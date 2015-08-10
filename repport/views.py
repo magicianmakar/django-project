@@ -130,7 +130,7 @@ def api(request, target):
         project.website = data.get('website')
         project.url = data.get('url')
         project.logo = data.get('logo')
-        project.description = data.get('description')
+        project.description = data.get('description', '')
         project.conclusion = data.get('conclusion')
         project.save()
         return HttpResponse('ok')
