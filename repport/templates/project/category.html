@@ -39,7 +39,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for item in category.topic_set.all %}
+                {% for item in category.topics %}
                 <tr class="{{item.get_bs_class}}">
                     <td><a href="/topic/{{item.id}}">{{item.title}}</a></td>
                     <td><input type="text" value="{{item.score}}" topic="{{item.id}}" class="form-control" style="width: 40px; text-align: center;"></td>
@@ -47,7 +47,6 @@
                         <input type="checkbox" topic="{{item.id}}" {% if item.action_item %}checked="checked"{% endif %} />
                     </td>
                     <td style="text-align: center">
-                        <a  style="color:#fff" class="edit-project btn btn-xs btn-primary" project-id="{{item.id}}"> Disable</a>
                         <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="#" project-id="{{item.id}}">  Delete</a>
                     </td>
                 </tr>

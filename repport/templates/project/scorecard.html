@@ -12,7 +12,7 @@
       <tbody>
 
         {% for cat in project.categories %}
-            {% for topic in cat.topic_set.all %}
+            {% for topic in cat.topics %}
             <tr>
               <td><a style="color: {{cat.color}}" href="/topic/{{topic.id}}">{{topic.title}}</a></td>
               <td style="text-align:center" xclass="{{topic.get_bs_class}}">{{topic.score}}</td>
