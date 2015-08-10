@@ -1,0 +1,76 @@
+{% extends "project/base.html" %}
+
+{% block project-main %}
+
+    <div class="row">
+        <div class="form-group col-md-4">
+            <label>Title</label>
+        <input id="id_topic-title" class="form-control input" name="topic-title" type="text" placeholder="topic Title"  maxlength="254"  value="{{topic.title}}">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-3">
+            <label>Score</label>
+        <input id="id_topic-score" class="form-control input" name="topic-score" type="text" placeholder="Topic Score"  maxlength="254"  value="{{topic.score}}">
+        </div>
+    </div>
+
+    <div id="tabs" style="margin-bottom: 25px;">
+        <ul>
+            <li><a href="#tabs-1">Analysis</a></li>
+            <li><a href="#tabs-2">Recommendations</a></li>
+            <li><a href="#tabs-3">Guidelines</a></li>
+            <li><a href="#tabs-4">Action description</a></li>
+        </ul>
+
+        <div id="tabs-1">
+            <textarea name="analysis" class="form-control">{{topic.analysis}}</textarea>
+        </div>
+
+        <div id="tabs-2">
+            <textarea name="recommendations" class="form-control">{{topic.recommendations}}</textarea>
+        </div>
+
+        <div id="tabs-3">
+            <textarea name="guidelines" class="form-control">{{topic.guidelines}}</textarea>
+        </div>
+
+        <div id="tabs-4">
+            <textarea name="action_description" class="form-control">{{topic.action_description}}</textarea>
+        </div>
+    </div>
+
+    <div class="row" style="margin: 10px -40px 10px 0px;">
+        <div class="col-md-2 col-md-offset-10">
+            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving...">Save</button>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        $(function() {
+            $( "#tabs" ).tabs();
+
+            setup_full_editor('analysis');
+            setup_full_editor('recommendations');
+            setup_full_editor('guidelines');
+            setup_full_editor('action_description');
+
+            $('#btn-save').click(function() {
+                var postData = {
+                    topic:  {{topic.id}},
+                    title:  $('#id_topic-title').val(),
+                    score:  $('#id_topic-score').val(),
+                };
+
+                for (var i in CKEDITOR.instances) {
+                    postData[i] = CKEDITOR.instances[i].getData();
+                }
+
+                ajaxSave($(this), 'topic', postData);
+            });
+        });
+    </script>
+{% endblock %}

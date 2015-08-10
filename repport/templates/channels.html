@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Video Ad Tools{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        /* Base for label styling */
+        [type="checkbox"]:not(:checked),
+        [type="checkbox"]:checked {
+            position: absolute;
+            left: -9999px;
+        }
+        [type="checkbox"]:not(:checked) + label,
+        [type="checkbox"]:checked + label {
+            position: relative;
+            padding-left: 25px;
+            cursor: pointer;
+        }
+
+        /* checkbox aspect */
+        [type="checkbox"]:not(:checked) + label:before,
+        [type="checkbox"]:checked + label:before {
+            content: '';
+            position: absolute;
+            left:0; top: -7px;
+            width: 17px; height: 17px;
+            border: 1px solid #aaa;
+            background: #f8f8f8;
+            border-radius: 2px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,.3)
+        }
+        /* checked mark aspect */
+        [type="checkbox"]:not(:checked) + label:after,
+        [type="checkbox"]:checked + label:after
+        /*{
+            content: '✔';
+            position: absolute;
+            top: 0; left: 4px;
+            font-size: 14px;
+            color: #09ad7e;
+            line-height: 1.75;
+            -webkit-transition: all .2s;
+            -moz-transition: all .2s;
+            -ms-transition: all .2s;
+            transition: all .2s;
+        }*/
+        {
+          content: '✔';
+          position: absolute;
+          top: -4px;
+          left: 3px;
+          font-size: 1px;
+          color: #0081BA;
+          line-height: 1.75;
+          -webkit-transition: all .2s;
+          -moz-transition: all .2s;
+          -ms-transition: all .2s;
+          transition: all .2s;
+          background-color: #0081BA;
+          border-radius: 10px;
+          height: 11px;
+          border-radius: 2px;
+          width: 11px;
+          box-shadow: 0 0 10px #0081BA;
+        }
+
+        /* checked mark aspect changes */
+        [type="checkbox"]:not(:checked) + label:after {
+            opacity: 0;
+            -webkit-transform: scale(0);
+            -moz-transform: scale(0);
+            -ms-transform: scale(0);
+            transform: scale(0);
+        }
+        [type="checkbox"]:checked + label:after {
+            opacity: 1;
+            -webkit-transform: scale(1);
+            -moz-transform: scale(1);
+            -ms-transform: scale(1);
+            transform: scale(1);
+        }
+        /* disabled checkbox */
+        [type="checkbox"]:disabled:not(:checked) + label:before,
+        [type="checkbox"]:disabled:checked + label:before {
+            box-shadow: none;
+            border-color: #bbb;
+            background-color: #ddd;
+        }
+        [type="checkbox"]:disabled:checked + label:after {
+            color: #999;
+        }
+        [type="checkbox"]:disabled + label {
+            color: #aaa;
+        }
+        /* accessibility */
+        [type="checkbox"]:checked:focus + label:before,
+        [type="checkbox"]:not(:checked):focus + label:before {
+            border: 1px dotted blue;
+        }
+
+        td.number {
+            text-align: right;
+        }
+    </style>
+{% endblock %}
+
+{% block main-container %}
+        {% if not channels %}
+        <div class="row" id="loginSetup">
+            <div class="well col-md-offset-3 col-md-6">
+                <p class="text-center">
+                    <h1 class="text-center">
+                            Channel Search
+                    </h1>
+                    <p class="text-center"></p>
+                    {% if error %}
+                    <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
+                    {% endif %}
+                </p>
+                <form class="form-horizontal" method="GET">
+                    <!-- {% csrf_token %} -->
+                  <div class="form-group">
+                    <label for="q" class="col-sm-2 control-label">
+                        Query
+                    </label>
+                    <div class="col-sm-8">
+                      <input  name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                      <button id="userLogin" type="submit" class="btn btn-default">Search</button>
+                    </div>
+                  </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div>
+            <div class="row" id="loginSetup">
+                <form class="form-horizontal" method="GET">
+                    <div class="col-md-12">
+                        <!-- {% csrf_token %} -->
+                      <div class="form-group">
+                        <label for="q" class="col-sm-2 control-label">
+                        Channel
+                        </label>
+                        <div class="col-sm-8">
+                          <input  name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="{{query}}">
+                        </div>
+                        <div class="col-sm-2">
+                          <button id="userLogin" type="submit" class="btn btn-default">Search</button>
+                        </div>
+                      </div>
+                    </div>
+                </form>
+            </div>
+
+            <table id="invoices-table" class="table table-hover table-condensed">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"> <label for="select-all"></label></th>
+                        <th style="cursor:pointer">#</th>
+                        <th style="cursor:pointer">Title</th>
+                        <th style="cursor:pointer">Subscribes</th>
+                        <th style="cursor:pointer">Videos</th>
+                        <th style="cursor:pointer">Views</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in channels %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" id="{{item.id}}">
+                            <label for="{{item.id}}"></label>
+                        </td>
+                        <td>{{item.index}}</td>
+                        <td>
+                            <div class="media">
+                              <div class="media-left">
+                                <a class="" href="{{item.url}}">
+                                  <img class="media-object" src="{{item.thumbnail}}" alt="{{item.title}}" style="width: 64px;">
+                                </a>
+                              </div>
+                              <div class="media-body">
+                                <h4 class="media-heading"><a class="" href="{{item.url}}" target="_blank">{{item.title}}</a></h4>
+                                <p>
+                                    <a href="/?r=channel:{{item.id}}" title="View all videos from {{item.title}} Channel" target="_blank"><span class="label label-primary">Channel videos</span></a>
+                                </p>
+
+                              </div>
+                            </div>
+                        </td>
+                        <td class="number">{{item.statistics.subscriberCount}}</td>
+                        <td class="number">{{item.statistics.videoCount}}</td>
+                        <td class="number">{{item.statistics.viewCount}}</td>
+                        <td class="number">{{item.statistics.commentCount}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+          <button id="copy-selected" type="button" class="btn btn-primary btn-lg">Copy Selected</button>
+          <p></p>
+
+        {% endif %}
+
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+    $(function(){
+        ZeroClipboard.config( { swfPath: "//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.swf" } );
+
+        var client = new ZeroClipboard( $("#copy-selected"))
+        // $("#copy-selected").click(function(){
+        //     var text = '';
+        //     $('table tbody input[type="checkbox"]').each(function(i, el) {
+        //         if(el.checked) {
+        //             text += 'https://www.youtube.com/watch?v=' + $(el).attr('id') + '\n';
+        //         }
+        //     });
+
+        //     if(text.length == 0) {
+        //         alert('Select a video first');
+        //     } else {
+        //         ZeroClipboard.setData( "text/plain", text );
+        //     }
+        // });
+          client.on( 'ready', function(event) {
+        console.log( 'movie is loaded' );
+
+            client.on( 'copy', function(event) {
+                    //event.clipboardData.setData('text/plain', event.target.innerHTML);
+                    var text = '';
+                    $('table tbody input[type="checkbox"]').each(function(i, el) {
+                        if(el.checked) {
+                            text += 'https://www.youtube.com/channel/' + $(el).attr('id') + '\n';
+                        }
+                    });
+
+                    if(text.length == 0) {
+                        alert('Select a video first');
+                    } else {
+                        event.clipboardData.setData('text/plain', text );
+                    }
+            } );
+
+            client.on( 'aftercopy', function(event) {
+              console.log('Copied text to clipboard: ' + event.data['text/plain']);
+            } );
+          } );
+
+          client.on( 'error', function(event) {
+            console.log( 'ZeroClipboard error of type "' + event.name + '": ' + event.message );
+            ZeroClipboard.destroy();
+          } );
+
+          $("table").tablesorter();
+
+            $('.yt-video').click(function(e) {
+                e.preventDefault();
+                $.fancybox({
+                    'padding'       : 0,
+                    'autoScale'     : false,
+                    'transitionIn'  : 'none',
+                    'transitionOut' : 'none',
+                    'title'         : this.title,
+                    'width'         : 640,
+                    'height'        : 385,
+                    'href'          : this.href.replace(new RegExp("watch\\?v=", "i"), 'v/'),
+                    'type'          : 'swf',
+                    'swf'           : {
+                        'wmode'             : 'transparent',
+                        'allowfullscreen'   : 'true'
+                    }
+                });
+
+                return false;
+            });
+
+            $('#save-to-list').click(function() {
+                var selected = [];
+                $('table tbody input[type="checkbox"]').each(function(i, el) {
+                    if(el.checked) {
+                        selected.push($(el).attr('id'));;
+                    }
+                });
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/api/user/lists',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('select#user-list').html($('<option>', {}));;
+                        for (var i=0;i<data.length; i++) {
+                            $('select#user-list').append($('<option>', {value:data[i].id, text: data[i].title}));
+                        }
+
+                        $('#myModal').modal('show');
+                    }
+                });
+
+            });
+
+            $('button#save-list').click(function () {
+                var selected = '';
+                $('table tbody input[type="checkbox"]').each(function(i, el) {
+                    if(el.checked) {
+                        selected += $(el).attr('id') + ';';
+                    }
+                });
+
+                var newListTitle = $('#new-list').val();
+                var selectedList = $('#user-list').val();
+
+                var data = {
+                    selected: selected,
+                    newListTitle: newListTitle,
+                    selectedList: selectedList
+                };
+
+                $.ajax({
+                    type: 'PUT',
+                    url: '/api/user/lists',
+                    data: data,
+                    success: function (data) {
+                        if(data == 'ok') {
+                            $('#new-list').val('');
+                            $('#myModal').modal('hide');
+                        }
+                    }
+                });
+            });
+
+            $('.del-video').click(function () {
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/user/lists/'+$(this).attr('list-id')+'/'+$(this).attr('video-id'),
+                    context: this,
+                    success: function (data) {
+                        if(data == 'ok') {
+                            $(this).parents('tr').remove();
+                        }
+                 }
+                });
+            });
+    });
+
+    setTimeout(function () {
+        $('#select-all').change(function(){
+            var checked = this.checked;
+            $('table input[type="checkbox"]').each(function(i, el) {
+                el.checked=checked;
+            });
+        });
+    }, 100);
+
+    </script>
+
+{% endblock %}

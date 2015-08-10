@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}SEO Repport - Projects{% endblock %}
+
+{% block jquery-ui-css %}{% endblock %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-offset-3 col-md-6">
+        <h2 class="text-center">SEO Audit App</h2>
+
+        <div class="panel panel-default">
+          <!-- Default panel contents -->
+          <div class="panel-heading">All Project</div>
+          <!-- List group -->
+          <ul class="list-group">
+            {% for item in projects %}
+            <li class="list-group-item">
+                <a href="/project/{{item.id}}">{{item.title}}</a>
+                <span class="pull-right">
+                    <a class="edit-project btn btn-xs btn-primary" href="/project/{{item.id}}" project-id="{{item.id}}"> <span class="glyphicon glyphicon-edit" title="Edit Project" aria-hidden="true"></span> Edit</a>
+                    <!-- <a class="del-project btn btn-xs btn-danger" href="#" project-id="{{item.id}}"> <span class="glyphicon glyphicon-remove" title="Delete Project" aria-hidden="true"></span> Delete</a> -->
+                </span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+    </div>
+
+    <div class="col-md-offset-3 col-md-6">
+        <button id="add-new-project" class="btn btn-success pull-right"><span class="glyphicon glyphicon-plus" title="Add a new project" aria-hidden="true"></span> New Project</button>
+    </div>
+</div>
+
+<div id="new-project" style="display:none">
+    <form id="new-project-form">
+    <div>
+        <label>Project Title:</label>
+        <input type="text" name="title">
+    </div>
+
+    <div>
+        <label>Template:</label>
+        <select name="template">
+            {% for item in templates %}
+            <option value="{{item.id}}">{{item.title}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extrajs%}
+<script type="text/javascript">
+$(function () {
+    $('#add-new-project').click(function() {
+        $('#new-project').dialog({
+            'title': 'New Project',
+            buttons: [
+                {
+                    text: "Add",
+                    click: function() {
+                        $.ajax({
+                            context: this,
+                            type: 'POST',
+                            url: '/api/add-project',
+                            data: $('#new-project-form').serialize(),
+                            success: function (data) {
+                                if(data.startsWith('/project/')) {
+                                    window.location.href = data;
+                                } else {
+                                    alert('Inknow Error');
+                                }
+                            },
+                            error: function (data) {
+                                alert('Unknown Error, please try again.')
+                            }
+                        });
+
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        });
+    });
+});
+</script>
+{% endblock %}

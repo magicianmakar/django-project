@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}SEO Audit - {{project.title}}{% endblock %}
+
+{% block main-container %}
+
+<!-- <div class="row">
+    <div class="col-md-offset-4 col-md-6">
+        <h2>{{project.title}}</h2>
+    </div>
+</div> -->
+<div class="row" xstyle="margin-top: 25px;">
+    <div class="col-md-offset-1 col-md-2">
+        <div class="list-group">
+            <a href="/project/{{project.id}}" class="list-group-item {% if clist == 'settings' %}active{% endif %}">Settings</a>
+            <a href="/project/scorecard/{{project.id}}" class="list-group-item {% if clist == 'scorecard' %}active{% endif %}">Scorecard</a>
+            {% for item in project.categorie_set.all %}
+            <a href="/category/{{item.id}}" class="list-group-item {% if clist == item.id %}active{% endif %}">{{item.title}} Category</a>
+            {% endfor %}
+            <a href="/project/templates/{{project.id}}" class="list-group-item {% if clist == 'templates' %}active{% endif %}">Templates</a>
+            <a href="/project/preview/{{project.id}}" class="list-group-item {% if clist == 'preview' %}active{% endif %}">Preview</a>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        {% if breadcrumbs %}
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                <li><a href="{{item.url}}">{{item.title}}</a></li>
+                {% else %}
+                <li class="active">{{item}}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+        {% endif %}
+
+        {% block project-main %}{% endblock %}
+    </div>
+</div>
+
+{% endblock %}
+
+

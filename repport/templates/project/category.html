@@ -1,0 +1,150 @@
+{% extends "project/base.html" %}
+
+{% block project-main %}
+
+    <div class="row">
+        <div class="form-group col-md-4">
+            <label>Title</label>
+        <input id="id_category-title" class="form-control input" name="category-title" type="text" placeholder="Category Title" title="Category Title"  maxlength="254"  value="{{category.title}}">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-3">
+            <label>Color</label>
+        <input id="id_category-color" class="form-control input" name="category-color" type="text" placeholder="Category Color" title="Category Color"  maxlength="254"  value="{{category.color}}">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-3">
+            <label>Algorithm Usage (%)</label>
+        <input id="id_algorithm_usage" class="form-control input" name="algorithm_usage" type="text" placeholder="Algorithm Usage (%)"  title="Algorithm Usage (%)"  maxlength="254"  value="{{category.algorithm_usage}}">
+        </div>
+    </div>
+
+    <div id="tabs" style="margin-bottom: 25px;">
+        <ul>
+            <li><a href="#tabs-1">Topics</a></li>
+            <li><a href="#tabs-2">Content Analysis</a></li>
+            <li><a href="#tabs-3">Content Score</a></li>
+        </ul>
+
+        <div id="tabs-1">
+            <table id="topics-table" class="table table-condensed table-hover wxell">
+              <thead>
+                <tr>
+                  <th style="width: 60%;"></th>
+                  <th>Score</th>
+                  <th>Action Item</th>
+                  <th style="text-align: center"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in category.topic_set.all %}
+                <tr class="{{item.get_bs_class}}">
+                    <td><a href="/topic/{{item.id}}">{{item.title}}</a></td>
+                    <td><input type="text" value="{{item.score}}" topic="{{item.id}}" class="form-control" style="width: 40px; text-align: center;"></td>
+                    <td style="text-align: center;">
+                        <input type="checkbox" topic="{{item.id}}" {% if item.action_item %}checked="checked"{% endif %} />
+                    </td>
+                    <td style="text-align: center">
+                        <a  style="color:#fff" class="edit-project btn btn-xs btn-primary" project-id="{{item.id}}"> Disable</a>
+                        <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="#" project-id="{{item.id}}">  Delete</a>
+                    </td>
+                </tr>
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align: right;">
+                            <button class="add-topic btn btn-success btn-xs  ">
+                                <span class="glyphicon glyphicon-plus" title="Add a new Topic" aria-hidden="true"></span> New Topic
+                            </button>
+                        </td>
+                    </tr>
+              </tbody>
+            </table>
+        </div>
+
+        <div id="tabs-2">
+            <textarea name="content_analysis" class="form-control">{{category.content_analysis}}</textarea>
+        </div>
+
+        <div id="tabs-3">
+            <textarea name="content_score" class="form-control">{{category.content_score}}</textarea>
+        </div>
+    </div>
+
+    <div class="row" style="margin: 10px -40px 10px 0px;">
+        <div class="col-md-2 col-md-offset-10">
+            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving...">Save</button>
+        </div>
+    </div>
+
+    <!--
+        <div class="panel panel-default">
+        <div class="panel-heading">Topics</div>
+        <div class="panel-body"> </div>
+        <ul class="list-group">
+             <li class="list-group-item">
+                <a href="/topic/{{item.id}}">{{item.title}}</a>
+                <span  class="pull-right">
+                    <a href="#">Remove</a> |
+                    <a href="#">Edit</a>
+                </span>
+            </li>
+        </ul>
+    </div>
+    -->
+    <!-- <h2>Category Topics</h2> -->
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        $(function() {
+            $( "#tabs" ).tabs();
+
+            setup_full_editor('content_analysis');
+            setup_full_editor('content_score');
+
+            $('#btn-save').click(function() {
+                var postData = {
+                    category:   {{category.id}},
+                    title:      $('#id_category-title').val(),
+                    color:      $('#id_category-color').val(),
+                    algorithm:  $('#id_algorithm_usage').val(),
+                };
+
+                for (var i in CKEDITOR.instances) {
+                    postData[i] = CKEDITOR.instances[i].getData();
+                }
+
+                ajaxSave($(this), 'category', postData);
+            });
+
+            $('#topics-table input[type="text"]').change(function () {
+                $.ajax({
+                    url: '/api/score',
+                    type: 'POST',
+                    data: {score: $(this).val(), topic: $(this).attr('topic')},
+                    success: function (data) {
+                        console.log(data);
+                    }
+                });
+            });
+
+            $('#topics-table input[type="checkbox"]').change(function () {
+                $.ajax({
+                    url: '/api/action-item',
+                    type: 'POST',
+                    data: {action: (this.checked ? 1 : 0), topic: $(this).attr('topic')},
+                    success: function (data) {
+                        console.log(data);
+                    }
+                });
+            });
+
+        });
+    </script>
+{% endblock %}
+

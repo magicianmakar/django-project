@@ -1,0 +1,36 @@
+
+{% extends "project/base.html" %}
+
+{% block project-main %}
+    <table class="table table-condensed table-hover  xtable-bordered">
+      <thead>
+        <tr>
+          <th style="width: 80%;">SEO Element</th>
+          <th style="text-align:center">Score</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% for cat in project.categorie_set.all %}
+            {% for topic in cat.topic_set.all %}
+            <tr>
+              <td><a style="color: {{cat.color}}" href="/topic/{{topic.id}}">{{topic.title}}</a></td>
+              <td style="text-align:center" xclass="{{topic.get_bs_class}}">{{topic.score}}</td>
+            </tr>
+            {% endfor %}
+
+            <tr class="active">
+              <td style="font-weight: bolder; color: {{cat.color}}; padding-left: 20px;">{{cat.title}} SEO Score ({{cat.algorithm_usage}}% Algorithm)</td>
+              <td style="color: {{cat.color}}; font-weight: bolder; text-align:center">{{cat.category_score|floatformat:"0"}}%</td>
+            </tr>
+        {% endfor %}
+
+        <tr class="success">
+          <td style="font-weight: bolder; padding-left: 5px;">OVERALL SEO SCORE</td>
+          <td style="font-weight: bolder; text-align:center">{{project.overall_score|floatformat:"0"}}%</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "project/base.html" %}
+
+{% block extracss %}
+<style type="text/css">
+    textarea, .ui-widget textarea, {
+        font-family: monospace;
+    }
+</style>
+{% endblock %}
+
+{% block project-main %}
+
+    <div id="tabs" style="margin-bottom: 25px;">
+        <ul>
+            <li><a href="#tabs-1">Report Template</a></li>
+            <li><a href="#tabs-2">Executive Summary</a></li>
+            <li><a href="#tabs-3">Scorecard</a></li>
+            <li><a href="#tabs-4">Content Analysis</a></li>
+            <li><a href="#tabs-5">Top Action Items</a></li>
+        </ul>
+
+        <div id="tabs-1">
+            <textarea style="font-family: monospace" name="report_template"  class="form-control"  rows="20">{{template.report_template}}</textarea>
+        </div>
+        <div id="tabs-2">
+            <textarea style="font-family: monospace" name="executive_summary" class="form-control" rows="20">{{template.executive_summary}}</textarea>
+        </div>
+        <div id="tabs-3">
+            <textarea style="font-family: monospace" name="scorecard" class="form-control"  rows="20">{{template.scorecard}}</textarea>
+        </div>
+        <div id="tabs-4">
+            <textarea style="font-family: monospace" name="content_analysis" class="form-control"  rows="20">{{template.content_analysis}}</textarea>
+        </div>
+        <div id="tabs-5">
+            <textarea style="font-family: monospace" name="top_action_items" class="form-control"  rows="20">{{template.top_action_items}}</textarea>
+        </div>
+    </div>
+
+    <div class="row" style="margin: 10px -40px 10px 0px;">
+        <div class="col-md-2 col-md-offset-10">
+            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving...">Save</button>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        $(function() {
+            $( "#tabs" ).tabs();
+
+            $('#btn-save').click(function() {
+                var postData = {
+                    template:  {{template.id}},
+                    executive_summary: $('textarea[name="executive_summary"]').val(),
+                    scorecard: $('textarea[name="scorecard"]').val(),
+                    content_analysis: $('textarea[name="content_analysis"]').val(),
+                    top_action_items: $('textarea[name="top_action_items"]').val(),
+                    report_template: $('textarea[name="report_template"]').val(),
+                };
+
+                for (var i in CKEDITOR.instances) {
+                }
+
+                ajaxSave($(this), 'template', postData);
+            });
+        });
+    </script>
+{% endblock %}

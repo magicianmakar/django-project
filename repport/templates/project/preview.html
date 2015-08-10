@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load template_helper %}
+
+{% block default-js %}{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+
+    @font-face {
+      font-family: 'Edmondsans Regular';
+      src: url('/static/Edmondsans_Regular.otf');
+    }
+    @font-face {
+      font-family: 'ChunkFive Roman';
+      src: url('/static/Chunkfive.otf');
+    }
+
+    .table > tbody > tr > td, .table > tbody > tr > th
+     {
+        border: 0 solid #ddd;
+    }
+
+    body {
+        font-family: "Edmondsans Regular","Helvetica Neue",Helvetica,Arial,sans-serif;
+        color: #333;
+        font-size: 14px;
+        line-height: 1.42857;
+    }
+
+    .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+        font-family: "ChunkFive Roman";
+    }
+
+    .h3, h3 {
+        /*color: #5798a6;*/
+        font-family: "Droid Serif";
+        /*font-weight: bold;*/
+    }
+
+    textarea {
+        /*font-family: monospace;*/
+    }
+</style>
+{% endblock %}
+
+{% block main-nav %}{% endblock %}
+
+{% block main-container %}
+<div class="row" style="margin-top: 25px;">
+    <div class="col-md-offset-3 col-md-7">
+
+    {% render_project template.report_template project %}
+
+    </div>
+</div>
+
+{% endblock %}
+
