@@ -201,34 +201,23 @@ def scorecard_view(request, project_id):
     })
 
 # @login_required
-def preview_project(request, project_id, html_only=False):
+def preview_project(request, project_id, for_pdf=False):
     project = get_object_or_404(Project, pk=project_id)
     tpl = project.template
 
-    ctx = {'project': project}
-
-    # template = Template(project.description.replace('&quot;', '"'))
-    context = Context(ctx)
-
-    # seo_executive_html = template.render(context)
-
-    template = Template(open(os.path.join(settings.BASE_DIR, 'repport/templates/project/scorecard.html')).read().replace('{% extends "project/base.html" %}', ''))
-    seo_scorecard_html = template.render(context)
-
     template = get_template('project/preview.html')
-    ctx.update({
+    ctx = {
         'project': project,
         'template': tpl,
-        # 'seo_executive_html': seo_executive_html,
-        'seo_scorecard_html': seo_scorecard_html,
+        'pdf': for_pdf,
         'clist': 'preview',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Preview']
-    })
+    }
 
     context = Context(ctx)
     repport_html = template.render(context)
 
-    if html_only:
+    if for_pdf:
         return repport_html
     else:
         return HttpResponse(repport_html)
@@ -263,15 +252,6 @@ def link_callback(uri, rel):
 
 def generate_pdf(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-
-    # Prepare context
-    ctx = {'project': project}
-
-    # Render html content through html template with context
-    template = Template(project.description.replace('&quot;', '"'))
-    context = Context(ctx)
-
-    seo_executive_html = template.render(context)
 
     # Write PDF to file
     file = open(os.path.join(settings.MEDIA_ROOT, 'test.pdf'), "w+b")

@@ -21,6 +21,7 @@
             {% endfor %}
             <a href="/project/templates/{{project.id}}" class="list-group-item {% if clist == 'templates' %}active{% endif %}">Templates</a>
             <a href="/project/preview/{{project.id}}" class="list-group-item {% if clist == 'preview' %}active{% endif %}">Preview</a>
+            <a href="/project/pdf/{{project.id}}" class="list-group-item {% if clist == 'pdf' %}active{% endif %}">Generate PDF</a>
         </div>
     </div>
 

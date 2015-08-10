@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% load template_helper %}
 
+{% block default-css %}
+    {% if pdf %}
+        <link href="/static/bootstrap2.css" rel="stylesheet" />
+    {% else %}
+        <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    {% endif %}
+{% endblock %}
+
 {% block default-js %}{% endblock %}
 
 {% block extracss %}
@@ -8,11 +16,11 @@
 
     @font-face {
       font-family: 'Edmondsans Regular';
-      src: url('/static/Edmondsans_Regular.otf');
+      src: url('/static/Edmondsans_Regular.{{pdf|yesno:"ttf,otf"}}');
     }
     @font-face {
       font-family: 'ChunkFive Roman';
-      src: url('/static/Chunkfive.otf');
+      src: url('/static/Chunkfive.{{pdf|yesno:"ttf,otf"}}');
     }
 
     .table > tbody > tr > td, .table > tbody > tr > th
