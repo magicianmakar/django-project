@@ -27,7 +27,7 @@
 
         <div id="tabs-1">
             <ul class="list-group">
-                {% for item in project.categorie_set.all %}
+                {% for item in project.categories %}
                 <li class="list-group-item">
                     <a href="/category/{{item.id}}">{{item.title}}</a>
                     <span class="pull-right">

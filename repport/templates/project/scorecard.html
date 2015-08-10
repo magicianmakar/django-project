@@ -11,7 +11,7 @@
       </thead>
       <tbody>
 
-        {% for cat in project.categorie_set.all %}
+        {% for cat in project.categories %}
             {% for topic in cat.topic_set.all %}
             <tr>
               <td><a style="color: {{cat.color}}" href="/topic/{{topic.id}}">{{topic.title}}</a></td>

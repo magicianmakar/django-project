@@ -16,7 +16,7 @@
         <div class="list-group">
             <a href="/project/{{project.id}}" class="list-group-item {% if clist == 'settings' %}active{% endif %}">Settings</a>
             <a href="/project/scorecard/{{project.id}}" class="list-group-item {% if clist == 'scorecard' %}active{% endif %}">Scorecard</a>
-            {% for item in project.categorie_set.all %}
+            {% for item in project.categories %}
             <a href="/category/{{item.id}}" class="list-group-item {% if clist == item.id %}active{% endif %}">{{item.title}} Category</a>
             {% endfor %}
             <a href="/project/templates/{{project.id}}" class="list-group-item {% if clist == 'templates' %}active{% endif %}">Templates</a>

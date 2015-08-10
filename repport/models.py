@@ -29,6 +29,9 @@ class Project(models.Model):
         scores = [i.category_score() for i in self.categorie_set.all()]
         return (sum(scores) / float(len(scores)))
 
+    def categories(self):
+        return self.categorie_set.all().all().order_by('id')
+
 class Categorie(models.Model):
     title = models.CharField(max_length=512)
     content_analysis = models.TextField(blank=True, default='')
@@ -45,7 +48,7 @@ class Categorie(models.Model):
         return self.title
 
     def topics(self):
-        return self.topic_set.all()
+        return self.topic_set.all().order_by('id')
 
     def category_score(self):
         scores = [i.score for i in self.topic_set.all()]
