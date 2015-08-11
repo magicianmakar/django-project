@@ -228,7 +228,7 @@ def preview_project(request, project_id, for_pdf=False):
 
 # Convert HTML URIs to absolute system paths so xhtml2pdf can access those resources
 def link_callback(uri, rel):
-    print (uri, rel)
+
     # use short variable names
     sUrl  = settings.STATIC_URL      # Typically /static/
     sRoot = settings.STATIC_ROOT    # Typically /home/userX/project_static/
@@ -238,10 +238,8 @@ def link_callback(uri, rel):
     # convert URIs to absolute system paths
     if uri.startswith(mUrl):
         path = os.path.join(settings.BASE_DIR2, uri)
-        print 'mUrl:', path
     elif uri.startswith(sUrl):
-        path = '/home/naruto/Desktop/seo-repport-app/app'+uri
-        print 'sUrl:', path
+        path = os.path.join(settings.BASE_DIR2, (uri[1:] if uri[0] == '/' else uri))
     else:
         return uri
 
@@ -250,7 +248,6 @@ def link_callback(uri, rel):
             print (
                     '%s: media URI must start with %s or %s' % \
                     (uri, sUrl, mUrl))
-    print '>>>' , path
 
     return path
 
