@@ -101,4 +101,4 @@ class ProjectTemplate(models.Model):
     report_style = models.TextField(blank=True, default='')
 
     def __str__(self):
-        return self.title
+        return '%s | %s' % (self.title, self.project_set.first())

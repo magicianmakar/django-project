@@ -44,10 +44,10 @@
     </div>
 
     <div>
-        <label>Template:</label>
+        <label>Clone Template from:</label>
         <select name="template">
             {% for item in templates %}
-            <option value="{{item.id}}">{{item.title}}</option>
+            <option value="{{item.id}}">{{item.title}} | {{item.project_set.first}}</option>
             {% endfor %}
         </select>
     </div>

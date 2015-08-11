@@ -177,7 +177,14 @@ def api(request, target):
 
     if target == 'add-project':
         template = get_object_or_404(ProjectTemplate, pk=data.get('template'))
-        project = Project(title=data.get('title'), template=template)
+        new_template = ProjectTemplate(
+            title=template.title,
+            report_template=template.report_template,
+            report_style=template.report_style)
+
+        new_template.save()
+
+        project = Project(title=data.get('title'), template=new_template)
         project.save()
 
         init_project(project)
