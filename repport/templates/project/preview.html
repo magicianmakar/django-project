@@ -3,7 +3,7 @@
 
 {% block default-css %}
     {% if pdf %}
-        <link href="/static/bootstrap2.css" rel="stylesheet" />
+        <!-- <link href="/static/bootstrap2.css" rel="stylesheet" /> -->
     {% else %}
         <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
     {% endif %}
@@ -13,7 +13,6 @@
 
 {% block extracss %}
 <style type="text/css">
-
     @font-face {
       font-family: 'Edmondsans Regular';
       src: url('/static/Edmondsans_Regular.{{pdf|yesno:"ttf,otf"}}');
@@ -23,31 +22,7 @@
       src: url('/static/Chunkfive.{{pdf|yesno:"ttf,otf"}}');
     }
 
-    .table > tbody > tr > td, .table > tbody > tr > th
-     {
-        border: 0 solid #ddd;
-    }
-
-    body {
-        font-family: "Edmondsans Regular","Helvetica Neue",Helvetica,Arial,sans-serif;
-        color: #333;
-        font-size: 14px;
-        line-height: 1.42857;
-    }
-
-    .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
-        font-family: "ChunkFive Roman";
-    }
-
-    .h3, h3 {
-        /*color: #5798a6;*/
-        font-family: "Droid Serif";
-        /*font-weight: bold;*/
-    }
-
-    textarea {
-        /*font-family: monospace;*/
-    }
+    {{template.report_style|safe}}
 </style>
 {% endblock %}
 

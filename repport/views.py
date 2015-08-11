@@ -170,10 +170,7 @@ def api(request, target):
 
     if target == 'template':
         template = get_object_or_404(ProjectTemplate, pk=data.get('template'))
-        template.executive_summary = data.get('executive_summary')
-        template.scorecard = data.get('scorecard')
-        template.content_analysis = data.get('content_analysis')
-        template.top_action_items = data.get('top_action_items')
+        template.report_style = data.get('report_style')
         template.report_template = data.get('report_template')
         template.save()
         return HttpResponse('ok')

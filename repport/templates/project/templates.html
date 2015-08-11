@@ -13,26 +13,14 @@
     <div id="tabs" style="margin-bottom: 25px;">
         <ul>
             <li><a href="#tabs-1">Report Template</a></li>
-            <li><a href="#tabs-2">Executive Summary</a></li>
-            <li><a href="#tabs-3">Scorecard</a></li>
-            <li><a href="#tabs-4">Content Analysis</a></li>
-            <li><a href="#tabs-5">Top Action Items</a></li>
+            <li><a href="#tabs-2">Report Style</a></li>
         </ul>
 
         <div id="tabs-1">
             <textarea style="font-family: monospace" name="report_template"  class="form-control"  rows="20">{{template.report_template}}</textarea>
         </div>
         <div id="tabs-2">
-            <textarea style="font-family: monospace" name="executive_summary" class="form-control" rows="20">{{template.executive_summary}}</textarea>
-        </div>
-        <div id="tabs-3">
-            <textarea style="font-family: monospace" name="scorecard" class="form-control"  rows="20">{{template.scorecard}}</textarea>
-        </div>
-        <div id="tabs-4">
-            <textarea style="font-family: monospace" name="content_analysis" class="form-control"  rows="20">{{template.content_analysis}}</textarea>
-        </div>
-        <div id="tabs-5">
-            <textarea style="font-family: monospace" name="top_action_items" class="form-control"  rows="20">{{template.top_action_items}}</textarea>
+            <textarea style="font-family: monospace" name="report_style" class="form-control" rows="20">{{template.report_style}}</textarea>
         </div>
     </div>
 
@@ -52,10 +40,7 @@
             $('#btn-save').click(function() {
                 var postData = {
                     template:  {{template.id}},
-                    executive_summary: $('textarea[name="executive_summary"]').val(),
-                    scorecard: $('textarea[name="scorecard"]').val(),
-                    content_analysis: $('textarea[name="content_analysis"]').val(),
-                    top_action_items: $('textarea[name="top_action_items"]').val(),
+                    report_style: $('textarea[name="report_style"]').val(),
                     report_template: $('textarea[name="report_template"]').val(),
                 };
 

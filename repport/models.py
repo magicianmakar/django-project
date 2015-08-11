@@ -97,11 +97,8 @@ class Topic(models.Model):
 
 class ProjectTemplate(models.Model):
     title = models.CharField(max_length=512)
-    executive_summary = models.TextField(blank=True, default='')
-    scorecard = models.TextField(blank=True, default='')
-    content_analysis = models.TextField(blank=True, default='')
-    top_action_items = models.TextField(blank=True, default='')
     report_template = models.TextField(blank=True, default='')
+    report_style = models.TextField(blank=True, default='')
 
     def __str__(self):
         return self.title
