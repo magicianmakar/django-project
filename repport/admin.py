@@ -68,7 +68,7 @@ class TemplateAdmin(admin.ModelAdmin):
         }),
         ('Templates', {
             # 'classes': ['collapse',],
-            'fields': ('executive_summary', 'scorecard', 'content_analysis', 'top_action_items', 'report_template')
+            'fields': ('report_template', 'report_style')
         }),
     )
 
