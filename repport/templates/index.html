@@ -21,8 +21,8 @@
             <li class="list-group-item">
                 <a href="/project/{{item.id}}">{{item.title}}</a>
                 <span class="pull-right">
-                    <a class="edit-project btn btn-xs btn-primary" href="/project/{{item.id}}" project-id="{{item.id}}"> <span class="glyphicon glyphicon-edit" title="Edit Project" aria-hidden="true"></span> Edit</a>
-                    <!-- <a class="del-project btn btn-xs btn-danger" href="#" project-id="{{item.id}}"> <span class="glyphicon glyphicon-remove" title="Delete Project" aria-hidden="true"></span> Delete</a> -->
+                    <!-- <a class="edit-project btn btn-xs btn-default" href="/project/{{item.id}}" project-id="{{item.id}}"> <span class="glyphicon glyphicon-edit" title="Edit Project" aria-hidden="true"></span> Edit</a> -->
+                    <a class="clone-project btn btn-xs btn-primary" href="#" project-id="{{item.id}}"> <span class="glyphicon glyphicon-new-window" title="Clone Project" aria-hidden="true"></span> Clone</a>
                 </span>
             </li>
             {% endfor %}
@@ -43,7 +43,7 @@
         <input type="text" name="title">
     </div>
 
-    <div>
+    <div  id="tpl-select">
         <label>Clone Template from:</label>
         <select name="template">
             {% for item in templates %}
@@ -51,6 +51,7 @@
             {% endfor %}
         </select>
     </div>
+    <input type="hidden" id="src-project" name="src-project"  value="">
     </form>
 </div>
 
@@ -60,6 +61,7 @@
 <script type="text/javascript">
 $(function () {
     $('#add-new-project').click(function() {
+        $('#tpl-select').show();
         $('#new-project').dialog({
             'title': 'New Project',
             buttons: [
@@ -70,6 +72,40 @@ $(function () {
                             context: this,
                             type: 'POST',
                             url: '/api/add-project',
+                            data: $('#new-project-form').serialize(),
+                            success: function (data) {
+                                if(data.startsWith('/project/')) {
+                                    window.location.href = data;
+                                } else {
+                                    alert('Inknow Error');
+                                }
+                            },
+                            error: function (data) {
+                                alert('Unknown Error, please try again.')
+                            }
+                        });
+
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        });
+    });
+
+    $('.clone-project').click(function() {
+        $('#tpl-select').hide();
+        $('#src-project').val($(this).attr('project-id'));
+
+        $('#new-project').dialog({
+            'title': 'Clone Project',
+            buttons: [
+                {
+                    text: "Clone",
+                    click: function() {
+                        $.ajax({
+                            context: this,
+                            type: 'POST',
+                            url: '/api/clone-project',
                             data: $('#new-project-form').serialize(),
                             success: function (data) {
                                 if(data.startsWith('/project/')) {

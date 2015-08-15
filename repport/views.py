@@ -72,6 +72,48 @@ def init_project(project):
 
 
 
+def clone_project(src, project):
+    # project.title = src.title
+    # project.website = src.website
+    # project.url = src.url
+    # project.logo = src.logo
+    # project.description = src.description
+    # project.conclusion = src.conclusion
+
+    template = src.template
+    new_template = ProjectTemplate(
+        title=template.title,
+        report_template=template.report_template,
+        report_style=template.report_style)
+
+    new_template.save()
+
+    project.template = new_template
+
+    for c in src.categorie_set.all().all().order_by('id'):
+        cat = Categorie(
+            title=c.title,
+            content_analysis=c.content_analysis,
+            content_score=c.content_score,
+            color=c.color,
+            algorithm_usage=c.algorithm_usage,
+            project=project)
+        cat.save()
+
+        for t in c.topic_set.all().order_by('id'):
+            topic = Topic(
+                title=t.title,
+                score=t.score,
+                action_item=t.action_item,
+                analysis=t.analysis,
+                recommendations=t.recommendations,
+                guidelines=t.guidelines,
+                action_description=t.action_description,
+                categorie=cat,
+            )
+            topic.save()
+
+
 # @login_required
 def index(request):
     # init_project()
@@ -188,6 +230,15 @@ def api(request, target):
         project.save()
 
         init_project(project)
+
+        return HttpResponse('/project/%d'%project.id)
+
+    if target == 'clone-project':
+        src = get_object_or_404(Project, pk=data.get('src-project'))
+        project = Project(title=data.get('title'), template=src.template)
+        project.save()
+
+        clone_project(src, project)
 
         return HttpResponse('/project/%d'%project.id)
 
