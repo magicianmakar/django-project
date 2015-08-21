@@ -4,40 +4,44 @@
 
 {% block title %}SEO Audit - {{project.title}}{% endblock %}
 
-{% block main-container %}
 
-<!-- <div class="row">
-    <div class="col-md-offset-4 col-md-6">
-        <h2>{{project.title}}</h2>
-    </div>
-</div> -->
-<div class="row" xstyle="margin-top: 25px;">
-    <div class="col-md-offset-1 col-md-2">
-        <div class="list-group">
-            <a href="/project/{{project.id}}" class="list-group-item {% if clist == 'settings' %}active{% endif %}">Settings</a>
-            <a href="/project/scorecard/{{project.id}}" class="list-group-item {% if clist == 'scorecard' %}active{% endif %}">Scorecard</a>
+<div style="display:none">
+    {% block project-nav %}
+   <li {% if page == 'projects' or page == '' or not page %}class="active"{% endif %}>
+    <a href="/">
+        <i class="fa fa-edit"></i>
+        <span class="nav-label">{{project.title}}</span>
+        <span class="fa arrow"></span>
+    </a>
+        <ul class="nav nav-second-level collapse in" style="">
+            <li class="{% if clist == 'settings' %}active{% endif %}"><a href="/project/{{project.id}}" >Settings</a></li>
+            <li class="{% if clist == 'scorecard' %}active{% endif %}"><a href="/project/scorecard/{{project.id}}" >Scorecard</a></li>
             {% for item in project.categories %}
-            <a href="/category/{{item.id}}" class="list-group-item {% if clist == item.id %}active{% endif %}">{{item.title}} Category</a>
-            {% endfor %}
-            <a href="/project/templates/{{project.id}}" class="list-group-item {% if clist == 'templates' %}active{% endif %}">Templates</a>
-            <a href="/project/preview/{{project.id}}" class="list-group-item {% if clist == 'preview' %}active{% endif %}">Preview</a>
-            <a href="/project/pdf/{{project.id}}" class="list-group-item {% if clist == 'pdf' %}active{% endif %}">Generate PDF</a>
-        </div>
-    </div>
-
-    <div class="col-md-7">
-        {% if breadcrumbs %}
-        <ol class="breadcrumb">
-            {% for item in breadcrumbs %}
-                {% if item.url %}
-                <li><a href="{{item.url}}">{{item.title}}</a></li>
-                {% else %}
-                <li class="active">{{item}}</li>
+            <li class="{% if clist == item.id %}active{% endif %}">
+                <a href="/category/{{item.id}}">
+                    {{item.title}} Category
+                    <span class="fa arrow"></span>
+                </a>
+                {% if clist == item.id %}
+                <ul class="nav nav-third-level collapse in" style="">
+                    {% for item in category.topics %}
+                    <li class="{% if tlist == item.id %}active{% endif %}"><a href="/topic/{{item.id}}" >{{item.title}}</a></li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
+            </li>
             {% endfor %}
-        </ol>
-        {% endif %}
+            <li class="{% if clist == 'templates' %}active{% endif %}"><a href="/project/templates/{{project.id}}" >Templates</a></li>
+            <li class="{% if clist == 'preview' %}active{% endif %}"><a href="/project/preview/{{project.id}}" >Preview</a></li>
+            <li class="{% if clist == 'pdf' %}active{% endif %}"><a href="/project/pdf/{{project.id}}" >Generate PDF</a></li>
+        </ul>
+    </li>
+    {% endblock %}
+</div>
 
+{% block main-container %}
+<div class="row">
+    <div class="col-md-offset-2 col-md-8">
         {% block project-main %}{% endblock %}
     </div>
 </div>

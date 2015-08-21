@@ -1,42 +1,62 @@
 {% extends "project/base.html" %}
 
 {% block project-main %}
-
-    <div class="row">
-        <div class="form-group col-md-4">
-            <label>Title</label>
-        <input id="id_topic-title" class="form-control input" name="topic-title" type="text" placeholder="topic Title"  maxlength="254"  value="{{topic.title}}">
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Topic Settings</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                <a class="close-link"><i class="fa fa-times"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="row">
+                <div class="form-group col-md-4">
+                    <label>Title</label>
+                <input id="id_topic-title" class="form-control input" name="topic-title" type="text" placeholder="topic Title"  maxlength="254"  value="{{topic.title}}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label>Score</label>
+                <input id="id_topic-score" class="form-control input" name="topic-score" type="text" placeholder="Topic Score"  maxlength="254"  value="{{topic.score}}">
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <div class="form-group col-md-3">
-            <label>Score</label>
-        <input id="id_topic-score" class="form-control input" name="topic-score" type="text" placeholder="Topic Score"  maxlength="254"  value="{{topic.score}}">
-        </div>
-    </div>
 
-    <div id="tabs" style="margin-bottom: 25px;">
-        <ul>
-            <li><a href="#tabs-1">Analysis</a></li>
-            <li><a href="#tabs-2">Recommendations</a></li>
-            <li><a href="#tabs-3">Guidelines</a></li>
-            <li><a href="#tabs-4">Action description</a></li>
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#tabs-1" data-toggle="tab">Analysis</a></li>
+            <li><a href="#tabs-2" data-toggle="tab">Recommendations</a></li>
+            <li><a href="#tabs-3" data-toggle="tab">Guidelines</a></li>
+            <li><a href="#tabs-4" data-toggle="tab">Action description</a></li>
         </ul>
 
-        <div id="tabs-1">
-            <textarea name="analysis" class="form-control">{{topic.analysis}}</textarea>
-        </div>
+        <div class="tab-content">
+            <div id="tabs-1" class="tab-pane active">
+                <div class="panel-body">
+                    <textarea name="analysis" class="form-control">{{topic.analysis}}</textarea>
+                </div>
+            </div>
 
-        <div id="tabs-2">
-            <textarea name="recommendations" class="form-control">{{topic.recommendations}}</textarea>
-        </div>
+            <div id="tabs-2" class="tab-pane">
+                <div class="panel-body">
+                    <textarea name="recommendations" class="form-control">{{topic.recommendations}}</textarea>
+                </div>
+            </div>
 
-        <div id="tabs-3">
-            <textarea name="guidelines" class="form-control">{{topic.guidelines}}</textarea>
-        </div>
+            <div id="tabs-3" class="tab-pane">
+                <div class="panel-body">
+                    <textarea name="guidelines" class="form-control">{{topic.guidelines}}</textarea>
+                </div>
+            </div>
 
-        <div id="tabs-4">
-            <textarea name="action_description" class="form-control">{{topic.action_description}}</textarea>
+            <div id="tabs-4" class="tab-pane">
+                <div class="panel-body">
+                    <textarea name="action_description" class="form-control">{{topic.action_description}}</textarea>
+                </div>
+            </div>
         </div>
     </div>
 

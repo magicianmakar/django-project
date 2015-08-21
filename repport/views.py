@@ -157,6 +157,7 @@ def topic_view(request, topic_id):
         'category': category,
         'topic': topic,
         'clist': category.id,
+        'tlist': topic.id,
         'breadcrumbs': [
             {'title': category.project.title, 'url': '/project/%d'%category.project.id},
             {'title': '%s Category '%category.title, 'url': '/category/%d'%category.id},

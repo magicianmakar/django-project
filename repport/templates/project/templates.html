@@ -8,19 +8,33 @@
 </style>
 {% endblock %}
 
+{% block page-title %}Edit Project's Template{% endblock %}
+
 {% block project-main %}
 
-    <div id="tabs" style="margin-bottom: 25px;">
-        <ul>
-            <li><a href="#tabs-1">Report Template</a></li>
-            <li><a href="#tabs-2">Report Style</a></li>
-        </ul>
-
-        <div id="tabs-1">
-            <textarea style="font-family: monospace" name="report_template"  class="form-control"  rows="20">{{template.report_template}}</textarea>
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Report Template</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                <a class="close-link"><i class="fa fa-times"></i></a>
+            </div>
         </div>
-        <div id="tabs-2">
-            <textarea style="font-family: monospace" name="report_style" class="form-control" rows="20">{{template.report_style}}</textarea>
+        <div class="ibox-content">
+            <textarea id="report_template" style="font-family: monospace" name="report_template"  class="form-control"  rows="20">{{template.report_template}}</textarea>
+        </div>
+    </div>
+
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Report Style</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                <a class="close-link"><i class="fa fa-times"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <textarea id="report_style" style="font-family: monospace" name="report_style" class="form-control" rows="20">{{template.report_style}}</textarea>
         </div>
     </div>
 
@@ -35,13 +49,12 @@
 {% block extrajs %}
     <script type="text/javascript">
         $(function() {
-            $( "#tabs" ).tabs();
 
             $('#btn-save').click(function() {
                 var postData = {
                     template:  {{template.id}},
-                    report_style: $('textarea[name="report_style"]').val(),
-                    report_template: $('textarea[name="report_template"]').val(),
+                    report_style: editor_report_style.getValue(),
+                    report_template: editor_report_template.getValue(),
                 };
 
                 for (var i in CKEDITOR.instances) {
@@ -49,6 +62,24 @@
 
                 ajaxSave($(this), 'template', postData);
             });
+        });
+
+         $(document).ready(function(){
+
+             editor_report_template = CodeMirror.fromTextArea(document.getElementById("report_template"), {
+                 lineNumbers: true,
+                 matchBrackets: true,
+                 styleActiveLine: true,
+                 // mode: 'html'
+             });
+
+             editor_report_style = CodeMirror.fromTextArea(document.getElementById("report_style"), {
+                 lineNumbers: true,
+                 matchBrackets: true,
+                 styleActiveLine: true,
+                 // mode: 'css'
+             });
+
         });
     </script>
 {% endblock %}

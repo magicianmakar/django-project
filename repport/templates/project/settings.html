@@ -1,31 +1,50 @@
 {% extends "project/base.html" %}
 
+{% block page-title %}Project Settings{% endblock %}
+
 {% block project-main %}
 
-    <h3>Project Settings</h3>
-    <div class="row">
-        <div class="form-group col-md-8">
-        <input id="id_project-title" class="form-control input" name="project-title" type="text" placeholder="Project Title" maxlength="254"  value="{{project.title}}">
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Project Settings<small></small></h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                <a class="close-link"><i class="fa fa-times"></i></a>
+            </div>
         </div>
+        <div class="ibox-content">
+            <div class="row">
+                <div class="form-group col-md-8">
+                    <label for="project-title">Project Title</label>
+                    <input id="id_project-title" class="form-control input" name="project-title" type="text" placeholder="Project Title" maxlength="254"  value="{{project.title}}">
+                </div>
 
-        <div class="form-group col-md-10">
-        <input id="id_project-website" class="form-control input" name="project-website" type="text" placeholder="Company Website (used in the repport)" maxlength="254"  value="{{project.website}}">
-        </div>
+                <div class="form-group col-md-10">
+                    <label for="project-website">Company Website (without http or www)</label>
+                    <input id="id_project-website" class="form-control input" name="project-website" type="text" placeholder="Company Website (used in the repport)" maxlength="254"  value="{{project.website}}">
+                </div>
 
-        <div class="form-group col-md-10">
-        <input id="id_project-url" class="form-control input" name="project-url" type="text" placeholder="Company Url" maxlength="254"  value="{{project.url}}">
-        </div>        <div class="form-group col-md-10">
-        <input id="id_project-logo" class="form-control input" name="project-logo" type="text" placeholder="Company Logo" maxlength="254"  value="{{project.logo}}">
+                <div class="form-group col-md-10">
+                    <label for="project-url">Company Url</label>
+                    <input id="id_project-url" class="form-control input" name="project-url" type="text" placeholder="Company Url" maxlength="254"  value="{{project.url}}">
+                </div>
+                <div class="form-group col-md-10">
+                    <label for="project-logo">Company Logo</label>
+                    <input id="id_project-logo" class="form-control input" name="project-logo" type="text" placeholder="Company Logo" maxlength="254"  value="{{project.logo}}">
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="tabs" style="margin-bottom: 25px;">
-        <ul>
-            <li><a href="#tabs-1">Categories</a></li>
-            <li><a href="#tabs-2">Conclusion</a></li>
-        </ul>
-
-        <div id="tabs-1">
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Project Categories<small></small></h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                <a class="close-link"><i class="fa fa-times"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
             <ul class="list-group">
                 {% for item in project.categories %}
                 <li class="list-group-item">
@@ -37,13 +56,20 @@
                 {% endfor %}
             </ul>
         </div>
+    </div>
 
-
-        <div id="tabs-2">
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Conclusion<small></small></h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                <a class="close-link"><i class="fa fa-times"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
             <textarea name="conclusion" class="form-control">{{project.conclusion}}</textarea>
         </div>
     </div>
-
 
     <div class="row" style="margin: 10px -40px 10px 0px;">
         <div class="col-md-2 col-md-offset-10">
