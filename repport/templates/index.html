@@ -32,27 +32,38 @@
     </div>
 
     <div class="col-md-offset-3 col-md-6">
-        <button id="add-new-project" class="btn btn-success pull-right"><span class="glyphicon glyphicon-plus" title="Add a new project" aria-hidden="true"></span> New Project</button>
+        <button xhref="#modal-form" id="add-new-project" class="btn btn-success pull-right" data-toggle="modal"><span class="glyphicon glyphicon-plus" title="Add a new project" aria-hidden="true"></span> New Project</button>
     </div>
 </div>
 
-<div id="new-project" style="display:none">
-    <form id="new-project-form">
-    <div>
-        <label>Project Title:</label>
-        <input type="text" name="title">
+ <div id="modal-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12 ">
+                        <h3 class="m-t-none m-b">New Project</h3>
+                        <form role="form" id="new-project-form">
+                            <div class="form-group"><label>Project Title</label> <input name="title" type="text" placeholder="Enter Project Title" class="form-control"></div>
+                            <div class="form-group" id="tpl-select">
+                                <label>Clone Template from</label>
+                                <select name="template" class="form-control m-b">
+                                    {% for item in templates %}
+                                    <option value="{{item.id}}">{{item.title}} | {{item.project_set.first}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <button class="project-add btn btn-sm btn-primary pull-right m-t-n-xs"><strong>Add</strong></button>
+                                <button class="project-clone btn btn-sm btn-primary pull-right m-t-n-xs"><strong>Clone</strong></button>
+                            </div>
+                            <input type="hidden" id="src-project" name="src-project"  value="">
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
     </div>
-
-    <div  id="tpl-select">
-        <label>Clone Template from:</label>
-        <select name="template">
-            {% for item in templates %}
-            <option value="{{item.id}}">{{item.title}} | {{item.project_set.first}}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <input type="hidden" id="src-project" name="src-project"  value="">
-    </form>
 </div>
 
 {% endblock %}
@@ -61,68 +72,60 @@
 <script type="text/javascript">
 $(function () {
     $('#add-new-project').click(function() {
+        $('#modal-form').modal();
         $('#tpl-select').show();
-        $('#new-project').dialog({
-            'title': 'New Project',
-            buttons: [
-                {
-                    text: "Add",
-                    click: function() {
-                        $.ajax({
-                            context: this,
-                            type: 'POST',
-                            url: '/api/add-project',
-                            data: $('#new-project-form').serialize(),
-                            success: function (data) {
-                                if(data.startsWith('/project/')) {
-                                    window.location.href = data;
-                                } else {
-                                    alert('Inknow Error');
-                                }
-                            },
-                            error: function (data) {
-                                alert('Unknown Error, please try again.')
-                            }
-                        });
 
-                        $( this ).dialog( "close" );
-                    }
-                }
-            ]
-        });
+        $('#modal-form .project-add').show();
+        $('#modal-form .project-clone').hide();
+
     });
 
     $('.clone-project').click(function() {
+        $('#modal-form .project-add').hide();
+        $('#modal-form .project-clone').show();
+
         $('#tpl-select').hide();
         $('#src-project').val($(this).attr('project-id'));
+        $('#modal-form').modal();
+    });
 
-        $('#new-project').dialog({
-            'title': 'Clone Project',
-            buttons: [
-                {
-                    text: "Clone",
-                    click: function() {
-                        $.ajax({
-                            context: this,
-                            type: 'POST',
-                            url: '/api/clone-project',
-                            data: $('#new-project-form').serialize(),
-                            success: function (data) {
-                                if(data.startsWith('/project/')) {
-                                    window.location.href = data;
-                                } else {
-                                    alert('Inknow Error');
-                                }
-                            },
-                            error: function (data) {
-                                alert('Unknown Error, please try again.')
-                            }
-                        });
-
-                        $( this ).dialog( "close" );
-                    }
+    $('#modal-form .project-add').click(function(e) {
+        e.preventDefault();
+        $.ajax({
+            context: this,
+            type: 'POST',
+            url: '/api/add-project',
+            data: $('#new-project-form').serialize(),
+            success: function (data) {
+                if(data.startsWith('/project/')) {
+                    window.location.href = data;
+                } else {
+                    alert('Inknow Error');
                 }
-            ]
+            },
+            error: function (data) {
+                alert('Unknown Error, please try again.')
+            }
+        });
+    });
+
+    $('#modal-form .project-clone').click(function() {
+        e.preventDefault();
+        $.ajax({
+            context: this,
+            type: 'POST',
+            url: '/api/clone-project',
+            data: $('#new-project-form').serialize(),
+            success: function (data) {
+                if(data.startsWith('/project/')) {
+                    window.location.href = data;
+                } else {
+                    alert('Inknow Error');
+                }
+            },
+            error: function (data) {
+                alert('Unknown Error, please try again.')
+            }
         });
     });
 });
