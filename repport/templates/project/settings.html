@@ -50,7 +50,7 @@
                 <li class="list-group-item">
                     <a href="/category/{{item.id}}">{{item.title}}</a>
                     <span class="pull-right">
-                        <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="#" project-id="{{item.id}}"> <span class="glyphicon glyphicon-remove" title="Delete Category" aria-hidden="true"></span> Delete</a>
+                        <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/categorie/{{item.id}}/delete/" project-id="{{item.id}}"> Delete</a>
                     </span>
                 </li>
                 {% endfor %}
@@ -72,8 +72,12 @@
     </div>
 
     <div class="row" style="margin: 10px -40px 10px 0px;">
-        <div class="col-md-2 col-md-offset-10">
-            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving...">Save</button>
+        <div class="col-md-2">
+            <a href="/admin/repport/project/{{project.id}}/delete/?next=/" class="btn btn-lg btn-danger" ><i class="fa fa-times"></i> Delete Project</a>
+        </div>
+
+        <div class="col-md-2 col-md-offset-8">
+            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving..."><i class="fa fa-save"></i> Save</button>
         </div>
     </div>
 

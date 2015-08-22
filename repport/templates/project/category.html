@@ -60,7 +60,7 @@
                             <input type="checkbox" topic="{{item.id}}" {% if item.action_item %}checked="checked"{% endif %} />
                         </td>
                         <td style="text-align: center">
-                            <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="#" project-id="{{item.id}}">  Delete</a>
+                            <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/topic/{{item.id}}/delete/" project-id="{{item.id}}">  Delete</a>
                         </td>
                     </tr>
                         {% endfor %}
@@ -105,8 +105,11 @@
     </div>
 
     <div class="row" style="margin: 10px -40px 10px 0px;">
-        <div class="col-md-2 col-md-offset-10">
-            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving...">Save</button>
+        <div class="col-md-2">
+            <a href="/admin/repport/categorie/{{category.id}}/delete/" class="btn btn-lg btn-danger" ><i class="fa fa-times"></i> Delete Category</a>
+        </div>
+        <div class="col-md-2 col-md-offset-8">
+            <button id="btn-save" class="btn btn-lg btn-primary" data-loading-text="Saving..."><i class="fa fa-save"></i> Save</button>
         </div>
     </div>
 
