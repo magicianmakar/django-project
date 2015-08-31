@@ -256,8 +256,8 @@ def api(request, target):
 
         project = get_object_or_404(Project, pk=data.get('project'))
         metric = Metric(name=data.get('metric-name'),
-            value=data.get('metric-description'),
-            description=data.get('metric-value'),
+            description=data.get('metric-description'),
+            value=data.get('metric-value'),
             project=project)
         metric.save()
 
