@@ -24,6 +24,7 @@
               <thead>
                 <tr>
                   <th>Name</th>
+                  <th>Template Code</th>
                   <th>Value</th>
                   <th style="text-align: center"></th>
                 </tr>
@@ -32,6 +33,7 @@
                 {% for item in metrics %}
                 <tr>
                     <td><b>{{item.name}}</b><br/><i>{{item.description}}</i></td>
+                    <td>{{item.code}}</td>
                     <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
                     <td style="text-align: center">
                         <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/metric/{{item.id}}/delete/" project-id="{{item.id}}">  Delete</a>

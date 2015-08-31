@@ -120,3 +120,6 @@ class Metric(models.Model):
 
     def __str__(self):
         return self.name
+
+    def code(self):
+        return '{{metrics.%s}}'%self.name
