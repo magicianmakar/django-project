@@ -243,6 +243,26 @@ def api(request, target):
 
         return HttpResponse('/project/%d'%project.id)
 
+    if target == 'metrics-edit':
+        template = get_object_or_404(Metric, pk=data.get('metric'))
+        template.value = data.get('value')
+        template.save()
+        return HttpResponse('ok')
+
+    if target == 'metrics-add':
+        import re
+        if not re.match('^[a-z][a-z0-9_-]+$', data.get('metric-name')):
+            return HttpResponse('Error: Metric name should contains only litters and numbers and _ and should start with a letter.')
+
+        project = get_object_or_404(Project, pk=data.get('project'))
+        metric = Metric(name=data.get('metric-name'),
+            value=data.get('metric-description'),
+            description=data.get('metric-value'),
+            project=project)
+        metric.save()
+
+        return redirect('/project/metrics/%d'%project.id)
+
 
     return HttpResponse('error')
 
@@ -265,6 +285,7 @@ def preview_project(request, project_id, for_pdf=False):
     ctx = {
         'project': project,
         'template': tpl,
+        'metrics': project.get_metrics(),
         'pdf': for_pdf,
         'clist': 'preview',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Preview']
@@ -328,6 +349,16 @@ def project_templates(request, project_id):
     }
 
     return render(request, "project/templates.html", ctx)
+
+def project_metrics(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    metrics = project.metric_set.all()
+    ctx = {
+        'project': project,
+        'metrics': metrics
+    }
+
+    return render(request, "project/metrics.html", ctx)
 
 @login_required
 def logout(request):

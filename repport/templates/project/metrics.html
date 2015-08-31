@@ -1,0 +1,101 @@
+{% extends "project/base.html" %}
+
+{% block extracss %}
+<style type="text/css">
+    textarea, .ui-widget textarea, {
+        font-family: monospace;
+    }
+</style>
+{% endblock %}
+
+{% block page-title %}Project Metrics{% endblock %}
+
+{% block project-main %}
+
+    <div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Metrics</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <table id="metrics-table" class="table table-condensed table-hover wxell">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                  <th style="text-align: center"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in metrics %}
+                <tr>
+                    <td><b>{{item.name}}</b><br/><i>{{item.description}}</i></td>
+                    <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
+                    <td style="text-align: center">
+                        <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/metric/{{item.id}}/delete/" project-id="{{item.id}}">  Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>New Metric</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+        </div>
+    </div>
+    <div class="ibox-content">
+            <form method="POST" action="/api/metrics-add">
+                <div class="row">
+                    <div class="form-group col-md-8">
+                        <label for="metric-name">Name</label>
+                        <input id="id_metric-name" class="form-control input" name="metric-name" type="text" value="">
+                    </div>
+
+                    <div class="form-group col-md-8">
+                        <label for="metric-description">Description</label>
+                        <input id="id_metric-description" class="form-control input" name="metric-description" type="text" value="">
+                    </div>
+
+                    <div class="form-group col-md-8">
+                        <label for="metric-value">Value</label>
+                        <input id="id_metric-value" class="form-control input" name="metric-value" type="text"  value="">
+                        <input  name="project" type="hidden" value="{{project.id}}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <button id="btn-save" class="btn btn-lg btn-primary" type="submit"><i class="fa fa-plus"></i> Add</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        $(function() {
+
+            $('#metrics-table input[type="text"]').change(function () {
+                $.ajax({
+                    url: '/api/metrics-edit',
+                    type: 'POST',
+                    data: {value: $(this).val(), metric: $(this).attr('metric')},
+                    success: function (data) {
+                        console.log(data);
+                    }
+                });
+            });
+        });
+
+
+    </script>
+{% endblock %}

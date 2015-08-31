@@ -31,6 +31,7 @@
                 {% endif %}
             </li>
             {% endfor %}
+            <li class="{% if clist == 'metrics' %}active{% endif %}"><a href="/project/metrics/{{project.id}}" >Metrics</a></li>
             <li class="{% if clist == 'templates' %}active{% endif %}"><a href="/project/templates/{{project.id}}" >Templates</a></li>
             <li class="{% if clist == 'preview' %}active{% endif %}"><a href="/project/preview/{{project.id}}" >Preview</a></li>
             <li class="{% if clist == 'pdf' %}active{% endif %}"><a href="/project/pdf/{{project.id}}" >Generate PDF</a></li>

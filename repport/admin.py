@@ -71,8 +71,22 @@ class TemplateAdmin(admin.ModelAdmin):
             'fields': ('report_template', 'report_style')
         }),
     )
+class MetricAdmin(admin.ModelAdmin):
+    list_display = ('name', 'value', 'description')
+    # list_filter = ('user',)
+    # date_hierarchy = 'created_at'
+    # ordering = ('created_at', 'updated_at')
+    search_fields = ('name', 'value', 'description')
+
+    fieldsets = (
+        ('Info', {
+            #'classes': ['collapse',],
+            'fields': ('name', 'value', 'description', 'project')
+        }),
+    )
 
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Categorie, CategorieAdmin)
 admin.site.register(Topic, TopicAdmin)
 admin.site.register(ProjectTemplate, TemplateAdmin)
+admin.site.register(Metric, MetricAdmin)

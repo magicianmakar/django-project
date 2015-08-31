@@ -32,6 +32,14 @@ class Project(models.Model):
     def categories(self):
         return self.categorie_set.all().all().order_by('id')
 
+    def get_metrics(self):
+        metrics = self.metric_set.all()
+        data = {}
+        for i in metrics:
+            data[i.name] = i.value
+
+        return data
+
 class Categorie(models.Model):
     title = models.CharField(max_length=512)
     content_analysis = models.TextField(blank=True, default='')
@@ -102,3 +110,13 @@ class ProjectTemplate(models.Model):
 
     def __str__(self):
         return '%s | %s' % (self.title, self.project_set.first())
+
+class Metric(models.Model):
+    name = models.CharField(max_length=512)
+    value = models.CharField(max_length=512, blank=True, default='')
+    description = models.CharField(max_length=512, blank=True, default='')
+
+    project = models.ForeignKey(Project)
+
+    def __str__(self):
+        return self.name
