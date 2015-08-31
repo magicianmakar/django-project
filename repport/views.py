@@ -355,7 +355,10 @@ def project_metrics(request, project_id):
     metrics = project.metric_set.all()
     ctx = {
         'project': project,
-        'metrics': metrics
+        'metrics': metrics,
+        'clist': 'metrics',
+        'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Metrics']
+
     }
 
     return render(request, "project/metrics.html", ctx)
