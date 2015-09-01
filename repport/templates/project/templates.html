@@ -46,7 +46,18 @@
 
 {% endblock %}
 
+{% block extracss %}
+    <link href="/static/css/plugins/codemirror/codemirror.css" rel="stylesheet">
+    <link href="/static/css/plugins/codemirror/ambiance.css" rel="stylesheet">
+{% endblock %}
+
 {% block extrajs %}
+    <!-- CodeMirror -->
+    <script src="/static/js/plugins/codemirror/codemirror.js"></script>
+    <script src="/static/js/plugins/codemirror/mode/javascript/javascript.js"></script>
+    <script src="/static/js/plugins/codemirror/mode/xml/xml.js"></script>
+    <script src="/static/js/plugins/codemirror/mode/css/css.js"></script>
+
     <script type="text/javascript">
         $(function() {
 
@@ -70,14 +81,15 @@
                  lineNumbers: true,
                  matchBrackets: true,
                  styleActiveLine: true,
-                 // mode: 'html'
+                 mode: 'xml',
+                 htmlMode: true,
              });
 
              editor_report_style = CodeMirror.fromTextArea(document.getElementById("report_style"), {
                  lineNumbers: true,
                  matchBrackets: true,
                  styleActiveLine: true,
-                 // mode: 'css'
+                 mode: 'css'
              });
 
         });
