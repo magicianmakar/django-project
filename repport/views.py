@@ -354,7 +354,7 @@ def project_metrics(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     if request.GET.get('update'):
-        project.update_api_metrics()
+        project.update_api_metrics(request.GET.get('only'))
 
     metrics = project.metric_set.all()
     metrics_api = []

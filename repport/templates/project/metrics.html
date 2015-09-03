@@ -68,7 +68,7 @@
                     <td>{{item.code}}</td>
                     <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
                     <td style="text-align: center">
-                        <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/metric/{{item.id}}/delete/" project-id="{{item.id}}">  Delete</a>
+                        <a  style="color:#fff" class="del-project btn btn-xs btn-primary" href="?update=1&only={{item.name}}" project-id="{{item.id}}">  Refresh</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -76,7 +76,7 @@
             </table>
             <div class="row">
                 <div class="col-md-2 col-md-offset-9">
-                    <a href="?update=1" class="btn btn-lg btn-primary" type="submit"><i class="fa fa-refresh"></i> Refresh</a>
+                    <a href="?update=1" class="btn btn-lg btn-primary" type="submit"><i class="fa fa-refresh"></i> Refresh All</a>
                 </div>
             </div>
 

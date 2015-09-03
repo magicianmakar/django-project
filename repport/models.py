@@ -63,33 +63,36 @@ class Project(models.Model):
         if mtype == 'user':
             return user_metrics
 
-    def update_api_metrics(self):
+    def update_api_metrics(self, only=None):
         l = lsapi('mozscape-5a9d3a64d9', 'e4d61017b456062ddbf8b995b818a3ba')
         metrics = l.urlMetrics(self.url)
 
-        try:
-            m = self.metric_set.get(name='api_mozrank_url')
-        except:
-            m = Metric(name='api_mozrank_url', description='MozRank: URL', project=self)
+        if not only or only == 'api_mozrank_url':
+            try:
+                m = self.metric_set.get(name='api_mozrank_url')
+            except:
+                m = Metric(name='api_mozrank_url', description='MozRank: URL', project=self)
 
-        m.value = metrics['umrp']
-        m.save()
+            m.value = metrics['umrp']
+            m.save()
 
-        try:
-            m = self.metric_set.get(name='api_domain_authority')
-        except:
-            m = Metric(name='api_domain_authority', description='Domain Authority', project=self)
+        if not only or only == 'api_domain_authority':
+            try:
+                m = self.metric_set.get(name='api_domain_authority')
+            except:
+                m = Metric(name='api_domain_authority', description='Domain Authority', project=self)
 
-        m.value = metrics['pda']
-        m.save()
+            m.value = metrics['pda']
+            m.save()
 
-        try:
-            m = self.metric_set.get(name='api_external_equity_links')
-        except:
-            m = Metric(name='api_external_equity_links', description='External Equity Links', project=self)
+        if not only or only == 'api_external_equity_links':
+            try:
+                m = self.metric_set.get(name='api_external_equity_links')
+            except:
+                m = Metric(name='api_external_equity_links', description='External Equity Links', project=self)
 
-        m.value = metrics['ueid']
-        m.save()
+            m.value = metrics['ueid']
+            m.save()
 
 
 class Categorie(models.Model):
