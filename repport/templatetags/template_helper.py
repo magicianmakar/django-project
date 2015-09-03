@@ -9,7 +9,7 @@ def render_project(context, tpl, project):
     ctx = Context({
         'project': project,
         'template': project.template,
-        'metrics': project.get_metrics()
+        'metrics': project.get_metrics('all'),
     })
 
     return template.render(ctx)
@@ -21,7 +21,8 @@ def render_category(context, tpl, category):
         'project': category.project,
         'template': category.project.template,
         'category': category,
-        'metrics': category.project.get_metrics()
+        'metrics': category.project.get_metrics('all'),
+
     })
 
     return template.render(ctx)

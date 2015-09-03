@@ -285,7 +285,7 @@ def preview_project(request, project_id, for_pdf=False):
     ctx = {
         'project': project,
         'template': tpl,
-        'metrics': project.get_metrics(),
+        'metrics': project.get_metrics('all'),
         'pdf': for_pdf,
         'clist': 'preview',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Preview']
@@ -352,10 +352,34 @@ def project_templates(request, project_id):
 
 def project_metrics(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if request.GET.get('update'):
+        project.update_api_metrics()
+
     metrics = project.metric_set.all()
+    metrics_api = []
+    metrics_user = []
+    for i in metrics:
+        if i.name.startswith('api_'):
+            metrics_api.append(i)
+        else:
+            metrics_user.append(i)
+
+    if len(metrics_api) == 0:
+        data =  project.get_metrics('api')
+        for i in data:
+            metrics_api.append({
+                'name': i,
+                'value': data[i]
+            })
+
+    metrics = project.metric_set.all()
+
     ctx = {
         'project': project,
         'metrics': metrics,
+        'metrics_api': metrics_api,
+        'metrics_user': metrics_user,
         'clist': 'metrics',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Metrics']
 

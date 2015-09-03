@@ -14,7 +14,7 @@
 
     <div class="ibox float-e-margins">
     <div class="ibox-title">
-        <h5>Metrics</h5>
+        <h5>User Metrics</h5>
         <div class="ibox-tools">
             <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
         </div>
@@ -30,7 +30,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for item in metrics %}
+                {% for item in metrics_user %}
                 <tr>
                     <td><b>{{item.name}}</b><br/><i>{{item.description}}</i></td>
                     <td>{{item.code}}</td>
@@ -44,10 +44,48 @@
             </table>
         </div>
     </div>
+    <div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>API Metrics</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <table id="metrics-table" class="table table-condensed table-hover wxell">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Template Code</th>
+                  <th>Value</th>
+                  <th style="text-align: center"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in metrics_api %}
+                <tr>
+                    <td><b>{{item.name}}</b><br/><i>{{item.description}}</i></td>
+                    <td>{{item.code}}</td>
+                    <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
+                    <td style="text-align: center">
+                        <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/metric/{{item.id}}/delete/" project-id="{{item.id}}">  Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="row">
+                <div class="col-md-2 col-md-offset-9">
+                    <a href="?update=1" class="btn btn-lg btn-primary" type="submit"><i class="fa fa-refresh"></i> Refresh</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <div class="ibox float-e-margins">
     <div class="ibox-title">
-        <h5>New Metric</h5>
+        <h5>New User Metric</h5>
         <div class="ibox-tools">
             <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
         </div>

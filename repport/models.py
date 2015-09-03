@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.template import Context, Template
 
+from app.lsapi import lsapi
+
 BOOL_CHOICES = (
     (1, 'Yes'),
     (0, 'No'),
@@ -32,13 +34,63 @@ class Project(models.Model):
     def categories(self):
         return self.categorie_set.all().all().order_by('id')
 
-    def get_metrics(self):
+    def get_metrics(self, mtype='all'):
         metrics = self.metric_set.all()
-        data = {}
-        for i in metrics:
-            data[i.name] = i.value
+        api_metrics = {
+            'api_mozrank_url': 'N/A',
+            'api_domain_authority': 'N/A',
+            'api_external_equity_links': 'N/A',
+        }
 
-        return data
+        user_metrics = {}
+        for i in metrics:
+            if i.name.startswith('api_'):
+                api_metrics[i.name] = i.value
+            else:
+                user_metrics[i.name] = i.value
+
+        all_metrics = {}
+        all_metrics.update(user_metrics)
+        all_metrics.update(api_metrics)
+
+
+        if mtype == 'all':
+            return all_metrics
+
+        if mtype == 'api':
+            return api_metrics
+
+        if mtype == 'user':
+            return user_metrics
+
+    def update_api_metrics(self):
+        l = lsapi('mozscape-5a9d3a64d9', 'e4d61017b456062ddbf8b995b818a3ba')
+        metrics = l.urlMetrics(self.url)
+
+        try:
+            m = self.metric_set.get(name='api_mozrank_url')
+        except:
+            m = Metric(name='api_mozrank_url', description='MozRank: URL', project=self)
+
+        m.value = metrics['umrp']
+        m.save()
+
+        try:
+            m = self.metric_set.get(name='api_domain_authority')
+        except:
+            m = Metric(name='api_domain_authority', description='Domain Authority', project=self)
+
+        m.value = metrics['pda']
+        m.save()
+
+        try:
+            m = self.metric_set.get(name='api_external_equity_links')
+        except:
+            m = Metric(name='api_external_equity_links', description='External Equity Links', project=self)
+
+        m.value = metrics['ueid']
+        m.save()
+
 
 class Categorie(models.Model):
     title = models.CharField(max_length=512)
