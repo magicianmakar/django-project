@@ -126,11 +126,24 @@
 
             $('#metrics-table input[type="text"]').change(function () {
                 $.ajax({
+                    context: this,
                     url: '/api/metrics-edit',
                     type: 'POST',
                     data: {value: $(this).val(), metric: $(this).attr('metric')},
                     success: function (data) {
-                        console.log(data);
+                        if(data == 'ok') {
+                            // $(this).css('background-color', 'lightgreen');
+                            $(this).animate({backgroundColor: '#BFFFBA'});
+                            ta = $(this);
+                            setTimeout(function() {
+                                ta.animate({backgroundColor: '#FFFFFF'});
+                            }, 1000);
+                        } else {
+                            $(this).animate({backgroundColor: '#F9ACAC'});
+                        }
+                    },
+                    error: function (data) {
+                        $(this).animate({backgroundColor: '#F9ACAC'});
                     }
                 });
             });
