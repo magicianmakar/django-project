@@ -64,8 +64,9 @@ class Project(models.Model):
             return user_metrics
 
     def update_api_metrics(self, only=None):
-        l = lsapi('mozscape-5a9d3a64d9', 'e4d61017b456062ddbf8b995b818a3ba')
-        metrics = l.urlMetrics(self.url)
+        if not only or only in ['api_mozrank_url', 'api_domain_authority', 'api_external_equity_links']:
+            l = lsapi('mozscape-5a9d3a64d9', 'e4d61017b456062ddbf8b995b818a3ba')
+            metrics = l.urlMetrics(self.url)
 
         if not only or only == 'api_mozrank_url':
             try:
