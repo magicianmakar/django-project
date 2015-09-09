@@ -5,6 +5,8 @@ from django.template import Context, Template
 
 from app.lsapi import lsapi
 
+import urllib2
+
 BOOL_CHOICES = (
     (1, 'Yes'),
     (0, 'No'),
@@ -36,29 +38,38 @@ class Project(models.Model):
 
     def get_metrics(self, mtype='all'):
         metrics = self.metric_set.all()
-        api_metrics = {
+        moz_metrics = {
             'api_mozrank_url': 'N/A',
             'api_domain_authority': 'N/A',
             'api_external_equity_links': 'N/A',
         }
 
+        google_metrics = {
+            'api_google_speed_score': 'N/A',
+            'api_google_speed_report_url': 'N/A',
+        }
+
         user_metrics = {}
         for i in metrics:
             if i.name.startswith('api_'):
-                api_metrics[i.name] = i.value
+                moz_metrics[i.name] = i.value
             else:
                 user_metrics[i.name] = i.value
 
         all_metrics = {}
         all_metrics.update(user_metrics)
-        all_metrics.update(api_metrics)
+        all_metrics.update(moz_metrics)
+        all_metrics.update(google_metrics)
 
 
         if mtype == 'all':
             return all_metrics
 
-        if mtype == 'api':
-            return api_metrics
+        if mtype == 'moz':
+            return moz_metrics
+
+        if mtype == 'google':
+            return google_metrics
 
         if mtype == 'user':
             return user_metrics
@@ -93,6 +104,33 @@ class Project(models.Model):
                 m = Metric(name='api_external_equity_links', description='External Equity Links', project=self)
 
             m.value = metrics['ueid']
+            m.save()
+
+        if not only or only == 'api_google_speed_score':
+
+            response = requests.get(
+                url='https://www.googleapis.com/pagespeedonline/v1/runPagespeed',
+                params={
+                    'url': self.url,
+                    'key': 'AIzaSyAJc6rUtNc0J1GMePCjLSggnWiKJmTYxj4'
+                }
+            )
+
+            try:
+                m = self.metric_set.get(name='api_google_speed_score')
+            except:
+                m = Metric(name='api_google_speed_score', description='Google Speed Test Score', project=self)
+
+            m.value = response.json().get('score')
+            m.save()
+
+        if not only or only == 'api_google_speed_report_url':
+            try:
+                m = self.metric_set.get(name='api_google_speed_report_url')
+            except:
+                m = Metric(name='api_google_speed_report_url', description='Google Speed Test Report URL', project=self)
+
+            m.value = 'https://developers.google.com/speed/pagespeed/insights/?url=%s&tab=desktop'%urllib2.quote(self.url)
             m.save()
 
 

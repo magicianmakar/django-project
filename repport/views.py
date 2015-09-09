@@ -357,18 +357,29 @@ def project_metrics(request, project_id):
         project.update_api_metrics(request.GET.get('only'))
 
     metrics = project.metric_set.all()
-    metrics_api = []
+    metrics_moz = []
+    metrics_google = []
     metrics_user = []
     for i in metrics:
-        if i.name.startswith('api_'):
-            metrics_api.append(i)
+        if i.name.startswith('api_google_'):
+            metrics_google.append(i)
+        elif i.name.startswith('api_'):
+            metrics_moz.append(i)
         else:
             metrics_user.append(i)
 
-    if len(metrics_api) == 0:
-        data =  project.get_metrics('api')
+    if len(metrics_moz) == 0:
+        data =  project.get_metrics('moz')
         for i in data:
-            metrics_api.append({
+            metrics_moz.append({
+                'name': i,
+                'value': data[i]
+            })
+
+    if len(metrics_google) == 0:
+        data =  project.get_metrics('google')
+        for i in data:
+            metrics_google.append({
                 'name': i,
                 'value': data[i]
             })
@@ -378,7 +389,8 @@ def project_metrics(request, project_id):
     ctx = {
         'project': project,
         'metrics': metrics,
-        'metrics_api': metrics_api,
+        'metrics_moz': metrics_moz,
+        'metrics_google': metrics_google,
         'metrics_user': metrics_user,
         'clist': 'metrics',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Metrics']
