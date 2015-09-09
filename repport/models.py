@@ -5,7 +5,7 @@ from django.template import Context, Template
 
 from app.lsapi import lsapi
 
-import urllib2
+import requests, urllib2
 
 BOOL_CHOICES = (
     (1, 'Yes'),
@@ -49,6 +49,14 @@ class Project(models.Model):
             'api_google_speed_report_url': 'N/A',
         }
 
+        sharecount_metrics = {
+            'api_sharecount_facebook':  'N/A',
+            'api_sharecount_googleplus': 'N/A',
+            'api_sharecount_twitter':   'N/A',
+            'api_sharecount_linkedin':  'N/A',
+            'api_sharecount_pinterest': 'N/A',
+        }
+
         user_metrics = {}
         for i in metrics:
             if i.name.startswith('api_'):
@@ -60,6 +68,7 @@ class Project(models.Model):
         all_metrics.update(user_metrics)
         all_metrics.update(moz_metrics)
         all_metrics.update(google_metrics)
+        all_metrics.update(sharecount_metrics)
 
 
         if mtype == 'all':
@@ -70,6 +79,9 @@ class Project(models.Model):
 
         if mtype == 'google':
             return google_metrics
+
+        if mtype == 'sharecount':
+            return sharecount_metrics
 
         if mtype == 'user':
             return user_metrics
@@ -131,6 +143,61 @@ class Project(models.Model):
                 m = Metric(name='api_google_speed_report_url', description='Google Speed Test Report URL', project=self)
 
             m.value = 'https://developers.google.com/speed/pagespeed/insights/?url=%s&tab=desktop'%urllib2.quote(self.url)
+            m.save()
+
+        if not only or only in ['api_sharecount_facebook', 'api_sharecount_googleplus', 'api_sharecount_twitter',
+                                'api_sharecount_linkedin', 'api_sharecount_pinterest']:
+            response = requests.get(
+                url='https://free.sharedcount.com/url',
+                params={
+                    'url': self.url,
+                    'apikey': '4a7df4081d5ab4671e31872f1cffc71318f896a4'
+                }
+            ).json()
+
+        if not only or only == 'api_sharecount_facebook':
+            try:
+                m = self.metric_set.get(name='api_sharecount_facebook')
+            except:
+                m = Metric(name='api_sharecount_facebook', description='Facebook Share Count', project=self)
+
+            m.value = response.get('Facebook').get('share_count')
+            m.save()
+
+        if not only or only == 'api_sharecount_googleplus':
+            try:
+                m = self.metric_set.get(name='api_sharecount_googleplus')
+            except:
+                m = Metric(name='api_sharecount_googleplus', description='Google+ Share Count', project=self)
+
+            m.value = response.get('GooglePlusOne')
+            m.save()
+
+        if not only or only == 'api_sharecount_twitter':
+            try:
+                m = self.metric_set.get(name='api_sharecount_twitter')
+            except:
+                m = Metric(name='api_sharecount_twitter', description='Twitter Share Count', project=self)
+
+            m.value = response.get('Twitter')
+            m.save()
+
+        if not only or only == 'api_sharecount_linkedin':
+            try:
+                m = self.metric_set.get(name='api_sharecount_linkedin')
+            except:
+                m = Metric(name='api_sharecount_linkedin', description='LinkedIn Share Count', project=self)
+
+            m.value = response.get('LinkedIn')
+            m.save()
+
+        if not only or only == 'api_sharecount_pinterest':
+            try:
+                m = self.metric_set.get(name='api_sharecount_pinterest')
+            except:
+                m = Metric(name='api_sharecount_pinterest', description='Pinterest Share Count', project=self)
+
+            m.value = response.get('Pinterest')
             m.save()
 
 

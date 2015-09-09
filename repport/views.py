@@ -359,10 +359,14 @@ def project_metrics(request, project_id):
     metrics = project.metric_set.all()
     metrics_moz = []
     metrics_google = []
+    metrics_sharecount = []
     metrics_user = []
+
     for i in metrics:
         if i.name.startswith('api_google_'):
             metrics_google.append(i)
+        elif i.name.startswith('api_sharecount'):
+            metrics_sharecount.append(i)
         elif i.name.startswith('api_'):
             metrics_moz.append(i)
         else:
@@ -384,6 +388,14 @@ def project_metrics(request, project_id):
                 'value': data[i]
             })
 
+    if len(metrics_sharecount) == 0:
+        data =  project.get_metrics('sharecount')
+        for i in data:
+            metrics_sharecount.append({
+                'name': i,
+                'value': data[i]
+            })
+
     metrics = project.metric_set.all()
 
     ctx = {
@@ -391,6 +403,7 @@ def project_metrics(request, project_id):
         'metrics': metrics,
         'metrics_moz': metrics_moz,
         'metrics_google': metrics_google,
+        'metrics_sharecount': metrics_sharecount,
         'metrics_user': metrics_user,
         'clist': 'metrics',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Metrics']
