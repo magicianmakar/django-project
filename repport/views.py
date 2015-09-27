@@ -164,7 +164,7 @@ def topic_view(request, topic_id):
             topic.title]
     })
 
-# @login_required
+@login_required
 def api(request, target):
     data = request.POST
     if target == 'project':
@@ -324,6 +324,7 @@ def link_callback(uri, rel):
 
     return path
 
+@login_required
 def generate_pdf(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
@@ -355,11 +356,15 @@ def project_metrics(request, project_id):
 
     if request.GET.get('update'):
         project.update_api_metrics(request.GET.get('only'))
+    if request.GET.get('crawler'):
+        project.update_crawler_metrics(request.GET.get('crawler'))
+        return HttpResponse('ok')
 
     metrics = project.metric_set.all()
     metrics_moz = []
     metrics_google = []
     metrics_sharecount = []
+    crawler_metrics = []
     metrics_user = []
 
     for i in metrics:
@@ -367,6 +372,8 @@ def project_metrics(request, project_id):
             metrics_google.append(i)
         elif i.name.startswith('api_sharecount'):
             metrics_sharecount.append(i)
+        elif i.name.startswith('api_crawler'):
+            crawler_metrics.append(i)
         elif i.name.startswith('api_'):
             metrics_moz.append(i)
         else:
@@ -396,7 +403,25 @@ def project_metrics(request, project_id):
                 'value': data[i]
             })
 
+    if len(crawler_metrics) == 0:
+        data =  project.get_metrics('crawler')
+        for i in data:
+            crawler_metrics.append({
+                'name': i,
+                'value': data[i]
+            })
+
     metrics = project.metric_set.all()
+
+    r = requests.get('%s/get'%settings.CRAWLER_API_BASE, {
+        'url': project.url
+    })
+
+    crawler_metrics_status = 0
+    try:
+        crawler_metrics_status = r.json()['status']
+    except:
+        pass
 
     ctx = {
         'project': project,
@@ -404,7 +429,9 @@ def project_metrics(request, project_id):
         'metrics_moz': metrics_moz,
         'metrics_google': metrics_google,
         'metrics_sharecount': metrics_sharecount,
+        'crawler_metrics': crawler_metrics,
         'metrics_user': metrics_user,
+        'crawler_metrics_status': crawler_metrics_status,
         'clist': 'metrics',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Metrics']
 

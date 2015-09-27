@@ -36,7 +36,9 @@
                     <td>{{item.code}}</td>
                     <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
                     <td style="text-align: center">
+                        {% if user.is_authenticated %}
                         <a  style="color:#fff" class="del-project btn btn-xs btn-danger" href="/admin/repport/metric/{{item.id}}/delete/" project-id="{{item.id}}">  Delete</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -69,7 +71,9 @@
                     <td>{{item.code}}</td>
                     <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
                     <td style="text-align: center">
+                        {% if user.is_authenticated %}
                         <a  style="color:#fff" class="del-project btn btn-xs btn-primary" href="?update=1&only={{item.name}}" project-id="{{item.id}}">  Refresh</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -102,7 +106,9 @@
                     <td>{{item.code}}</td>
                     <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
                     <td style="text-align: center">
+                        {% if user.is_authenticated %}
                         <a  style="color:#fff" class="del-project btn btn-xs btn-primary" href="?update=1&only={{item.name}}" project-id="{{item.id}}">  Refresh</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -135,7 +141,9 @@
                     <td>{{item.code}}</td>
                     <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 150px; text-align: left;"></td>
                     <td style="text-align: center">
+                        {% if user.is_authenticated %}
                         <a  style="color:#fff" class="del-project btn btn-xs btn-primary" href="?update=1&only={{item.name}}" project-id="{{item.id}}">  Refresh</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -145,6 +153,59 @@
         </div>
     </div>
 
+    <div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Crawler Metrics</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <table id="metrics-table" class="table table-condensed table-hover wxell">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Template Code</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in crawler_metrics %}
+                <tr>
+                    <td><b>{{item.name}}</b><br/><i>{{item.description}}</i></td>
+                    <td>{{item.code}}</td>
+                    <td><input type="text" value="{{item.value}}" metric="{{item.id}}" class="form-control" style="width: 100px; text-align: left;"></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            {% if user.is_authenticated %}
+            <div class="row">
+                <div class="col-md-6">
+                    <p>
+                        {% if crawler_metrics_status == 1 %}
+                        <a id="crawl-btn" href="#" class="btn btn-lg btn-success" disabled="disabled">
+                            <i class=""></i> Crawler running...
+                        </a>
+                        {% elif crawler_metrics_status == 2 %}
+                        <a id="crawl-btn" href="?update=1&only=api_crawler" class="btn btn-lg btn-success" type="submit">
+                            <i class="fa fa-refresh"></i> Update from Crawler data
+                        </a>
+                        {% else %}
+                        <a id="crawl-btn" href="?update=1&only=api_crawler" class="btn btn-lg btn-success" type="submit">
+                            <i class="fa fa-code-fork"></i> Run Crawler
+                        </a>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+{% if user.is_authenticated %}
     <div class="row">
         <div class="col-md-6">
             <p><a href="?update=1" class="btn btn-lg btn-primary" type="submit"><i class="fa fa-refresh"></i> Refresh All API Metrics</a></p>
@@ -185,6 +246,7 @@
             </form>
         </div>
     </div>
+{% endif %}
 
 {% endblock %}
 

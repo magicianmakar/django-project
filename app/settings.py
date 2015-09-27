@@ -126,3 +126,5 @@ MEDIA_URL = 'http://localhost/'
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
+CRAWLER_API_BASE = 'http://app1.speedaudits.com:8000'
+CRAWLER_API_CALLBACK_BASE = 'http://app.speedaudits.com'

@@ -7,6 +7,8 @@ from app.lsapi import lsapi
 
 import requests, urllib2
 
+from app.settings import CRAWLER_API_BASE, CRAWLER_API_CALLBACK_BASE
+
 BOOL_CHOICES = (
     (1, 'Yes'),
     (0, 'No'),
@@ -57,6 +59,14 @@ class Project(models.Model):
             'api_sharecount_pinterest': 'N/A',
         }
 
+        crawler_metrics = {
+            'api_crawler_links_count':  'N/A',
+            'api_crawler_duplicate_descriptions':  'N/A',
+            'api_crawler_duplicate_title': 'N/A',
+            'api_crawler_images_missing_alt':   'N/A',
+            'api_crawler_notfound_links_count': 'N/A',
+        }
+
         user_metrics = {}
         for i in metrics:
             if i.name.startswith('api_'):
@@ -69,6 +79,7 @@ class Project(models.Model):
         all_metrics.update(moz_metrics)
         all_metrics.update(google_metrics)
         all_metrics.update(sharecount_metrics)
+        all_metrics.update(crawler_metrics)
 
 
         if mtype == 'all':
@@ -82,6 +93,9 @@ class Project(models.Model):
 
         if mtype == 'sharecount':
             return sharecount_metrics
+
+        if mtype == 'crawler':
+            return crawler_metrics
 
         if mtype == 'user':
             return user_metrics
@@ -200,6 +214,49 @@ class Project(models.Model):
             m.value = response.get('Pinterest')
             m.save()
 
+
+        if only == 'api_crawler':
+            requests.get('%s/crawl'%CRAWLER_API_BASE,{
+                'name': self.title,
+                'url': self.url.rstrip('/'),
+                'callback': '%s/project/metrics/%d?crawler={TASK_ID}'%(CRAWLER_API_CALLBACK_BASE, self.id)
+            })
+
+    def update_crawler_metrics(self, task_id):
+        rep = requests.get('%s/get'%CRAWLER_API_BASE, {'id': task_id})
+        data = rep.json()
+
+        data_map = {
+            'api_crawler_links_count':  {
+                'name': 'links_count',
+                'info': 'Total links count'
+            },
+            'api_crawler_duplicate_descriptions':  {
+                'name': 'duplicate_descriptions',
+                'info': 'Pages with the same description'
+            },
+            'api_crawler_duplicate_title': {
+                'name': 'duplicate_title',
+                'info': 'Pages with the same title'
+            },
+            'api_crawler_images_missing_alt':   {
+                'name': 'images_missing_alt',
+                'info': 'Images messing alt tag'
+            },
+            'api_crawler_notfound_links_count': {
+                'name': 'notfound_links_count',
+                'info': '404 links count'
+            }
+        }
+
+        for key in data_map:
+            try:
+                m = self.metric_set.get(name=key)
+            except:
+                m = Metric(name=key, description=data_map[key]['info'], project=self)
+
+            m.value = data.get(data_map[key]['name'])
+            m.save()
 
 class Categorie(models.Model):
     title = models.CharField(max_length=512)
