@@ -413,11 +413,16 @@ def project_metrics(request, project_id):
 
     metrics = project.metric_set.all()
 
-    r = requests.get('%s/get'%settings.CRAWLER_API_BASE, {
-        'url': project.url
-    })
-
     crawler_metrics_status = 0
+
+    try:
+        r = requests.get('%s/get'%settings.CRAWLER_API_BASE, {
+            'url': project.url
+        })
+    except:
+        crawler_metrics_status = -1
+        pass
+
     try:
         crawler_metrics_status = r.json()['status']
     except:
@@ -432,6 +437,7 @@ def project_metrics(request, project_id):
         'crawler_metrics': crawler_metrics,
         'metrics_user': metrics_user,
         'crawler_metrics_status': crawler_metrics_status,
+        'CRAWLER_API_BASE': settings.CRAWLER_API_BASE,
         'clist': 'metrics',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Metrics']
 

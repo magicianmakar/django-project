@@ -183,21 +183,23 @@
             {% if user.is_authenticated %}
             <div class="row">
                 <div class="col-md-6">
-                    <p>
-                        {% if crawler_metrics_status == 1 %}
-                        <a id="crawl-btn" href="#" class="btn btn-lg btn-success" disabled="disabled">
+                        {% if crawler_metrics_status == -1 %}
+                        <a id="crawl-btn" href="#" class="btn btn btn-danger" disabled="disabled">
+                            <i class="fa fa-warning"></i> Crawler Server not responding at: {{CRAWLER_API_BASE}}
+                        </a>
+                        {% elif crawler_metrics_status == 1 %}
+                        <a id="crawl-btn" href="#" class="btn btn-success" disabled="disabled">
                             <i class=""></i> Crawler running...
                         </a>
                         {% elif crawler_metrics_status == 2 %}
-                        <a id="crawl-btn" href="?update=1&only=api_crawler" class="btn btn-lg btn-success" type="submit">
+                        <a id="crawl-btn" href="?update=1&only=api_crawler" class="btn btn-success" type="submit">
                             <i class="fa fa-refresh"></i> Update from Crawler data
                         </a>
                         {% else %}
-                        <a id="crawl-btn" href="?update=1&only=api_crawler" class="btn btn-lg btn-success" type="submit">
+                        <a id="crawl-btn" href="?update=1&only=api_crawler" class="btn btn-success" type="submit">
                             <i class="fa fa-code-fork"></i> Run Crawler
                         </a>
                         {% endif %}
-                    </p>
                 </div>
             </div>
             {% endif %}
