@@ -36,7 +36,7 @@
                 </div>
             </div>
 
-            <input type="hidden" name="next" value="/" />
+            <input type="hidden" name="next" value="{{request.GET.next|default:'/'}}" />
 
             <a href="{% url 'django.contrib.auth.views.password_reset' %}" class="pull-right need-help">Forgot Password?</a>
             <a href="{% url 'repport.views.register' %}" class="pull-left text-center new-account">Register New Account</a>

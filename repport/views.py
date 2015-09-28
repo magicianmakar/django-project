@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django.template import Context, Template
 # from django.conf import settings
 from django.template.loader import get_template
+from django.contrib.auth import logout as user_logout
 
 from xhtml2pdf import pisa
 
@@ -114,7 +115,7 @@ def clone_project(src, project):
             topic.save()
 
 
-# @login_required
+@login_required
 def index(request):
     # init_project()
 
@@ -126,7 +127,7 @@ def index(request):
         'templates': templates
     })
 
-# @login_required
+@login_required
 def project_view(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
@@ -136,7 +137,7 @@ def project_view(request, project_id):
         'breadcrumbs': [project.title]
     })
 
-# @login_required
+@login_required
 def category_view(request, cat_id):
     category = get_object_or_404(Categorie, pk=cat_id)
 
@@ -147,7 +148,7 @@ def category_view(request, cat_id):
         'breadcrumbs': [{'title': category.project.title, 'url': '/project/%d'%category.project.id}, '%s Category '%category.title]
     })
 
-# @login_required
+@login_required
 def topic_view(request, topic_id):
     topic = get_object_or_404(Topic, pk=topic_id)
     category = topic.categorie
@@ -266,7 +267,7 @@ def api(request, target):
 
     return HttpResponse('error')
 
-# @login_required
+@login_required
 def scorecard_view(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
@@ -276,7 +277,7 @@ def scorecard_view(request, project_id):
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Scorecard']
     })
 
-# @login_required
+@login_required
 def preview_project(request, project_id, for_pdf=False):
     project = get_object_or_404(Project, pk=project_id)
     tpl = project.template
@@ -338,6 +339,7 @@ def generate_pdf(request, project_id):
     file.close()            # Don't forget to close the file handle
     return HttpResponse(pdf, content_type='application/pdf')
 
+@login_required
 def project_templates(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     tpl = project.template
@@ -359,6 +361,9 @@ def project_metrics(request, project_id):
     if request.GET.get('crawler'):
         project.update_crawler_metrics(request.GET.get('crawler'))
         return HttpResponse('ok')
+
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect('/accounts/login/?next=%s'%request.META.get('PATH_INFO'))
 
     metrics = project.metric_set.all()
     metrics_moz = []
@@ -447,6 +452,7 @@ def project_metrics(request, project_id):
 
 @login_required
 def logout(request):
+    user_logout(request)
     return redirect('index')
 
 def register(request):

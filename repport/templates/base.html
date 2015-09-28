@@ -36,16 +36,16 @@
             <ul class="nav metismenu" id="side-menu">
                 <li style="padding: 10px 10px 0px;"><img src="/static/logo2.png" style="max-width: 85%; margin-left: 12px;"></li>
                 <li class="nav-header">
+                    {% if user.is_authenticated %}
                     <div class="dropdown profile-element">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{ user.username }}</strong>
                              </span> <span class="text-muted text-xs block">Options <b class="caret"></b></span> </span> </a>
                             <ul class="dropdown-menu animated fadeInRight m-t-xs">
-                                {% if user.is_authenticated %}
-                                <li><a href="#">Logout</a></li>
-                                {% endif %}
+                                <li><a href="/logout">Logout</a></li>
                             </ul>
                     </div>
+                    {% endif %}
                     <div style="font-size: 0.9em;" class="logo-element">
                         Speed <br> Audit
                     </div>
@@ -88,7 +88,7 @@
                 <ul class="nav navbar-top-links navbar-right">
                     <li>
                         {% if user.is_authenticated %}
-                        <a href="{% url 'django.contrib.auth.views.login' %}">
+                        <a href="/logout">
                             <i class="fa fa-sign-out"></i> Log out
                         </a>
                         {% else %}
