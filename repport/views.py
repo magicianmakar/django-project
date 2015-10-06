@@ -12,6 +12,7 @@ from xhtml2pdf import pisa
 from .models import *
 from .forms import *
 from app import settings
+from app.flask_app import *
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests
 
@@ -449,6 +450,78 @@ def project_metrics(request, project_id):
     }
 
     return render(request, "project/metrics.html", ctx)
+
+@login_required
+def project_explorer(request, project_id, etype='links'):
+
+    project = get_object_or_404(Project, pk=project_id)
+
+    website = Website.query.filter_by(url=project.url).first()
+
+    try:
+        page = int(request.GET.get('page', '1'))
+    except:
+        page = 1
+
+    ctx = {
+        'project': project,
+        'page': page,
+        'clist': 'explorer',
+        'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Explorer']
+    }
+
+    if etype == 'links':
+        ctx['links_count'] = website.links.count()
+        ctx['links'] = website.links.all()
+
+    if etype == 'titles':
+        titles = []
+        links = db.session.query(WebsiteLink, db.func.count(WebsiteLink.title)) \
+                          .filter(WebsiteLink.website==website) \
+                          .group_by(WebsiteLink.title) \
+                          .all()
+
+        for i in links:
+            link, count = i
+            titles.append({
+                'link': link,
+                'count': count
+            })
+
+        ctx['titles'] = titles
+    if etype == 'description':
+        descriptions = []
+        links = db.session.query(WebsiteLink, db.func.count(WebsiteLink.description)) \
+                          .filter(WebsiteLink.website==website) \
+                          .group_by(WebsiteLink.description) \
+                          .all()
+
+        for i in links:
+            link, count = i
+            descriptions.append({
+                'link': link,
+                'count': count
+            })
+
+        ctx['descriptions'] = descriptions
+    if etype == 'images':
+        images = []
+        links = db.session.query(WebsiteImage, db.func.count(WebsiteImage.id)) \
+                          .filter(WebsiteImage.website_link.has(website=website)) \
+                          .group_by(WebsiteImage.src) \
+                          .all()
+
+        for i in links:
+            image, count = i
+            images.append({
+                'image': image,
+                'count': count
+            })
+
+        ctx['images'] = images
+
+
+    return render(request, "project/explorer/%s.html"%etype, ctx)
 
 @login_required
 def logout(request):

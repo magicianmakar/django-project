@@ -39,3 +39,8 @@ def url_replace(context, field, value):
 def page_full_url(context):
     url = context['request'].build_absolute_uri()
     return url
+
+@register.simple_tag(takes_context = True)
+def smart_url(context, base, url):
+    link = '<a href="%s">%s</a>'%(url, url.replace('//www.', '//').replace(base, ''))
+    return link
