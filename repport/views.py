@@ -456,7 +456,13 @@ def project_explorer(request, project_id, etype='links'):
 
     project = get_object_or_404(Project, pk=project_id)
 
-    website = Website.query.filter_by(url=project.url).first()
+    try:
+        website = Website.query.filter_by(url=project.url).first()
+        remove_session = True
+    except:
+        website = None
+        db.session.remove()
+        remove_session = False
 
     try:
         page = int(request.GET.get('page', '1'))
@@ -531,7 +537,8 @@ def project_explorer(request, project_id, etype='links'):
         ctx['images'] = images
         ctx['breadcrumbs'].append('Images')
 
-    db.session.remove()
+    if remove_session:
+        db.session.remove()
 
     return render(request, "project/explorer/%s.html"%etype, ctx)
 
