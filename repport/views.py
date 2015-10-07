@@ -456,26 +456,21 @@ def project_explorer(request, project_id, etype='links'):
 
     project = get_object_or_404(Project, pk=project_id)
 
-    try:
-        website = Website.query.filter_by(url=project.url).first()
-        remove_session = True
-    except:
-        website = None
-        db.session.remove()
-        remove_session = False
-
-    try:
-        page = int(request.GET.get('page', '1'))
-    except:
-        page = 1
-
     ctx = {
         'project': project,
-        'page': page,
         'clist': 'explorer',
         'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id},
                         {'title': 'Explorer', 'url': '/project/%d/explorer'%project.id}]
     }
+
+    try:
+        website = Website.query.filter_by(url=project.url).first()
+    except Exception as e:
+        website = None
+        db.session.remove()
+        etype = 'error'
+        ctx['error'] = str(e)
+
 
     if not website:
         etype = 'notfound'
@@ -537,9 +532,10 @@ def project_explorer(request, project_id, etype='links'):
         ctx['images'] = images
         ctx['breadcrumbs'].append('Images')
 
-    if remove_session:
+    if etype != 'error':
         db.session.remove()
 
+    etype = 'error'
     return render(request, "project/explorer/%s.html"%etype, ctx)
 
 @login_required
