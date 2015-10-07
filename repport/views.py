@@ -535,7 +535,6 @@ def project_explorer(request, project_id, etype='links'):
     if etype != 'error':
         db.session.remove()
 
-    etype = 'error'
     return render(request, "project/explorer/%s.html"%etype, ctx)
 
 @login_required
