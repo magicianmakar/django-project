@@ -472,7 +472,7 @@ def project_explorer(request, project_id, etype='links'):
         ctx['error'] = str(e)
 
 
-    if not website:
+    if not website and etype != 'error':
         etype = 'notfound'
 
     if etype == 'links':
