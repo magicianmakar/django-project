@@ -1,0 +1,32 @@
+{% extends "project/base.html" %}
+{% load url_tools %}
+
+{% block page-title %}Project Explorer{% endblock %}
+
+{% block project-main-row-size %}col-md-12{% endblock %}
+
+{% block project-main %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class=""><a href="/project/explorer/{{project.id}}-links">Internal Links</a></li>
+                <li class=""><a href="/project/explorer/{{project.id}}-titles">Page Titles</a></li>
+                <li class=""><a href="/project/explorer/{{project.id}}-description">Meta Description</a></li>
+                <li class=""><a href="/project/explorer/{{project.id}}-images">Images</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tab-1">
+                    <div class="panel-body">
+                        <div style="text-align:center"><h2>Please run the crawler first.</h2></div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab-2">
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+{% endblock %}

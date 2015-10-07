@@ -467,12 +467,18 @@ def project_explorer(request, project_id, etype='links'):
         'project': project,
         'page': page,
         'clist': 'explorer',
-        'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id}, 'Explorer']
+        'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id},
+                        {'title': 'Explorer', 'url': '/project/%d/explorer'%project.id}]
     }
+
+    if not website:
+        etype = 'notfound'
 
     if etype == 'links':
         ctx['links_count'] = website.links.count()
         ctx['links'] = website.links.all()
+
+        ctx['breadcrumbs'].append('Links')
 
     if etype == 'titles':
         titles = []
@@ -489,6 +495,8 @@ def project_explorer(request, project_id, etype='links'):
             })
 
         ctx['titles'] = titles
+        ctx['breadcrumbs'].append('Titles')
+
     if etype == 'description':
         descriptions = []
         links = db.session.query(WebsiteLink, db.func.count(WebsiteLink.description)) \
@@ -504,6 +512,8 @@ def project_explorer(request, project_id, etype='links'):
             })
 
         ctx['descriptions'] = descriptions
+        ctx['breadcrumbs'].append('Meta Descriptions')
+
     if etype == 'images':
         images = []
         links = db.session.query(WebsiteImage, db.func.count(WebsiteImage.id)) \
@@ -519,6 +529,7 @@ def project_explorer(request, project_id, etype='links'):
             })
 
         ctx['images'] = images
+        ctx['breadcrumbs'].append('Images')
 
 
     return render(request, "project/explorer/%s.html"%etype, ctx)
