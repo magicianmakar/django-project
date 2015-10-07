@@ -531,6 +531,7 @@ def project_explorer(request, project_id, etype='links'):
         ctx['images'] = images
         ctx['breadcrumbs'].append('Images')
 
+    db.session.close()
 
     return render(request, "project/explorer/%s.html"%etype, ctx)
 
