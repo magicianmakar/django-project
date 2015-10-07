@@ -12,7 +12,6 @@ from xhtml2pdf import pisa
 from .models import *
 from .forms import *
 from app import settings
-from app.flask_app import *
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests
 
@@ -453,6 +452,7 @@ def project_metrics(request, project_id):
 
 @login_required
 def project_explorer(request, project_id, etype='links'):
+    from app.flask_app import db, Website, WebsiteLink, WebsiteImage
 
     project = get_object_or_404(Project, pk=project_id)
 
