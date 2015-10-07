@@ -29,7 +29,7 @@
                             <tbody>
                             {% for item in links %}
                                 <tr>
-                                    <td>{% smart_url project.url item.url %}</td>
+                                    <td>{{item.url|urlize}}</td>
                                     <td>{{item.title}}</td>
                                     <td>{{item.status}}</td>
                                 </tr>

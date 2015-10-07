@@ -29,7 +29,7 @@
                             <tbody>
                             {% for item in images %}
                                 <tr>
-                                    <td>{{item.image.src|default:"&lt;Blank&gt;"}}</td>
+                                    <td>{{item.image.src|urlize|default:"&lt;Blank&gt;"}}</td>
                                     <td>{{item.image.alt|default:"&lt;Blank&gt;"}}</td>
                                     <td>{{item.count}}</td>
                                 </tr>
