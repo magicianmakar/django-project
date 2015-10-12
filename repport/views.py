@@ -452,7 +452,7 @@ def project_metrics(request, project_id):
 
 @login_required
 def project_explorer(request, project_id, etype='links'):
-    from app.flask_app import db, Website, WebsiteLink, WebsiteImage
+    from app.flask_app import db, Website, WebsiteLink, WebsiteImage, WebsiteHeader
 
     project = get_object_or_404(Project, pk=project_id)
 
@@ -470,7 +470,6 @@ def project_explorer(request, project_id, etype='links'):
         db.session.remove()
         etype = 'error'
         ctx['error'] = str(e)
-
 
     if not website and etype != 'error':
         etype = 'notfound'
@@ -532,10 +531,29 @@ def project_explorer(request, project_id, etype='links'):
         ctx['images'] = images
         ctx['breadcrumbs'].append('Images')
 
+    if etype == 'h1' or etype == 'h2':
+        headers = []
+        links = db.session.query(WebsiteHeader, db.func.count(WebsiteHeader.text)) \
+                          .filter(WebsiteHeader.website_link.has(website=website), WebsiteHeader.header==etype) \
+                          .group_by(WebsiteHeader.text) \
+                          .all()
+
+        for i in links:
+            link, count = i
+            headers.append({
+                'header': link,
+                'count': count
+            })
+
+        ctx['headers'] = headers
+        ctx['breadcrumbs'].append('Headers')
+
+    html = render(request, "project/explorer/%s.html"%etype, ctx)
+
     if etype != 'error':
         db.session.remove()
 
-    return render(request, "project/explorer/%s.html"%etype, ctx)
+    return html
 
 @login_required
 def logout(request):

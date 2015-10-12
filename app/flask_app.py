@@ -11,6 +11,22 @@ def get_app():
 
 app, db = get_app()
 
+class WebsiteHeader(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    header = db.Column(db.String(256))
+    text = db.Column(db.String(512))
+
+    website_link_id = db.Column(db.Integer, db.ForeignKey('website_link.id'))
+    website_link = db.relationship('WebsiteLink', backref=db.backref('headers', lazy='dynamic'))
+
+    def __init__(self, header, text, link):
+        self.header = header
+        self.text = text
+        self.website_link = link
+
+    def __repr__(self):
+        return '<Header %r>' % self.text
+
 class WebsiteImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     src = db.Column(db.String(256))

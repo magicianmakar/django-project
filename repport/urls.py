@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     url(r'^project/templates/(?P<project_id>[0-9]+)$', repport.views.project_templates),
     url(r'^project/metrics/(?P<project_id>[0-9]+)$', repport.views.project_metrics),
     url(r'^project/explorer/(?P<project_id>[0-9]+)$', repport.views.project_explorer),
-    url(r'^project/explorer/(?P<project_id>[0-9]+)[/-](?P<etype>[a-z]+)$', repport.views.project_explorer),
+    url(r'^project/explorer/(?P<project_id>[0-9]+)[/-](?P<etype>[a-z0-9]+)$', repport.views.project_explorer),
 
     url(r'^api/(?P<target>[a-z-]+)$', repport.views.api),
 
