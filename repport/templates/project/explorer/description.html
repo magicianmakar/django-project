@@ -31,7 +31,7 @@
                             <tbody>
                             {% for item in descriptions %}
                                 <tr>
-                                    <td>{{item.link.description|default:"&lt;Blank&gt;"}}</td>
+                                    <td><a class="show-urls" url-id="{{item.link.id}}" href="#">{{item.link.description|default:"&lt;Blank&gt;"}}</a></td>
                                     <td>{{item.count}}</td>
                                     <td>{{item.link.description|length}}</td>
                                 </tr>
@@ -48,6 +48,11 @@
         </div>
     </div>
 </div>
+
+<div style="height: 300px; z-index: 1000;" id="main-panel">
+    <iframe src="#" style="width: 100%; height: 100%;"></iframe>
+</div>
+<button id="main-panel-close" class="btn btn-sm" style="z-index: 10002"><i class="fa fa-times"></i></button>
 {% endblock %}
 
 {% block extracss %}
@@ -73,6 +78,38 @@
                     "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
                 }
             });
+        });
+
+        setInterval(function () {
+            if ($( "#main-panel" ).css('display') != 'none') {
+                $( "#main-panel" ).position({
+                  my: "right bottom",
+                  at: "right-25 bottom",
+                  of: window
+                });
+
+                $( "#main-panel-close" ).position({
+                  my: "right top",
+                  at: "right-5 top+5",
+                  of: '#main-panel'
+                });
+            }
+        }, 100);
+
+        $( "#main-panel" ).hide();
+
+        $('.show-urls').click(function(e){
+            e.preventDefault();
+
+            $( "#main-panel iframe" ).attr('src', '/project/explorer/frame/{{project.id}}-description?link='+$(this).attr('url-id'));
+            $( "#main-panel" ).show();
+            $( "#main-panel-close" ).show();
+        });
+        $( "#main-panel-close" ).click(function(e){
+            e.preventDefault();
+
+            $('#main-panel').hide();
+            $( "#main-panel-close" ).hide();
         });
     </script>
 {% endblock %}

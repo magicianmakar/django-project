@@ -556,6 +556,44 @@ def project_explorer(request, project_id, etype='links'):
     return html
 
 @login_required
+def project_explorer_frame(request, project_id, etype='title'):
+    from app.flask_app import db, Website, WebsiteLink, WebsiteImage, WebsiteHeader
+
+    project = get_object_or_404(Project, pk=project_id)
+
+    ctx = {
+        'project': project,
+        'clist': 'explorer',
+        'breadcrumbs': [{'title': project.title, 'url': '/project/%d'%project.id},
+                        {'title': 'Explorer', 'url': '/project/%d/explorer'%project.id}]
+    }
+
+    try:
+        website = Website.query.filter_by(url=project.url).first()
+    except Exception as e:
+        website = None
+        db.session.remove()
+        etype = 'error'
+        ctx['error'] = str(e)
+
+    if etype == 'titles':
+        ctx['link'] = WebsiteLink.query.get(request.GET.get('link'))
+        ctx['titles_count'] = WebsiteLink.query.filter(WebsiteLink.title==ctx['link'].title,WebsiteLink.website==website).count()
+        ctx['titles'] = WebsiteLink.query.filter(WebsiteLink.title==ctx['link'].title,WebsiteLink.website==website).all()
+
+    if etype == 'description':
+        ctx['link'] = WebsiteLink.query.get(request.GET.get('link'))
+        ctx['descriptions_count'] = WebsiteLink.query.filter(WebsiteLink.description==ctx['link'].description,WebsiteLink.website==website).count()
+        ctx['descriptions'] = WebsiteLink.query.filter(WebsiteLink.description==ctx['link'].description,WebsiteLink.website==website).all()
+
+    html = render(request, "project/explorer/frame/%s.html"%etype, ctx)
+
+    if etype != 'error':
+        db.session.remove()
+
+    return html
+
+@login_required
 def logout(request):
     user_logout(request)
     return redirect('index')
