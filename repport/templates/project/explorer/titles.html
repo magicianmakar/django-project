@@ -31,9 +31,9 @@
                             <tbody>
                             {% for item in titles %}
                                 <tr>
-                                    <td><a class="show-urls" url-id="{{item.link.id}}" href="#">{{item.link.title|default:"&lt;Blank&gt;"}}</a></td>
-                                    <td>{{item.count}}</td>
-                                    <td>{{item.link.title|length}}</td>
+                                    <td><a class="show-urls" url-id="{{item.id}}" href="#">{{item.title|default:"&lt;Blank&gt;"}}</a></td>
+                                    <td>1</td>
+                                    <td>{{item.title|length}}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -52,7 +52,9 @@
 <div style="height: 300px; z-index: 1000;" id="main-panel">
     <iframe src="#" style="width: 100%; height: 100%;"></iframe>
 </div>
+
 <button id="main-panel-close" class="btn btn-sm" style="z-index: 10002"><i class="fa fa-times"></i></button>
+
 {% endblock %}
 
 {% block extracss %}
@@ -105,6 +107,7 @@
             $( "#main-panel" ).show();
             $( "#main-panel-close" ).show();
         });
+
         $( "#main-panel-close" ).click(function(e){
             e.preventDefault();
 

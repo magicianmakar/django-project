@@ -23,15 +23,37 @@
                     <ul class="nav nav-tabs">
                         <li class=""><a href="#tab-1" data-toggle="tab">Info</a></li>
                         <li class="active"><a href="#tab-2" data-toggle="tab">Occurrences</a></li>
+                        <li><a href="#tab-3" data-toggle="tab">Inlink</a></li>
+                        <li><a href="#tab-4" data-toggle="tab">Outlink</a></li>
+                        <li><a href="#tab-5" data-toggle="tab">Image Info</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane " id="tab-1">
                             <div class="panel-body">
                                 <dl class="dl-horizontal">
-                                    <dt>Meta Descriptions:</dt>
-                                    <dd>{{link.title|default:"&lt;Blank&gt;"}}</dd>
+                                    <dt>Address:</dt>
+                                    <dd>{{link.url|urlize}}</dd>
+
+                                    <dt>Title:</dt>
+                                    <dd>{{link.title}}</dd>
+
+                                    <dt>Description:</dt>
+                                    <dd>{{link.description}}</dd>
+
+                                    <dt>Content:</dt>
+                                    <dd>text/html; charset=utf-8</dd>
+
                                     <dt>Occurrences:</dt>
                                     <dd>{{descriptions_count}}</dd>
+
+                                    <dt>Level:</dt>
+                                    <dd>{{link.depth}}</dd>
+
+                                    <dt>Size:</dt>
+                                    <dd>{{link.size}}</dd>
+
+                                    <dt>Status Code:</dt>
+                                    <dd>{{link.status}}</dd>
                                 </dl>
                             </div>
                         </div>
@@ -57,9 +79,65 @@
                                 </table>
                             </div>
                         </div>
+                        <div class="tab-pane" id="tab-3">
+                            <div class="panel-body">
+                                <table class="table table-bordered dataTables">
+                                    <thead>
+                                        <tr>
+                                            <th>Link</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for item in inlinks %}
+                                        <tr>
+                                            <td>{{item.url|urlize}}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-4">
+                            <div class="panel-body">
+                                <table class="table table-bordered dataTables">
+                                    <thead>
+                                        <tr>
+                                            <th>Link</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for item in outlinks %}
+                                        <tr>
+                                            <td>{{item.url|urlize}}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-5">
+                            <div class="panel-body">
+                                <table class="table table-bordered dataTables">
+                                    <thead>
+                                        <tr>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Alt Text</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for item in images %}
+                                        <tr>
+                                            <td>{{link.url|urlize}}</td>
+                                            <td>{{item.src|urlize}}</td>
+                                            <td>{{item.alt}}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-
-
                 </div>
             </div>
         </div>

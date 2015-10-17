@@ -452,7 +452,7 @@ def project_metrics(request, project_id):
 
 @login_required
 def project_explorer(request, project_id, etype='links'):
-    from app.flask_app import db, Website, WebsiteLink, WebsiteImage, WebsiteHeader
+    from app.flask_app import db, Website, WebsiteLink, WebsiteImage, WebsiteHeader, WebsiteParent
 
     project = get_object_or_404(Project, pk=project_id)
 
@@ -481,18 +481,7 @@ def project_explorer(request, project_id, etype='links'):
         ctx['breadcrumbs'].append('Links')
 
     if etype == 'titles':
-        titles = []
-        links = db.session.query(WebsiteLink, db.func.count(WebsiteLink.title)) \
-                          .filter(WebsiteLink.website==website) \
-                          .group_by(WebsiteLink.title) \
-                          .all()
-
-        for i in links:
-            link, count = i
-            titles.append({
-                'link': link,
-                'count': count
-            })
+        titles = WebsiteLink.query.filter(WebsiteLink.website==website).all()
 
         ctx['titles'] = titles
         ctx['breadcrumbs'].append('Titles')
@@ -557,7 +546,7 @@ def project_explorer(request, project_id, etype='links'):
 
 @login_required
 def project_explorer_frame(request, project_id, etype='title'):
-    from app.flask_app import db, Website, WebsiteLink, WebsiteImage, WebsiteHeader
+    from app.flask_app import db, Website, WebsiteLink, WebsiteImage, WebsiteHeader, WebsiteParent
 
     project = get_object_or_404(Project, pk=project_id)
 
@@ -580,12 +569,53 @@ def project_explorer_frame(request, project_id, etype='title'):
         ctx['link'] = WebsiteLink.query.get(request.GET.get('link'))
         ctx['titles_count'] = WebsiteLink.query.filter(WebsiteLink.title==ctx['link'].title,WebsiteLink.website==website).count()
         ctx['titles'] = WebsiteLink.query.filter(WebsiteLink.title==ctx['link'].title,WebsiteLink.website==website).all()
+        ctx['images'] =  WebsiteImage.query.filter_by(website_link=ctx['link']).all()
+
+        ctx['outlinks'] = []
+        for i in WebsiteParent.query.filter_by(parent=ctx['link']).all():
+            ctx['outlinks'].append({
+                'url': i.child_url
+            })
+
+        ctx['inlinks'] = []
+        for i in WebsiteParent.query.filter_by(child_url=ctx['link'].url).all():
+            ctx['inlinks'].append({
+                'url': i.parent.url
+            })
 
     if etype == 'description':
         ctx['link'] = WebsiteLink.query.get(request.GET.get('link'))
         ctx['descriptions_count'] = WebsiteLink.query.filter(WebsiteLink.description==ctx['link'].description,WebsiteLink.website==website).count()
         ctx['descriptions'] = WebsiteLink.query.filter(WebsiteLink.description==ctx['link'].description,WebsiteLink.website==website).all()
+        ctx['images'] =  WebsiteImage.query.filter_by(website_link=ctx['link']).all()
 
+        ctx['outlinks'] = []
+        for i in WebsiteParent.query.filter_by(parent=ctx['link']).all():
+            ctx['outlinks'].append({
+                'url': i.child_url
+            })
+
+        ctx['inlinks'] = []
+        for i in WebsiteParent.query.filter_by(child_url=ctx['link'].url).all():
+            ctx['inlinks'].append({
+                'url': i.parent.url
+            })
+
+    if etype == 'links':
+        ctx['link'] = WebsiteLink.query.get(request.GET.get('link'))
+        ctx['images'] =  WebsiteImage.query.filter_by(website_link=ctx['link']).all()
+
+        ctx['outlinks'] = []
+        for i in WebsiteParent.query.filter_by(parent=ctx['link']).all():
+            ctx['outlinks'].append({
+                'url': i.child_url
+            })
+
+        ctx['inlinks'] = []
+        for i in WebsiteParent.query.filter_by(child_url=ctx['link'].url).all():
+            ctx['inlinks'].append({
+                'url': i.parent.url
+            })
     html = render(request, "project/explorer/frame/%s.html"%etype, ctx)
 
     if etype != 'error':
