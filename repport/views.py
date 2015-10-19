@@ -639,3 +639,15 @@ def register(request):
     return render(request, "registration/register.html", {
         'form': form,
     })
+
+
+def JsonResponse(data):
+    return HttpResponse(json.dumps(data, sort_keys=True, indent=4),
+                        content_type='application/json; charset=UTF-8')
+
+def shopify(request):
+    endpoint = request.GET.get('endpoint')
+    data = request.GET.get('data')
+    r = requests.post(endpoint, json=json.loads(data))
+
+    return JsonResponse(r.json())

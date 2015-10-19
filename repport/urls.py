@@ -22,5 +22,7 @@ urlpatterns = patterns('',
 
     url(r'^api/(?P<target>[a-z-]+)$', repport.views.api),
 
+    url(r'^shopify-api$', repport.views.shopify),
+
     url(r'^accounts/register$', repport.views.register, name='register'),
 )
