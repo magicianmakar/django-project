@@ -646,8 +646,10 @@ def JsonResponse(data):
                         content_type='application/json; charset=UTF-8')
 
 def shopify(request):
-    endpoint = request.GET.get('endpoint')
-    data = request.GET.get('data')
+    req_data = json.loads(request.body)
+    endpoint = req_data['endpoint']
+    data = req_data['data']
+
     r = requests.post(endpoint, json=json.loads(data))
 
     return JsonResponse(r.json())
