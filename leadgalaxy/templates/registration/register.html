@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Create an account{% endblock %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-sm-6 col-md-4 col-md-offset-4 col-sm-offset-3" style="margin-top:30px">
+        <h1 class="text-center login-title">Register new Account</h1>
+
+        <div class="wall">
+            <form method="post" action="{% url 'leadgalaxy.views.register' %}" class="xform-signin" role="form">
+            {% csrf_token %}
+
+            <div class="row">
+                <div class="form-group col-md-12">
+                    {{ form.username.errors | safe }}
+                    {% render_field form.username class+="form-control input-lg" placeholder="Username" %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-12">
+                    {{ form.email.errors | safe }}
+                    {% render_field form.email class+="form-control input-lg" placeholder="Email" %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-12">
+                    {{ form.password1.errors | safe }}
+                    {% render_field form.password1 class+="form-control input-lg" placeholder="Password" %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-12">
+                    {{ form.password2.errors | safe }}
+                    {% render_field form.password2 class+="form-control input-lg" placeholder="Password verification" %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-12">
+                    <input class="btn btn-lg btn-primary btn-block" type="submit" value="Register" />
+                </div>
+            </div>
+            <input type="hidden" name="next" value="{{ next }}" />
+
+            <a href="{% url 'django.contrib.auth.views.login' %}" class="pull-right need-help">Log in</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

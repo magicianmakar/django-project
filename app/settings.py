@@ -41,7 +41,7 @@ INSTALLED_APPS = (
 
     'widget_tweaks',    # For forms
 
-    'repport'
+    'leadgalaxy'
 )
 
 MIDDLEWARE_CLASSES = (
