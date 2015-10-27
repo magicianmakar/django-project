@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.template import Context, Template
 # from django.conf import settings
 from django.template.loader import get_template
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
@@ -52,6 +53,12 @@ def api(request, target):
     if target == 'login':
         username=data.get('username')
         password=data.get('password')
+
+        if '@' in username:
+            try:
+                username = User.objects.get(email=username).username
+            except:
+                return JsonResponse({'error': 'Unvalide email or password'})
 
         user = authenticate(username=username, password=password)
         if user is not None:
