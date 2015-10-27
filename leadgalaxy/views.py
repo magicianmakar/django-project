@@ -18,7 +18,13 @@ import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
 
 @login_required
 def index(request):
-    return render(request, 'index.html', {})
+    stores = request.user.shopifystore_set.all()
+
+    return render(request, 'index.html', {
+        'stores': stores,
+        'clist': 'index',
+        'breadcrumbs': ['Dashboard']
+    })
 
 @login_required
 def api(request, target):
@@ -39,6 +45,12 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
+
+            store = ShopifyStore(api_url=form.cleaned_data['api_url'],
+                                title=form.cleaned_data['store_title'],
+                                user=new_user)
+            store.save()
+
             return HttpResponseRedirect("/")
     else:
         form = RegisterForm()

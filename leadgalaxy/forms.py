@@ -21,6 +21,8 @@ class BsErrorList(ErrorList):
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
+    store_title = forms.CharField(min_length=2)
+    api_url = forms.CharField(min_length=30)
 
     def __init__(self, *args, **kwargs):
         super(RegisterForm, self).__init__(*args, **kwargs)
