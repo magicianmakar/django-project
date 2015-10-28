@@ -25,3 +25,15 @@ class AccessToken(models.Model):
 
     def __unicode__(self):
         return self.token
+
+class ShopifyProduct(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    user = models.ForeignKey(User)
+
+    data = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.token

@@ -102,6 +102,7 @@ def api(request, target):
             stores = []
             for i in user.shopifystore_set.all():
                 stores.append({
+                    'id': i.id,
                     'name': i.title,
                     'url': i.api_url
                 })
@@ -148,14 +149,15 @@ def api(request, target):
             else:
                 user = None
 
-        url = data.get('url')
+        store_id = data.get('store')
 
         if user:
-            ShopifyStore.objects.filter(api_url=url, user=user).delete()
+            ShopifyStore.objects.filter(id=store_id, user=user).delete()
 
             stores = []
             for i in user.shopifystore_set.all():
                 stores.append({
+                    'id': i.id,
                     'name': i.title,
                     'url': i.api_url
                 })
@@ -165,6 +167,35 @@ def api(request, target):
         return JsonResponse({'error': 'Unvalide access token'})
 
     if method == 'POST' and target == 'shopify':
+        req_data = json.loads(request.body)
+        store = req_data['store']
+
+
+        data = req_data['data']
+        token = req_data['access_token']
+        user = get_user_from_token(token)
+
+        store = ShopifyStore.objects.get(id=store, user=user)
+        endpoint = store.api_url + '/admin/products.json'
+
+        if not user:
+            return JsonResponse({'error': 'Unvalide access token'})
+
+        r = requests.post(endpoint, json=json.loads(data))
+
+        import re
+        pid = r.json()['product']['id']
+        url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
+        url = 'https://%s/admin/products/%d'%(url, pid);
+
+        return JsonResponse({
+            'product': {
+                'url': url,
+                'id': pid
+                }
+            })
+
+    if method == 'POST' and target == 'save-for-later':
         req_data = json.loads(request.body)
         endpoint = req_data['endpoint']
         data = req_data['data']
