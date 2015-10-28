@@ -112,9 +112,16 @@ def api(request, target):
 
     if method == 'POST' and target == 'add-store':
         token = data.get('access_token')
+        if token:
+            user = get_user_from_token(token)
+        else:
+            if request.user.is_authenticated:
+                user = request.user
+            else:
+                user = None
+
         name = data.get('name')
         url = data.get('url')
-        user = get_user_from_token(token)
 
         if user:
             store = ShopifyStore(title=name, api_url=url, user=user)
@@ -133,8 +140,15 @@ def api(request, target):
 
     if method == 'POST' and target == 'delete-store':
         token = data.get('access_token')
+        if token:
+            user = get_user_from_token(token)
+        else:
+            if request.user.is_authenticated:
+                user = request.user
+            else:
+                user = None
+
         url = data.get('url')
-        user = get_user_from_token(token)
 
         if user:
             ShopifyStore.objects.filter(api_url=url, user=user).delete()
@@ -180,12 +194,6 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
-
-            store = ShopifyStore(api_url=form.cleaned_data['api_url'],
-                                title=form.cleaned_data['store_title'],
-                                user=new_user)
-            store.save()
-
             return HttpResponseRedirect("/")
     else:
         form = RegisterForm()

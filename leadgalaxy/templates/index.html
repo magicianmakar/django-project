@@ -16,7 +16,8 @@
               <thead>
                 <tr>
                   <th style="width: 20%;">Title</th>
-                  <th style="">API URL</th>
+                  <th style="width: 60%;">API URL</th>
+                  <th style="">Options</th>
                 </tr>
               </thead>
               <tbody>
@@ -24,12 +25,127 @@
                     <tr>
                       <td><a href="/store/{{item.id}}">{{item.title}}</a></td>
                       <td>{{item.api_url}}</td>
+                      <td>
+                        <button class="visit-store btn btn-xs btn-success" store-url="{{item.api_url}}"> Visit Store</button>
+                        <button class="delete-store btn btn-xs btn-danger" store-url="{{item.api_url}}"> Delete</button>
+                      </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="3" class="text-center">No store found.</td>
                     </tr>
                     {% endfor %}
               </tbody>
             </table>
+
+            <a data-toggle="modal" class="btn btn-primary" href="#modal-form">Add Store</a>
         </div>
     </div>
 
+<div id="modal-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Add Shopify Store</h3>
 
+                        <form role="form">
+                            <div class="form-group"><label>Name</label> <input type="text" id="store-name" placeholder="Enter Store Name" class="form-control"></div>
+                            <div class="form-group"><label>API URL</label> <input type="text" id="store-url" placeholder="Copy/Past Example URL" class="form-control"></div>
+                            <div>
+                                <button id="add-store" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Add store</strong></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-sm-6"><h4>Need Help?</h4>
+                <p class="xwell">
+                    How To Connect Your Shopify Store:
+                    <ol>
+                        <li>Create a "Shopify Private App"</li>
+                        <li>Give a Friendly Store Name and paste the <b>Example URL</b> from your Private App.</li>
+                    </ol>
+
+                    <a href="http://f.cl.ly/items/3b001Z0x1e0I010F2z0q/Screen%20Recording%202015-10-20%20at%2001.03%20PM.gif" target="_blank">Watch Video Instructions</a>
+                </p>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+    $('#add-store').click(function(e) {
+        var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
+
+        if (!url || url.length != 1) {
+            alert('API URL is not correct!');
+            return;
+        }
+
+        $('#add-store').button('loading');
+
+        $.ajax({
+            url: '/api/add-store',
+            type: 'POST',
+            data: {
+                name: $('#store-name').val(),
+                url: 'https://' + url[0],
+            },
+            success: function(data) {
+                if ('error' in data) {
+                    alert(data.error);
+                    $('#add-store').button('reset');
+                } else {
+                    window.location.href = window.location.href
+                }
+
+            },
+            error: function(data) {
+                alert('Unknow error!');
+                $('#add-store').button('reset');
+            }
+        });
+    });
+
+    $('.delete-store').click(function (e) {
+        var btn = $(this);
+        var url = $(this).attr('store-url');
+
+        btn.button('loading');
+
+        $.ajax({
+            url: '/api/delete-store',
+            type: 'POST',
+            data: {
+                url: url,
+            },
+            success: function(data) {
+                if ('error' in data) {
+                    alert(data.error);
+                    btn.button('reset');
+                } else {
+                    btn.parents('tr').remove();
+                }
+
+            },
+            error: function(data) {
+                alert('Connection error');
+                btn.button('reset');
+            }
+        });
+    });
+
+    $('.visit-store').click(function(e) {
+        var url = $(this).attr('store-url');
+        url = url.replace(/[^\/:]+:[^:]+@/, '') + '/admin';
+
+        window.open(url, '_target');
+    });
+
+</script>
+{% endblock %}
+
