@@ -25,7 +25,7 @@ def index(request):
 
     return render(request, 'index.html', {
         'stores': stores,
-        'clist': 'index',
+        'page': 'index',
         'breadcrumbs': ['Dashboard']
     })
 
@@ -49,6 +49,18 @@ def api(request, target):
         data = request.GET
     else:
         return JsonResponse({'error', 'Unknow method: %s'%method})
+
+    token = data.get('access_token')
+    if token:
+        user = get_user_from_token(token)
+    else:
+        if request.user.is_authenticated:
+            user = request.user
+        else:
+            user = None
+
+    if target not in ['login', 'shopify', 'save-for-later'] and not user:
+        return JsonResponse({'user':'Unauthenticated api call.'})
 
     if target == 'login':
         username=data.get('username')
@@ -95,98 +107,90 @@ def api(request, target):
             return JsonResponse({'error': 'Unvalid form'})
 
     if method == 'GET' and target == 'stores':
-        token = data.get('access_token')
-        user = get_user_from_token(token)
+        stores = []
+        for i in user.shopifystore_set.all():
+            stores.append({
+                'id': i.id,
+                'name': i.title,
+                'url': i.api_url
+            })
 
-        if user:
-            stores = []
-            for i in user.shopifystore_set.all():
-                stores.append({
-                    'id': i.id,
-                    'name': i.title,
-                    'url': i.api_url
-                })
+        return JsonResponse(stores, safe=False)
 
-            return JsonResponse(stores, safe=False)
-
-        return JsonResponse({'error': 'Unvalide access token'})
 
     if method == 'POST' and target == 'add-store':
-        token = data.get('access_token')
-        if token:
-            user = get_user_from_token(token)
-        else:
-            if request.user.is_authenticated:
-                user = request.user
-            else:
-                user = None
-
         name = data.get('name')
         url = data.get('url')
 
-        if user:
-            store = ShopifyStore(title=name, api_url=url, user=user)
-            store.save()
+        store = ShopifyStore(title=name, api_url=url, user=user)
+        store.save()
 
-            stores = []
-            for i in user.shopifystore_set.all():
-                stores.append({
-                    'name': i.title,
-                    'url': i.api_url
-                })
+        stores = []
+        for i in user.shopifystore_set.all():
+            stores.append({
+                'name': i.title,
+                'url': i.api_url
+            })
 
-            return JsonResponse(stores, safe=False)
-
-        return JsonResponse({'error': 'Unvalide access token'})
+        return JsonResponse(stores, safe=False)
 
     if method == 'POST' and target == 'delete-store':
-        token = data.get('access_token')
-        if token:
-            user = get_user_from_token(token)
-        else:
-            if request.user.is_authenticated:
-                user = request.user
-            else:
-                user = None
-
         store_id = data.get('store')
 
-        if user:
-            ShopifyStore.objects.filter(id=store_id, user=user).delete()
+        ShopifyStore.objects.filter(id=store_id, user=user).delete()
 
-            stores = []
-            for i in user.shopifystore_set.all():
-                stores.append({
-                    'id': i.id,
-                    'name': i.title,
-                    'url': i.api_url
-                })
+        stores = []
+        for i in user.shopifystore_set.all():
+            stores.append({
+                'id': i.id,
+                'name': i.title,
+                'url': i.api_url
+            })
 
-            return JsonResponse(stores, safe=False)
+        return JsonResponse(stores, safe=False)
 
-        return JsonResponse({'error': 'Unvalide access token'})
-
-    if method == 'POST' and target == 'shopify':
+    if method == 'POST' and (target == 'shopify' or target == 'save-for-later'):
         req_data = json.loads(request.body)
         store = req_data['store']
 
-
         data = req_data['data']
-        token = req_data['access_token']
-        user = get_user_from_token(token)
 
         store = ShopifyStore.objects.get(id=store, user=user)
         endpoint = store.api_url + '/admin/products.json'
 
+        if 'access_token' in req_data:
+            token = req_data['access_token']
+            user = get_user_from_token(token)
+        else:
+            if request.user.is_authenticated:
+                user = request.user
+            else:
+                user = None
+
         if not user:
             return JsonResponse({'error': 'Unvalide access token'})
 
-        r = requests.post(endpoint, json=json.loads(data))
+        if target == 'shopify':
+            r = requests.post(endpoint, json=json.loads(data))
 
-        import re
-        pid = r.json()['product']['id']
-        url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
-        url = 'https://%s/admin/products/%d'%(url, pid);
+            import re
+            pid = r.json()['product']['id']
+            url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
+            url = 'https://%s/admin/products/%d'%(url, pid);
+        else:
+            if 'store' in req_data:
+                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                product.store = store
+                product.data = data
+                product.stat = 1
+
+            else:
+                product = ShopifyProduct(store=store, user=user, data=data, stat=1)
+
+            product.save()
+
+            url = request.build_absolute_uri('/product/%d'%product.id)
+            pid = product.id
 
         return JsonResponse({
             'product': {
@@ -195,21 +199,57 @@ def api(request, target):
                 }
             })
 
-    if method == 'POST' and target == 'save-for-later':
-        req_data = json.loads(request.body)
-        endpoint = req_data['endpoint']
-        data = req_data['data']
-        token = req_data['access_token']
-        user = get_user_from_token(token)
-
-        if not user:
-            return JsonResponse({'error': 'Unvalide access token'})
-
-        r = requests.post(endpoint, json=json.loads(data))
-
-        return JsonResponse(r.json(), safe=False)
-
     return JsonResponse({'error': 'Unhandled endpoint'})
+
+@login_required
+def product(request, tpl='grid'):
+    products = []
+    for i in ShopifyProduct.objects.filter(user=request.user):
+        p = {
+            'id': i.id,
+            'store': i.store,
+            'user': i.user,
+            'created_at': i.created_at,
+            'updated_at': i.updated_at,
+            'product': json.loads(i.data),
+        }
+
+        p['price'] = '$%.02f'%p['product']['price']
+        p['images'] = p['product']['images']
+        products.append(p)
+
+    if not tpl or tpl == 'grid':
+        tpl = 'product.html'
+    else:
+        tpl = 'product_table.html'
+
+    return render(request, tpl, {
+        'products': products,
+        'page': 'product',
+        'breadcrumbs': ['Products']
+    })
+
+@login_required
+def product_view(request, pid):
+    product = get_object_or_404(ShopifyProduct, id=pid)
+    p = {
+        'id': product.id,
+        'store': product.store,
+        'user': product.user,
+        'created_at': product.created_at,
+        'updated_at': product.updated_at,
+        'data': product.data,
+        'product': json.loads(product.data),
+    }
+
+    p['price'] = '$%.02f'%p['product']['price']
+    p['images'] = p['product']['images']
+
+    return render(request, 'product_view.html', {
+        'product': p,
+        'page': 'product',
+        'breadcrumbs': ['Products', 'View']
+    })
 
 def login(request):
     user_logout(request)

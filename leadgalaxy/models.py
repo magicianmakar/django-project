@@ -31,6 +31,7 @@ class ShopifyProduct(models.Model):
     user = models.ForeignKey(User)
 
     data = models.TextField()
+    stat = models.IntegerField(default=0, verbose_name='Publish stat')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

@@ -8,6 +8,8 @@ urlpatterns = patterns('',
     url(r'^logout$', leadgalaxy.views.logout),
 
     url(r'^api/(?P<target>[a-z-]+)$', leadgalaxy.views.api),
+    url(r'^product/?(?P<tpl>(grid|table))?$', leadgalaxy.views.product, name='product'),
+    url(r'^product/(?P<pid>[0-9]+)$', leadgalaxy.views.product_view, name='product_view'),
 
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',

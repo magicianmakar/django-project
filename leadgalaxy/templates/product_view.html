@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+<div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Shopify Stores<small></small></h5>
+        <div class="ibox-tools">
+            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+        </div>
+    </div>
+    <div class="ibox-content">
+
+        <div class=" row">
+            <div class="form-group col-xs-12">
+                <label for="product-title">Title</label>
+                <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
+            </div>
+            <div class="form-group col-xs-4">
+                <label for="product-price">Price</label>
+                <div class="input-group">
+                    <span class="input-group-addon">$</span>
+                    <input type="text" class="form-control" id="product-price" placeholder="Product Price">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-xs-6">
+                <label for="product-type">Type</label>
+                <input type="text" class="form-control" id="product-type" placeholder="Product Type">
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-xs-6">
+                <label for="store-select">Export to</label>
+                <select id="store-select"  class="form-control" _style="width: 30%">
+                {% for i in request.user.shopifystore_set.all %}
+                    <option value="{{i.id}}">{{i.title}}</option>
+                {% endfor %}
+                </select>
+            </div>
+
+            <div id="more-options" class="col-xs-12">
+                <div class="childs" style="">
+                    <div class="row">
+                    <div class="form-group col-xs-6">
+                        <label for="product-type">Weight</label>
+                        <input type="text" class="form-control" id="product-weight" placeholder="Product Weight">
+                    </div>
+
+                    <div class="form-group col-xs-3" style="padding-top: 24px">
+                        <select name="product-weight-unit" id="product-weight-unit" class="form-control">
+                            <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                            <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                            <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                            <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                        </select>
+                    </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <label for="product-type">Compare at price</label>
+                            <input type="text" class="form-control" id="product-compare-at" placeholder="" value="{{product.compare_at_price}}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <label for="product-type">Tags</label>
+                            <input type="text" class="form-control" value="Pending" id="product-tag" placeholder="Product Tags">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <label for="">Variants</label>
+                        </div>
+                    </div>
+                    <div id="variants" class="row well" style="margin:5px 0px 10px 0;padding: 20px 0 0px;">
+                        <div class="variant-simple form-group col-xs-10" style="display:none">
+                            <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
+                            <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0px;" placeholder="Values (separeted by comma)">
+                            <a href="#" class="btn btn-danger btn-xs remove-variant">Remove</a>
+                        </div>
+                        <div class="area col-xs-12">
+                        </div>
+                        <div class="col-xs-12" style="margin: 10px 0;text-align: right">
+                            <a href="#" class="btn btn-success btn-xs add-variant">Add Variant</a>
+                        </div>
+                    </div>
+
+                    <div class="form-group col-xs-12">
+                        <label for="product-visible">
+                            <input type="checkbox" class="" id="product-visible">
+                            Make Product Visible
+                        </label>
+                    </div>
+
+                    <div class="form-group col-xs-12">
+                        <label for="include-desc">
+                            <input type="checkbox" class="" id="include-desc">
+                            Export Description
+                        </label>
+                        <input id="product-description" type="hidden" name="content">
+                        <trix-editor input="product-description"></trix-editor>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- <p><span>Export to: <select id="store-select" style="width: 30%"></select></span><br> </p> -->
+            <div class="buttons col-xs-12">
+                <p>
+                    <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
+                    <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
+                    <button id="view-btn" type="button" class="btn btn-info" style="display:none">View</button>
+                    <!-- <span class="export" id="export-btn">Export</span> -->
+                    <!-- <span style="display:none" class="view" id="view-btn">View On Shopify</span> -->
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+
+var api_base = '';
+var product = {{product.data|safe}};
+
+function removeVariant(e) {
+    e.preventDefault();
+
+    $(this).parent().remove();
+
+    $('#variants .area').append(v);
+};
+
+function showProductInfo(rproduct) {
+    product = rproduct;
+    if (product) {
+        $('#product-title').val(product.title);
+        $('#product-price').val(product.price);
+        $('#product-type').val(product.type);
+        $('#product-tag').val(product.tags);
+
+        var element = document.querySelector("trix-editor");
+        element.editor.setSelectedRange([0, 0])
+        element.editor.insertHTML(product.description);
+
+        if (product.variants.length > 1) {
+            $.each(product.variants, function(i, el) {
+                var v = $('#variants .variant-simple').clone();
+                v.removeClass('variant-simple');
+                v.addClass('variant');
+                v.find("a.remove-variant").click(removeVariant);
+                v.show();
+
+                v.find('#product-variant-name').val(el.title);
+                v.find('#product-variant-values').val(el.values.join(','));
+
+                $('#variants .area').append(v);
+            });
+        }
+
+        if (product.weight) {
+            $('#product-weight').val(product.weight);
+        }
+    }
+}
+
+$("a.add-variant").click(function (e) {
+    e.preventDefault();
+
+    var v = $('#variants .variant-simple').clone();
+    v.addClass('variant');
+    v.removeClass('variant-simple');
+    v.show();
+    v.find("a.remove-variant").click(removeVariant);
+    // v.find('#product-variant-name').val(product.variants_title);
+    // v.find('#product-variant-values').val(product.variants_values.join(','));
+
+    $('#variants .area').append(v);
+});
+
+function removeVariant(e) {
+    e.preventDefault();
+
+    $(this).parent().remove();
+
+    $('#variants .area').append(v);
+};
+
+
+$('#export-btn').click(function () {
+    var btn = $(this);
+    var target = btn.attr('target');
+
+    btn.button('loading')
+
+    var api_url = $('#store-select').val();
+
+    if (!api_url || api_url.length==0) {
+        alert('Please choose a Shopify store first!');
+        return;
+    // } else {
+        // api_url = api_url + '/admin/products.json';
+    }
+
+    var api_data = {
+      "product": {
+        "title": $('#product-title').val(),
+        "body_html": ($('#include-desc')[0].checked ? $('#product-description').val() : ('<h2>'+$('#product-title').val()+'</h2>')),
+        "product_type": $('#product-type').val(),
+        "vendor": "Rank Engine",
+        "published": $('#product-visible')[0].checked,
+        "tags": $('#product-tag').val(),
+        "variants": [],
+        "options": [],
+        "images" :[]
+      }
+    };
+
+    for (var i=0; i<product.images.length; i++) {
+        api_data.product.images.push({
+            src: product.images[i]
+        })
+    }
+
+    if ($('#variants .variant').length==0) {
+        var vdata = {
+            "price": parseFloat($('#product-price').val()),
+        };
+
+        if ($('#product-compare-at').val().length) {
+            vdata.compare_at_price = parseFloat($('#product-compare-at').val());
+        }
+
+        if ($('#product-weight').val().length) {
+            vdata.weight = parseFloat($('#product-weight').val());
+            vdata.weight_unit = $('#product-weight-unit').val();
+        }
+
+        api_data.product.variants.push(vdata);
+
+    } else {
+        var vars_list = $('#product-variant-values').val().split(',');
+
+
+
+        // for (var i=0; i<vars_list.length; i++) {
+        $('#variants .variant').each(function (i, el) {
+            api_data.product.options.push({
+                'name': $(el).find('#product-variant-name').val(),
+                'values': $(el).find('#product-variant-values').val().split(',')
+            });
+
+            //api_data.product.options.values.push($(el).find('#product-variant-values').val().split(','));
+        });
+        // }
+
+        var vars_list = [];
+        $('#variants .variant').each(function (i, el) {
+            vars_list.push($(el).find('#product-variant-values').val().split(','));
+        });
+
+        vars_list = allPossibleCases(vars_list);
+        for (var i=0; i<vars_list.length; i++) {
+            var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
+
+            var vdata = {
+                "price": parseFloat($('#product-price').val()),
+                "title": title,
+            };
+
+            $.each(vars_list[i], function (j, va) {
+                vdata["option"+(j+1)] = va;
+            });
+
+            if ($('#product-compare-at').val().length) {
+                vdata.compare_at_price = parseFloat($('#product-compare-at').val());
+            }
+
+            if ($('#product-weight').val().length) {
+                vdata.weight = parseFloat($('#product-weight').val());
+                vdata.weight_unit = $('#product-weight-unit').val();
+            }
+
+            api_data.product.variants.push(vdata);
+
+        }
+    }
+
+    $.ajax({
+        url: api_base + '/api/' + target,
+        type: 'POST',
+        data: JSON.stringify ({
+            'product': {{product.id}},
+            'store': api_url,
+            'data': JSON.stringify(api_data),
+            'access_token': localStorage.access_token
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        context: {btn: this},
+        success: function (data) {
+            $(this.btn).button('reset');
+
+            if ('product' in data) {
+                $("#view-btn").attr("shopify-id", data.product.id);
+                $("#view-btn").attr("shopify-url", data.product.url);
+                $("#view-btn").show();
+                $('#export-btn, #save-for-later-btn').hide();
+            }  else {
+                $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
+            }
+        },
+        error: function (data) {
+            console.log(data);
+            $(this.btn).button('reset');
+
+            $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
+        }
+
+    });
+});
+
+$('#save-for-later-btn').click(function (e) {
+    var btn = $(this);
+    var target = btn.attr('target');
+
+    btn.button('loading')
+
+    var api_url = $('#store-select').val();
+
+    if (!api_url || api_url.length==0) {
+        alert('Please choose a Shopify store first!');
+        return;
+    }
+
+    var api_data = {
+        'title': $('#product-title').val(),
+        'description': $('#product-description').val(),
+        'price': parseFloat($('#product-price').val()),
+        'compare_at_price': parseFloat($('#product-compare-at').val()),
+        'images': product.images,
+        'type': $('#product-type').val(),
+        'tags': $('#product-tag').val(),
+        'weight': parseFloat($('#product-weight').val()),
+        'weight_unit': $('#product-weight-unit').val(),
+
+        'variants': []
+    }
+
+
+
+    if ($('#variants .variant').length>1) {
+        $('#variants .variant').each(function (i, el) {
+            api_data.variants.push({
+                'title': $(el).find('#product-variant-name').val(),
+                'values': $(el).find('#product-variant-values').val().split(',')
+            });
+
+        });
+    }
+
+    $.ajax({
+        url: api_base + '/api/' + target,
+        type: 'POST',
+        data: JSON.stringify ({
+            'product': {{product.id}},
+            'store': api_url,
+            'data': JSON.stringify(api_data),
+            'access_token': localStorage.access_token
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        context: {btn: this},
+        success: function (data) {
+            $(this.btn).button('reset');
+
+            if ('product' in data) {
+                $("#view-btn").attr("shopify-id", data.product.id);
+                $("#view-btn").attr("shopify-url", data.product.url);
+            }  else {
+                $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
+            }
+        },
+        error: function (data) {
+            console.log(data);
+            $(this.btn).button('reset');
+
+            $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
+        }
+    });
+});
+
+$(function() {
+    showProductInfo(product);
+});
+
+</script>
+{% endblock %}
+
