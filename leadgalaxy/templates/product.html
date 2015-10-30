@@ -42,7 +42,7 @@
                     <div class="m-t text-righ">
 
                         <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
-                        {% if item.stat == 1 %}
+                        {% if item.stat == 1 and item.shopify_url %}
                         <a href="{{item.shopify_url}}" class="btn btn-xs btn-outline btn-success" target="_blank"> <i class="fa fa-share"></i> Sent</a>
                         {% endif %}
                     </div>
