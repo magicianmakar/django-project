@@ -205,6 +205,13 @@ def api(request, target):
                 }
             })
 
+    if method == 'POST' and target == 'product':
+        product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        product.stat = 0
+        product.save()
+
+        return JsonResponse({'status': 'ok'})
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
