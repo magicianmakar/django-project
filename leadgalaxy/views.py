@@ -178,7 +178,7 @@ def api(request, target):
             url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
             url = 'https://%s/admin/products/%d'%(url, pid);
         else:
-            if 'store' in req_data:
+            if 'product' in req_data:
                 product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
                 product.store = store
                 product.data = data
