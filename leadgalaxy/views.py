@@ -171,21 +171,27 @@ def api(request, target):
             return JsonResponse({'error': 'Unvalide access token'})
 
         if target == 'shopify':
+
             r = requests.post(endpoint, json=json.loads(data))
 
-            import re
             pid = r.json()['product']['id']
             url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
             url = 'https://%s/admin/products/%d'%(url, pid);
+
+            if 'product' in req_data:
+                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                product.shopify_id = pid
+                product.stat = 1
+                product.save()
         else:
             if 'product' in req_data:
                 product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
                 product.store = store
                 product.data = data
-                product.stat = 1
+                product.stat = 0
 
             else:
-                product = ShopifyProduct(store=store, user=user, data=data, stat=1)
+                product = ShopifyProduct(store=store, user=user, data=data, stat=0)
 
             product.save()
 
@@ -208,6 +214,8 @@ def product(request, tpl='grid'):
         p = {
             'id': i.id,
             'store': i.store,
+            'stat': i.stat,
+            'shopify_url': i.shopify_link(),
             'user': i.user,
             'created_at': i.created_at,
             'updated_at': i.updated_at,
