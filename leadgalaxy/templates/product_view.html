@@ -404,6 +404,10 @@ $('#save-for-later-btn').click(function (e) {
     });
 });
 
+$("#view-btn").click(function () {
+    window.open($(this).attr('shopify-url'), '_blank');
+});
+
 $(function() {
     showProductInfo(product);
 });
