@@ -33,7 +33,7 @@ class ShopifyProduct(models.Model):
 
     data = models.TextField()
     stat = models.IntegerField(default=0, verbose_name='Publish stat') # 0: not send yet, 1: Sent to Shopify
-    shopify_id = models.IntegerField(default=0, verbose_name='Shopif Product ID')
+    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
