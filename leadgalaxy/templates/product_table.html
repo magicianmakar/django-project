@@ -30,7 +30,18 @@
                     <tbody>
                     {% for item in products %}
                         <tr>
-                            <td><a href="/product/{{item.id}}">{{item.product.title}}</a></td>
+                            <td>
+                                <ul class="media-list">
+                                  <li class="media">
+                                    <a class="pull-left" href="#">
+                                      <img style="width: 64px; height: 64px;" class="media-object" src="{{item.images|first}}" alt="">
+                                    </a>
+                                    <div class="media-body">
+                                      <h4 class="media-heading"><a href="/product/{{item.id}}">{{item.product.title}}</a></h4>
+                                    </div>
+                                  </li>
+                                </ul>
+                            </td>
                             <td>{{item.product.price}}</td>
                             <td>{{item.product.type}}</td>
                             <td>{{item.product.tags}}</td>
