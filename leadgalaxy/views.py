@@ -221,7 +221,7 @@ def api(request, target):
             product_data['tags'] = data.get('tags[%s]'%p)
             product_data['price'] = float(data.get('price[%s]'%p))
             product_data['compare_at_price'] = float(data.get('compare_at[%s]'%p))
-            product_data['product_type'] = data.get('type[%s]'%p)
+            product_data['type'] = data.get('type[%s]'%p)
             product_data['weight'] = data.get('weight[%s]'%p)
             # send_to_shopify = data.get('send_to_shopify[%s]'%p)
 
