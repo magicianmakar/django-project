@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.db.models import Q
-import re
+import re, json
 
 class ShopifyStore(models.Model):
     title = models.CharField(max_length=512, blank=True, default='')
@@ -15,7 +15,7 @@ class ShopifyStore(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return self.title
+        return '%s | %s'%(self.title, self.user.username)
 
 class AccessToken(models.Model):
     token = models.CharField(max_length=512, unique=True)
@@ -25,7 +25,7 @@ class AccessToken(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return self.token
+        return '%s | %s'%(self.user.username, self.token)
 
 class ShopifyProduct(models.Model):
     store = models.ForeignKey(ShopifyStore)
@@ -38,8 +38,13 @@ class ShopifyProduct(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    # def __unicode__(self):
-        # return self.token
+    def __unicode__(self):
+        try:
+            title = json.loads(self.data)['title']
+        except:
+            title = 'Product'
+
+        return '%s | %s'%(title, self.store.title)
 
     def shopify_link(self):
         if self.shopify_id:
