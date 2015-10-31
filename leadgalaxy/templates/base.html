@@ -15,7 +15,15 @@
     <link href="{% static 'css/animate.css' %}" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <link href="{% static 'css/trix.css' %}" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.1/skins/square/blue.css" rel="stylesheet">
 
+    <style type="text/css">
+    .icheckbox_square-blue {
+        position: absolute;
+        margin: 5px;
+        background-color: #fff;
+    }
+    </style>
     {% block extracss %}{% endblock %}
 
   </head>
@@ -136,12 +144,22 @@
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
     <script src="{% static 'js/plugins/metisMenu/jquery.metisMenu.js' %}"></script>
     <script src="{% static 'js/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.1/icheck.min.js"></script>
      <!--<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script> -->
 
     <!-- Custom and plugin javascript -->
     <script src="{% static 'js/inspinia.js' %}"></script>
     <script src="{% static 'js/plugins/pace/pace.min.js' %}"></script>
     <script src="{% static 'js/trix.js' %}"></script>
+
+    <script type="text/javascript">
+        $(function() {
+            $('.icheck').iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue',
+            });
+        });
+    </script>
 
     {% block extrajs %}{% endblock %}
 

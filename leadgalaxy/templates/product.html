@@ -14,13 +14,27 @@
 </div>
 <div class="ibox-content">
 
+<div class="row" style="margin-bottom: 20px">
+    <div class="col-md-6">
+        <label for="selected-actions">Selected Items:</label>
+        <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
+            <option value=""></option>
+            <option value="edit">Edit...</option>
+            <option value="sent">Mark as Sent</option>
+            <option value="unsent">Mark as Unsent</option>
+            <option value="delete">Delete</option>
+        </select>
+        <button id="apply-btn" class="btn btn-primary">Apply</button>
+    </div>
+</div>
+
 <div class="row">
     {% for item in products %}
     <div class="col-md-3">
         <div class="ibox">
-            <div class="ibox-content product-box">
-
+            <div class="ibox-content product-box" product-id="{{item.id}}">
                 <div class="product-imitation" style="padding: 0;">
+                    <input class="item-select icheck" style="" name="product" value="{{item.id}}" type="checkbox" />
                     <img src="{{item.images|first}}" style="width: 100%">
                 </div>
                 <div class="product-desc">
@@ -34,11 +48,10 @@
                         Submitted at {{item.created_at|date}}
                     </div>
                     <div class="m-t text-righ">
-
                         <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
-                        {% if item.stat == 1 %}
-                        <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success sent-btn" target="_blank"> <i class="fa fa-share"></i> <span>Sent</span></button>
-                        {% endif %}
+
+                        <button product-id="{{item.id}}" {% if item.stat != 1 %}style="display:none"{% endif %} class="btn btn-xs btn-outline btn-success sent-btn" target="_blank"> <i class="fa fa-share"></i> <span>Sent</span></button>
+
                     </div>
                 </div>
             </div>
@@ -56,73 +69,23 @@
 
 {% block extrajs %}
 <script type="text/javascript">
-    $('#add-store').click(function(e) {
-        var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
 
-        if (!url || url.length != 1) {
-            alert('API URL is not correct!');
-            return;
-        }
-
-        $('#add-store').button('loading');
-
+    function changeProductStat(product, stat, callback, erroback) {
         $.ajax({
-            url: '/api/add-store',
+            url: '/api/product-stat',
             type: 'POST',
             data: {
-                name: $('#store-name').val(),
-                url: 'https://' + url[0],
+                product: product,
+                sent: stat
             },
             success: function(data) {
-                if ('error' in data) {
-                    alert(data.error);
-                    $('#add-store').button('reset');
-                } else {
-                    window.location.href = window.location.href
-                }
-
+                callback(data);
             },
             error: function(data) {
-                alert('Unknow error!');
-                $('#add-store').button('reset');
+                erroback(data);
             }
         });
-    });
-
-    $('.delete-store').click(function (e) {
-        var btn = $(this);
-        var url = $(this).attr('store-url');
-
-        btn.button('loading');
-
-        $.ajax({
-            url: '/api/delete-store',
-            type: 'POST',
-            data: {
-                url: url,
-            },
-            success: function(data) {
-                if ('error' in data) {
-                    alert(data.error);
-                    btn.button('reset');
-                } else {
-                    btn.parents('tr').remove();
-                }
-
-            },
-            error: function(data) {
-                alert('Connection error');
-                btn.button('reset');
-            }
-        });
-    });
-
-    $('.visit-store').click(function(e) {
-        var url = $(this).attr('store-url');
-        url = url.replace(/[^\/:]+:[^:]+@/, '') + '/admin';
-
-        window.open(url, '_target');
-    });
+    }
 
     $('.sent-btn')
       .mouseenter(function() {
@@ -139,28 +102,69 @@
         var btn = $(this);
         btn.button('loading');
 
-        $.ajax({
-            url: '/api/product',
-            type: 'POST',
-            data: {
-                product: btn.attr('product-id'),
-            },
-            success: function(data) {
+
+        changeProductStat(btn.attr('product-id'), 0,
+            function(data) {
                 if ('error' in data) {
                     alert(data.error);
                     btn.button('reset');
                 } else {
-                    btn.remove();
+                    btn.hide();
                 }
-
-            },
-            error: function(data) {
-                alert('Connection error');
+            }, function(data) {
                 btn.button('reset');
-            }
+                alert('Server side error')
         });
       });
 
+      $('#apply-btn').click(function (e) {
+            var action = $('#selected-actions').val();
+            if (action == 'delete') {
+                if (!confirm('Are you sure that you want to permanently delete the selected products?')) {
+                    return;
+                }
+            }
+            $('input[type=checkbox]').each(function(i, el) {
+                if (el.checked) {
+                    var product = $(el).parents('.product-box').attr('product-id');
+                    if (action == 'unsent') {
+                        var btn = $(el).parents('.product-box').find('.sent-btn');
+                        btn.button('loading');
+
+                        changeProductStat(product, 0, function(data) {
+                            if (data.status == 'ok') {
+                                btn.hide();
+                            }
+                        }, function(data) {
+                            btn.button('reset');
+                            alert('Server side error')
+                        });
+                    } else if (action == 'sent') {
+                        var btn = $(el).parents('.product-box').find('.sent-btn');
+
+                        changeProductStat(product, 1, function(data) {
+                            if (data.status == 'ok') {
+                                btn.show();
+                            }
+                        });
+                    } else if (action == 'delete') {
+                        $.ajax({
+                            url: '/api/product-delete',
+                            type: 'POST',
+                            data: {
+                                product: product,
+                            },
+                            success: function(data) {
+                                $(el).parents('.col-md-3').remove();
+                            },
+                            error: function(data) {
+                                alert('Server side error');
+                            }
+                        });
+                    }
+                }
+            });
+        });
 </script>
 {% endblock %}
 

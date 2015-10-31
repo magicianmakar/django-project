@@ -205,10 +205,16 @@ def api(request, target):
                 }
             })
 
-    if method == 'POST' and target == 'product':
+    if method == 'POST' and target == 'product-stat':
         product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
-        product.stat = 0
+        product.stat = data.get('sent')
         product.save()
+
+        return JsonResponse({'status': 'ok'})
+
+    if method == 'POST' and target == 'product-delete':
+        product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        product.delete()
 
         return JsonResponse({'status': 'ok'})
 

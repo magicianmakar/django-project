@@ -32,7 +32,7 @@
                             <th>Compare At Price</th>
                             <th>Product Type</th>
                             <th style="width: 100px">Weight</th>
-                            <!-- <th style="width:200px">Options</th> -->
+                            <th style="width:200px">Options</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -69,9 +69,9 @@
                                 <span style=""><input style="margin: 0px;padding: 10px 0px 0px 10px;width: 45px; height: 45px;border:0 none;" name="weight[{{item.id}}]" value="{{item.product.weight}}" />
                                     <i>{{item.product.weight_unit}}</i></span>
                             </td>
-                            <!-- <td astyle="">
-                                <input style="" name="send_to_shopify[{{item.id}}]" type="checkbox" /> Send to Shopify Store
-                            </td> -->
+                            <td astyle="">
+                                <input class="icheck" style="" name="send_to_shopify[{{item.id}}]" type="checkbox" /> Send to Shopify Store
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -108,10 +108,6 @@
     <!-- <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script> -->
 
     <script type="text/javascript">
-        $(document).ready(function() {
-
-        });
-
         $('#save-btn').click(function() {
             var btn = $(this);
             btn.button('loading');
