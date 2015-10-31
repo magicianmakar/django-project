@@ -120,6 +120,10 @@
                     <button id="view-btn" type="button" class="btn btn-info" style="display:none">View in Shopify</button>
                     <!-- <span class="export" id="export-btn">Export</span> -->
                     <!-- <span style="display:none" class="view" id="view-btn">View On Shopify</span> -->
+                    {% if product.product.original_url %}
+                        <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a>
+                    {% endif %}
+
                 </p>
             </div>
         </div>

@@ -316,6 +316,7 @@ def product_view(request, pid):
 
     p['price'] = '$%.02f'%p['product']['price']
     p['images'] = p['product']['images']
+    p['original_url'] = p['product'].get('original_url')
 
     return render(request, 'product_view.html', {
         'product': p,
