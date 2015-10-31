@@ -235,6 +235,39 @@ def api(request, target):
             product.save()
 
         return JsonResponse({'status': 'ok'})
+    if method == 'POST' and target == 'product-edit':
+        products = []
+        for p in data.getlist('products[]'):
+            product = ShopifyProduct.objects.get(id=p)
+            product_data = json.loads(product.data)
+
+            if 'tags' in data:
+                product_data['tags'] = data.get('tags')
+
+            if 'price' in data:
+                product_data['price'] = float(data.get('price'))
+
+            if 'compare_at' in data:
+                product_data['compare_at_price'] = float(data.get('compare_at'))
+
+            if 'type' in data:
+                product_data['type'] = data.get('type')
+
+            if 'weight' in data:
+                product_data['weight'] = data.get('weight')
+
+            if 'weight_unit' in data:
+                product_data['weight_unit'] = data.get('weight_unit')
+
+            products.append(product_data)
+
+            product.data = json.dumps(product_data)
+            product.save()
+
+        return JsonResponse({
+            'status': 'ok',
+            'products':products
+        }, safe=False)
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 

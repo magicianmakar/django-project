@@ -14,6 +14,7 @@
 </div>
 <div class="ibox-content">
 
+{% if products %}
 <div class="row" style="margin-bottom: 20px">
     <div class="col-md-6">
         <label for="selected-actions">Selected Items:</label>
@@ -27,6 +28,7 @@
         <button id="apply-btn" class="btn btn-primary">Apply</button>
     </div>
 </div>
+{% endif %}
 
 <div class="row">
     {% for item in products %}
@@ -34,8 +36,8 @@
         <div class="ibox">
             <div class="ibox-content product-box" product-id="{{item.id}}">
                 <div class="product-imitation" style="padding: 0;">
-                    <input class="item-select icheck" style="" name="product" value="{{item.id}}" type="checkbox" />
-                    <img src="{{item.images|first}}" style="width: 100%">
+                    <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                    <label for="product_{{item.id}}"><img src="{{item.images|first}}" style="width: 100%"></label>
                 </div>
                 <div class="product-desc">
                     <span class="product-price">
@@ -57,13 +59,62 @@
             </div>
         </div>
     </div>
+    {% empty %}
+    <h3 class="text-center">No product found.</h3>
     {% endfor %}
 </div>
 
 </div>
 </div>
 
+<div id="modal-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Edit selected products</h3>
+                        <p class="m-t-none m-b">Empty fields will be ignored.</p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" id="product-price" placeholder="Procuct Price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-compare-at" placeholder="Compare at price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-type" placeholder="Product type" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-tags" placeholder="Tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="form-group col-xs-6">
+                                        <label for="product-type">Weight</label>
+                                        <input type="text" class="form-control" id="product-weight" placeholder="Product Weight">
+                                    </div>
 
+                                    <div class="form-group col-xs-3" style="padding-top: 24px">
+                                        <select name="product-weight-unit" id="product-weight-unit" class="form-control">
+                                            <option value="g">g</option>
+                                            <option value="kg">kg</option>
+                                            <option value="oz">oz</option>
+                                            <option value="lb">lb</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button id="save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Save</strong></button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 
@@ -123,7 +174,12 @@
                 if (!confirm('Are you sure that you want to permanently delete the selected products?')) {
                     return;
                 }
+            } else if (action == 'edit') {
+                $('#modal-form').modal('show');
+                return;
             }
+
+            $('#selected-actions').val('');
             $('input[type=checkbox]').each(function(i, el) {
                 if (el.checked) {
                     var product = $(el).parents('.product-box').attr('product-id');
@@ -162,6 +218,67 @@
                             }
                         });
                     }
+
+                    $(el).iCheck('uncheck');
+                }
+            });
+        });
+
+        $('#save-changes').click(function (e) {
+            var btn = $(this);
+            var products = [];
+
+            $('input[type=checkbox]').each(function(i, el) {
+                if (el.checked) {
+                    products.push($(el).parents('.product-box').attr('product-id'));
+                    $(el).iCheck('uncheck');
+                }
+            });
+
+
+            var data = {
+                'products': products
+            };
+
+            if ($('#product-price').val().length) {
+                data['price'] = $('#product-price').val();
+            }
+
+            if ($('#product-compare-at').val().length) {
+                data['compare_at'] = $('#product-compare-at').val();
+            }
+
+            if ($('#product-type').val().length) {
+                data['type'] = $('#product-type').val();
+            }
+
+            if ($('#product-tags').val().length) {
+                data['tags'] = $('#product-tags').val();
+            }
+
+            if ($('#product-weight').val().length) {
+                data['weight'] = $('#product-weight').val();
+                data['weight_unit'] = $('#product-weight-unit').val();
+            }
+
+            btn.button('loading');
+
+            $.ajax({
+                url: '/api/product-edit',
+                type: 'POST',
+                data: data,
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        window.location.href = window.location.href;
+                    } else {
+                        alert('error' in data ? data.error : 'Server error');
+                    }
+                },
+                error: function(data) {
+                    alert('error' in data ? data.error : 'Server error');
+                },
+                complete: function() {
+                    btn.button('reset');
                 }
             });
         });

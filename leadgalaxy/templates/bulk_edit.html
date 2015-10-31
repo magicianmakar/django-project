@@ -73,6 +73,10 @@
                                 <input class="icheck" style="" name="send_to_shopify[{{item.id}}]" type="checkbox" /> Send to Shopify Store
                             </td>
                         </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="7">No product found</td>
+                        </tr>
                     {% endfor %}
                     </tbody>
                 </table>
