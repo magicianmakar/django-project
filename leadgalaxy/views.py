@@ -212,6 +212,24 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'bulk-edit':
+        for p in data.getlist('product'):
+            product = ShopifyProduct.objects.get(id=p)
+            product_data = json.loads(product.data)
+
+            product_data['title'] = data.get('title[%s]'%p)
+            product_data['tags'] = data.get('tags[%s]'%p)
+            product_data['price'] = float(data.get('price[%s]'%p))
+            product_data['compare_at_price'] = float(data.get('compare_at[%s]'%p))
+            product_data['product_type'] = data.get('type[%s]'%p)
+            product_data['weight'] = data.get('weight[%s]'%p)
+            # send_to_shopify = data.get('send_to_shopify[%s]'%p)
+
+            product.data = json.dumps(product_data)
+            product.save()
+
+        return JsonResponse({'status': 'ok'})
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -264,6 +282,31 @@ def product_view(request, pid):
         'product': p,
         'page': 'product',
         'breadcrumbs': ['Products', 'View']
+    })
+
+@login_required
+def bulk_edit(request):
+    products = []
+    for i in ShopifyProduct.objects.filter(user=request.user):
+        p = {
+            'id': i.id,
+            'store': i.store,
+            'stat': i.stat,
+            'shopify_url': i.shopify_link(),
+            'user': i.user,
+            'created_at': i.created_at,
+            'updated_at': i.updated_at,
+            'product': json.loads(i.data),
+        }
+
+        p['price'] = '$%.02f'%p['product']['price']
+        p['images'] = p['product']['images']
+        products.append(p)
+
+    return render(request, 'bulk_edit.html', {
+        'products': products,
+        'page': 'bulk',
+        'breadcrumbs': ['Products', 'Bulk Edit']
     })
 
 def login(request):

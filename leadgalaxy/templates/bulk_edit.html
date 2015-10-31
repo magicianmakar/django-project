@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Saved Products<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li><a href="/product">Grid Layout</a> </li>
+                        <!-- <li><a href="#">Config option 2</a> </li> -->
+                    </ul>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form id="bulk">
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th style="width:50%">Title</th>
+                            <th>Tags</th>
+                            <th>Price</th>
+                            <th>Compare At Price</th>
+                            <th>Product Type</th>
+                            <th style="width: 100px">Weight</th>
+                            <!-- <th style="width:200px">Options</th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in products %}
+                        <tr>
+                            <td style="padding: 0px;">
+                                <input type="hidden" name="product" value="{{item.id}}" />
+                                <ul class="media-list">
+                                  <li class="media">
+                                    <a class="pull-left" href="#">
+                                      <img style="width: 64px; height: 64px;" class="media-object" src="{{item.images|first}}" alt="">
+                                    </a>
+                                    <div class="media-body">
+                                      <textarea style="margin: 0px;padding: 10px;width: 100%; height: 45px; overflow: hidden;border:0 none;" name="title[{{item.id}}]" id="title[{{item.id}}]" >{{item.product.title}}</textarea>
+                                    </div>
+                                  </li>
+                                </ul>
+
+
+                            </td>
+                            <td style="padding: 0px;">
+                                <input style="margin: 0px;padding: 10px;width: 100%; height: 45px;border:0 none;" name="tags[{{item.id}}]" value="{{item.product.tags}}" />
+                            </td>
+                            <td style="padding: 0px;">
+                                <input style="margin: 0px;padding: 10px;width: 100%; height: 45px;border:0 none;" name="price[{{item.id}}]" value="{{item.product.price|floatformat:2}}" />
+                            </td>
+                            <td style="padding: 0px;">
+                                <input style="margin: 0px;padding: 10px;width: 100%; height: 45px;border:0 none;" name="compare_at[{{item.id}}]" value="{{item.product.compare_at_price|default:'0.0'}}" />
+                            </td>
+                            <td style="padding: 0px;">
+                                <input style="margin: 0px;padding: 10px;width: 100%; height: 45px;border:0 none;" name="type[{{item.id}}]" value="{{item.product.type}}" />
+                            </td>
+                            <td style="padding: 0px;">
+                                <span style=""><input style="margin: 0px;padding: 10px 0px 0px 10px;width: 45px; height: 45px;border:0 none;" name="weight[{{item.id}}]" value="{{item.product.weight}}" />
+                                    <i>{{item.product.weight_unit}}</i></span>
+                            </td>
+                            <!-- <td astyle="">
+                                <input style="" name="send_to_shopify[{{item.id}}]" type="checkbox" /> Send to Shopify Store
+                            </td> -->
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </form>
+
+                <button id="save-btn" class="btn btn-lg btn-success"><i class="fa fa-save"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="/static/css/plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
+    <link href="/static/css/plugins/dataTables/dataTables.responsive.css" rel="stylesheet">
+    <link href="/static/css/plugins/dataTables/dataTables.tableTools.min.css" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+    <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+    <script src="/static/js/plugins/dataTables/dataTables.responsive.js"></script>
+    <script src="/static/js/plugins/dataTables/dataTables.tableTools.min.js"></script>
+    <!-- <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script> -->
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+        });
+
+        $('#save-btn').click(function() {
+            var btn = $(this);
+            btn.button('loading');
+
+            $.ajax({
+                url: '/api/bulk-edit',
+                type: 'POST',
+                data: $('form#bulk').serialize(),
+                success: function (data) {
+                    if ('status' in data && data.status == 'ok') {
+                        //window.location.href = window.location.href;
+                    } else {
+                        alert(data.error || 'Server error');
+                    }
+                },
+                error: function(data) {
+                    alert(data.error || 'Server error');
+                },
+                complete: function() {
+                    btn.button('reset');
+                }
+            })
+        });
+    </script>
+{% endblock %}
+
