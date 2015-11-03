@@ -11,6 +11,7 @@ urlpatterns = patterns('',
     url(r'^product/edit/all$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
     url(r'^product/?(?P<tpl>(grid|table))?$', leadgalaxy.views.product, name='product'),
     url(r'^product/(?P<pid>[0-9]+)$', leadgalaxy.views.product_view, name='product_view'),
+    url(r'^boards$', leadgalaxy.views.boards, name='boards'),
 
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',

@@ -285,6 +285,12 @@ def api(request, target):
             'products':products
         }, safe=False)
 
+    if method == 'POST' and target == 'boards-add':
+        board = ShopifyBoard(title=data.get('title').strip(), user=user)
+        board.save()
+
+        return JsonResponse({'status': 'ok'})
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -365,6 +371,37 @@ def bulk_edit(request):
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
     })
 
+@login_required
+def boards(request):
+    boards = []
+    for b in request.user.shopifyboard_set.all():
+        board = {
+            'title': b.title,
+            'products': []
+        }
+
+        for i in b.products.all():
+            p = {
+                'id': i.id,
+                'store': i.store,
+                'stat': i.stat,
+                'shopify_url': i.shopify_link(),
+                'user': i.user,
+                'created_at': i.created_at,
+                'updated_at': i.updated_at,
+                'product': json.loads(i.data),
+            }
+
+            p['price'] = '$%.02f'%p['product']['price']
+            p['images'] = p['product']['images']
+            board['products'].append(p)
+
+        boards.append(board)
+
+    return render(request, 'boards.html', {
+        'boards': boards,
+        'page': 'boards',
+        'breadcrumbs': ['Boards']
     })
 
 def login(request):
