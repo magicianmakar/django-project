@@ -60,7 +60,7 @@ def api(request, target):
             user = None
 
     if target not in ['login', 'shopify', 'save-for-later'] and not user:
-        return JsonResponse({'user':'Unauthenticated api call.'})
+        return JsonResponse({'error':'Unauthenticated api call.'})
 
     if target == 'login':
         username=data.get('username')
