@@ -16,6 +16,7 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <link href="{% static 'css/trix.css' %}" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.1/skins/square/blue.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.0.0/jquery.contextMenu.min.css" rel="stylesheet">
 
     <style type="text/css">
     .icheckbox_square-blue {
@@ -185,6 +186,8 @@
     <script src="{% static 'js/plugins/metisMenu/jquery.metisMenu.js' %}"></script>
     <script src="{% static 'js/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.1/icheck.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.0.0/jquery.contextMenu.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.0.0/jquery.ui.position.min.js"></script>
      <!--<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script> -->
 
     <!-- Custom and plugin javascript -->
@@ -214,7 +217,11 @@
                     success: function(data) {
                         if ('status' in data && data.status == 'ok') {
                             $('#modal-board-add').modal('hide');
-                            window.location.href = window.location.href;
+                            if (typeof(window.onBoardAdd) == 'function') {
+                                window.onBoardAdd(data.board);
+                            } else {
+                                window.location.href = window.location.href;
+                            }
                         } else {
                             alert('error' in data ? data.error : 'Server error');
                         }

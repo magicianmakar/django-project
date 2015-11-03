@@ -5,12 +5,20 @@
 {% block main-container %}
 
 {% for board in boards %}
-<div id="b{{board.id}}" class="ibox float-e-margins">
+<div id="b{{board.id}}" class="board-box ibox float-e-margins">
 <div class="ibox-title">
     <h5>{{board.title}}<small></small></h5>
     <div class="ibox-tools">
-        <!-- <a href="/product/table" title="Table Layout"><i class="fa fa-lg fa-list"></i></a> -->
-        <!-- <a style="color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a> -->
+        <a class="collapse-link">
+            <i class="fa fa-chevron-up"></i>
+        </a>
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+            <i class="fa fa-wrench"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-user">
+            <li><a board-id="{{board.id}}" class="board-empty" href="#">Empty board</a></li>
+            <li><a board-id="{{board.id}}" class="board-delete" href="#">Delete board</a></li>
+        </ul>
     </div>
 </div>
 <div class="ibox-content">
@@ -291,6 +299,60 @@
                 },
                 complete: function() {
                     btn.button('reset');
+                }
+            });
+        });
+
+        $('.board-empty').click(function (e) {
+            e.preventDefault();
+            var board = $(this).attr('board-id');
+            var btn = $(this);
+
+            $.ajax({
+                url: '/api/board-empty',
+                type: 'POST',
+                data: {
+                    board: board
+                },
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        $(btn.parents('.board-box').find('.ibox-content')[0]).html(
+                            '<h3 class="text-center">No product in this board.</h3>'
+                        );
+                    } else {
+                        alert('error' in data ? data.error : 'Server error');
+                    }
+                },
+                error: function(data) {
+                    alert('error' in data ? data.error : 'Server error');
+                },
+                complete: function() {
+                }
+            });
+        });
+
+        $('.board-delete').click(function (e) {
+            e.preventDefault();
+            var board = $(this).attr('board-id');
+            var btn = $(this);
+
+            $.ajax({
+                url: '/api/board-delete',
+                type: 'POST',
+                data: {
+                    board: board
+                },
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        btn.parents('.board-box').remove();
+                    } else {
+                        alert('error' in data ? data.error : 'Server error');
+                    }
+                },
+                error: function(data) {
+                    alert('error' in data ? data.error : 'Server error');
+                },
+                complete: function() {
                 }
             });
         });

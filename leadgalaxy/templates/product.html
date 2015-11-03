@@ -55,6 +55,14 @@
 
                         <button product-id="{{item.id}}" {% if item.stat != 1 %}style="display:none"{% endif %} class="btn btn-xs btn-outline btn-success sent-btn" target="_blank"> <i class="fa fa-share"></i> <span>Sent</span></button>
 
+                        <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn pull-right" target="_blank">
+                            {% if item.boards.first %}
+                            Board: {{item.boards.first.title}}
+                            {% else %}
+                            Board
+                            {% endif %}
+                        </button>
+
                     </div>
                 </div>
             </div>
@@ -238,6 +246,8 @@
                             if (data.status == 'ok') {
                                 btn.show();
                             }
+                        }, function(data) {
+                            alert('Server side error')
                         });
                     } else if (action == 'delete') {
                         $.ajax({
@@ -358,6 +368,66 @@
                 },
                 complete: function() {
                     btn.button('reset');
+                }
+            });
+        });
+
+        function changeBoard(board_id, options) {
+            // options.$trigger.button('loading');
+            $.ajax({
+                url: '/api/product-board',
+                type: 'POST',
+                data: {
+                    'product': options.$trigger.attr("product-id"),
+                    'board': board_id
+                },
+                success: function(data) {
+                    // options.$trigger.button('reset');
+
+                    if ('status' in data && data.status == 'ok') {
+                        if ('board' in data) {
+                            options.$trigger.text('Board: '+data.board.title);
+                        } else {
+                            options.$trigger.text('Board');
+                        }
+                    } else {
+                        alert('error' in data ? data.error : 'Server error');
+                    }
+                },
+                error: function(data) {
+                    options.$trigger.button('reset');
+                    alert('error' in data ? data.error : 'Server error');
+                },
+                complete: function() {
+                    // options.$trigger.button('reset');
+                }
+            });
+        }
+        $(function(){
+            $.contextMenu({
+                selector: '.board-btn',
+                trigger: 'left',
+                callback: function(key, options) {
+                    if (key == 'add') {
+                        window.onBoardAdd = function(board) {
+                            // options.$trigger.text('Board: '+board.title);
+                            changeBoard(board.id, options);
+                        }
+
+                        $('#modal-board-add').modal('show');
+                    } else if (key == 'clear') {
+                        changeBoard(0, options);
+                    } else {
+                        changeBoard(key, options);
+                    }
+                },
+                items: {
+                {% for item in request.user.shopifyboard_set.all %}
+                    "{{item.id}}": {name: "{{item.title}}"},
+                {% endfor %}
+                    "sep1": "---------",
+                    "add": {name: "Add new board", icon: 'add'},
+                    "clear": {name: "Clear", icon: 'quit'}
                 }
             });
         });

@@ -289,18 +289,60 @@ def api(request, target):
         board = ShopifyBoard(title=data.get('title').strip(), user=user)
         board.save()
 
-        return JsonResponse({'status': 'ok'})
+        return JsonResponse({
+            'status': 'ok',
+            'board': {
+                'id': board.id,
+                'title': board.title
+            }
+        })
 
     if method == 'POST' and target == 'board-add-products':
         board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
         products = []
         for p in data.getlist('products[]'):
             product = ShopifyProduct.objects.get(id=p)
+            # product.shopifyboard_set.clear()
             board.products.add(product)
 
         board.save()
 
         return JsonResponse({'status': 'ok'})
+    if method == 'POST' and target == 'product-board':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+
+        if data.get('board') == '0':
+            product.shopifyboard_set.clear()
+            product.save()
+
+            return JsonResponse({
+                'status': 'ok'
+            })
+        else:
+            board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+            board.products.add(product)
+            board.save()
+
+            return JsonResponse({
+                'status': 'ok',
+                'board': {
+                    'id': board.id,
+                    'title': board.title
+                }
+            })
+    if method == 'POST' and target == 'board-delete':
+        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board.delete()
+        return JsonResponse({
+            'status': 'ok'
+        })
+
+    if method == 'POST' and target == 'board-empty':
+        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board.products.clear()
+        return JsonResponse({
+            'status': 'ok'
+        })
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 
@@ -317,6 +359,7 @@ def product(request, tpl='grid'):
             'created_at': i.created_at,
             'updated_at': i.updated_at,
             'product': json.loads(i.data),
+            'boards': i.shopifyboard_set.all()
         }
 
         p['price'] = '$%.02f'%p['product']['price']
