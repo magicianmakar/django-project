@@ -26,7 +26,7 @@ def index(request):
     return render(request, 'index.html', {
         'stores': stores,
         'page': 'index',
-        'breadcrumbs': ['Dashboard']
+        'breadcrumbs': ['Stores']
     })
 
 def get_user_from_token(token):
@@ -337,7 +337,7 @@ def product_view(request, pid):
     return render(request, 'product_view.html', {
         'product': p,
         'page': 'product',
-        'breadcrumbs': ['Products', 'View']
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
     })
 
 @login_required
@@ -362,7 +362,9 @@ def bulk_edit(request):
     return render(request, 'bulk_edit.html', {
         'products': products,
         'page': 'bulk',
-        'breadcrumbs': ['Products', 'Bulk Edit']
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
+    })
+
     })
 
 def login(request):
