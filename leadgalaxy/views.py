@@ -291,6 +291,17 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'board-add-products':
+        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        products = []
+        for p in data.getlist('products[]'):
+            product = ShopifyProduct.objects.get(id=p)
+            board.products.add(product)
+
+        board.save()
+
+        return JsonResponse({'status': 'ok'})
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -376,6 +387,7 @@ def boards(request):
     boards = []
     for b in request.user.shopifyboard_set.all():
         board = {
+            'id': b.id,
             'title': b.title,
             'products': []
         }

@@ -64,7 +64,7 @@ class ShopifyBoard(models.Model):
     title = models.CharField(max_length=512, blank=True, default='')
 
     user = models.ForeignKey(User)
-    products = models.ManyToManyField(ShopifyProduct)
+    products = models.ManyToManyField(ShopifyProduct, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

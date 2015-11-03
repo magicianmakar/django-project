@@ -60,6 +60,21 @@
 
                 <li {% if page == 'bulk' %}class="active"{% endif %}><a href="{% url 'bulk_edit' %}"> <i class="fa fa-edit"></i> <span class="nav-label">Bulk edit</span></a> </li>
 
+                <li {% if page == 'boards' %}class="active"{% endif %}>
+                    <a href="{% url 'boards' %}">
+                        <i class="fa fa-edit"></i>
+                        <span class="nav-label">Boards</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    {% if page == 'boards' %}
+                    <ul class="nav nav-second-level collapse in">
+                        {% for item in request.user.shopifyboard_set.all %}
+                        <li><a href="#b{{item.id}}">{{item.title}}</a></li>
+                        {% endfor %}
+                        <li><a href="#" class="add-board-btn"><span class="fa fa-plus"></span> Add Board</a></li>
+                    </ul>
+                    {% endif %}
+                </li>
             </ul>
 
         </div>
@@ -139,6 +154,31 @@
     </div>
   </div>
 
+<div id="modal-board-add" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add new board</h3>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" id="add-board-name" placeholder="New Board Name" class="form-control">
+                            </div>
+
+                            <div>
+                                <button id="board-add-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Add</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
     <!-- Mainly scripts -->
     <script src="{% static 'js/jquery-2.1.1.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
@@ -157,6 +197,32 @@
             $('.icheck').iCheck({
                 checkboxClass: 'icheckbox_square-blue',
                 radioClass: 'iradio_square-blue',
+            });
+
+            $(".add-board-btn").click(function(e) {
+                e.preventDefault();
+                $('#modal-board-add').modal('show');
+            });
+
+            $("#board-add-send").click(function(e) {
+                $.ajax({
+                    url: '/api/boards-add',
+                    type: 'POST',
+                    data: {
+                        title: $('#add-board-name').val()
+                    },
+                    success: function(data) {
+                        if ('status' in data && data.status == 'ok') {
+                            $('#modal-board-add').modal('hide');
+                            window.location.href = window.location.href;
+                        } else {
+                            alert('error' in data ? data.error : 'Server error');
+                        }
+                    },
+                    error: function (data) {
+                        alert('error' in data ? data.error : 'Server error');
+                    }
+                })
             });
         });
     </script>

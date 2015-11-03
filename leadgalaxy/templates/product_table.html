@@ -23,6 +23,7 @@
                         <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
                             <option value=""></option>
                             <option value="edit">Edit...</option>
+                            <option value="board">Add to Board...</option>
                             <option value="sent">Mark as Sent</option>
                             <option value="unsent">Mark as Unsent</option>
                             <option value="delete">Delete</option>
@@ -125,6 +126,37 @@
     </div>
 </div>
 
+
+<div id="modal-board-product" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add to board</h3>
+                        <form role="form">
+                            <div class="form-group text-center">
+            <label for="selected-board">Select board</label>
+            <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
+                <!-- <option value=""></option> -->
+                {% for item in request.user.shopifyboard_set.all %}
+                <option value="{{item.id}}">{{item.title}}</option>
+                {% endfor %}
+            </select>
+                            </div>
+
+                            <div>
+                                <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Apply</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extracss %}
@@ -256,6 +288,9 @@
             } else if (action == 'edit') {
                 $('#modal-form').modal('show');
                 return;
+            } else if (action == 'board') {
+                $('#modal-board-product').modal('show');
+                return;
             }
 
             $('#selected-actions').val('');
@@ -345,6 +380,49 @@
                 success: function(data) {
                     if ('status' in data && data.status == 'ok') {
                         window.location.href = window.location.href;
+                    } else {
+                        alert('error' in data ? data.error : 'Server error');
+                    }
+                },
+                error: function(data) {
+                    alert('error' in data ? data.error : 'Server error');
+                },
+                complete: function() {
+                    btn.button('reset');
+                }
+            });
+        });
+
+        $('#board-product-send').click(function (e) {
+            var btn = $(this);
+            var products = [];
+
+            if ($('#selected-board').val().length==0) {
+                alert('Please select a board.');
+                return;
+            }
+
+            $('input[type=checkbox]').each(function(i, el) {
+                if (el.checked) {
+                    products.push($(el).parents('.product-box').attr('product-id'));
+                    $(el).iCheck('uncheck');
+                }
+            });
+
+            var data = {
+                'board': $('#selected-board').val(),
+                'products': products
+            };
+
+            btn.button('loading');
+
+            $.ajax({
+                url: '/api/board-add-products',
+                type: 'POST',
+                data: data,
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        $('#modal-board-product').modal('hide');
                     } else {
                         alert('error' in data ? data.error : 'Server error');
                     }

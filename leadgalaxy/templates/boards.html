@@ -5,7 +5,7 @@
 {% block main-container %}
 
 {% for board in boards %}
-<div class="ibox float-e-margins">
+<div id="b{{board.id}}" class="ibox float-e-margins">
 <div class="ibox-title">
     <h5>{{board.title}}<small></small></h5>
     <div class="ibox-tools">
@@ -62,10 +62,19 @@
         </div>
     </div>
     {% empty %}
+    <h3 class="text-center">No product in this board.</h3>
     {% endfor %}
 </div>
 
 </div>
+</div>
+{% empty %}
+<div class="row">
+    <div class="middle-box text-center animated fadeInDown">
+        <h3 class="">No board found.</h3>
+        <a href="#" class="add-board-btn btn btn-primary"><span class="fa fa-plus"></span> Add Board</a>
+
+    </div>
 </div>
 {% endfor %}
 
