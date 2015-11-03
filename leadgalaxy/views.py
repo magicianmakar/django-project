@@ -155,7 +155,11 @@ def api(request, target):
 
         data = req_data['data']
 
-        store = ShopifyStore.objects.get(id=store, user=user)
+        try:
+            store = ShopifyStore.objects.get(id=store, user=user)
+        except:
+            return JsonResponse({'error': 'Selected store not found.'})
+
         endpoint = store.api_url + '/admin/products.json'
 
         if 'access_token' in req_data:
@@ -179,13 +183,21 @@ def api(request, target):
             url = 'https://%s/admin/products/%d'%(url, pid);
 
             if 'product' in req_data:
-                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                try:
+                    product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                except:
+                    return JsonResponse({'error': 'Selected product not found.'})
+
                 product.shopify_id = pid
                 product.stat = 1
                 product.save()
         else:
             if 'product' in req_data:
-                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                try:
+                    product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                except:
+                    return JsonResponse({'error': 'Selected product not found.'})
+
                 product.store = store
                 product.data = data
                 product.stat = 0
@@ -206,7 +218,11 @@ def api(request, target):
             })
 
     if method == 'POST' and target == 'product-stat':
-        product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        try:
+            product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        except:
+            return JsonResponse({'error': 'Selected product not found.'})
+
         product.stat = data.get('sent')
         product.save()
 
