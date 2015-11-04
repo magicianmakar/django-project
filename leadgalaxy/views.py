@@ -174,10 +174,12 @@ def api(request, target):
         if not user:
             return JsonResponse({'error': 'Unvalide access token'})
 
+        product_data = {}
         if target == 'shopify':
 
             r = requests.post(endpoint, json=json.loads(data))
 
+            product_data = r.json()['product']
             pid = r.json()['product']['id']
             url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
             url = 'https://%s/admin/products/%d'%(url, pid);
@@ -213,9 +215,10 @@ def api(request, target):
         return JsonResponse({
             'product': {
                 'url': url,
-                'id': pid
+                'id': pid,
+                'data': product_data
                 }
-            })
+            }, safe=False)
 
     if method == 'POST' and target == 'product-stat':
         try:
