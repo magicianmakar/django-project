@@ -382,7 +382,7 @@ $('#save-for-later-btn').click(function (e) {
 
 
 
-    if ($('#variants .variant').length>1) {
+    if ($('#variants .variant').length) {
         $('#variants .variant').each(function (i, el) {
             api_data.variants.push({
                 'title': $(el).find('#product-variant-name').val(),
