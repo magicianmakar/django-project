@@ -35,7 +35,7 @@ def get_user_from_token(token):
     except:
         return None
 
-    if access_token:
+    if len(token) and access_token:
         return access_token.user
 
     return None
@@ -50,8 +50,8 @@ def api(request, target):
     else:
         return JsonResponse({'error', 'Unknow method: %s'%method})
 
-    token = data.get('access_token')
-    if token:
+    if 'access_token' in data:
+        token = data.get('access_token')
         user = get_user_from_token(token)
     else:
         if request.user.is_authenticated:
