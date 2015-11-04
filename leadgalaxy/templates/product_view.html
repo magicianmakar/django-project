@@ -65,14 +65,14 @@
                     <div class="row">
                         <div class="form-group col-xs-6">
                             <label for="product-type">Compare at price</label>
-                            <input type="text" class="form-control" id="product-compare-at" placeholder="" value="{{product.product.compare_at_price}}">
+                            <input type="text" class="form-control" id="product-compare-at" placeholder="" value="{{product.product.compare_at_price|default:''}}">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="form-group col-xs-6">
                             <label for="product-type">Tags</label>
-                            <input type="text" class="form-control" value="Pending" id="product-tag" placeholder="Product Tags">
+                            <input type="text" class="form-control" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
                         </div>
                     </div>
                     <div class="row">
@@ -95,7 +95,7 @@
 
                     <div class="form-group col-xs-12">
                         <label for="product-visible">
-                            <input type="checkbox" class="" id="product-visible">
+                            <input type="checkbox" class="" id="product-visible" {% if product.product.published %} selected="selected"{% endif %}>
                             Make Product Visible
                         </label>
                     </div>
