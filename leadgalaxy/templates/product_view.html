@@ -161,7 +161,7 @@ function showProductInfo(rproduct) {
         element.editor.setSelectedRange([0, 0])
         element.editor.insertHTML(product.description);
 
-        if (product.variants.length > 1) {
+        if (product.variants.length) {
             $.each(product.variants, function(i, el) {
                 var v = $('#variants .variant-simple').clone();
                 v.removeClass('variant-simple');
