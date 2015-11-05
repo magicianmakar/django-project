@@ -208,23 +208,60 @@
         changeProductStat(btn.attr('product-id'), 0,
             function(data) {
                 if ('error' in data) {
-                    alert(data.error);
+                    swal("Error", data.error, "error");
                     btn.button('reset');
                 } else {
                     btn.hide();
                 }
             }, function(data) {
                 btn.button('reset');
-                alert('Server side error')
+                swal("Error", "Server side error", "error");
         });
       });
 
       $('#apply-btn').click(function (e) {
             var action = $('#selected-actions').val();
+
+
+            if (action.length==0) {
+                swal('Please select an action first', '', "warning");
+                return;
+            }
+
             if (action == 'delete') {
-                if (!confirm('Are you sure that you want to permanently delete the selected products?')) {
-                    return;
-                }
+                swal({
+                    title: "Delete Selected Products",
+                    text: "This will remove the selected products permanently. Are you sure you want to remove those products?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Remove Permanently",
+                    cancelButtonText: "Cancel"
+                },
+                function(isConfirmed) {
+                    if(isConfirmed) {
+                        $('input[type=checkbox]').each(function(i, el) {
+                            if (el.checked) {
+                                var product = $(el).parents('.product-box').attr('product-id');
+                                $.ajax({
+                                    url: '/api/product-delete',
+                                    type: 'POST',
+                                    data: {
+                                        product: product,
+                                    },
+                                    success: function(data) {
+                                        $(el).parents('.col-md-3').remove();
+                                    },
+                                    error: function(data) {
+                                        swal("Error", "Server side error", "error");
+                                    }
+                                });
+
+                                $(el).iCheck('uncheck');
+                            }
+                        });
+                    }
+                });
             } else if (action == 'edit') {
                 $('#modal-form').modal('show');
                 return;
@@ -247,7 +284,7 @@
                             }
                         }, function(data) {
                             btn.button('reset');
-                            alert('Server side error')
+                            swal("Error", "Server side error", "error");
                         });
                     } else if (action == 'sent') {
                         var btn = $(el).parents('.product-box').find('.sent-btn');
@@ -257,25 +294,13 @@
                                 btn.show();
                             }
                         }, function(data) {
-                            alert('Server side error')
-                        });
-                    } else if (action == 'delete') {
-                        $.ajax({
-                            url: '/api/product-delete',
-                            type: 'POST',
-                            data: {
-                                product: product,
-                            },
-                            success: function(data) {
-                                $(el).parents('.col-md-3').remove();
-                            },
-                            error: function(data) {
-                                alert('Server side error');
-                            }
+                            swal("Error", "Server side error", "error");
                         });
                     }
 
-                    $(el).iCheck('uncheck');
+                    if (action != 'delete') {
+                        $(el).iCheck('uncheck');
+                    }
                 }
             });
         });
@@ -327,11 +352,11 @@
                     if ('status' in data && data.status == 'ok') {
                         window.location.href = window.location.href;
                     } else {
-                        alert('error' in data ? data.error : 'Server error');
+                        swal("Error", 'error' in data ? data.error : 'Server side error', "error");
                     }
                 },
                 error: function(data) {
-                    alert('error' in data ? data.error : 'Server error');
+                    swal("Error", 'error' in data ? data.error : 'Server side error', "error");
                 },
                 complete: function() {
                     btn.button('reset');
@@ -344,7 +369,7 @@
             var products = [];
 
             if ($('#selected-board').val().length==0) {
-                alert('Please select a board.');
+                swal('Please select a board first', '', "warning");
                 return;
             }
 
@@ -370,11 +395,11 @@
                     if ('status' in data && data.status == 'ok') {
                         $('#modal-board-product').modal('hide');
                     } else {
-                        alert('error' in data ? data.error : 'Server error');
+                        swal("Error", 'error' in data ? data.error : 'Server error', "error");
                     }
                 },
                 error: function(data) {
-                    alert('error' in data ? data.error : 'Server error');
+                   swal("Error", 'error' in data ? data.error : 'Server error', "error");
                 },
                 complete: function() {
                     btn.button('reset');
@@ -401,12 +426,12 @@
                             options.$trigger.text('Board');
                         }
                     } else {
-                        alert('error' in data ? data.error : 'Server error');
+                        swal("Error", 'error' in data ? data.error : 'Server side error', "error");
                     }
                 },
                 error: function(data) {
                     options.$trigger.button('reset');
-                    alert('error' in data ? data.error : 'Server error');
+                    swal("Error", 'error' in data ? data.error : 'Server side error', "error");
                 },
                 complete: function() {
                     // options.$trigger.button('reset');
@@ -420,7 +445,7 @@
 
             swal({
                 title: "Delete Product",
-                text: "This will remove the product permanently. Are you sure you want to remove this product",
+                text: "This will remove the product permanently. Are you sure you want to remove this product?",
                 type: "warning",
                 showCancelButton: true,
                 closeOnConfirm: false,
