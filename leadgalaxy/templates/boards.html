@@ -69,6 +69,12 @@
             </div>
         </div>
     </div>
+
+{% if forloop.counter|divisibleby:"4" %}
+</div>
+<div class="row">
+{% endif %}
+
     {% empty %}
     <h3 class="text-center">No product in this board.</h3>
     {% endfor %}

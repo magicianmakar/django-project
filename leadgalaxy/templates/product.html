@@ -50,24 +50,35 @@
                     <div class="small m-t-xs">
                         Submitted at {{item.created_at|date}}
                     </div>
-                    <div class="m-t text-righ">
+                    <div class="m-t row">
+                        <div class="col-md-3">
                         <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
+                        </div>
 
+                        <div class="col-md-3">
                         <button product-id="{{item.id}}" {% if item.stat != 1 %}style="display:none"{% endif %} class="btn btn-xs btn-outline btn-success sent-btn" target="_blank"> <i class="fa fa-share"></i> <span>Sent</span></button>
+                        </div>
 
-                        <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn pull-right" target="_blank">
+                        <div class="col-md-7">
+                        <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
                             {% if item.boards.first %}
                             Board: {{item.boards.first.title}}
                             {% else %}
                             Board
                             {% endif %}
                         </button>
-
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+{% if forloop.counter|divisibleby:"4" %}
+    </div>
+<div class="row">
+{% endif %}
+
     {% empty %}
     <h3 class="text-center">No product found.</h3>
     {% endfor %}
