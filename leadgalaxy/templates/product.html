@@ -37,6 +37,7 @@
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
                     <label for="product_{{item.id}}"><img src="{{item.images|first}}" style="width: 100%"></label>
+                    <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button>
                 </div>
                 <div class="product-desc">
                     <span class="product-price">
@@ -412,6 +413,41 @@
                 }
             });
         }
+
+        $('.delete-product-btn').click(function (e) {
+            var btn = $(this);
+            var product = btn.attr('product-id');
+
+            swal({
+                title: "Delete Prodyct",
+                text: "This will remove the product permanently. Are you sure you want to remove this product",
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                showLoaderOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Remove Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    $.ajax({
+                        url: '/api/product-delete',
+                        type: 'POST',
+                        data: {
+                            product: product,
+                        },
+                        success: function(data) {
+                            btn.parents('.col-md-3').remove();
+                            swal("Deleted!", "The product has been deleted.", "success");
+                        },
+                        error: function(data) {
+                            swal("Error", "Server side error", "error");
+                        }
+                    });
+                }
+            });
+        });
 
         $(function(){
             $.contextMenu({

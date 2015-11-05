@@ -35,12 +35,12 @@
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
-                            <th>Title</th>
+                            <th style="width:40%">Title</th>
                             <th>Price</th>
                             <th>Category</th>
                             <th>Tags</th>
                             <th>Date</th>
-                            <!-- <th>Options</th> -->
+                            <th>Options</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,11 +63,10 @@
                             <td>{{item.product.type}}</td>
                             <td>{{item.product.tags}}</td>
                             <td>{{item.created_at|date}}</td>
-<!--                             <td>
-                                <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary">Info <i class="fa fa-long-arrow-right"></i> </a>
-                                <button class="btn btn-xs btn-danger delete-store" store-id="{{item.id}}">Delete</button>
+                            <td>
+                                <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button>
                             </td>
- -->                        </tr>
+                        </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -210,6 +209,41 @@
             }
         });
     }
+
+    $('.delete-product-btn').click(function (e) {
+        var btn = $(this);
+        var product = btn.attr('product-id');
+
+        swal({
+            title: "Delete Prodyct",
+            text: "This will remove the product permanently. Are you sure you want to remove this product",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Remove Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) {
+            if (isConfirmed) {
+                $.ajax({
+                    url: '/api/product-delete',
+                    type: 'POST',
+                    data: {
+                        product: product,
+                    },
+                    success: function(data) {
+                        btn.parents('tr').remove();
+                        swal("Deleted!", "The product has been deleted.", "success");
+                    },
+                    error: function(data) {
+                        swal("Error", "Server side error", "error");
+                    }
+                });
+            }
+        });
+    });
 
       $('#apply-btn').click(function (e) {
             var action = $('#selected-actions').val();
