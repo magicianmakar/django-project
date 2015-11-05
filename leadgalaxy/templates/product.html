@@ -4,29 +4,31 @@
 
 {% block main-container %}
 
-<div class="ibox float-e-margins">
-<div class="ibox-title">
-    <h5>Saved Products<small></small></h5>
-    <div class="ibox-tools">
-        <a href="/product/table" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
-        <a style="color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
-    </div>
-</div>
-<div class="ibox-content">
-
 {% if products %}
-<div class="row" style="margin-bottom: 20px">
-    <div class="col-md-6">
-        <label for="selected-actions">Selected Items:</label>
-        <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
-            <option value=""></option>
-            <option value="edit">Edit...</option>
-            <option value="board">Add to Board...</option>
-            <option value="sent">Mark as Sent</option>
-            <option value="unsent">Mark as Unsent</option>
-            <option value="delete">Delete</option>
-        </select>
-        <button id="apply-btn" class="btn btn-primary">Apply</button>
+<div class="ibox float-e-margins">
+    <!-- <div class="ibox-title">
+        <h5>Saved Products<small></small></h5>
+        <div class="ibox-tools">
+            <a href="/product/table" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
+            <a style="color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
+        </div>
+    </div> -->
+    <div class="ibox-content">
+
+        <div class="row">
+            <div class="col-md-6">
+                <label for="selected-actions">Selected Items:</label>
+                <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
+                    <option value=""></option>
+                    <option value="edit">Edit...</option>
+                    <option value="board">Add to Board...</option>
+                    <option value="sent">Mark as Sent</option>
+                    <option value="unsent">Mark as Unsent</option>
+                    <option value="delete">Delete</option>
+                </select>
+                <button id="apply-btn" class="btn btn-primary">Apply</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -83,9 +85,9 @@
     <h3 class="text-center">No product found.</h3>
     {% endfor %}
 </div>
-
+<!--
 </div>
-</div>
+</div> -->
 
 <div id="modal-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
@@ -414,6 +416,7 @@
                 }
             });
         }
+
         $(function(){
             $.contextMenu({
                 selector: '.board-btn',

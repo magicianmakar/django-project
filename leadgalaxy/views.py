@@ -311,6 +311,19 @@ def api(request, target):
         board.save()
 
         return JsonResponse({'status': 'ok'})
+
+    if method == 'POST' and target == 'product-remove-board':
+        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        products = []
+        for p in data.getlist('products[]'):
+            product = ShopifyProduct.objects.get(id=p)
+            # product.shopifyboard_set.clear()
+            board.products.remove(product)
+
+        board.save()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'POST' and target == 'product-board':
         product = ShopifyProduct.objects.get(id=data.get('product'))
 
