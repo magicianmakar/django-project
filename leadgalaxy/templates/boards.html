@@ -48,6 +48,7 @@
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
                     <label for="product_{{item.id}}"><img src="{{item.images|first}}" style="width: 100%"></label>
+                    <button class="btn btn-xs btn-danger delete-from-board-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button>
                 </div>
                 <div class="product-desc">
                     <span class="product-price">
@@ -194,6 +195,37 @@
         });
       });
 
+      function deletFromBoard(board_id, products, products_el) {
+        $.ajax({
+            url: '/api/product-remove-board',
+            type: 'POST',
+            data: {
+                products: products,
+                board: board_id
+            },
+            success: function(data) {
+                if ('status' in data && data.status == 'ok') {
+                    $.each(products_el, function(j, elc){
+                        elc.parents('.col-md-3').remove();
+                    });
+                } else {
+                    alert('Server side error');
+                }
+            },
+            error: function(data) {
+                alert('Server side error');
+            }
+        });
+      }
+
+        $('.delete-from-board-btn').click(function (e) {
+            var products = [$(this).attr('product-id')];
+            var products_el = [$(this)];
+            var board_id = $(this).parents('.board-box').attr('board-id');
+
+            deletFromBoard(board_id, products, products_el);
+        });
+
       $('#apply-btn').click(function (e) {
             var boardBox = $(this).parents('.board-box');
 
@@ -219,27 +251,7 @@
                     }
                 });
 
-                $.ajax({
-                    url: '/api/product-remove-board',
-                    type: 'POST',
-                    data: {
-                        products: products,
-                        board: board_id
-                    },
-                    success: function(data) {
-                        if ('status' in data && data.status == 'ok') {
-                            $.each(products_el, function(j, elc){
-                                elc.parents('.col-md-3').remove();
-                            });
-                        } else {
-                            alert('Server side error');
-                        }
-                    },
-                    error: function(data) {
-                        alert('Server side error');
-                    }
-                });
-
+                deletFromBoard(board_id, products, products_el);
             }
 
             boardBox.find('#selected-actions').val('');
