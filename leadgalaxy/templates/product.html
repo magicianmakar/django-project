@@ -6,15 +6,7 @@
 
 {% if products %}
 <div class="ibox float-e-margins">
-    <!-- <div class="ibox-title">
-        <h5>Saved Products<small></small></h5>
-        <div class="ibox-tools">
-            <a href="/product/table" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
-            <a style="color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
-        </div>
-    </div> -->
-    <div class="ibox-content">
-
+    <div class="ibox-title">
         <div class="row">
             <div class="col-md-6">
                 <label for="selected-actions">Selected Items:</label>
@@ -27,6 +19,10 @@
                     <option value="delete">Delete</option>
                 </select>
                 <button id="apply-btn" class="btn btn-primary">Apply</button>
+            </div>
+            <div class="col-md-1 pull-right text-right">
+                <a href="/product/table" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
+                <a style="color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
             </div>
         </div>
     </div>
