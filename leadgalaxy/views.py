@@ -60,7 +60,7 @@ def api(request, target):
             user = None
 
     if target not in ['login', 'shopify', 'save-for-later'] and not user:
-        return JsonResponse({'error':'Unauthenticated api call.'})
+        return JsonResponse({'error': 'Unauthenticated api call.'})
 
     if target == 'login':
         username=data.get('username')
@@ -155,24 +155,26 @@ def api(request, target):
 
         data = req_data['data']
 
-        try:
-            store = ShopifyStore.objects.get(id=store, user=user)
-        except:
-            return JsonResponse({'error': 'Selected store not found.'})
-
-        endpoint = store.api_url + '/admin/products.json'
-
         if 'access_token' in req_data:
             token = req_data['access_token']
             user = get_user_from_token(token)
+
+            if not user:
+                return JsonResponse({'error': 'Unvalide access token: %s'%(token)})
         else:
             if request.user.is_authenticated:
                 user = request.user
             else:
-                user = None
+                return JsonResponse({'error': 'Unauthenticated user'})
 
-        if not user:
-            return JsonResponse({'error': 'Unvalide access token'})
+        try:
+            store = ShopifyStore.objects.get(id=store, user=user)
+        except:
+            return JsonResponse({
+                'error': 'Selected store (%s) not found for user: %s'%(store, user.username if user else 'None')
+            })
+
+        endpoint = store.api_url + '/admin/products.json'
 
         product_data = {}
         if target == 'shopify':
