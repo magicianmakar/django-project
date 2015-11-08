@@ -396,7 +396,7 @@ def product(request, tpl='grid'):
 
 @login_required
 def product_view(request, pid):
-    product = get_object_or_404(ShopifyProduct, id=pid)
+    product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
     p = {
         'id': product.id,
         'store': product.store,
