@@ -381,7 +381,11 @@ def product(request, tpl='grid'):
         }
 
         p['price'] = '$%.02f'%p['product']['price']
-        p['images'] = (p['product']['images'] if p['product']['images'] else [])
+
+        if 'images' not in p['product'] or not p['product']['images']:
+            p['product']['images'] = []
+
+        p['images'] = p['product']['images']
         products.append(p)
 
     if not tpl or tpl == 'grid':
@@ -408,8 +412,11 @@ def product_view(request, pid):
         'product': json.loads(product.data),
     }
 
+    if 'images' not in p['product'] or not p['product']['images']:
+        p['product']['images'] = []
+
     p['price'] = '$%.02f'%p['product']['price']
-    p['images'] = (p['product']['images'] if p['product']['images'] else [])
+    p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
     return render(request, 'product_view.html', {
@@ -433,8 +440,11 @@ def bulk_edit(request):
             'product': json.loads(i.data),
         }
 
+        if 'images' not in p['product'] or not p['product']['images']:
+            p['product']['images'] = []
+
         p['price'] = '$%.02f'%p['product']['price']
-        p['images'] = (p['product']['images'] if p['product']['images'] else [])
+        p['images'] = p['product']['images']
         products.append(p)
 
     return render(request, 'bulk_edit.html', {
@@ -465,8 +475,11 @@ def boards(request):
                 'product': json.loads(i.data),
             }
 
+            if 'images' not in p['product'] or not p['product']['images']:
+                p['product']['images'] = []
+
             p['price'] = '$%.02f'%p['product']['price']
-            p['images'] = (p['product']['images'] if p['product']['images'] else [])
+            p['images'] = p['product']['images']
             board['products'].append(p)
 
         boards.append(board)
