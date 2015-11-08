@@ -249,10 +249,12 @@ $('#export-btn').click(function () {
       }
     };
 
-    for (var i=0; i<product.images.length; i++) {
-        api_data.product.images.push({
-            src: product.images[i]
-        })
+    if (product.images) {
+        for (var i=0; i<product.images.length; i++) {
+            api_data.product.images.push({
+                src: product.images[i]
+            })
+        }
     }
 
     if ($('#variants .variant').length==0) {
