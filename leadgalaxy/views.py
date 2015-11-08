@@ -381,6 +381,7 @@ def product(request, tpl='grid'):
         }
 
         p['price'] = '$%.02f'%p['product']['price']
+        p['images'] = p['product']['images']
         products.append(p)
 
     if not tpl or tpl == 'grid':
@@ -408,6 +409,7 @@ def product_view(request, pid):
     }
 
     p['price'] = '$%.02f'%p['product']['price']
+    p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
     return render(request, 'product_view.html', {
@@ -432,6 +434,7 @@ def bulk_edit(request):
         }
 
         p['price'] = '$%.02f'%p['product']['price']
+        p['images'] = p['product']['images']
         products.append(p)
 
     return render(request, 'bulk_edit.html', {
@@ -463,6 +466,7 @@ def boards(request):
             }
 
             p['price'] = '$%.02f'%p['product']['price']
+            p['images'] = p['product']['images']
             board['products'].append(p)
 
         boards.append(board)
