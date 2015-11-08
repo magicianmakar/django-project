@@ -303,9 +303,13 @@ $('#export-btn').click(function () {
                 "title": title,
             };
 
-            $.each(vars_list[i], function (j, va) {
-                vdata["option"+(j+1)] = va;
-            });
+            if (typeof(vars_list[i]) == "string") {
+                vdata["option1"] = vars_list[i];
+            } else {
+                $.each(vars_list[i], function (j, va) {
+                    vdata["option"+(j+1)] = va;
+                });
+            }
 
             if ($('#product-compare-at').val().length) {
                 vdata.compare_at_price = parseFloat($('#product-compare-at').val());
