@@ -371,6 +371,13 @@ def api(request, target):
             'status': 'ok'
         })
 
+    if method == 'POST' and target == 'variant-image':
+        r = requests.put(data.get('url'), json=json.loads(data.get('data')))
+
+        return JsonResponse({
+            'status': 'ok'
+        })
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -432,6 +439,22 @@ def product_view(request, pid):
         'product': p,
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
+    })
+
+@login_required
+def variants_edit(request, store_id, pid):
+    store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
+    api_url = '%s/admin/products/%s.json'%(store.api_url, pid)
+
+    r = requests.get(api_url)
+    product = json.dumps(r.json()['product'])
+
+    return render(request, 'variants_edit.html', {
+        'store': store,
+        'product_id': pid,
+        'product': product,
+        'page': 'product',
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Vatiants']
     })
 
 @login_required

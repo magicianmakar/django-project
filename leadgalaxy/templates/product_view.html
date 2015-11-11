@@ -128,8 +128,8 @@
                     <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
                     <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
                     <button id="view-btn" type="button" class="btn btn-info" style="display:none">View in Shopify</button>
-                    <!-- <span class="export" id="export-btn">Export</span> -->
-                    <!-- <span style="display:none" class="view" id="view-btn">View On Shopify</span> -->
+                    <button id="btn-variants-img" type="button" class="btn btn-success" style="display:none">Setup Variants Images</button>
+
                     {% if product.product.original_url %}
                         <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a>
                     {% endif %}
@@ -396,6 +396,12 @@ $('#export-btn').click(function () {
             $(this.btn).button('reset');
 
             if ('product' in data) {
+                if (data.product.data) {
+                    $('#btn-variants-img').prop('store-id', $('#store-select').val());
+                    $('#btn-variants-img').prop('product-id', data.product.data.id);
+                    $('#btn-variants-img').show();
+                }
+
                 $("#view-btn").attr("shopify-id", data.product.id);
                 $("#view-btn").attr("shopify-url", data.product.url);
                 $("#view-btn").show();
@@ -508,6 +514,13 @@ $('.var-image-block').mouseenter(function() {
 })
 .mouseleave(function() {
     $(this).find('button').fadeOut();
+});
+
+$('#btn-variants-img').click(function (e) {
+    var store_id = $('#btn-variants-img').prop('store-id');
+    var product_id = $('#btn-variants-img').prop('product-id');
+
+    window.location.href = '/product/variants/'+store_id+'/'+product_id;
 });
 
 $(function() {
