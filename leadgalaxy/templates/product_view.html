@@ -112,7 +112,17 @@
                 </div>
             </div>
 
-            <!-- <p><span>Export to: <select id="store-select" style="width: 30%"></select></span><br> </p> -->
+            <div class="buttons col-xs-12">
+                <div class="row  text-center" id="var-images">
+                    {% for item in product.images %}
+                    <div class="col-xs-3 var-image-block">
+                        <img src="{{item}}" class="var-image" />
+                        <button class="btn btn-danger btn-xs" style="display:none;position: absolute;right: 35px;top: 0;border-radius: 5px;font-weight: bolder;"><i class="fa fa-times"></i></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
             <div class="buttons col-xs-12">
                 <p>
                     <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
@@ -134,6 +144,51 @@
 
 {% endblock %}
 
+{% block extracss %}
+<style type="text/css">
+.buttons {
+    /*text-align: right;*/
+    margin-top: 20px;
+    margin-bottom: 25px;
+}
+
+.buttons .export, .buttons .view{
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.buttons .export {
+    border: 1px solid #A0E7A3;
+    background-color: rgb(213, 255, 213);
+}
+
+.buttons .view {
+    border: 1px solid #A0C9E7;
+    background-color: rgb(213, 255, 253);
+}
+
+
+.var-image {
+    border: 1px solid #ccc;
+    padding: 5px;
+    width: 100px;
+    cursor: pointer;
+}
+
+.var-image:hover {
+    border: 1px solid #000;
+}
+
+.var-image-disabled {
+    opacity: 0.3;
+}
+
+.var-image-block {
+    margin-top: 15px;
+}
+</style>
+{% endblock %}
 
 {% block extrajs %}
 <script type="text/javascript">
@@ -431,6 +486,28 @@ $('#save-for-later-btn').click(function (e) {
 
 $("#view-btn").click(function () {
     window.open($(this).attr('shopify-url'), '_blank');
+});
+
+$('.var-image-block button').click(function (e) {
+    var image_url = $(this).parent().find('img').attr('src');
+    console.log('delete',image_url);
+    var new_images = [];
+
+    for (var i = 0; i < product.images.length; i++) {
+        if (product.images[i] != image_url) {
+            new_images.push(product.images[i]);
+        }
+    };
+
+    product.images = new_images;
+    $(this).parent().remove();
+});
+
+$('.var-image-block').mouseenter(function() {
+    $(this).find('button').show();
+})
+.mouseleave(function() {
+    $(this).find('button').fadeOut();
 });
 
 $(function() {
