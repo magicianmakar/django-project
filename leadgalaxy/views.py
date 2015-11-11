@@ -181,7 +181,16 @@ def api(request, target):
 
             r = requests.post(endpoint, json=json.loads(data))
 
-            product_data = r.json()['product']
+            try:
+                product_data = r.json()['product']
+            except:
+                try:
+                    d = r.json()
+                    return JsonResponse({'error': '[Shopify API Error] '+' | '.join([k+': '+''.join(d['errors'][k]) for k in d['errors']])})
+                except:
+                    print r.text
+                    return JsonResponse({'error': 'Shopify API Error'})
+
             pid = r.json()['product']['id']
             url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
             url = 'https://%s/admin/products/%d'%(url, pid);
