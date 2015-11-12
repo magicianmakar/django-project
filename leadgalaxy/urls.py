@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
 from leadgalaxy.forms import EmailAuthenticationForm
+from django.contrib.auth.views import password_reset
 
 import leadgalaxy.views
 
@@ -17,4 +18,6 @@ urlpatterns = patterns('',
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         { 'authentication_form': EmailAuthenticationForm }, name='login'),
+     url(r'^accounts/password/reset/$', password_reset, {'template_name': 'registration/password_reset.html'}),
+
 )
