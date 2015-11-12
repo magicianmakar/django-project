@@ -6,6 +6,9 @@ from django.db.models import Q
 import re, json
 
 class ShopifyStore(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
     title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
 
@@ -18,6 +21,9 @@ class ShopifyStore(models.Model):
         return '%s | %s'%(self.title, self.user.username)
 
 class AccessToken(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
     token = models.CharField(max_length=512, unique=True)
     user = models.ForeignKey(User)
 
@@ -28,6 +34,9 @@ class AccessToken(models.Model):
         return '%s | %s'%(self.user.username, self.token)
 
 class ShopifyProduct(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
     store = models.ForeignKey(ShopifyStore)
     user = models.ForeignKey(User)
 
@@ -61,6 +70,9 @@ class ShopifyProduct(models.Model):
             return None
 
 class ShopifyBoard(models.Model):
+    class Meta:
+        ordering = ['title']
+
     title = models.CharField(max_length=512, blank=True, default='')
     config = models.CharField(max_length=512, blank=True, default='')
 
