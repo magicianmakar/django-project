@@ -16,6 +16,7 @@
             <i class="fa fa-wrench"></i>
         </a>
         <ul class="dropdown-menu dropdown-user">
+            <li><a board-id="{{board.id}}" class="board-edit" href="#">Edit...</a></li>
             <li><a board-id="{{board.id}}" class="board-empty" href="#">Empty board</a></li>
             <li><a board-id="{{board.id}}" class="board-delete" href="#">Delete board</a></li>
         </ul>
@@ -142,6 +143,49 @@
     </div>
 </div>
 
+
+<div id="smartboard-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Edit Board</h3>
+                        <form role="form">
+                            <p class="m-t-none m-b">Edit Board</p>
+                            <div class="form-group">
+                                <label for="">Board Title:</label>
+                                <input type="text" id="board-title" class="form-control">
+                            </div>
+
+                            <h3 class="m-t-none m-b">Smart Board</h3>
+                            <p class="m-t-none m-b">Add products to this board if (separate values with comma):</p>
+                            <input type="hidden" id="smartboard-board">
+
+                            <div class="form-group">
+                                <label for="">Product Title contains:</label>
+                                <input type="text" id="smartboard-product-title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Tags contains:</label>
+                                <input type="text" id="smartboard-product-tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Type contains:</label>
+                                <input type="text" id="smartboard-product-type" class="form-control">
+                            </div>
+                            <div>
+                                <button id="smartboard-save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Save</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 
@@ -410,6 +454,49 @@
                     alert('error' in data ? data.error : 'Server error');
                 },
                 complete: function() {
+                }
+            });
+        });
+
+        $('.board-edit').click(function (e) {
+            e.preventDefault();
+
+            var board = $(this).attr('board-id');
+
+            $.ajax({
+                url: '/api/board-config',
+                type: 'GET',
+                data: {
+                    board: board,
+                },
+                success: function(data) {
+                    $('#smartboard-board').val(board);
+                    $('#board-title').val(data.title);
+                    $('#smartboard-product-title').val(data.config.title);
+                    $('#smartboard-product-type').val(data.config.type);
+                    $('#smartboard-product-tags').val(data.config.tags);
+
+                    $('#smartboard-modal').modal();
+                }
+            });
+        });
+
+        $('#smartboard-save-changes').click(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '/api/board-config',
+                type: 'POST',
+                data: {
+                    'store-title': $('#board-title').val(),
+                    'board': $('#smartboard-board').val(),
+                    'title': $('#smartboard-product-title').val(),
+                    'type': $('#smartboard-product-type').val(),
+                    'tags': $('#smartboard-product-tags').val(),
+                },
+                success: function(data) {
+                    $('#smartboard-modal').modal('hide');
+                    window.location = window.location;
                 }
             });
         });

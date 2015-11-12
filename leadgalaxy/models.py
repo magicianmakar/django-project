@@ -62,6 +62,7 @@ class ShopifyProduct(models.Model):
 
 class ShopifyBoard(models.Model):
     title = models.CharField(max_length=512, blank=True, default='')
+    config = models.CharField(max_length=512, blank=True, default='')
 
     user = models.ForeignKey(User)
     products = models.ManyToManyField(ShopifyProduct, blank=True)

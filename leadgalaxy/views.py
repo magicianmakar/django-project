@@ -19,6 +19,40 @@ from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
 
+def smartBoardAdd(user, product):
+    prodct_info = json.loads(product.data)
+    prodct_info = {
+        'title': prodct_info.get('title', '').lower(),
+        'tags': prodct_info.get('tags', '').lower(),
+        'type': prodct_info.get('type', '').lower(),
+    }
+
+    for i in user.shopifyboard_set.all():
+        try:
+            config = json.loads(i.config)
+        except:
+            continue
+
+        product_added = False
+        for j in ['title', 'tags', 'type']:
+            if product_added:
+                break
+
+            if not len(config.get(j, '')) or not len(prodct_info[j]):
+                continue
+
+            for f in config.get(j, '').split(','):
+                print f.lower(), 'in', prodct_info[j]
+
+                if f.lower() in prodct_info[j]:
+                    i.products.add(product)
+                    product_added = True
+
+                    break
+
+        if product_added:
+            i.save()
+
 @login_required
 def index(request):
     stores = request.user.shopifystore_set.all()
@@ -220,6 +254,8 @@ def api(request, target):
 
             product.save()
 
+            smartBoardAdd(user, product)
+
             url = request.build_absolute_uri('/product/%d'%product.id)
             pid = product.id
 
@@ -373,6 +409,43 @@ def api(request, target):
 
     if method == 'POST' and target == 'variant-image':
         r = requests.put(data.get('url'), json=json.loads(data.get('data')))
+
+        return JsonResponse({
+            'status': 'ok'
+        })
+
+    if method == 'GET' and target == 'board-config':
+        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+
+        try:
+            return JsonResponse({
+                'status': 'ok',
+                'title': board.title,
+                'config': json.loads(board.config)
+            })
+        except:
+            return JsonResponse({
+                'status': 'ok',
+                'title': board.title,
+                'config': {
+                    'title': '',
+                    'tags': '',
+                    'type': ''
+                }
+            })
+
+    if method == 'POST' and target == 'board-config':
+        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+
+        board.title = data.get('store-title')
+
+        board.config = json.dumps({
+            'title': data.get('title'),
+            'tags': data.get('tags'),
+            'type': data.get('type'),
+        })
+
+        board.save()
 
         return JsonResponse({
             'status': 'ok'
