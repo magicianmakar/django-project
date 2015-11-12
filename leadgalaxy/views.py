@@ -19,7 +19,7 @@ from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
 
-def smartBoardAdd(user, product):
+def smartBoardByProduct(user, product):
     prodct_info = json.loads(product.data)
     prodct_info = {
         'title': prodct_info.get('title', '').lower(),
@@ -42,8 +42,6 @@ def smartBoardAdd(user, product):
                 continue
 
             for f in config.get(j, '').split(','):
-                print f.lower(), 'in', prodct_info[j]
-
                 if f.lower() in prodct_info[j]:
                     i.products.add(product)
                     product_added = True
@@ -52,6 +50,38 @@ def smartBoardAdd(user, product):
 
         if product_added:
             i.save()
+
+def smartBoardByBoard(user, board):
+    for product in user.shopifyproduct_set.all():
+        prodct_info = json.loads(product.data)
+        prodct_info = {
+            'title': prodct_info.get('title', '').lower(),
+            'tags': prodct_info.get('tags', '').lower(),
+            'type': prodct_info.get('type', '').lower(),
+        }
+
+        try:
+            config = json.loads(board.config)
+        except:
+            continue
+
+        product_added = False
+        for j in ['title', 'tags', 'type']:
+            if product_added:
+                break
+
+            if not len(config.get(j, '')) or not len(prodct_info[j]):
+                continue
+
+            for f in config.get(j, '').split(','):
+                if f.lower() in prodct_info[j]:
+                    board.products.add(product)
+                    product_added = True
+
+                    break
+
+        if product_added:
+            board.save()
 
 @login_required
 def index(request):
@@ -254,7 +284,7 @@ def api(request, target):
 
             product.save()
 
-            smartBoardAdd(user, product)
+            smartBoardByProduct(user, product)
 
             url = request.build_absolute_uri('/product/%d'%product.id)
             pid = product.id
@@ -446,6 +476,8 @@ def api(request, target):
         })
 
         board.save()
+
+        smartBoardByBoard(user, board)
 
         return JsonResponse({
             'status': 'ok'
