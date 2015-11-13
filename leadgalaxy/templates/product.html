@@ -480,9 +480,11 @@
                 trigger: 'left',
                 callback: function(key, options) {
                     if (key == 'add') {
-                        window.onBoardAdd = function(board) {
-                            // options.$trigger.text('Board: '+board.title);
-                            changeBoard(board.id, options);
+                        if (typeof(window.onBoardAdd) != 'function') {
+                            window.onBoardAdd = function(board) {
+                                // options.$trigger.text('Board: '+board.title);
+                                changeBoard(board.id, options);
+                            }
                         }
 
                         $('#modal-board-add').modal('show');

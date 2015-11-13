@@ -228,6 +228,8 @@
                             } else {
                                 window.location.href = window.location.href;
                             }
+
+                            $('#add-board-name').val('');
                         } else {
                             alert('error' in data ? data.error : 'Server error');
                         }
