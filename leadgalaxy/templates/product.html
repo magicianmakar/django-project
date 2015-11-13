@@ -474,17 +474,28 @@
             });
         });
 
-        $(function(){
+        var boardsMenu = {
+        {% for item in request.user.shopifyboard_set.all %}
+            "{{item.id}}": {name: "{{item.title}}"},
+        {% endfor %}
+            "sep1": "---------",
+            "add": {name: "Add new board", icon: 'add'},
+            "clear": {name: "Clear", icon: 'quit'}
+        };
+
+        function setupContextMenus() {
             $.contextMenu({
                 selector: '.board-btn',
                 trigger: 'left',
                 callback: function(key, options) {
                     if (key == 'add') {
-                        if (typeof(window.onBoardAdd) != 'function') {
-                            window.onBoardAdd = function(board) {
-                                // options.$trigger.text('Board: '+board.title);
-                                changeBoard(board.id, options);
-                            }
+                        window.onBoardAdd = function(board) {
+                            // options.$trigger.text('Board: '+board.title);
+                            boardsMenu[''+board.id] = {name: board.title};
+                            changeBoard(board.id, options);
+
+                            $.contextMenu( 'destroy' );
+                            setupContextMenus();
                         }
 
                         $('#modal-board-add').modal('show');
@@ -494,15 +505,12 @@
                         changeBoard(key, options);
                     }
                 },
-                items: {
-                {% for item in request.user.shopifyboard_set.all %}
-                    "{{item.id}}": {name: "{{item.title}}"},
-                {% endfor %}
-                    "sep1": "---------",
-                    "add": {name: "Add new board", icon: 'add'},
-                    "clear": {name: "Clear", icon: 'quit'}
-                }
+                items: boardsMenu
             });
+        }
+
+        $(function(){
+            setupContextMenus();
         });
 </script>
 {% endblock %}
