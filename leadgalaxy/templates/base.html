@@ -167,7 +167,7 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <h3 class="m-t-none m-b">Add new board</h3>
-                        <form role="form">
+                        <form id="new-board-add-form" role="form">
                             <div class="form-group">
                                 <input type="text" id="add-board-name" placeholder="New Board Name" class="form-control">
                             </div>
@@ -213,7 +213,9 @@
                 $('#modal-board-add').modal('show');
             });
 
-            $("#board-add-send").click(function(e) {
+            function createBoard(e) {
+                e.preventDefault();
+
                 $.ajax({
                     url: '/api/boards-add',
                     type: 'POST',
@@ -238,6 +240,15 @@
                         alert('error' in data ? data.error : 'Server error');
                     }
                 })
+            };
+
+            $("#new-board-add-form").submit(createBoard);
+            $("#board-add-send").click(createBoard);
+            $("#board-add-send").keypress(function (e) {
+                  if (e.which == 13) {
+                    createBoard(e);
+                    return false;
+                  }
             });
         });
     </script>
