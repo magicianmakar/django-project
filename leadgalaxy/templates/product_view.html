@@ -260,22 +260,6 @@ function removeVariant(e) {
     $('#variants .area').append(v);
 };
 
-function allPossibleCases(arr) {
-  if (arr.length == 1) {
-    return arr[0];
-  } else {
-    var result = [];
-    var allCasesOfRest = allPossibleCases(arr.slice(1));  // recur with the rest of array
-    for (var i = 0; i < allCasesOfRest.length; i++) {
-      for (var j = 0; j < arr[0].length; j++) {
-        result.push([arr[0][j], allCasesOfRest[i]]);
-      }
-    }
-    return result;
-  }
-
-}
-
 $('#export-btn').click(function () {
     var btn = $(this);
     var target = btn.attr('target');
@@ -388,7 +372,6 @@ $('#export-btn').click(function () {
             'product': {{product.id}},
             'store': api_url,
             'data': JSON.stringify(api_data),
-            'access_token': localStorage.access_token
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -467,7 +450,6 @@ $('#save-for-later-btn').click(function (e) {
             'product': {{product.id}},
             'store': api_url,
             'data': JSON.stringify(api_data),
-            'access_token': localStorage.access_token
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
