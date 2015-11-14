@@ -213,6 +213,25 @@ def api(request, target):
 
         return JsonResponse(stores, safe=False)
 
+    if method == 'GET' and target == 'product':
+        try:
+            product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        except:
+            return JsonResponse({'error':'Product not found'})
+
+        return JsonResponse(json.loads(product.data), safe=False)
+
+    if method == 'POST' and target == 'products-info':
+        products = {}
+        for p in data.getlist('products[]'):
+            try:
+                product = ShopifyProduct.objects.get(id=p, user=user)
+                products[p] = json.loads(product.data)
+            except:
+                return JsonResponse({'error':'Product not found'})
+
+        return JsonResponse(products, safe=False)
+
     if method == 'POST' and (target == 'shopify' or target == 'save-for-later'):
         req_data = json.loads(request.body)
         store = req_data['store']
