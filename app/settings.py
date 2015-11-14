@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'widget_tweaks',    # For forms
+    'hijack',
 
     'leadgalaxy'
 )
@@ -50,6 +51,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'hijack.middleware.HijackRemoteUserMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -127,5 +129,5 @@ MEDIA_URL = 'http://localhost/'
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
-CRAWLER_API_BASE = 'http://app1.speedaudits.com:8000'
-CRAWLER_API_CALLBACK_BASE = 'http://app.speedaudits.com'
+HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after hijacking the user.
+REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/admin/"  # where you want to be redirected to, after releasing the user.

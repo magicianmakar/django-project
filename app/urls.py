@@ -7,4 +7,5 @@ urlpatterns = patterns('',
     url(r'', include('leadgalaxy.urls')),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^hijack/', include('hijack.urls')),
 )

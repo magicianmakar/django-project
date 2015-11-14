@@ -4,6 +4,8 @@ cryptography==1.0
 cssselect==0.9.1
 dj-database-url==0.3.0
 Django==1.8.1
+django-compat==1.0.7
+django-hijack==1.0.10
 django-postgrespool==0.3.0
 django-widget-tweaks==1.3
 docutils==0.12
