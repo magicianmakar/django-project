@@ -211,6 +211,7 @@ function showProductInfo(rproduct) {
         $('#product-price').val(product.price);
         $('#product-type').val(product.type);
         $('#product-tag').val(product.tags);
+        $('#product-compare-at').val(product.compare_at_price);
 
         var element = document.querySelector("trix-editor");
         element.editor.setSelectedRange([0, 0])
