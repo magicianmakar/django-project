@@ -520,7 +520,10 @@ def product(request, tpl='grid'):
             'boards': i.shopifyboard_set.all()
         }
 
-        p['price'] = '$%.02f'%p['product']['price']
+        try:
+            p['price'] = '$%.02f'%p['product']['price']
+        except:
+            p['price'] = '$0.0'
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
@@ -555,7 +558,11 @@ def product_view(request, pid):
     if 'images' not in p['product'] or not p['product']['images']:
         p['product']['images'] = []
 
-    p['price'] = '$%.02f'%p['product']['price']
+    try:
+        p['price'] = '$%.02f'%p['product']['price']
+    except:
+        p['price'] = '$0.0'
+
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
@@ -599,7 +606,11 @@ def bulk_edit(request):
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
 
-        p['price'] = '$%.02f'%p['product']['price']
+        try:
+            p['price'] = '$%.02f'%p['product']['price']
+        except:
+            p['price'] = '$0.0'
+
         p['images'] = p['product']['images']
         products.append(p)
 
@@ -634,7 +645,11 @@ def boards(request):
             if 'images' not in p['product'] or not p['product']['images']:
                 p['product']['images'] = []
 
-            p['price'] = '$%.02f'%p['product']['price']
+            try:
+                p['price'] = '$%.02f'%p['product']['price']
+            except:
+                p['price'] = '$0.0'
+
             p['images'] = p['product']['images']
             board['products'].append(p)
 
