@@ -1,5 +1,6 @@
 {% load static %}
 {% load hijack_tags %}
+{% load perms_helper %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -103,7 +104,11 @@
                 </div>
                 <ul class="nav navbar-top-links navbar-right">
                     <li>
-                        <span class="m-r-sm text-muted welcome-message">{{user.groups.first|default:''}}</span>
+                        <span class="m-r-sm text-muted welcome-message">
+                            {% if request.user|in_group:'VIP Members' %}
+                                <img style="height: 35px;" src="{% static 'img/vip-badge.png' %}" alt="VIP Member">
+                            {% endif %}
+                        </span>
                     </li>
                     <li>
                         {% if user.is_authenticated %}

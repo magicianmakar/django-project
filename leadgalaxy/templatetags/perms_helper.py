@@ -1,7 +1,6 @@
 from django import template
 from urlparse import urlparse, urlunparse
 from django.http import QueryDict
-from leadgalaxy.models import LEAD_GROUPS
 
 register = template.Library()
 
@@ -18,7 +17,7 @@ def in_group(user, group_name):
         In galaxy_admin Group
     {% endif %}
     """
-    return LEAD_GROUPS[group_name] in user.groups.all().values_list('id', flat=True)
+    return group_name in user.groups.all().values_list('name', flat=True)
 
 @register.filter(name='in_groups')
 def in_groups(user, groups_name):
