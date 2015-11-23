@@ -213,10 +213,6 @@ function showProductInfo(rproduct) {
         $('#product-tag').val(product.tags);
         $('#product-compare-at').val(product.compare_at_price);
 
-        var element = document.querySelector("trix-editor");
-        element.editor.setSelectedRange([0, 0])
-        element.editor.insertHTML(product.description);
-
         if (product.variants.length) {
             $.each(product.variants, function(i, el) {
                 var v = $('#variants .variant-simple').clone();
@@ -235,6 +231,12 @@ function showProductInfo(rproduct) {
         if (product.weight) {
             $('#product-weight').val(product.weight);
         }
+
+        setTimeout(function() {
+            var element = document.querySelector("trix-editor");
+            element.editor.setSelectedRange([0, 0])
+            element.editor.insertHTML(product.description);
+        }, 1000);
     }
 }
 
