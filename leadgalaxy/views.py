@@ -19,6 +19,12 @@ from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
 
+def safeFloat(v):
+    try:
+        return float(v)
+    except:
+        return 0.0
+
 def smartBoardByProduct(user, product):
     prodct_info = json.loads(product.data)
     prodct_info = {
@@ -340,8 +346,8 @@ def api(request, target):
 
             product_data['title'] = data.get('title[%s]'%p)
             product_data['tags'] = data.get('tags[%s]'%p)
-            product_data['price'] = float(data.get('price[%s]'%p))
-            product_data['compare_at_price'] = float(data.get('compare_at[%s]'%p))
+            product_data['price'] = safeFloat(data.get('price[%s]'%p))
+            product_data['compare_at_price'] = safeFloat(data.get('compare_at[%s]'%p))
             product_data['type'] = data.get('type[%s]'%p)
             product_data['weight'] = data.get('weight[%s]'%p)
             # send_to_shopify = data.get('send_to_shopify[%s]'%p)
@@ -360,10 +366,10 @@ def api(request, target):
                 product_data['tags'] = data.get('tags')
 
             if 'price' in data:
-                product_data['price'] = float(data.get('price'))
+                product_data['price'] = safeFloat(data.get('price'))
 
             if 'compare_at' in data:
-                product_data['compare_at_price'] = float(data.get('compare_at'))
+                product_data['compare_at_price'] = safeFloat(data.get('compare_at'))
 
             if 'type' in data:
                 product_data['type'] = data.get('type')
@@ -520,10 +526,7 @@ def product(request, tpl='grid'):
             'boards': i.shopifyboard_set.all()
         }
 
-        try:
-            p['price'] = '$%.02f'%p['product']['price']
-        except:
-            p['price'] = '$0.0'
+        p['price'] = '$%.02f'%safeFloat(p['product']['price'])
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
@@ -558,10 +561,7 @@ def product_view(request, pid):
     if 'images' not in p['product'] or not p['product']['images']:
         p['product']['images'] = []
 
-    try:
-        p['price'] = '$%.02f'%p['product']['price']
-    except:
-        p['price'] = '$0.0'
+    p['price'] = '$%.02f'%safeFloat(p['product']['price'])
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
@@ -606,10 +606,7 @@ def bulk_edit(request):
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
 
-        try:
-            p['price'] = '$%.02f'%p['product']['price']
-        except:
-            p['price'] = '$0.0'
+        p['price'] = '$%.02f'%safeFloat(p['product']['price'])
 
         p['images'] = p['product']['images']
         products.append(p)
@@ -645,10 +642,7 @@ def boards(request):
             if 'images' not in p['product'] or not p['product']['images']:
                 p['product']['images'] = []
 
-            try:
-                p['price'] = '$%.02f'%p['product']['price']
-            except:
-                p['price'] = '$0.0'
+            p['price'] = '$%.02f'%safeFloat(p['product']['price'])
 
             p['images'] = p['product']['images']
             board['products'].append(p)
