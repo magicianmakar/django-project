@@ -243,6 +243,7 @@ def api(request, target):
         store = req_data['store']
 
         data = req_data['data']
+        original_data = req_data.get('original', '')
 
         if 'access_token' in req_data:
             token = req_data['access_token']
@@ -305,7 +306,9 @@ def api(request, target):
                 product.stat = 0
 
             else:
-                product = ShopifyProduct(store=store, user=user, data=data, stat=0)
+                original_data = original_data.encode('zlib').encode('base64')
+
+                product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0)
 
             product.save()
 
@@ -566,8 +569,14 @@ def product_view(request, pid):
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
+    original = None
+    try:
+        original = json.loads(product.original_data.decode('base64').decode('zlib'))
+    except: pass
+
     return render(request, 'product_view.html', {
         'product': p,
+        'original': original,
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
     })

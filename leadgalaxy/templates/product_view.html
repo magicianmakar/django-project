@@ -7,14 +7,25 @@
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
 <div class="ibox float-e-margins">
-    <div class="ibox-title">
-        <h5>Shopify Stores<small></small></h5>
+<!--     <div class="ibox-title">
+        <h5>Product View<small></small></h5>
         <div class="ibox-tools">
             <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
         </div>
-    </div>
+    </div> -->
     <div class="ibox-content">
 
+         <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-edit"></i> Saved Product</a></li>
+                {% if original %}
+                <li class=""><a data-toggle="tab" href="#tab-2"><i class="fa fa-history"></i>Original</a></li>
+                {% endif %}
+            </ul>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane active">
+                    <div class="panel-body">
+        <!-- Product view -->
         <div class=" row">
             <div class="form-group col-xs-12">
                 <label for="product-title">Title</label>
@@ -34,6 +45,7 @@
                 <input type="text" class="form-control" id="product-type" placeholder="Product Type">
             </div>
         </div>
+
         <div class="row">
             <div class="form-group col-xs-6">
                 <label for="store-select">Export to</label>
@@ -137,7 +149,110 @@
                 </p>
             </div>
         </div>
+        <!-- / Product view -->
+
+            </div> <!-- / #tab-1 -->
+        </div>
+        {% if original %}
+        <div id="tab-2" class="tab-pane">
+            <div class="panel-body">
+        <!-- Product view -->
+        <div class=" row">
+            <div class=" row">
+                <div class="col-xs-8" style="margin-left: 15px">
+                    <dl>
+                        <dt>Title</dt>
+                        <dd>{{original.title}}</dd>
+                    </dl>
+                </div>
+                {% if product.product.original_url %}
+                <div class="col-xs-3">
+                    <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-xs-4">
+                <dl>
+                    <dt>Price</dt>
+                    <dd>${{original.price}}</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-6">
+                <dl>
+                    <dt>Type</dt>
+                    <dd>{{original.type}}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                {% if original.weight %}
+                <div class="row">
+                    <div class="col-xs-6">
+                        <dl>
+                            <dt>Weight</dt>
+                            <dd>{{original.weight}} {{product.product.weight_unit}}</dd>
+                        </dl>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if original.compare_at_price %}
+                <div class="row">
+                    <div class="col-xs-6">
+                        <dl>
+                            <dt>Compare at price</dt>
+                            <dd>${{original.compare_at_price}}</dd>
+                        </dl>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if original.tags %}
+                <div class="row">
+                    <div class="col-xs-6">
+                        <dl>
+                            <dt>Tags</dt>
+                            <dd>{{original.tags}}</dd>
+                        </dl>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <strong>Images</strong>
+                        <div class="row  text-center" id="var-images">
+                            {% for item in product.images %}
+                            <div class="col-xs-3" style="margin-top: 15px">
+                                <img src="{{item}}" class="var-image" />
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+                <hr>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <strong>Description</strong>
+                        <p>{{original.description|safe}}</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+        <!-- / Product view -->
+            </div>
+        </div>
     </div>
+</div>
+    </div> <!-- / .ibox-content -->
 </div>
     </div>
 </div>
