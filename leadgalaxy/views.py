@@ -671,6 +671,37 @@ def boards(request):
         'breadcrumbs': ['Boards']
     })
 
+@login_required
+def acp_users_list(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    users = User.objects.all()
+    users_count = User.objects.count()
+    return render(request, 'acp_users_list.html', {
+        'users': users,
+        'users_count': users_count,
+        'page': 'acp_users_list',
+        'breadcrumbs': ['ACP', 'Users List']
+    })
+
+@login_required
+def acp_graph(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    products = ShopifyProduct.objects.all() \
+        .extra({'created':'date(%s.created_at)'%ShopifyProduct._meta.db_table}) \
+        .values('created') \
+        .annotate(created_count=Count('id')) \
+        .order_by('-created')
+
+    return render(request, 'acp_graph.html', {
+        'products': products,
+        'page': 'acp_users_list',
+        'breadcrumbs': ['ACP', 'Graph Analytics']
+    })
+
 def login(request):
     user_logout(request)
     return redirect('/')

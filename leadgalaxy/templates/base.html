@@ -85,6 +85,19 @@
                     </ul>
                     {% endif %}
                 </li>
+
+                {% if request.user.is_superuser %}
+                <li {% if 'acp' in page %}class="active"{% endif %}>
+                    <a href="#">
+                        <i class="fa fa-cogs"></i>
+                        <span class="nav-label">Admin</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse">
+                        <li {% if page == 'acp_users_list' %}class="active"{% endif %}><a href="{% url 'acp_users_list' %}">Users</a></li>
+                    </ul>
+                </li>
+                {% endif %}
             </ul>
 
         </div>
