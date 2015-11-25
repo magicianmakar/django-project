@@ -342,11 +342,13 @@ function showProductInfo(rproduct) {
             $('#product-weight').val(product.weight);
         }
 
-        setTimeout(function() {
-            var element = document.querySelector("trix-editor");
-            element.editor.setSelectedRange([0, 0])
-            element.editor.insertHTML(product.description);
-        }, 1000);
+        if (product.description) {
+            setTimeout(function() {
+                var element = document.querySelector("trix-editor");
+                element.editor.setSelectedRange([0, 0])
+                element.editor.insertHTML(product.description);
+            }, 1000);
+        }
     }
 }
 
