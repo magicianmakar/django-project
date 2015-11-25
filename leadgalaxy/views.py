@@ -152,8 +152,14 @@ def api(request, target):
                 access_token = AccessToken(user=user, token=token)
                 access_token.save()
 
-                return JsonResponse({'token': token})
-                # Redirect to a success page.
+                return JsonResponse({
+                    'token': token,
+                    'user' : {
+                        'groups': [str(i) for i in user.groups.all().values_list('name', flat=True)],
+                        'username': user.username,
+                        'email': user.email
+                    }
+                }, safe=False)
 
         return JsonResponse({'error': 'Unvalide username or password'})
 
