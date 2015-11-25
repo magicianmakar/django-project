@@ -95,6 +95,7 @@
                     </a>
                     <ul class="nav nav-second-level collapse">
                         <li {% if page == 'acp_users_list' %}class="active"{% endif %}><a href="{% url 'acp_users_list' %}">Users</a></li>
+                        <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Graph</a></li>
                     </ul>
                 </li>
                 {% endif %}
