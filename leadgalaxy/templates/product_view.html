@@ -107,7 +107,7 @@
 
                     <div class="form-group col-xs-12">
                         <label for="product-visible">
-                            <input type="checkbox" class="" id="product-visible" {% if product.product.published %} selected="selected"{% endif %}>
+                            <input type="checkbox" class="" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
                             Make Product Visible
                         </label>
                     </div>
@@ -540,6 +540,7 @@ $('#save-for-later-btn').click(function (e) {
         'tags': $('#product-tag').val(),
         'weight': parseFloat($('#product-weight').val()),
         'weight_unit': $('#product-weight-unit').val(),
+        'published': $('#product-visible').prop('checked'),
 
         'variants': []
     }
