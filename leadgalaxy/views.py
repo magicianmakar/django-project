@@ -312,7 +312,7 @@ def api(request, target):
                 product.stat = 0
 
             else:
-                original_data = original_data.encode('zlib').encode('base64')
+                original_data = original_data.encode('utf-8').encode('zlib').encode('base64')
 
                 product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0)
 
