@@ -113,13 +113,8 @@
                     </div>
 
                     <div class="form-group col-xs-12">
-                        <label for="include-desc">
-                            <input type="checkbox" class="" id="include-desc">
-                            Export Description
-                        </label>
                         <input id="product-description" type="hidden" name="content">
                         <trix-editor input="product-description"></trix-editor>
-
                     </div>
                 </div>
             </div>
@@ -395,7 +390,7 @@ $('#export-btn').click(function () {
     var api_data = {
       "product": {
         "title": $('#product-title').val(),
-        "body_html": ($('#include-desc')[0].checked ? $('#product-description').val() : ('<h2>'+$('#product-title').val()+'</h2>')),
+        "body_html": $('#product-description').val(),
         "product_type": $('#product-type').val(),
         "vendor": "",
         "published": $('#product-visible')[0].checked,
