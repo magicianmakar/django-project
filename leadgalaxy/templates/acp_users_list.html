@@ -25,6 +25,7 @@
                         <tr>
                             <th style="width:50%">Username</th>
                             <th>Email</th>
+                            <th>Groups</th>
                             <th>Stores</th>
                             <th>Saved Products</th>
                         </tr>
@@ -34,6 +35,7 @@
                         <tr user-id="{{item.id}}">
                             <td><a href="/admin/auth/user/{{item.id}}/">{{item.username}}</a></td>
                             <td> {{item.email}} </td>
+                            <td> {{item.groups.all|join:", "}} </td>
                             <td> {{item.shopifystore_set.count}} </td>
                             <td> {{item.shopifyproduct_set.count}} </td>
                         </tr>
