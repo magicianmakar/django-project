@@ -698,7 +698,7 @@ def acp_graph(request):
 
     return render(request, 'acp_graph.html', {
         'products': products,
-        'page': 'acp_users_list',
+        'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
 
