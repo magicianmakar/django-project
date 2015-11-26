@@ -705,8 +705,13 @@ def acp_graph(request):
         .annotate(created_count=Count('id')) \
         .order_by('-created')
 
+    stores_count = ShopifyStore.objects.count()
+    products_count = ShopifyProduct.objects.count()
+
     return render(request, 'acp_graph.html', {
         'products': products,
+        'products_count': products_count,
+        'stores_count': stores_count,
         'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
