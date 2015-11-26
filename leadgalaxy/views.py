@@ -676,14 +676,23 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
 
-    users = User.objects.all()
+    import time
+    start = time.time()
+    if request.GET.get('fast', 0) == 'yes':
+        users = User.objects.prefetch_related('shopifyproduct_set', 'groups').all()
+    else:
+        users = User.objects.all()
+
     users_count = User.objects.count()
-    return render(request, 'acp_users_list.html', {
+    html = render(request, 'acp_users_list.html', {
         'users': users,
         'users_count': users_count,
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']
     })
+
+    print 'Took:', time.time() - start, 'ms'
+    return html
 
 @login_required
 def acp_graph(request):
