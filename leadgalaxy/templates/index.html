@@ -12,11 +12,13 @@
             </div>
         </div>
         <div class="ibox-content">
+            <div class="row">
+                <div class="col-md-12">
             <table class="table table-condensed table-hover table-bordered">
               <thead>
                 <tr>
-                  <th style="width: 20%;">Title</th>
-                  <th style="width: 60%;">API URL</th>
+                  <th style=";">Title</th>
+                  <th class="hidden-sm hidden-xs" style=";">API URL</th>
                   <th style="">Options</th>
                 </tr>
               </thead>
@@ -24,7 +26,7 @@
                     {% for item in stores %}
                     <tr>
                       <td><a href="/store/{{item.id}}">{{item.title}}</a></td>
-                      <td>{{item.api_url}}</td>
+                      <td class="hidden-sm" >{{item.api_url}}</td>
                       <td>
                         <button class="visit-store btn btn-xs btn-success" store-url="{{item.api_url}}"> Visit Store</button>
                         <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.api_url}}"> Delete</button>
@@ -39,6 +41,9 @@
             </table>
 
             <a data-toggle="modal" class="btn btn-primary" href="#modal-form">Add Store</a>
+                </div>
+            </div>
+
         </div>
     </div>
 
