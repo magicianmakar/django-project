@@ -27,7 +27,7 @@
                       <td>{{item.api_url}}</td>
                       <td>
                         <button class="visit-store btn btn-xs btn-success" store-url="{{item.api_url}}"> Visit Store</button>
-                        <button class="delete-store btn btn-xs btn-danger" store-url="{{item.api_url}}"> Delete</button>
+                        <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.api_url}}"> Delete</button>
                       </td>
                     </tr>
                     {% empty %}
@@ -113,7 +113,7 @@
 
     $('.delete-store').click(function (e) {
         var btn = $(this);
-        var url = $(this).attr('store-url');
+        var store = $(this).attr('store-id');
 
         btn.button('loading');
 
@@ -121,7 +121,7 @@
             url: '/api/delete-store',
             type: 'POST',
             data: {
-                url: url,
+                store: store,
             },
             success: function(data) {
                 if ('error' in data) {
