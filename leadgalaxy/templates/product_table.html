@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load compress %}
 
 {% block main-container %}
 
@@ -215,6 +216,7 @@
     <script src="/static/js/plugins/dataTables/dataTables.tableTools.min.js"></script>
     <!-- <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script> -->
 
+    {% compress js %}
     <script type="text/javascript">
        $(document).ready(function() {
             var oTable = $('.dataTables').dataTable({
@@ -519,5 +521,6 @@
             });
         });
 </script>
+{% endcompress %}
 {% endblock %}
 
