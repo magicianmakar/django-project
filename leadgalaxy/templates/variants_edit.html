@@ -129,8 +129,8 @@ function displayAjaxError(desc, data) {
     }
     $('.displayAjaxError').remove();
     $(".container-fluid").prepend($('<div>', {
-        class: 'displayAjaxError row alert alert-danger',
-        text: desc +': '+ error_msg
+        'class': 'displayAjaxError row alert alert-danger',
+        'text': desc +': '+ error_msg
     }));
 }
 
@@ -238,8 +238,8 @@ function setupVariantsLinking() {
 
 
         $.each(product.images, function (i, el) {
-            var d = $('<div>', {class:'col-xs-3 var-image-block'});
-            var img = $('<img>', {src: el.src, class: 'var-image', 'image-id': el.id});
+            var d = $('<div>', {'class':'col-xs-3 var-image-block'});
+            var img = $('<img>', {src: el.src, 'class': 'var-image', 'image-id': el.id});
             d.append(img);
             d.append($('<img class="link-success" src="/static/img/checked-checkbox-24.png" style="display:none;position: absolute;left: 25px;top: 5px;background-color: #fff;border-radius: 5px;">'));
 
