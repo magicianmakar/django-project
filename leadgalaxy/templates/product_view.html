@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% load static %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -302,7 +301,6 @@
 {% endblock %}
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
 
 var api_base = '';
@@ -629,6 +627,5 @@ $(function() {
 });
 
 </script>
-{% endcompress %}
 {% endblock %}
 

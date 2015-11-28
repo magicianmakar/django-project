@@ -1,7 +1,6 @@
 {% load static %}
 {% load hijack_tags %}
 {% load perms_helper %}
-{% load compress %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -225,7 +224,6 @@
     <script src="{% static 'js/trix.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
 
-    {% compress js %}
     <script type="text/javascript">
         $(function() {
             $('.icheck').iCheck({
@@ -301,7 +299,6 @@
             });
         });
     </script>
-    {% endcompress %}
 
     {% block extrajs %}{% endblock %}
 

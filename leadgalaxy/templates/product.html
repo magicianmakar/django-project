@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% load static %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -204,7 +203,6 @@
 
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
 
     function changeProductStat(product, stat, callback, erroback) {
@@ -629,6 +627,5 @@
             setupContextMenus();
         });
 </script>
-{% endcompress %}
 {% endblock %}
 

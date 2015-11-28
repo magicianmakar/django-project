@@ -42,7 +42,6 @@ INSTALLED_APPS = (
 
     'widget_tweaks',    # For forms
     'hijack',
-    'compressor',
 
     'leadgalaxy'
 )
@@ -77,13 +76,6 @@ TEMPLATES = [
         },
     },
 ]
-
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    # other finders..
-    'compressor.finders.CompressorFinder',
-)
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
@@ -140,6 +132,3 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after hijacking the user.
 REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/admin/"  # where you want to be redirected to, after releasing the user.
-
-COMPRESS_ENABLED = True
-COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.SlimItFilter']

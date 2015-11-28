@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% load static %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -223,7 +222,6 @@
 
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
 
     var currentBoardBox = null;
@@ -619,7 +617,5 @@
             });
         });
 </script>
-{% endcompress %}
-
 {% endblock %}
 

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% load static %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -111,7 +110,6 @@
 {% block extrajs %}
 <script src="/static/js/jquery.loader.min.js" type="text/javascript"></script>
 
-{% compress js %}
 <script type="text/javascript">
 
 var api_base = '';
@@ -265,6 +263,5 @@ $(function() {
 });
 
 </script>
-{% endcompress %}
 {% endblock %}
 

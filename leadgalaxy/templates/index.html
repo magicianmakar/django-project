@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% load static %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -83,7 +82,6 @@
 
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
     $('#add-store').click(function(e) {
         var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
@@ -154,6 +152,5 @@
     });
 
 </script>
-{% endcompress %}
 {% endblock %}
 
