@@ -60,45 +60,55 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
 
     } else {
         $(product.variants).each(function (i, el) {
-            api_data.product.options.push({
-                'name': el.title,
-                'values': el.values
-            });
+            if (el.values.length>1) {
+                api_data.product.options.push({
+                    'name': el.title,
+                    'values': el.values
+                });
+            }
         });
 
         var vars_list = [];
         $(product.variants).each(function (i, el) {
-            vars_list.push(el.values);
+            if (el.values.length>1) {
+                vars_list.push(el.values);
+            }
         });
 
-        vars_list = allPossibleCases(vars_list);
-        for (var i=0; i<vars_list.length; i++) {
-            var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
+        if (vars_list.length>0) {
+            vars_list = allPossibleCases(vars_list);
 
-            var vdata = {
-                "price": product.price,
-                "title": title,
-            };
+            for (var i=0; i<vars_list.length; i++) {
+                var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
 
-            if (typeof(vars_list[i]) == "string") {
-                vdata["option1"] = vars_list[i];
-            } else {
-                $.each(vars_list[i], function (j, va) {
-                    vdata["option"+(j+1)] = va;
-                });
+                var vdata = {
+                    "price": product.price,
+                    "title": title,
+                };
+
+                if (typeof(vars_list[i]) == "string") {
+                    vdata["option1"] = vars_list[i];
+                } else {
+                    $.each(vars_list[i], function (j, va) {
+                        vdata["option"+(j+1)] = va;
+                    });
+                }
+
+                if (product.compare_at_price) {
+                    vdata.compare_at_price = product.compare_at_price;
+                }
+
+                if (product.weight) {
+                    vdata.weight = product.weight;
+                    vdata.weight_unit = product.weight_unit;
+                }
+
+                api_data.product.variants.push(vdata);
             }
-
-            if (product.compare_at_price) {
-                vdata.compare_at_price = product.compare_at_price;
-            }
-
-            if (product.weight) {
-                vdata.weight = product.weight;
-                vdata.weight_unit = product.weight_unit;
-            }
-
-            api_data.product.variants.push(vdata);
-
+        } else {
+            // alert('Variants should have more than one value separated by comma (,)');
+            callback(product, data, callback_data, false);
+            return;
         }
     }
 

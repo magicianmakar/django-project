@@ -430,52 +430,57 @@ $('#export-btn').click(function () {
     } else {
         var vars_list = $('#product-variant-values').val().split(',');
 
-
-
-        // for (var i=0; i<vars_list.length; i++) {
         $('#variants .variant').each(function (i, el) {
-            api_data.product.options.push({
-                'name': $(el).find('#product-variant-name').val(),
-                'values': $(el).find('#product-variant-values').val().split(',')
-            });
-
-            //api_data.product.options.values.push($(el).find('#product-variant-values').val().split(','));
+            var vals = $(el).find('#product-variant-values').val().split(',');
+            if (vals.length>1) {
+                api_data.product.options.push({
+                    'name': $(el).find('#product-variant-name').val(),
+                    'values': vals
+                });
+            }
         });
-        // }
 
         var vars_list = [];
         $('#variants .variant').each(function (i, el) {
-            vars_list.push($(el).find('#product-variant-values').val().split(','));
+            var vals = $(el).find('#product-variant-values').val().split(',');
+            if (vals.length>1) {
+                vars_list.push(vals);
+            }
         });
 
-        vars_list = allPossibleCases(vars_list);
-        for (var i=0; i<vars_list.length; i++) {
-            var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
+        if (vars_list.length>0) {
+            vars_list = allPossibleCases(vars_list);
+            for (var i=0; i<vars_list.length; i++) {
+                var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
 
-            var vdata = {
-                "price": parseFloat($('#product-price').val()),
-                "title": title,
-            };
+                var vdata = {
+                    "price": parseFloat($('#product-price').val()),
+                    "title": title,
+                };
 
-            if (typeof(vars_list[i]) == "string") {
-                vdata["option1"] = vars_list[i];
-            } else {
-                $.each(vars_list[i], function (j, va) {
-                    vdata["option"+(j+1)] = va;
-                });
+                if (typeof(vars_list[i]) == "string") {
+                    vdata["option1"] = vars_list[i];
+                } else {
+                    $.each(vars_list[i], function (j, va) {
+                        vdata["option"+(j+1)] = va;
+                    });
+                }
+
+                if ($('#product-compare-at').val().length) {
+                    vdata.compare_at_price = parseFloat($('#product-compare-at').val());
+                }
+
+                if ($('#product-weight').val().length) {
+                    vdata.weight = parseFloat($('#product-weight').val());
+                    vdata.weight_unit = $('#product-weight-unit').val();
+                }
+
+                api_data.product.variants.push(vdata);
             }
-
-            if ($('#product-compare-at').val().length) {
-                vdata.compare_at_price = parseFloat($('#product-compare-at').val());
-            }
-
-            if ($('#product-weight').val().length) {
-                vdata.weight = parseFloat($('#product-weight').val());
-                vdata.weight_unit = $('#product-weight-unit').val();
-            }
-
-            api_data.product.variants.push(vdata);
-
+        } else {
+            alert('Variants should have more than one value separated by comma (,)');
+            btn.button('reset');
+            return;
         }
     }
 
