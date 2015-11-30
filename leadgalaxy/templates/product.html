@@ -32,7 +32,7 @@
 
 <div class="row">
     {% for item in products %}
-    <div class="col-md-3">
+    <div class="col-xs-3 col-md-3">
         <div class="ibox">
             <div class="ibox-content product-box" product-id="{{item.id}}">
                 <div class="product-imitation" style="padding: 0;">
@@ -45,7 +45,8 @@
                         {{item.price}}
                     </span>
                     <small class="text-muted">{{item.product.type}}</small>
-                    <a href="/product/{{item.id}}" class="product-name"> {{item.product.title}}</a>
+                    <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
+                    <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
 
                     <div class="small m-t-xs">
                         Submitted at {{item.created_at|date}}
