@@ -577,8 +577,7 @@ def product_view(request, pid):
 
     original = None
     try:
-        if 'VIP Members' in request.user.groups.all().values_list('name', flat=True):
-            original = json.loads(product.original_data.decode('base64').decode('zlib'))
+        original = json.loads(product.original_data.decode('base64').decode('zlib'))
     except: pass
 
     return render(request, 'product_view.html', {
