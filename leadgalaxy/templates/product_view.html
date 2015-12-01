@@ -656,6 +656,7 @@ $('#save-product-notes').click(function (e) {
         },
         success: function(data) {
             if (data.status == 'ok') {
+                swal('Note saved', '', "success");
             } else {
                 alert('Server Error');
             }
