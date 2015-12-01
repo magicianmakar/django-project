@@ -315,6 +315,7 @@ def api(request, target):
                 original_data = original_data.encode('utf-8').encode('zlib').encode('base64')
 
                 product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0)
+                product.notes = req_data.get('notes', '')
 
             product.save()
 
