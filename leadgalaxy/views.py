@@ -541,6 +541,15 @@ def api(request, target):
             }
         })
 
+    if method == 'POST' and target == 'product-notes':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        product.notes = data.get('notes')
+        product.save()
+
+        return JsonResponse({
+            'status': 'ok',
+        })
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -589,6 +598,7 @@ def product_view(request, pid):
         'updated_at': product.updated_at,
         'data': product.data,
         'product': json.loads(product.data),
+        'notes': product.notes,
     }
 
     if 'images' not in p['product'] or not p['product']['images']:

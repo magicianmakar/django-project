@@ -21,6 +21,7 @@
                 {% if original %}
                 <li class=""><a data-toggle="tab" href="#tab-2"><i class="fa fa-history"></i>Original</a></li>
                 {% endif %}
+                <li class=""><a data-toggle="tab" href="#tab-3"><i class="fa fa-file-o"></i>Notes</a></li>
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -114,7 +115,7 @@
 
                     <div class="form-group col-xs-12">
                         <input id="product-description" type="hidden" name="content">
-                        <trix-editor input="product-description"></trix-editor>
+                        <trix-editor id="trix-description" input="product-description"></trix-editor>
                     </div>
                 </div>
             </div>
@@ -245,6 +246,19 @@
             </div>
         </div>
         {% endif %}
+        <div id="tab-3" class="tab-pane">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="form-group col-xs-12">
+                        <input id="product-notes" type="hidden" name="content-notes">
+                        <trix-editor id="trix-notes" input="product-notes">dsd</trix-editor>
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <button id="save-product-notes" class="btn btn-success">Save Notes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
     </div> <!-- / .ibox-content -->
@@ -344,7 +358,7 @@ function showProductInfo(rproduct) {
 
         if (product.description) {
             setTimeout(function() {
-                var element = document.querySelector("trix-editor");
+                var element = document.querySelector("#trix-description");
                 element.editor.setSelectedRange([0, 0])
                 element.editor.insertHTML(product.description);
             }, 1000);
@@ -627,8 +641,40 @@ $('#btn-variants-img').click(function (e) {
     window.location.href = '/product/variants/'+store_id+'/'+product_id;
 });
 
+$('#save-product-notes').click(function (e) {
+    var btn = $(this);
+
+    btn.button('loading');
+
+    $.ajax({
+        type: 'POST',
+        url: '/api/product-notes',
+        context: {},
+        data: {
+            'notes': $('#product-notes').val(),
+            'product': {{product.id}},
+        },
+        success: function(data) {
+            if (data.status == 'ok') {
+            } else {
+                alert('Server Error');
+            }
+        },
+        error: function(data) {
+            alert('Server Error');
+        },
+        complete: function() {
+            btn.button('reset');
+        }
+    });
+});
+
 $(function() {
     showProductInfo(product);
+
+    var element = document.querySelector("#trix-notes");
+    element.editor.setSelectedRange([0, 0])
+    element.editor.insertHTML('{{product.notes|escapejs}}');
 });
 
 </script>
