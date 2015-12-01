@@ -738,7 +738,17 @@ def acp_groups_install(request):
     users = User.objects.filter(profile__plan=None)
 
     if (request.GET.get('confirm', 'no')!='yes'):
-        return HttpResponse('Total Users: %d'% len(users))
+        default_count = 0
+        vip_count = 0
+        for user in users:
+            if 'VIP Members' in user.groups.all().values_list('name', flat=True):
+                vip_count += 1
+            else:
+                default_count += 1
+
+            count += 1
+
+        return HttpResponse('Total: %d - Default: %d - VIP: %d'% (default_count+vip_count,default_count,vip_count))
 
     count = 0
     with transaction.atomic():
