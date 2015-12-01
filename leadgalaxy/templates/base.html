@@ -120,8 +120,14 @@
                 <ul class="nav navbar-top-links navbar-right">
                     <li>
                         <span class="m-r-sm text-muted welcome-message">
-                            {% if request.user|in_group:'VIP Members' %}
-                                <img style="height: 35px;" src="{% static 'img/vip-badge.png' %}" alt="VIP Member">
+                            {% if request.user.is_authenticated %}
+                                {% if request.user.profile.plan.description %}
+                                    <span>{{request.user.profile.plan.description}}</span>
+                                {% endif %}
+
+                                {% if request.user.profile.plan.badge_image %}
+                                    <img style="height: 35px;" src="{{ request.user.profile.plan.badge_image }}" alt="">
+                                {% endif %}
                             {% endif %}
                         </span>
                     </li>

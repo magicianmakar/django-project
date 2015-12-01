@@ -118,5 +118,8 @@ class GroupPlan(models.Model):
     products = models.IntegerField(default=0)
     boards = models.IntegerField(default=0)
 
+    badge_image = models.CharField(max_length=512, blank=True, default='')
+    description = models.CharField(max_length=512, blank=True, default='')
+
     def __unicode__(self):
         return '%s'%(self.title)
