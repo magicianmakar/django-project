@@ -15,6 +15,8 @@ urlpatterns = patterns('',
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', leadgalaxy.views.variants_edit, name='variants_edit'),
     url(r'^boards$', leadgalaxy.views.boards, name='boards'),
     url(r'^acp/users/list$', leadgalaxy.views.acp_users_list, name='acp_users_list'),
+    url(r'^acp/groups$', leadgalaxy.views.acp_groups, name='acp_groups'),
+    url(r'^acp/groups/install$', leadgalaxy.views.acp_groups_install, name='acp_groups_install'),
     url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
 
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),

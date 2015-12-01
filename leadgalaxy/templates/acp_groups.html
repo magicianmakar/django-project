@@ -9,7 +9,7 @@
         <div class="ibox float-e-margins">
 
              <div class="ibox-title">
-                <h5>Users Count: {{users_count}}<small></small></h5>
+                <h5>Plans<small></small></h5>
                 <div class="ibox-tools">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
                         <i class="fa fa-wrench"></i>
@@ -23,27 +23,21 @@
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
-                            <th>Username</th>
-                            <th>Email</th>
                             <th>Plan</th>
+                            <th>Price Per Month</th>
                             <th>Stores</th>
-                            <th>Saved Products</th>
+                            <th>Products</th>
+                            <th>Boards</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for item in users %}
-                        <tr user-id="{{item.id}}">
-                            <td><a target="_blank" href="/admin/auth/user/{{item.id}}/">{{item.username}}</a></td>
-                            <td>{{item.email}} </td>
-                            <td>
-                            {% if item.profile.get_plan %}
-                                <a target="_blank" href="/admin/leadgalaxy/groupplan/{{item.profile.plan.id}}/">{{item.profile.plan.title}}</a>
-                            {% else %}
-                                <b>None</b>
-                            {% endif %}
-                            </td>
-                            <td>{{item.shopifystore_set.count}}</td>
-                            <td>{{item.shopifyproduct_set.count}}</td>
+                    {% for item in plans %}
+                        <tr plans-id="{{item.id}}">
+                            <td><b><a target="_blank" href="/admin/leadgalaxy/groupplan/{{item.id}}/">{{item.title}}</a></b></td>
+                            <td>${{item.montly_price}}</td>
+                            <td>{% if item.stores == -1 %}Unlimited{% else %}{{item.stores}}{% endif %}</td>
+                            <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
+                            <td>{% if item.boards == -1 %}Unlimited{% else %}{{item.boards}}{% endif %}</td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -82,15 +76,7 @@
     <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script>
 
     <script type="text/javascript">
-        $(document).ready(function() {
-            $('.dataTables').dataTable({
-                responsive: true,
-                "dom": 'T<"clear">lfrtip',
-                "tableTools": {
-                    "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
-                }
-            });
-        });
+
     </script>
 {% endblock %}
 

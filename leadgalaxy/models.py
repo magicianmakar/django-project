@@ -1,9 +1,37 @@
 from django.db import models
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.template import Context, Template
 from django.db.models import Q
 import re, json
+
+ENTITY_STATUS_CHOICES = (
+    (0, 'Pending'),
+    (1, 'Active'),
+    (2, 'Inactive'),
+    (3, 'Hold'),
+)
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, related_name='profile')
+    plan = models.ForeignKey('GroupPlan', null=True)
+
+    status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
+
+    full_name = models.CharField(max_length=255, blank=True, default='')
+    address1 = models.CharField(max_length=255, blank=True, default='')
+    city = models.CharField(max_length=255, blank=True, default='')
+    state = models.CharField(max_length=255, blank=True, default='')
+    country = models.CharField(max_length=255, blank=True, default='')
+
+    def __str__(self):
+        return '%s | %s'%(self.user.username, self.plan.title)
+
+    def get_plan(self):
+       try:
+          return self.plan
+       except:
+          return None
 
 class ShopifyStore(models.Model):
     class Meta:
@@ -82,3 +110,13 @@ class ShopifyBoard(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+class GroupPlan(models.Model):
+    title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
+    montly_price = models.FloatField(default=0.0, verbose_name="Price Per Month")
+    stores = models.IntegerField(default=0)
+    products = models.IntegerField(default=0)
+    boards = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return '%s'%(self.title)

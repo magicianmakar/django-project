@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.template import Context, Template
 # from django.conf import settings
 from django.template.loader import get_template
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
@@ -714,6 +714,45 @@ def acp_graph(request):
         'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
+
+@login_required
+def acp_groups(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    plans = GroupPlan.objects.all()
+    return render(request, 'acp_groups.html', {
+        'plans': plans,
+        'page': 'acp_groups',
+        'breadcrumbs': ['ACP', 'Plans &amp; Groups']
+    })
+
+def acp_groups_install(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    from django.db import transaction
+
+    plan = GroupPlan.objects.get(id=request.GET.get('default'))
+    vip_plan = GroupPlan.objects.get(id=request.GET.get('vip'))
+    users = User.objects.filter(profile__plan=None)
+
+    if (request.GET.get('confirm', 'no')!='yes'):
+        return HttpResponse('Total Users: %d'% len(users))
+
+    count = 0
+    with transaction.atomic():
+        for user in users:
+            if 'VIP Members' in user.groups.all().values_list('name', flat=True):
+                profile = UserProfile(user=user, plan=vip_plan)
+            else:
+                profile = UserProfile(user=user, plan=plan)
+
+            profile.save()
+
+            count += 1
+
+    return HttpResponse('Done, changed: %d'%count)
 
 def login(request):
     user_logout(request)
