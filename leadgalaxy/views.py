@@ -517,6 +517,30 @@ def api(request, target):
             'status': 'ok'
         })
 
+    if method == 'POST' and target == 'change-plan':
+        if not user.is_superuser:
+            return JsonResponse({'error': 'You don\'t have access to this endpoint'})
+
+        target_user = User.objects.get(id=data.get('user'))
+        plan = GroupPlan.objects.get(id=data.get('plan'))
+
+
+        try:
+            profile = target_user.profile
+            target_user.profile.plan = plan
+        except:
+            profile = UserProfile(user=target_user, plan=plan)
+
+        target_user.profile.save()
+
+        return JsonResponse({
+            'status': 'ok',
+            'plan': {
+                'id': plan.id,
+                'title': plan.title
+            }
+        })
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -682,9 +706,12 @@ def acp_users_list(request):
     else:
         users = User.objects.all()
 
+    plans = GroupPlan.objects.all()
+
     users_count = User.objects.count()
     html = render(request, 'acp_users_list.html', {
         'users': users,
+        'plans': plans,
         'users_count': users_count,
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']

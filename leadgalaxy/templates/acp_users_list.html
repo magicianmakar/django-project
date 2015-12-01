@@ -28,6 +28,7 @@
                             <th>Plan</th>
                             <th>Stores</th>
                             <th>Saved Products</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -35,15 +36,19 @@
                         <tr user-id="{{item.id}}">
                             <td><a target="_blank" href="/admin/auth/user/{{item.id}}/">{{item.username}}</a></td>
                             <td>{{item.email}} </td>
-                            <td>
+                            <td class="profile-plan">
                             {% if item.profile.get_plan %}
-                                <a target="_blank" href="/admin/leadgalaxy/groupplan/{{item.profile.plan.id}}/">{{item.profile.plan.title}}</a>
+                                <b>{{item.profile.plan.title}}</b>
                             {% else %}
                                 <b>None</b>
                             {% endif %}
                             </td>
                             <td>{{item.shopifystore_set.count}}</td>
                             <td>{{item.shopifyproduct_set.count}}</td>
+                            <td>
+                                <a href="/hijack/{{item.id}}/" class="btn btn-success btn-xs ">Login as this user</a>
+                                <button class="btn btn-primary btn-xs change-plan-btn">Change Plan</button>
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -57,6 +62,28 @@
     </div>
 </div>
 
+<div id="modal-plan-select" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Sending To Shopify</h3>
+
+                        <label for="send-select-store">Select Plan:</label>
+                        <select class="form-control" name="selected-actions" id="plan-change-select" style="display: inline-block; width: 191px; ">
+                            {% for item in plans %}
+                            <option value="{{item.id}}">{{item.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="change-plan-apply" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extracss %}
@@ -90,6 +117,46 @@
                     "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
                 }
             });
+
+            $('.change-plan-btn').click(function (e) {
+                $('.active-plan-change').removeClass('active-plan-change');
+                $(this).parents('tr').find('.profile-plan').addClass('active-plan-change');
+                $('#modal-plan-select').prop('user-id', $(this).parents('tr').attr('user-id'));
+                $('#modal-plan-select').modal('show');
+            });
+
+            $('#change-plan-apply').click(function (e) {
+                var btn = $(this);
+                var user = $('#modal-plan-select').prop('user-id');
+                var plan = $('#plan-change-select').val();
+
+                btn.button('loading');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/change-plan',
+                    context: {},
+                    data: {
+                        'plan':plan,
+                        'user': user
+                    },
+                    success: function(data) {
+                        if (data.status == 'ok') {
+                            $('#modal-plan-select').modal('hide');
+                            $('.active-plan-change').find('b').text(data.plan.title);
+                        } else {
+                            alert('Server Error');
+                        }
+                    },
+                    error: function(data) {
+                        alert('Server Error');
+                    },
+                    complete: function() {
+                        btn.button('reset');
+                    }
+                });
+
+            })
         });
     </script>
 {% endblock %}
