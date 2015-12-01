@@ -677,8 +677,8 @@ def acp_users_list(request):
 
     import time
     start = time.time()
-    if request.GET.get('fast', 0) == 'yes':
-        users = User.objects.prefetch_related('shopifyproduct_set', 'groups').all()
+    if request.GET.get('plan', None):
+        users = User.objects.filter(profile__plan_id=request.GET.get('plan'))
     else:
         users = User.objects.all()
 

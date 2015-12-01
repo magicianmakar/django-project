@@ -28,6 +28,7 @@
                             <th>Stores</th>
                             <th>Products</th>
                             <th>Boards</th>
+                            <th>Users Count</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,6 +39,7 @@
                             <td>{% if item.stores == -1 %}Unlimited{% else %}{{item.stores}}{% endif %}</td>
                             <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
                             <td>{% if item.boards == -1 %}Unlimited{% else %}{{item.boards}}{% endif %}</td>
+                            <td><a href="{% url 'acp_users_list' %}?plan={{item.id}}">{{item.userprofile_set.count}}</a></td>
                         </tr>
                     {% empty %}
                         <tr>
