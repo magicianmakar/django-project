@@ -305,9 +305,9 @@
                   }
             });
 
-            var selectStat = true;
             $('.select-all-btn').click(function (e) {
                 e.preventDefault();
+                var selectStat = $(this).prop('select-all') == true;
                 ((window.location.href.indexOf('/boards')==-1) ?
                     $('input[type="checkbox"]') :
                     $(this).parents('.board-box').find('input[type="checkbox"]'))
@@ -315,8 +315,8 @@
                     $(el).iCheck(selectStat ? 'check' : 'uncheck');
                 });
 
-                selectStat = !selectStat;
-                $(this).text(selectStat ? 'Select All' : 'Unselect All');
+                $(this).prop('select-all', !selectStat)
+                $(this).text(!selectStat ? 'Select All' : 'Unselect All');
                 document.body.focus();
             })
         });
