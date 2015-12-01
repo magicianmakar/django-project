@@ -254,7 +254,7 @@
                         <trix-editor id="trix-notes" input="product-notes">dsd</trix-editor>
                     </div>
                     <div class="form-group col-xs-12">
-                        <button id="save-product-notes" class="btn btn-success">Save Notes</button>
+                        <button id="save-product-notes" class="btn btn-success"><i class="fa fa-check"></i> Save Notes</button>
                     </div>
                 </div>
             </div>
@@ -641,6 +641,7 @@ $('#btn-variants-img').click(function (e) {
     window.location.href = '/product/variants/'+store_id+'/'+product_id;
 });
 
+$('#save-product-notes i').hide();
 $('#save-product-notes').click(function (e) {
     var btn = $(this);
 
@@ -649,14 +650,20 @@ $('#save-product-notes').click(function (e) {
     $.ajax({
         type: 'POST',
         url: '/api/product-notes',
-        context: {},
+        context: btn,
         data: {
             'notes': $('#product-notes').val(),
             'product': {{product.id}},
         },
         success: function(data) {
             if (data.status == 'ok') {
-                swal('Note saved', '', "success");
+                setTimeout(function () {
+                    btn.find('i').slideDown(300, function () {
+                        setTimeout(function () {
+                            $('i', btn).slideUp();
+                        }, 1000);
+                    });
+                }, 100);
             } else {
                 alert('Server Error');
             }
