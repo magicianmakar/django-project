@@ -746,8 +746,6 @@ def acp_groups_install(request):
             else:
                 default_count += 1
 
-            count += 1
-
         return HttpResponse('Total: %d - Default: %d - VIP: %d'% (default_count+vip_count,default_count,vip_count))
 
     count = 0
