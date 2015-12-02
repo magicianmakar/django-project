@@ -44,6 +44,7 @@
                             <th>Category</th>
                             <th>Tags</th>
                             <th>Date</th>
+                            <th>Sourced from</th>
                             <th>Options</th>
                         </tr>
                     </thead>
@@ -65,6 +66,7 @@
                             <td>{{item.product.type}}</td>
                             <td>{{item.product.tags}}</td>
                             <td>{{item.created_at|date}}</td>
+                            <td><a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a></td>
                             <td>
                                 <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button>
                             </td>
@@ -225,6 +227,7 @@
                 "columns": [
                     { "orderable": false },
                     { "orderable": false },
+                    null,
                     null,
                     null,
                     null,

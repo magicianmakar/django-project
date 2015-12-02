@@ -46,6 +46,11 @@
                         {{item.price}}
                     </span>
                     <small class="text-muted">{{item.product.type}}</small>
+                    {% if item.source %}
+                    <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                        <a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a>
+                    </small>
+                    {% endif %}
                     <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
                     <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
 

@@ -142,7 +142,7 @@
                     <button id="btn-variants-img" type="button" class="btn btn-success" style="display:none">Setup Variants Images</button>
 
                     {% if product.product.original_url %}
-                        <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a>
+                        <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source}}</a>
                     {% endif %}
 
                 </p>

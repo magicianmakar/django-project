@@ -577,6 +577,13 @@ def product(request, tpl='grid'):
             'boards': i.shopifyboard_set.all()
         }
 
+        try:
+            if 'aliexpress' in p['product'].get('original_url','').lower():
+                p['source'] = 'AliExpress'
+            elif 'alibaba' in p['product'].get('original_url','').lower():
+                p['source'] = 'AliBaba'
+        except: pass
+
         p['price'] = '$%.02f'%safeFloat(p['product']['price'])
 
         if 'images' not in p['product'] or not p['product']['images']:
@@ -625,6 +632,13 @@ def product_view(request, pid):
                     p['original_product_id'] = re.findall('([0-9]+).html', p['original_url'])[0]
                     p['original_product_source'] = 'ALIEXPRESS'
                 except: pass
+
+    try:
+        if 'aliexpress' in p['product'].get('original_url','').lower():
+            p['source'] = 'AliExpress'
+        elif 'alibaba' in p['product'].get('original_url','').lower():
+            p['source'] = 'AliBaba'
+    except: pass
 
     original = None
     try:
@@ -704,6 +718,13 @@ def boards(request):
                 'updated_at': i.updated_at,
                 'product': json.loads(i.data),
             }
+
+            try:
+                if 'aliexpress' in p['product'].get('original_url','').lower():
+                    p['source'] = 'AliExpress'
+                elif 'alibaba' in p['product'].get('original_url','').lower():
+                    p['source'] = 'AliBaba'
+            except: pass
 
             if 'images' not in p['product'] or not p['product']['images']:
                 p['product']['images'] = []
