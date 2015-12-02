@@ -34,9 +34,11 @@
                     </div>
                 </div>
                 {% endif %}
-                <table class="table table-bordered dataTables">
+                <table class="table table-striped dataTables">
                     <thead>
                         <tr>
+                            <th style="width:20px"></th>
+                            <th style="width:64px"></th>
                             <th style="width:40%">Title</th>
                             <th>Price</th>
                             <th>Category</th>
@@ -49,17 +51,15 @@
                     {% for item in products %}
                         <tr product-id="{{item.id}}">
                             <td>
-                                <ul class="media-list">
-                                  <li class="media">
-                                      <input class="item-select icheck" style="margin:0" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
-                                    <label class="pull-left" for="product_{{item.id}}">
-                                      <img style="width: 64px; height: 64px;" class="media-object" src="{{item.images|first}}" alt="">
-                                    </label>
-                                    <div class="media-body">
-                                      <h4 class="media-heading"><a href="/product/{{item.id}}">{{item.product.title}}</a></h4>
-                                    </div>
-                                  </li>
-                                </ul>
+                                <input class="item-select icheck" style="" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                                <label class="pull-left" for="product_{{item.id}}"></label>
+                            </td>
+                            <td>
+                                <img style="width: 64px; height: 64px;" class="media-object" src="{{item.images|first}}" alt="">
+
+                            </td>
+                            <td>
+                                <a href="/product/{{item.id}}">{{item.product.title}}</a>
                             </td>
                             <td>{{item.product.price}}</td>
                             <td>{{item.product.type}}</td>
@@ -220,7 +220,18 @@
        $(document).ready(function() {
             var oTable = $('.dataTables').dataTable({
                 responsive: true,
+                orderMulti: false,
                 "dom": 'T<"clear">lfrtip',
+                "columns": [
+                    { "orderable": false },
+                    { "orderable": false },
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    { "orderable": false },
+                ],
                 "tableTools": {
                     "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf",
                     "aButtons": []
