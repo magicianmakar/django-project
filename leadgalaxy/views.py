@@ -25,6 +25,13 @@ def safeFloat(v):
     except:
         return 0.0
 
+def create_new_profile(user):
+    plan = GroupPlan.objects.filter(default_plan=1).first()
+    profile = UserProfile(user=user, plan=plan)
+    profile.save()
+
+    return profile
+
 def smartBoardByProduct(user, product):
     prodct_info = json.loads(product.data)
     prodct_info = {
@@ -167,6 +174,7 @@ def api(request, target):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
+            create_new_profile(new_user)
 
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])
             if user is not None:
@@ -789,6 +797,12 @@ def acp_groups(request):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
 
+    if request.method == 'POST':
+        plan = GroupPlan.objects.get(id=request.POST['default-plan'])
+        GroupPlan.objects.all().update(default_plan=0)
+        plan.default_plan = 1
+        plan.save()
+
     plans = GroupPlan.objects.all()
     return render(request, 'acp_groups.html', {
         'plans': plans,
@@ -845,6 +859,8 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
+            create_new_profile(new_user)
+
             return HttpResponseRedirect("/")
     else:
         form = RegisterForm()

@@ -12,6 +12,11 @@ ENTITY_STATUS_CHOICES = (
     (3, 'Hold'),
 )
 
+YES_NO_CHOICES = (
+    (0, 'No'),
+    (1, 'Yes'),
+)
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
     plan = models.ForeignKey('GroupPlan', null=True)
@@ -121,6 +126,8 @@ class GroupPlan(models.Model):
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='')
+
+    default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
     def __unicode__(self):
         return '%s'%(self.title)

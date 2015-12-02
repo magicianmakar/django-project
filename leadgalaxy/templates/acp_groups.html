@@ -20,6 +20,22 @@
             </div>
 
             <div class="ibox-content">
+                <div class="row">
+                    <form class="form-inline" method="POST">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <label class="control-label">New Registrations Plan:</label>
+                            <select name="default-plan" class="form-control">
+                                {% for item in plans %}
+                                <option value="{{item.id}}" {% if item.default_plan %}selected="selected"{% endif %}>{{item.title}}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-success btn-sm" style="margin-bottom:0">Apply</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+                <p style="margin-bottom:20px"></p>
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
