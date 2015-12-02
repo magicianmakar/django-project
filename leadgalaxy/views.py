@@ -610,6 +610,14 @@ def product_view(request, pid):
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
+    if 'VIP' in request.user.profile.plan.title:
+        if (p['original_url'] and len(p['original_url'])):
+            if 'aliexpress' in p['original_url'].lower():
+                try:
+                    p['original_product_id'] = re.findall('([0-9]+).html', p['original_url'])[0]
+                    p['original_product_source'] = 'ALIEXPRESS'
+                except: pass
+
     original = None
     try:
         original = json.loads(product.original_data.decode('base64').decode('zlib'))
@@ -703,6 +711,29 @@ def boards(request):
         'boards': boards,
         'page': 'boards',
         'breadcrumbs': ['Boards']
+    })
+
+@login_required
+def get_shipping_info(request):
+    product = request.GET.get('id')
+
+    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
+        params= {
+            'f': 'd',
+            'productid': product,
+            'userType': 'cnfm',
+            'country': 'US',
+            'province': '',
+            'city': '',
+            'count': '1',
+            'currencyCode': 'USD',
+            'sendGoodsCountry': ''
+    })
+
+    data = json.loads(r.text[1:-1])
+
+    return render(request, 'shippement_info.html',{
+        'info': data
     })
 
 @login_required
