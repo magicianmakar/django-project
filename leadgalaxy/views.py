@@ -749,26 +749,22 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
 
-    import time
-    start = time.time()
     if request.GET.get('plan', None):
         users = User.objects.filter(profile__plan_id=request.GET.get('plan'))
+        users_count = User.objects.filter(profile__plan_id=request.GET.get('plan')).count()
     else:
         users = User.objects.all()
+        users_count = User.objects.count()
 
     plans = GroupPlan.objects.all()
 
-    users_count = User.objects.count()
-    html = render(request, 'acp_users_list.html', {
+    return render(request, 'acp_users_list.html', {
         'users': users,
         'plans': plans,
         'users_count': users_count,
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']
     })
-
-    print 'Took:', time.time() - start, 'ms'
-    return html
 
 @login_required
 def acp_graph(request):
