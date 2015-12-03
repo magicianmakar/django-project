@@ -124,14 +124,16 @@
             </div>
 
             <div class="buttons col-xs-12">
-                <div class="row  text-center" id="var-images">
-                    {% for item in product.images %}
-                    <div class="col-xs-3 var-image-block">
-                        <img src="{{item}}" class="var-image" />
-                        <button class="btn btn-danger btn-xs" style="display:none;position: absolute;right: 35px;top: 0;border-radius: 5px;font-weight: bolder;"><i class="fa fa-times"></i></button>
-                    </div>
-                    {% endfor %}
+                <div class="row text-center" id="var-images">
                 </div>
+
+                {% if original.extra_images %}
+                <div class="row">
+                    <div class="col-xs-12 text-left" style="margin-top: 15px;">
+                        <button class="btn btn-success btn-xs add-images-btn pull-right" data-toggle="modal" data-target="#modal-add-image">More images</button>
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <div class="buttons col-xs-12">
@@ -280,6 +282,36 @@
     </div>
 </div>
 
+<div id="modal-add-image" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Image to add</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% for item in original.extra_images %}
+
+                            {% if forloop.counter0|divisibleby:"4" %}
+                            <div class="col-xs-12"></div>
+                            {% endif %}
+
+                            <div class="col-xs-3 add-var-image-block">
+                                <img src="{{item}}" class="add-var-image" />
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Close</button>
+              </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extracss %}
@@ -307,14 +339,14 @@
 }
 
 
-.var-image {
+.var-image, .add-var-image {
     border: 1px solid #ccc;
     padding: 5px;
     width: 100px;
     cursor: pointer;
 }
 
-.var-image:hover {
+.var-image:hover, .add-var-image:hover {
     border: 1px solid #000;
 }
 
@@ -322,7 +354,7 @@
     opacity: 0.3;
 }
 
-.var-image-block {
+.var-image-block, .add-var-image-block {
     margin-top: 15px;
 }
 </style>
@@ -377,6 +409,8 @@ function showProductInfo(rproduct) {
                 element.editor.insertHTML(product.description);
             }, 1000);
         }
+
+        renderImages();
     }
 }
 
@@ -626,7 +660,7 @@ $("#view-btn").click(function () {
     window.open($(this).attr('shopify-url'), '_blank');
 });
 
-$('.var-image-block button').click(function (e) {
+function imageClicked(e) {
     var image_url = $(this).parent().find('img').attr('src');
     console.log('delete',image_url);
     var new_images = [];
@@ -639,7 +673,11 @@ $('.var-image-block button').click(function (e) {
 
     product.images = new_images;
     $(this).parent().remove();
-});
+
+    renderImages();
+}
+
+$('.var-image-block button').click(imageClicked);
 
 $('.var-image-block').mouseenter(function() {
     $(this).find('button').show();
@@ -690,6 +728,36 @@ $('#save-product-notes').click(function (e) {
         }
     });
 });
+
+$('#modal-add-image .add-var-image').click(function (e) {
+    product.images.push($(this).attr('src'));
+    renderImages();
+});
+
+function renderImages() {
+    $('#var-images').empty();
+    $.each(product.images, function (i, el) {
+        if(i!=0&&i%4==0) {
+            $('#var-images').append($('<div class="col-xs-12"></div>'));
+        }
+
+        var d = $('<div>', {class:'col-xs-3 var-image-block','image-url': el});
+        var img = $('<img>', {src: el, class: 'var-image', 'image-url': el, 'style':'cursor: default'});
+        d.append(img);
+        d.append($('<button class="btn btn-danger  btn-xs" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
+
+        d.find('button').click(imageClicked);
+
+        d.mouseenter(function() {
+            $(this).find('button').show();
+        })
+        .mouseleave(function() {
+            $(this).find('button').fadeOut();
+        })
+
+        $('#var-images').append(d);
+    });
+}
 
 $(function() {
     showProductInfo(product);
