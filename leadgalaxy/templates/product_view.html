@@ -129,9 +129,11 @@
 
                 <div class="row">
                     <div class="col-xs-12 text-right" style="margin-top: 15px;">
+                        {% if images_upload %}
                         <button class="btn btn-success btn-xs" data-toggle="modal" data-target="#modal-upload-image">
                             <i class="fa fa-upload"></i> Upload Image
                         </button>
+                        {% endif %}
                         <button class="btn btn-success btn-xs add-images-btn " data-toggle="modal" data-target="#modal-add-image">More images</button>
                     </div>
                 </div>
@@ -785,6 +787,8 @@ $('#modal-add-image .add-var-image').click(function (e) {
     renderImages();
 });
 
+{% if images_upload %}
+
 $('#modal-upload-image').on('show.bs.modal', function (e) {
     $('.upload-image-btn').button('reset');
     $('#file_input').prop('value', '');
@@ -856,6 +860,7 @@ function file_uploaded(url) {
         error: function(data) {},
     });
 }
+{% endif %}
 
 function renderImages() {
     $('#var-images').empty();

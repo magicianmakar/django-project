@@ -654,9 +654,11 @@ def product_view(request, pid):
         original = json.loads(product.original_data.decode('base64').decode('zlib'))
     except: pass
 
+
     return render(request, 'product_view.html', {
         'product': p,
         'original': original,
+        'images_upload': ('VIP' in request.user.profile.plan.title),
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
     })
