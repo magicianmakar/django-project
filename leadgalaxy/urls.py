@@ -20,6 +20,8 @@ urlpatterns = patterns('',
     url(r'^acp/groups/install$', leadgalaxy.views.acp_groups_install, name='acp_groups_install'),
     url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
 
+    url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
+
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         { 'authentication_form': EmailAuthenticationForm }, name='login'),

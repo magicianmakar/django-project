@@ -131,3 +131,17 @@ class GroupPlan(models.Model):
 
     def __unicode__(self):
         return '%s'%(self.title)
+
+class UserUpload(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+    product = models.ForeignKey(ShopifyProduct, null=True)
+    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return '%s | %s'%(self.url.replace('%2F','/').split('/')[-1], self.user.username)

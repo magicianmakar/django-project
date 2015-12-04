@@ -559,6 +559,16 @@ def api(request, target):
             'status': 'ok',
         })
 
+    if method == 'POST' and target == 'add-user-upload':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+
+        upload = UserUpload(user=user, product=product, url=data.get('url'))
+        upload.save()
+
+        return JsonResponse({
+            'status': 'ok',
+        })
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 @login_required
@@ -834,6 +844,7 @@ def acp_groups(request):
         'breadcrumbs': ['ACP', 'Plans &amp; Groups']
     })
 
+@login_required
 def acp_groups_install(request):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
@@ -868,6 +879,38 @@ def acp_groups_install(request):
             count += 1
 
     return HttpResponse('Done, changed: %d'%count)
+
+@login_required
+def upload_file_sign(request):
+    import time, base64, hmac, urllib
+    from hashlib import sha1
+
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+
+    object_name = urllib.quote_plus(request.GET.get('file_name'))
+    mime_type = request.GET.get('file_type')
+
+    if 'image' not in mime_type.lower():
+        return JsonResponse({'error':'None allowed file type'})
+
+    expires = int(time.time()+60*60*24)
+    amz_headers = "x-amz-acl:public-read"
+
+    string_to_sign = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, S3_BUCKET, object_name)
+
+    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest())
+    signature = urllib.quote_plus(signature.strip())
+
+    url = 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, object_name)
+
+    content = {
+        'signed_request': '%s?AWSAccessKeyId=%s&Expires=%s&Signature=%s' % (url, AWS_ACCESS_KEY, expires, signature),
+        'url': url,
+    }
+
+    return JsonResponse(content, safe=False)
 
 def login(request):
     user_logout(request)
