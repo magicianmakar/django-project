@@ -635,13 +635,12 @@ def product_view(request, pid):
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
-    if 'VIP' in request.user.profile.plan.title:
-        if (p['original_url'] and len(p['original_url'])):
-            if 'aliexpress' in p['original_url'].lower():
-                try:
-                    p['original_product_id'] = re.findall('([0-9]+).html', p['original_url'])[0]
-                    p['original_product_source'] = 'ALIEXPRESS'
-                except: pass
+    if (p['original_url'] and len(p['original_url'])):
+        if 'aliexpress' in p['original_url'].lower():
+            try:
+                p['original_product_id'] = re.findall('([0-9]+).html', p['original_url'])[0]
+                p['original_product_source'] = 'ALIEXPRESS'
+            except: pass
 
     try:
         if 'aliexpress' in p['product'].get('original_url','').lower():
