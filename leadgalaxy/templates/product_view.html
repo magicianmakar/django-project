@@ -691,12 +691,11 @@ $("#view-btn").click(function () {
 });
 
 function imageClicked(e) {
-    var image_url = $(this).parent().find('img').attr('src');
-    console.log('delete',image_url);
+    var imageID = $(this).parent().find('img').attr('image-id');
     var new_images = [];
 
     for (var i = 0; i < product.images.length; i++) {
-        if (product.images[i] != image_url) {
+        if (i != imageID) {
             new_images.push(product.images[i]);
         }
     };
@@ -869,8 +868,8 @@ function renderImages() {
             $('#var-images').append($('<div class="col-xs-12"></div>'));
         }
 
-        var d = $('<div>', {class:'col-xs-3 var-image-block','image-url': el});
-        var img = $('<img>', {src: el, class: 'var-image', 'image-url': el, 'style':'cursor: default'});
+        var d = $('<div>', {'class':'col-xs-3 var-image-block','image-url': el});
+        var img = $('<img>', {src: el, 'class': 'var-image', 'image-url': el, 'image-id':i, 'style':'cursor: default'});
         d.append(img);
         d.append($('<button class="btn btn-danger  btn-xs" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
 
