@@ -924,44 +924,30 @@ $(function() {
 
 $(function() {
     $("#uploader").plupload({
-        // General settings
         runtimes : 'html5,flash',
-        // Flash settings
         flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/Moxie.swf',
-        // S3 specific settings
         url : "https://{{aws_bucket}}.s3.amazonaws.com:443/",
-        file_name_name: false, // Custom option to our fork to remove file_name_name
+        file_name_name: false,
         multipart: true,
         multipart_params : {
-          // Dummy filename to ensure the field is sent in HTML just like Flash
-          // This allow to have a consistent AWS policy for both HTML and Flash
           filename: 'filename',
           utf8: true,
           AWSAccessKeyId: "{{aws_key}}",
-          acl: "public-read", // See http://docs.aws.amazon.com/AmazonS3/latest/dev/ACLOverview.html#CannedACL
-          // See Generating a policy and a signature
+          acl: "public-read",
           policy: "{{aws_policy|escapejs}}",
           signature: "{{aws_signature|escapejs}}",
-          // This is basically the resulting location of the file on S3.
-          // See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPOST.html#RESTObjectPOST-requests-form-fields
-          //
-          // WARNING : Change this to suite your needs.
-          // You need to insert some sort of unique identifier to avoid
-          // overriding files if they share the same filename.
           key: "uploads/u{{user.id}}/${filename}",
           'Content-Type': 'image/jpeg',
         },
         filters : {
-            // Maximum file size
             max_file_size : '3mb',
-            // Specify what files to browse for
             mime_types: [
                 {title : "Image files", extensions : "png,jpg,jpeg,gif"}
             ]
         },
         views: {
             list: true,
-            thumbs: true, // Show thumbs
+            thumbs: true,
             active: 'thumbs'
         },
         sortable: true,
