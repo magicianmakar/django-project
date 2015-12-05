@@ -690,6 +690,15 @@ $("#view-btn").click(function () {
     window.open($(this).attr('shopify-url'), '_blank');
 });
 
+function matchImagesWithExtra() {
+    $('#modal-add-image .extra-added').remove();
+    $('#modal-add-image .add-var-image-block').each(function(i, el) {
+            if (product.images.indexOf($('img', el).attr('src')) != -1) {
+                $(el).append($('<img class="extra-added" src="//i.imgur.com/HDg5nrv.png" style="position: absolute;left: 16px;top: 1px;border-radius: 0 0 8px 0;background-color: #fff;">'));
+            }
+    });
+}
+
 function imageClicked(e) {
     var imageID = $(this).parent().find('img').attr('image-id');
     var new_images = [];
@@ -768,10 +777,25 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
             }
 
             var d = $('<div>', {class:'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
-            var img = $('<img>', {src: $(el).attr('src'), class: 'add-var-image', 'image-url': $(el).attr('src'), 'style':'cursor: default'});
+            var img = $('<img>', {src: $(el).attr('src'), class: 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
             d.append(img);
+
             img.click(function (e) {
-                product.images.push($(this).attr('src'));
+                var imageIdx = product.images.indexOf($(this).attr('src'));
+                if (imageIdx == -1) {
+                    product.images.push($(this).attr('src'));
+                } else {
+                    var images = [];
+
+                    for (var i = 0; i < product.images.length; i++) {
+                        if (i!=imageIdx) {
+                            images.push(product.images[i]);
+                        }
+                    };
+
+                    product.images = images;
+                }
+
                 renderImages();
             });
 
@@ -779,6 +803,8 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
             counter++;
         }
     });
+
+    matchImagesWithExtra();
 });
 
 $('#modal-add-image .add-var-image').click(function (e) {
@@ -884,6 +910,8 @@ function renderImages() {
 
         $('#var-images').append(d);
     });
+
+    matchImagesWithExtra();
 }
 var product_extra_images = [
 {% for item in original.extra_images %}
