@@ -768,7 +768,7 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
     $('#modal-add-image .description-images-add').empty();
     var counter=0;
     $('.original-description img').each(function (i, el) {
-        if (product_extra_images.indexOf($(el).attr('src'))==-1) {
+        if (product_extra_images.indexOf($(el).attr('src').replace(/\?[^\?]+$/,''))==-1) {
             if(counter%4==0) {
                 $('.description-images-add').append($('<div class="col-xs-12"></div>'));
             }
@@ -910,7 +910,7 @@ function renderImages() {
 }
 var product_extra_images = [
 {% for item in original.extra_images %}
-        "{{item}}",
+        "{{item}}".replace(/\?[^\?]+$/,''),
 {% endfor %}
 ];
 
