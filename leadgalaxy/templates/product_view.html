@@ -833,7 +833,7 @@ $('.upload-image-btn').click(function (e) {
 
 function get_signed_request(file){
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/upload/sign_s3?file_name=u{{user.id}}%2F"+file.name+"&file_type="+file.type);
+    xhr.open("GET", "/upload/sign_s3?file_name=uploads/u{{user.id}}/"+file.name+"&file_type="+file.type);
     xhr.onreadystatechange = function(){
         if(xhr.readyState === 4) {
             if(xhr.status === 200) {
