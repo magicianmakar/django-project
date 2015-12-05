@@ -615,6 +615,36 @@ def product(request, tpl='grid'):
 
 @login_required
 def product_view(request, pid):
+    #  AWS
+    import time, base64, hmac, urllib, arrow
+    from hashlib import sha1
+
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+    conditions = [
+        ["starts-with", "$utf8", ""],
+        # Change this path if you need, but adjust the javascript config
+        ["starts-with", "$key", "uploads"],
+        ["starts-with", "$name", ""],
+        ["starts-with", "$Content-Type", "image/"],
+        ["starts-with", "$filename", ""],
+        { "bucket": S3_BUCKET },
+        { "acl": "public-read" }
+    ]
+
+    policy = {
+        # Valid for 3 hours. Change according to your needs
+        "expiration": arrow.now().replace(hours=+3).format("YYYY-MM-DDTHH:mm:ss")+'Z',
+        "conditions": conditions
+    }
+
+    policy_str = json.dumps(policy)
+    string_to_sign = base64.encodestring(policy_str).replace('\n', '')
+
+    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
+
+    #  /AWS
     product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
     p = {
         'id': product.id,
@@ -659,6 +689,10 @@ def product_view(request, pid):
         'product': p,
         'original': original,
         'images_upload': ('VIP' in request.user.profile.plan.title),
+        'aws_policy': string_to_sign,
+        'aws_signature': signature,
+        'aws_key': AWS_ACCESS_KEY,
+        'aws_bucket': S3_BUCKET,
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
     })

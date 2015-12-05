@@ -320,31 +320,24 @@
 </div>
 
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">Select Image to upload</h4>
+            <h4 class="modal-title">Image upload</h4>
           </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <label for="file_input">Select File:</label>
-                        <input type="file" id="file_input" name="file_input">
-                    </div>
-                </div>
+                <div id="uploader"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success upload-image-btn">Upload</button>
-                <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Close</button>
-              </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extracss %}
+<link href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+
 <style type="text/css">
 .buttons {
     /*text-align: right;*/
@@ -391,6 +384,10 @@
 {% endblock %}
 
 {% block extrajs %}
+<script type="text/javascript" src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+
 <script type="text/javascript">
 
 var api_base = '';
@@ -872,8 +869,6 @@ function file_uploaded(url) {
     product.images.push(url);
     renderImages();
 
-    $('#modal-upload-image').modal('hide');
-
     $.ajax({
         type: 'POST',
         url: '/api/add-user-upload',
@@ -925,6 +920,65 @@ $(function() {
     var element = document.querySelector("#trix-notes");
     element.editor.setSelectedRange([0, 0])
     element.editor.insertHTML('{{product.notes|escapejs}}');
+});
+
+$(function() {
+    $("#uploader").plupload({
+        // General settings
+        runtimes : 'html5,flash',
+        // Flash settings
+        flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/Moxie.swf',
+        // S3 specific settings
+        url : "https://{{aws_bucket}}.s3.amazonaws.com:443/",
+        file_name_name: false, // Custom option to our fork to remove file_name_name
+        multipart: true,
+        multipart_params : {
+          // Dummy filename to ensure the field is sent in HTML just like Flash
+          // This allow to have a consistent AWS policy for both HTML and Flash
+          filename: 'filename',
+          utf8: true,
+          AWSAccessKeyId: "{{aws_key}}",
+          acl: "public-read", // See http://docs.aws.amazon.com/AmazonS3/latest/dev/ACLOverview.html#CannedACL
+          // See Generating a policy and a signature
+          policy: "{{aws_policy|escapejs}}",
+          signature: "{{aws_signature|escapejs}}",
+          // This is basically the resulting location of the file on S3.
+          // See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPOST.html#RESTObjectPOST-requests-form-fields
+          //
+          // WARNING : Change this to suite your needs.
+          // You need to insert some sort of unique identifier to avoid
+          // overriding files if they share the same filename.
+          key: "uploads/u{{user.id}}/${filename}",
+          'Content-Type': 'image/jpeg',
+        },
+        filters : {
+            // Maximum file size
+            max_file_size : '3mb',
+            // Specify what files to browse for
+            mime_types: [
+                {title : "Image files", extensions : "png,jpg,jpeg,gif"}
+            ]
+        },
+        views: {
+            list: true,
+            thumbs: true, // Show thumbs
+            active: 'thumbs'
+        },
+        sortable: true,
+        dragdrop: true,
+        init: {
+            BeforeUpload: function(up, file) {
+                up.settings.multipart_params['Content-Type'] = file.type;
+            },
+            FileUploaded: function(up, file, info) {
+                var url = 'http://{{aws_bucket}}.s3.amazonaws.com/uploads/u{{user.id}}/'+file.name;
+                file_uploaded(url);
+            },
+            UploadComplete: function(up, files){
+                $('#modal-upload-image').modal('hide');
+            }
+        }
+    });
 });
 
 </script>
