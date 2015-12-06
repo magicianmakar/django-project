@@ -436,7 +436,7 @@ def api(request, target):
         board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
         products = []
         for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p)
+            product = ShopifyProduct.objects.get(id=p, user=user)
             # product.shopifyboard_set.clear()
             board.products.remove(product)
 
@@ -445,7 +445,7 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'product-board':
-        product = ShopifyProduct.objects.get(id=data.get('product'))
+        product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
 
         if data.get('board') == '0':
             product.shopifyboard_set.clear()
