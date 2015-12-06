@@ -26,5 +26,9 @@ urlpatterns = patterns('',
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         { 'authentication_form': EmailAuthenticationForm }, name='login'),
      url(r'^accounts/password/reset/$', password_reset, {'template_name': 'registration/password_reset.html'}),
+     url(r'^accounts/password_reset/done/$', 'django.contrib.auth.views.password_reset_done',
+        {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header':'Shopified App'}}),
+     url(r'^accounts/password_change/done/$', 'django.contrib.auth.views.password_change_done',
+        {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header':'Shopified App'}}),
 
 )
