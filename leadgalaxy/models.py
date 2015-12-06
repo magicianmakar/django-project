@@ -38,12 +38,16 @@ class UserProfile(models.Model):
        except:
           return None
 
+    def get_active_stores(self):
+        return self.user.shopifystore_set.filter(is_active=True)
+
 class ShopifyStore(models.Model):
     class Meta:
         ordering = ['-created_at']
 
     title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
+    is_active = models.BooleanField(default=True)
 
     user = models.ForeignKey(User)
 

@@ -98,7 +98,7 @@ def smartBoardByBoard(user, board):
 
 @login_required
 def index(request):
-    stores = request.user.shopifystore_set.all()
+    stores = request.user.shopifystore_set.filter(is_active=True)
 
     return render(request, 'index.html', {
         'stores': stores,
@@ -192,7 +192,7 @@ def api(request, target):
 
     if method == 'GET' and target == 'stores':
         stores = []
-        for i in user.shopifystore_set.all():
+        for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
                 'id': i.id,
                 'name': i.title,
@@ -210,7 +210,7 @@ def api(request, target):
         store.save()
 
         stores = []
-        for i in user.shopifystore_set.all():
+        for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
                 'name': i.title,
                 'url': i.api_url
@@ -221,10 +221,10 @@ def api(request, target):
     if method == 'POST' and target == 'delete-store':
         store_id = data.get('store')
 
-        ShopifyStore.objects.filter(id=store_id, user=user).delete()
+        ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
 
         stores = []
-        for i in user.shopifystore_set.all():
+        for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
                 'id': i.id,
                 'name': i.title,

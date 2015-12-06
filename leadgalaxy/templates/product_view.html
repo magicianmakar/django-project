@@ -132,9 +132,14 @@
 
             <div class="form-group col-xs-12">
                 <label for="store-select">Export to:</label>
-                <select id="store-select"  class="form-control" style="width: 150px; display: inline-block; margin-left: 10px;">
+                <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
                 {% for i in request.user.shopifystore_set.all %}
-                    <option value="{{i.id}}">{{i.title}}</option>
+                    <option value="{{i.id}}">
+                        {{i.title}}
+                        {% if not i.is_active %}
+                        [deleted]
+                        {% endif %}
+                    </option>
                 {% endfor %}
                 </select>
             </div>
