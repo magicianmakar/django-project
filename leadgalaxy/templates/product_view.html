@@ -951,9 +951,11 @@ var product_extra_images = [
 $(function() {
     showProductInfo(product);
 
-    var element = document.querySelector("#trix-notes");
-    element.editor.setSelectedRange([0, 0])
-    element.editor.insertHTML('{{product.notes|escapejs}}');
+    setTimeout(function() {
+        var element = document.querySelector("#trix-notes");
+        element.editor.setSelectedRange([0, 0])
+        element.editor.insertHTML('{{product.notes|escapejs}}');
+    }, 2000);
 });
 
 $(function() {
