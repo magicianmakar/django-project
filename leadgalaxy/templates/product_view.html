@@ -51,15 +51,6 @@
         </div>
 
         <div class="row">
-            <div class="form-group col-xs-6">
-                <label for="store-select">Export to</label>
-                <select id="store-select"  class="form-control" _style="width: 30%">
-                {% for i in request.user.shopifystore_set.all %}
-                    <option value="{{i.id}}">{{i.title}}</option>
-                {% endfor %}
-                </select>
-            </div>
-
             <div id="more-options" class="col-xs-12">
                 <div class="childs" style="">
                     <div class="row">
@@ -137,6 +128,15 @@
                         <button class="btn btn-success btn-xs add-images-btn " data-toggle="modal" data-target="#modal-add-image">More images</button>
                     </div>
                 </div>
+            </div>
+
+            <div class="form-group col-xs-12">
+                <label for="store-select">Export to:</label>
+                <select id="store-select"  class="form-control" style="width: 150px; display: inline-block; margin-left: 10px;">
+                {% for i in request.user.shopifystore_set.all %}
+                    <option value="{{i.id}}">{{i.title}}</option>
+                {% endfor %}
+                </select>
             </div>
 
             <div class="buttons col-xs-12">
