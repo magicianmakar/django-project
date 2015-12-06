@@ -28,6 +28,7 @@
                             <th>Plan</th>
                             <th>Stores</th>
                             <th>Saved Products</th>
+                            <th>Join Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -45,6 +46,7 @@
                             </td>
                             <td>{{item.shopifystore_set.count}}</td>
                             <td>{{item.shopifyproduct_set.count}}</td>
+                            <td>{{item.date_joined|date}}</td>
                             <td>
                                 <a href="/hijack/{{item.id}}/" class="btn btn-success btn-xs ">Login as this user</a>
                                 <button class="btn btn-primary btn-xs change-plan-btn">Change Plan</button>
