@@ -353,6 +353,8 @@ def api(request, target):
 
     if method == 'POST' and target == 'product-delete':
         product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        product.userupload_set.update(product=None)
+
         product.delete()
 
         return JsonResponse({'status': 'ok'})
