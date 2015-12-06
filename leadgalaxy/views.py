@@ -359,7 +359,7 @@ def api(request, target):
 
     if method == 'POST' and target == 'bulk-edit':
         for p in data.getlist('product'):
-            product = ShopifyProduct.objects.get(id=p)
+            product = ShopifyProduct.objects.get(id=p, user=user)
             product_data = json.loads(product.data)
 
             product_data['title'] = data.get('title[%s]'%p)
@@ -377,7 +377,7 @@ def api(request, target):
     if method == 'POST' and target == 'product-edit':
         products = []
         for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p)
+            product = ShopifyProduct.objects.get(id=p, user=user)
             product_data = json.loads(product.data)
 
             if 'tags' in data:
@@ -424,7 +424,7 @@ def api(request, target):
         board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
         products = []
         for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p)
+            product = ShopifyProduct.objects.get(id=p, user=user)
             # product.shopifyboard_set.clear()
             board.products.add(product)
 
@@ -551,7 +551,7 @@ def api(request, target):
         })
 
     if method == 'POST' and target == 'product-notes':
-        product = ShopifyProduct.objects.get(id=data.get('product'))
+        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
         product.notes = data.get('notes')
         product.save()
 
@@ -560,7 +560,7 @@ def api(request, target):
         })
 
     if method == 'POST' and target == 'add-user-upload':
-        product = ShopifyProduct.objects.get(id=data.get('product'))
+        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
 
         upload = UserUpload(user=user, product=product, url=data.get('url'))
         upload.save()
