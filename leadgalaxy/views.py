@@ -19,11 +19,11 @@ from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
 
-def safeFloat(v):
+def safeFloat(v, default=0.0):
     try:
         return float(v)
     except:
-        return 0.0
+        return default
 
 def create_new_profile(user):
     plan = GroupPlan.objects.filter(default_plan=1).first()
