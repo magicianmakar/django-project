@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     url(r'^acp/groups$', leadgalaxy.views.acp_groups, name='acp_groups'),
     url(r'^acp/groups/install$', leadgalaxy.views.acp_groups_install, name='acp_groups_install'),
     url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
+    url(r'^autocomplete/(?P<target>[a-z-]+)$', leadgalaxy.views.autocomplete),
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
 

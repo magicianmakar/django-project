@@ -274,13 +274,13 @@
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Type</label>
-                                <input name="type" type="text" class="form-control" placeholder="">
+                                <input id="filter-type" name="type" type="text" class="form-control" placeholder="">
                             </div>
                         </div>
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Tag</label>
-                                <input name="tag" type="text" class="form-control" placeholder="">
+                                <input id="filter-tag" name="tag" type="text" class="form-control" placeholder="">
                             </div>
                         </div>
                         <div class="col-md-12 m-t-xs">
@@ -305,8 +305,20 @@
 </div>
 {% endblock %}
 
+{% block extracss %}
+<style type="text/css">
+    .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; cursor: pointer; }
+    .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
+    .autocomplete-selected { background: #F0F0F0; }
+    .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+    .autocomplete-group { padding: 2px 5px; }
+    .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
+</style>
+{% endblock %}
 
 {% block extrajs %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js"></script>
+
 <script type="text/javascript">
 
     function changeProductStat(product, stat, callback, erroback) {
@@ -746,8 +758,23 @@
             return true; // ensure form still submits
         });
 
+
         $(function(){
             setupContextMenus();
+
+            $('#filter-type').autocomplete({
+                serviceUrl: '/autocomplete/types',
+                minChars: 2,
+                onSelect: function (suggestion) {
+                }
+            });
+
+            $('#filter-tag').autocomplete({
+                serviceUrl: '/autocomplete/tags',
+                minChars: 2,
+                onSelect: function (suggestion) {
+                }
+            });
         });
 </script>
 {% endblock %}

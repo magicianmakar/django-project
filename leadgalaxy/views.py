@@ -979,6 +979,43 @@ def acp_groups_install(request):
 
     return HttpResponse('Done, changed: %d'%count)
 
+def autocomplete(request, target):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'User login required'})
+
+    q = request.GET.get('query', '')
+
+    if target == 'types':
+        types = []
+        for product in request.user.shopifyproduct_set.all():
+            prodct_info = json.loads(product.data)
+            ptype = prodct_info.get('type')
+            if ptype not in types:
+                if q:
+                    if q.lower() in ptype.lower():
+                        types.append(ptype)
+                else:
+                    types.append(ptype)
+
+        return JsonResponse({'query': q, 'suggestions': [{'value':i, 'data':i} for i in types]}, safe=False)
+
+    elif target == 'tags':
+        tags = []
+        for product in request.user.shopifyproduct_set.all():
+            prodct_info = json.loads(product.data)
+            for i in prodct_info.get('tags', '').split(','):
+                i = i.strip()
+                if i and i not in tags:
+                    if q:
+                        if q.lower() in i.lower():
+                            tags.append(i)
+                    else:
+                        tags.append(i)
+
+        return JsonResponse({'query': q, 'suggestions': [{'value':i, 'data':i} for i in tags]}, safe=False)
+    else:
+        return JsonResponse({'error': 'Unknow target'})
+
 @login_required
 def upload_file_sign(request):
     import time, base64, hmac, urllib
