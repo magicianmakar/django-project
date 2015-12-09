@@ -211,26 +211,26 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Title</label>
-                                <input name="title" type="text" class="form-control" placeholder="">
+                                <input name="title" type="text" class="form-control" value="{{request.GET.title}}" placeholder="">
                             </div>
                         </div>
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Price</label>
-                                <input name="price-min" type="text" class="form-control" style="width: 80px;padding: 0 5px" placeholder="Min.">
-                                <input name="price-max" type="text" class="form-control" style="width: 80px;padding: 0 5px" placeholder="Max.">
+                                <input name="price_min" type="text" class="form-control" value="{{request.GET.price_min}}" style="width: 80px;padding: 0 5px" placeholder="Min.">
+                                <input name="price_max" type="text" class="form-control" value="{{request.GET.price_max}}" style="width: 80px;padding: 0 5px" placeholder="Max.">
                             </div>
                         </div>
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Type</label>
-                                <input id="filter-type" name="type" type="text" class="form-control" placeholder="">
+                                <input id="filter-type" name="type" type="text" class="form-control" value="{{request.GET.type}}" placeholder="">
                             </div>
                         </div>
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Tag</label>
-                                <input id="filter-tag" name="tag" type="text" class="form-control" placeholder="">
+                                <input id="filter-tag" name="tag" type="text" class="form-control" value="{{request.GET.tag}}" placeholder="">
                             </div>
                         </div>
                         <div class="col-md-12 m-t-xs">
@@ -238,8 +238,8 @@
                                 <label class="m-r-sm" style="width: 95px">Product Visibility</label>
                                 <select name="visibile" type="text" class="form-control">
                                     <option value=""></option>
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
+                                    <option value="yes" {% if request.GET.visibile %}selected="selected"{% endif %}>Yes</option>
+                                    <option value="no"  {% if request.GET.visibile %}selected="selected"{% endif %}>No</option>
                                 </select>
                             </div>
                         </div>
