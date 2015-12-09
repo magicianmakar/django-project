@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 
 from .models import *
 from .forms import *
@@ -616,8 +617,21 @@ def accept_product(product, fdata):
 def product(request, tpl='grid'):
     products = []
     filter_products = (request.GET.get('f') == '1')
+    post_per_page = 25
 
-    for i in ShopifyProduct.objects.filter(user=request.user):
+    if filter_products or tpl == 'table':
+        page = ShopifyProduct.objects.filter(user=request.user)
+        paginator = None
+    else:
+        res = ShopifyProduct.objects.filter(user=request.user)
+        paginator = Paginator(res, post_per_page)
+
+        page = request.GET.get('page', 1)
+        page = min(max(1, int(page)), paginator.num_pages)
+
+        page = paginator.page(page)
+
+    for i in page:
         p = {
             'id': i.id,
             'store': i.store,
@@ -656,6 +670,8 @@ def product(request, tpl='grid'):
         tpl = 'product_table.html'
 
     return render(request, tpl, {
+        'paginator': paginator,
+        'current_page': page,
         'products': products,
         'page': 'product',
         'breadcrumbs': ['Products']
