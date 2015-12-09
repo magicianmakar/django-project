@@ -18,7 +18,7 @@
             <div class="ibox-content">
                 {% if products %}
                 <div class="row" style="margin-bottom: 20px">
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <label for="selected-actions">Selected Items:</label>
                         <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
                             <option value=""></option>
@@ -31,6 +31,7 @@
                         </select>
                         <button id="apply-btn" class="btn btn-primary">Apply</button>
                         <button class="btn btn-default btn-outline select-all-btn">Select All</button>
+                        <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
                     </div>
                 </div>
                 {% endif %}
@@ -188,6 +189,65 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-filter" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <!-- <h3 class="m-t-none m-b">Filter</h3> -->
+                <h4 class="modal-title">Filter</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <form id="product-filter-form" class="form-inline" method="get">
+                        <input type="hidden" name="f" value="1">
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Title</label>
+                                <input name="title" type="text" class="form-control" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Price</label>
+                                <input name="price-min" type="text" class="form-control" style="width: 80px;padding: 0 5px" placeholder="Min.">
+                                <input name="price-max" type="text" class="form-control" style="width: 80px;padding: 0 5px" placeholder="Max.">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Type</label>
+                                <input name="type" type="text" class="form-control" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Tag</label>
+                                <input name="tag" type="text" class="form-control" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Visibility</label>
+                                <select name="visibile" type="text" class="form-control">
+                                    <option value=""></option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-md-offset-10 m-t-md">
+                            <button id="shopify-send-btn" class="btn btn-primary">Apply</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -452,6 +512,11 @@
                     btn.button('reset');
                 }
             });
+        });
+
+        $("#product-filter-form").submit(function() {
+            $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+            return true; // ensure form still submits
         });
 
         $('#shopify-send-btn').click(function (e) {
