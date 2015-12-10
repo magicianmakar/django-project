@@ -108,8 +108,7 @@
                     </div>
 
                     <div class="form-group col-xs-12">
-                        <input id="product-description" type="hidden" name="content">
-                        <trix-editor id="trix-description" input="product-description"></trix-editor>
+                        <textarea name="product-description" class="form-control"></textarea>
                     </div>
                 </div>
             </div>
@@ -438,11 +437,7 @@ function showProductInfo(rproduct) {
         }
 
         if (product.description) {
-            setTimeout(function() {
-                var element = document.querySelector("#trix-description");
-                element.editor.setSelectedRange([0, 0])
-                element.editor.insertHTML(product.description);
-            }, 1000);
+            document.editor.setData(product.description);
         }
 
         renderImages();
@@ -489,7 +484,7 @@ $('#export-btn').click(function () {
     var api_data = {
       "product": {
         "title": $('#product-title').val(),
-        "body_html": $('#product-description').val(),
+        "body_html": document.editor.getData(),
         "product_type": $('#product-type').val(),
         "vendor": "",
         "published": $('#product-visible')[0].checked,
@@ -635,7 +630,7 @@ $('#save-for-later-btn').click(function (e) {
 
     var api_data = {
         'title': $('#product-title').val(),
-        'description': $('#product-description').val(),
+        'description': document.editor.getData(),
         'price': parseFloat($('#product-price').val()),
         'compare_at_price': parseFloat($('#product-compare-at').val()),
         'images': product.images,
@@ -954,6 +949,8 @@ var product_extra_images = [
 ];
 
 $(function() {
+    setup_full_editor('product-description');
+
     showProductInfo(product);
 
     setTimeout(function() {

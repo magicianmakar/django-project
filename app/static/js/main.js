@@ -135,6 +135,37 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
     });
 };
 
+function setup_full_editor(textarea_name) {
+    document.editor = CKEDITOR.replace( textarea_name,
+    {
+        contentsCss: [
+            // '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css',
+            // '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap-theme.min.css',
+            //'/static/css/main.css',
+            'body { padding: 15px; }',
+            // 'h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { color: #A7A7A7;}'
+        ],
+        // Remove unused plugins.
+        removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,table,tabletools,templates',
+        // Disabled any kind of filtering
+        allowedContent : true,
+        toolbar :
+        [
+            { name: 'document', items : [ 'Source','Maximize' ] },
+            { name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
+            { name: 'editing', items : [ 'Find','Replace','-','SelectAll' ] },
+            '/',
+            { name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','Subscript','Superscript','-','RemoveFormat' ] },
+            { name: 'textAlign', items : ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'/*,'-','BidiRtl','BidiLtr'*/ ] },
+            { name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','Blockquote' ] },
+            '/',
+            { name: 'styles', items : [ 'Format','Font','FontSize' ] },
+            { name: 'colors', items : [ 'TextColor','BGColor' ] },
+            { name: 'links', items : [ 'Link','Unlink','Anchor', 'SpecialChar' ] },
+        ],
+    });
+}
+
 $(function() {
     $('.icheck').iCheck({
         checkboxClass: 'icheckbox_square-blue',
