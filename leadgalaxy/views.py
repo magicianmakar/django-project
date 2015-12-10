@@ -658,6 +658,17 @@ def get_product(request, filter_products, post_per_page=25):
         else:
             products.append(p)
 
+
+    if filter_products and len(products):
+        paginator = Paginator(products, post_per_page)
+
+        page = request.GET.get('page', 1)
+        page = min(max(1, int(page)), paginator.num_pages)
+
+        page = paginator.page(page)
+        products = page.object_list
+
+
     return products, paginator, page
 
 def accept_product(product, fdata):
