@@ -308,7 +308,6 @@ def api(request, target):
                     d = r.json()
                     return JsonResponse({'error': '[Shopify API Error] '+' | '.join([k+': '+''.join(d['errors'][k]) for k in d['errors']])})
                 except:
-                    print r.text
                     return JsonResponse({'error': 'Shopify API Error'})
 
             pid = r.json()['product']['id']
@@ -676,25 +675,19 @@ def accept_product(product, fdata):
 
     if fdata.get('title'):
         accept = fdata.get('title').lower() in product['product']['title'].lower()
-        print 'Check title:', accept
 
     if fdata.get('price_min') or fdata.get('price_max'):
         price = safeFloat(product['product']['price'])
         min_price = safeFloat(fdata.get('price_min'), -1)
         max_price = safeFloat(fdata.get('price_max'), -1)
 
-        print 'Filter price:', min_price, '<', price, '<', max_price
-
         if (min_price>0 and max_price>0):
             accept = (accept and  (min_price <= price) and (price <= max_price))
-            print 'Check min+max:', accept
         elif (min_price>0):
             accept = (accept and (min_price <= price))
-            print 'Check min:', accept
 
         elif (max_price>0):
             accept = (accept and (max_price >= price))
-            print 'Check max:', accept
 
     if fdata.get('type'):
         accept = (accept and fdata.get('type').lower() in product['product'].get('type').lower())
@@ -702,12 +695,9 @@ def accept_product(product, fdata):
     if fdata.get('tag'):
         accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
     if fdata.get('visibile'):
-        print 'publish', product['product'].get('published')
-        print 'visibile', fdata.get('visibile')
         published = (fdata.get('visibile').lower()=='yes')
         accept = (accept and published == bool(product['product'].get('published')))
 
-    print 'Accept:', accept
     return accept
 
 @login_required
