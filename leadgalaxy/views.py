@@ -619,7 +619,7 @@ def product(request, tpl='grid'):
     filter_products = (request.GET.get('f') == '1')
     post_per_page = 25
 
-    if filter_products or tpl == 'table':
+    if filter_products:
         page = ShopifyProduct.objects.filter(user=request.user)
         paginator = None
     else:
