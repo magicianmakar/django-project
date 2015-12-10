@@ -794,29 +794,16 @@ def variants_edit(request, store_id, pid):
 
 @login_required
 def bulk_edit(request):
-    products = []
-    for i in ShopifyProduct.objects.filter(user=request.user):
-        p = {
-            'id': i.id,
-            'store': i.store,
-            'stat': i.stat,
-            'shopify_url': i.shopify_link(),
-            'user': i.user,
-            'created_at': i.created_at,
-            'updated_at': i.updated_at,
-            'product': json.loads(i.data),
-        }
+    filter_products = (request.GET.get('f') == '1')
+    post_per_page = safeInt(request.GET.get('ppp'), 25)
 
-        if 'images' not in p['product'] or not p['product']['images']:
-            p['product']['images'] = []
-
-        p['price'] = '$%.02f'%safeFloat(p['product']['price'])
-
-        p['images'] = p['product']['images']
-        products.append(p)
+    products, paginator, page = get_product(request, filter_products, post_per_page)
 
     return render(request, 'bulk_edit.html', {
         'products': products,
+        'paginator': paginator,
+        'current_page': page,
+        'filter_products': filter_products,
         'page': 'bulk',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
     })
