@@ -678,6 +678,7 @@ def product(request, tpl='grid'):
     return render(request, tpl, {
         'paginator': paginator,
         'current_page': page,
+        'filter_products': filter_products,
         'products': products,
         'page': 'product',
         'breadcrumbs': ['Products']
