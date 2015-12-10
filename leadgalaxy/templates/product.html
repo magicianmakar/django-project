@@ -73,11 +73,14 @@
 
                         <div class="col-md-7">
                         <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
-                            {% if item.boards.first %}
-                            Board: {{item.boards.first.title}}
-                            {% else %}
-                            Board
-                            {% endif %}
+                            {% with board=item.qelem.shopifyboard_set.first %}
+                                {% if board %}
+                                Board: {{board.title}}
+                                {% else %}
+                                Board
+                                {% endif %}
+                            {% endwith %}
+
                         </button>
                         </div>
                     </div>

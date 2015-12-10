@@ -626,6 +626,7 @@ def get_product(request, filter_products, post_per_page=25):
 
     for i in page:
         p = {
+            'qelem': i,
             'id': i.id,
             'store': i.store,
             'stat': i.stat,
@@ -634,7 +635,6 @@ def get_product(request, filter_products, post_per_page=25):
             'created_at': i.created_at,
             'updated_at': i.updated_at,
             'product': json.loads(i.data),
-            'boards': i.shopifyboard_set.all()
         }
 
         try:
