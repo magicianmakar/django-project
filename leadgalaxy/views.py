@@ -580,51 +580,8 @@ def api(request, target):
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 
-def accept_product(product, fdata):
-    accept = True
-
-    if fdata.get('title'):
-        accept = fdata.get('title').lower() in product['product']['title'].lower()
-        print 'Check title:', accept
-
-    if fdata.get('price_min') or fdata.get('price_max'):
-        price = safeFloat(product['product']['price'])
-        min_price = safeFloat(fdata.get('price_min'), -1)
-        max_price = safeFloat(fdata.get('price_max'), -1)
-
-        print 'Filter price:', min_price, '<', price, '<', max_price
-
-        if (min_price>0 and max_price>0):
-            accept = (accept and  (min_price <= price) and (price <= max_price))
-            print 'Check min+max:', accept
-        elif (min_price>0):
-            accept = (accept and (min_price <= price))
-            print 'Check min:', accept
-
-        elif (max_price>0):
-            accept = (accept and (max_price >= price))
-            print 'Check max:', accept
-
-    if fdata.get('type'):
-        accept = (accept and fdata.get('type').lower() in product['product'].get('type').lower())
-
-    if fdata.get('tag'):
-        accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
-    if fdata.get('visibile'):
-        print 'publish', product['product'].get('published')
-        print 'visibile', fdata.get('visibile')
-        published = (fdata.get('visibile').lower()=='yes')
-        accept = (accept and published == bool(product['product'].get('published')))
-
-    print 'Accept:', accept
-    return accept
-
-@login_required
-def product(request, tpl='grid'):
+def get_product(request, filter_products, post_per_page=25):
     products = []
-    filter_products = (request.GET.get('f') == '1')
-    post_per_page = safeInt(request.GET.get('ppp'), 25)
-
     if filter_products:
         page = ShopifyProduct.objects.filter(user=request.user)
         paginator = None
@@ -669,6 +626,54 @@ def product(request, tpl='grid'):
                 products.append(p)
         else:
             products.append(p)
+
+    return products, paginator, page
+
+def accept_product(product, fdata):
+    accept = True
+
+    if fdata.get('title'):
+        accept = fdata.get('title').lower() in product['product']['title'].lower()
+        print 'Check title:', accept
+
+    if fdata.get('price_min') or fdata.get('price_max'):
+        price = safeFloat(product['product']['price'])
+        min_price = safeFloat(fdata.get('price_min'), -1)
+        max_price = safeFloat(fdata.get('price_max'), -1)
+
+        print 'Filter price:', min_price, '<', price, '<', max_price
+
+        if (min_price>0 and max_price>0):
+            accept = (accept and  (min_price <= price) and (price <= max_price))
+            print 'Check min+max:', accept
+        elif (min_price>0):
+            accept = (accept and (min_price <= price))
+            print 'Check min:', accept
+
+        elif (max_price>0):
+            accept = (accept and (max_price >= price))
+            print 'Check max:', accept
+
+    if fdata.get('type'):
+        accept = (accept and fdata.get('type').lower() in product['product'].get('type').lower())
+
+    if fdata.get('tag'):
+        accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
+    if fdata.get('visibile'):
+        print 'publish', product['product'].get('published')
+        print 'visibile', fdata.get('visibile')
+        published = (fdata.get('visibile').lower()=='yes')
+        accept = (accept and published == bool(product['product'].get('published')))
+
+    print 'Accept:', accept
+    return accept
+
+@login_required
+def product(request, tpl='grid'):
+    filter_products = (request.GET.get('f') == '1')
+    post_per_page = safeInt(request.GET.get('ppp'), 25)
+
+    products, paginator, page = get_product(request, filter_products, post_per_page)
 
     if not tpl or tpl == 'grid':
         tpl = 'product.html'
