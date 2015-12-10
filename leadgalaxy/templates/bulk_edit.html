@@ -32,7 +32,6 @@
                             <th>Compare At Price</th>
                             <th>Product Type</th>
                             <th style="width: 100px">Weight</th>
-                            <th style="width:100px">Send To Shopify</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,9 +67,6 @@
                             <td style="padding: 0px;">
                                 <span style=""><input style="margin: 0px;padding: 10px 0px 0px 10px;width: 45px; height: 45px;border:0 none;" name="weight[{{item.id}}]" value="{{item.product.weight}}" />
                                     <i>{{item.product.weight_unit}}</i></span>
-                            </td>
-                            <td style="">
-                                <input class="icheck send-to-shopify" style="" name="send_to_shopify[{{item.id}}]" type="checkbox" />
                             </td>
                         </tr>
                     {% empty %}
