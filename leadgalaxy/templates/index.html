@@ -19,14 +19,16 @@
                 <tr>
                   <th style=";">Title</th>
                   <th class="hidden-sm hidden-xs" style=";">API URL</th>
+                  <th style="width:90px">Products</th>
                   <th style="">Options</th>
                 </tr>
               </thead>
               <tbody>
                     {% for item in stores %}
-                    <tr>
+                    <tr store-id="{{item.id}}">
                       <td><a href="/store/{{item.id}}">{{item.title}}</a></td>
                       <td class="hidden-sm" >{{item.api_url}}</td>
+                      <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
                         <button class="visit-store btn btn-xs btn-success" store-url="{{item.api_url}}"> Visit Store</button>
                         <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.api_url}}"> Delete</button>
@@ -78,6 +80,30 @@
         </div>
     </div>
 </div>
+
+<div id="modal-store-move" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Delete Store</h3>
+                        <p>Where to move the linked products in this store?</p>
+
+                        <label for="">Select Store:</label>
+                        <select class="form-control" name="" id="move-select-store" style="display: inline-block; width: 191px; ">
+                            {% for item in stores %}
+                            <option value="{{item.id}}">{{item.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="store-move-btn" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 
@@ -116,9 +142,25 @@
         });
     });
 
+
     $('.delete-store').click(function (e) {
+        document.current_store = $(this).attr('store-id');
+        $('#modal-store-move').modal('show');
+    });
+
+    $('#store-move-btn').click(function (e) {
         var btn = $(this);
-        var store = $(this).attr('store-id');
+        var store = parseInt(document.current_store);
+        var move_to = parseInt($('#move-select-store').val());
+
+        if (move_to <= 0) {
+            swal('Delete Store', 'Please select a store', 'warning');
+            return;
+        }
+        if (move_to == store) {
+            swal('Delete Store', 'Please choose an other store ', 'warning');
+            return;
+        }
 
         btn.button('loading');
 
@@ -126,19 +168,21 @@
             url: '/api/delete-store',
             type: 'POST',
             data: {
-                store: store,
+                'store': store,
+                'move-to': move_to
             },
             success: function(data) {
                 if ('error' in data) {
-                    alert(data.error);
-                    btn.button('reset');
+                    swal('Delete Store', data.error, 'error');
                 } else {
-                    btn.parents('tr').remove();
+                    $('tr[store-id="'+store+'"]').remove();
                 }
-
             },
             error: function(data) {
-                alert('Connection error');
+                swal('Delete Store', 'Server error', 'error');
+            },
+            complete: function () {
+                $('#modal-store-move').modal('hide');
                 btn.button('reset');
             }
         });

@@ -236,8 +236,11 @@ def api(request, target):
 
     if method == 'POST' and target == 'delete-store':
         store_id = data.get('store')
+        move_to = data.get('move-to')
 
+        move_to_store = ShopifyStore.objects.get(id=move_to, user=user)
         ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
+        ShopifyStore.objects.get(id=store_id, user=user).shopifyproduct_set.update(store=move_to_store)
 
         stores = []
         for i in user.shopifystore_set.filter(is_active=True):
