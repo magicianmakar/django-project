@@ -20,6 +20,12 @@ from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
 
+def safeInt(v, default=0.0):
+    try:
+        return int(v)
+    except:
+        return default
+
 def safeFloat(v, default=0.0):
     try:
         return float(v)
@@ -617,7 +623,7 @@ def accept_product(product, fdata):
 def product(request, tpl='grid'):
     products = []
     filter_products = (request.GET.get('f') == '1')
-    post_per_page = 25
+    post_per_page = safeInt(request.GET.get('ppp'), 25)
 
     if filter_products:
         page = ShopifyProduct.objects.filter(user=request.user)
