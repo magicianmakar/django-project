@@ -1058,6 +1058,14 @@ def upload_file_sign(request):
 
     return JsonResponse(content, safe=False)
 
+@login_required
+def user_profile(request):
+
+    return render(request, 'user/profile.html', {
+        'page': 'user_profile',
+        'breadcrumbs': ['Profile']
+    })
+
 def login(request):
     user_logout(request)
     return redirect('/')

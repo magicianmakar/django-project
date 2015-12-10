@@ -52,9 +52,11 @@
                             <ul class="dropdown-menu animated fadeInRight m-t-xs">
                                 {% if user.is_superuser %}
                                 <li><a href="{% url 'admin:index' %}">Admin Panel</a></li>
+                                <li class="divider"></li>
                                 {% endif %}
 
                                 {% if user.is_authenticated %}
+                                <li><a href="{% url 'user_profile' %}">Profile</a></li>
                                 <li><a href="{% url 'leadgalaxy.views.logout' %}">Logout</a></li>
                                 {% endif %}
                             </ul>

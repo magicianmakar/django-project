@@ -23,6 +23,8 @@ urlpatterns = patterns('',
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
 
+    url(r'^user/profile$', leadgalaxy.views.user_profile, name='user_profile'),
+
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         { 'authentication_form': EmailAuthenticationForm }, name='login'),
