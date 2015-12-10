@@ -690,9 +690,12 @@ def product_view(request, pid):
     import time, base64, hmac, urllib, arrow
     from hashlib import sha1
 
-    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+    S3_BUCKET = os.environ.get('S3_BUCKET_NAME', '')
+
+    aws_available = (AWS_ACCESS_KEY and AWS_SECRET_KEY and S3_BUCKET)
+
     conditions = [
         ["starts-with", "$utf8", ""],
         # Change this path if you need, but adjust the javascript config
@@ -759,7 +762,7 @@ def product_view(request, pid):
     return render(request, 'product_view.html', {
         'product': p,
         'original': original,
-        'images_upload': ('VIP' in request.user.profile.plan.title),
+        'images_upload': (aws_available and 'VIP' in request.user.profile.plan.title),
         'aws_policy': string_to_sign,
         'aws_signature': signature,
         'aws_key': AWS_ACCESS_KEY,
