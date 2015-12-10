@@ -22,6 +22,16 @@
                 </div>
             </div>
             <div class="ibox-content">
+                <div class="row">
+                    <div class="col-md-offset-9 col-md-3 text-right">
+                        <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
+
+                        {% if filter_products %}
+                        <a href="/product/edit/all" class="btn btn-outline btn-default">Clear Filter</a>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <form id="bulk">
                 <table class="table table-bordered dataTables">
                     <thead>
@@ -29,7 +39,7 @@
                             <th style="width:50%">Title</th>
                             <th>Tags</th>
                             <th>Price</th>
-                            <th>Compare At Price</th>
+                            <th>Compare at</th>
                             <th>Product Type</th>
                             <th style="width: 100px">Weight</th>
                         </tr>
@@ -117,6 +127,8 @@
         </div>
     </div>
 </div>
+
+{% include 'partial/filter_modal.html' %}
 
 {% endblock %}
 
@@ -258,6 +270,27 @@
                             }
                         );
                     });
+                }
+            });
+        });
+
+        $(function() {
+            $("#product-filter-form").submit(function() {
+                $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+                return true; // ensure form still submits
+            });
+
+            $('#filter-type').autocomplete({
+                serviceUrl: '/autocomplete/types',
+                minChars: 1,
+                onSelect: function (suggestion) {
+                }
+            });
+
+            $('#filter-tag').autocomplete({
+                serviceUrl: '/autocomplete/tags',
+                minChars: 1,
+                onSelect: function (suggestion) {
                 }
             });
         });
