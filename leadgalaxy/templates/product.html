@@ -23,6 +23,9 @@
                 <button id="apply-btn" class="btn btn-primary">Apply</button>
                 <button class="btn btn-default btn-outline select-all-btn">Select All</button>
                 <button class="btn btn-success btn-outline filter-btn">Filter</button>
+                {% if filter_products %}
+                <a href="/product" class="btn btn-outline btn-default">Clear Filter</a>
+                {% endif %}
             </div>
             <div class="col-md-1 pull-right text-right">
                 <a href="/product/table" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
@@ -295,7 +298,6 @@
                         </div>
 
                         <div class="col-md-5 col-md-offset-8 m-t-md">
-                            <a href="/product" class="btn btn-default">Clear Filter</a>
                             <button id="shopify-send-btn" class="btn btn-primary">Apply</button>
                         </div>
                     </form>
