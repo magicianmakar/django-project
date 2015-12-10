@@ -581,10 +581,10 @@ def accept_product(product, fdata):
         accept = fdata.get('title').lower() in product['product']['title'].lower()
         print 'Check title:', accept
 
-    if fdata.get('price-min') or fdata.get('price-max'):
+    if fdata.get('price_min') or fdata.get('price_max'):
         price = safeFloat(product['product']['price'])
-        min_price = safeFloat(fdata.get('price-min'), -1)
-        max_price = safeFloat(fdata.get('price-max'), -1)
+        min_price = safeFloat(fdata.get('price_min'), -1)
+        max_price = safeFloat(fdata.get('price_max'), -1)
 
         print 'Filter price:', min_price, '<', price, '<', max_price
 
