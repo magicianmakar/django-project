@@ -276,45 +276,12 @@
         .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
 
     </style>
-
-    <!-- Data Tables -->
-    <link href="/static/css/plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
-    <link href="/static/css/plugins/dataTables/dataTables.responsive.css" rel="stylesheet">
-    <link href="/static/css/plugins/dataTables/dataTables.tableTools.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-    <!-- Data Tables -->
-    <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.responsive.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.tableTools.min.js"></script>
-    <!-- <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script> -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js"></script>
 
     <script type="text/javascript">
-       $(document).ready(function() {
-            var oTable = $('.dataTables').dataTable({
-                responsive: true,
-                orderMulti: false,
-                "dom": 'T<"clear">lfrtip',
-                "columns": [
-                    { "orderable": false },
-                    { "orderable": false },
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    { "orderable": false },
-                ],
-                "tableTools": {
-                    "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf",
-                    "aButtons": []
-                }
-            });
-        });
 
     function changeProductStat(product, stat, callback, erroback) {
         $.ajax({
