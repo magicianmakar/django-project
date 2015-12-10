@@ -610,21 +610,16 @@ def api(request, target):
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 
-def get_product(request, filter_products, post_per_page=25):
+def get_product(request, filter_products, post_per_page=25, sort=None):
+    import time
+    _start = time.time()
+
     products = []
-    if filter_products:
-        page = ShopifyProduct.objects.filter(user=request.user)
-        paginator = None
-    else:
-        res = ShopifyProduct.objects.filter(user=request.user)
-        paginator = Paginator(res, post_per_page)
+    paginator = None
+    page = request.GET.get('page', 1)
 
-        page = request.GET.get('page', 1)
-        page = min(max(1, int(page)), paginator.num_pages)
-
-        page = paginator.page(page)
-
-    for i in page:
+    res = ShopifyProduct.objects.filter(user=request.user)
+    for i in res:
         p = {
             'qelem': i,
             'id': i.id,
@@ -657,16 +652,18 @@ def get_product(request, filter_products, post_per_page=25):
         else:
             products.append(p)
 
+    if len(products):
+        if sort:
+            products = sorted_products(products, sort)
 
-    if filter_products and len(products):
         paginator = Paginator(products, post_per_page)
 
-        page = request.GET.get('page', 1)
         page = min(max(1, int(page)), paginator.num_pages)
-
         page = paginator.page(page)
+
         products = page.object_list
 
+    print 'get_product took %0.04f ms'%(time.time()-_start)
 
     return products, paginator, page
 
@@ -700,12 +697,31 @@ def accept_product(product, fdata):
 
     return accept
 
+def sorted_products(products, sort):
+    sort_reversed = (sort[0] == '-')
+
+    if sort_reversed:
+        sort = sort[1:]
+
+    if sort == 'title':
+        products = sorted(products,
+            cmp=lambda x,y: cmp(x['product']['title'], y['product']['title']),
+            reverse=sort_reversed)
+
+    elif sort == 'price':
+        products = sorted(products,
+            cmp=lambda x,y: cmp(safeFloat(x['product']['price']), safeFloat(y['product']['price'])),
+            reverse=sort_reversed)
+
+    return products
+
 @login_required
 def product(request, tpl='grid'):
     filter_products = (request.GET.get('f') == '1')
     post_per_page = safeInt(request.GET.get('ppp'), 25)
+    sort_by = request.GET.get('sort')
 
-    products, paginator, page = get_product(request, filter_products, post_per_page)
+    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by)
 
     if not tpl or tpl == 'grid':
         tpl = 'product.html'
@@ -828,8 +844,9 @@ def variants_edit(request, store_id, pid):
 def bulk_edit(request):
     filter_products = (request.GET.get('f') == '1')
     post_per_page = safeInt(request.GET.get('ppp'), 25)
+    sort_by = request.GET.get('sort')
 
-    products, paginator, page = get_product(request, filter_products, post_per_page)
+    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by)
 
     return render(request, 'bulk_edit.html', {
         'products': products,
