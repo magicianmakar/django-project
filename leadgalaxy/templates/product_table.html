@@ -68,7 +68,7 @@
                             <td>
                                 <a href="/product/{{item.id}}">{{item.product.title}}</a>
                             </td>
-                            <td>{{item.product.price}}</td>
+                            <td>${{item.product.price|floatformat:2}}</td>
                             <td>{{item.product.type}}</td>
                             <td>{{item.product.tags}}</td>
                             <td>{{item.created_at|date}}</td>
