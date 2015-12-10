@@ -213,6 +213,15 @@ def api(request, target):
         name = data.get('name')
         url = data.get('url')
 
+        total_stores = user.profile.plan.stores # -1 mean unlimited
+        user_saved_stores = user.shopifystore_set.filter(is_active=True).count()
+
+        if (total_stores > -1) and (user_saved_stores + 1 > total_stores):
+            return JsonResponse({
+                'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.' \
+                         %(total_stores, user_saved_stores)
+            })
+
         store = ShopifyStore(title=name, api_url=url, user=user)
         store.save()
 
@@ -315,8 +324,9 @@ def api(request, target):
                 product.shopify_id = pid
                 product.stat = 1
                 product.save()
-        else:
+        else: # save for later
             if 'product' in req_data:
+                # Saved product update
                 try:
                     product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
                 except:
@@ -326,7 +336,19 @@ def api(request, target):
                 product.data = data
                 product.stat = 0
 
-            else:
+            else: # New product to save
+
+                # Check if the user plan allow more product saving
+                total_products = user.profile.plan.products # -1 mean unlimited
+                user_saved_products = user.shopifyproduct_set.count()
+
+                if (total_products > -1) and (user_saved_products + 1 > total_products):
+                    return JsonResponse({
+                        'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.' \
+                                 %(total_products, user_saved_products)
+                    })
+
+                # zip & base64 encode before saving to save space on database
                 original_data = original_data.encode('utf-8').encode('zlib').encode('base64')
 
                 product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0)
@@ -418,6 +440,15 @@ def api(request, target):
         }, safe=False)
 
     if method == 'POST' and target == 'boards-add':
+        total_boards = user.profile.plan.boards # -1 mean unlimited
+        user_saved_boards = user.shopifyboard_set.count()
+
+        if (total_boards > -1) and (user_saved_boards + 1 > total_boards):
+            return JsonResponse({
+                'error': 'Your current plan allow up to %d boards, currently you have %d boards.' \
+                         %(total_boards, user_saved_boards)
+            })
+
         board = ShopifyBoard(title=data.get('title').strip(), user=user)
         board.save()
 
