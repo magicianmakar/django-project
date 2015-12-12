@@ -68,7 +68,7 @@ class AccessToken(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return '%s | %s'%(self.user.username, self.token)
+        return '%s'%(self.token)
 
 class ShopifyProduct(models.Model):
     class Meta:
