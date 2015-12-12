@@ -41,6 +41,21 @@ class UserProfile(models.Model):
     def get_active_stores(self):
         return self.user.shopifystore_set.filter(is_active=True)
 
+    def can(self, perm_name):
+        perm_name = perm_name.lower()
+        view_perm = perm_name.replace('.use', '.view')
+        use_perm = perm_name.replace('.view', '.use')
+        for i in self.plan.permissions.all().values_list('name',flat=True):
+            i = i.lower()
+            if perm_name.endswith('.view'):
+                if i == view_perm or i == use_perm:
+                    return True
+            else:
+                if i == perm_name:
+                    return True
+
+        return False
+
 class ShopifyStore(models.Model):
     class Meta:
         ordering = ['-created_at']
@@ -121,6 +136,13 @@ class ShopifyBoard(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
+class AppPermission(models.Model):
+    name = models.CharField(max_length=512, verbose_name="Permission")
+    description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
+
+    def __unicode__(self):
+        return '%s'%(self.description)
+
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     montly_price = models.FloatField(default=0.0, verbose_name="Price Per Month")
@@ -132,6 +154,8 @@ class GroupPlan(models.Model):
     description = models.CharField(max_length=512, blank=True, default='')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
+
+    permissions = models.ManyToManyField(AppPermission, blank=True)
 
     def __unicode__(self):
         return '%s'%(self.title)

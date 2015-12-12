@@ -3,6 +3,7 @@ from .models import *
 
 class GroupPlanAdmin(admin.ModelAdmin):
     exclude = ('default_plan',)
+    filter_horizontal = ('permissions',)
 
 class UserUploadAdmin(admin.ModelAdmin):
     raw_id_fields = ('product',)
@@ -17,3 +18,4 @@ admin.site.register(ShopifyBoard, ShopifyBoardAdmin)
 admin.site.register(GroupPlan, GroupPlanAdmin)
 admin.site.register(UserProfile)
 admin.site.register(UserUpload, UserUploadAdmin)
+admin.site.register(AppPermission)
