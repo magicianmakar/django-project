@@ -942,7 +942,7 @@ def acp_users_list(request):
 
     plans = GroupPlan.objects.all()
 
-    return render(request, 'acp_users_list.html', {
+    return render(request, 'acp/users_list.html', {
         'users': users,
         'plans': plans,
         'users_count': users_count,
@@ -970,7 +970,7 @@ def acp_graph(request):
     stores_count = ShopifyStore.objects.count()
     products_count = ShopifyProduct.objects.count()
 
-    return render(request, 'acp_graph.html', {
+    return render(request, 'acp/graph.html', {
         'products': products,
         'products_count': products_count,
         'users': users,
@@ -991,7 +991,7 @@ def acp_groups(request):
         plan.save()
 
     plans = GroupPlan.objects.all()
-    return render(request, 'acp_groups.html', {
+    return render(request, 'acp/groups.html', {
         'plans': plans,
         'page': 'acp_groups',
         'breadcrumbs': ['ACP', 'Plans &amp; Groups']
