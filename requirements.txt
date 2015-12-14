@@ -1,4 +1,5 @@
 arrow==0.7.0
+boto==2.38.0
 cffi==1.2.1
 characteristic==14.3.0
 cryptography==1.0
