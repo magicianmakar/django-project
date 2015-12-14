@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load perms_helper %}
 
 {% block main-container %}
 
@@ -18,13 +19,33 @@
          <div class="tabs-container">
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-edit"></i> Saved Product</a></li>
-                {% if original %}
-                <li class=""><a data-toggle="tab" href="#tab-2"><i class="fa fa-history"></i>Original</a></li>
+                {% if original and request.user|can:'original_product.view' %}
+                <li class=""><a
+                    {% if request.user|can:'original_product.use' %}
+                    data-toggle="tab" href="#tab-2"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-history"></i>Original</a></li>
                 {% endif %}
-                {% if product.original_product_source %}
-                <li class=""><a data-toggle="tab" href="#tab-3"><i class="fa fa-file-o"></i>Shipping Method</a></li>
+                {% if product.original_product_source and request.user|can:'shipping_methods.view' %}
+                <li class=""><a
+                    {% if request.user|can:'shipping_methods.use' %}
+                    data-toggle="tab" href="#tab-3"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-file-o"></i>Shipping Method</a></li>
                 {% endif %}
-                <li class=""><a data-toggle="tab" href="#tab-4"><i class="fa fa-file-o"></i>Notes</a></li>
+                {% if request.user|can:'notes.view' %}
+                <li class=""><a
+                    {% if request.user|can:'notes.use' %}
+                    data-toggle="tab" href="#tab-4"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-file-o"></i>Notes</a></li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -119,10 +140,16 @@
 
                 <div class="row">
                     <div class="col-xs-12 text-right" style="margin-top: 15px;">
-                        {% if images_upload %}
-                        <button class="btn btn-success btn-xs" data-toggle="modal" data-target="#modal-upload-image">
+                        {% if aws_available and request.user|can:'image_uploader.view' %}
+                        <a class="btn btn-success btn-xs"
+                            {% if request.user|can:'image_uploader.use' %}
+                            data-toggle="modal" data-target="#modal-upload-image"
+                            {% else %}
+                            href="{% url 'upgrade_required' %}"
+                            {% endif %}
+                        >
                             <i class="fa fa-upload"></i> Upload Image
-                        </button>
+                        </a>
                         {% endif %}
                         <button class="btn btn-success btn-xs add-images-btn " data-toggle="modal" data-target="#modal-add-image">More images</button>
                     </div>
@@ -148,7 +175,9 @@
                     <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
                     <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
                     <button id="view-btn" type="button" class="btn btn-info" style="display:none">View in Shopify</button>
+                    {% if request.user|can:'product_variant_setup.view' %}
                     <button id="btn-variants-img" type="button" class="btn btn-success" style="display:none">Setup Variants Images</button>
+                    {% endif %}
 
                     {% if product.product.original_url %}
                         <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source}}</a>
@@ -161,7 +190,7 @@
 
             </div> <!-- / #tab-1 -->
         </div>
-        {% if original %}
+        {% if original and request.user|can:'original_product.use' %}
         <div id="tab-2" class="tab-pane">
             <div class="panel-body">
         <!-- Product view -->
@@ -258,7 +287,7 @@
             </div>
         </div>
         {% endif %}
-        {% if product.original_product_source %}
+        {% if product.original_product_source and request.user|can:'shipping_methods.use' %}
         <div id="tab-3" class="tab-pane">
             <div class="panel-body">
                 <div class="row">
@@ -323,6 +352,7 @@
     </div>
 </div>
 
+{% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -336,6 +366,8 @@
         </div>
     </div>
 </div>
+{% endif %}
+
 {% endblock %}
 
 {% block extracss %}
@@ -826,7 +858,7 @@ $('#modal-add-image .add-var-image').click(function (e) {
     renderImages();
 });
 
-{% if images_upload %}
+{% if request.user|can:'image_uploader.use' %}
 
 $('#modal-upload-image').on('show.bs.modal', function (e) {
     $('.upload-image-btn').button('reset');
@@ -961,6 +993,8 @@ $(function() {
 });
 
 $(function() {
+    {% if aws_available and request.user|can:'image_uploader.use' %}
+
     $("#uploader").plupload({
         runtimes : 'html5,flash',
         flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/Moxie.swf',
@@ -1003,6 +1037,7 @@ $(function() {
             }
         }
     });
+    {% endif %}
 
     $('.original-description').css('overflow', 'auto');
     $('.original-description img').css({width:'100%', height: ''});

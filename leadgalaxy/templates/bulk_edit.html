@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load perms_helper %}
 
 {% block main-container %}
 
@@ -22,6 +23,7 @@
                 </div>
             </div>
             <div class="ibox-content">
+                {% if request.user|can:'product_filters.view' %}
                 <div class="row">
                     <div class="col-md-offset-9 col-md-3 text-right">
                         <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
@@ -31,6 +33,7 @@
                         {% endif %}
                     </div>
                 </div>
+                {% endif %}
 
                 <form id="bulk">
                 <table class="table table-bordered dataTables">

@@ -724,6 +724,9 @@ def product(request, tpl='grid'):
     post_per_page = safeInt(request.GET.get('ppp'), 25)
     sort_by = request.GET.get('sort')
 
+    if filter_products and not request.user.profile.can('product_filters.use'):
+        return render(request, 'upgrade.html')
+
     products, paginator, page = get_product(request, filter_products, post_per_page, sort_by)
 
     if not tpl or tpl == 'grid':
@@ -818,7 +821,7 @@ def product_view(request, pid):
     return render(request, 'product_view.html', {
         'product': p,
         'original': original,
-        'images_upload': (aws_available and 'VIP' in request.user.profile.plan.title),
+        'aws_available': aws_available or True,
         'aws_policy': string_to_sign,
         'aws_signature': signature,
         'aws_key': AWS_ACCESS_KEY,
@@ -829,6 +832,9 @@ def product_view(request, pid):
 
 @login_required
 def variants_edit(request, store_id, pid):
+    if request.user.profile.can('product_variant_setup.use'):
+        return render(request, 'upgrade.html')
+
     store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
     api_url = '%s/admin/products/%s.json'%(store.api_url, pid)
 
@@ -845,9 +851,15 @@ def variants_edit(request, store_id, pid):
 
 @login_required
 def bulk_edit(request):
+    if not request.user.profile.can('bulk_editing.use'):
+        return render(request, 'upgrade.html')
+
     filter_products = (request.GET.get('f') == '1')
     post_per_page = safeInt(request.GET.get('ppp'), 25)
     sort_by = request.GET.get('sort')
+
+    if filter_products and not request.user.profile.can('product_filters.use'):
+        return render(request, 'upgrade.html')
 
     products, paginator, page = get_product(request, filter_products, post_per_page, sort_by)
 
@@ -1160,6 +1172,9 @@ def upload_file_sign(request):
     }
 
     return JsonResponse(content, safe=False)
+
+def upgrade_required(request):
+    return render(request, 'upgrade.html')
 
 def login(request):
     user_logout(request)

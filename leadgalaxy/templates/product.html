@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load url_tools %}
+{% load perms_helper %}
 
 {% block main-container %}
 
@@ -22,9 +23,11 @@
                 </select>
                 <button id="apply-btn" class="btn btn-primary">Apply</button>
                 <button class="btn btn-default btn-outline select-all-btn">Select All</button>
-                <button class="btn btn-success btn-outline filter-btn">Filter</button>
-                {% if filter_products %}
-                <a href="/product" class="btn btn-outline btn-default">Clear Filter</a>
+                {% if request.user|can:'product_filters.view' %}
+                    <button class="btn btn-success btn-outline filter-btn">Filter</button>
+                    {% if filter_products %}
+                    <a href="/product" class="btn btn-outline btn-default">Clear Filter</a>
+                    {% endif %}
                 {% endif %}
             </div>
             <div class="col-md-1 pull-right text-right">

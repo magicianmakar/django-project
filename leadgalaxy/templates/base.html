@@ -68,7 +68,9 @@
 
                 <li {% if page == 'product' %}class="active"{% endif %}><a href="{% url 'product' %}"> <i class="fa fa-shopping-cart"></i> <span class="nav-label">Products</span></a></li>
 
+                {% if request.user|can:'bulk_editing.view' %}
                 <li {% if page == 'bulk' %}class="active"{% endif %}><a href="{% url 'bulk_edit' %}"> <i class="fa fa-table"></i> <span class="nav-label">Bulk edit</span></a> </li>
+                {% endif %}
 
                 <li {% if page == 'boards' %}class="active"{% endif %}>
                     <a href="{% url 'boards' %}">
