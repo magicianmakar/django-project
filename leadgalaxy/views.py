@@ -954,9 +954,9 @@ def acp_users_list(request):
         return HttpResponseRedirect('/')
 
     if request.GET.get('plan', None):
-        users = User.select_related('profile', 'profile__plan') \
+        users = User.objects.select_related('profile', 'profile__plan') \
                     .prefetch_related('shopifyproduct_set','shopifystore_set') \
-                    .objects.filter(profile__plan_id=request.GET.get('plan'))
+                    .filter(profile__plan_id=request.GET.get('plan'))
         users_count = User.objects.filter(profile__plan_id=request.GET.get('plan')).count()
     else:
         users = User.objects.select_related('profile', 'profile__plan') \
