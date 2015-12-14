@@ -999,6 +999,8 @@ def acp_groups(request):
     if request.method == 'POST':
         if request.POST.get('import'):
             data = json.loads(request.POST.get('import'))
+            new_permissions = []
+            info = ''
             for i in data:
                 try:
                     AppPermission.objects.get(name=i['name'])
@@ -1006,12 +1008,18 @@ def acp_groups(request):
                     perm = AppPermission(name=i['name'], description=i['description'])
                     perm.save()
 
-                    print 'New Permission:', i['name'], i['description']
+                    new_permissions.append(perm)
+                    info = info + '%s: '%perm.name
 
                     for p in i['plans']:
                         plan = GroupPlan.objects.get(title=p['title'])
                         plan.permissions.add(perm)
-                        print 'Add to', p['title']
+
+                        info = info + '%s, '%plan.title
+
+                    info = info + '<br> '
+
+            messages.success(request, 'Permission import success<br> new permissions: %d<br>%s'%(len(new_permissions), info))
         else:
             plan = GroupPlan.objects.get(id=request.POST['default-plan'])
             GroupPlan.objects.all().update(default_plan=0)
