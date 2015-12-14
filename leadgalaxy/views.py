@@ -621,7 +621,14 @@ def get_product(request, filter_products, post_per_page=25, sort=None):
     paginator = None
     page = request.GET.get('page', 1)
 
-    res = ShopifyProduct.objects.filter(user=request.user)
+    res = ShopifyProduct.objects.select_related('store').prefetch_related('shopifyboard_set').filter(user=request.user)
+    if not filter_products and not sort:
+        paginator = Paginator(res, post_per_page)
+
+        page = min(max(1, int(page)), paginator.num_pages)
+        page = paginator.page(page)
+        res = page
+
     for i in res:
         p = {
             'qelem': i,
@@ -629,7 +636,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None):
             'store': i.store,
             'stat': i.stat,
             'shopify_url': i.shopify_link(),
-            'user': i.user,
+            'user': request.user,
             'created_at': i.created_at,
             'updated_at': i.updated_at,
             'product': json.loads(i.data),
@@ -659,12 +666,13 @@ def get_product(request, filter_products, post_per_page=25, sort=None):
         if sort:
             products = sorted_products(products, sort)
 
-        paginator = Paginator(products, post_per_page)
+        if filter_products or sort:
+            paginator = Paginator(products, post_per_page)
 
-        page = min(max(1, int(page)), paginator.num_pages)
-        page = paginator.page(page)
+            page = min(max(1, int(page)), paginator.num_pages)
+            page = paginator.page(page)
 
-        products = page.object_list
+            products = page.object_list
 
     print 'get_product took %0.04f ms'%(time.time()-_start)
 
