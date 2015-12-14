@@ -985,10 +985,69 @@ def acp_groups(request):
         return HttpResponseRedirect('/')
 
     if request.method == 'POST':
-        plan = GroupPlan.objects.get(id=request.POST['default-plan'])
-        GroupPlan.objects.all().update(default_plan=0)
-        plan.default_plan = 1
-        plan.save()
+        if request.POST.get('import'):
+            data = json.loads(request.POST.get('import'))
+            for i in data:
+                try:
+                    AppPermission.objects.get(name=i['name'])
+                except:
+                    perm = AppPermission(name=i['name'], description=i['description'])
+                    perm.save()
+
+                    print 'New Permission:', i['name'], i['description']
+
+                    for p in i['plans']:
+                        plan = GroupPlan.objects.get(title=p['title'])
+                        plan.permissions.add(perm)
+                        print 'Add to', p['title']
+        else:
+            plan = GroupPlan.objects.get(id=request.POST['default-plan'])
+            GroupPlan.objects.all().update(default_plan=0)
+            plan.default_plan = 1
+            plan.save()
+    elif request.GET.get('perm-name'):
+        name = request.GET.get('perm-name').strip()
+        description = request.GET.get('perm-description').strip()
+        perms = []
+
+        if request.GET.get('perm-view'):
+            perm = AppPermission(name='%s.view'%name, description='%s | View'%description)
+            perm.save()
+
+            perms.append(perm)
+
+        if request.GET.get('perm-use'):
+            perm = AppPermission(name='%s.use'%name, description='%s | Use'%description)
+            perm.save()
+
+            perms.append(perm)
+
+        for i in request.GET.getlist('perm-grant-to'):
+            plan = GroupPlan.objects.get(id=i)
+            for p in perms:
+                plan.permissions.add(p)
+
+        messages.success(request, 'New permission added.')
+        return HttpResponseRedirect('/acp/groups?add=1')
+
+    elif request.GET.get('export'):
+        data = []
+        for i in AppPermission.objects.all():
+            perm = {
+                'name': i.name,
+                'description': i.description,
+                'plans': []
+            }
+
+            for p in i.groupplan_set.all():
+                perm['plans'].append({
+                    'id': p.id,
+                    'title': p.title
+                })
+
+            data.append(perm)
+
+        return JsonResponse(data, safe=False)
 
     plans = GroupPlan.objects.all()
     return render(request, 'acp/groups.html', {

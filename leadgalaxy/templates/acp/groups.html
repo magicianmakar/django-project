@@ -71,7 +71,7 @@
 
 {% if request.GET.add %}
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-6">
         <div class="ibox float-e-margins">
              <div class="ibox-title">
                 <h5>Add Permission<small></small></h5>
@@ -107,6 +107,33 @@
 
                         <div class="col-md-12 m-b-xs">
                             <button class="btn btn-success btn-sm" style="margin-bottom:0">Apply</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="ibox float-e-margins">
+             <div class="ibox-title">
+                <h5>Import Permissions<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <div class="row">
+                    <form class="form-inline" method="POST">
+                    <div class="form-group">
+                        <div class="col-md-12 m-b-xs">
+                            <textarea name="import" class="form-control" id="" cols="50" rows="10">{{request.POST.import|default:''}}</textarea>
+                        </div>
+
+                        <div class="col-md-12 m-b-xs">
+                            <button class="btn btn-success btn-sm" style="margin-bottom:0">Import</button>
                         </div>
                     </div>
                     </form>
