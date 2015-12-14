@@ -23,6 +23,7 @@ urlpatterns = patterns('',
     url(r'^upgrade-required$', leadgalaxy.views.upgrade_required, name='upgrade_required'),
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
+    url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
 
     url(r'^accounts/register$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',

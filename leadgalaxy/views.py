@@ -1200,6 +1200,44 @@ def login(request):
     user_logout(request)
     return redirect('/')
 
+
+@login_required
+def save_image_s3(request):
+    """Saves the image in img_url into S3 with the name img_name"""
+    if not request.user.profile.can('aviary_photo_editor.use'):
+        return render(request, 'upgrade.html')
+
+    import boto, urllib2, StringIO
+    from boto.s3.key import Key
+
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+
+    img_url = request.POST.get('url')
+    img_name = 'uploads/u%d/%s'%(request.user.id, img_url.split('/')[-1])
+
+    product = ShopifyProduct.objects.get(user=request.user, id=request.POST.get('product'))
+
+    conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+    bucket = conn.get_bucket(S3_BUCKET)
+    k = Key(bucket)
+    k.key = img_name
+    fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
+    k.set_metadata("Content-Type", 'image/jpeg')
+    k.set_contents_from_file(fp)
+    k.make_public()
+
+    upload_url = 'http://%s.s3.amazonaws.com/%s'%(S3_BUCKET, img_name)
+
+    upload = UserUpload(user=request.user, product=product, url=upload_url)
+    upload.save()
+
+    return JsonResponse({
+        'status': 'ok',
+        'url': upload_url
+    })
+
 @login_required
 def logout(request):
     user_logout(request)

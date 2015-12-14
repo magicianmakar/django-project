@@ -427,6 +427,9 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 
+<!-- Load Feather code -->
+<script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
+
 <script type="text/javascript">
 
 var api_base = '';
@@ -638,7 +641,6 @@ $('#export-btn').click(function () {
             }
         },
         error: function (data) {
-            console.log(data);
             $(this.btn).button('reset');
 
             $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
@@ -710,7 +712,6 @@ $('#save-for-later-btn').click(function (e) {
             }
         },
         error: function (data) {
-            console.log(data);
             $(this.btn).button('reset');
 
             $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
@@ -956,11 +957,24 @@ function renderImages() {
         }
 
         var d = $('<div>', {'class':'col-xs-3 var-image-block','image-url': el});
-        var img = $('<img>', {src: el, 'class': 'var-image', 'image-url': el, 'image-id':i, 'style':'cursor: default'});
+        var img = $('<img>', {src: el, 'id':'product-image-'+i, 'class': 'var-image', 'image-url': el, 'image-id':i, 'style':'cursor: default'});
         d.append(img);
-        d.append($('<button class="btn btn-danger  btn-xs" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
+        d.append($('<button class="btn btn-danger btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
 
-        d.find('button').click(imageClicked);
+        {% if request.user|can:'aviary_photo_editor.view' %}
+        d.append($('<button class="btn btn-primary btn-xs edit-photo" style="display:none;position: absolute;cursor: pointer;right: 50px;top: 5px;background-color: rgb(226, 255, 228);color: rgb(0, 105, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
+        {% endif %}
+
+        d.find('.image-delete').click(imageClicked);
+
+        d.find('.edit-photo').click(function (e) {
+            var img = $(this).parents('.var-image-block').find('img');
+
+            launchEditor(
+                img.attr('id'),
+                img.attr('src')
+            );
+        });
 
         d.mouseenter(function() {
             $(this).find('button').show();
@@ -1042,6 +1056,64 @@ $(function() {
     $('.original-description').css('overflow', 'auto');
     $('.original-description img').css({width:'100%', height: ''});
 });
+
+
+{% if request.user|can:'aviary_photo_editor.use' %}
+
+var featherEditor = new Aviary.Feather({
+    apiKey: '220489e3e16f4691bc88d1ef81e05a8b',
+    theme: 'dark', // Check out our new 'light' and 'dark' themes!
+    tools: 'all',
+    appendTo: '',
+    onSave: function(imageID, newURL) {
+        var img = document.getElementById(imageID);
+        img.src = newURL;
+
+        featherEditor.disableControls();
+        featherEditor.showWaitIndicator();
+
+        $.ajax({
+            url: '/upload/save_image_s3',
+            type: 'POST',
+            data: {
+                'url': newURL,
+                'product': {{product.id}}
+            },
+            context: {'img': img, 'imageID': imageID},
+            success: function (data) {
+                featherEditor.enableControls();
+                featherEditor.hideWaitIndicator();
+
+                if (data.status == 'ok') {
+                    this.img.src = data.url;
+                    product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
+                } else {
+                    swal('Image Editor', 'Error occured when saving the image', 'error');
+                }
+            },
+            error: function(data) {
+                swal('Image Editor', 'Error occured when saving the image', 'error');
+            }
+        });
+    },
+    onError: function(errorObj) {
+        alert(errorObj.message);
+    }
+});
+
+function launchEditor(id, src) {
+    featherEditor.launch({
+        image: id,
+        url: src
+    });
+    return false;
+}
+
+{% else %}
+function launchEditor(id, src) {
+    swal('Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
+}
+{% endif %}
 
 </script>
 {% endblock %}
