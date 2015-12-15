@@ -840,7 +840,7 @@ def product_view(request, pid):
 
 @login_required
 def variants_edit(request, store_id, pid):
-    if request.user.profile.can('product_variant_setup.use'):
+    if not request.user.profile.can('product_variant_setup.use'):
         return render(request, 'upgrade.html')
 
     store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
