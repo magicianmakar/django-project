@@ -94,7 +94,7 @@ class ShopifyProduct(models.Model):
 
     data = models.TextField()
     original_data = models.TextField(default='')
-    notes = models.TextField(default='')
+    notes = models.TextField(default='', blank=True)
     stat = models.IntegerField(default=0, verbose_name='Publish stat') # 0: not send yet, 1: Sent to Shopify
     shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
 
