@@ -18,7 +18,7 @@ from .models import *
 from .forms import *
 from app import settings
 
-import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib
+import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib, arrow
 
 def safeInt(v, default=0.0):
     try:
@@ -1236,6 +1236,44 @@ def save_image_s3(request):
     return JsonResponse({
         'status': 'ok',
         'url': upload_url
+    })
+
+def get_variant_image(store, product_id, variants_id):
+    """ product_id: Product ID in Shopify """
+    variant = requests.get(store.get_link('/admin/variants/{}.json'.format(variants_id), api=True)).json()
+    image_id = variant['variant']['image_id']
+
+    if image_id:
+        image = requests.get(store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
+        return image['image']['src']
+    else:
+        return None
+
+@login_required
+def orders(request):
+    if not request.user.profile.can('orders.use'):
+        return render(request, 'upgrade.html')
+
+    store = request.user.shopifystore_set.first()
+    orders = requests.get(store.get_link('/admin/orders.json', api=True)).json()['orders']
+    products = {}
+
+    for index, order in enumerate(orders):
+        orders[index]['date_str'] = arrow.get(order['created_at']).humanize()
+        orders[index]['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
+        for i, el in enumerate((order['line_items'])):
+            product = ShopifyProduct.objects.filter(shopify_id=el['product_id'])
+            orders[index]['line_items'][i]['variant_link'] = store.get_link('/admin/products/%d/variants/%d'%(el['product_id'], el['variant_id']))
+            if product.count():
+                # products[i['id']] = product.first()
+                orders[index]['line_items'][i]['product'] = product.first()
+                orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
+
+    return render(request, 'orders.html', {
+        'orders': orders,
+        'products': products,
+        'page': 'orders',
+        'breadcrumbs': ['Orders']
     })
 
 @login_required

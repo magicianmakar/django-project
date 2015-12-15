@@ -72,6 +72,10 @@
                 <li {% if page == 'bulk' %}class="active"{% endif %}><a href="{% url 'bulk_edit' %}"> <i class="fa fa-table"></i> <span class="nav-label">Bulk edit</span></a> </li>
                 {% endif %}
 
+                {% if request.user|can:'orders.view' %}
+                <li {% if page == 'orders' %}class="active"{% endif %}><a href="{% url 'orders' %}"> <i class="fa fa-check-square-o"></i> <span class="nav-label">Orders</span></a> </li>
+                {% endif %}
+
                 <li {% if page == 'boards' %}class="active"{% endif %}>
                     <a href="{% url 'boards' %}">
                         <i class="fa fa-edit"></i>

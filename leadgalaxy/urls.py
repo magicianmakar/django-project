@@ -21,6 +21,7 @@ urlpatterns = patterns('',
     url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
     url(r'^autocomplete/(?P<target>[a-z-]+)$', leadgalaxy.views.autocomplete),
     url(r'^upgrade-required$', leadgalaxy.views.upgrade_required, name='upgrade_required'),
+    url(r'^orders$', leadgalaxy.views.orders, name='orders'),
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
