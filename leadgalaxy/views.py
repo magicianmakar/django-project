@@ -1272,10 +1272,9 @@ def orders(request):
             for i, el in enumerate((order['line_items'])):
                 product = ShopifyProduct.objects.filter(shopify_id=el['product_id'])
                 orders[index]['line_items'][i]['variant_link'] = store.get_link('/admin/products/%d/variants/%d'%(el['product_id'], el['variant_id']))
+                orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
                 if product.count():
-                    # products[i['id']] = product.first()
                     orders[index]['line_items'][i]['product'] = product.first()
-                    orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
 
         for i in orders:
             all_orders.append(i)
