@@ -72,6 +72,17 @@ class ShopifyStore(models.Model):
     def __unicode__(self):
         return '%s | %s'%(self.title, self.user.username)
 
+    def get_link(self, page, api=False):
+        import re
+
+        if api:
+            url = re.findall('[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
+        else:
+            url = re.findall('[^@\.]+\.myshopify\.com', self.api_url)[0]
+
+        url = 'https://%s/%s'%(url, page.lstrip('/'))
+        return url
+
 class AccessToken(models.Model):
     class Meta:
         ordering = ['-created_at']
@@ -122,6 +133,29 @@ class ShopifyProduct(models.Model):
             return json.loads(self.data)['title']
         except:
             return None
+
+    def get_images(self):
+        return json.loads(self.data)['images']
+
+    def get_original_info(self):
+        data = json.loads(self.data)
+
+        url = data.get('original_url')
+        source = ''
+
+        if url:
+            if 'aliexpress' in url.lower():
+                source = 'AliExpress'
+            elif 'alibaba' in url.lower():
+                source = 'AliBaba'
+
+            return {
+                'source': source,
+                'url': url
+            }
+
+        return None
+
 
 class ShopifyBoard(models.Model):
     class Meta:
