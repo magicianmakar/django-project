@@ -141,7 +141,7 @@ class AppPermission(models.Model):
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
     def __unicode__(self):
-        return '%s - %s'%(self.description, self.name)
+        return self.description
 
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
