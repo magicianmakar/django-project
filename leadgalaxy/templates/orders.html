@@ -4,131 +4,151 @@
 
 {% block main-container %}
 
-    <div class="ibox float-e-margins">
-        <div class="ibox-title">
-            <h5>Shopify Stores<small></small></h5>
-            <div class="ibox-tools">
-                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-            </div>
-        </div>
-        <div class="ibox-content">
-            <div class="row">
-                <div class="col-md-12">
-            <table class="table table-condensed table-hover">
-              <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>Date</th>
-                  <th>Customer</th>
-                  <th>Payment Status</th>
-                  <th>Fulfillment Status</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td>
-                            <a href="#" class="more-info"><i class="fa fa-plus" style="margin-right:10px"></i></a>
-                            <a href="{{order.order_url}}" target="_blank">{{order.name}}</a>
-                        </td>
-                        <td>{{order.date_str}}</a></td>
-                        <td>{{order.customer.first_name}} {{order.customer.last_name}}</td>
-                        <td>{{order.financial_status|title}}</td>
-                        <td>
-                            {% if not order.fulfillment_status %}
-                                <span class="label label-warning">Unfulfilled</span>
-                            {% else %}
-                                <span class="label label-success">{{order.fulfillment_status|title}}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <b>{% if order.currency == 'USD' %} ${% else %} {{order.currency}} {% endif %}{{order.total_price}}</b>
-                        </td>
-                    </tr>
+<div class="col-xs-12">
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+        {% if not request.GET.store %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">All Stores</a></li>
 
-                    <tr class="var-info" style="display:none">
-                        <td colspan="6">
-                            <table class="table table-condensed xtable-hover xtable-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th style="width:310px"></th>
-                                        <th>Variant</th>
-                                        <th>Qty</th>
-                                        <th>Vendor</th>
-                                        <th></th>
-                                        <th></th>
-                                        <th>Shipping Address</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in order.line_items %}
-                                    {% with image=item.image original=item.product.get_original_info %}
-                                    <tr>
-                                        <td>
-                                            <img
-                                            {% if image %}
-                                            src="{{image}}"
-                                            {% else %}
-                                            src="{{item.product.get_images|first}}"
-                                            {% endif %}
-                                            style="width:64px" />
-                                        </td>
-                                        <td>{{item.name}}</td>
-                                        <td><a href="{{item.variant_link}}" target="_blank">{{item.variant_title}}</a></td>
-                                        <td>
-                                            <span style="{% if item.quantity > 1 %} font-weight: bolder; color: blue{% endif %}">{{item.quantity}}</span>
-                                        </td>
-                                        <td>{{item.vendor}}</td>
-                                        <td>
-                                            {% if original %}
-                                            <a href="{{original.url}}" target="_blank" class="btn btn-success btn-xs itooltip"  data-toggle="tooltip" data-placement="top" title="Sourced from: {{original.source}}">Place Order</a>
-                                            {% else %}
-                                            <span class="label label-warning">Non tracked</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                        {% if not item.fulfillment_status %}
-                                            <span class="label label-warning">Unfulfilled</span>
-                                        {% else %}
-                                            <span class="label label-success">{{item.fulfillment_status|title}}</span>
+            {% for item in user.profile.get_active_stores %}
+            <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+            {% endfor %}
+
+        {% else %}
+            <li class=""><a href="/orders" aria-expanded="true">All Stores</a></li>
+
+            {% for item in user.profile.get_active_stores %}
+                {% if item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
+        </ul>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <table class="table table-condensed table-hover">
+                      <thead>
+                        <tr>
+                          <th>Order #</th>
+                          <th>Date</th>
+                          <th>Customer</th>
+                          <th>Payment Status</th>
+                          <th>Fulfillment Status</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>
+                                    <a href="#" class="more-info"><i class="fa fa-plus" style="margin-right:10px"></i></a>
+                                    <a href="{{order.order_url}}" target="_blank">
+                                        {{order.name}}
+                                        {% if not request.GET.store %}
+                                        | {{ order.store.title }}
                                         {% endif %}
-                                        </td>
-                                        {% if forloop.counter0 == 0 %}
-                                        <td rowspan="{{order.line_items|length}}">
-                                            {{order.shipping_address.address1}}<br>
-                                            {{order.shipping_address.address2}}{% if order.shipping_address.address2 %}<br>{% endif %}
-                                            {{order.shipping_address.city}}, {{order.shipping_address.province_code}} {{order.shipping_address.zip}}
-                                            {% if order.shipping_address.country_code != 'US' %}
-                                            <br> <b>{{order.shipping_address.country}}</b>
-                                            {% endif %}
-                                            <br>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endwith %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
+                                    </a>
+                                </td>
+                                <td>{{order.date_str}}</a></td>
+                                <td>{{order.customer.first_name}} {{order.customer.last_name}}</td>
+                                <td>{{order.financial_status|title}}</td>
+                                <td>
+                                    {% if not order.fulfillment_status %}
+                                        <span class="label label-warning">Unfulfilled</span>
+                                    {% else %}
+                                        <span class="label label-success">{{order.fulfillment_status|title}}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <b>{% if order.currency == 'USD' %} ${% else %} {{order.currency}} {% endif %}{{order.total_price}}</b>
+                                </td>
+                            </tr>
+
+                            <tr class="var-info" style="display:none">
+                                <td colspan="6">
+                                    <table class="table table-condensed xtable-hover xtable-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th style="width:310px"></th>
+                                                <th>Variant</th>
+                                                <th>Qty</th>
+                                                <th>Vendor</th>
+                                                <th></th>
+                                                <th></th>
+                                                <th>Shipping Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in order.line_items %}
+                                            {% with image=item.image original=item.product.get_original_info %}
+                                            <tr>
+                                                <td>
+                                                    <img
+                                                    {% if image %}
+                                                    src="{{image}}"
+                                                    {% else %}
+                                                    src="{{item.product.get_images|first}}"
+                                                    {% endif %}
+                                                    style="width:64px" />
+                                                </td>
+                                                <td>{{item.name}}</td>
+                                                <td><a href="{{item.variant_link}}" target="_blank">{{item.variant_title}}</a></td>
+                                                <td>
+                                                    <span style="{% if item.quantity > 1 %} font-weight: bolder; color: blue{% endif %}">{{item.quantity}}</span>
+                                                </td>
+                                                <td>{{item.vendor}}</td>
+                                                <td>
+                                                    {% if original %}
+                                                    <a href="{{original.url}}" target="_blank" class="btn btn-success btn-xs itooltip"  data-toggle="tooltip" data-placement="top" title="Sourced from: {{original.source}}">Place Order</a>
+                                                    {% else %}
+                                                    <span class="label label-warning">Non tracked</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                {% if not item.fulfillment_status %}
+                                                    <span class="label label-warning">Unfulfilled</span>
+                                                {% else %}
+                                                    <span class="label label-success">{{item.fulfillment_status|title}}</span>
+                                                {% endif %}
+                                                </td>
+                                                {% if forloop.counter0 == 0 %}
+                                                <td rowspan="{{order.line_items|length}}">
+                                                    {{order.shipping_address.address1}}<br>
+                                                    {{order.shipping_address.address2}}{% if order.shipping_address.address2 %}<br>{% endif %}
+                                                    {{order.shipping_address.city}}, {{order.shipping_address.province_code}} {{order.shipping_address.zip}}
+                                                    {% if order.shipping_address.country_code != 'US' %}
+                                                    <br> <b>{{order.shipping_address.country}}</b>
+                                                    {% endif %}
+                                                    <br>
+                                                </td>
+                                                {% endif %}
+                                            </tr>
+                                            {% endwith %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
 
 
-                    {% empty %}
-                    <tr>
-                      <td colspan="3" class="text-center">No store found.</td>
-                    </tr>
-                    {% endfor %}
-              </tbody>
-            </table>
-
-            <a data-toggle="modal" class="btn btn-primary" href="#modal-form">Add Store</a>
+                            {% empty %}
+                            <tr>
+                              <td colspan="6" class="text-center">No orders found.</td>
+                            </tr>
+                            {% endfor %}
+                      </tbody>
+                    </table>
                 </div>
             </div>
-
         </div>
     </div>
+</div>
+
 {% endblock %}
 
 

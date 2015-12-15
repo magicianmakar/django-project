@@ -1254,23 +1254,34 @@ def orders(request):
     if not request.user.profile.can('orders.use'):
         return render(request, 'upgrade.html')
 
-    store = request.user.shopifystore_set.first()
-    orders = requests.get(store.get_link('/admin/orders.json', api=True)).json()['orders']
-    products = {}
+    stores = []
+    all_orders = []
+    if request.GET.get('store'):
+        stores.append(ShopifyStore.objects.get(id=request.GET.get('store')))
+    else:
+        stores = request.user.profile.get_active_stores()
 
-    for index, order in enumerate(orders):
-        orders[index]['date_str'] = arrow.get(order['created_at']).humanize()
-        orders[index]['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
-        for i, el in enumerate((order['line_items'])):
-            product = ShopifyProduct.objects.filter(shopify_id=el['product_id'])
-            orders[index]['line_items'][i]['variant_link'] = store.get_link('/admin/products/%d/variants/%d'%(el['product_id'], el['variant_id']))
-            if product.count():
-                # products[i['id']] = product.first()
-                orders[index]['line_items'][i]['product'] = product.first()
-                orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
+    for store in stores:
+        orders = requests.get(store.get_link('/admin/orders.json', api=True)).json()['orders']
+        products = {}
+
+        for index, order in enumerate(orders):
+            orders[index]['date_str'] = arrow.get(order['created_at']).humanize()
+            orders[index]['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
+            orders[index]['store'] = store
+            for i, el in enumerate((order['line_items'])):
+                product = ShopifyProduct.objects.filter(shopify_id=el['product_id'])
+                orders[index]['line_items'][i]['variant_link'] = store.get_link('/admin/products/%d/variants/%d'%(el['product_id'], el['variant_id']))
+                if product.count():
+                    # products[i['id']] = product.first()
+                    orders[index]['line_items'][i]['product'] = product.first()
+                    orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
+
+        for i in orders:
+            all_orders.append(i)
 
     return render(request, 'orders.html', {
-        'orders': orders,
+        'orders': all_orders,
         'products': products,
         'page': 'orders',
         'breadcrumbs': ['Orders']
