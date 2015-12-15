@@ -49,7 +49,7 @@
             <p>Login in. To see it in action.</p>
             <form method="POST" class="m-t" role="form" action="{% url 'django.contrib.auth.views.login' %}">
                 {% csrf_token %}
-                <input type="hidden" name="next" value="/" />
+                <input type="hidden" name="next" value="request.GET.next|default:'/'" />
 
                 <div class="form-group">
                     {% render_field form.username class+="form-control input-lg" placeholder="Username or Email" %}
