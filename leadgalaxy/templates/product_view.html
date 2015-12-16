@@ -662,6 +662,8 @@ $('#export-btn').click(function () {
                 $("#view-btn").attr("shopify-url", data.product.url);
                 $("#view-btn").show();
                 $('#export-btn, #save-for-later-btn').hide();
+
+                toastr.success('Product Exported.','Shopify Export');
             }  else {
                 $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
             }
@@ -733,6 +735,7 @@ $('#save-for-later-btn').click(function (e) {
             if ('product' in data) {
                 $("#view-btn").attr("shopify-id", data.product.id);
                 $("#view-btn").attr("shopify-url", data.product.url);
+                toastr.success('Save for later.','Product Saved');
             }  else {
                 $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
             }
@@ -790,7 +793,6 @@ $('#btn-variants-img').click(function (e) {
     window.location.href = '/product/variants/'+store_id+'/'+product_id;
 });
 
-$('#save-product-notes i').hide();
 $('#save-product-notes').click(function (e) {
     var btn = $(this);
 
@@ -842,7 +844,7 @@ $('#save-metadata').click(function (e) {
             }
         },
         error: function(data) {
-            alert('Server Error');
+            swal('Product Metadata', 'Server Error', 'error');
         },
         complete: function() {
             btn.button('reset');
