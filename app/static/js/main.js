@@ -253,4 +253,6 @@ $(function() {
         $(this).text(!selectStat ? 'Select All' : 'Unselect All');
         document.body.focus();
     })
+
+    toastr.options.timeOut = 3000;
 });
