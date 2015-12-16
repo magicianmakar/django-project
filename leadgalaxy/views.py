@@ -328,8 +328,14 @@ def api(request, target):
                 product.shopify_id = pid
                 product.stat = 1
                 product.save()
+            else:
+                product = None
 
             product_export = ShopifyProductExport(original_url=original_url, shopify_id=pid, store=store)
+
+            if product:
+                product_export.product = product
+
             product_export.save()
 
         else: # save for later

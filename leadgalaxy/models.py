@@ -162,7 +162,9 @@ class ShopifyProductExport(models.Model):
 
     original_url = models.CharField(max_length=512, blank=True, default='')
     shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
+
     store = models.ForeignKey(ShopifyStore)
+    product = models.ForeignKey(ShopifyProduct, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
 

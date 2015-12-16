@@ -11,6 +11,9 @@ class UserUploadAdmin(admin.ModelAdmin):
 class ShopifyBoardAdmin(admin.ModelAdmin):
     raw_id_fields = ('products',)
 
+class ShopifyProductExportAdmin(admin.ModelAdmin):
+    raw_id_fields = ('product', 'store')
+
 admin.site.register(ShopifyStore)
 admin.site.register(AccessToken)
 admin.site.register(ShopifyProduct)
@@ -19,4 +22,4 @@ admin.site.register(GroupPlan, GroupPlanAdmin)
 admin.site.register(UserProfile)
 admin.site.register(UserUpload, UserUploadAdmin)
 admin.site.register(AppPermission)
-admin.site.register(ShopifyProductExport)
+admin.site.register(ShopifyProductExport, ShopifyProductExportAdmin)
