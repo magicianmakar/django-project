@@ -156,6 +156,18 @@ class ShopifyProduct(models.Model):
 
         return None
 
+class ShopifyProductExport(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    original_url = models.CharField(max_length=512, blank=True, default='')
+    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
+    store = models.ForeignKey(ShopifyStore)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+
+    def __unicode__(self):
+        return '{} | {}'.format(self.shopify_id, self.store.title)
 
 class ShopifyBoard(models.Model):
     class Meta:

@@ -277,6 +277,7 @@ def api(request, target):
 
         data = req_data['data']
         original_data = req_data.get('original', '')
+        original_url = req_data.get('original_url', '')
 
         if 'access_token' in req_data:
             token = req_data['access_token']
@@ -320,12 +321,17 @@ def api(request, target):
             if 'product' in req_data:
                 try:
                     product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                    original_url = product.get_original_info().get('url', '')
                 except:
                     return JsonResponse({'error': 'Selected product not found.'})
 
                 product.shopify_id = pid
                 product.stat = 1
                 product.save()
+
+            product_export = ShopifyProductExport(original_url=original_url, shopify_id=pid, store=store)
+            product_export.save()
+
         else: # save for later
             if 'product' in req_data:
                 # Saved product update
