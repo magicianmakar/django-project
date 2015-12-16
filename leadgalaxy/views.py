@@ -612,6 +612,21 @@ def api(request, target):
         return JsonResponse({
             'status': 'ok',
         })
+    if method == 'POST' and target == 'product-metadata':
+        if not user.profile.can('product_metadata.use'):
+            return JsonResponse({'error': 'Your current plan doesn\'t have this feature.'})
+
+        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        product.set_original_url(data.get('original-link'))
+
+        if not product.set_shopify_id_from_url(data.get('shopify-link')):
+            return JsonResponse({'error': 'Invalid Shopify link.'})
+
+        product.save()
+
+        return JsonResponse({
+            'status': 'ok',
+        })
 
     if method == 'POST' and target == 'add-user-upload':
         product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
@@ -800,6 +815,7 @@ def product_view(request, pid):
     #  /AWS
     product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
     p = {
+        'qelem': product,
         'id': product.id,
         'store': product.store,
         'user': product.user,

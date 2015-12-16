@@ -156,6 +156,31 @@ class ShopifyProduct(models.Model):
 
         return None
 
+    def set_original_url(self, url):
+        data = json.loads(self.data)
+        if url != data.get('original_url'):
+            data['original_url'] = url
+            self.data = json.dumps(data)
+            self.save()
+
+            return True
+
+        return False
+
+    def set_shopify_id_from_url(self, url):
+        if url and url.strip():
+            try:
+                pid = re.findall('/([0-9]+)$', url)[0]
+            except:
+                return False
+        else:
+            pid = 0
+
+        self.shopify_id = pid
+        self.save()
+
+        return True
+
 class ShopifyProductExport(models.Model):
     class Meta:
         ordering = ['-created_at']

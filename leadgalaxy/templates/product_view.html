@@ -6,7 +6,7 @@
 {% block main-container %}
 
 <div class="row">
-    <div class="col-md-8 col-md-offset-2">
+    <div class="col-md-10 col-md-offset-1">
 <div class="ibox float-e-margins">
 <!--     <div class="ibox-title">
         <h5>Product View<small></small></h5>
@@ -45,6 +45,15 @@
                     href="{% url 'upgrade_required' %}"
                     {% endif %}
                     ><i class="fa fa-file-o"></i>Notes</a></li>
+                {% endif %}
+                {% if request.user|can:'product_metadata.view' %}
+                <li class=""><a
+                    {% if request.user|can:'product_metadata.use' %}
+                    data-toggle="tab" href="#tab-5"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-cogs"></i> Metadata</a></li>
                 {% endif %}
             </ul>
             <div class="tab-content">
@@ -299,14 +308,31 @@
         </div>
         {% endif %}
         <div id="tab-4" class="tab-pane">
-            <div class="panel-body">
+            <div class="panel-body" style="min-height:300px">
                 <div class="row">
                     <div class="form-group col-xs-12">
                         <input id="product-notes" type="hidden" name="content-notes">
-                        <trix-editor id="trix-notes" input="product-notes">dsd</trix-editor>
+                        <trix-editor id="trix-notes" input="product-notes" style="min-height: 250px"></trix-editor>
                     </div>
                     <div class="form-group col-xs-12">
-                        <button id="save-product-notes" class="btn btn-success"><i class="fa fa-check"></i> Save Notes</button>
+                        <button id="save-product-notes" class="btn btn-success"><i class="fa fa-save"></i> Save Notes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tab-5" class="tab-pane">
+            <div class="panel-body"  style="min-height:300px">
+                <div class="row">
+                    <div class="form-group col-xs-12">
+                        <label>Original Product link:</label>
+                        <input id="product-original-link" type="text" class="form-control" value="{{product.qelem.get_original_info.url|default:''}}">
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <label>Product link in Shopify:</label>
+                        <input id="product-shopify-link" type="text" class="form-control" value="{{product.qelem.shopify_link|default:''}}">
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <button id="save-metadata" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
                     </div>
                 </div>
             </div>
@@ -780,15 +806,39 @@ $('#save-product-notes').click(function (e) {
         },
         success: function(data) {
             if (data.status == 'ok') {
-                setTimeout(function () {
-                    btn.find('i').slideDown(300, function () {
-                        setTimeout(function () {
-                            $('i', btn).slideUp();
-                        }, 1000);
-                    });
-                }, 100);
+                toastr.success('Modification saved.','Product Notes');
             } else {
-                alert('Server Error');
+                swal('Product Notes', (typeof(data.error) == 'string' ? data.error : 'Unknow Server Error'), 'error');
+            }
+        },
+        error: function(data) {
+            swal('Product Notes', 'Server Error', 'error');
+        },
+        complete: function() {
+            btn.button('reset');
+        }
+    });
+});
+
+$('#save-metadata').click(function (e) {
+    var btn = $(this);
+
+    btn.button('loading');
+
+    $.ajax({
+        type: 'POST',
+        url: '/api/product-metadata',
+        context: btn,
+        data: {
+            'original-link': $('#product-original-link').val(),
+            'shopify-link': $('#product-shopify-link').val(),
+            'product': {{product.id}},
+        },
+        success: function(data) {
+            if (data.status == 'ok') {
+                toastr.success('Modification saved.','Product Metadata');
+            } else {
+                swal('Product Metadata', (typeof(data.error) == 'string' ? data.error : 'Unknow Server Error'), 'error');
             }
         },
         error: function(data) {
