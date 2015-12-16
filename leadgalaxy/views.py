@@ -124,6 +124,16 @@ def get_user_from_token(token):
 
     return None
 
+def get_myshopify_link(store, link):
+    # TODO: iter over all stores
+    handle = link.split('/')[-1]
+
+    r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
+    if len(r['products']) == 1:
+        return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
+
+    return None
+
 # @login_required
 def api(request, target):
     method = request.method
@@ -619,7 +629,13 @@ def api(request, target):
         product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
         product.set_original_url(data.get('original-link'))
 
-        if not product.set_shopify_id_from_url(data.get('shopify-link')):
+        shopify_link = data.get('shopify-link')
+        if 'myshopify' not in shopify_link.lower():
+            shopify_link = get_myshopify_link(product.store, shopify_link)
+            if not shopify_link:
+                return JsonResponse({'error': 'Invalid Custom domain link.'})
+
+        if not product.set_shopify_id_from_url(shopify_link):
             return JsonResponse({'error': 'Invalid Shopify link.'})
 
         product.save()
