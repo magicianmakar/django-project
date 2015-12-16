@@ -120,9 +120,7 @@ class ShopifyProduct(models.Model):
 
     def shopify_link(self):
         if self.shopify_id:
-            url = re.findall('[^@\.]+\.myshopify\.com', self.store.api_url)[0]
-            url = 'https://%s/admin/products/%d'%(url, self.shopify_id)
-            return url
+            return self.store.get_link('/admin/products/{}'.format(self.shopify_id))
         else:
             return None
 
