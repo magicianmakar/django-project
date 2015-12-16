@@ -73,8 +73,6 @@ class ShopifyStore(models.Model):
         return '%s | %s'%(self.title, self.user.username)
 
     def get_link(self, page, api=False):
-        import re
-
         if api:
             url = re.findall('[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
         else:
