@@ -105,7 +105,6 @@ class ShopifyProduct(models.Model):
     original_data = models.TextField(default='')
     notes = models.TextField(default='', blank=True)
     stat = models.IntegerField(default=0, verbose_name='Publish stat') # 0: not send yet, 1: Sent to Shopify
-    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
     shopify_export = models.ForeignKey('ShopifyProductExport', null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
@@ -187,7 +186,6 @@ class ShopifyProductExport(models.Model):
     shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
 
     store = models.ForeignKey(ShopifyStore)
-    product = models.ForeignKey(ShopifyProduct, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
 

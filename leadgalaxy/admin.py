@@ -12,7 +12,7 @@ class ShopifyBoardAdmin(admin.ModelAdmin):
     raw_id_fields = ('products',)
 
 class ShopifyProductExportAdmin(admin.ModelAdmin):
-    raw_id_fields = ('product', 'store')
+    raw_id_fields = ('store',)
 
 admin.site.register(ShopifyStore)
 admin.site.register(AccessToken)
