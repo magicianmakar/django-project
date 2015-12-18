@@ -124,13 +124,20 @@ def get_user_from_token(token):
 
     return None
 
-def get_myshopify_link(store, link):
-    # TODO: iter over all stores
-    handle = link.split('/')[-1]
+def get_myshopify_link(user, default_store, link):
+    stores = [default_store,]
+    for i in user.shopifystore_set.all():
+        if i not in stores:
+            stores.append(i)
 
-    r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
-    if len(r['products']) == 1:
-        return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
+    for store in stores:
+        handle = link.split('/')[-1]
+
+        r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
+        if len(r['products']) == 1:
+            return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
+
+        print ' * Product not found in store: {}'.format(store.title)
 
     return None
 
@@ -342,11 +349,11 @@ def api(request, target):
                 product = None
 
             product_export = ShopifyProductExport(original_url=original_url, shopify_id=pid, store=store)
+            product_export.save()
 
             if product:
-                product_export.product = product
-
-            product_export.save()
+                product.shopify_export = product_export
+                product.save()
 
         else: # save for later
             if 'product' in req_data:
@@ -631,7 +638,7 @@ def api(request, target):
 
         shopify_link = data.get('shopify-link')
         if 'myshopify' not in shopify_link.lower():
-            shopify_link = get_myshopify_link(product.store, shopify_link)
+            shopify_link = get_myshopify_link(user, product.store, shopify_link)
             if not shopify_link:
                 return JsonResponse({'error': 'Invalid Custom domain link.'})
 
@@ -1314,7 +1321,7 @@ def orders(request):
             orders[index]['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
             orders[index]['store'] = store
             for i, el in enumerate((order['line_items'])):
-                product = ShopifyProduct.objects.filter(shopify_id=el['product_id'])
+                product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
                 orders[index]['line_items'][i]['variant_link'] = store.get_link('/admin/products/%d/variants/%d'%(el['product_id'], el['variant_id']))
                 orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
                 if product.count():

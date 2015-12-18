@@ -106,6 +106,7 @@ class ShopifyProduct(models.Model):
     notes = models.TextField(default='', blank=True)
     stat = models.IntegerField(default=0, verbose_name='Publish stat') # 0: not send yet, 1: Sent to Shopify
     shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
+    shopify_export = models.ForeignKey('ShopifyProductExport', null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
@@ -119,8 +120,8 @@ class ShopifyProduct(models.Model):
         return '%s | %s'%(title, self.store.title)
 
     def shopify_link(self):
-        if self.shopify_id:
-            return self.store.get_link('/admin/products/{}'.format(self.shopify_id))
+        if self.shopify_export and self.shopify_export.shopify_id:
+            return self.store.get_link('/admin/products/{}'.format(self.shopify_export.shopify_id))
         else:
             return None
 
@@ -172,8 +173,9 @@ class ShopifyProduct(models.Model):
         else:
             pid = 0
 
-        self.shopify_id = pid
-        self.save()
+        if self.shopify_export:
+            self.shopify_export.shopify_id = pid
+            self.shopify_export.save()
 
         return True
 
