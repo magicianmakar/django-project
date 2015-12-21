@@ -663,7 +663,7 @@ def api(request, target):
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 
-def get_product(request, filter_products, post_per_page=25, sort=None):
+def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
     import time
     _start = time.time()
 
@@ -672,6 +672,14 @@ def get_product(request, filter_products, post_per_page=25, sort=None):
     page = request.GET.get('page', 1)
 
     res = ShopifyProduct.objects.select_related('store').prefetch_related('shopifyboard_set').filter(user=request.user)
+    if store:
+        if store == 'c': # connected
+            res = res.exclude(shopify_export__isnull=True)
+        elif store == 'n': # non-connected
+            res = res.filter(shopify_export__isnull=True)
+        else:
+            res = res.filter(shopify_export__store=store)
+
     if not filter_products and not sort:
         paginator = Paginator(res, post_per_page)
 
@@ -778,6 +786,7 @@ def sorted_products(products, sort):
 
 @login_required
 def product(request, tpl='grid'):
+    store = request.GET.get('store', 'n')
     filter_products = (request.GET.get('f') == '1')
     post_per_page = safeInt(request.GET.get('ppp'), 25)
     sort_by = request.GET.get('sort')
@@ -785,7 +794,7 @@ def product(request, tpl='grid'):
     if filter_products and not request.user.profile.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
-    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by)
+    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by, store)
 
     if not tpl or tpl == 'grid':
         tpl = 'product.html'

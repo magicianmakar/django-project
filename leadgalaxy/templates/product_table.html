@@ -6,18 +6,43 @@
 
 {% block main-container %}
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5>Saved Products<small></small></h5>
-                <div class="ibox-tools">
-                    <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
-                    <a href="/product"  title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
-                </div>
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+        {% if not request.GET.store %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Not Connected</a></li>
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
 
-            </div>
-            <div class="ibox-content">
+            {% for item in user.profile.get_active_stores %}
+            <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+            {% endfor %}
+
+        {% else %}
+            {% if request.GET.store == 'n' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Not Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
+            {% endif %}
+
+            {% if request.GET.store == 'c' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
+            {% endif %}
+
+            {% for item in user.profile.get_active_stores %}
+                {% if item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
                 {% if products %}
                 <div class="row" style="margin-bottom: 20px">
                     <div class="col-md-8">
@@ -85,10 +110,10 @@
                 </table>
 
                 {% include "partial/paginator.html" %}
-            </div>
-        </div>
-    </div>
-</div>
+            </div> <!-- div.ibox-content -->
+        </div> <!-- div.ibox.float-e-margins -->
+    </div> <!-- div.col-md-12 -->
+</div> <!-- div.row -->
 
 
 <div id="modal-form" class="modal fade" aria-hidden="true">
