@@ -380,7 +380,7 @@ def api(request, target):
                     })
 
                 # zip & base64 encode before saving to save space on database
-                original_data = original_data.encode('utf-8').encode('zlib').encode('base64')
+                original_data = original_data.encode('utf-8').encode('zlib')
 
                 product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0)
                 product.notes = req_data.get('notes', '')
@@ -813,7 +813,7 @@ def product(request, tpl='grid'):
 @login_required
 def product_view(request, pid):
     #  AWS
-    import time, base64, hmac, urllib, arrow
+    import time, base64, hmac, urllib, arrow, zlib
     from hashlib import sha1
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID', '')
@@ -882,7 +882,7 @@ def product_view(request, pid):
 
     original = None
     try:
-        original = json.loads(product.original_data.decode('base64').decode('zlib'))
+        original = json.loads(zlib.decompress(product.original_data))
     except: pass
 
     export = product.shopify_export
