@@ -1,6 +1,6 @@
 {% load url_tools %}
 
-{% if paginator %}
+{% if paginator and paginator.num_pages > 1 %}
 <div class="row">
     <nav style="text-align: center;">
       <ul class="pagination pagination-lg">
@@ -17,7 +17,7 @@
         {% for pa in paginator.page_range %}
 
             {% if pa == current_page.number %}
-            <li class="active"><a href="#">{{pa}}</span></a></li>
+            <li class="active"><span>{{pa}}</span></li>
             {% else %}
             <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
             {% endif %}
