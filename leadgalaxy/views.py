@@ -885,6 +885,10 @@ def product_view(request, pid):
         original = json.loads(product.original_data.decode('base64').decode('zlib'))
     except: pass
 
+    export = product.shopify_export
+    if export and export.shopify_id:
+        p['shopify_url'] = export.store.get_link('/admin/products/{}'.format(export.shopify_id))
+        p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, product.id)
 
     return render(request, 'product_view.html', {
         'product': p,
