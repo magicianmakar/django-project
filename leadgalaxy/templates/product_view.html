@@ -786,8 +786,8 @@ $('.var-image-block').mouseenter(function() {
 });
 
 $('#btn-variants-img').click(function (e) {
-    var store_id ').prop('store-id');
-    var product_id ').prop('product-id');
+    var store_id = $('#btn-variants-img').prop('store-id');
+    var product_id = $('#btn-variants-img').prop('product-id');
 
     window.location.href = '/product/variants/'+store_id+'/'+product_id;
 });
