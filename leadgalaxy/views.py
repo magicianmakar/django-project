@@ -948,7 +948,9 @@ def bulk_edit(request):
     if filter_products and not request.user.profile.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
-    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by)
+    store = 'n'
+
+    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by, store)
 
     return render(request, 'bulk_edit.html', {
         'products': products,
