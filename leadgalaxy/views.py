@@ -664,9 +664,6 @@ def api(request, target):
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
-    import time
-    _start = time.time()
-
     products = []
     paginator = None
     page = request.GET.get('page', 1)
@@ -731,8 +728,6 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             page = paginator.page(page)
 
             products = page.object_list
-
-    print 'get_product took %0.04f ms'%(time.time()-_start)
 
     return products, paginator, page
 
