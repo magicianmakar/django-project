@@ -332,8 +332,7 @@ def api(request, target):
                     return JsonResponse({'error': 'Shopify API Error'})
 
             pid = r.json()['product']['id']
-            url = re.findall('[^@\.]+\.myshopify\.com', store.api_url)[0]
-            url = 'https://%s/admin/products/%d'%(url, pid);
+            url = store.get_link('/admin/products/{}'.format(pid))
 
             if 'product' in req_data:
                 try:
@@ -381,8 +380,9 @@ def api(request, target):
 
                 # zip & base64 encode before saving to save space on database
                 original_data = original_data.encode('utf-8').encode('zlib')
+                is_active = req_data.get('activate', True)
 
-                product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0)
+                product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0, is_active=is_active)
                 product.notes = req_data.get('notes', '')
 
             product.save()
