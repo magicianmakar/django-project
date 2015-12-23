@@ -1006,7 +1006,10 @@ def get_shipping_info(request):
             'sendGoodsCountry': ''
     })
 
-    data = json.loads(r.text[1:-1])
+    try:
+        data = json.loads(r.text[1:-1])
+    except:
+        data ={}
 
     return render(request, 'shippement_info.html',{
         'info': data
