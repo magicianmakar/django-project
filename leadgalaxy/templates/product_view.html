@@ -156,6 +156,7 @@
                 </div>
             </div>
 
+            {% if not product.shopify_url %}
             <div class="form-group col-xs-12">
                 <label for="store-select">Export to:</label>
                 <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
@@ -169,6 +170,7 @@
                 {% endfor %}
                 </select>
             </div>
+            {% endif %}
 
             <div class="buttons col-xs-12">
                 <p>
@@ -187,6 +189,10 @@
                         {% if request.user|can:'product_variant_setup.view' %}
                         <button id="btn-variants-img" type="button" class="btn btn-success" style="display:none">Setup Variants Images</button>
                         {% endif %}
+                    {% endif %}
+
+                    {% if product.shopify_url %}
+                        <a id="duplicate-btn" class="btn btn-outline btn-success" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a>
                     {% endif %}
 
                     {% if product.product.original_url %}
@@ -933,6 +939,43 @@ $('.upload-image-btn').click(function (e) {
         $(this).bootstrapBtn('loading');
         get_signed_request(file);
     }
+});
+
+$('#duplicate-btn').click(function (e) {
+    if ($(this).attr('href') != '#') {
+        return;
+    }
+
+    e.preventDefault();
+
+    var product_id = $(this).attr('product-id');
+
+    $(this).bootstrapBtn('loading');
+
+    $.ajax({
+        url: '/api/product-duplicate',
+        type: 'POST',
+        data: {
+            product: product_id
+        },
+        context: {btn: $(this)},
+        success: function (data) {
+            var btn = this.btn;
+            btn.bootstrapBtn('reset');
+
+            if ('product' in data) {
+                btn.attr('href', data.product.url);
+                toastr.success('Duplicate Product.','Product Duplicated!');
+
+                setTimeout(function() {
+                    btn.html('<i class="fa fa-external-link"></i> Open duplicate');
+                }, 100);
+            }
+        },
+        error: function (data) {
+            this.btn.bootstrapBtn('reset');
+        }
+    });
 });
 
 function get_signed_request(file){

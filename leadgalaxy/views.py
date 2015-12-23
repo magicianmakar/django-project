@@ -13,6 +13,7 @@ from django.db.models import Count, Q
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.core.urlresolvers import reverse
 
 from .models import *
 from .forms import *
@@ -660,6 +661,25 @@ def api(request, target):
         return JsonResponse({
             'status': 'ok',
         })
+
+    if method == 'POST' and target == 'product-duplicate':
+        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        duplicate_product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+
+        duplicate_product.pk = None
+        duplicate_product.parent_product = product
+        duplicate_product.shopify_export = None
+        duplicate_product.stat = 0
+        duplicate_product.save()
+
+        return JsonResponse({
+            'status': 'ok',
+            'product': {
+                'id': duplicate_product.id,
+                'url': reverse('product_view', args=[duplicate_product.id])
+            }
+        })
+
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 

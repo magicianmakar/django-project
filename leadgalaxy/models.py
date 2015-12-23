@@ -108,6 +108,8 @@ class ShopifyProduct(models.Model):
     shopify_export = models.ForeignKey('ShopifyProductExport', null=True)
     is_active = models.BooleanField(default=True)
 
+    parent_product = models.ForeignKey('ShopifyProduct', null=True, verbose_name='Dupliacte of product')
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
