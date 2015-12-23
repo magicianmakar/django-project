@@ -379,8 +379,6 @@ def api(request, target):
                                  %(total_products, user_saved_products)
                     })
 
-                # zip & base64 encode before saving to save space on database
-                original_data = original_data.encode('utf-8').encode('zlib')
                 is_active = req_data.get('activate', True)
 
                 product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0, is_active=is_active)
@@ -900,7 +898,7 @@ def product_view(request, pid):
 
     original = None
     try:
-        original = json.loads(zlib.decompress(product.original_data))
+        original = json.loads(product.original_data)
     except: pass
 
     export = product.shopify_export
