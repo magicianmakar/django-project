@@ -801,15 +801,18 @@ def sorted_products(products, sort):
 
 @login_required
 def product(request, tpl='grid'):
-    store = request.GET.get('store', 'n')
-    filter_products = (request.GET.get('f') == '1')
-    post_per_page = safeInt(request.GET.get('ppp'), 25)
-    sort_by = request.GET.get('sort')
+    args = {
+        'request': request,
+        'filter_products': (request.GET.get('f') == '1'),
+        'post_per_page': safeInt(request.GET.get('ppp'), 25),
+        'sort': request.GET.get('sort'),
+        'store': request.GET.get('store', 'n')
+    }
 
-    if filter_products and not request.user.profile.can('product_filters.use'):
+    if args['filter_products'] and not request.user.profile.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
-    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by, store)
+    products, paginator, page = get_product(**args)
 
     if not tpl or tpl == 'grid':
         tpl = 'product.html'
@@ -819,7 +822,7 @@ def product(request, tpl='grid'):
     return render(request, tpl, {
         'paginator': paginator,
         'current_page': page,
-        'filter_products': filter_products,
+        'filter_products': args['filter_products'],
         'products': products,
         'page': 'product',
         'breadcrumbs': ['Products']
@@ -941,22 +944,24 @@ def bulk_edit(request):
     if not request.user.profile.can('bulk_editing.use'):
         return render(request, 'upgrade.html')
 
-    filter_products = (request.GET.get('f') == '1')
-    post_per_page = safeInt(request.GET.get('ppp'), 25)
-    sort_by = request.GET.get('sort')
+    args = {
+        'request': request,
+        'filter_products': (request.GET.get('f') == '1'),
+        'post_per_page': safeInt(request.GET.get('ppp'), 25),
+        'sort': request.GET.get('sort'),
+        'store': 'n'
+    }
 
-    if filter_products and not request.user.profile.can('product_filters.use'):
+    if args['filter_products'] and not request.user.profile.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
-    store = 'n'
-
-    products, paginator, page = get_product(request, filter_products, post_per_page, sort_by, store)
+    products, paginator, page = get_product(**args)
 
     return render(request, 'bulk_edit.html', {
         'products': products,
         'paginator': paginator,
         'current_page': page,
-        'filter_products': filter_products,
+        'filter_products': args['filter_products'],
         'page': 'bulk',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
     })
