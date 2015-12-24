@@ -1011,12 +1011,14 @@ def boards(request):
 
 @login_required
 def get_shipping_info(request):
-    product = request.GET.get('id')
+    aliexpress_id = request.GET.get('id')
+    product = request.GET.get('product')
+    product = ShopifyProduct.objects.get(user=request.user, id=request.GET.get('product', 0))
 
     r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
         params= {
             'f': 'd',
-            'productid': product,
+            'productid': aliexpress_id,
             'userType': 'cnfm',
             'country': 'US',
             'province': '',
@@ -1027,12 +1029,21 @@ def get_shipping_info(request):
     })
 
     try:
-        data = json.loads(r.text[1:-1])
+        shippement_data = json.loads(r.text[1:-1])
     except:
-        data ={}
+        shippement_data ={}
 
+    product_data = json.loads(product.data)
+
+    if 'store' in product_data:
+        store = product_data['store']
+    else:
+        store = None
+
+    print '|||', store
     return render(request, 'shippement_info.html',{
-        'info': data
+        'info': shippement_data,
+        'store': store
     })
 
 @login_required
