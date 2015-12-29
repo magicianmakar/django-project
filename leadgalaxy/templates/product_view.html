@@ -677,7 +677,7 @@ $('#export-btn').click(function () {
                 toastr.success('Product Exported.','Shopify Export');
             }  else {
 
-                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error';
+                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error');
                 swal('Shopify Export', error, 'error');
             }
         },
@@ -750,7 +750,7 @@ $('#save-for-later-btn').click(function (e) {
                 $("#view-btn").attr("shopify-url", data.product.url);
                 toastr.success('Save for later.','Product Saved');
             }  else {
-                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error';
+                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error');
                 swal('Save for later', error, 'error');
             }
         },
