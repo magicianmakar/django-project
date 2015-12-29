@@ -676,13 +676,15 @@ $('#export-btn').click(function () {
 
                 toastr.success('Product Exported.','Shopify Export');
             }  else {
-                $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
+
+                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error';
+                swal('Shopify Export', error, 'error');
             }
         },
         error: function (data) {
             $(this.btn).bootstrapBtn('reset');
 
-            $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
+            swal('Shopify Export', 'Server error', 'error');
         }
 
     });
@@ -748,13 +750,13 @@ $('#save-for-later-btn').click(function (e) {
                 $("#view-btn").attr("shopify-url", data.product.url);
                 toastr.success('Save for later.','Product Saved');
             }  else {
-                $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
+                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error';
+                swal('Save for later', error, 'error');
             }
         },
         error: function (data) {
             $(this.btn).bootstrapBtn('reset');
-
-            $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
+            swal('Save for later', 'Export Error: Server error', 'error');
         }
     });
 });
