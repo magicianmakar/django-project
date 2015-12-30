@@ -678,6 +678,31 @@ def api(request, target):
             }
         })
 
+    if method == 'GET' and target == 'user-config':
+        return JsonResponse(user.profile.get_config())
+
+    if method == 'POST' and target == 'user-config':
+        print user.profile.get_config()
+
+        auto_margin = data.get('auto_margin')
+        if auto_margin:
+            if not auto_margin.endswith('%'):
+                auto_margin = auto_margin + '%'
+
+
+        config = {
+            'auto_margin': auto_margin,
+            'make_visisble': bool(data.get('make_visisble')),
+            'default_desc': data.get('default_desc'),
+        }
+
+        user.profile.config = json.dumps(config)
+        user.profile.save()
+        print json.dumps(config)
+        print user.profile.config
+
+        return JsonResponse({'status': 'ok'})
+
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 

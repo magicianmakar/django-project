@@ -29,6 +29,8 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=255, blank=True, default='')
     country = models.CharField(max_length=255, blank=True, default='')
 
+    config = models.TextField(default='', blank=True)
+
     def __str__(self):
         return '%s | %s'%(self.user.username, self.plan.title)
 
@@ -55,6 +57,22 @@ class UserProfile(models.Model):
                     return True
 
         return False
+
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
+    def get_config_value(self, name, default=None):
+        return self.get_config().get(name, default)
+
+    def set_config_value(self, name, value):
+        data = self.get_config()
+        data[name] = value
+
+        self.config = json.dumps(data)
+        self.save()
 
 class ShopifyStore(models.Model):
     class Meta:

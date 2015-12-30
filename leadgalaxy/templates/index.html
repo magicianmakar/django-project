@@ -49,6 +49,47 @@
         </div>
     </div>
 
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Settings<small></small></h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="row">
+                <div class="col-md-12">
+                    <form id="config-form" class="form-horizontal" role="form">
+                      <div class="form-group">
+                        <label for="auto_margin" class="col-sm-2 control-label">Auto Margin</label>
+                        <div class="col-sm-2">
+                          <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{{user.profile.get_config.auto_margin}}">
+                        </div>
+                        <span class="help-block ">(For example: If you set Auto margin to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
+                      </div>
+                      <div class="form-group">
+                        <label for="make_visisble" class="col-sm-2 control-label">Make Products Visible</label>
+                        <div class="col-sm-10">
+                          <input type="checkbox" class="form-control icheck" id="make_visisble" name="make_visisble"{% if user.profile.get_config.make_visisble %}checked="checked"{% endif %}>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
+                        <div class="col-sm-10">
+                          <textarea name="default_desc" id="default_desc" cols="30" rows="10" class="form-control">{{user.profile.get_config.default_desc}}</textarea>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                          <button data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                        </div>
+                      </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <div id="modal-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -193,6 +234,33 @@
         url = url.replace(/[^\/:]+:[^:]+@/, '') + '/admin';
 
         window.open(url, '_target');
+    });
+
+    $('form#config-form').submit(function (e) {
+        e.preventDefault();
+
+        var config = $(this).serialize();
+
+        $.ajax({
+            url: '/api/user-config',
+            type: 'POST',
+            data: config,
+            context: {form: $(this)},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    toastr.success('Saved.','User Config');
+                } else {
+                    swal('User Config', ('error' in data ? data.error : 'Unknow error'), 'error');
+                }
+            },
+            error: function (data) {
+                swal('User Config', 'Server error', 'error');
+            },
+            complete: function () {
+            }
+        });
+
+        return false;
     });
 
 </script>
