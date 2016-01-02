@@ -74,6 +74,11 @@ class UserProfile(models.Model):
         self.config = json.dumps(data)
         self.save()
 
+def user_can(self, perms):
+    return self.profile.can(perms)
+
+User.add_to_class("can", user_can)
+
 class ShopifyStore(models.Model):
     class Meta:
         ordering = ['-created_at']
