@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load perms_helper %}
 
 {% block main-container %}
 
@@ -60,30 +61,95 @@
             <div class="row">
                 <div class="col-md-12">
                     <form id="config-form" class="form-horizontal" role="form">
-                      <div class="form-group">
-                        <label for="auto_margin" class="col-sm-2 control-label">Auto Margin</label>
-                        <div class="col-sm-2">
-                          <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{{user.profile.get_config.auto_margin}}">
+                        {% if user|can:'auto_margin.use' %}
+                        <div class="form-group">
+                            <label for="auto_margin" class="col-sm-2 control-label">Auto Margin</label>
+                            <div class="col-sm-2">
+                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{{config.auto_margin}}">
+                            </div>
+                            <span class="help-block ">(For example: If you set Auto margin to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
                         </div>
-                        <span class="help-block ">(For example: If you set Auto margin to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
-                      </div>
-                      <div class="form-group">
-                        <label for="make_visisble" class="col-sm-2 control-label">Make Products Visible</label>
-                        <div class="col-sm-10">
-                          <input type="checkbox" class="form-control icheck" id="make_visisble" name="make_visisble"{% if user.profile.get_config.make_visisble %}checked="checked"{% endif %}>
+                        <div class="form-group">
+                            <label for="auto_margin_cents" class="col-sm-2 control-label">Auto Margin Cents</label>
+                            <div class="col-sm-2">
+                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_margin_cents" name="auto_margin_cents" value="{{config.auto_margin_cents}}">
+                            </div>
+                            <span class="help-block ">(For example: If you set Auto Margin Cents to <b>95</b>, product price will end always by .95)</span>
                         </div>
-                      </div>
-                      <div class="form-group">
-                        <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
-                        <div class="col-sm-10">
-                          <textarea name="default_desc" id="default_desc" cols="30" rows="10" class="form-control">{{user.profile.get_config.default_desc}}</textarea>
+                        <div class="col-sm-offset-2"><hr /></div>
+
+
+                        <div class="form-group">
+                            <label for="auto_compare_at" class="col-sm-2 control-label">Auto Compare at</label>
+                            <div class="col-sm-2">
+                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at" value="{{config.auto_compare_at}}">
+                            </div>
+                            <span class="help-block "></span>
                         </div>
-                      </div>
-                      <div class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                          <button data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                        <div class="form-group">
+                            <label for="auto_compare_at_cents" class="col-sm-2 control-label">Auto Margin Cents</label>
+                            <div class="col-sm-2">
+                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_compare_at_cents" name="auto_compare_at_cents" value="{{config.auto_compare_at_cents}}">
+                            </div>
+                            <span class="help-block "></span>
                         </div>
-                      </div>
+
+                        <div class="col-sm-offset-2"><hr /></div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="default_weight_unit" class="col-sm-2 control-label">Default Weight Unit</label>
+                            <div class="col-sm-2">
+                                <select id="default_weight_unit" name="default_weight_unit" class="form-control">
+                                    <option value="g" {% if config.default_weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                                    <option value="kg" {% if config.default_weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                                    <option value="oz" {% if config.default_weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                                    <option value="lb" {% if config.default_weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                                </select>
+                            </div>
+                            <span class="help-block "></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="default_weight_number" class="col-sm-2 control-label">Fixed Weight</label>
+                            <div class="col-sm-2">
+                                <input style="width:80px" type="text" class="form-control col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
+                            </div>
+                            <span class="help-block "></span>
+                        </div>
+
+                        <div class="col-sm-offset-2"><hr /></div>
+
+                        <div class="form-group">
+                            <label for="description_mode" class="col-sm-2 control-label">Default Product Description</label>
+                            <div class="col-sm-2">
+                                <select id="description_mode" name="description_mode" class="form-control">
+                                    <option value="empty" {% if config.description_mode == 'empty' %}selected="selected"{% endif %}>Empty</option>
+                                    <option value="original" {% if config.description_mode == 'original' %}selected="selected"{% endif %}>Original</option>
+                                    <option value="simplified" {% if config.description_mode == 'simplified' %}selected="selected"{% endif %}>Simplified</option>
+                                    <option value="custom" {% if config.description_mode == 'custom' %}selected="selected"{% endif %}>Custom</option>
+                                </select>
+                            </div>
+                            <span class="help-block "></span>
+                        </div>
+                        <div id="desc-div" class="form-group" {% if config.description_mode != 'custom' %} style="display:none" {% endif %}>
+                            <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
+                            <div class="col-sm-10">
+                                <textarea name="default_desc" id="default_desc" cols="30" rows="10" class="form-control">{{config.default_desc}}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="make_visisble" class="col-sm-2 control-label">Make Products Visible</label>
+                            <div class="col-sm-10">
+                                <input type="checkbox" class="form-control icheck" id="make_visisble" name="make_visisble"{% if config.make_visisble %}checked="checked"{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -262,6 +328,14 @@
 
         return false;
     });
+
+    $('#description_mode').change(function (e) {
+        if ($(this).val() == 'custom') {
+            $('#desc-div').show();
+        } else {
+            $('#desc-div').hide();
+        }
+    })
 
 </script>
 {% endblock %}

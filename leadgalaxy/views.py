@@ -107,9 +107,11 @@ def smartBoardByBoard(user, board):
 @login_required
 def index(request):
     stores = request.user.shopifystore_set.filter(is_active=True)
+    config = request.user.profile.get_config()
 
     return render(request, 'index.html', {
         'stores': stores,
+        'config': config,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
@@ -137,8 +139,6 @@ def get_myshopify_link(user, default_store, link):
         r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
         if len(r['products']) == 1:
             return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
-
-        print ' * Product not found in store: {}'.format(store.title)
 
     return None
 
@@ -679,27 +679,43 @@ def api(request, target):
         })
 
     if method == 'GET' and target == 'user-config':
-        return JsonResponse(user.profile.get_config())
+        config = user.profile.get_config()
+        if not user.can('auto_margin.use'):
+            for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
+                if i in config:
+                    del config[i]
+        else:
+            # make sure this fields are populated so the extension can display them
+            for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
+                if i not in config:
+                    config[i] = ''
+
+        return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
-        print user.profile.get_config()
+        config = {}
 
-        auto_margin = data.get('auto_margin')
-        if auto_margin:
-            if not auto_margin.endswith('%'):
-                auto_margin = auto_margin + '%'
+        for key in data:
+            if not data[key]:
+                continue
 
+            if key in ['auto_margin', 'auto_compare_at']:
+                if not data.get(key).endswith('%'):
+                    config[key] = data[key] + '%'
+            if key in ['auto_margin_cents', 'auto_compare_at_cents']:
+                try:
+                    config[key] = int(data[key])
+                except:
+                    config[key] = ''
 
-        config = {
-            'auto_margin': auto_margin,
-            'make_visisble': bool(data.get('make_visisble')),
-            'default_desc': data.get('default_desc'),
-        }
+            if key in ['make_visisble']:
+                config[key] = bool(data.get(key))
+
+            if key not in config: # In case the second if above is not true
+                config[key] = data[key]
 
         user.profile.config = json.dumps(config)
         user.profile.save()
-        print json.dumps(config)
-        print user.profile.config
 
         return JsonResponse({'status': 'ok'})
 
