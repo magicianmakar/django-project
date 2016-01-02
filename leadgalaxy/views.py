@@ -1081,7 +1081,6 @@ def get_shipping_info(request):
     else:
         store = None
 
-    print '|||', store
     return render(request, 'shippement_info.html',{
         'info': shippement_data,
         'store': store
