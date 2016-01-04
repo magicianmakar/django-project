@@ -842,7 +842,7 @@ def sorted_products(products, sort):
     return products
 
 @login_required
-def product(request, tpl='grid'):
+def products_list(request, tpl='grid'):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
@@ -1391,7 +1391,7 @@ def get_variant_image(store, product_id, variants_id):
         return None
 
 @login_required
-def orders(request):
+def orders_view(request):
     if not request.user.profile.can('orders.use'):
         return render(request, 'upgrade.html')
 
