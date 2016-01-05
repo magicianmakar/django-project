@@ -105,7 +105,7 @@ def smartBoardByBoard(user, board):
             board.save()
 
 @login_required
-def index(request):
+def index_view(request):
     stores = request.user.shopifystore_set.filter(is_active=True)
     config = request.user.profile.get_config()
 
@@ -714,14 +714,13 @@ def api(request, target):
             if key in ['make_visisble']:
                 config[key] = bool(data.get(key))
 
-            if key not in config: # In case the second if above is not true
+            if key not in config:  # In case the second if above is not true
                 config[key] = data[key]
 
         user.profile.config = json.dumps(config)
         user.profile.save()
 
         return JsonResponse({'status': 'ok'})
-
 
     return JsonResponse({'error': 'Unhandled endpoint'})
 
