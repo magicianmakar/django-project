@@ -1411,10 +1411,30 @@ def orders_view(request):
             orders[index]['store'] = store
             for i, el in enumerate((order['line_items'])):
                 product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
-                orders[index]['line_items'][i]['variant_link'] = store.get_link('/admin/products/%d/variants/%d'%(el['product_id'], el['variant_id']))
+                orders[index]['line_items'][i]['variant_link'] = store.get_link(
+                    '/admin/products/%d/variants/%d' % (el['product_id'], el['variant_id']))
                 orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
+
                 if product.count():
                     orders[index]['line_items'][i]['product'] = product.first()
+                    original_url = product.first().get_original_info()['url']
+                    original_id = re.findall('/([0-9]+).html', original_url)[0]
+                    orders[index]['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
+                        original_id)
+
+                if request.user.can('auto_order.use'):
+                    order_data = {
+                        'variant': el['variant_title'],
+                        'quantity': el['fulfillable_quantity'],
+                        'shipping_address': order['shipping_address'],
+                        'order': {
+                            'phone': request.user.config('order_phone_number'),
+                            'note': request.user.config('order_custom_note')
+                        }
+                    }
+
+                    order_data = json.dumps(order_data).encode('base64').strip()
+                    orders[index]['line_items'][i]['order_data'] = order_data
 
         for i in orders:
             all_orders.append(i)
