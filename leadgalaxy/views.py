@@ -690,6 +690,18 @@ def api(request, target):
                 if i not in config:
                     config[i] = ''
 
+        if not user.can('auto_order.use'):
+            for i in ['order_phone_number', 'order_custom_note',]:
+                if i in config:
+                    del config[i]
+        else:
+            for i in ['order_phone_number', 'order_custom_note',]:
+                if i in config:
+                    if user.can('auto_order.use'):
+                        config[i] = ''
+                    else:
+                        del config[i]
+
         if config.get('description_mode') == '':
             config['description_mode'] = 'empty'
 
