@@ -77,7 +77,11 @@ class UserProfile(models.Model):
 def user_can(self, perms):
     return self.profile.can(perms)
 
+def user_config(self, name, default_value=None):
+    return self.profile.get_config_value(name, default_value)
+
 User.add_to_class("can", user_can)
+User.add_to_class("config", user_config)
 
 class ShopifyStore(models.Model):
     class Meta:
