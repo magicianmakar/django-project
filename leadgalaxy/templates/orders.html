@@ -121,7 +121,7 @@
                                                 </td>
                                                 <td>
                                                 {% if not item.fulfillment_status %}
-                                                    <button class="btn btn-xs label-warning fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}">Unfulfilled</button>
+                                                    <button class="btn btn-xs btn-default fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}">Unfulfilled</button>
                                                 {% else %}
                                                     <span class="label label-success">{{item.fulfillment_status|title}}</span>
                                                 {% endif %}
@@ -163,7 +163,7 @@
         <div class="modal-content">
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Add Shopify Store</h3>
+                    <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Change Fulfillment Status</h3>
 
                         <form role="form">
                             <div class="form-group">
@@ -228,6 +228,10 @@
         $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
         $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
 
+         if ($(this).prop('fulfilled')) {
+            return;
+        };
+
         $('#modal-fulfillment').modal('show');
     });
 
@@ -235,15 +239,18 @@
         e.preventDefault();
 
         $(this).button('loading');
+        var line_btn = $('.fulfill-btn[line-id="'+$('#modal-fulfillment #fulfill-line-id').val()+'"]');
 
         $.ajax({
             url: '/api/fulfill-order',
             type: 'POST',
             data:  $('#modal-fulfillment form').serialize(),
-            context: $(this),
+            context: {btn: $(this), line: line_btn},
             success: function (data) {
                 if (data.status == 'ok') {
                     $('#modal-fulfillment').modal('hide');
+                    swal('Fulfillment Status', 'Fulfillment Status changed to Fulfilled', 'success');
+                    this.line.prop('fulfilled', true);
                 } else {
                     displayAjaxError('Fulfill Order', data);
                 }
@@ -252,7 +259,16 @@
                 displayAjaxError('Fulfill Order', data);
             },
             complete: function () {
-                $(this).button('reset');
+                this.btn.button('reset');
+
+                var btn = this.line;
+                setTimeout(function() {
+                    if (btn.prop('fulfilled')) {
+                        btn.removeClass('btn-default');
+                        btn.addClass('btn-success');
+                        btn.text('Fulfilled');
+                    }
+                }, 100);
             }
         });
     });
