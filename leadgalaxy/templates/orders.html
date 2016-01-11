@@ -108,12 +108,13 @@
                                                     <span style="{% if item.quantity > 1 %} font-weight: bolder; color: blue{% endif %}">{{item.quantity}}</span>
                                                 </td>
                                                 <td>{{item.vendor}}</td>
-                                                <td>
+                                                <td class="text-center">
                                                     {% if original %}
-                                                        {% if not item.order_data %}
                                                         <a href="{{item.original_url}}" target="_blank" class="btn btn-success btn-xs itooltip"  data-toggle="tooltip" data-placement="top" title="Sourced from: {{original.source}}">Place Order</a>
-                                                        {% else %}
-                                                        <a href="{{item.original_url}}?SAPlaceOrder={{ item.order_data|urlencode }}" target="_blank" class="btn btn-success btn-xs itooltip"  data-toggle="tooltip" data-placement="top" title="Sourced from: {{original.source}}">Auto Place Order</a>
+                                                        {% if item.order_data %}
+                                                        <br />
+
+                                                        <a href="{{item.original_url}}?SAPlaceOrder={{ item.order_data|urlencode }}" target="_blank" class="btn btn-info btn-xs itooltip m-t-xs" data-toggle="tooltip" data-placement="top" title="Select variant and quantity and fill shipping address automatically">Auto Place Order</a>
                                                         {% endif %}
                                                     {% else %}
                                                     <span class="label label-warning">Not Tracked</span>
