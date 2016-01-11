@@ -14,6 +14,18 @@ function allPossibleCases(arr) {
   }
 }
 
+function displayAjaxError(desc, data) {
+    var error_msg = 'Server error.';
+
+    if (typeof (data.error) == 'string') {
+        error_msg = data.error;
+    } else if (typeof (data) == 'string') {
+        error_msg = data;
+    }
+
+    swal(desc, error_msg, 'error');
+}
+
 function sendProductToShopify (product, store_id, product_id, callback, callback_data) {
     if (!store_id || store_id.length==0) {
         alert('Please choose a Shopify store first!');

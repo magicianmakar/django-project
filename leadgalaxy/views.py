@@ -731,6 +731,45 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'fulfill-order':
+        try:
+            store = ShopifyStore.objects.get(user=user, id=data.get('fulfill-store'))
+        except:
+            return JsonResponse({'error': 'Store not found'})
+
+        tracking = data.get('fulfill-traking-number')
+        if not tracking:
+            tracking = None
+
+        api_data = {
+            "fulfillment": {
+                "tracking_number": None,
+                "line_items": [{
+                    "id": int(data.get('fulfill-line-id')),
+                    "quantity": int(data.get('fulfill-quantity'))
+                }]
+            }
+        }
+
+        rep = requests.post(
+            url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
+            json=api_data
+        )
+
+        if 'fulfillment' in rep.json():
+            # print 'fulfillment:', rep.json()
+            return JsonResponse({'status': 'ok'})
+        else:
+            try:
+                d = rep.json()
+                return JsonResponse({'error': '[Shopify API Error] '+' | '.join([k+': '+''.join(d['errors'][k]) for k in d['errors']])})
+            except:
+                try:
+                    d = rep.json()
+                    return JsonResponse({'error': 'Shopify API Error: ' + d['errors']})
+                except:
+                    return JsonResponse({'error': 'Shopify API Error'})
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
