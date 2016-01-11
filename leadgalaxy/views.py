@@ -720,7 +720,7 @@ def api(request, target):
                 except:
                     config[key] = ''
 
-            if key in ['make_visisble']:
+            if key in ['make_visisble', 'epacket_shipping']:
                 config[key] = bool(data.get(key))
 
             if key not in config:  # In case the second if above is not true
@@ -1438,7 +1438,8 @@ def orders_view(request):
                         'shipping_address': order['shipping_address'],
                         'order': {
                             'phone': request.user.config('order_phone_number'),
-                            'note': request.user.config('order_custom_note')
+                            'note': request.user.config('order_custom_note'),
+                            'epacket': bool(request.user.config('epacket_shipping')),
                         }
                     }
 
