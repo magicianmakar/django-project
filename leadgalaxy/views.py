@@ -699,7 +699,7 @@ def api(request, target):
                 if i not in config:
                         config[i] = ''
 
-        if config.get('description_mode') == '':
+        if not config.get('description_mode'):
             config['description_mode'] = 'empty'
 
         return JsonResponse(config)
