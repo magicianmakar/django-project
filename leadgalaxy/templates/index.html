@@ -63,35 +63,35 @@
                     <form id="config-form" class="form-horizontal" role="form">
                         {% if user|can:'auto_margin.use' %}
                         <div class="form-group">
-                            <label for="auto_margin" class="col-sm-2 control-label">Auto Margin</label>
-                            <div class="col-sm-2">
-                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{{config.auto_margin}}">
+                            <label for="auto_margin" class="col-sm-2 control-label">Price Markup</label>
+                            <div class="col-sm-1">
+                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{{config.auto_margin}}">
                             </div>
-                            <span class="help-block ">(For example: If you set Auto margin to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
+                            <span class="help-block ">(For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
                         </div>
                         <div class="form-group">
-                            <label for="auto_margin_cents" class="col-sm-2 control-label">Auto Margin Cents</label>
-                            <div class="col-sm-2">
-                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_margin_cents" name="auto_margin_cents" value="{{config.auto_margin_cents}}">
+                            <label for="auto_margin_cents" class="col-sm-2 control-label">Price Cents Value</label>
+                            <div class="col-sm-1">
+                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_margin_cents" name="auto_margin_cents" value="{{config.auto_margin_cents}}">
                             </div>
-                            <span class="help-block ">(For example: If you set Auto Margin Cents to <b>95</b>, product price will end always by .95)</span>
+                            <span class="help-block ">(For example: If you set Price Cents Value to <b>95</b>, product price will end always by .95)</span>
                         </div>
                         <div class="col-sm-offset-2"><hr /></div>
 
 
                         <div class="form-group">
-                            <label for="auto_compare_at" class="col-sm-2 control-label">Auto Compare at</label>
-                            <div class="col-sm-2">
-                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at" value="{{config.auto_compare_at}}">
+                            <label for="auto_compare_at" class="col-sm-2 control-label">Compare At Price Markup</label>
+                            <div class="col-sm-1">
+                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at" value="{{config.auto_compare_at}}">
                             </div>
-                            <span class="help-block "></span>
+                            <span class="help-block ">(For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00)</span>
                         </div>
                         <div class="form-group">
-                            <label for="auto_compare_at_cents" class="col-sm-2 control-label">Auto Margin Cents</label>
-                            <div class="col-sm-2">
-                                <input style="width:80px" type="text" class="form-control col-sm-2" id="auto_compare_at_cents" name="auto_compare_at_cents" value="{{config.auto_compare_at_cents}}">
+                            <label for="auto_compare_at_cents" class="col-sm-2 control-label">Compare At Price Cents Value</label>
+                            <div class="col-sm-1">
+                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at_cents" name="auto_compare_at_cents" value="{{config.auto_compare_at_cents}}">
                             </div>
-                            <span class="help-block "></span>
+                            <span class="help-block ">(For example: If you set Compare At Price Cents Value to <b>95</b>, product compare price will end always by .95)</span>
                         </div>
 
                         <div class="col-sm-offset-2"><hr /></div>
@@ -110,7 +110,7 @@
                             <span class="help-block "></span>
                         </div>
                         <div class="form-group">
-                            <label for="default_weight_number" class="col-sm-2 control-label">Fixed Weight</label>
+                            <label for="default_weight_number" class="col-sm-2 control-label">Weight Value</label>
                             <div class="col-sm-2">
                                 <input style="width:80px" type="text" class="form-control col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
                             </div>
@@ -129,7 +129,7 @@
                                     <option value="custom" {% if config.description_mode == 'custom' %}selected="selected"{% endif %}>Custom</option>
                                 </select>
                             </div>
-                            <span class="help-block "></span>
+                            <span class="help-block desc-select-help"></span>
                         </div>
                         <div id="desc-div" class="form-group" {% if config.description_mode != 'custom' %} style="display:none" {% endif %}>
                             <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
@@ -359,12 +359,33 @@
 
     $('#description_mode').change(function (e) {
         if ($(this).val() == 'custom') {
-            $('#desc-div').show();
+            $('#desc-div').slideDown('fast');
         } else {
-            $('#desc-div').hide();
+            $('#desc-div').slideUp('fast');
         }
-    })
 
+        showDescriptionHelp();
+    });
+
+    function showDescriptionHelp() {
+        var help = {
+            empty: 'By default, no description will be used.',
+            original: 'By default, the full AliExpress product description will be pre-populated.',
+            simplified: 'By default, the product specs portion of the AliExpress description will be pre-populated.',
+            custom: 'By default, the custom description entered below will be pre-populated.',
+        }
+
+        var val = $('#description_mode').val();
+        if (val in help) {
+            $('.desc-select-help').text(help[val]);
+        } else {
+            $('.desc-select-help').text('');
+        }
+    }
+
+    $(function () {
+        showDescriptionHelp();
+    })
 </script>
 {% endblock %}
 
