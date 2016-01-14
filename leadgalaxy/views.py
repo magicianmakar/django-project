@@ -770,6 +770,20 @@ def api(request, target):
                 except:
                     return JsonResponse({'error': 'Shopify API Error'})
 
+    if method == 'GET' and target == 'product-variant-image':
+        try:
+            store = ShopifyStore.objects.get(user=user, id=data.get('store'))
+        except:
+            return JsonResponse({'error': 'Store not found'})
+
+        image = get_variant_image(store, data.get('product'), data.get('variant'))
+
+        if image:
+            return JsonResponse({
+                'status': 'ok',
+                'image': image
+            })
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
@@ -1444,6 +1458,9 @@ def orders_view(request):
 
     stores = []
     all_orders = []
+    post_per_page = safeInt(request.GET.get('ppp'), 20)
+    page = safeInt(request.GET.get('page'), 1)
+
     if request.GET.get('store'):
         stores.append(ShopifyStore.objects.get(id=request.GET.get('store')))
     else:
@@ -1453,21 +1470,32 @@ def orders_view(request):
         orders = requests.get(store.get_link('/admin/orders.json', api=True)).json()['orders']
         products = {}
 
-        for index, order in enumerate(orders):
-            orders[index]['date_str'] = arrow.get(order['created_at']).humanize()
-            orders[index]['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
-            orders[index]['store'] = store
+        paginator = Paginator(orders, post_per_page)
+
+        page = min(max(1, page), paginator.num_pages)
+        page = paginator.page(page)
+
+        for index, order in enumerate(page):
+            order['date_str'] = arrow.get(order['created_at']).humanize()
+            order['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
+            order['store'] = store
+
             for i, el in enumerate((order['line_items'])):
                 product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
-                orders[index]['line_items'][i]['variant_link'] = store.get_link(
+                order['line_items'][i]['variant_link'] = store.get_link(
                     '/admin/products/%d/variants/%d' % (el['product_id'], el['variant_id']))
-                orders[index]['line_items'][i]['image'] = get_variant_image(store, el['product_id'], el['variant_id'])
+
+                order['line_items'][i]['image'] = {
+                    'store': store.id,
+                    'product': el['product_id'],
+                    'variant': el['variant_id']
+                }
 
                 if product.count():
-                    orders[index]['line_items'][i]['product'] = product.first()
+                    order['line_items'][i]['product'] = product.first()
                     original_url = product.first().get_original_info()['url']
                     original_id = re.findall('/([0-9]+).html', original_url)[0]
-                    orders[index]['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
+                    order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
                         original_id)
 
                 if request.user.can('auto_order.use'):
@@ -1483,14 +1511,15 @@ def orders_view(request):
                     }
 
                     order_data = json.dumps(order_data).encode('base64').strip()
-                    orders[index]['line_items'][i]['order_data'] = order_data
+                    order['line_items'][i]['order_data'] = order_data
 
-        for i in orders:
-            all_orders.append(i)
+            all_orders.append(order)
 
     return render(request, 'orders.html', {
         'orders': all_orders,
         'products': products,
+        'paginator': paginator,
+        'current_page': page,
         'page': 'orders',
         'breadcrumbs': ['Orders']
     })
