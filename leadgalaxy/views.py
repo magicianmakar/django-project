@@ -1525,6 +1525,23 @@ def orders_view(request):
     })
 
 @login_required
+def acp_users_emails(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
+    users = []
+    for row in res:
+        if row.user not in users:
+            users.append(row.user)
+
+    o = ''
+    for i in users:
+        o = '{}{}<br>\n'.format(o, i.email)
+
+    return HttpResponse(o)
+
+@login_required
 def logout(request):
     user_logout(request)
     return redirect('/')
