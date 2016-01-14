@@ -1531,9 +1531,12 @@ def acp_users_emails(request):
 
     res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
     users = []
+    filtred = []
     for row in res:
-        if row.user not in users:
+        if row.user not in users and row.user not in filtred and 'VIP' not in row.user.profile.plan.title:
             users.append(row.user)
+        else:
+            filtred.append(row.user)
 
     o = ''
     for i in users:
