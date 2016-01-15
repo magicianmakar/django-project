@@ -17,13 +17,20 @@
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                    <button class="btn btn-success btn-rounded filter-btn pull-right">Filter &amp; Sort</button>
-                    <form method="get" action="/orders" class="filter-form" style="display:none">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
+                        </div>
+                        <div class="col-md-2 col-md-offset-8">
+                            <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
+                        </div>
+                    </div>
+                    <form method="get" action="/orders" class="filter-form m-t-sm" style="display:none;">
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Sort:</label>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <select name="sort" class="form-control" style="padding: 6px 0px">
                                 <option {% if sort == 'asc' %}selected="selected"{% endif %}value="asc">Newst orders first</option>
                                 <option {% if sort == 'desc' %}selected="selected"{% endif %}value="desc">Oldest orders first</option>
@@ -34,34 +41,40 @@
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Status:</label>
                         </div>
-                        <div class="col-md-3">
-                            <select name="status" class="form-control" style="padding: 6px 0px">
+                        <div class="col-md-2">
+                            <select name="status" class="form-control help-select" style="padding: 6px 0px">
                                 <option {% if status == 'open' %}selected="selected"{% endif %}value="open">All open orders</option>
                                 <option {% if status == 'closed' %}selected="selected"{% endif %}value="closed">Show only closed orders</option>
                                 <option {% if status == 'cancelled' %}selected="selected"{% endif %}value="cancelled">Show only cancelled orders</option>
                                 <option {% if status == 'any' %}selected="selected"{% endif %}value="any">Any order status</option>
                             </select>
                         </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Fulfillment Status:</label>
                         </div>
-                        <div class="col-md-4">
-                            <select name="fulfillment" class="form-control" style="padding: 6px 0px">
-                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}value="unshipped">Show orders that have not yet been shipped</option>
+                        <div class="col-md-2">
+                            <select name="fulfillment" class="form-control help-select" style="padding: 6px 0px">
+                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}value="unshipped" title="fff">Show orders that have not yet been shipped</option>
                                 <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %}value="shipped">Show orders that have been shipped</option>
                                 <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}value="partial">Show partially shipped orders</option>
                                 <option {% if fulfillment == 'any' %}selected="selected"{% endif %}value="any">Show orders with any fulfillment status</option>
                             </select>
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Financial Status:</label>
                         </div>
-                        <div class="col-md-4">
-                            <select name="financial" class="form-control" style="padding: 6px 0px">
+                        <div class="col-md-2">
+                            <select name="financial" class="form-control help-select" style="padding: 6px 0px">
                                 <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all authorized, pending, and paid orders</option>
                                 <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>
                                 <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
@@ -72,6 +85,9 @@
                                 <!-- <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option> -->
                                 <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
                             </select>
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
                         </div>
                     </div>
 
@@ -214,7 +230,7 @@
                       </tbody>
                     </table>
 
-                    <h4>Orders count: {{open_orders}}</h4>
+
 
                     {% include "partial/paginator.html" %}
                 </div>
@@ -378,6 +394,40 @@
     $('.filter-btn').click(function (e) {
         $('.filter-form').toggle('fade');
     });
+
+    $(".filter-form").submit(function() {
+        $(this).find(":input").filter(function(){
+            return ((this.name == 'sort' && this.value == 'desc') ||
+                (this.name == 'status' && this.value == 'open') ||
+                (this.name == 'fulfillment' && this.value == 'unshipped') ||
+                (this.name == 'financial' && this.value == 'any'));
+        }).attr("disabled", "disabled");
+        return true; // ensure form still submits
+    });
+
+    function toTitleCase(str) {
+        return str.replace('_', ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+    }
+
+    $(function () {
+        $('.help-select').each(function (i, el) {
+            $('option', el).each(function (index, option) {
+                $(option).attr('title', $(option).text());
+                $(option).text(toTitleCase($(option).val()));
+            });
+
+            $(el).change(function (e) {
+                var helpTag = $(this).parents('.row').find('.help-block');
+                $('option', el).each(function (index, option) {
+                    if ($(option).prop('selected')) {
+                        helpTag.text($(option).attr('title'));
+                    }
+                });
+            });
+
+            $(el).trigger('change');
+        });
+    })
 </script>
 {% endblock %}
 
