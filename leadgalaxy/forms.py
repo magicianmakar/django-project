@@ -105,25 +105,24 @@ class ShopifyOrderPaginator(Paginator):
         self.set_current_page(number)
 
         if self.reverse_order:
-            api_page = self.reverse_pages[number]
+            if number > 1 or self.num_pages == 1:
+                if self.num_pages == 1:
+                    api_page = self.reverse_pages[number]
+                else:
+                    api_page = self.reverse_pages[number+1]
+                orders = self.get_orders(api_page)
+                orders = reversed(orders)
+            else:
+                api_page = self.reverse_pages[number]
+                orders = self.get_orders(api_page)
+
+                api_page = self.reverse_pages[number+1]
+                orders = self.get_orders(api_page)+orders
+                orders = reversed(orders)
+
         else:
             api_page = number
-
-        rep = requests.get(
-            url = self.store.get_link('/admin/orders.json', api=True),
-            params = {
-                'limit': self.order_limit,
-                'page': api_page,
-                'status': self.status,
-                'fulfillment_status': self.fulfillment,
-                'financial_status': self.financial,
-            }
-        )
-
-        orders = rep.json()['orders']
-
-        if self.reverse_order:
-            orders = reversed(orders)
+            orders = self.get_orders(api_page)
 
         return self._get_page(orders, number, self)
 
@@ -132,11 +131,29 @@ class ShopifyOrderPaginator(Paginator):
         Returns a 1-based range of pages for iterating through within
         a template for loop.
         """
-        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(self.num_pages + 1, self.current_page+5))
+        page_count = self.num_pages
+        if self.reverse_order:
+            page_count -= 1
+
+        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
         if 1 not in pages:
             pages = [1, None] + pages
 
-        if self.num_pages not in pages:
-            pages = pages + [None, self.num_pages]
+        if page_count not in pages:
+            pages = pages + [None, page_count]
 
         return pages
+
+    def get_orders(self, page):
+        rep = requests.get(
+            url = self.store.get_link('/admin/orders.json', api=True),
+            params = {
+                'limit': self.order_limit,
+                'page': page,
+                'status': self.status,
+                'fulfillment_status': self.fulfillment,
+                'financial_status': self.financial,
+            }
+        )
+
+        return rep.json()['orders']

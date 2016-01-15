@@ -1481,6 +1481,7 @@ def orders_view(request):
     except:
         print rep.text
 
+    sort = request.GET.get('sort', 'asc')
     status = request.GET.get('status', 'open')
     fulfillment = request.GET.get('fulfillment', 'unshipped')
     financial = request.GET.get('financial', 'any')
@@ -1492,6 +1493,7 @@ def orders_view(request):
     paginator.set_store(store)
     paginator.set_order_limit(post_per_page)
     paginator.set_filter(status, fulfillment, financial)
+    paginator.set_reverse_order(sort=='desc')
 
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)

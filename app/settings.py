@@ -133,8 +133,7 @@ MEDIA_URL = 'http://localhost/'
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after hijacking the user.
-REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/admin/"  # where you want to be redirected to, after releasing the user.
-
+REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after releasing the user.
 
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
