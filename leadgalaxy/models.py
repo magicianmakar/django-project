@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from django.template import Context, Template
 from django.db.models import Q
+from django.utils.functional import cached_property
+
 import re, json, requests
 
 ENTITY_STATUS_CHOICES = (
@@ -43,11 +45,15 @@ class UserProfile(models.Model):
     def get_active_stores(self):
         return self.user.shopifystore_set.filter(is_active=True)
 
+    @cached_property
+    def get_perms(self):
+        return self.plan.permissions.all().values_list('name',flat=True)
+
     def can(self, perm_name):
         perm_name = perm_name.lower()
         view_perm = perm_name.replace('.use', '.view')
         use_perm = perm_name.replace('.view', '.use')
-        for i in self.plan.permissions.all().values_list('name',flat=True):
+        for i in self.get_perms:
             i = i.lower()
             if perm_name.endswith('.view'):
                 if i == view_perm or i == use_perm:
