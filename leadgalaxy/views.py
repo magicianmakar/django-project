@@ -1455,7 +1455,8 @@ def get_variant_image(store, product_id, variants_id):
         image = requests.get(store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
         return image['image']['src']
     else:
-        return None
+        product = requests.get(store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
+        return product['image']['src']
 
 @login_required
 def orders_view(request):
