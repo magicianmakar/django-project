@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
+from unidecode import unidecode
 
 from .models import *
 from .forms import *
@@ -1541,12 +1542,23 @@ def orders_view(request):
 
             products_cache[el['product_id']] = product
 
-            if auto_orders:
+            if auto_orders and 'shipping_address' in order:
                 try:
+                    shipping_address_asci = {} # Aliexpress doesn't allow unicode
+                    shipping_address = order['shipping_address']
+                    for k in shipping_address.keys():
+                        if shipping_address[k] and type(shipping_address[k]) is unicode:
+                            shipping_address_asci[k] = unidecode(shipping_address[k])
+                        else:
+                            shipping_address_asci[k] = shipping_address[k]
+
+                    if not shipping_address_asci[u'province']:
+                        shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
+
                     order_data = {
                         'variant': el['variant_title'],
                         'quantity': el['fulfillable_quantity'],
-                        'shipping_address': order['shipping_address'],
+                        'shipping_address': shipping_address_asci,
                         'order': {
                             'phone': request.user.config('order_phone_number'),
                             'note': request.user.config('order_custom_note'),
