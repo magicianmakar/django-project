@@ -1465,7 +1465,7 @@ def orders_view(request):
         store = ShopifyStore.objects.get(id=request.GET.get('store'))
     else:
         stores = request.user.profile.get_active_stores()
-        if len(stores):
+        if stores.count():
             store = stores[0]
         else:
             messages.warning(request, 'Please add at least one store before using the Orders page.')
@@ -1498,13 +1498,15 @@ def orders_view(request):
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
 
+    products_cache = {}
+    auto_orders = request.user.can('auto_order.use')
+
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).humanize()
         order['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
         order['store'] = store
 
         for i, el in enumerate((order['line_items'])):
-            product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
             order['line_items'][i]['variant_link'] = store.get_link(
                 '/admin/products/%d/variants/%d' % (el['product_id'], el['variant_id']))
 
@@ -1514,16 +1516,27 @@ def orders_view(request):
                 'variant': el['variant_id']
             }
 
-            if product.count():
-                order['line_items'][i]['product'] = product.first()
-                original_url = product.first().get_original_info()['url']
+            if el['product_id'] in products_cache:
+                product = products_cache[el['product_id']]
+            else:
+                product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
+                if product.count():
+                    product = product.first()
+                else:
+                    product = None
+
+            if product:
+                order['line_items'][i]['product'] = product
+                original_url = product.get_original_info()['url']
                 try:
                     original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
                     order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(original_id)
                 except:
                     print 'WARNIGN ID NOT FOUND FOR:', original_url
 
-            if request.user.can('auto_order.use'):
+            products_cache[el['product_id']] = product
+
+            if auto_orders:
                 order_data = {
                     'variant': el['variant_title'],
                     'quantity': el['fulfillable_quantity'],
