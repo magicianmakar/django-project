@@ -1537,19 +1537,22 @@ def orders_view(request):
             products_cache[el['product_id']] = product
 
             if auto_orders:
-                order_data = {
-                    'variant': el['variant_title'],
-                    'quantity': el['fulfillable_quantity'],
-                    'shipping_address': order['shipping_address'],
-                    'order': {
-                        'phone': request.user.config('order_phone_number'),
-                        'note': request.user.config('order_custom_note'),
-                        'epacket': bool(request.user.config('epacket_shipping')),
+                try:
+                    order_data = {
+                        'variant': el['variant_title'],
+                        'quantity': el['fulfillable_quantity'],
+                        'shipping_address': order['shipping_address'],
+                        'order': {
+                            'phone': request.user.config('order_phone_number'),
+                            'note': request.user.config('order_custom_note'),
+                            'epacket': bool(request.user.config('epacket_shipping')),
+                        }
                     }
-                }
 
-                order_data = json.dumps(order_data).encode('base64').strip()
-                order['line_items'][i]['order_data'] = order_data
+                    order_data = json.dumps(order_data).encode('base64').strip()
+                    order['line_items'][i]['order_data'] = order_data
+                except:
+                    pass
 
         all_orders.append(order)
 
