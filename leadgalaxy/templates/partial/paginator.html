@@ -18,6 +18,8 @@
 
             {% if pa == current_page.number %}
             <li class="active"><span>{{pa}}</span></li>
+            {% elif pa == None %}
+            <li class="active"><span>...</span></li>
             {% else %}
             <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
             {% endif %}

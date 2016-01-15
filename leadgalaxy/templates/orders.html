@@ -17,6 +17,59 @@
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
+                    <form method="get" action="/orders">
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Status:</label>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status" id="status" class="form-control" style="padding: 6px 0px">
+                                <option {% if status == 'open' %}selected="selected"{% endif %}value="open">All open orders</option>
+                                <option {% if status == 'closed' %}selected="selected"{% endif %}value="closed">Show only closed orders</option>
+                                <option {% if status == 'cancelled' %}selected="selected"{% endif %}value="cancelled">Show only cancelled orders</option>
+                                <option {% if status == 'any' %}selected="selected"{% endif %}value="any">Any order status</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Fulfillment Status:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="fulfillment" id="fulfillment" class="form-control" style="padding: 6px 0px">
+                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}value="unshipped">Show orders that have not yet been shipped</option>
+                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %}value="shipped">Show orders that have been shipped</option>
+                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}value="partial">Show partially shipped orders</option>
+                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %}value="any">Show orders with any fulfillment status</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Financial Status:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="financial" id="financial" class="form-control" style="padding: 6px 0px">
+                                <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all authorized, pending, and paid orders</option>
+                                <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>
+                                <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
+                                <option value="paid" {% if financial == 'paid' %}selected="selected"{% endif %}>Show only paid orders</option>
+                                <option value="partially_paid" {% if financial == 'partially_paid' %}selected="selected"{% endif %}>Show only partially paid orders</option>
+                                <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only refunded orders</option>
+                                <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only voided orders</option>
+                                <!-- <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option> -->
+                                <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                        <button class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+                    </form>
+                    <hr >
                     <table class="table table-condensed table-hover">
                       <thead>
                         <tr>
@@ -146,7 +199,7 @@
                       </tbody>
                     </table>
 
-                    <h4>Orders Count: {{paginator.count}}</h4>
+                    <h4>Orders count: {{open_orders}}</h4>
 
                     {% include "partial/paginator.html" %}
                 </div>

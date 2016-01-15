@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from django.template import Context, Template
 from django.db.models import Q
-import re, json
+import re, json, requests
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -107,6 +107,16 @@ class ShopifyStore(models.Model):
 
         url = 'https://%s/%s'%(url, page.lstrip('/'))
         return url
+
+    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any'):
+        return requests.get(
+            url = self.get_link('/admin/orders/count.json', api=True),
+            params = {
+                'status': status,
+                'fulfillment_status': fulfillment,
+                'financial_status': financial
+            }
+        ).json()['count']
 
 class AccessToken(models.Model):
     class Meta:

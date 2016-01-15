@@ -9,6 +9,9 @@ from django.forms.utils import ErrorList
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
+from django.core.paginator import Paginator
+
+import requests
 
 class BsErrorList(ErrorList):
     def __unicode__(self):
@@ -60,3 +63,80 @@ class EmailAuthenticationForm(AuthenticationForm):
                     params={'username':self.username_field.verbose_name},
                 )
         return username
+
+class ShopifyOrderPaginator(Paginator):
+    def __init__(self, *args, **kwargs):
+        super(ShopifyOrderPaginator, self).__init__(*args, **kwargs)
+
+        self.reverse_order = False
+
+    def set_store(self, store):
+        self.store = store
+
+    def set_filter(self, status, fulfillment, financial):
+        self.status = status
+        self.fulfillment = fulfillment
+        self.financial = financial
+
+    def set_order_limit(self, limit):
+        self.order_limit = limit
+
+    def set_current_page(self, page):
+        self.current_page = page
+
+    def set_reverse_order(self, reverse_order):
+        self.reverse_order = reverse_order
+
+        if self.reverse_order:
+            pages = range(1, self.num_pages + 1)
+            self.reverse_pages = dict(zip(pages, reversed(pages)))
+
+    def page(self, number):
+        """
+        Returns a Page object for the given 1-based page number.
+        """
+
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        self.set_current_page(number)
+
+        if self.reverse_order:
+            api_page = self.reverse_pages[number]
+        else:
+            api_page = number
+
+        rep = requests.get(
+            url = self.store.get_link('/admin/orders.json', api=True),
+            params = {
+                'limit': self.order_limit,
+                'page': api_page,
+                'status': self.status,
+                'fulfillment_status': self.fulfillment,
+                'financial_status': self.financial,
+            }
+        )
+
+        orders = rep.json()['orders']
+
+        if self.reverse_order:
+            orders = reversed(orders)
+
+        return self._get_page(orders, number, self)
+
+    def page_range(self):
+        """
+        Returns a 1-based range of pages for iterating through within
+        a template for loop.
+        """
+        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(self.num_pages + 1, self.current_page+5))
+        if 1 not in pages:
+            pages = [1, None] + pages
+
+        if self.num_pages not in pages:
+            pages = pages + [None, self.num_pages]
+
+        return pages

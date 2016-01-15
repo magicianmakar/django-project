@@ -1481,10 +1481,17 @@ def orders_view(request):
     except:
         print rep.text
 
-    orders = list(reversed(orders))
-    products = {}
+    status = request.GET.get('status', 'open')
+    fulfillment = request.GET.get('fulfillment', 'unshipped')
+    financial = request.GET.get('financial', 'any')
 
-    paginator = Paginator(orders, post_per_page)
+    open_orders = store.get_orders_count(status, fulfillment, financial)
+    orders = xrange(0, open_orders)
+
+    paginator = ShopifyOrderPaginator(orders, post_per_page)
+    paginator.set_store(store)
+    paginator.set_order_limit(post_per_page)
+    paginator.set_filter(status, fulfillment, financial)
 
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
@@ -1532,9 +1539,12 @@ def orders_view(request):
     return render(request, 'orders.html', {
         'orders': all_orders,
         'store': store,
-        'products': products,
         'paginator': paginator,
         'current_page': page,
+        'open_orders': open_orders,
+        'status': status,
+        'financial': financial,
+        'fulfillment': fulfillment,
         'page': 'orders',
         'breadcrumbs': ['Orders']
     })
