@@ -1517,9 +1517,11 @@ def orders_view(request):
             if product.count():
                 order['line_items'][i]['product'] = product.first()
                 original_url = product.first().get_original_info()['url']
-                original_id = re.findall('/([0-9]+).html', original_url)[0]
-                order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
-                    original_id)
+                try:
+                    original_id = re.findall('/([0-9]+).html', original_url)[0]
+                    order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(original_id)
+                except:
+                    print 'WARNIGN ID NOT FOUND FOR:', original_url
 
             if request.user.can('auto_order.use'):
                 order_data = {
