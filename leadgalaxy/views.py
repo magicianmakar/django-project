@@ -641,9 +641,14 @@ def api(request, target):
             if not shopify_link:
                 return JsonResponse({'error': 'Invalid Custom domain link.'})
 
-        if not product.set_shopify_id_from_url(shopify_link):
+        shopify_id = product.set_shopify_id_from_url(shopify_link)
+        if not shopify_id:
             return JsonResponse({'error': 'Invalid Shopify link.'})
 
+        product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id, store=product.store)
+        product_export.save()
+
+        product.shopify_export = product_export
         product.save()
 
         return JsonResponse({

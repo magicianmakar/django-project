@@ -222,7 +222,7 @@ class ShopifyProduct(models.Model):
             self.shopify_export.shopify_id = pid
             self.shopify_export.save()
 
-        return True
+        return pid
 
 class ShopifyProductExport(models.Model):
     class Meta:
