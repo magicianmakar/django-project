@@ -104,25 +104,8 @@ class ShopifyOrderPaginator(Paginator):
 
         self.set_current_page(number)
 
-        if self.reverse_order:
-            if number > 1 or self.num_pages == 1:
-                if self.num_pages == 1:
-                    api_page = self.reverse_pages[number]
-                else:
-                    api_page = self.reverse_pages[number+1]
-                orders = self.get_orders(api_page)
-                orders = reversed(orders)
-            else:
-                api_page = self.reverse_pages[number]
-                orders = self.get_orders(api_page)
-
-                api_page = self.reverse_pages[number+1]
-                orders = self.get_orders(api_page)+orders
-                orders = reversed(orders)
-
-        else:
-            api_page = number
-            orders = self.get_orders(api_page)
+        api_page = number
+        orders = self.get_orders(api_page)
 
         return self._get_page(orders, number, self)
 
@@ -132,8 +115,6 @@ class ShopifyOrderPaginator(Paginator):
         a template for loop.
         """
         page_count = self.num_pages
-        if self.reverse_order:
-            page_count -= 1
 
         pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
         if 1 not in pages:
@@ -145,6 +126,11 @@ class ShopifyOrderPaginator(Paginator):
         return pages
 
     def get_orders(self, page):
+        if self.reverse_order:
+            order = 'asc'
+        else:
+            order = 'desc'
+
         rep = requests.get(
             url = self.store.get_link('/admin/orders.json', api=True),
             params = {
@@ -153,6 +139,7 @@ class ShopifyOrderPaginator(Paginator):
                 'status': self.status,
                 'fulfillment_status': self.fulfillment,
                 'financial_status': self.financial,
+                'order': 'processed_at '+order
             }
         )
 
