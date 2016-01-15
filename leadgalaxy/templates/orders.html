@@ -21,7 +21,8 @@
                         <div class="col-md-2">
                             <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
                         </div>
-                        <div class="col-md-2 col-md-offset-8">
+                        <div class="col-md-4 col-md-offset-6 text-right">
+                            <button class="btn btn-success btn-rounded btn-sm expand-btn">Expand All</button>
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
                         </div>
                     </div>
@@ -408,6 +409,10 @@
     function toTitleCase(str) {
         return str.replace('_', ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
     }
+
+    $('.expand-btn').click(function (e) {
+        $(".more-info").trigger('click');
+    });
 
     $(function () {
         $('.help-select').each(function (i, el) {
