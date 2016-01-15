@@ -6,25 +6,13 @@
 
     <div class="tabs-container">
         <ul class="nav nav-tabs">
-        {% if not request.GET.store %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">All Stores</a></li>
-
             {% for item in user.profile.get_active_stores %}
-            <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-            {% endfor %}
-
-        {% else %}
-            <li class=""><a href="/orders" aria-expanded="true">All Stores</a></li>
-
-            {% for item in user.profile.get_active_stores %}
-                {% if item.id|stringformat:"i" == request.GET.store %}
+                {% if store == item or item.id|stringformat:"i" == request.GET.store %}
                     <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}
                     <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
                 {% endif %}
             {% endfor %}
-
-        {% endif %}
         </ul>
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">

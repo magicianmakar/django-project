@@ -1462,61 +1462,76 @@ def orders_view(request):
     page = safeInt(request.GET.get('page'), 1)
 
     if request.GET.get('store'):
-        stores.append(ShopifyStore.objects.get(id=request.GET.get('store')))
+        store = ShopifyStore.objects.get(id=request.GET.get('store'))
     else:
         stores = request.user.profile.get_active_stores()
+        if len(stores):
+            store = stores[0]
+        else:
+            messages.warning(request, 'Please add at least one store before using the Orders page.')
+            return HttpResponseRedirect('/')
 
-    for store in stores:
-        orders = requests.get(store.get_link('/admin/orders.json', api=True)).json()['orders']
-        products = {}
+    rep = requests.get(
+        url=store.get_link('/admin/orders.json', api=True),
+        params={'limit': safeInt(request.GET.get('limit'), 100)}
+    )
 
-        paginator = Paginator(orders, post_per_page)
+    try:
+        orders = rep.json()['orders']
+    except:
+        print rep.text
 
-        page = min(max(1, page), paginator.num_pages)
-        page = paginator.page(page)
+    orders = list(reversed(orders))
+    products = {}
 
-        for index, order in enumerate(page):
-            order['date_str'] = arrow.get(order['created_at']).humanize()
-            order['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
-            order['store'] = store
+    paginator = Paginator(orders, post_per_page)
 
-            for i, el in enumerate((order['line_items'])):
-                product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
-                order['line_items'][i]['variant_link'] = store.get_link(
-                    '/admin/products/%d/variants/%d' % (el['product_id'], el['variant_id']))
+    page = min(max(1, page), paginator.num_pages)
+    page = paginator.page(page)
 
-                order['line_items'][i]['image'] = {
-                    'store': store.id,
-                    'product': el['product_id'],
-                    'variant': el['variant_id']
+    for index, order in enumerate(page):
+        order['date_str'] = arrow.get(order['created_at']).humanize()
+        order['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
+        order['store'] = store
+
+        for i, el in enumerate((order['line_items'])):
+            product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
+            order['line_items'][i]['variant_link'] = store.get_link(
+                '/admin/products/%d/variants/%d' % (el['product_id'], el['variant_id']))
+
+            order['line_items'][i]['image'] = {
+                'store': store.id,
+                'product': el['product_id'],
+                'variant': el['variant_id']
+            }
+
+            if product.count():
+                order['line_items'][i]['product'] = product.first()
+                original_url = product.first().get_original_info()['url']
+                original_id = re.findall('/([0-9]+).html', original_url)[0]
+                order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
+                    original_id)
+
+            if request.user.can('auto_order.use'):
+                order_data = {
+                    'variant': el['variant_title'],
+                    'quantity': el['fulfillable_quantity'],
+                    'shipping_address': order['shipping_address'],
+                    'order': {
+                        'phone': request.user.config('order_phone_number'),
+                        'note': request.user.config('order_custom_note'),
+                        'epacket': bool(request.user.config('epacket_shipping')),
+                    }
                 }
 
-                if product.count():
-                    order['line_items'][i]['product'] = product.first()
-                    original_url = product.first().get_original_info()['url']
-                    original_id = re.findall('/([0-9]+).html', original_url)[0]
-                    order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
-                        original_id)
+                order_data = json.dumps(order_data).encode('base64').strip()
+                order['line_items'][i]['order_data'] = order_data
 
-                if request.user.can('auto_order.use'):
-                    order_data = {
-                        'variant': el['variant_title'],
-                        'quantity': el['fulfillable_quantity'],
-                        'shipping_address': order['shipping_address'],
-                        'order': {
-                            'phone': request.user.config('order_phone_number'),
-                            'note': request.user.config('order_custom_note'),
-                            'epacket': bool(request.user.config('epacket_shipping')),
-                        }
-                    }
-
-                    order_data = json.dumps(order_data).encode('base64').strip()
-                    order['line_items'][i]['order_data'] = order_data
-
-            all_orders.append(order)
+        all_orders.append(order)
 
     return render(request, 'orders.html', {
         'orders': all_orders,
+        'store': store,
         'products': products,
         'paginator': paginator,
         'current_page': page,
