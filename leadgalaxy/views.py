@@ -1481,7 +1481,7 @@ def orders_view(request):
     except:
         print rep.text
 
-    sort = request.GET.get('sort', 'asc')
+    sort = request.GET.get('sort', 'desc')
     status = request.GET.get('status', 'open')
     fulfillment = request.GET.get('fulfillment', 'unshipped')
     financial = request.GET.get('financial', 'any')
