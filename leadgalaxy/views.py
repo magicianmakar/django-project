@@ -1544,6 +1544,7 @@ def orders_view(request):
         'paginator': paginator,
         'current_page': page,
         'open_orders': open_orders,
+        'sort': sort,
         'status': status,
         'financial': financial,
         'fulfillment': fulfillment,
