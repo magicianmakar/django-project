@@ -1469,14 +1469,17 @@ def orders_view(request):
     page = safeInt(request.GET.get('page'), 1)
 
     if request.GET.get('store'):
-        store = ShopifyStore.objects.get(id=request.GET.get('store'))
+        store = ShopifyStore.objects.get(id=request.GET.get('store'), user=request.user)
+        request.session['last_store'] = store.id
     else:
-        stores = request.user.profile.get_active_stores()
-        if stores.count():
-            store = stores[0]
+        if 'last_store' in request.session:
+            store = ShopifyStore.objects.get(id=request.session['last_store'], user=request.user)
         else:
-            messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return HttpResponseRedirect('/')
+            if stores.count():
+                store = stores[0]
+            else:
+                messages.warning(request, 'Please add at least one store before using the Orders page.')
+                return HttpResponseRedirect('/')
 
     rep = requests.get(
         url=store.get_link('/admin/orders.json', api=True),
