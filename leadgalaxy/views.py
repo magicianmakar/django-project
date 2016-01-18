@@ -1563,6 +1563,7 @@ def orders_view(request):
                         shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
 
                     order_data = {
+                        'auto': False, # False mean step-by-step order placing
                         'variant': el['variant_title'],
                         'quantity': el['fulfillable_quantity'],
                         'shipping_address': shipping_address_asci,
@@ -1573,7 +1574,6 @@ def orders_view(request):
                         }
                     }
 
-                    order_data = json.dumps(order_data).encode('base64').strip()
                     order['line_items'][i]['order_data'] = order_data
                 except:
                     pass

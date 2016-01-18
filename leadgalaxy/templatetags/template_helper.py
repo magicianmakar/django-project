@@ -1,5 +1,6 @@
 from django import template
 from django.template import Context, Template
+import json
 
 register = template.Library()
 
@@ -27,3 +28,10 @@ def render_category(context, tpl, category):
 
     return template.render(ctx)
 
+
+@register.simple_tag(takes_context = True)
+def encode_order(context, data, auto):
+    data['auto'] = (auto == 'True')
+    print type(data['auto'])
+    print json.dumps(data, indent=4)
+    return json.dumps(data).encode('base64')

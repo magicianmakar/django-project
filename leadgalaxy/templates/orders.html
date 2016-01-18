@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load template_helper %}
 
 {% block main-container %}
 
@@ -186,12 +187,16 @@
                                                 <td>{{item.vendor}}</td>
                                                 <td class="text-center">
                                                     {% if original %}
-                                                        <a href="{{item.original_url}}" target="_blank" class="btn btn-success btn-xs itooltip"  data-toggle="tooltip" data-placement="top" title="Sourced from: {{original.source}}">Place Order</a>
-                                                        {% if item.order_data %}
-                                                        <br />
-
-                                                        <a href="{{item.original_url}}?SAPlaceOrder={{ item.order_data|urlencode }}" target="_blank" class="btn btn-info btn-xs itooltip m-t-xs" data-toggle="tooltip" data-placement="top" title="Select variant and quantity and fill shipping address automatically">Auto Place Order</a>
-                                                        {% endif %}
+                                                        <div class="btn-group">
+                                                            <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">Place Order <span class="caret"></span></button>
+                                                            <ul class="dropdown-menu">
+                                                                <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
+                                                                {% if item.order_data %}
+                                                                <li><a href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data False|urlencode  %}" target="_blank">Step By Step Order</a></li>
+                                                                <li><a href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}" target="_blank">Auto Place Order</a></li>
+                                                                {% endif %}
+                                                            </ul>
+                                                        </div>
                                                     {% else %}
                                                     <span class="label label-warning">Not Tracked</span>
                                                     {% endif %}
