@@ -1477,8 +1477,7 @@ def orders_view(request):
             store = ShopifyStore.objects.get(id=request.session['last_store'], user=request.user)
         else:
             stores = request.user.profile.get_active_stores()
-
-            if stores.count():
+            if len(stores):
                 store = stores[0]
 
         if not store:
