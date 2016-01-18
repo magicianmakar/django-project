@@ -1518,7 +1518,7 @@ def orders_view(request):
 
         for i, el in enumerate((order['line_items'])):
             order['line_items'][i]['variant_link'] = store.get_link(
-                '/admin/products/%d/variants/%d' % (el['product_id'], el['variant_id']))
+                '/admin/products/{}/variants/{}'.format(el['product_id'], el['variant_id']))
 
             order['line_items'][i]['image'] = {
                 'store': store.id,
