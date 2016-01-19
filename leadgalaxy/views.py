@@ -763,7 +763,6 @@ def api(request, target):
         )
 
         if 'fulfillment' in rep.json():
-            # print 'fulfillment:', rep.json()
             return JsonResponse({'status': 'ok'})
         else:
             try:
@@ -1492,7 +1491,7 @@ def orders_view(request):
     try:
         orders = rep.json()['orders']
     except:
-        print rep.text
+        pass
 
     sort = request.GET.get('sort', 'desc')
     status = request.GET.get('status', 'open')
