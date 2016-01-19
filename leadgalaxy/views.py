@@ -21,6 +21,7 @@ from .forms import *
 from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib, arrow
+from province_helper import uk_provinces
 
 def safeInt(v, default=0.0):
     try:
@@ -1578,7 +1579,10 @@ def orders_view(request):
                             shipping_address_asci[k] = shipping_address[k]
 
                     if not shipping_address_asci[u'province']:
-                        shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
+                        if shipping_address_asci[u'country'] == u'United Kingdom':
+                            shipping_address_asci[u'province'] = uk_provinces.get(shipping_address_asci[u'city'].lower().strip(), u'')
+                        else:
+                            shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
 
                     order_data = {
                         'auto': False, # False mean step-by-step order placing
