@@ -111,6 +111,7 @@
                           <th>Customer</th>
                           <th>Payment Status</th>
                           <th>Fulfillment Status</th>
+                          <th>Customer</th>
                           <th>Total</th>
                         </tr>
                       </thead>
@@ -137,12 +138,16 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    <img class="itooltip" style="width: 16px" title="{{order.shipping_address.country}}" src="http://lipis.github.io/flag-icon-css/flags/4x3/{{order.shipping_address.country_code|lower}}.svg">
+                                    {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}
+                                </td>
+                                <td>
                                     <b>{% if order.currency == 'USD' %} ${% else %} {{order.currency}} {% endif %}{{order.total_price}}</b>
                                 </td>
                             </tr>
 
                             <tr class="var-info" style="display:none">
-                                <td colspan="6">
+                                <td colspan="7">
                                     <table class="table table-condensed xtable-hover xtable-bordered">
                                         <thead>
                                             <tr>
@@ -212,7 +217,7 @@
                                                 <td rowspan="{{order.line_items|length}}">
                                                     {{order.shipping_address.address1}}<br>
                                                     {{order.shipping_address.address2}}{% if order.shipping_address.address2 %}<br>{% endif %}
-                                                    {{order.shipping_address.city}}, {{order.shipping_address.province_code}} {{order.shipping_address.zip}}
+                                                    {{order.shipping_address.city}}, {{order.shipping_address.province_code|default:''}} {{order.shipping_address.zip}}
                                                     {% if order.shipping_address.country_code != 'US' %}
                                                     <br> <b>{{order.shipping_address.country}}</b>
                                                     {% endif %}
