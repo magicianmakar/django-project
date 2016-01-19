@@ -1445,17 +1445,36 @@ def save_image_s3(request):
         'url': upload_url
     })
 
-def get_variant_image(store, product_id, variants_id):
+def get_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
-    variant = requests.get(store.get_link('/admin/variants/{}.json'.format(variants_id), api=True)).json()
-    image_id = variant['variant']['image_id']
+    product_id = safeInt(product_id)
+    variant_id = safeInt(variant_id)
+    image = None
 
-    if image_id:
+    try:
+        cached = ShopifyProductImage.objects.get(store=store, product=product_id, variant=variant_id)
+        return cached.image
+    except:
+        pass
+
+    if variant_id:
+        variant = requests.get(store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)).json()
+
+    try:
+        image_id = variant['variant']['image_id']
         image = requests.get(store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
-        return image['image']['src']
-    else:
+        image = image['image']['src']
+    except:
         product = requests.get(store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
-        return product['product']['image']['src']
+        image = product['product']['image']['src']
+
+    if image:
+        cached = ShopifyProductImage(store=store, product=product_id, variant=variant_id, image=image)
+        cached.save()
+
+        return image
+    else:
+        return None
 
 @login_required
 def orders_view(request):

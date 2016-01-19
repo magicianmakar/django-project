@@ -238,6 +238,17 @@ class ShopifyProductExport(models.Model):
     def __unicode__(self):
         return '{} | {}'.format(self.shopify_id, self.store.title)
 
+class ShopifyProductImage(models.Model):
+    product = models.BigIntegerField(verbose_name="Shopify Product ID")
+    variant = models.BigIntegerField(default=0, verbose_name="Shopify Product ID")
+    store = models.ForeignKey(ShopifyStore)
+
+    image = models.CharField(max_length=512, blank=True, default='')
+
+    def __unicode__(self):
+        return '{} | {}'.format(self.product, self.variant)
+
+
 class ShopifyBoard(models.Model):
     class Meta:
         ordering = ['title']
