@@ -32,6 +32,4 @@ def render_category(context, tpl, category):
 @register.simple_tag(takes_context = True)
 def encode_order(context, data, auto):
     data['auto'] = (auto == 'True')
-    print type(data['auto'])
-    print json.dumps(data, indent=4)
     return json.dumps(data).encode('base64')
