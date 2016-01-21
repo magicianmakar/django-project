@@ -116,7 +116,6 @@
                         <tr>
                           <th>Order #</th>
                           <th>Date</th>
-                          <th>Customer</th>
                           <th>Payment Status</th>
                           <th>Fulfillment Status</th>
                           <th>Customer</th>
@@ -133,7 +132,6 @@
                                     </a>
                                 </td>
                                 <td>{{order.date_str}}</td>
-                                <td>{{order.customer.first_name}} {{order.customer.last_name}}</td>
                                 <td>{{order.financial_status|title}}</td>
                                 <td>
                                     {% if not order.fulfillment_status %}
@@ -152,7 +150,7 @@
                             </tr>
 
                             <tr class="var-info" style="display:none">
-                                <td colspan="7">
+                                <td colspan="6">
                                     <table class="table table-condensed xtable-hover xtable-bordered">
                                         <thead>
                                             <tr>
