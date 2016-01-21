@@ -130,9 +130,6 @@
                                     <a href="#" class="more-info"><i class="fa fa-plus" style="margin-right:10px"></i></a>
                                     <a href="{{order.order_url}}" target="_blank">
                                         {{order.name}}
-                                        {% if not request.GET.store %}
-                                        | {{ order.store.title }}
-                                        {% endif %}
                                     </a>
                                 </td>
                                 <td>{{order.date_str}}</td>
