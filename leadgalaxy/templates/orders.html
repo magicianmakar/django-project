@@ -30,6 +30,14 @@
                     <form method="get" action="/orders" class="filter-form m-t-sm" style="display:none;">
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Query:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="query" value="{{query}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order name or ID">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Sort:</label>
                         </div>
                         <div class="col-md-2">
@@ -411,7 +419,8 @@
             return ((this.name == 'sort' && this.value == 'desc') ||
                 (this.name == 'status' && this.value == 'open') ||
                 (this.name == 'fulfillment' && this.value == 'unshipped') ||
-                (this.name == 'financial' && this.value == 'any'));
+                (this.name == 'financial' && this.value == 'any') ||
+                (this.name == 'query' && this.value.trim().length == 0));
         }).attr("disabled", "disabled");
         return true; // ensure form still submits
     });

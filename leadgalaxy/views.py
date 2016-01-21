@@ -1517,6 +1517,7 @@ def orders_view(request):
     status = request.GET.get('status', 'open')
     fulfillment = request.GET.get('fulfillment', 'unshipped')
     financial = request.GET.get('financial', 'any')
+    query = request.GET.get('query')
 
     open_orders = store.get_orders_count(status, fulfillment, financial)
     orders = xrange(0, open_orders)
@@ -1526,6 +1527,7 @@ def orders_view(request):
     paginator.set_order_limit(post_per_page)
     paginator.set_filter(status, fulfillment, financial)
     paginator.set_reverse_order(sort=='desc')
+    paginator.set_query(safeInt(query, query))
 
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
@@ -1612,6 +1614,7 @@ def orders_view(request):
         'status': status,
         'financial': financial,
         'fulfillment': fulfillment,
+        'query': query,
         'page': 'orders',
         'breadcrumbs': ['Orders']
     })

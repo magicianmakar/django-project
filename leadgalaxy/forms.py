@@ -69,6 +69,7 @@ class ShopifyOrderPaginator(Paginator):
         super(ShopifyOrderPaginator, self).__init__(*args, **kwargs)
 
         self.reverse_order = False
+        self.query = None
 
     def set_store(self, store):
         self.store = store
@@ -87,9 +88,8 @@ class ShopifyOrderPaginator(Paginator):
     def set_reverse_order(self, reverse_order):
         self.reverse_order = reverse_order
 
-        if self.reverse_order:
-            pages = range(1, self.num_pages + 1)
-            self.reverse_pages = dict(zip(pages, reversed(pages)))
+    def set_query(self, query):
+        self.query = query
 
     def page(self, number):
         """
@@ -131,8 +131,21 @@ class ShopifyOrderPaginator(Paginator):
         else:
             order = 'desc'
 
-        rep = requests.get(
-            url = self.store.get_link('/admin/orders.json', api=True),
+        if self.query and type(self.query) is long:
+            rep = requests.get(
+                url = self.store.get_link('/admin/orders/{}.json'.format(self.query), api=True),
+                params = {
+                    'limit': self.order_limit,
+                    'page': page,
+                    'status': self.status,
+                    'fulfillment_status': self.fulfillment,
+                    'financial_status': self.financial,
+                    'order': 'processed_at '+order
+                }
+            )
+            rep = rep.json()
+            return [rep['order']]
+        else:
             params = {
                 'limit': self.order_limit,
                 'page': page,
@@ -141,6 +154,15 @@ class ShopifyOrderPaginator(Paginator):
                 'financial_status': self.financial,
                 'order': 'processed_at '+order
             }
-        )
 
-        return rep.json()['orders']
+            if self.query:
+                params['name'] = self.query
+
+            rep = requests.get(
+                url = self.store.get_link('/admin/orders.json', api=True),
+                params = params
+            )
+
+            rep = rep.json()
+            return rep['orders']
+

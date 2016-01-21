@@ -114,13 +114,14 @@ class ShopifyStore(models.Model):
         url = 'https://%s/%s'%(url, page.lstrip('/'))
         return url
 
-    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any'):
+    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query=''):
         return requests.get(
             url = self.get_link('/admin/orders/count.json', api=True),
             params = {
                 'status': status,
                 'fulfillment_status': fulfillment,
-                'financial_status': financial
+                'financial_status': financial,
+                'query': query
             }
         ).json()['count']
 
