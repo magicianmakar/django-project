@@ -342,6 +342,54 @@
                         <button id="save-metadata" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
                     </div>
                 </div>
+
+                <hr />
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3>Variants Mapping</h3>
+                        <form id="mapping-form">
+                            {% for item in product.mapped_variants %}
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                  <h3 class="panel-title">{{item.title}}</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <table class="table table-borderd table-compact">
+                                        <thead>
+                                            <tr>
+                                                <th>{{product.original_product_source|default:'Source'|title}}</th>
+                                                <th>Shopify</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for variant in item.values %}
+                                            <tr>
+                                                <td style="vertical-align:middle">{{variant.source}}</td>
+                                                <td style="vertical-align:middle">
+                                                    <input class="form-control" value="{{variant.shopify}}" name="{{variant.source}}">
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p>Product doesn't have any variants.</p>
+                            {% endfor %}
+
+                            <input type="hidden" name="product" value="{{product.id}}">
+                        </form>
+                    </div>
+                </div>
+                {% if product.product.variants %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button id="save-mapping" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -1216,6 +1264,30 @@ function launchEditor(id, src) {
 }
 {% endif %}
 
+$('#save-mapping').click(function (e) {
+    $(this).bootstrapBtn('loading');
+
+    $.ajax({
+        url: '/api/variants-mapping',
+        type: 'POST',
+        data: $('#mapping-form').serialize(),
+        context: {btn: $(this)},
+        success: function (data) {
+            if (data.status == 'ok') {
+                toastr.success('Variants Mapping','Mapping Saved');
+            } else {
+                displayAjaxError('Variants Mapping', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Variants Mapping', data);
+        },
+        complete: function () {
+            this.btn.bootstrapBtn('reset');
+        }
+    });
+    $('#mapping-form').serialize();
+});
 </script>
 {% endblock %}
 

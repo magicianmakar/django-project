@@ -796,6 +796,25 @@ def api(request, target):
                 'image': image
             })
 
+    if method == 'POST' and target == 'variants-mapping':
+        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+
+        mapping = {}
+        for k in data:
+            if k != 'product':
+                mapping[k] = data[k]
+
+                if '/' in data[k]:
+                    return JsonResponse({
+                        'error': 'The character / is not allowed in variants name.\n' + \
+                        'It will cause issues with auto-variant selection'
+                    })
+
+        product.variants_map = json.dumps(mapping)
+        product.save()
+
+        return JsonResponse({'status': 'ok'})
+
     return JsonResponse({'error': 'Unhandled endpoint'})
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
@@ -989,6 +1008,7 @@ def product_view(request, pid):
         'data': product.data,
         'product': json.loads(product.data),
         'notes': product.notes,
+        'mapped_variants': [],
     }
 
     if 'images' not in p['product'] or not p['product']['images']:
@@ -998,6 +1018,18 @@ def product_view(request, pid):
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
+
+    try:
+        variants_map = json.loads(product.variants_map)
+    except:
+        variants_map = {}
+
+    for i in p['product']['variants']:
+        var = {'title': i['title'], 'values':[]}
+        for v in i['values']:
+            var['values'].append({'source': v, 'shopify': variants_map.get(v, v)})
+
+        p['mapped_variants'].append(var)
 
     if (p['original_url'] and len(p['original_url'])):
         if 'aliexpress' in p['original_url'].lower():
@@ -1578,7 +1610,7 @@ def orders_view(request):
             products_cache[el['product_id']] = product
 
             if auto_orders and 'shipping_address' in order:
-                try:
+                # try:
                     shipping_address_asci = {} # Aliexpress doesn't allow unicode
                     shipping_address = order['shipping_address']
                     for k in shipping_address.keys():
@@ -1607,9 +1639,22 @@ def orders_view(request):
                         }
                     }
 
+                    if product:
+                        try:
+                            variants_map = json.loads(product.variants_map)
+                            variants_map = {av: ak for ak, av in variants_map.items()}
+                        except:
+                            variants_map = {}
+
+                        mapped = []
+                        for s in [j.strip() for j in order_data['variant'].split('/')]:
+                            mapped.append(variants_map.get(s, s))
+
+                        order_data['variant'] = ' / '.join(mapped)
+
                     order['line_items'][i]['order_data'] = order_data
-                except:
-                    pass
+                # except:
+                    # pass
 
         all_orders.append(order)
 
