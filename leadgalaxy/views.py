@@ -638,19 +638,25 @@ def api(request, target):
         product.set_original_url(data.get('original-link'))
 
         shopify_link = data.get('shopify-link')
-        if 'myshopify' not in shopify_link.lower():
-            shopify_link = get_myshopify_link(user, product.store, shopify_link)
-            if not shopify_link:
-                return JsonResponse({'error': 'Invalid Custom domain link.'})
 
-        shopify_id = product.set_shopify_id_from_url(shopify_link)
-        if not shopify_id:
-            return JsonResponse({'error': 'Invalid Shopify link.'})
+        if not shopify_link:
+            if product.shopify_export:
+                product.shopify_export = None
+        else:
+            if 'myshopify' not in shopify_link.lower():
+                shopify_link = get_myshopify_link(user, product.store, shopify_link)
+                if not shopify_link:
+                    return JsonResponse({'error': 'Invalid Custom domain link.'})
 
-        product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id, store=product.store)
-        product_export.save()
+            shopify_id = product.set_shopify_id_from_url(shopify_link)
+            if not shopify_id:
+                return JsonResponse({'error': 'Invalid Shopify link.'})
 
-        product.shopify_export = product_export
+            product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id, store=product.store)
+            product_export.save()
+
+            product.shopify_export = product_export
+
         product.save()
 
         return JsonResponse({
