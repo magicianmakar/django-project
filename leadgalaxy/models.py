@@ -172,6 +172,12 @@ class ShopifyProduct(models.Model):
         else:
             return None
 
+    def get_shopify_id(self):
+        if self.shopify_export and self.shopify_export.shopify_id:
+            return self.shopify_export.shopify_id
+        else:
+            return None
+
     def get_product(self):
         try:
             return json.loads(self.data)['title']

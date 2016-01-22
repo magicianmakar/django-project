@@ -1008,7 +1008,6 @@ def product_view(request, pid):
         'data': product.data,
         'product': json.loads(product.data),
         'notes': product.notes,
-        'mapped_variants': [],
     }
 
     if 'images' not in p['product'] or not p['product']['images']:
@@ -1018,18 +1017,6 @@ def product_view(request, pid):
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
-
-    try:
-        variants_map = json.loads(product.variants_map)
-    except:
-        variants_map = {}
-
-    for i in p['product']['variants']:
-        var = {'title': i['title'], 'values':[]}
-        for v in i['values']:
-            var['values'].append({'source': v, 'shopify': variants_map.get(v, v)})
-
-        p['mapped_variants'].append(var)
 
     if (p['original_url'] and len(p['original_url'])):
         if 'aliexpress' in p['original_url'].lower():
@@ -1073,7 +1060,7 @@ def variants_edit(request, store_id, pid):
         return render(request, 'upgrade.html')
 
     store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
-    api_url = '%s/admin/products/%s.json'%(store.api_url, pid)
+    api_url = store.get_link('/admin/products/{}.json'.format(pid), api=True)
 
     r = requests.get(api_url)
     product = json.dumps(r.json()['product'])
@@ -1085,6 +1072,76 @@ def variants_edit(request, store_id, pid):
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Vatiants']
     })
+
+
+@login_required
+def product_mapping(request, store_id, product_id):
+    # if not request.user.profile.can('product_variant_setup.use'):
+        # return render(request, 'upgrade.html')
+
+    product = get_object_or_404(ShopifyProduct, user=request.user, id=product_id)
+
+    shopify_id = product.get_shopify_id()
+    if not shopify_id:
+        from django.http import Http404
+        raise Http404("Product doesn't exists on Shopify Store.")
+
+    api_url = product.store.get_link('/admin/products/{}.json'.format(shopify_id), api=True)
+    r = requests.get(api_url)
+    shopify_product = r.json()['product']
+
+    source_variants = []
+    images = {}
+    variants_map = {}
+
+    try:
+        variants_map = json.loads(product.variants_map)
+    except:
+        pass
+
+    for i in shopify_product['images']:
+        for var in i['variant_ids']:
+            images[var] = i['src']
+
+    print variants_map
+    for i, v in enumerate(shopify_product['variants']):
+        shopify_product['variants'][i]['image'] = images.get(v['id'])
+
+        mapped = variants_map.get(str(v['id']))
+        if mapped:
+            options = mapped.split(',')
+        else:
+            options = []
+            if v.get('option1'):
+                options.append(v.get('option1'))
+            if v.get('option2'):
+                options.append(v.get('option2'))
+            if v.get('option3'):
+                options.append(v.get('option3'))
+
+        for o in options:
+            source_variants.append(o)
+
+        shopify_product['variants'][i]['default'] = ','.join(options)
+
+    original_data = json.loads(product.original_data)
+    if not original_data['variants']:
+        original_data = json.loads(product.data)
+
+    for i in [v['values'] for v in original_data['variants']]:
+        for j in i:
+            source_variants.append(j)
+
+    return render(request, 'product_mapping.html', {
+        'store': product.store,
+        'product_id': product_id,
+        'product': product,
+        'shopify_product': shopify_product,
+        'source_variants': json.dumps(list(set(source_variants))),
+        'page': 'product',
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Vatiants Mapping']
+    })
+
 
 @login_required
 def bulk_edit(request):
@@ -1610,7 +1667,7 @@ def orders_view(request):
             products_cache[el['product_id']] = product
 
             if auto_orders and 'shipping_address' in order:
-                # try:
+                try:
                     shipping_address_asci = {} # Aliexpress doesn't allow unicode
                     shipping_address = order['shipping_address']
                     for k in shipping_address.keys():
@@ -1642,19 +1699,16 @@ def orders_view(request):
                     if product:
                         try:
                             variants_map = json.loads(product.variants_map)
-                            variants_map = {av: ak for ak, av in variants_map.items()}
                         except:
                             variants_map = {}
 
-                        mapped = []
-                        for s in [j.strip() for j in order_data['variant'].split('/')]:
-                            mapped.append(variants_map.get(s, s))
-
-                        order_data['variant'] = ' / '.join(mapped)
+                        mapped = variants_map.get(str(el['variant_id']))
+                        if mapped:
+                            order_data['variant'] = ' / '.join(mapped.split(','))
 
                     order['line_items'][i]['order_data'] = order_data
-                # except:
-                    # pass
+                except:
+                    pass
 
         all_orders.append(order)
 
