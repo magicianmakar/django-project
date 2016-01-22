@@ -82,7 +82,9 @@
     var source_variants = {{source_variants|safe}};
     $(document).ready(function() {
         $(".tag-it").tagit({
-            availableTags: source_variants
+            availableTags: source_variants,
+            autocomplete: {delay: 0, minLength: 0},
+            showAutocompleteOnFocus: true
         });
     });
 
