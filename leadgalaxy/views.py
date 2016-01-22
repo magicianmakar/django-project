@@ -1070,7 +1070,7 @@ def variants_edit(request, store_id, pid):
         'product_id': pid,
         'product': product,
         'page': 'product',
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Vatiants']
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Variants']
     })
 
 
@@ -1139,7 +1139,7 @@ def product_mapping(request, store_id, product_id):
         'shopify_product': shopify_product,
         'source_variants': json.dumps(list(set(source_variants))),
         'page': 'product',
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Vatiants Mapping']
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Variants Mapping']
     })
 
 
