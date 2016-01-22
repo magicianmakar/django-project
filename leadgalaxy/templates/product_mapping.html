@@ -17,7 +17,7 @@
                             <tr>
                                 <th>Image</th>
                                 <th>Shopify</th>
-                                <th>{{product.original_product_source|default:'Source'|title}}</th>
+                                <th>{{product.get_original_info.source|default:'Source'|title}}</th>
                             </tr>
                         </thead>
                         <tbody>
