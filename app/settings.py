@@ -136,8 +136,8 @@ HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after hij
 REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after releasing the user.
 
 EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
-EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
+EMAIL_HOST_USER = 'jcfreak1223'
+EMAIL_HOST_PASSWORD = '^at#qX#92W1p'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "noreply@shopifiedapp.com"
