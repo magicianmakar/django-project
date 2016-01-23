@@ -1565,11 +1565,6 @@ def upload_file_sign(request):
 def upgrade_required(request):
     return render(request, 'upgrade.html')
 
-def login(request):
-    user_logout(request)
-    return redirect('/')
-
-
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
@@ -1843,6 +1838,12 @@ def register(request, registration=None):
                 registration.expired = True
                 registration.user = new_user
                 registration.save()
+
+            messages.info(request, "Thanks for registering. You are now logged in.")
+            new_user = authenticate(username=request.POST['username'],
+                                    password=request.POST['password1'])
+
+            login(request, new_user)
 
             return HttpResponseRedirect("/")
     else:
