@@ -283,6 +283,7 @@ class GroupPlan(models.Model):
     stores = models.IntegerField(default=0)
     products = models.IntegerField(default=0)
     boards = models.IntegerField(default=0)
+    register_hash = models.CharField(blank=True, default='', max_length=50)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='')
@@ -307,3 +308,19 @@ class UserUpload(models.Model):
 
     def __unicode__(self):
         return '%s | %s'%(self.url.replace('%2F','/').split('/')[-1], self.user.username)
+
+
+class PlanRegistration(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    plan = models.ForeignKey(GroupPlan)
+    register_hash = models.CharField(max_length=40, unique=True)
+    data = models.CharField(max_length=512, blank=True, default='')
+    expired = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return '{} | {}'.format(self.plan.title, self.register_hash)
