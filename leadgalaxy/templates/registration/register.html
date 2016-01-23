@@ -63,6 +63,10 @@
                     </div>
                 </div>
 
+                {% if registration %}
+                    <input type="hidden" name="rid" value="{{ registration.register_hash }}">
+                {% endif %}
+
                 <button type="submit" class="btn btn-primary block full-width m-b">Register</button>
 
                 <p class="text-muted text-center"><small>Already have an account?</small></p>

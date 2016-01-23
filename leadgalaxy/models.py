@@ -315,6 +315,7 @@ class PlanRegistration(models.Model):
         ordering = ['-created_at']
 
     plan = models.ForeignKey(GroupPlan)
+    user = models.ForeignKey(User, null=True)
     register_hash = models.CharField(max_length=40, unique=True)
     data = models.CharField(max_length=512, blank=True, default='')
     expired = models.BooleanField(default=False)

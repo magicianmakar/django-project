@@ -1,10 +1,9 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import logout as user_logout
 from django.shortcuts import redirect
 from django.template import Context, Template
-# from django.conf import settings
 from django.template.loader import get_template
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
@@ -14,11 +13,13 @@ from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
+from django.core.mail import send_mail
 from unidecode import unidecode
+
+from app import settings
 
 from .models import *
 from .forms import *
-from app import settings
 
 import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib, arrow
 from province_helper import load_uk_provincess
@@ -143,6 +144,21 @@ def get_myshopify_link(user, default_store, link):
             return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
 
     return None
+
+
+def random_hash():
+    import uuid, md5
+
+    token = str(uuid.uuid4())
+    return md5.new(token).hexdigest()
+
+
+def generate_plan_registration(plan, data={}):
+    reg = PlanRegistration(plan=plan, data=json.dumps(data))
+    reg.register_hash = random_hash()
+    reg.save()
+
+    return reg
 
 # @login_required
 def api(request, target):
@@ -815,7 +831,55 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
-    return JsonResponse({'error': 'Unhandled endpoint'})
+    if method == 'POST' and target == 'generate-registration':
+        plan = GroupPlan.objects.get(id=data['plan'])
+        plan = generate_plan_registration(plan)
+
+    return JsonResponse({'error': 'Non-handled endpoint'})
+
+def webhook(request, provider, option):
+    if provider == 'paylio' and request.method == 'POST':
+        if option not in ['vip-elite', 'elite', 'pro', 'basic']:
+            raise Http404('Page not found..')
+
+        plan_map = {
+            'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
+            'elite': '3eccff4f178db4b85ff7245373102aec',
+            'pro': '55cb8a0ddbc9dacab8d99ac7ecaae00b',
+            'basic': '2877056b74f4683ee0cf9724b128e27b'
+        }
+
+        plan = GroupPlan.objects.get(register_hash=plan_map[option])
+
+        data = {
+            'email':     request.POST['payer_email'],
+            'status':    request.POST['status'],
+            'lastname':  request.POST['payer_lastname'],
+            'firstname': request.POST['payer_firstname'],
+            'payer_id':  request.POST['payer_id'],
+        }
+
+        reg = generate_plan_registration(plan, data)
+        data['reg_hash'] = reg.register_hash
+        data['plan_title'] = plan.title
+
+        template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'webhook_register.html')
+        template = Template(open(template_file).read())
+
+        ctx = Context(data)
+
+        email_html = template.render(ctx)
+        email_html = email_html.replace('\n', '<br />')
+
+        send_mail(subject='Your Shopified App Access',
+            recipient_list=[data['email']],
+            from_email='chase@rankengine.com',
+            message=email_html,
+            html_message=email_html)
+
+        return HttpResponse('ok')
+
+    raise Http404('Page not found.')
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
     products = []
@@ -1083,7 +1147,6 @@ def product_mapping(request, store_id, product_id):
 
     shopify_id = product.get_shopify_id()
     if not shopify_id:
-        from django.http import Http404
         raise Http404("Product doesn't exists on Shopify Store.")
 
     api_url = product.store.get_link('/admin/products/{}.json'.format(shopify_id), api=True)
@@ -1755,16 +1818,44 @@ def logout(request):
     user_logout(request)
     return redirect('/')
 
-def register(request):
+
+def register(request, registration=None):
+    if request.method == 'POST':
+        registration = request.POST.get('rid')
+
+    if registration:
+        # Convert the hash to a PlanRegistration model
+        registration = get_object_or_404(PlanRegistration, register_hash=registration)
+
+    if registration and registration.expired:
+        raise Http404('Registration link expired')
+
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
-            create_new_profile(new_user)
+            new_profile = create_new_profile(new_user)
+
+            if registration:
+                new_profile.plan = registration.plan
+                new_profile.save()
+
+                registration.expired = True
+                registration.user = new_user
+                registration.save()
 
             return HttpResponseRedirect("/")
     else:
-        form = RegisterForm()
+        try:
+            initial = {
+                'email': json.loads(registration.data).get('email'),
+            }
+        except:
+            initial = {}
+
+        form = RegisterForm(initial=initial)
+
     return render(request, "registration/register.html", {
         'form': form,
+        'registration': registration
     })
