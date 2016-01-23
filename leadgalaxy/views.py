@@ -1124,13 +1124,16 @@ def product_mapping(request, store_id, product_id):
 
         shopify_product['variants'][i]['default'] = ','.join(options)
 
-    original_data = json.loads(product.original_data)
-    if not original_data['variants']:
-        original_data = json.loads(product.data)
+    try:
+        original_data = json.loads(product.original_data)
+        if not original_data['variants']:
+            original_data = json.loads(product.data)
 
-    for i in [v['values'] for v in original_data['variants']]:
-        for j in i:
-            source_variants.append(j)
+        for i in [v['values'] for v in original_data['variants']]:
+            for j in i:
+                source_variants.append(j)
+    except:
+        pass
 
     return render(request, 'product_mapping.html', {
         'store': product.store,
