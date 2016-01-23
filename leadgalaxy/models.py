@@ -292,7 +292,7 @@ class GroupPlan(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     def __unicode__(self):
-        return '%s'%(self.title)
+        return self.title
 
 class UserUpload(models.Model):
     class Meta:

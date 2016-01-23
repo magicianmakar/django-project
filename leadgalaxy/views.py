@@ -152,7 +152,7 @@ def api(request, target):
     elif method == 'GET':
         data = request.GET
     else:
-        return JsonResponse({'error', 'Unknow method: %s'%method})
+        return JsonResponse({'error': 'Unknown method: {}'.format(method)})
 
     if 'access_token' in data:
         token = data.get('access_token')
@@ -1463,9 +1463,9 @@ def autocomplete(request, target):
                     else:
                         tags.append(i)
 
-        return JsonResponse({'query': q, 'suggestions': [{'value':i, 'data':i} for i in tags]}, safe=False)
+        return JsonResponse({'query': q, 'suggestions': [{'value':j, 'data':j} for j in tags]}, safe=False)
     else:
-        return JsonResponse({'error': 'Unknow target'})
+        return JsonResponse({'error': 'Unknown target'})
 
 @login_required
 def upload_file_sign(request):
