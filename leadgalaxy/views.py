@@ -851,6 +851,9 @@ def webhook(request, provider, option):
 
         plan = GroupPlan.objects.get(register_hash=plan_map[option])
 
+        if 'payer_email' not in request.POST:
+            return HttpResponse('ok')
+
         data = {
             'email':     request.POST['payer_email'],
             'status':    request.POST['status'],
