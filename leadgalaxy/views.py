@@ -877,9 +877,39 @@ def webhook(request, provider, option):
             message=email_html,
             html_message=email_html)
 
+        slack_invite(data)
+
         return HttpResponse('ok')
 
     raise Http404('Page not found.')
+
+def slack_invite(rdata):
+    success = False
+    rep = ''
+    try:
+        r = requests.post(
+            url='https://shopifiedapp.slack.com/api/users.admin.invite',
+            data={
+                'email': rdata['email'],
+                'first_name': rdata['firstname'],
+                'last_name': rdata['lastname'],
+                'channels': 'C0F23PPE2,C0FA60BC6,C0FA6GYHM,C0F1M7X8R,C0FA6RYKW',
+                'token': 'xoxp-15055768838-15352958307-19268566291-4b5686d251',
+                'set_active': True,
+                '_attempts': 1
+            }
+        )
+
+        success = r.json()['ok']
+        rep = r.text
+    except Exception as e:
+        rep = str(e)
+
+    if not success:
+        send_mail(subject='Slack Invite Fail',
+            recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+            from_email='chase@rankengine.com',
+            message='Slack Invite wasn\'t sent to {} due the following error:\n{}'.format(rdata['email'], rep))
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
     products = []
@@ -1812,7 +1842,6 @@ def acp_users_emails(request):
 def logout(request):
     user_logout(request)
     return redirect('/')
-
 
 def register(request, registration=None):
     if request.method == 'POST':
