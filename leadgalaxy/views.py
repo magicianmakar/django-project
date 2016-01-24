@@ -881,7 +881,8 @@ def webhook(request, provider, option):
 
         return HttpResponse('ok')
 
-    raise Http404('Page not found.')
+    else:
+        return JsonResponse({'status': 'ok'})
 
 def slack_invite(rdata):
     success = False
