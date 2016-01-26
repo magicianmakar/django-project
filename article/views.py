@@ -170,16 +170,21 @@ def _save_submittion(request, form, article=None):
 
         article.save()
 
-        for i in tags.split(','):
-            try:
-                tag = ArticleTag.objects.get(title=i)
-            except:
-                tag = ArticleTag(title=i)
-                tag.save()
+        if i.trim():
+            for i in tags.split(','):
+                try:
+                    i = i.trim()
+                    if not i:
+                        continue
 
-            article.tags.add(tag)
+                    tag = ArticleTag.objects.get(title=i)
+                except:
+                    tag = ArticleTag(title=i)
+                    tag.save()
 
-        # article.save()
+                article.tags.add(tag)
+
+        article.save()
 
         return article
     else:
