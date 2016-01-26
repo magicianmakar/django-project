@@ -145,18 +145,24 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
             }
         }
     });
-};
+}
 
-function setup_full_editor(textarea_name) {
+function setup_full_editor(textarea_name, include_css) {
+    include_css = typeof(include_css) === undefined ? false : include_css;
+
+    var styles = ['body { padding: 15px; }'];
+    if (include_css) {
+        styles = [
+            '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css',
+            '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap-theme.min.css',
+            '/static/css/main.css',
+            'body { padding: 15px; }',
+        ];
+    }
+
     document.editor = CKEDITOR.replace( textarea_name,
     {
-        contentsCss: [
-            // '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css',
-            // '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap-theme.min.css',
-            //'/static/css/main.css',
-            'body { padding: 15px; }',
-            // 'h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { color: #A7A7A7;}'
-        ],
+        contentsCss: styles,
         // Remove unused plugins.
         removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,table,tabletools,templates',
         // Disabled any kind of filtering

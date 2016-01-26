@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block main-container %}
+
+<div class="row article">
+    <div class="col-lg-10 col-lg-offset-1">
+        <div class="ibox">
+            <div class="ibox-content">
+                <div class="pull-right">
+                    {% for tag in article.tags.all %}
+                    <a class="btn btn-white btn-xs" href="{{tag.get_link}}">{{tag.title}}</a>
+                    {% endfor %}
+                </div>
+                <div class="text-center article-title">
+                <span class="text-muted"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
+                    <h1>
+                        {{ article.title }}
+                    </h1>
+                </div>
+
+                {{ article.body|safe }}
+
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-6">
+                            <h5>Tags:</h5>
+                            {% for tag in article.tags.all %}
+                            <a class="btn btn-white btn-xs" href="{{tag.get_link}}">{{tag.title}}</a>
+                            {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-right">
+                            <h5>Options:</h5>
+                            {% if user.is_superuser %}
+                                <a class="btn btn-xs btn-success" href="{% url 'edit' article.id %}"><i class="fa fa-edit"></i> Edit</a>
+                                <a class="btn btn-xs btn-danger" href="{% url 'admin:article_article_delete' article.id %}"><i class="fa fa-remove"></i> Delete</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                <span class="pull-right">
+                </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

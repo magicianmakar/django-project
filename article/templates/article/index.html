@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Shopified App{% endblock %}
+
+{% block main-container %}
+
+<!-- <div class="ibox-content m-b-sm border-bottom">
+    <div class="p-xs">
+        <div class="pull-left m-r-md">
+            <i class="fa fa-globe text-navy mid-icon"></i>
+        </div>
+        <h2>Welcome to Shopified App Training</h2>
+        <span>You will learn how to use the web app &amp; the extension</span>
+    </div>
+</div> -->
+
+<div class="ibox-content forum-container">
+    <div class="forum-title">
+        <div class="pull-right forum-desc">
+            <samll>Total courses: {{articles.count}}</samll>
+        </div>
+        {% if tag %}
+        <h3>{{tag}} Pages</h3>
+        {% endif %}
+    </div>
+
+    {% for article in articles %}
+    <div class="forum-item active">
+        <div class="row">
+            <div class="col-md-9">
+                <div class="forum-icon">
+                    <i class="fa fa-shield"></i>
+                </div>
+                <a href="{% url 'article.views.view' article.slug %}" class="forum-item-title">{{ article.title }}</a>
+                <div class="forum-sub-title">
+                    By <a herf="#">{{ article.author.username }}</a>,
+                    Last update: <span class="date">{{ article.updated_at|date:"m/Y/d" }}</span></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if user.is_superuser %}
+        <a class="btn btn-sm btn-success" href="{% url 'add-page' %}"><i class="fa fa-plus"></i> Create Page</a>
+    {% endif %}
+
+</div>
+
+{% endblock %}

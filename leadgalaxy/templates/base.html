@@ -114,9 +114,20 @@
                         <li {% if page == 'acp_users_list' %}class="active"{% endif %}><a href="{% url 'acp_users_list' %}">Users</a></li>
                         <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans &amp; Groups</a></li>
                         <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Analytics</a></li>
+                        <li {% if page == 'acp_pages' %}class="active"{% endif %}><a href="/pages/">Pages</a></li>
                     </ul>
                 </li>
                 {% endif %}
+
+                {% for item in sidebar_links %}
+                <li>
+                    <a href="{{ item.link }}">
+                        {% if item.icon %}<i class="fa fa-{{item.icon}}"></i>{% endif %}
+                        <span class="nav-label">{{ item.title }}</span>
+                        {% if item.badge %}<span class="pull-right label label-info">{{ item.badge }}</span>{% endif %}
+                    </a>
+                </li>
+                {% endfor %}
             </ul>
 
         </div>
@@ -250,7 +261,7 @@
     <script src="{% static 'js/plugins/pace/pace.min.js' %}"></script>
     <script src="{% static 'js/plugins/toastr/toastr.min.js' %}"></script>
     <script src="{% static 'js/trix.js' %}"></script>
-    <script src="{% static 'js/main.js' %}?v=4"></script>
+    <script src="{% static 'js/main.js' %}?v=5"></script>
 
     {% block extrajs %}{% endblock %}
 
