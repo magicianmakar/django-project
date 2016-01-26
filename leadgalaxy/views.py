@@ -846,7 +846,8 @@ def webhook(request, provider, option):
             'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
             'elite': '3eccff4f178db4b85ff7245373102aec',
             'pro': '55cb8a0ddbc9dacab8d99ac7ecaae00b',
-            'basic': '2877056b74f4683ee0cf9724b128e27b'
+            'basic': '2877056b74f4683ee0cf9724b128e27b',
+            'free': '606bd8eb8cb148c28c4c022a43f0432d'
         }
 
         plan = GroupPlan.objects.get(register_hash=plan_map[option])
@@ -854,38 +855,92 @@ def webhook(request, provider, option):
         if 'payer_email' not in request.POST:
             return HttpResponse('ok')
 
-        data = {
-            'email':     request.POST['payer_email'],
-            'status':    request.POST['status'],
-            'lastname':  request.POST['payer_lastname'],
-            'firstname': request.POST['payer_firstname'],
-            'payer_id':  request.POST['payer_id'],
-        }
+        try:
+            status = request.POST['status']
+            if status not in ['new', 'canceled', 'refunded']:
+                raise Exception('Unknown Order status: {}'.format(status))
 
-        reg = generate_plan_registration(plan, data)
-        data['reg_hash'] = reg.register_hash
-        data['plan_title'] = plan.title
+            data = {
+                'email':     request.POST['payer_email'],
+                'status':    status,
+                'lastname':  request.POST['payer_lastname'],
+                'firstname': request.POST['payer_firstname'],
+                'payer_id':  request.POST['payer_id'],
+            }
+        except Exception as e:
+            send_mail(subject='Shopified App: Webhook exception',
+                recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                from_email='chase@rankengine.com',
+                message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
+                        repr(request.GET.urlencode()),
+                        repr(request.POST.urlencode()),
+                        '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
 
-        template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'webhook_register.html')
-        template = Template(open(template_file).read())
+            raise Http404('Error during proccess')
 
-        ctx = Context(data)
+        if status == 'new':
+            reg = generate_plan_registration(plan, data)
+            data['reg_hash'] = reg.register_hash
+            data['plan_title'] = plan.title
 
-        email_html = template.render(ctx)
-        email_html = email_html.replace('\n', '<br />')
+            template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'webhook_register.html')
+            template = Template(open(template_file).read())
 
-        send_mail(subject='Your Shopified App Access',
-            recipient_list=[data['email']],
-            from_email='chase@rankengine.com',
-            message=email_html,
-            html_message=email_html)
+            ctx = Context(data)
 
-        slack_invite(data)
+            email_html = template.render(ctx)
+            email_html = email_html.replace('\n', '<br />')
 
-        return HttpResponse('ok')
+            send_mail(subject='Your Shopified App Access',
+                recipient_list=[data['email']],
+                from_email='chase@rankengine.com',
+                message=email_html,
+                html_message=email_html)
 
+            slack_invite(data)
+
+            send_mail(subject='Shopified App: New Registration',
+                recipient_list=['chase@rankengine.com'],
+                from_email='chase@rankengine.com',
+                message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(format_data(data)))
+
+            return HttpResponse('ok')
+        elif status in ['canceled', 'refunded']:
+            try:
+                user = User.objects.get(email=data['email'])
+
+                free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                user.profile.plan = free_plan
+                user.profile.save()
+
+                data['previous_plan'] = plan.title
+                data['new_plan'] = free_plan.title
+
+                send_mail(subject='Shopified App: Cancel/Refund',
+                    recipient_list=['chase@rankengine.com'],
+                    from_email='chase@rankengine.com',
+                    message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(format_data(data)))
+
+                return HttpResponse('ok')
+
+            except Exception as e:
+                send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
+                    recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                    from_email='chase@rankengine.com',
+                    message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
+                            repr(request.GET.urlencode()),
+                            repr(request.POST.urlencode()),
+                            '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
+                raise Http404('Error during proccess')
     else:
         return JsonResponse({'status': 'ok'})
+
+def format_data(data):
+    text = ''
+    for k,v in data.items():
+        text = '{}    {}: {}\n'.format(text, k.replace('_', ' ').title(), v)
+
+    return text
 
 def slack_invite(rdata):
     success = False
