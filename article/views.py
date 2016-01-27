@@ -170,7 +170,7 @@ def _save_submittion(request, form, article=None):
 
         article.save()
 
-        if i.trim():
+        if tags.trim():
             for i in tags.split(','):
                 try:
                     i = i.trim()
