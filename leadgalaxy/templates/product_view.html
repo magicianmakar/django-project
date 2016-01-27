@@ -552,6 +552,8 @@ function removeVariant(e) {
 };
 
 $('#export-btn').click(function () {
+    $('#save-for-later-btn').trigger('click');
+
     var btn = $(this);
     var target = btn.attr('target');
 
