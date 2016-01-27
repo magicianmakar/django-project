@@ -184,6 +184,25 @@ function setup_full_editor(textarea_name, include_css) {
     });
 }
 
+function setup_admin_editor(textarea_name, include_css) {
+    include_css = typeof(include_css) === undefined ? false : include_css;
+
+    var styles = ['body { padding: 15px; }'];
+    if (include_css) {
+        styles = [
+            '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css',
+            '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap-theme.min.css',
+            '/static/css/main.css',
+            'body { padding: 15px; }',
+        ];
+    }
+
+    document.editor = CKEDITOR.replace( textarea_name, {
+        contentsCss: styles,
+        allowedContent : true,
+    });
+}
+
 $(function() {
     $('.icheck').iCheck({
         checkboxClass: 'icheckbox_square-blue',
