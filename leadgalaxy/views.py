@@ -1,14 +1,13 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as user_logout
 from django.shortcuts import redirect
 from django.template import Context, Template
-from django.template.loader import get_template
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -21,7 +20,7 @@ from app import settings
 from .models import *
 from .forms import *
 
-import httplib2, os, sys, urlparse, urllib2, re, json, requests, hashlib, arrow
+import os, re, json, requests, arrow
 from province_helper import load_uk_provincess
 
 def safeInt(v, default=0.0):
@@ -616,7 +615,7 @@ def api(request, target):
 
     if method == 'POST' and target == 'change-plan':
         if not user.is_superuser:
-            return JsonResponse({'error': 'You don\'t have access to this endpoint'})
+            raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
         plan = GroupPlan.objects.get(id=data.get('plan'))
