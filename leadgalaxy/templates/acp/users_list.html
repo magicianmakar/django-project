@@ -98,11 +98,11 @@
 
         var data = [
 {% for item in users %}
-['{{item.id}}|{{item.username}}',
+['<span style="display:none">{{item.id}}|{{item.username}}</span>',
 '{{item.email}}',
 '{{item.profile.plan.title}}',
 
-{% if request.GET.products %}
+{% if show_products %}
 'item.shopifystore_set.count}}',
 'item.shopifyproduct_set.count}}',
 {% endif %}
@@ -112,13 +112,15 @@
         ];
 
         $(document).ready(function() {
-            $('.dataTables').on( 'draw.dt', function () {
+            $('.dataTables').on( 'draw.dt', function (e) {
+                console.dir(e);
                 $('.dataTables tr').each(function (i, el) {
-                    var info = $(el).find('td').first().text();
+                    var info = $(el).find('td').first().find('span').text();
                     info = info.split('|');
-                    $(el).find('td').first().html($('<a>', {href: '/admin/auth/user/'+info[0]+'/', target: '_blank', text: info[1]}));
+                    $(el).find('td').find('a').remove()
+                    $(el).find('td').first().append($('<a>', {href: '/admin/auth/user/'+info[0]+'/', target: '_blank', text: info[1]}));
 
-                    $(el).find('td').last()
+                    $(el).find('td').last().empty()
                     .append($('<a>', {
                         'href': '/hijack/'+info[0]+'/',
                         'class': 'btn btn-success btn-xs m-r-xs',
