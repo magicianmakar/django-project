@@ -164,7 +164,7 @@ function setup_full_editor(textarea_name, include_css) {
     {
         contentsCss: styles,
         // Remove unused plugins.
-        removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,table,tabletools,templates',
+        removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,templates',
         // Disabled any kind of filtering
         allowedContent : true,
         toolbar :
@@ -176,6 +176,8 @@ function setup_full_editor(textarea_name, include_css) {
             { name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','Subscript','Superscript','-','RemoveFormat' ] },
             { name: 'textAlign', items : ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'/*,'-','BidiRtl','BidiLtr'*/ ] },
             { name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','Blockquote' ] },
+            { name: 'insert', items : ['Image', 'Table', 'HorizontalRule', ''] },
+
             '/',
             { name: 'styles', items : [ 'Format','Font','FontSize' ] },
             { name: 'colors', items : [ 'TextColor','BGColor' ] },
