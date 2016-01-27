@@ -121,7 +121,7 @@
 
                 {% for item in sidebar_links %}
                 <li>
-                    <a href="{{ item.link }}">
+                    <a href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %}>
                         {% if item.icon %}<i class="fa fa-{{item.icon}}"></i>{% endif %}
                         <span class="nav-label">{{ item.title }}</span>
                         {% if item.badge %}<span class="pull-right label label-info">{{ item.badge }}</span>{% endif %}

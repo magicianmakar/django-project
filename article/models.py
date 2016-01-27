@@ -77,6 +77,8 @@ class SidebarLink(models.Model):
     link = models.CharField(max_length=512)
     badge = models.CharField(blank=True, default='', max_length=20)
     order = models.IntegerField(default=0)
+    new_tab = models.BooleanField(default=False)
+    icon = models.CharField(blank=True, default='', max_length=20)
 
     def __str__(self):
         return self.title
