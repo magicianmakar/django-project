@@ -170,6 +170,8 @@
                 {% endfor %}
                 </select>
             </div>
+            {% else %}
+            <input type="hidden" id="store-select" name="store-select" value="{{product.qelem.store_id}}">
             {% endif %}
 
             <div class="buttons col-xs-12">
@@ -555,13 +557,11 @@ $('#export-btn').click(function () {
 
     btn.bootstrapBtn('loading')
 
-    var api_url = $('#store-select').val();
+    var store_id = $('#store-select').val();
 
-    if (!api_url || api_url.length==0) {
+    if (!store_id || store_id.length==0) {
         alert('Please choose a Shopify store first!');
         return;
-    // } else {
-        // api_url = api_url + '/admin/products.json';
     }
 
     var api_data = {
@@ -664,7 +664,7 @@ $('#export-btn').click(function () {
         type: 'POST',
         data: JSON.stringify ({
             'product': {{product.id}},
-            'store': api_url,
+            'store': store_id,
             'data': JSON.stringify(api_data),
         }),
         contentType: "application/json; charset=utf-8",
@@ -707,9 +707,9 @@ $('#save-for-later-btn').click(function (e) {
 
     btn.bootstrapBtn('loading')
 
-    var api_url = $('#store-select').val();
+    var store_id = $('#store-select').val();
 
-    if (!api_url || api_url.length==0) {
+    if (!store_id || store_id.length==0) {
         alert('Please choose a Shopify store first!');
         return;
     }
@@ -747,7 +747,7 @@ $('#save-for-later-btn').click(function (e) {
         type: 'POST',
         data: JSON.stringify ({
             'product': {{product.id}},
-            'store': api_url,
+            'store': store_id,
             'data': JSON.stringify(api_data),
         }),
         contentType: "application/json; charset=utf-8",
