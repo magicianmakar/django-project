@@ -26,8 +26,10 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Plan</th>
+                            {% if request.GET.products %}
                             <th>Stores</th>
                             <th>Products</th>
+                            {% endif %}
                             <th>Join Date</th>
                             <th>Actions</th>
                         </tr>
@@ -44,8 +46,12 @@
                                 <b>None</b>
                             {% endif %}
                             </td>
+
+                            {% if request.GET.products %}
                             <td>{{item.shopifystore_set.count}}</td>
                             <td>{{item.shopifyproduct_set.count}}</td>
+                            {% endif %}
+
                             <td>{{item.date_joined|date}}</td>
                             <td>
                                 <a href="/hijack/{{item.id}}/" class="btn btn-success btn-xs ">Login with</a>
