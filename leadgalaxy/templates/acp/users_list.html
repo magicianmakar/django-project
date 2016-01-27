@@ -35,34 +35,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for item in users %}
-                        <tr user-id="{{item.id}}">
-                            <td><a target="_blank" href="/admin/auth/user/{{item.id}}/">{{item.username}}</a></td>
-                            <td>{{item.email}} </td>
-                            <td class="profile-plan">
-                            {% if item.profile.get_plan %}
-                                <b>{{item.profile.plan.title}}</b>
-                            {% else %}
-                                <b>None</b>
-                            {% endif %}
-                            </td>
-
-                            {% if request.GET.products %}
-                            <td>{{item.shopifystore_set.count}}</td>
-                            <td>{{item.shopifyproduct_set.count}}</td>
-                            {% endif %}
-
-                            <td>{{item.date_joined|date}}</td>
-                            <td>
-                                <a href="/hijack/{{item.id}}/" class="btn btn-success btn-xs ">Login with</a>
-                                <button class="btn btn-primary btn-xs change-plan-btn">Change Plan</button>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td class="text-center" colspan="4">No product found</td>
-                        </tr>
-                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -117,23 +89,60 @@
     <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script>
 
     <script type="text/javascript">
-        $('.change-plan-btn').click(function (e) {
+        function changePlan(e) {
             $('.active-plan-change').removeClass('active-plan-change');
             $(this).parents('tr').find('.profile-plan').addClass('active-plan-change');
-            $('#modal-plan-select').prop('user-id', $(this).parents('tr').attr('user-id'));
+            $('#modal-plan-select').prop('user-id', $(this).attr('user-id'));
             $('#modal-plan-select').modal('show');
-        });
+        }
+
+        var data = [
+{% for item in users %}
+['{{item.id}}|{{item.username}}',
+'{{item.email}}',
+'{{item.profile.plan.title}}',
+
+{% if request.GET.products %}
+'item.shopifystore_set.count}}',
+'item.shopifyproduct_set.count}}',
+{% endif %}
+
+'{{item.date_joined|date}}', ''],
+{% endfor %}
+        ];
 
         $(document).ready(function() {
-            $('.dataTables').dataTable({
+            $('.dataTables').on( 'draw.dt', function () {
+                $('.dataTables tr').each(function (i, el) {
+                    var info = $(el).find('td').first().text();
+                    info = info.split('|');
+                    $(el).find('td').first().html($('<a>', {href: '/admin/auth/user/'+info[0]+'/', target: '_blank', text: info[1]}));
+
+                    $(el).find('td').last()
+                    .append($('<a>', {
+                        'href': '/hijack/'+info[0]+'/',
+                        'class': 'btn btn-success btn-xs m-r-xs',
+                        'text': 'Login with'
+                    }))
+                    .append(
+                        $('<a>', {
+                            'href': '#',
+                            'class': 'btn btn-primary btn-xs change-plan-btn',
+                            'user-id': info[0],
+                            'text': 'Change Plan'
+                        }).click(changePlan)
+                    );
+                });
+            });
+
+            var table = $('.dataTables').dataTable({
                 responsive: true,
+                'data': data,
                 "dom": 'T<"clear">lfrtip',
                 "tableTools": {
                     "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
                 }
             });
-
-
 
             $('#change-plan-apply').click(function (e) {
                 var btn = $(this);
@@ -165,7 +174,6 @@
                         btn.button('reset');
                     }
                 });
-
             })
         });
     </script>
