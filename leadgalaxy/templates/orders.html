@@ -111,7 +111,7 @@
                     </div>
                     <hr >
                     </form>
-                    <table class="table table-condensed table-hover">
+                    <table class="table table-condensed xtable-hover">
                       <thead>
                         <tr>
                           <th>Order #</th>
@@ -167,7 +167,7 @@
                                         <tbody>
                                             {% for item in order.line_items %}
                                             {% with image=item.image original=item.product.get_original_info %}
-                                            <tr>
+                                            <tr {% if item.shopify_order %}class="success"{% endif %}>
                                                 <td>
                                                     <img
                                                     class="lazyload"
@@ -196,9 +196,21 @@
                                                 <td class="text-center">
                                                     {% if original %}
                                                         <div class="btn-group">
-                                                            <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">Place Order <span class="caret"></span></button>
+                                                            <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">
+                                                                {% if item.shopify_order %}
+                                                                Order Placed
+                                                                {% else %}
+                                                                Place Order
+                                                                {% endif %}
+                                                                <span class="caret"></span></button>
+
                                                             <ul class="dropdown-menu">
+                                                                {% if item.shopify_order %}
+                                                                <li><a class="placed-order-details" href="#" order-id="{{order.id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}" data="{{item.shopify_order.encoded}}">Order Details</a></li>
+                                                                {% endif %}
+
                                                                 <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
+
                                                                 {% if item.order_data %}
                                                                 <li><a href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data False|urlencode  %}" target="_blank">Step By Step Order</a></li>
                                                                 <li><a href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}" target="_blank">Auto Place Order</a></li>
@@ -424,6 +436,17 @@
 
     $('.expand-btn').click(function (e) {
         $(".more-info").trigger('click');
+    });
+    $('.placed-order-details').click(function (e) {
+        e.preventDefault();
+
+        var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
+        var html = '<ul>';
+        html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" href="http://trade.aliexpress.com/order_detail.htm?orderId='+data.aliexpress.order.id+'">'+data.aliexpress.order.id+'</a></li>';
+        html += '<li style="list-style:none">Order date: '+$(this).attr('order-date')+'</li>';
+        html += '</ul';
+
+        swal({title: '', text: html, html: true, animation:false});
     });
 
     $(function () {

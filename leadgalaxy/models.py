@@ -256,6 +256,22 @@ class ShopifyProductImage(models.Model):
     def __unicode__(self):
         return '{} | {}'.format(self.product, self.variant)
 
+class ShopifyOrder(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+    order_id = models.BigIntegerField()
+    line_id = models.BigIntegerField()
+    data = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+
+    def encoded(self):
+        return json.dumps(self.data).encode('base64')
+
+    def __str__(self):
+        return '{} | {}'.format(self.order_id, self.line_id)
 
 class ShopifyBoard(models.Model):
     class Meta:

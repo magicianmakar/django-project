@@ -830,9 +830,22 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
-    if method == 'POST' and target == 'generate-registration':
-        plan = GroupPlan.objects.get(id=data['plan'])
-        plan = generate_plan_registration(plan)
+    if method == 'POST' and target == 'order-fulfill':
+        order_id = safeInt(data.get('order_id'))
+        line_id = safeInt(data.get('line_id'))
+        order_data = {
+            'aliexpress': {
+                'order': {
+                    'id': data.get('aliexpress_order_id'),
+                    'trade': data.get('aliexpress_order_trade')
+                }
+            }
+        }
+
+        order = ShopifyOrder(user=user, order_id=order_id, line_id=line_id, data=json.dumps(order_data))
+        order.save()
+
+        return JsonResponse({'status': 'ok'})
 
     return JsonResponse({'error': 'Non-handled endpoint'})
 
@@ -1783,6 +1796,15 @@ def orders_view(request):
     auto_orders = request.user.can('auto_order.use')
     uk_provinces = None
 
+    orders_ids = []
+    for order in page:
+        orders_ids.append(order['id'])
+
+    orders_list = {}
+    res = ShopifyOrder.objects.filter(user=request.user, order_id__in=orders_ids)
+    for i in res:
+        orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
+
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).humanize()
         order['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
@@ -1797,6 +1819,8 @@ def orders_view(request):
                 'product': el['product_id'],
                 'variant': el['variant_id']
             }
+
+            order['line_items'][i]['shopify_order'] = orders_list.get('{}-{}'.format(order['id'], el['id']))
 
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
@@ -1841,6 +1865,8 @@ def orders_view(request):
                         'variant': el['variant_title'],
                         'quantity': el['fulfillable_quantity'],
                         'shipping_address': shipping_address_asci,
+                        'order_id': order['id'],
+                        'line_id': el['id'],
                         'order': {
                             'phone': request.user.config('order_phone_number'),
                             'note': request.user.config('order_custom_note'),
