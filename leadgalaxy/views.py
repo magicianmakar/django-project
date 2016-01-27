@@ -355,9 +355,12 @@ def api(request, target):
             if 'product' in req_data:
                 try:
                     product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
-                    original_url = product.get_original_info().get('url', '')
-                except:
-                    return JsonResponse({'error': 'Selected product not found.'})
+
+                    original_info = product.get_original_info()
+                    if original_info:
+                        original_url = original_info.get('url', '')
+                except Exception as e:
+                    return JsonResponse({'error': 'Selected product not found ({})'.format(repr(e))})
 
                 product.shopify_id = pid
                 product.stat = 1
