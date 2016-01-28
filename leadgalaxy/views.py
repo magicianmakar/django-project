@@ -287,6 +287,14 @@ def api(request, target):
 
         return JsonResponse(stores, safe=False)
 
+    if method == 'POST' and target == 'update-store':
+        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        store.title = data.get('title')
+        store.api_url = data.get('url')
+        store.save()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'GET' and target == 'product':
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'), user=user)

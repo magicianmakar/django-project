@@ -18,8 +18,8 @@
             <table class="table table-condensed table-hover table-bordered">
               <thead>
                 <tr>
-                  <th style=";">Title</th>
-                  <th class="hidden-sm hidden-xs" style=";">Store URL</th>
+                  <th style="">Title</th>
+                  <th class="hidden-sm hidden-xs" style="width:55%">API URL</th>
                   <th style="width:90px">Products</th>
                   <th style="">Options</th>
                 </tr>
@@ -27,8 +27,11 @@
               <tbody>
                     {% for item in stores %}
                     <tr store-id="{{item.id}}">
-                      <td><a href="/store/{{item.id}}">{{item.title}}</a></td>
-                      <td>{{item.get_link|urlize}}</td>
+                      <td><a class="edit-store" store-id="{{item.id}}" store-url="http://{{item.api_url}}" store-name="{{item.title}}" href="#">{{item.title}}</a></td>
+                      <td>
+                        <span class="api-url" style="display:none">http://{{item.api_url}}</span>
+                        <a href="#" class="show-api-url btn btn-default btn-outline btn-xs">Show</a>
+                      </td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
                         <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank"> Visit Store</a>
@@ -43,7 +46,7 @@
               </tbody>
             </table>
 
-            <a data-toggle="modal" class="btn btn-primary" href="#modal-form">Add Store</a>
+            <a class="add-store-btn btn btn-primary" href="#">Add Store</a>
                 </div>
             </div>
 
@@ -192,10 +195,12 @@
                     <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Add Shopify Store</h3>
 
                         <form role="form">
-                            <div class="form-group"><label>Name</label> <input type="text" id="store-name" placeholder="Enter Store Name" class="form-control"></div>
+                            <div class="form-group">
+                                <label>Name</label> <input type="text" id="store-name" placeholder="Enter Store Name" class="form-control"></div>
                             <div class="form-group"><label>API URL</label> <input type="text" id="store-url" placeholder="Copy/Past Example URL" class="form-control"></div>
                             <div>
                                 <button id="add-store" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Add store</strong></button>
+                                <button id="update-store" style="display:none" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Update store</strong></button>
                             </div>
                         </form>
                     </div>
@@ -244,6 +249,14 @@
 
 {% block extrajs %}
 <script type="text/javascript">
+    $('.add-store-btn').click(function (e) {
+        e.preventDefault();
+        $('#add-store').hide();
+        $('#update-store').show();
+
+        $('#modal-form').modal('show');
+    });
+
     $('#add-store').click(function(e) {
         var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
 
@@ -375,6 +388,65 @@
             $('.desc-select-help').text('');
         }
     }
+
+    $('.edit-store').click(function (e) {
+        e.preventDefault();
+
+        $('#store-name').val($(this).attr('store-name'));
+        $('#store-name').attr('store-id', $(this).attr('store-id'));
+        $('#store-url').val($(this).attr('store-url'));
+
+        $('#add-store').hide();
+        $('#update-store').show();
+
+        $('#modal-form').modal('show');
+
+    });
+
+    $('#update-store').click(function (e) {
+        e.preventDefault();
+
+        var store = $('#store-name').attr('store-id');
+        var name = $('#store-name').val()
+        var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
+
+        if (!url || url.length != 1) {
+            alert('API URL is not correct!');
+            return;
+        } else {
+            url = url[0];
+        }
+
+        $.ajax({
+            url: '/api/update-store',
+            type: 'POST',
+            data: {
+                store: store,
+                title: name,
+                url: url
+            },
+            context: {},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    $('#modal-form').modal('hide');
+                    toastr.success('Store information updated', 'Store update');
+                } else {
+                    displayAjaxError('Store update', data);
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Store update', data);
+            },
+            complete: function () {
+            }
+        });
+    });
+
+    $('.show-api-url').click(function (e) {
+        e.preventDefault();
+
+        $(this).parent().find('.api-url').toggle();
+    });
 
     $(function () {
         showDescriptionHelp();
