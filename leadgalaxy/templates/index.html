@@ -27,9 +27,9 @@
               <tbody>
                     {% for item in stores %}
                     <tr store-id="{{item.id}}">
-                      <td><a class="edit-store" store-id="{{item.id}}" store-url="http://{{item.api_url}}" store-name="{{item.title}}" href="#">{{item.title}}</a></td>
+                      <td><a class="edit-store" store-id="{{item.id}}" store-url="{{item.api_url}}" store-name="{{item.title}}" href="#">{{item.title}}</a></td>
                       <td>
-                        <span class="api-url" style="display:none">http://{{item.api_url}}</span>
+                        <span class="api-url" style="display:none">{{item.api_url}}</span>
                         <a href="#" class="show-api-url btn btn-default btn-outline btn-xs">Show</a>
                       </td>
                       <td>{{item.shopifyproduct_set.count}}</td>
@@ -263,6 +263,8 @@
         if (!url || url.length != 1) {
             alert('API URL is not correct!');
             return;
+        } else {
+            url = 'https://' + url[0];
         }
 
         $('#add-store').button('loading');
@@ -272,7 +274,7 @@
             type: 'POST',
             data: {
                 name: $('#store-name').val(),
-                url: 'https://' + url[0],
+                url: url,
             },
             success: function(data) {
                 if ('error' in data) {
@@ -414,7 +416,7 @@
             alert('API URL is not correct!');
             return;
         } else {
-            url = url[0];
+            url = 'https://' + url[0];
         }
 
         $.ajax({
