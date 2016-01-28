@@ -123,7 +123,7 @@
 
                     <div class="form-group col-xs-12">
                         <label for="product-visible">
-                            <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
+                            <input type="checkbox" class="" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
                             Make Product Visible
                         </label>
                     </div>
@@ -175,45 +175,32 @@
             {% endif %}
 
             <div class="buttons col-xs-12">
-                <div class="row">
-                    <div class="col-md-6">
-                        {% if  product.shopify_url %}
-                        <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
-                        {% endif %}
-                        <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
+                <p>
+                    {% if not product.shopify_url %}
+                    <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
+                    {% endif %}
+                    <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
 
-                    <div class="btn-group dropup">
-                        <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
-                            More Options<span class="caret" style="margin-left:10px"></span></button>
-
-                        <ul class="dropdown-menu">
-                        {% if product.shopify_url %}
-                            <li><a href="{{product.shopify_url}}" target="_blank" >View in Shopify</a></li>
-                            {% if request.user|can:'product_variant_setup.view' %}
-                            <li><a href="{{product.variant_edit}}" target="_blank">Setup Variants Images</a></li>
-                            {% endif %}
-                        {% else %}
-                            <li><a id="view-btn" type="button" style="display:none">View in Shopify</a></li>
-                            {% if request.user|can:'product_variant_setup.view' %}
-                            <li><a id="btn-variants-img" type="button" style="display:none">Setup Variants Images</a></li>
-                            {% endif %}
+                    {% if product.shopify_url %}
+                        <a href="{{product.shopify_url}}" target="_blank" class="btn btn-success" >View in Shopify</a>
+                        {% if request.user|can:'product_variant_setup.view' %}
+                        <a href="{{product.variant_edit}}" class="btn btn-success" target="_blank">Setup Variants Images</a>
                         {% endif %}
-
-                        {% if product.qelem.get_shopify_id %}
-                        <li><a href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank"> <i class="fa fa-chain"></i> Variants Mapping</a></li>
+                    {% else %}
+                        <button id="view-btn" type="button" class="btn btn-info" style="display:none">View in Shopify</button>
+                        {% if request.user|can:'product_variant_setup.view' %}
+                        <button id="btn-variants-img" type="button" class="btn btn-success" style="display:none">Setup Variants Images</button>
                         {% endif %}
+                    {% endif %}
 
-                        {% if product.shopify_url %}
-                            <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
-                        {% endif %}
+                    {% if product.shopify_url %}
+                        <a id="duplicate-btn" class="btn btn-outline btn-success" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a>
+                    {% endif %}
 
-                        {% if product.product.original_url %}
-                            <li><a href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source}}</a></li>
-                        {% endif %}
-                        </ul>
-                    </div>
-                    </div>
-                </div>
+                    {% if product.product.original_url %}
+                        <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source}}</a>
+                    {% endif %}
+                </p>
             </div>
         </div>
         <!-- / Product view -->
