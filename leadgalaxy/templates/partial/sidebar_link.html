@@ -2,7 +2,7 @@
 {% for item in links %}
 <li>
     {% with childs=item.childs.all %}
-    <a href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %}>
+    <a href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %} {% if item.title|length > 20 %}style="padding-right:0px"{%endif%}>
         {% if item.icon %}<i class="fa fa-{{item.icon}}"></i>{% endif %}
         <span class="nav-label">{{ item.title }}</span>
         {% if childs %} <span class="fa arrow"></span>{% endif %}
