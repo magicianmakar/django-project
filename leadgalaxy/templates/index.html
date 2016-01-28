@@ -19,7 +19,7 @@
               <thead>
                 <tr>
                   <th style=";">Title</th>
-                  <th class="hidden-sm hidden-xs" style=";">API URL</th>
+                  <th class="hidden-sm hidden-xs" style=";">Store URL</th>
                   <th style="width:90px">Products</th>
                   <th style="">Options</th>
                 </tr>
@@ -28,10 +28,10 @@
                     {% for item in stores %}
                     <tr store-id="{{item.id}}">
                       <td><a href="/store/{{item.id}}">{{item.title}}</a></td>
-                      <td class="hidden-sm" >{{item.api_url}}</td>
+                      <td>{{item.get_link|urlize}}</td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
-                        <button class="visit-store btn btn-xs btn-success" store-url="{{item.api_url}}"> Visit Store</button>
+                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank"> Visit Store</a>
                         <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.api_url}}"> Delete</button>
                       </td>
                     </tr>
@@ -321,13 +321,6 @@
                 btn.button('reset');
             }
         });
-    });
-
-    $('.visit-store').click(function(e) {
-        var url = $(this).attr('store-url');
-        url = url.replace(/[^\/:]+:[^:]+@/, '') + '/admin';
-
-        window.open(url, '_target');
     });
 
     $('form#config-form').submit(function (e) {
