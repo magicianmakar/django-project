@@ -80,7 +80,7 @@ class SidebarLink(models.Model):
     new_tab = models.BooleanField(default=False)
     icon = models.CharField(blank=True, default='', max_length=20)
 
-    parent = models.ForeignKey('SidebarLink', on_delete=models.SET_NULL, related_name='childs', null=True)
+    parent = models.ForeignKey('SidebarLink', on_delete=models.SET_NULL, related_name='childs', blank=True, null=True)
 
     def __str__(self):
         return self.title
