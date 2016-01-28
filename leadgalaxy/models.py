@@ -105,13 +105,17 @@ class ShopifyStore(models.Model):
     def __unicode__(self):
         return '%s | %s'%(self.title, self.user.username)
 
-    def get_link(self, page, api=False):
+    def get_link(self, page=None, api=False):
         if api:
             url = re.findall('[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
         else:
             url = re.findall('[^@\.]+\.myshopify\.com', self.api_url)[0]
 
-        url = 'https://%s/%s'%(url, page.lstrip('/'))
+        if page:
+            url = 'https://{}/{}'.format(url, page.lstrip('/'))
+        else:
+            url = 'https://{}'.format(url)
+
         return url
 
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query=''):
