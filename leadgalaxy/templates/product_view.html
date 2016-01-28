@@ -985,6 +985,8 @@ $('#duplicate-btn').click(function (e) {
                 setTimeout(function() {
                     btn.html('<i class="fa fa-external-link"></i> Open duplicate');
                 }, 100);
+
+                window.open(data.product.url, '_blank');
             }
         },
         error: function (data) {
