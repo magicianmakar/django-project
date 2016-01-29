@@ -10,11 +10,13 @@ def safeInt(v, default=0.0):
     except:
         return default
 
+
 def safeFloat(v, default=0.0):
     try:
         return float(v)
     except:
         return default
+
 
 def random_hash():
     import uuid, md5
@@ -22,12 +24,14 @@ def random_hash():
     token = str(uuid.uuid4())
     return md5.new(token).hexdigest()
 
+
 def create_new_profile(user):
     plan = GroupPlan.objects.filter(default_plan=1).first()
     profile = UserProfile(user=user, plan=plan)
     profile.save()
 
     return profile
+
 
 def get_user_from_token(token):
     try:
@@ -39,6 +43,7 @@ def get_user_from_token(token):
         return access_token.user
 
     return None
+
 
 def generate_plan_registration(plan, data={}):
     reg = PlanRegistration(plan=plan, data=json.dumps(data))
@@ -80,6 +85,7 @@ def smart_board_by_product(user, product):
         if product_added:
             i.save()
 
+
 def smart_board_by_board(user, board):
     for product in user.shopifyproduct_set.all():
         product_info = json.loads(product.data)
@@ -115,7 +121,7 @@ def smart_board_by_board(user, board):
 
 def format_data(data):
     text = ''
-    for k,v in data.items():
+    for k, v in data.items():
         text = '{}    {}: {}\n'.format(text, k.replace('_', ' ').title(), v)
 
     return text
@@ -165,6 +171,7 @@ def get_myshopify_link(user, default_store, link):
 
     return None
 
+
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
     product_id = safeInt(product_id)
@@ -182,7 +189,8 @@ def get_shopify_variant_image(store, product_id, variant_id):
 
     try:
         image_id = variant['variant']['image_id']
-        image = requests.get(store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
+        image = requests.get(
+            store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
         image = image['image']['src']
     except:
         product = requests.get(store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
@@ -196,9 +204,11 @@ def get_shopify_variant_image(store, product_id, variant_id):
     else:
         return None
 
+
 def get_shopify_order(store, order_id):
     rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True)).json()
     return rep['order']
+
 
 def get_shopify_order_line(store, order_id, line_id):
     order = get_shopify_order(store, order_id)
@@ -208,22 +218,25 @@ def get_shopify_order_line(store, order_id, line_id):
 
     return False
 
+
 def get_shopify_order_note(store, order_id):
     order = get_shopify_order(store, order_id)
     return order['note']
 
+
 def set_shopify_order_note(store, order_id, note):
     rep = requests.put(
-        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
-        json={
-            'order': {
-                'id': order_id,
-                'note': note
+            url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+            json={
+                'order': {
+                    'id': order_id,
+                    'note': note
+                }
             }
-        }
     ).json()
 
     return rep['order']['id']
+
 
 def add_shopify_order_note(store, order_id, new_note):
     note = get_shopify_order_note(store, order_id)
