@@ -133,7 +133,7 @@
                                 </td>
                                 <td>{{order.date_str}}</td>
                                 <td>{{order.financial_status|title}}</td>
-                                <td>
+                                <td class="fulfillment-status">
                                     {% if not order.fulfillment_status %}
                                         <span class="label label-warning">Unfulfilled</span>
                                     {% else %}
@@ -488,6 +488,7 @@
                 success: function (data) {
                     if (data.status == 'ok') {
                         this.orderData.btn.parents('tr').addClass('success');
+                        findMarkedLines();
                         swal('Marked as Ordered.', 'Item was marked as ordered in Shopified App', 'success');
                     } else {
                         displayAjaxError('Mark as Ordered', data);
@@ -501,6 +502,21 @@
             });
         });
     });
+
+    function findMarkedLines() {
+        $('.fulfillment-status button.status-orderd-btn').remove();
+
+        $('.var-info table tr[class="success"]').each(function (i, tr) {
+            var orderTR = $(tr).parents('tr').prev();
+            orderTR.find('.fulfillment-status').append(
+                $('<button class="btn btn-info btn-circle btn-xs itooltip no-outline status-orderd-btn" type="button" title="Order with lines marked as Ordered"><i class="fa fa-check"></i></button>').click(function (e) {
+                    $(this).parents('tr').find('.more-info').trigger('click');
+                })
+            );
+        });
+
+        $(".itooltip").tooltip();
+    }
 
     $(function () {
         $('.help-select').each(function (i, el) {
@@ -520,6 +536,8 @@
 
             $(el).trigger('change');
         });
+
+        findMarkedLines();
     })
 </script>
 {% endblock %}

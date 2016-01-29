@@ -89,3 +89,13 @@
     display: block;
     border-bottom: 1px solid #000;
 }
+
+.btn-circle.btn-xs {
+    width: 15px;
+    height: 15px;
+    padding: 2px 2px;
+    border-radius: 15px;
+    font-size: 8px;
+    line-height: 0.9;
+}
+
