@@ -120,7 +120,7 @@
                 </li>
                 {% endif %}
 
-                {% include 'partial/sidebar_link.html' with links=sidebar_links %}
+                {% include 'partial/sidebar_link.html' with links=sidebar_links plan=user.profile.plan.register_hash %}
             </ul>
 
         </div>

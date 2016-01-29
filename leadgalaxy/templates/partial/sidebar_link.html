@@ -1,5 +1,6 @@
 
 {% for item in links %}
+{% if plan in item.plans %}
 <li>
     {% with childs=item.childs.all %}
     <a href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %} {% if item.title|length > 20 %}style="padding-right:0px"{%endif%}>
@@ -12,6 +13,7 @@
     </a>
             <ul class="nav nav-second-level collapse">
                 {% for child in childs %}
+                {% if plan in child.plans %}
                  <li>
                     <a href="{% url 'acp_users_list' %}">
                         {% if child.icon %}<i class="fa fa-{{child.icon}}"></i>{% endif %}
@@ -19,6 +21,7 @@
                         {% if child.badge %}<span class="pull-right label label-info">{{ child.badge }}</span>{% endif %}
                     </a>
                 </li>
+                {% endif %}
                 {% endfor %}
             </ul>
         {% else %}
@@ -27,4 +30,5 @@
 
     {% endwith %}
 </li>
+{% endif %}
 {% endfor %}
