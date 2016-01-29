@@ -568,7 +568,12 @@
     $('.view-order-notes').click(function (e) {
         e.preventDefault();
 
-        swal('', atob($(this).attr('notes')), '');
+        swal({
+            title: '',
+            text: atob($(this).attr('notes')),
+            type: '',
+            animation: 'none'
+        });
     });
     function findMarkedLines() {
         $('.fulfillment-status button.status-orderd-btn').remove();
