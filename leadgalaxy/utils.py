@@ -15,7 +15,7 @@ def set_shopify_order_note(store, order_id, note):
         }
     ).json()
 
-    return rep['order']['id'] == order_id
+    return rep['order']['id']
 
 def add_shopify_order_note(store, order_id, new_note):
     note = get_shopify_order_note(store, order_id)

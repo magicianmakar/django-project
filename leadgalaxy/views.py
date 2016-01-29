@@ -867,6 +867,15 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'order-add-note':
+        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+
+        if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
+            return JsonResponse({'status': 'ok'})
+        else:
+            return JsonResponse({'error': 'Shopify API Error'})
+
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 def webhook(request, provider, option):

@@ -134,10 +134,25 @@
                                 <td>{{order.date_str}}</td>
                                 <td>{{order.financial_status|title}}</td>
                                 <td class="fulfillment-status">
-                                    {% if not order.fulfillment_status %}
-                                        <span class="label label-warning">Unfulfilled</span>
-                                    {% else %}
-                                        <span class="label label-success">{{order.fulfillment_status|title}}</span>
+                                     <div class="btn-group">
+                                        <button data-toggle="dropdown" class="btn btn-xs dropdown-toggle {% if not order.fulfillment_status %}btn-warning{% else %}btn-success{% endif %}" aria-expanded="false">
+                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
+                                            <span class="caret"></span></button>
+
+                                        <ul class="dropdown-menu">
+                                            <li><a class="add-order-note" href="#" store="{{order.store.id}}" order-id="{{order.id}}">Add notes</a></li>
+                                        </ul>
+                                    </div>
+
+                                    {% if order.note %}
+
+                                    <button
+                                        class="btn btn-outline  btn-xs itooltip no-outline view-order-notes"
+                                        notes="{% base64_encode order.note %}"
+                                        title="Order Notes"
+                                        style="padding: 0; margin: 0 3px; color: #999999">
+                                        <i class="fa fa-sticky-note"></i>
+                                    </button>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -503,6 +518,56 @@
         });
     });
 
+    $('.add-order-note').click(function (e) {
+        e.preventDefault();
+
+        var order_id = $(this).attr('order-id');
+        var store = $(this).attr('store');
+
+        swal({
+            title: "Add Note",
+            text: "Add Notes to this order:",
+            type: "input",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            animation: "slide-from-top",
+            inputPlaceholder: "Notes"
+        }, function(inputValue) {
+            if (inputValue === false) return false;
+            if (inputValue === "") {
+                swal.showInputError("You need to enter a note.");
+                return false
+            }
+
+            $.ajax({
+                url: '/api/order-add-note',
+                type: 'POST',
+                data: {
+                    'order_id': order_id,
+                    'store': store,
+                    'note': inputValue
+                },
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        swal('Add Note', 'Note added to the order in Shopify.', 'success');
+                    } else {
+                        displayAjaxError('Add Note', data);
+                    }
+                },
+                error: function (data) {
+                    displayAjaxError('Add Note', data);
+                },
+                complete: function () {
+                }
+            });
+        });
+    });
+
+    $('.view-order-notes').click(function (e) {
+        e.preventDefault();
+
+        swal('', atob($(this).attr('notes')), '');
+    });
     function findMarkedLines() {
         $('.fulfillment-status button.status-orderd-btn').remove();
 

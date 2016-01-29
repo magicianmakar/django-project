@@ -33,3 +33,7 @@ def render_category(context, tpl, category):
 def encode_order(context, data, auto):
     data['auto'] = (auto == 'True')
     return json.dumps(data).encode('base64')
+
+@register.simple_tag(takes_context = True)
+def base64_encode(context, data):
+    return data.encode('base64')
