@@ -207,6 +207,8 @@
                                                             <ul class="dropdown-menu">
                                                                 {% if item.shopify_order %}
                                                                 <li><a class="placed-order-details" href="#" order-id="{{order.id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}" data="{{item.shopify_order.encoded}}">Order Details</a></li>
+                                                                {% else %}
+                                                                <li><a class="mark-as-ordered" href="#" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
                                                                 {% endif %}
 
                                                                 <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
@@ -447,6 +449,57 @@
         html += '</ul';
 
         swal({title: '', text: html, html: true, animation:false});
+    });
+
+    $('.mark-as-ordered').click(function (e) {
+        e.preventDefault();
+
+        var orderData = {
+            order_id: $(this).attr('order-id'),
+            line_id: $(this).attr('line-id'),
+            btn:  $(this)
+        }
+
+        swal({
+            title: "Order Placed",
+            text: "Aliexpress Order ID:",
+            type: "input",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            animation: "slide-from-top",
+            inputPlaceholder: "Order ID"
+        }, function(inputValue) {
+            if (inputValue === false) return false;
+            if (inputValue === "") {
+                swal.showInputError("You need to enter an Order ID.");
+                return false
+            }
+
+            $.ajax({
+                url: '/api/order-fulfill',
+                type: 'POST',
+                data: {
+                    'order_id': orderData.order_id,
+                    'line_id': orderData.line_id,
+                    'aliexpress_order_id': inputValue,
+                    'aliexpress_order_trade': ''
+                },
+                context: {orderData: orderData},
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        this.orderData.btn.parents('tr').addClass('success');
+                        swal('Marked as Ordered.', 'Item was marked as ordered in Shopified App', 'success');
+                    } else {
+                        displayAjaxError('Mark as Ordered', data);
+                    }
+                },
+                error: function (data) {
+                    displayAjaxError('Mark as Ordered', data);
+                },
+                complete: function () {
+                }
+            });
+        });
     });
 
     $(function () {
