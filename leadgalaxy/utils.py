@@ -120,21 +120,22 @@ def format_data(data):
 
     return text
 
-def slack_invite(rdata):
+
+def slack_invite(data):
     success = False
     rep = ''
     try:
         r = requests.post(
-            url='https://shopifiedapp.slack.com/api/users.admin.invite',
-            data={
-                'email': rdata['email'],
-                'first_name': rdata['firstname'],
-                'last_name': rdata['lastname'],
-                'channels': 'C0F23PPE2,C0FA60BC6,C0FA6GYHM,C0F1M7X8R,C0FA6RYKW',
-                'token': 'xoxp-15055768838-15056514242-19294251986-f79c8c24f4',
-                'set_active': True,
-                '_attempts': 1
-            }
+                url='https://shopifiedapp.slack.com/api/users.admin.invite',
+                data={
+                    'email': data['email'],
+                    'first_name': data['firstname'],
+                    'last_name': data['lastname'],
+                    'channels': 'C0F23PPE2,C0FA60BC6,C0FA6GYHM,C0F1M7X8R,C0FA6RYKW',
+                    'token': 'xoxp-15055768838-15056514242-19294251986-f79c8c24f4',
+                    'set_active': True,
+                    '_attempts': 1
+                }
         )
 
         success = r.json()['ok']
@@ -144,12 +145,13 @@ def slack_invite(rdata):
 
     if not success:
         send_mail(subject='Slack Invite Fail',
-            recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-            from_email='chase@rankengine.com',
-            message='Slack Invite was not sent to {} due the following error:\n{}'.format(rdata['email'], rep))
+                  recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                  from_email='chase@rankengine.com',
+                  message='Slack Invite was not sent to {} due the following error:\n{}'.format(data['email'], rep))
+
 
 def get_myshopify_link(user, default_store, link):
-    stores = [default_store,]
+    stores = [default_store, ]
     for i in user.shopifystore_set.all():
         if i not in stores:
             stores.append(i)
