@@ -25,88 +25,6 @@ import os, re, json, requests, arrow
 import utils
 from province_helper import load_uk_provincess
 
-def safeInt(v, default=0.0):
-    try:
-        return int(v)
-    except:
-        return default
-
-def safeFloat(v, default=0.0):
-    try:
-        return float(v)
-    except:
-        return default
-
-def create_new_profile(user):
-    plan = GroupPlan.objects.filter(default_plan=1).first()
-    profile = UserProfile(user=user, plan=plan)
-    profile.save()
-
-    return profile
-
-def smartBoardByProduct(user, product):
-    prodct_info = json.loads(product.data)
-    prodct_info = {
-        'title': prodct_info.get('title', '').lower(),
-        'tags': prodct_info.get('tags', '').lower(),
-        'type': prodct_info.get('type', '').lower(),
-    }
-
-    for i in user.shopifyboard_set.all():
-        try:
-            config = json.loads(i.config)
-        except:
-            continue
-
-        product_added = False
-        for j in ['title', 'tags', 'type']:
-            if product_added:
-                break
-
-            if not len(config.get(j, '')) or not len(prodct_info[j]):
-                continue
-
-            for f in config.get(j, '').split(','):
-                if f.lower() in prodct_info[j]:
-                    i.products.add(product)
-                    product_added = True
-
-                    break
-
-        if product_added:
-            i.save()
-
-def smartBoardByBoard(user, board):
-    for product in user.shopifyproduct_set.all():
-        prodct_info = json.loads(product.data)
-        prodct_info = {
-            'title': prodct_info.get('title', '').lower(),
-            'tags': prodct_info.get('tags', '').lower(),
-            'type': prodct_info.get('type', '').lower(),
-        }
-
-        try:
-            config = json.loads(board.config)
-        except:
-            continue
-
-        product_added = False
-        for j in ['title', 'tags', 'type']:
-            if product_added:
-                break
-
-            if not len(config.get(j, '')) or not len(prodct_info[j]):
-                continue
-
-            for f in config.get(j, '').split(','):
-                if f.lower() in prodct_info[j]:
-                    board.products.add(product)
-                    product_added = True
-
-                    break
-
-        if product_added:
-            board.save()
 
 @login_required
 def index_view(request):
@@ -120,48 +38,7 @@ def index_view(request):
         'breadcrumbs': ['Stores']
     })
 
-def get_user_from_token(token):
-    try:
-        access_token = AccessToken.objects.get(token=token)
-    except:
-        return None
 
-    if len(token) and access_token:
-        return access_token.user
-
-    return None
-
-def get_myshopify_link(user, default_store, link):
-    stores = [default_store,]
-    for i in user.shopifystore_set.all():
-        if i not in stores:
-            stores.append(i)
-
-    for store in stores:
-        handle = link.split('/')[-1]
-
-        r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
-        if len(r['products']) == 1:
-            return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
-
-    return None
-
-
-def random_hash():
-    import uuid, md5
-
-    token = str(uuid.uuid4())
-    return md5.new(token).hexdigest()
-
-
-def generate_plan_registration(plan, data={}):
-    reg = PlanRegistration(plan=plan, data=json.dumps(data))
-    reg.register_hash = random_hash()
-    reg.save()
-
-    return reg
-
-# @login_required
 def api(request, target):
     method = request.method
     if method == 'POST':
@@ -173,7 +50,7 @@ def api(request, target):
 
     if 'access_token' in data:
         token = data.get('access_token')
-        user = get_user_from_token(token)
+        user = utils.get_user_from_token(token)
     else:
         if request.user.is_authenticated:
             user = request.user
@@ -218,7 +95,7 @@ def api(request, target):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
-            create_new_profile(new_user)
+            utils.create_new_profile(new_user)
 
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])
             if user is not None:
@@ -326,7 +203,7 @@ def api(request, target):
 
         if 'access_token' in req_data:
             token = req_data['access_token']
-            user = get_user_from_token(token)
+            user = utils.get_user_from_token(token)
 
             if not user:
                 return JsonResponse({'error': 'Unvalide access token: %s'%(token)})
@@ -416,7 +293,7 @@ def api(request, target):
 
             product.save()
 
-            smartBoardByProduct(user, product)
+            utils.smart_board_by_product(user, product)
 
             url = request.build_absolute_uri('/product/%d'%product.id)
             pid = product.id
@@ -455,8 +332,8 @@ def api(request, target):
 
             product_data['title'] = data.get('title[%s]'%p)
             product_data['tags'] = data.get('tags[%s]'%p)
-            product_data['price'] = safeFloat(data.get('price[%s]'%p))
-            product_data['compare_at_price'] = safeFloat(data.get('compare_at[%s]'%p))
+            product_data['price'] = utils.safeFloat(data.get('price[%s]'%p))
+            product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at[%s]'%p))
             product_data['type'] = data.get('type[%s]'%p)
             product_data['weight'] = data.get('weight[%s]'%p)
             # send_to_shopify = data.get('send_to_shopify[%s]'%p)
@@ -475,10 +352,10 @@ def api(request, target):
                 product_data['tags'] = data.get('tags')
 
             if 'price' in data:
-                product_data['price'] = safeFloat(data.get('price'))
+                product_data['price'] = utils.safeFloat(data.get('price'))
 
             if 'compare_at' in data:
-                product_data['compare_at_price'] = safeFloat(data.get('compare_at'))
+                product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at'))
 
             if 'type' in data:
                 product_data['type'] = data.get('type')
@@ -620,7 +497,7 @@ def api(request, target):
 
         board.save()
 
-        smartBoardByBoard(user, board)
+        utils.smart_board_by_board(user, board)
 
         return JsonResponse({
             'status': 'ok'
@@ -672,7 +549,7 @@ def api(request, target):
                 product.shopify_export = None
         else:
             if 'myshopify' not in shopify_link.lower():
-                shopify_link = get_myshopify_link(user, product.store, shopify_link)
+                shopify_link = utils.get_myshopify_link(user, product.store, shopify_link)
                 if not shopify_link:
                     return JsonResponse({'error': 'Invalid Custom domain link.'})
 
@@ -816,7 +693,7 @@ def api(request, target):
         except:
             return JsonResponse({'error': 'Store not found'})
 
-        image = get_variant_image(store, data.get('product'), data.get('variant'))
+        image = utils.get_shopify_variant_image(store, data.get('product'), data.get('variant'))
 
         if image:
             return JsonResponse({
@@ -844,8 +721,8 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'order-fulfill':
-        order_id = safeInt(data.get('order_id'))
-        line_id = safeInt(data.get('line_id'))
+        order_id = utils.safeInt(data.get('order_id'))
+        line_id = utils.safeInt(data.get('line_id'))
         order_data = {
             'aliexpress': {
                 'order': {
@@ -924,7 +801,7 @@ def webhook(request, provider, option):
             raise Http404('Error during proccess')
 
         if status == 'new':
-            reg = generate_plan_registration(plan, data)
+            reg = utils.generate_plan_registration(plan, data)
             data['reg_hash'] = reg.register_hash
             data['plan_title'] = plan.title
 
@@ -942,12 +819,12 @@ def webhook(request, provider, option):
                 message=email_html,
                 html_message=email_html)
 
-            slack_invite(data)
+            utils.slack_invite(data)
 
             send_mail(subject='Shopified App: New Registration',
                 recipient_list=['chase@rankengine.com'],
                 from_email='chase@rankengine.com',
-                message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(format_data(data)))
+                message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(utils.format_data(data)))
 
             return HttpResponse('ok')
         elif status in ['canceled', 'refunded']:
@@ -964,7 +841,7 @@ def webhook(request, provider, option):
                 send_mail(subject='Shopified App: Cancel/Refund',
                     recipient_list=['chase@rankengine.com'],
                     from_email='chase@rankengine.com',
-                    message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(format_data(data)))
+                    message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(utils.format_data(data)))
 
                 return HttpResponse('ok')
 
@@ -980,40 +857,6 @@ def webhook(request, provider, option):
     else:
         return JsonResponse({'status': 'ok'})
 
-def format_data(data):
-    text = ''
-    for k,v in data.items():
-        text = '{}    {}: {}\n'.format(text, k.replace('_', ' ').title(), v)
-
-    return text
-
-def slack_invite(rdata):
-    success = False
-    rep = ''
-    try:
-        r = requests.post(
-            url='https://shopifiedapp.slack.com/api/users.admin.invite',
-            data={
-                'email': rdata['email'],
-                'first_name': rdata['firstname'],
-                'last_name': rdata['lastname'],
-                'channels': 'C0F23PPE2,C0FA60BC6,C0FA6GYHM,C0F1M7X8R,C0FA6RYKW',
-                'token': 'xoxp-15055768838-15056514242-19294251986-f79c8c24f4',
-                'set_active': True,
-                '_attempts': 1
-            }
-        )
-
-        success = r.json()['ok']
-        rep = r.text
-    except Exception as e:
-        rep = str(e)
-
-    if not success:
-        send_mail(subject='Slack Invite Fail',
-            recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-            from_email='chase@rankengine.com',
-            message='Slack Invite wasn\'t sent to {} due the following error:\n{}'.format(rdata['email'], rep))
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
     products = []
@@ -1056,7 +899,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
                 p['source'] = 'AliBaba'
         except: pass
 
-        p['price'] = '$%.02f'%safeFloat(p['product']['price'])
+        p['price'] = '$%.02f'%utils.safeFloat(p['product']['price'])
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
@@ -1090,9 +933,9 @@ def accept_product(product, fdata):
         accept = fdata.get('title').lower() in product['product']['title'].lower()
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        price = safeFloat(product['product']['price'])
-        min_price = safeFloat(fdata.get('price_min'), -1)
-        max_price = safeFloat(fdata.get('price_max'), -1)
+        price = utils.safeFloat(product['product']['price'])
+        min_price = utils.safeFloat(fdata.get('price_min'), -1)
+        max_price = utils.safeFloat(fdata.get('price_max'), -1)
 
         if (min_price>0 and max_price>0):
             accept = (accept and  (min_price <= price) and (price <= max_price))
@@ -1126,7 +969,7 @@ def sorted_products(products, sort):
 
     elif sort == 'price':
         products = sorted(products,
-            cmp=lambda x,y: cmp(safeFloat(x['product']['price']), safeFloat(y['product']['price'])),
+            cmp=lambda x,y: cmp(utils.safeFloat(x['product']['price']), utils.safeFloat(y['product']['price'])),
             reverse=sort_reversed)
 
     return products
@@ -1136,7 +979,7 @@ def products_list(request, tpl='grid'):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': safeInt(request.GET.get('ppp'), 25),
+        'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
         'sort': request.GET.get('sort'),
         'store': request.GET.get('store', 'n')
     }
@@ -1211,7 +1054,7 @@ def product_view(request, pid):
     if 'images' not in p['product'] or not p['product']['images']:
         p['product']['images'] = []
 
-    p['price'] = '$%.02f'%safeFloat(p['product']['price'])
+    p['price'] = '$%.02f'%utils.safeFloat(p['product']['price'])
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
@@ -1351,7 +1194,7 @@ def bulk_edit(request):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': safeInt(request.GET.get('ppp'), 25),
+        'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
         'sort': request.GET.get('sort'),
         'store': 'n'
     }
@@ -1402,7 +1245,7 @@ def boards(request):
             if 'images' not in p['product'] or not p['product']['images']:
                 p['product']['images'] = []
 
-            p['price'] = '$%.02f'%safeFloat(p['product']['price'])
+            p['price'] = '$%.02f'%utils.safeFloat(p['product']['price'])
 
             p['images'] = p['product']['images']
             board['products'].append(p)
@@ -1739,36 +1582,6 @@ def save_image_s3(request):
         'url': upload_url
     })
 
-def get_variant_image(store, product_id, variant_id):
-    """ product_id: Product ID in Shopify """
-    product_id = safeInt(product_id)
-    variant_id = safeInt(variant_id)
-    image = None
-
-    try:
-        cached = ShopifyProductImage.objects.get(store=store, product=product_id, variant=variant_id)
-        return cached.image
-    except:
-        pass
-
-    if variant_id:
-        variant = requests.get(store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)).json()
-
-    try:
-        image_id = variant['variant']['image_id']
-        image = requests.get(store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
-        image = image['image']['src']
-    except:
-        product = requests.get(store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
-        image = product['product']['image']['src']
-
-    if image:
-        cached = ShopifyProductImage(store=store, product=product_id, variant=variant_id, image=image)
-        cached.save()
-
-        return image
-    else:
-        return None
 
 @login_required
 def orders_view(request):
@@ -1778,8 +1591,8 @@ def orders_view(request):
     stores = []
     all_orders = []
     store = None
-    post_per_page = safeInt(request.GET.get('ppp'), 20)
-    page = safeInt(request.GET.get('page'), 1)
+    post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
+    page = utils.safeInt(request.GET.get('page'), 1)
 
     if request.GET.get('store'):
         store = ShopifyStore.objects.get(id=request.GET.get('store'), user=request.user)
@@ -1798,7 +1611,7 @@ def orders_view(request):
 
     rep = requests.get(
         url=store.get_link('/admin/orders.json', api=True),
-        params={'limit': safeInt(request.GET.get('limit'), 100)}
+        params={'limit': utils.safeInt(request.GET.get('limit'), 100)}
     )
 
     try:
@@ -1820,7 +1633,7 @@ def orders_view(request):
     paginator.set_order_limit(post_per_page)
     paginator.set_filter(status, fulfillment, financial)
     paginator.set_reverse_order(sort=='desc')
-    paginator.set_query(safeInt(query, query))
+    paginator.set_query(utils.safeInt(query, query))
 
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
@@ -1979,7 +1792,7 @@ def register(request, registration=None):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save()
-            new_profile = create_new_profile(new_user)
+            new_profile = utils.create_new_profile(new_user)
 
             if registration:
                 new_profile.plan = registration.plan
