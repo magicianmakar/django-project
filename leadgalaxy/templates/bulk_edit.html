@@ -169,12 +169,13 @@
                 success: function (data) {
                     if ('status' in data && data.status == 'ok') {
                         sendToShopify();
+                        toastr.success('Saved', 'Bulk Edit')
                     } else {
-                        alert(data.error || 'Server error');
+                        displayAjaxError('Bulk Edit', data);
                     }
                 },
                 error: function(data) {
-                    alert(data.error || 'Server error');
+                    displayAjaxError('Bulk Edit', data);
                 },
                 complete: function() {
                     btn.button('reset');
