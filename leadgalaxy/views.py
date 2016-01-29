@@ -861,7 +861,11 @@ def api(request, target):
         store = data.get('store')
         if store:
             store = ShopifyStore.objects.get(id=store, user=user)
-            note = 'Aliexpress Order ID: {}'.format(order_id)
+            order_line = utils.get_shopify_order_line(store, order_id, line_id)
+            if order_line:
+                note = 'Aliexpress Order ID: {} - {} / {}'.format(order_id, order_line['name'], order_line['variant_title'])
+            else:
+                note = 'Aliexpress Order ID: {}'.format(order_id)
 
             utils.add_shopify_order_note(store, order_id, note)
 
