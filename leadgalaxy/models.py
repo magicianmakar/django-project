@@ -1,11 +1,11 @@
 from django.db import models
 
-from django.contrib.auth.models import User, Group
-from django.template import Context, Template
-from django.db.models import Q
+from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 
-import re, json, requests
+import re
+import json
+import requests
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -18,6 +18,7 @@ YES_NO_CHOICES = (
     (0, 'No'),
     (1, 'Yes'),
 )
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
@@ -34,7 +35,7 @@ class UserProfile(models.Model):
     config = models.TextField(default='', blank=True)
 
     def __str__(self):
-        return '%s | %s'%(self.user.username, self.plan.title)
+        return '{} | {}'.format(self.user.username, self.plan.title)
 
     def get_plan(self):
        try:
@@ -47,7 +48,7 @@ class UserProfile(models.Model):
 
     @cached_property
     def get_perms(self):
-        return self.plan.permissions.all().values_list('name',flat=True)
+        return self.plan.permissions.all().values_list('name', flat=True)
 
     def can(self, perm_name):
         perm_name = perm_name.lower()
@@ -80,8 +81,10 @@ class UserProfile(models.Model):
         self.config = json.dumps(data)
         self.save()
 
+
 def user_can(self, perms):
     return self.profile.can(perms)
+
 
 def user_config(self, name, default_value=None):
     return self.profile.get_config_value(name, default_value)
@@ -99,11 +102,11 @@ class ShopifyStore(models.Model):
 
     user = models.ForeignKey(User)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return '%s | %s'%(self.title, self.user.username)
+        return '{} | {}'.format(self.title, self.user.username)
 
     def get_link(self, page=None, api=False):
         if api:
@@ -120,14 +123,15 @@ class ShopifyStore(models.Model):
 
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query=''):
         return requests.get(
-            url = self.get_link('/admin/orders/count.json', api=True),
-            params = {
+            url=self.get_link('/admin/orders/count.json', api=True),
+            params={
                 'status': status,
                 'fulfillment_status': fulfillment,
                 'financial_status': financial,
                 'query': query
             }
         ).json()['count']
+
 
 class AccessToken(models.Model):
     class Meta:
@@ -136,11 +140,12 @@ class AccessToken(models.Model):
     token = models.CharField(max_length=512, unique=True)
     user = models.ForeignKey(User)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return '%s'%(self.token)
+        return self.token
+
 
 class ShopifyProduct(models.Model):
     class Meta:
@@ -153,13 +158,13 @@ class ShopifyProduct(models.Model):
     original_data = models.TextField(default='', blank=True)
     variants_map = models.TextField(default='', blank=True)
     notes = models.TextField(default='', blank=True)
-    stat = models.IntegerField(default=0, verbose_name='Publish stat') # 0: not send yet, 1: Sent to Shopify
+    stat = models.IntegerField(default=0, verbose_name='Publish stat')  # 0: not send yet, 1: Sent to Shopify
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
@@ -168,7 +173,7 @@ class ShopifyProduct(models.Model):
         except:
             title = 'Product'
 
-        return '%s | %s'%(title, self.store.title)
+        return '{} | {}'.format(title, self.store.title)
 
     def shopify_link(self):
         if self.shopify_export and self.shopify_export.shopify_id:
@@ -236,19 +241,21 @@ class ShopifyProduct(models.Model):
 
         return pid
 
+
 class ShopifyProductExport(models.Model):
     class Meta:
         ordering = ['-created_at']
 
     original_url = models.CharField(max_length=512, blank=True, default='')
-    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopif Product ID')
+    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopify Product ID')
 
     store = models.ForeignKey(ShopifyStore)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
 
     def __unicode__(self):
         return '{} | {}'.format(self.shopify_id, self.store.title)
+
 
 class ShopifyProductImage(models.Model):
     product = models.BigIntegerField(verbose_name="Shopify Product ID")
@@ -260,6 +267,7 @@ class ShopifyProductImage(models.Model):
     def __unicode__(self):
         return '{} | {}'.format(self.product, self.variant)
 
+
 class ShopifyOrder(models.Model):
     class Meta:
         ordering = ['-created_at']
@@ -269,13 +277,14 @@ class ShopifyOrder(models.Model):
     line_id = models.BigIntegerField()
     data = models.TextField()
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
 
     def encoded(self):
         return json.dumps(self.data).encode('base64')
 
     def __str__(self):
         return '{} | {}'.format(self.order_id, self.line_id)
+
 
 class ShopifyBoard(models.Model):
     class Meta:
@@ -287,15 +296,17 @@ class ShopifyBoard(models.Model):
     user = models.ForeignKey(User)
     products = models.ManyToManyField(ShopifyProduct, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
 
 class AppPermission(models.Model):
     name = models.CharField(max_length=512, verbose_name="Permission")
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.description
+
 
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
@@ -312,8 +323,9 @@ class GroupPlan(models.Model):
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
+
 
 class UserUpload(models.Model):
     class Meta:
@@ -323,11 +335,11 @@ class UserUpload(models.Model):
     product = models.ForeignKey(ShopifyProduct, null=True)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
-        return '%s | %s'%(self.url.replace('%2F','/').split('/')[-1], self.user.username)
+    def __str__(self):
+        return '{} | {}'.format(self.url.replace('%2F', '/').split('/')[-1], self.user.username)
 
 
 class PlanRegistration(models.Model):
@@ -343,5 +355,5 @@ class PlanRegistration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} | {}'.format(self.plan.title, self.register_hash)
