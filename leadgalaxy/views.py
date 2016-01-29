@@ -20,7 +20,11 @@ from app import settings
 from .models import *
 from .forms import *
 
-import os, re, json, requests, arrow
+import os
+import re
+import json
+import requests
+import arrow
 
 import utils
 from province_helper import load_uk_provincess
