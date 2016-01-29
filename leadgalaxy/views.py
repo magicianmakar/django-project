@@ -21,6 +21,8 @@ from .models import *
 from .forms import *
 
 import os, re, json, requests, arrow
+
+import utils
 from province_helper import load_uk_provincess
 
 def safeInt(v, default=0.0):
@@ -855,6 +857,13 @@ def api(request, target):
 
         order = ShopifyOrder(user=user, order_id=order_id, line_id=line_id, data=json.dumps(order_data))
         order.save()
+
+        store = data.get('store')
+        if store:
+            store = ShopifyStore.objects.get(id=store, user=user)
+            note = 'Aliexpress Order ID: {}'.format(order_id)
+
+            utils.add_shopify_order_note(store, order_id, note)
 
         return JsonResponse({'status': 'ok'})
 
@@ -1878,6 +1887,7 @@ def orders_view(request):
                         'shipping_address': shipping_address_asci,
                         'order_id': order['id'],
                         'line_id': el['id'],
+                        'store': store.id,
                         'order': {
                             'phone': request.user.config('order_phone_number'),
                             'note': request.user.config('order_custom_note'),
