@@ -15,7 +15,7 @@
                 {% for child in childs %}
                 {% if plan in child.plans %}
                  <li>
-                    <a href="{% url 'acp_users_list' %}">
+                    <a href="{{ child.link }}" {% if child.new_tab %}target="_blank"{% endif %}>
                         {% if child.icon %}<i class="fa fa-{{child.icon}}"></i>{% endif %}
                         <span class="nav-label">{{ child.title }}</span>
                         {% if child.badge %}<span class="pull-right label label-info">{{ child.badge }}</span>{% endif %}
