@@ -61,8 +61,8 @@ def api(request, target):
         return JsonResponse({'error': 'Unauthenticated api call.'})
 
     if target == 'login':
-        username=data.get('username')
-        password=data.get('password')
+        username = data.get('username')
+        password = data.get('password')
 
         if '@' in username:
             try:
@@ -82,7 +82,7 @@ def api(request, target):
 
                 return JsonResponse({
                     'token': token,
-                    'user' : {
+                    'user': {
                         'groups': [str(i) for i in user.groups.all().values_list('name', flat=True)],
                         'username': user.username,
                         'email': user.email
@@ -122,18 +122,17 @@ def api(request, target):
 
         return JsonResponse(stores, safe=False)
 
-
     if method == 'POST' and target == 'add-store':
         name = data.get('name')
         url = data.get('url')
 
-        total_stores = user.profile.plan.stores # -1 mean unlimited
+        total_stores = user.profile.plan.stores  # -1 mean unlimited
         user_saved_stores = user.shopifystore_set.filter(is_active=True).count()
 
         if (total_stores > -1) and (user_saved_stores + 1 > total_stores):
             return JsonResponse({
                 'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.' \
-                         %(total_stores, user_saved_stores)
+                         % (total_stores, user_saved_stores)
             })
 
         store = ShopifyStore(title=name, api_url=url, user=user)
@@ -178,7 +177,7 @@ def api(request, target):
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
         except:
-            return JsonResponse({'error':'Product not found'})
+            return JsonResponse({'error': 'Product not found'})
 
         return JsonResponse(json.loads(product.data), safe=False)
 
@@ -189,7 +188,7 @@ def api(request, target):
                 product = ShopifyProduct.objects.get(id=p, user=user)
                 products[p] = json.loads(product.data)
             except:
-                return JsonResponse({'error':'Product not found'})
+                return JsonResponse({'error': 'Product not found'})
 
         return JsonResponse(products, safe=False)
 
@@ -206,7 +205,7 @@ def api(request, target):
             user = utils.get_user_from_token(token)
 
             if not user:
-                return JsonResponse({'error': 'Unvalide access token: %s'%(token)})
+                return JsonResponse({'error': 'Unvalide access token: %s' % (token)})
         else:
             if request.user.is_authenticated:
                 user = request.user
@@ -217,7 +216,7 @@ def api(request, target):
             store = ShopifyStore.objects.get(id=store, user=user)
         except:
             return JsonResponse({
-                'error': 'Selected store (%s) not found for user: %s'%(store, user.username if user else 'None')
+                'error': 'Selected store (%s) not found for user: %s' % (store, user.username if user else 'None')
             })
 
         endpoint = store.api_url + '/admin/products.json'
@@ -232,7 +231,8 @@ def api(request, target):
             except:
                 try:
                     d = r.json()
-                    return JsonResponse({'error': '[Shopify API Error] '+' | '.join([k+': '+''.join(d['errors'][k]) for k in d['errors']])})
+                    return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(
+                            [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])})
                 except:
                     return JsonResponse({'error': 'Shopify API Error'})
 
@@ -262,7 +262,7 @@ def api(request, target):
                 product.shopify_export = product_export
                 product.save()
 
-        else: # save for later
+        else:  # save for later
             if 'product' in req_data:
                 # Saved product update
                 try:
@@ -274,28 +274,29 @@ def api(request, target):
                 product.data = data
                 product.stat = 0
 
-            else: # New product to save
+            else:  # New product to save
 
                 # Check if the user plan allow more product saving
-                total_products = user.profile.plan.products # -1 mean unlimited
+                total_products = user.profile.plan.products  # -1 mean unlimited
                 user_saved_products = user.shopifyproduct_set.count()
 
                 if (total_products > -1) and (user_saved_products + 1 > total_products):
                     return JsonResponse({
                         'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.' \
-                                 %(total_products, user_saved_products)
+                                 % (total_products, user_saved_products)
                     })
 
                 is_active = req_data.get('activate', True)
 
-                product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0, is_active=is_active)
+                product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0,
+                                         is_active=is_active)
                 product.notes = req_data.get('notes', '')
 
             product.save()
 
             utils.smart_board_by_product(user, product)
 
-            url = request.build_absolute_uri('/product/%d'%product.id)
+            url = request.build_absolute_uri('/product/%d' % product.id)
             pid = product.id
 
         return JsonResponse({
@@ -303,8 +304,8 @@ def api(request, target):
                 'url': url,
                 'id': pid,
                 'data': product_data
-                }
-            }, safe=False)
+            }
+        }, safe=False)
 
     if method == 'POST' and target == 'product-stat':
         try:
@@ -330,12 +331,12 @@ def api(request, target):
             product = ShopifyProduct.objects.get(id=p, user=user)
             product_data = json.loads(product.data)
 
-            product_data['title'] = data.get('title[%s]'%p)
-            product_data['tags'] = data.get('tags[%s]'%p)
-            product_data['price'] = utils.safeFloat(data.get('price[%s]'%p))
-            product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at[%s]'%p))
-            product_data['type'] = data.get('type[%s]'%p)
-            product_data['weight'] = data.get('weight[%s]'%p)
+            product_data['title'] = data.get('title[%s]' % p)
+            product_data['tags'] = data.get('tags[%s]' % p)
+            product_data['price'] = utils.safeFloat(data.get('price[%s]' % p))
+            product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at[%s]' % p))
+            product_data['type'] = data.get('type[%s]' % p)
+            product_data['weight'] = data.get('weight[%s]' % p)
             # send_to_shopify = data.get('send_to_shopify[%s]'%p)
 
             product.data = json.dumps(product_data)
@@ -373,17 +374,17 @@ def api(request, target):
 
         return JsonResponse({
             'status': 'ok',
-            'products':products
+            'products': products
         }, safe=False)
 
     if method == 'POST' and target == 'boards-add':
-        total_boards = user.profile.plan.boards # -1 mean unlimited
+        total_boards = user.profile.plan.boards  # -1 mean unlimited
         user_saved_boards = user.shopifyboard_set.count()
 
         if (total_boards > -1) and (user_saved_boards + 1 > total_boards):
             return JsonResponse({
                 'error': 'Your current plan allow up to %d boards, currently you have %d boards.' \
-                         %(total_boards, user_saved_boards)
+                         % (total_boards, user_saved_boards)
             })
 
         board = ShopifyBoard(title=data.get('title').strip(), user=user)
@@ -510,7 +511,6 @@ def api(request, target):
         target_user = User.objects.get(id=data.get('user'))
         plan = GroupPlan.objects.get(id=data.get('plan'))
 
-
         try:
             profile = target_user.profile
             target_user.profile.plan = plan
@@ -557,7 +557,8 @@ def api(request, target):
             if not shopify_id:
                 return JsonResponse({'error': 'Invalid Shopify link.'})
 
-            product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id, store=product.store)
+            product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id,
+                                                  store=product.store)
             product_export.save()
 
             product.shopify_export = product_export
@@ -609,13 +610,13 @@ def api(request, target):
                     config[i] = ''
 
         if not user.can('auto_order.use'):
-            for i in ['order_phone_number', 'order_custom_note',]:
+            for i in ['order_phone_number', 'order_custom_note', ]:
                 if i in config:
                     del config[i]
         else:
-            for i in ['order_phone_number', 'order_custom_note',]:
+            for i in ['order_phone_number', 'order_custom_note', ]:
                 if i not in config:
-                        config[i] = ''
+                    config[i] = ''
 
         if not config.get('description_mode'):
             config['description_mode'] = 'empty'
@@ -670,8 +671,8 @@ def api(request, target):
         }
 
         rep = requests.post(
-            url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
-            json=api_data
+                url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
+                json=api_data
         )
 
         if 'fulfillment' in rep.json():
@@ -679,7 +680,8 @@ def api(request, target):
         else:
             try:
                 d = rep.json()
-                return JsonResponse({'error': '[Shopify API Error] '+' | '.join([k+': '+''.join(d['errors'][k]) for k in d['errors']])})
+                return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(
+                        [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])})
             except:
                 try:
                     d = rep.json()
@@ -712,7 +714,7 @@ def api(request, target):
                 if '/' in data[k]:
                     return JsonResponse({
                         'error': 'The character / is not allowed in variants name.\n' + \
-                        'It will cause issues with auto-variant selection'
+                                 'It will cause issues with auto-variant selection'
                     })
 
         product.variants_map = json.dumps(mapping)
@@ -740,7 +742,8 @@ def api(request, target):
             store = ShopifyStore.objects.get(id=store, user=user)
             order_line = utils.get_shopify_order_line(store, order_id, line_id)
             if order_line:
-                note = 'Aliexpress Order ID: {} - {} / {}'.format(order_id, order_line['name'], order_line['variant_title'])
+                note = 'Aliexpress Order ID: {} - {} / {}'.format(order_id, order_line['name'],
+                                                                  order_line['variant_title'])
             else:
                 note = 'Aliexpress Order ID: {}'.format(order_id)
 
@@ -756,8 +759,8 @@ def api(request, target):
         else:
             return JsonResponse({'error': 'Shopify API Error'})
 
-
     return JsonResponse({'error': 'Non-handled endpoint'})
+
 
 def webhook(request, provider, option):
     if provider == 'paylio' and request.method == 'POST':
@@ -783,11 +786,11 @@ def webhook(request, provider, option):
                 raise Exception('Unknown Order status: {}'.format(status))
 
             data = {
-                'email':     request.POST['payer_email'],
-                'status':    status,
-                'lastname':  request.POST['payer_lastname'],
+                'email': request.POST['payer_email'],
+                'status': status,
+                'lastname': request.POST['payer_lastname'],
                 'firstname': request.POST['payer_firstname'],
-                'payer_id':  request.POST['payer_id'],
+                'payer_id': request.POST['payer_id'],
             }
         except Exception as e:
             send_mail(subject='Shopified App: Webhook exception',
@@ -814,17 +817,18 @@ def webhook(request, provider, option):
             email_html = email_html.replace('\n', '<br />')
 
             send_mail(subject='Your Shopified App Access',
-                recipient_list=[data['email']],
-                from_email='chase@rankengine.com',
-                message=email_html,
-                html_message=email_html)
+                      recipient_list=[data['email']],
+                      from_email='chase@rankengine.com',
+                      message=email_html,
+                      html_message=email_html)
 
             utils.slack_invite(data)
 
             send_mail(subject='Shopified App: New Registration',
-                recipient_list=['chase@rankengine.com'],
-                from_email='chase@rankengine.com',
-                message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(utils.format_data(data)))
+                      recipient_list=['chase@rankengine.com'],
+                      from_email='chase@rankengine.com',
+                      message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(
+                          utils.format_data(data)))
 
             return HttpResponse('ok')
         elif status in ['canceled', 'refunded']:
@@ -839,9 +843,10 @@ def webhook(request, provider, option):
                 data['new_plan'] = free_plan.title
 
                 send_mail(subject='Shopified App: Cancel/Refund',
-                    recipient_list=['chase@rankengine.com'],
-                    from_email='chase@rankengine.com',
-                    message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(utils.format_data(data)))
+                          recipient_list=['chase@rankengine.com'],
+                          from_email='chase@rankengine.com',
+                          message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(
+                              utils.format_data(data)))
 
                 return HttpResponse('ok')
 
@@ -865,9 +870,9 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
     res = ShopifyProduct.objects.select_related('store').prefetch_related('shopifyboard_set').filter(user=request.user)
     if store:
-        if store == 'c': # connected
+        if store == 'c':  # connected
             res = res.exclude(shopify_export__isnull=True)
-        elif store == 'n': # non-connected
+        elif store == 'n':  # non-connected
             res = res.filter(shopify_export__isnull=True)
         else:
             res = res.filter(shopify_export__store=store)
@@ -893,13 +898,14 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         }
 
         try:
-            if 'aliexpress' in p['product'].get('original_url','').lower():
+            if 'aliexpress' in p['product'].get('original_url', '').lower():
                 p['source'] = 'AliExpress'
-            elif 'alibaba' in p['product'].get('original_url','').lower():
+            elif 'alibaba' in p['product'].get('original_url', '').lower():
                 p['source'] = 'AliBaba'
-        except: pass
+        except:
+            pass
 
-        p['price'] = '$%.02f'%utils.safeFloat(p['product']['price'])
+        p['price'] = '$%.02f' % utils.safeFloat(p['product']['price'])
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
@@ -926,6 +932,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
     return products, paginator, page
 
+
 def accept_product(product, fdata):
     accept = True
 
@@ -937,12 +944,12 @@ def accept_product(product, fdata):
         min_price = utils.safeFloat(fdata.get('price_min'), -1)
         max_price = utils.safeFloat(fdata.get('price_max'), -1)
 
-        if (min_price>0 and max_price>0):
-            accept = (accept and  (min_price <= price) and (price <= max_price))
-        elif (min_price>0):
+        if (min_price > 0 and max_price > 0):
+            accept = (accept and (min_price <= price) and (price <= max_price))
+        elif (min_price > 0):
             accept = (accept and (min_price <= price))
 
-        elif (max_price>0):
+        elif (max_price > 0):
             accept = (accept and (max_price >= price))
 
     if fdata.get('type'):
@@ -951,10 +958,11 @@ def accept_product(product, fdata):
     if fdata.get('tag'):
         accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
     if fdata.get('visibile'):
-        published = (fdata.get('visibile').lower()=='yes')
+        published = (fdata.get('visibile').lower() == 'yes')
         accept = (accept and published == bool(product['product'].get('published')))
 
     return accept
+
 
 def sorted_products(products, sort):
     sort_reversed = (sort[0] == '-')
@@ -964,15 +972,17 @@ def sorted_products(products, sort):
 
     if sort == 'title':
         products = sorted(products,
-            cmp=lambda x,y: cmp(x['product']['title'], y['product']['title']),
-            reverse=sort_reversed)
+                          cmp=lambda x, y: cmp(x['product']['title'], y['product']['title']),
+                          reverse=sort_reversed)
 
     elif sort == 'price':
         products = sorted(products,
-            cmp=lambda x,y: cmp(utils.safeFloat(x['product']['price']), utils.safeFloat(y['product']['price'])),
-            reverse=sort_reversed)
+                          cmp=lambda x, y: cmp(utils.safeFloat(x['product']['price']),
+                                               utils.safeFloat(y['product']['price'])),
+                          reverse=sort_reversed)
 
     return products
+
 
 @login_required
 def products_list(request, tpl='grid'):
@@ -1003,6 +1013,7 @@ def products_list(request, tpl='grid'):
         'breadcrumbs': ['Products']
     })
 
+
 @login_required
 def product_view(request, pid):
     #  AWS
@@ -1022,20 +1033,21 @@ def product_view(request, pid):
         ["starts-with", "$name", ""],
         ["starts-with", "$Content-Type", "image/"],
         ["starts-with", "$filename", ""],
-        { "bucket": S3_BUCKET },
-        { "acl": "public-read" }
+        {"bucket": S3_BUCKET},
+        {"acl": "public-read"}
     ]
 
     policy = {
         # Valid for 3 hours. Change according to your needs
-        "expiration": arrow.now().replace(hours=+3).format("YYYY-MM-DDTHH:mm:ss")+'Z',
+        "expiration": arrow.now().replace(hours=+3).format("YYYY-MM-DDTHH:mm:ss") + 'Z',
         "conditions": conditions
     }
 
     policy_str = json.dumps(policy)
     string_to_sign = base64.encodestring(policy_str).replace('\n', '')
 
-    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
+    signature = base64.encodestring(
+        hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
 
     #  /AWS
     product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
@@ -1054,7 +1066,7 @@ def product_view(request, pid):
     if 'images' not in p['product'] or not p['product']['images']:
         p['product']['images'] = []
 
-    p['price'] = '$%.02f'%utils.safeFloat(p['product']['price'])
+    p['price'] = '$%.02f' % utils.safeFloat(p['product']['price'])
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
@@ -1064,19 +1076,22 @@ def product_view(request, pid):
             try:
                 p['original_product_id'] = re.findall('([0-9]+).html', p['original_url'])[0]
                 p['original_product_source'] = 'ALIEXPRESS'
-            except: pass
+            except:
+                pass
 
     try:
-        if 'aliexpress' in p['product'].get('original_url','').lower():
+        if 'aliexpress' in p['product'].get('original_url', '').lower():
             p['source'] = 'AliExpress'
-        elif 'alibaba' in p['product'].get('original_url','').lower():
+        elif 'alibaba' in p['product'].get('original_url', '').lower():
             p['source'] = 'AliBaba'
-    except: pass
+    except:
+        pass
 
     original = None
     try:
         original = json.loads(product.original_data)
-    except: pass
+    except:
+        pass
 
     export = product.shopify_export
     if export and export.shopify_id:
@@ -1094,6 +1109,7 @@ def product_view(request, pid):
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
     })
+
 
 @login_required
 def variants_edit(request, store_id, pid):
@@ -1117,9 +1133,6 @@ def variants_edit(request, store_id, pid):
 
 @login_required
 def product_mapping(request, store_id, product_id):
-    # if not request.user.profile.can('product_variant_setup.use'):
-        # return render(request, 'upgrade.html')
-
     product = get_object_or_404(ShopifyProduct, user=request.user, id=product_id)
 
     shopify_id = product.get_shopify_id()
@@ -1213,6 +1226,7 @@ def bulk_edit(request):
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
     })
 
+
 @login_required
 def boards(request):
     boards = []
@@ -1236,16 +1250,17 @@ def boards(request):
             }
 
             try:
-                if 'aliexpress' in p['product'].get('original_url','').lower():
+                if 'aliexpress' in p['product'].get('original_url', '').lower():
                     p['source'] = 'AliExpress'
-                elif 'alibaba' in p['product'].get('original_url','').lower():
+                elif 'alibaba' in p['product'].get('original_url', '').lower():
                     p['source'] = 'AliBaba'
-            except: pass
+            except:
+                pass
 
             if 'images' not in p['product'] or not p['product']['images']:
                 p['product']['images'] = []
 
-            p['price'] = '$%.02f'%utils.safeFloat(p['product']['price'])
+            p['price'] = '$%.02f' % utils.safeFloat(p['product']['price'])
 
             p['images'] = p['product']['images']
             board['products'].append(p)
@@ -1258,6 +1273,7 @@ def boards(request):
         'breadcrumbs': ['Boards']
     })
 
+
 @login_required
 def get_shipping_info(request):
     aliexpress_id = request.GET.get('id')
@@ -1265,22 +1281,22 @@ def get_shipping_info(request):
     product = ShopifyProduct.objects.get(user=request.user, id=request.GET.get('product', 0))
 
     r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
-        params= {
-            'f': 'd',
-            'productid': aliexpress_id,
-            'userType': 'cnfm',
-            'country': 'US',
-            'province': '',
-            'city': '',
-            'count': '1',
-            'currencyCode': 'USD',
-            'sendGoodsCountry': ''
-    })
+                     params={
+                         'f': 'd',
+                         'productid': aliexpress_id,
+                         'userType': 'cnfm',
+                         'country': 'US',
+                         'province': '',
+                         'city': '',
+                         'count': '1',
+                         'currencyCode': 'USD',
+                         'sendGoodsCountry': ''
+                     })
 
     try:
         shippement_data = json.loads(r.text[1:-1])
     except:
-        shippement_data ={}
+        shippement_data = {}
 
     product_data = json.loads(product.data)
 
@@ -1289,10 +1305,11 @@ def get_shipping_info(request):
     else:
         store = None
 
-    return render(request, 'shippement_info.html',{
+    return render(request, 'shippement_info.html', {
         'info': shippement_data,
         'store': store
     })
+
 
 @login_required
 def acp_users_list(request):
@@ -1301,14 +1318,14 @@ def acp_users_list(request):
 
     if request.GET.get('plan', None):
         users = User.objects.select_related('profile', 'profile__plan') \
-                    .prefetch_related('shopifyproduct_set','shopifystore_set') \
-                    .filter(profile__plan_id=request.GET.get('plan'))
+            .prefetch_related('shopifyproduct_set', 'shopifystore_set') \
+            .filter(profile__plan_id=request.GET.get('plan'))
         users_count = User.objects.filter(profile__plan_id=request.GET.get('plan')).count()
     else:
         users = User.objects.select_related('profile', 'profile__plan')
 
         if request.GET.get('products'):
-            users = users.prefetch_related('shopifyproduct_set','shopifystore_set')
+            users = users.prefetch_related('shopifyproduct_set', 'shopifystore_set')
 
         users_count = User.objects.count()
 
@@ -1323,19 +1340,20 @@ def acp_users_list(request):
         'breadcrumbs': ['ACP', 'Users List']
     })
 
+
 @login_required
 def acp_graph(request):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
 
     products = ShopifyProduct.objects.all() \
-        .extra({'created':'date(%s.created_at)'%ShopifyProduct._meta.db_table}) \
+        .extra({'created': 'date(%s.created_at)' % ShopifyProduct._meta.db_table}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
         .order_by('-created')
 
     users = User.objects.all() \
-        .extra({'created':'date(%s.date_joined)'%User._meta.db_table}) \
+        .extra({'created': 'date(%s.date_joined)' % User._meta.db_table}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
         .order_by('-created')
@@ -1351,6 +1369,7 @@ def acp_graph(request):
         'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
+
 
 @login_required
 def acp_groups(request):
@@ -1370,17 +1389,18 @@ def acp_groups(request):
                     perm.save()
 
                     new_permissions.append(perm)
-                    info = info + '%s: '%perm.name
+                    info = info + '%s: ' % perm.name
 
                     for p in i['plans']:
                         plan = GroupPlan.objects.get(title=p['title'])
                         plan.permissions.add(perm)
 
-                        info = info + '%s, '%plan.title
+                        info = info + '%s, ' % plan.title
 
                     info = info + '<br> '
 
-            messages.success(request, 'Permission import success<br> new permissions: %d<br>%s'%(len(new_permissions), info))
+            messages.success(request,
+                             'Permission import success<br> new permissions: %d<br>%s' % (len(new_permissions), info))
         else:
             plan = GroupPlan.objects.get(id=request.POST['default-plan'])
             GroupPlan.objects.all().update(default_plan=0)
@@ -1392,13 +1412,13 @@ def acp_groups(request):
         perms = []
 
         if request.GET.get('perm-view'):
-            perm = AppPermission(name='%s.view'%name, description='%s | View'%description)
+            perm = AppPermission(name='%s.view' % name, description='%s | View' % description)
             perm.save()
 
             perms.append(perm)
 
         if request.GET.get('perm-use'):
-            perm = AppPermission(name='%s.use'%name, description='%s | Use'%description)
+            perm = AppPermission(name='%s.use' % name, description='%s | Use' % description)
             perm.save()
 
             perms.append(perm)
@@ -1437,6 +1457,7 @@ def acp_groups(request):
         'breadcrumbs': ['ACP', 'Plans &amp; Groups']
     })
 
+
 @login_required
 def acp_groups_install(request):
     if not request.user.is_superuser:
@@ -1448,7 +1469,7 @@ def acp_groups_install(request):
     vip_plan = GroupPlan.objects.get(id=request.GET.get('vip'))
     users = User.objects.filter(profile__plan=None)
 
-    if (request.GET.get('confirm', 'no')!='yes'):
+    if (request.GET.get('confirm', 'no') != 'yes'):
         default_count = 0
         vip_count = 0
         for user in users:
@@ -1457,7 +1478,7 @@ def acp_groups_install(request):
             else:
                 default_count += 1
 
-        return HttpResponse('Total: %d - Default: %d - VIP: %d'% (default_count+vip_count,default_count,vip_count))
+        return HttpResponse('Total: %d - Default: %d - VIP: %d' % (default_count + vip_count, default_count, vip_count))
 
     count = 0
     with transaction.atomic():
@@ -1471,7 +1492,8 @@ def acp_groups_install(request):
 
             count += 1
 
-    return HttpResponse('Done, changed: %d'%count)
+    return HttpResponse('Done, changed: %d' % count)
+
 
 def autocomplete(request, target):
     if not request.user.is_authenticated:
@@ -1491,7 +1513,7 @@ def autocomplete(request, target):
                 else:
                     types.append(ptype)
 
-        return JsonResponse({'query': q, 'suggestions': [{'value':i, 'data':i} for i in types]}, safe=False)
+        return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
 
     elif target == 'tags':
         tags = []
@@ -1506,9 +1528,10 @@ def autocomplete(request, target):
                     else:
                         tags.append(i)
 
-        return JsonResponse({'query': q, 'suggestions': [{'value':j, 'data':j} for j in tags]}, safe=False)
+        return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
     else:
         return JsonResponse({'error': 'Unknown target'})
+
 
 @login_required
 def upload_file_sign(request):
@@ -1523,9 +1546,9 @@ def upload_file_sign(request):
     mime_type = request.GET.get('file_type')
 
     if 'image' not in mime_type.lower():
-        return JsonResponse({'error':'None allowed file type'})
+        return JsonResponse({'error': 'None allowed file type'})
 
-    expires = int(time.time()+60*60*24)
+    expires = int(time.time() + 60 * 60 * 24)
     amz_headers = "x-amz-acl:public-read"
 
     string_to_sign = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, S3_BUCKET, object_name)
@@ -1542,8 +1565,10 @@ def upload_file_sign(request):
 
     return JsonResponse(content, safe=False)
 
+
 def upgrade_required(request):
     return render(request, 'upgrade.html')
+
 
 @login_required
 def save_image_s3(request):
@@ -1559,7 +1584,7 @@ def save_image_s3(request):
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
     img_url = request.POST.get('url')
-    img_name = 'uploads/u%d/%s'%(request.user.id, img_url.split('/')[-1])
+    img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
 
     product = ShopifyProduct.objects.get(user=request.user, id=request.POST.get('product'))
 
@@ -1572,7 +1597,7 @@ def save_image_s3(request):
     k.set_contents_from_file(fp)
     k.make_public()
 
-    upload_url = 'http://%s.s3.amazonaws.com/%s'%(S3_BUCKET, img_name)
+    upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
 
     upload = UserUpload(user=request.user, product=product, url=upload_url)
     upload.save()
@@ -1610,8 +1635,8 @@ def orders_view(request):
             return HttpResponseRedirect('/')
 
     rep = requests.get(
-        url=store.get_link('/admin/orders.json', api=True),
-        params={'limit': utils.safeInt(request.GET.get('limit'), 100)}
+            url=store.get_link('/admin/orders.json', api=True),
+            params={'limit': utils.safeInt(request.GET.get('limit'), 100)}
     )
 
     try:
@@ -1632,7 +1657,7 @@ def orders_view(request):
     paginator.set_store(store)
     paginator.set_order_limit(post_per_page)
     paginator.set_filter(status, fulfillment, financial)
-    paginator.set_reverse_order(sort=='desc')
+    paginator.set_reverse_order(sort == 'desc')
     paginator.set_query(utils.safeInt(query, query))
 
     page = min(max(1, page), paginator.num_pages)
@@ -1653,12 +1678,12 @@ def orders_view(request):
 
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).humanize()
-        order['order_url'] = store.get_link('/admin/orders/%d'%order['id'])
+        order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
         order['store'] = store
 
         for i, el in enumerate((order['line_items'])):
             order['line_items'][i]['variant_link'] = store.get_link(
-                '/admin/products/{}/variants/{}'.format(el['product_id'], el['variant_id']))
+                    '/admin/products/{}/variants/{}'.format(el['product_id'], el['variant_id']))
 
             order['line_items'][i]['image'] = {
                 'store': store.id,
@@ -1682,7 +1707,8 @@ def orders_view(request):
                 original_url = product.get_original_info()['url']
                 try:
                     original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
-                    order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(original_id)
+                    order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
+                        original_id)
                 except:
                     print 'WARNIGN ID NOT FOUND FOR:', original_url
 
@@ -1690,7 +1716,7 @@ def orders_view(request):
 
             if auto_orders and 'shipping_address' in order:
                 try:
-                    shipping_address_asci = {} # Aliexpress doesn't allow unicode
+                    shipping_address_asci = {}  # Aliexpress doesn't allow unicode
                     shipping_address = order['shipping_address']
                     for k in shipping_address.keys():
                         if shipping_address[k] and type(shipping_address[k]) is unicode:
@@ -1702,12 +1728,13 @@ def orders_view(request):
                         if shipping_address_asci[u'country'] == u'United Kingdom':
                             if not uk_provinces:
                                 uk_provinces = load_uk_provincess()
-                            shipping_address_asci[u'province'] = uk_provinces.get(shipping_address_asci[u'city'].lower().strip(), u'')
+                            shipping_address_asci[u'province'] = uk_provinces.get(
+                                shipping_address_asci[u'city'].lower().strip(), u'')
                         else:
                             shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
 
                     order_data = {
-                        'auto': False, # False mean step-by-step order placing
+                        'auto': False,  # False mean step-by-step order placing
                         'variant': el['variant_title'],
                         'quantity': el['fulfillable_quantity'],
                         'shipping_address': shipping_address_asci,
@@ -1752,6 +1779,7 @@ def orders_view(request):
         'breadcrumbs': ['Orders']
     })
 
+
 @login_required
 def acp_users_emails(request):
     if not request.user.is_superuser:
@@ -1772,10 +1800,12 @@ def acp_users_emails(request):
 
     return HttpResponse(o)
 
+
 @login_required
 def logout(request):
     user_logout(request)
     return redirect('/')
+
 
 def register(request, registration=None):
     if request.method == 'POST':
