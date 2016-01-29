@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 
     'widget_tweaks',    # For forms
     'hijack',
+    'multiselectfield',
 
     'article',
     'leadgalaxy'
