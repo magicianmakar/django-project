@@ -36,4 +36,4 @@ def encode_order(context, data, auto):
 
 @register.simple_tag(takes_context = True)
 def base64_encode(context, data):
-    return data.encode('base64')
+    return data.encode('utf8').encode('base64')
