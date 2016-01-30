@@ -479,7 +479,8 @@
             showCancelButton: true,
             closeOnConfirm: false,
             animation: "slide-from-top",
-            inputPlaceholder: "Order ID"
+            inputPlaceholder: "Order ID",
+            showLoaderOnConfirm: true
         }, function(inputValue) {
             if (inputValue === false) return false;
             if (inputValue === "") {
@@ -524,12 +525,13 @@
 
         swal({
             title: "Add Note",
-            text: "Add Notes to this order:",
+            text: "Append note to this order notes:",
             type: "input",
             showCancelButton: true,
             closeOnConfirm: false,
             animation: "slide-from-top",
-            inputPlaceholder: "Notes"
+            inputPlaceholder: "Notes",
+            showLoaderOnConfirm: true
         }, function(inputValue) {
             if (inputValue === false) return false;
             if (inputValue === "") {
