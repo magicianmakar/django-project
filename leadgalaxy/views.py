@@ -77,7 +77,8 @@ def api(request, target):
         user = authenticate(username=username, password=password)
         if user is not None:
             if user.is_active:
-                import uuid, md5
+                import uuid
+                import md5
                 token = str(uuid.uuid4())
                 token = md5.new(token).hexdigest()
 
@@ -104,7 +105,8 @@ def api(request, target):
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])
             if user is not None:
                 if user.is_active:
-                    import uuid, md5
+                    import uuid
+                    import md5
                     token = str(uuid.uuid4())
                     token = md5.new(token).hexdigest()
 

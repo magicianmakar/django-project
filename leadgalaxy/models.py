@@ -38,10 +38,10 @@ class UserProfile(models.Model):
         return '{} | {}'.format(self.user.username, self.plan.title)
 
     def get_plan(self):
-       try:
-          return self.plan
-       except:
-          return None
+        try:
+            return self.plan
+        except:
+            return None
 
     def get_active_stores(self):
         return self.user.shopifystore_set.filter(is_active=True)
@@ -91,6 +91,7 @@ def user_config(self, name, default_value=None):
 
 User.add_to_class("can", user_can)
 User.add_to_class("config", user_config)
+
 
 class ShopifyStore(models.Model):
     class Meta:
