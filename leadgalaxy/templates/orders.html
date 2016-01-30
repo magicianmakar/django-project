@@ -453,14 +453,73 @@
     $('.placed-order-details').click(function (e) {
         e.preventDefault();
 
+        var tr_parent = $(this).parents('tr');
+        var order_id = $(this).attr('order-id');
+        var line_id = $(this).attr('line-id');
         var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
         var html = '<ul>';
         html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" href="http://trade.aliexpress.com/order_detail.htm?orderId='+data.aliexpress.order.id+'">'+data.aliexpress.order.id+'</a></li>';
         html += '<li style="list-style:none">Order date: '+$(this).attr('order-date')+'</li>';
         html += '</ul';
 
-        swal({title: '', text: html, html: true, animation:false});
+        swal({
+            title: '',
+            text: html,
+            showCancelButton: true,
+            html: true,
+            animation:false,
+            cancelButtonText: "Close",
+            confirmButtonText: 'Delete Order ID',
+            confirmButtonColor: "#DD6B55",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+        },
+        function(isConfirm) {
+            if (isConfirm) {
+                deleteOrderID(tr_parent, order_id, line_id);
+            }
+        });
     });
+
+    function deleteOrderID(tr_parent, order_id, line_id) {
+        swal({
+            title: 'Delete Order ID',
+            text: 'Are you sure you want to delete the Order ID?',
+            type: "warning",
+            showCancelButton: true,
+            animation: false,
+            cancelButtonText: "Cancel",
+            confirmButtonText: 'Yes',
+            confirmButtonColor: "#DD6B55",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirm) {
+            if (isConfirm) {
+                $.ajax({
+                    url: '/api/order-fulfill' + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
+                    type: 'DELETE',
+                    context: {tr: tr_parent},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            swal({
+                                title: "Order ID",
+                                text: "Product Order ID has been deleted.\nNote: The Order ID has not been removed from the order notes.",
+                                type: "success"
+                            });
+                            $(this.tr).removeClass('success');
+                        } else {
+                            displayAjaxError('Delete Order ID', data);
+                        }
+                    },
+                    error: function (data) {
+                        displayAjaxError('Delete Order ID', data);
+                    }
+                });
+            }
+        });
+    }
 
     $('.mark-as-ordered').click(function (e) {
         e.preventDefault();

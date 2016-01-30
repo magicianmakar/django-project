@@ -47,7 +47,7 @@ def api(request, target):
     method = request.method
     if method == 'POST':
         data = request.POST
-    elif method == 'GET':
+    elif method == 'GET' or method == 'DELETE':
         data = request.GET
     else:
         return JsonResponse({'error': 'Unknown method: {}'.format(method)})
@@ -754,6 +754,17 @@ def api(request, target):
             utils.add_shopify_order_note(store, order_id, note)
 
         return JsonResponse({'status': 'ok'})
+
+    if method == 'DELETE' and target == 'order-fulfill':
+        order_id = data.get('order_id')
+        line_id = data.get('line_id')
+
+        orders = ShopifyOrder.objects.filter(user=user, order_id=order_id, line_id=line_id)
+        if orders.count():
+            orders.delete()
+            return JsonResponse({'status': 'ok'})
+        else:
+            return JsonResponse({'error': 'Order not found.'})
 
     if method == 'POST' and target == 'order-add-note':
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
