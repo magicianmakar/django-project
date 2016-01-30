@@ -727,8 +727,10 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'order-fulfill':
-        order_id = utils.safeInt(data.get('order_id'))
-        line_id = utils.safeInt(data.get('line_id'))
+        order_id = data.get('order_id')
+        line_id = data.get('line_id')
+        source_id = data.get('aliexpress_order_id')
+
         order_data = {
             'aliexpress': {
                 'order': {
@@ -738,7 +740,11 @@ def api(request, target):
             }
         }
 
-        order = ShopifyOrder(user=user, order_id=order_id, line_id=line_id, data=json.dumps(order_data))
+        order = ShopifyOrder(user=user,
+                             order_id=order_id,
+                             line_id=line_id,
+                             source_id=source_id,
+                             data=json.dumps(order_data))
         order.save()
 
         store = data.get('store')

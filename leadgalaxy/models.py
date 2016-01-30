@@ -275,9 +275,13 @@ class ShopifyOrder(models.Model):
     user = models.ForeignKey(User)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
-    data = models.TextField()
+    source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
+    source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
+    source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
+    data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def encoded(self):
         return json.dumps(self.data).encode('base64')
