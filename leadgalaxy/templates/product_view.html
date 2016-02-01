@@ -179,6 +179,8 @@
                     <div class="col-md-6">
                         {% if not product.shopify_url %}
                         <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
+                        {% else %}
+                        <button id="export-btn" target="shopify-update" type="button" class="btn btn-primary" data-loading-text="Updating...">Update in Shopify</button>
                         {% endif %}
                         <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
 
@@ -498,6 +500,12 @@
 var api_base = '';
 var product = {{product.data|safe}};
 
+var shopify_variants = {
+{% for variant in shopify_product.variants %}
+'{{variant.title}}': {{variant.id}},
+{% endfor %}
+};
+
 function removeVariant(e) {
     e.preventDefault();
 
@@ -565,7 +573,7 @@ function removeVariant(e) {
 };
 
 $('#export-btn').click(function () {
-    $('#save-for-later-btn').trigger('click');
+    $('#save-for-later-btn').prop('no-confirm', true).trigger('click');
 
     var btn = $(this);
     var target = btn.attr('target');
@@ -665,6 +673,10 @@ $('#export-btn').click(function () {
                     vdata.weight_unit = $('#product-weight-unit').val();
                 }
 
+                if (vdata.title in shopify_variants) {
+                    vdata.id = shopify_variants[vdata.title];
+                }
+
                 api_data.product.variants.push(vdata);
             }
         } else {
@@ -698,9 +710,15 @@ $('#export-btn').click(function () {
                 $("#view-btn").attr("shopify-id", data.product.id);
                 $("#view-btn").attr("shopify-url", data.product.url);
                 $("#view-btn").show();
-                $('#export-btn, #save-for-later-btn').hide();
+                if (target == 'shopify') {
+                    $('#export-btn, #save-for-later-btn').hide();
 
-                toastr.success('Product Exported.','Shopify Export');
+                    toastr.success('Product Exported.','Shopify Export');
+                } else {
+                    toastr.success('Product Updated in Shopify.','Shopify Update');
+                    window.location.href = window.location.href;
+                }
+
             }  else {
 
                 var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error');
@@ -774,7 +792,12 @@ $('#save-for-later-btn').click(function (e) {
             if ('product' in data) {
                 $("#view-btn").attr("shopify-id", data.product.id);
                 $("#view-btn").attr("shopify-url", data.product.url);
-                toastr.success('Save for later.','Product Saved');
+
+                if ($('#save-for-later-btn').prop('no-confirm') == true) {
+                    $('#save-for-later-btn').prop('no-confirm', false);
+                } else {
+                    toastr.success('Save for later.','Product Saved');
+                }
             }  else {
                 var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error');
                 swal('Save for later', error, 'error');

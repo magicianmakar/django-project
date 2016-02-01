@@ -172,6 +172,11 @@ def get_myshopify_link(user, default_store, link):
     return None
 
 
+def get_shopify_product(store, product_id):
+    rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
+    return rep['product']
+
+
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
     product_id = safeInt(product_id)

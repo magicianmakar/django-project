@@ -61,7 +61,7 @@ def api(request, target):
         else:
             user = None
 
-    if target not in ['login', 'shopify', 'save-for-later'] and not user:
+    if target not in ['login', 'shopify', 'shopify-update', 'save-for-later'] and not user:
         return JsonResponse({'error': 'Unauthenticated api call.'})
 
     if target == 'login':
@@ -198,7 +198,7 @@ def api(request, target):
 
         return JsonResponse(products, safe=False)
 
-    if method == 'POST' and (target == 'shopify' or target == 'save-for-later'):
+    if method == 'POST' and (target == 'shopify' or target == 'shopify-update' or target == 'save-for-later'):
         req_data = json.loads(request.body)
         store = req_data['store']
 
@@ -225,12 +225,20 @@ def api(request, target):
                 'error': 'Selected store (%s) not found for user: %s' % (store, user.username if user else 'None')
             })
 
-        endpoint = store.api_url + '/admin/products.json'
+        endpoint = store.get_link('/admin/products.json', api=True)
 
         product_data = {}
-        if target == 'shopify':
+        if target == 'shopiyf' or target == 'shopify-update':
 
-            r = requests.post(endpoint, json=json.loads(data))
+            if target == 'shopify-update':
+                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                api_data = json.loads(data)
+                api_data['product']['id'] = product.get_shopify_id()
+
+                update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
+                r = requests.put(update_endpoint, json=api_data)
+            else:
+                r = requests.post(endpoint, json=json.loads(data))
 
             try:
                 product_data = r.json()['product']
@@ -245,28 +253,31 @@ def api(request, target):
             pid = r.json()['product']['id']
             url = store.get_link('/admin/products/{}'.format(pid))
 
-            if 'product' in req_data:
-                try:
-                    product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+            if target != 'shopify-update':
+                if 'product' in req_data:
+                    try:
+                        product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
 
-                    original_info = product.get_original_info()
-                    if original_info:
-                        original_url = original_info.get('url', '')
-                except Exception as e:
-                    return JsonResponse({'error': 'Selected product not found ({})'.format(repr(e))})
+                        original_info = product.get_original_info()
+                        if original_info:
+                            original_url = original_info.get('url', '')
+                    except Exception as e:
+                        return JsonResponse({'error': 'Selected product not found ({})'.format(repr(e))})
 
-                product.shopify_id = pid
-                product.stat = 1
-                product.save()
+                    product.shopify_id = pid
+                    product.stat = 1
+                    product.save()
+                else:
+                    product = None
+
+                product_export = ShopifyProductExport(original_url=original_url, shopify_id=pid, store=store)
+                product_export.save()
+
+                if product:
+                    product.shopify_export = product_export
+                    product.save()
             else:
-                product = None
-
-            product_export = ShopifyProductExport(original_url=original_url, shopify_id=pid, store=store)
-            product_export.save()
-
-            if product:
-                product.shopify_export = product_export
-                product.save()
+                messages.success(request, 'Product updated in Shopify.')
 
         else:  # save for later
             if 'product' in req_data:
@@ -1116,14 +1127,18 @@ def product_view(request, pid):
     except:
         pass
 
+    shopify_product = None
     export = product.shopify_export
     if export and export.shopify_id:
         p['shopify_url'] = export.store.get_link('/admin/products/{}'.format(export.shopify_id))
         p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, product.id)
 
+        shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
+
     return render(request, 'product_view.html', {
         'product': p,
         'original': original,
+        'shopify_product': shopify_product,
         'aws_available': aws_available or True,
         'aws_policy': string_to_sign,
         'aws_signature': signature,
