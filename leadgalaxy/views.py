@@ -973,7 +973,7 @@ def accept_product(product, fdata):
         accept = fdata.get('title').lower() in product['product']['title'].lower()
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        price = utils.safeFloat(product['product']['price'])
+        price = utils.safeFloat(product['product'].get('price'))
         min_price = utils.safeFloat(fdata.get('price_min'), -1)
         max_price = utils.safeFloat(fdata.get('price_max'), -1)
 
@@ -1010,8 +1010,8 @@ def sorted_products(products, sort):
 
     elif sort == 'price':
         products = sorted(products,
-                          cmp=lambda x, y: cmp(utils.safeFloat(x['product']['price']),
-                                               utils.safeFloat(y['product']['price'])),
+                          cmp=lambda x, y: cmp(utils.safeFloat(x['product'].get('price')),
+                                               utils.safeFloat(y['product'].get('price'))),
                           reverse=sort_reversed)
 
     return products
@@ -1099,7 +1099,7 @@ def product_view(request, pid):
     if 'images' not in p['product'] or not p['product']['images']:
         p['product']['images'] = []
 
-    p['price'] = '$%.02f' % utils.safeFloat(p['product']['price'])
+    p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
@@ -1297,7 +1297,7 @@ def boards(request):
             if 'images' not in p['product'] or not p['product']['images']:
                 p['product']['images'] = []
 
-            p['price'] = '$%.02f' % utils.safeFloat(p['product']['price'])
+            p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
 
             p['images'] = p['product']['images']
             board['products'].append(p)
