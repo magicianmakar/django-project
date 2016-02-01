@@ -1132,7 +1132,7 @@ def product_view(request, pid):
         p['shopify_url'] = export.store.get_link('/admin/products/{}'.format(export.shopify_id))
         p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, product.id)
 
-        shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
+        #shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
 
     return render(request, 'product_view.html', {
         'product': p,
