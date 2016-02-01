@@ -168,13 +168,13 @@ class ShopifyProduct(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         try:
             title = json.loads(self.data)['title']
         except:
             title = 'Product'
 
-        return '{} | {}'.format(title, self.store.title)
+        return title
 
     def shopify_link(self):
         if self.shopify_export and self.shopify_export.shopify_id:

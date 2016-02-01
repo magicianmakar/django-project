@@ -12,7 +12,8 @@ class ShopifyBoardAdmin(admin.ModelAdmin):
     raw_id_fields = ('products',)
 
 class ShopifyProductAdmin(admin.ModelAdmin):
-    raw_id_fields = ('parent_product', 'shopify_export')
+    raw_id_fields = ('parent_product', 'shopify_export', 'store', 'user')
+    list_display = ('__str__', 'store', 'created_at', 'updated_at')
 
 class ShopifyProductExportAdmin(admin.ModelAdmin):
     raw_id_fields = ('store',)
