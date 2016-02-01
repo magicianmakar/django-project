@@ -86,11 +86,16 @@ def user_can(self, perms):
     return self.profile.can(perms)
 
 
-def user_config(self, name, default_value=None):
+def user_get_config(self, name, default_value=None):
     return self.profile.get_config_value(name, default_value)
 
+
+def user_set_config(self, name, value):
+    return self.profile.set_config_value(name, value)
+
 User.add_to_class("can", user_can)
-User.add_to_class("config", user_config)
+User.add_to_class("get_config", user_get_config)
+User.add_to_class("set_config", user_set_config)
 
 
 class ShopifyStore(models.Model):

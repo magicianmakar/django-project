@@ -1769,9 +1769,9 @@ def orders_view(request):
                         'line_id': el['id'],
                         'store': store.id,
                         'order': {
-                            'phone': request.user.config('order_phone_number'),
-                            'note': request.user.config('order_custom_note'),
-                            'epacket': bool(request.user.config('epacket_shipping')),
+                            'phone': request.user.get_config('order_phone_number'),
+                            'note': request.user.get_config('order_custom_note'),
+                            'epacket': bool(request.user.get_config('epacket_shipping')),
                         }
                     }
 
