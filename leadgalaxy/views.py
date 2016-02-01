@@ -1671,16 +1671,6 @@ def orders_view(request):
             messages.warning(request, 'Please add at least one store before using the Orders page.')
             return HttpResponseRedirect('/')
 
-    rep = requests.get(
-            url=store.get_link('/admin/orders.json', api=True),
-            params={'limit': utils.safeInt(request.GET.get('limit'), 100)}
-    )
-
-    try:
-        orders = rep.json()['orders']
-    except:
-        pass
-
     sort = request.GET.get('sort', 'desc')
     status = request.GET.get('status', 'open')
     fulfillment = request.GET.get('fulfillment', 'unshipped')
