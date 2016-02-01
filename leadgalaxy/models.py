@@ -279,6 +279,7 @@ class ShopifyOrder(models.Model):
         ordering = ['-created_at']
 
     user = models.ForeignKey(User)
+    store = models.ForeignKey(ShopifyStore, null=True)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
     source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")

@@ -739,6 +739,7 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'order-fulfill':
+        # Mark Order as Ordered
         order_id = data.get('order_id')
         line_id = data.get('line_id')
         source_id = data.get('aliexpress_order_id')
@@ -770,6 +771,9 @@ def api(request, target):
                 note = 'Aliexpress Order ID: {}'.format(order_id)
 
             utils.add_shopify_order_note(store, order_id, note)
+
+            order.store = store
+            order.save()
 
         return JsonResponse({'status': 'ok'})
 
