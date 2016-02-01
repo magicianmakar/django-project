@@ -284,45 +284,8 @@
         </div>
     </div>
 
-<div id="modal-fulfillment" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Change Fulfillment Status</h3>
+    {% include 'partial/fulfillment_modal.html' only %}
 
-                        <form role="form">
-                            <div class="form-group">
-                                <label>Quantity</label>
-                                <input type="text" id="fulfill-quantity" name="fulfill-quantity" class="form-control">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Tracking Number</label>
-                                <input type="text" id="fulfill-traking-number" name="fulfill-traking-number" class="form-control">
-                            </div>
-
-                            <div>
-                                <input type="hidden" id="fulfill-order-id" name="fulfill-order-id" class="form-control">
-                                <input type="hidden" id="fulfill-line-id" name="fulfill-line-id" class="form-control">
-                                <input type="hidden" id="fulfill-store" name="fulfill-store" class="form-control">
-
-                                <button id="fullfill-order-btn" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Fulfill Order</strong></button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-sm-6">
-                        <h4>Fulfill order</h4>
-                        <p class="">
-                            Partially fulfill a single line item by explicitly specifying the line item and quantity to be fulfilled.
-                        </p>
-                        <p>If you don't have a Tracking Number, leave that field blank.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 
