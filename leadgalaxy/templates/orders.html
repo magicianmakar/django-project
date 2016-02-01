@@ -462,7 +462,7 @@
     $('.placed-order-details').click(function (e) {
         e.preventDefault();
 
-        var tr_parent = $(this).parents('tr');
+        var tr_parent = $(this).parents('tr').first();
         var order_id = $(this).attr('order-id');
         var line_id = $(this).attr('line-id');
         var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
@@ -569,7 +569,7 @@
                 context: {orderData: orderData},
                 success: function (data) {
                     if (data.status == 'ok') {
-                        this.orderData.btn.parents('tr').addClass('success');
+                        this.orderData.btn.parents('tr').first().addClass('success');
                         findMarkedLines();
                         swal('Marked as Ordered.', 'Item was marked as ordered in Shopified App', 'success');
                     } else {
