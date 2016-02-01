@@ -229,24 +229,23 @@ def api(request, target):
 
         product_data = {}
         if target == 'shopiyf' or target == 'shopify-update':
-
-            if target == 'shopify-update':
-                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
-                api_data = json.loads(data)
-                api_data['product']['id'] = product.get_shopify_id()
-
-                update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
-                r = requests.put(update_endpoint, json=api_data)
-            else:
-                r = requests.post(endpoint, json=json.loads(data))
-
             try:
+                if target == 'shopify-update':
+                    product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                    api_data = json.loads(data)
+                    api_data['product']['id'] = product.get_shopify_id()
+
+                    update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
+                    r = requests.put(update_endpoint, json=api_data)
+                else:
+                    r = requests.post(endpoint, json=json.loads(data))
+
                 product_data = r.json()['product']
             except:
                 try:
                     d = r.json()
                     return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(
-                            [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])})
+                                        [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])})
                 except:
                     return JsonResponse({'error': 'Shopify API Error'})
 
