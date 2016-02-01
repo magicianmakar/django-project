@@ -16,7 +16,7 @@ def order_source_id(apps, schema_editor):
     ShopifyOrder = apps.get_model("leadgalaxy", "ShopifyOrder")
 
     print
-    print '* Begin Registration Hash merging for {} plans'.format(ShopifyOrder.objects.count())
+    print '* Begin Shopify Order merging for {} Orders'.format(ShopifyOrder.objects.count())
 
     for order in ShopifyOrder.objects.all():
         if not order.source_id:
