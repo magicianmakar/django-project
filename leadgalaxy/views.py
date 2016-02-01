@@ -938,7 +938,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         except:
             pass
 
-        p['price'] = '$%.02f' % utils.safeFloat(p['product']['price'])
+        p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
