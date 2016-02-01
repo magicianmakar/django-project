@@ -11,12 +11,15 @@ class UserUploadAdmin(admin.ModelAdmin):
 class ShopifyBoardAdmin(admin.ModelAdmin):
     raw_id_fields = ('products',)
 
+class ShopifyProductAdmin(admin.ModelAdmin):
+    raw_id_fields = ('parent_product', 'shopify_export')
+
 class ShopifyProductExportAdmin(admin.ModelAdmin):
     raw_id_fields = ('store',)
 
 admin.site.register(ShopifyStore)
 admin.site.register(AccessToken)
-admin.site.register(ShopifyProduct)
+admin.site.register(ShopifyProduct, ShopifyProductAdmin)
 admin.site.register(ShopifyBoard, ShopifyBoardAdmin)
 admin.site.register(GroupPlan, GroupPlanAdmin)
 admin.site.register(UserProfile)
