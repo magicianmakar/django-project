@@ -228,7 +228,7 @@ def api(request, target):
         endpoint = store.get_link('/admin/products.json', api=True)
 
         product_data = {}
-        if target == 'shopiyf' or target == 'shopify-update':
+        if target == 'shopify' or target == 'shopify-update':
             try:
                 if target == 'shopify-update':
                     product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
@@ -252,7 +252,7 @@ def api(request, target):
             pid = r.json()['product']['id']
             url = store.get_link('/admin/products/{}'.format(pid))
 
-            if target != 'shopify-update':
+            if target == 'shopify':
                 if 'product' in req_data:
                     try:
                         product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
