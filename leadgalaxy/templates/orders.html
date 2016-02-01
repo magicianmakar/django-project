@@ -251,7 +251,7 @@
                                                 {% endif %}
                                                 </td>
                                                 {% if forloop.counter0 == 0 %}
-                                                <td rowspan="{{order.line_items|length}}">
+                                                <td rowspan="{{order.line_items|length}}" style="background-color:white;vertical-align:middle">
                                                     {{order.shipping_address.address1}}<br>
                                                     {{order.shipping_address.address2}}{% if order.shipping_address.address2 %}<br>{% endif %}
                                                     {{order.shipping_address.city}}, {{order.shipping_address.province_code|default:''}} {{order.shipping_address.zip}}
