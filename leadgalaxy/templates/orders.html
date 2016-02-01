@@ -203,7 +203,7 @@
                                                     {{item.name}}
                                                     {% endif %}
                                                 </td>
-                                                <td><a href="{{item.variant_link}}" target="_blank">{{item.variant_title}}</a></td>
+                                                <td><a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a></td>
                                                 <td>
                                                     <span style="{% if item.quantity > 1 %} font-weight: bolder; color: blue{% endif %}">{{item.quantity}}</span>
                                                 </td>
