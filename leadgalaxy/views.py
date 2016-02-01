@@ -1727,7 +1727,7 @@ def orders_view(request):
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
-                product = ShopifyProduct.objects.filter(shopify_export__shopify_id=el['product_id'])
+                product = ShopifyProduct.objects.filter(user=request.user, shopify_export__shopify_id=el['product_id'])
                 if product.count():
                     product = product.first()
                 else:
