@@ -514,8 +514,20 @@
             showLoaderOnConfirm: true
         }, function(inputValue) {
             if (inputValue === false) return false;
+            inputValue = inputValue.trim();
+
             if (inputValue === "") {
                 swal.showInputError("You need to enter an Order ID.");
+                return false
+            }
+
+            var order_link = inputValue.match(/orderId=([0-9]+)/);
+            if (order_link && order_link.length == 2) {
+                inputValue = order_link[1];
+            }
+
+            if (inputValue.match(/^[0-9]+$/) === null) {
+                swal.showInputError("The entered Order ID is not valid.");
                 return false
             }
 
