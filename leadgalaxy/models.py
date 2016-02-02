@@ -285,6 +285,7 @@ class ShopifyOrder(models.Model):
     source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
+    hidden = models.BooleanField(default=False)
     data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
