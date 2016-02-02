@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load template_helper %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+            {% for item in user.profile.get_active_stores %}
+                {% if store == item or item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    {% if not request.GET.hidden %}
+                    <div class="row">
+                        <div class="col-md-2 col-md-offset-10 text-right">
+                            <a href="{% url 'orders_track' %}?hidden=1" class="btn btn-default btn-rounded btn-sm expand-btn">Hidden Orders</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <table class="table table-condensed xtable-hover">
+                      <thead>
+                        <tr>
+                          <th style="width:64px">Preview</th>
+                          <th style="width:26%">Shopify Order</th>
+                          <th>Aliexpress Order</th>
+                          <th>Aliexpress Status</th>
+                          <th>Tracking Number</th>
+                          <th>Order Date</th>
+                          <th>Updated</th>
+                          <th style="width:120px"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in orders %}
+                        <tr id="{{item.id}}">
+                            <td>
+                                <img class="lazyload" store="{{item.store_id}}" product="{{item.line.product_id}}"
+                                     variant="{{item.line.variant_id}}" src="" style="width:64px;display:none" />
+                            </td>
+                            <td>
+                                <a href="{{item.get_shopify_link}}" target="_blank">
+                                    <span class="badge badge-primary">{{item.order.name}}</span>
+                                    <span class="m-l-xs">{{item.line.title}}</span>
+                                </a>
+                            </td>
+                            <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
+                            <td>{{item.get_source_status|default:'N/A'}}</td>
+                            <td>{{item.source_tracking|default:'N/A'}}</td>
+                            <td>{{item.created_at|date:'DATETIME_FORMAT'}}</td>
+                            <td>{{item.updated_at|date:'DATETIME_FORMAT'}}</td>
+                            <td>
+                                <button class="btn btn-success btn-xs fulfill-btn"
+                                        store="{{item.store_id}}"
+                                        order-id="{{item.order.id}}"
+                                        line-id="{{item.line.id}}"
+                                        quantity="{{item.line.quantity}}"
+                                        tracking-number="{{item.source_tracking|default:''}}"
+                                        >Fulfill in Shopify</button>
+
+                                {% if not request.GET.hidden %}
+                                <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order m-t-xs">Hide</button>
+                                {% else %}
+                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order m-t-xs">Un-Hide</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="7">No tracked orders found.</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+
+                  {% include "partial/paginator.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% include 'partial/fulfillment_modal.html' with notify=True only %}
+
+{% endblock %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+
+    var image_cache = {};
+
+    $('.fulfill-btn').click(function (e) {
+        $('#modal-fulfillment #fulfill-quantity').val($(this).attr('quantity'));
+        $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
+        $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
+        $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
+        $('#modal-fulfillment #fulfill-traking-number').val($(this).attr('tracking-number'));
+
+         if ($(this).prop('fulfilled')) {
+            return;
+        };
+
+        $('#modal-fulfillment').modal('show');
+    });
+
+    $('#fullfill-order-btn').click(function (e) {
+        e.preventDefault();
+
+        $(this).button('loading');
+        var line_btn = $('.fulfill-btn[line-id="'+$('#modal-fulfillment #fulfill-line-id').val()+'"]');
+
+        $.ajax({
+            url: '/api/fulfill-order',
+            type: 'POST',
+            data:  $('#modal-fulfillment form').serialize(),
+            context: {btn: $(this), line: line_btn},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    $('#modal-fulfillment').modal('hide');
+                    swal('Fulfillment Status', 'Fulfillment Status changed to Fulfilled', 'success');
+                    this.line.prop('fulfilled', true);
+                    this.line.parents('tr').first().addClass('success');
+                } else {
+                    displayAjaxError('Fulfill Order', data);
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Fulfill Order', data);
+            },
+            complete: function () {
+                this.btn.button('reset');
+
+                var btn = this.line;
+                setTimeout(function() {
+                    if (btn.prop('fulfilled')) {
+                        btn.removeClass('btn-default');
+                        btn.addClass('btn-success');
+                        btn.text('Fulfilled');
+                    }
+                }, 100);
+            }
+        });
+    });
+
+    function hideOrder(order_id) {
+        $.ajax({
+            url: '/api/order-fullfill-hide',
+            type: 'POST',
+            data: {
+                order: order_id,
+                {% if not request.GET.hidden %}
+                hide: true
+                {% endif %}
+            },
+            context: {order_id: order_id},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    {% if not request.GET.hidden %}
+                    $('tr[id="'+this.order_id+'"]').hide();
+
+                    swal('Hide Order', 'Order has been set to hidden.', 'success');
+                    {% else %}
+                    swal('Un-Hide Order', 'Order has been set to visible.', 'success');
+                    {% endif %}
+                } else {
+                    displayAjaxError('Hide Order', data);
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Hide Order', data);
+            }
+        });
+    }
+
+    $('.hide-order').click(function (e) {
+        var order_id = $(this).attr('order-id');
+
+        swal({
+            title: "Hide Order",
+            text: "Do you want to change this order status to hidden?",
+            type: "warning",
+            animation: false,
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Hide",
+            cancelButtonText: "Cancel",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirmed) {
+            if(isConfirmed) {
+                hideOrder(order_id);
+            }
+        });
+    });
+    $('.show-order').click(function (e) {
+        hideOrder($(this).attr('order-id'));
+    });
+
+    $(function () {
+        $('.lazyload').each(function (i, el) {
+            if (!$(el).prop('image-loaded')) {
+                var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
+
+                if (cache_name in image_cache) {
+                    $(el).attr('src', image_cache[cache_name]);
+                    $(el).show('fast');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/product-variant-image',
+                    type: 'GET',
+                    data: {
+                        store: $(el).attr('store'),
+                        product: $(el).attr('product'),
+                        variant: $(el).attr('variant'),
+                    },
+                    context: {img: $(el), cache_name: cache_name},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            this.img.attr('src', data.image);
+                            this.img.show('fast');
+
+                            image_cache[cache_name] = data.image;
+                        }
+                    },
+                    error: function (data) {
+                    },
+                    complete: function () {
+                        this.img.prop('image-loaded', true);
+                    }
+                });
+            }
+        });
+    })
+</script>
+{% endblock %}
+

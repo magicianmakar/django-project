@@ -252,3 +252,34 @@ def add_shopify_order_note(store, order_id, new_note):
         note = new_note
 
     return set_shopify_order_note(store, order_id, note)
+
+
+def get_tracking_orders(store, tracker_orders):
+    ids = []
+    for i in tracker_orders:
+        ids.append(str(i.order_id))
+
+    params = {
+        'ids': ','.join(ids),
+    }
+
+    rep = requests.get(
+        url=store.get_link('/admin/orders.json', api=True),
+        params=params
+    )
+
+    orders = {}
+    lines = {}
+
+    for order in rep.json()['orders']:
+        orders[order['id']] = order
+        for line in order['line_items']:
+            lines['{}-{}'.format(order['id'], line['id'])] = line
+
+    new_tracker_orders = []
+    for tracked in tracker_orders:
+        tracked.order = orders[tracked.order_id]
+        tracked.line = lines['{}-{}'.format(tracked.order_id, tracked.line_id)]
+        new_tracker_orders.append(tracked)
+
+    return new_tracker_orders

@@ -743,6 +743,21 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'GET' and target == 'order-fulfill':
+        # Get Orders marked as Ordered
+        from django.core import serializers
+
+        orders = []
+        data = serializers.serialize('python',
+                                     ShopifyOrder.objects.filter(user=user, hidden=False).order_by('updated_at'),
+                                     fields=('id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking',))
+        for i in data:
+            fields = i['fields']
+            fields['id'] = i['pk']
+            orders.append(fields)
+
+        return JsonResponse(orders, safe=False)
+
     if method == 'POST' and target == 'order-fulfill':
         # Mark Order as Ordered
         order_id = data.get('order_id')
@@ -793,6 +808,14 @@ def api(request, target):
         else:
             return JsonResponse({'error': 'Order not found.'})
 
+    if method == 'POST' and target == 'order-fulfill-update':
+        order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
+        order.source_status = data.get('status')
+        order.source_tracking = data.get('tracking_number')
+        order.save()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'POST' and target == 'order-add-note':
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
 
@@ -800,6 +823,14 @@ def api(request, target):
             return JsonResponse({'status': 'ok'})
         else:
             return JsonResponse({'error': 'Shopify API Error'})
+
+    if method == 'POST' and 'order-fullfill-hide':
+        order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
+        order.hidden = data.get('hide', False)
+        order.save()
+
+        return JsonResponse({'status': 'ok'})
+
 
     return JsonResponse({'error': 'Non-handled endpoint'})
 
@@ -1814,6 +1845,54 @@ def orders_view(request):
         'query': query,
         'page': 'orders',
         'breadcrumbs': ['Orders']
+    })
+
+
+@login_required
+def orders_track(request):
+    if not request.user.profile.can('orders.use'):
+        return render(request, 'upgrade.html')
+
+    store = None
+    post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
+    page = utils.safeInt(request.GET.get('page'), 1)
+
+    if request.GET.get('store'):
+        store = ShopifyStore.objects.get(id=request.GET.get('store'), user=request.user)
+        request.session['last_store'] = store.id
+    else:
+        if 'last_store' in request.session:
+            store = ShopifyStore.objects.get(id=request.session['last_store'], user=request.user)
+        else:
+            stores = request.user.profile.get_active_stores()
+            if len(stores):
+                store = stores[0]
+
+        if not store:
+            messages.warning(request, 'Please add at least one store before using the Orders page.')
+            return HttpResponseRedirect('/')
+
+    orders = ShopifyOrder.objects.filter(user=request.user,
+                                         store=store,
+                                         hidden=(request.GET.get('hidden', False)))
+
+    orders = orders.order_by('-updated_at')
+
+    paginator = Paginator(orders, post_per_page)
+    page = min(max(1, page), paginator.num_pages)
+    page = paginator.page(page)
+    orders = page.object_list
+
+    if len(orders):
+        orders = utils.get_tracking_orders(store, orders)
+
+    return render(request, 'orders_track.html', {
+        'store': store,
+        'orders': orders,
+        'paginator': paginator,
+        'current_page': page,
+        'page': 'orders_track',
+        'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
     })
 
 
