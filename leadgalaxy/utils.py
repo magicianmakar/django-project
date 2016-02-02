@@ -1,5 +1,8 @@
 import json
 import requests
+import uuid
+import md5
+
 from django.core.mail import send_mail
 from leadgalaxy.models import *
 
@@ -19,8 +22,6 @@ def safeFloat(v, default=0.0):
 
 
 def random_hash():
-    import uuid, md5
-
     token = str(uuid.uuid4())
     return md5.new(token).hexdigest()
 
@@ -31,6 +32,19 @@ def create_new_profile(user):
     profile.save()
 
     return profile
+
+
+def get_access_token(user):
+    try:
+        access_token = AccessToken.objects.filter(user=user).latest('created_at')
+    except:
+        token = str(uuid.uuid4())
+        token = md5.new(token).hexdigest()
+
+        access_token = AccessToken(user=user, token=token)
+        access_token.save()
+
+    return access_token.token
 
 
 def get_user_from_token(token):
