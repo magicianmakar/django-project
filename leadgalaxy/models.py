@@ -111,8 +111,8 @@ class ShopifyStore(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
-        return '{} | {}'.format(self.title, self.user.username)
+    def __str__(self):
+        return self.title
 
     def get_link(self, page=None, api=False):
         if api:
@@ -259,8 +259,8 @@ class ShopifyProductExport(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
 
-    def __unicode__(self):
-        return '{} | {}'.format(self.shopify_id, self.store.title)
+    def __str__(self):
+        return '{}'.format(self.shopify_id)
 
 
 class ShopifyProductImage(models.Model):
@@ -314,6 +314,8 @@ class ShopifyOrder(models.Model):
         }
 
         return status_map.get(self.source_status)
+
+    get_source_status.admin_order_field = 'source_status'
 
     def get_source_url(self):
         if self.source_id:
@@ -378,7 +380,7 @@ class UserUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return '{} | {}'.format(self.url.replace('%2F', '/').split('/')[-1], self.user.username)
+        return self.url.replace('%2F', '/').split('/')[-1]
 
 
 class PlanRegistration(models.Model):
