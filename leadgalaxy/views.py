@@ -1059,7 +1059,7 @@ def products_list(request, tpl='grid'):
 @login_required
 def product_view(request, pid):
     #  AWS
-    import time, base64, hmac, urllib, arrow, zlib
+    import base64, hmac
     from hashlib import sha1
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID', '')
