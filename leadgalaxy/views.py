@@ -692,8 +692,8 @@ def api(request, target):
             api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
 
         rep = requests.post(
-                url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
-                json=api_data
+            url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
+            json=api_data
         )
 
         if 'fulfillment' in rep.json():
@@ -701,8 +701,8 @@ def api(request, target):
         else:
             try:
                 d = rep.json()
-                return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(
-                        [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])})
+                errors = [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']]
+                return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(errors)})
             except:
                 try:
                     d = rep.json()
@@ -734,7 +734,7 @@ def api(request, target):
 
                 if '/' in data[k]:
                     return JsonResponse({
-                        'error': 'The character / is not allowed in variants name.\n' + \
+                        'error': 'The character / is not allowed in variants name.\n'
                                  'It will cause issues with auto-variant selection'
                     })
 
@@ -836,9 +836,9 @@ def webhook(request, provider, option):
             }
         except Exception as e:
             send_mail(subject='Shopified App: Webhook exception',
-                recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-                from_email='chase@rankengine.com',
-                message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
+                      recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                      from_email='chase@rankengine.com',
+                      message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
                         repr(request.GET.urlencode()),
                         repr(request.POST.urlencode()),
                         '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
@@ -894,9 +894,9 @@ def webhook(request, provider, option):
 
             except Exception as e:
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
-                    recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-                    from_email='chase@rankengine.com',
-                    message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
+                          recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                          from_email='chase@rankengine.com',
+                          message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
                             repr(request.GET.urlencode()),
                             repr(request.POST.urlencode()),
                             '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
@@ -1718,8 +1718,9 @@ def orders_view(request):
         order['store'] = store
 
         for i, el in enumerate((order['line_items'])):
-            order['line_items'][i]['variant_link'] = store.get_link(
-                    '/admin/products/{}/variants/{}'.format(el['product_id'], el['variant_id']))
+            var_link = store.get_link('/admin/products/{}/variants/{}'.format(el['product_id'],
+                                                                              el['variant_id']))
+            order['line_items'][i]['variant_link'] = var_link
 
             order['line_items'][i]['image'] = {
                 'store': store.id,
