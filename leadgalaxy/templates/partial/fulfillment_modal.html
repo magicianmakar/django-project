@@ -19,13 +19,12 @@
                             {% if notify %}
                             <div class="form-group">
                                 <label for="fulfill-notify-customer">
-
                                     Send shipping confirmation email to the customer:
                                 </label>
-                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:230px">
-                                    <option value="default">If all product are shipped</option>
-                                    <option value="yes">Yes</option>
+                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:100px">
                                     <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="default">Default</option>
                                 </select>
                             </div>
                             {% endif %}
@@ -45,6 +44,13 @@
                             Partially fulfill a single line item by explicitly specifying the line item and quantity to be fulfilled.
                         </p>
                         <p>If you don't have a Tracking Number, leave that field blank.</p>
+
+                        {% if notify %}
+                        <p>
+                            Select <b>Default</b> in confirmation email to notify the customer
+                            If All items from this order have been shipped.
+                        </p>
+                        {% endif %}
                     </div>
                 </div>
             </div>

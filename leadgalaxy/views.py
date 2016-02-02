@@ -687,6 +687,10 @@ def api(request, target):
             }
         }
 
+        notify_customer = data.get('fulfill-notify-customer')
+        if notify_customer and notify_customer != 'default':
+            api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+
         rep = requests.post(
                 url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
                 json=api_data
