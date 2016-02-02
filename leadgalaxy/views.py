@@ -1,9 +1,9 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as user_logout
 from django.shortcuts import redirect
-from django.template import Context, Template
+from django.template import Context, Template, RequestContext
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
+
 from unidecode import unidecode
 
 from app import settings
@@ -1884,3 +1885,17 @@ def register(request, registration=None):
         'form': form,
         'registration': registration
     })
+
+
+def handler404(request):
+    response = render_to_response('404.html', {},
+                                  context_instance=RequestContext(request))
+    response.status_code = 404
+    return response
+
+
+def handler500(request):
+    response = render_to_response('500.html', {},
+                                  context_instance=RequestContext(request))
+    response.status_code = 500
+    return response
