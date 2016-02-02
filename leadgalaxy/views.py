@@ -679,7 +679,7 @@ def api(request, target):
 
         api_data = {
             "fulfillment": {
-                "tracking_number": None,
+                "tracking_number": tracking,
                 "line_items": [{
                     "id": int(data.get('fulfill-line-id')),
                     "quantity": int(data.get('fulfill-quantity'))
