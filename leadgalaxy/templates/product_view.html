@@ -183,7 +183,7 @@
                         <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
 
                     <div class="btn-group dropup">
-                        <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
+                        <button id="more-options-btn" data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
                             More Options<span class="caret" style="margin-left:10px"></span></button>
 
                         <ul class="dropdown-menu">
@@ -710,6 +710,7 @@ $('#export-btn').click(function () {
                 $("#view-btn").show();
                 if (target == 'shopify') {
                     $('#export-btn, #save-for-later-btn').hide();
+                    $('#more-options-btn').trigger('click')
 
                     toastr.success('Product Exported.','Shopify Export');
                 } else {
