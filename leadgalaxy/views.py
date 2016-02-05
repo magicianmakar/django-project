@@ -753,10 +753,7 @@ def api(request, target):
 
         order_data = {
             'aliexpress': {
-                'order': {
-                    'id': data.get('aliexpress_order_id'),
-                    'trade': data.get('aliexpress_order_trade')
-                }
+                'order_trade': data.get('aliexpress_order_trade')
             }
         }
 
@@ -799,6 +796,17 @@ def api(request, target):
         order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
         order.source_status = data.get('status')
         order.source_tracking = data.get('tracking_number')
+
+        try:
+            order_data = json.loads(order.data)
+            if 'aliexpress' not in order_data:
+                order_data['aliexpress'] = {}
+        except:
+            order_data = {'aliexpress': {}}
+
+        order_data['aliexpress']['end_reason'] = data.get('end_reason')
+        order.data = json.dumps(order_data)
+
         order.save()
 
         return JsonResponse({'status': 'ok'})
