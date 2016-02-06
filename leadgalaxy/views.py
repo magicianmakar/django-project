@@ -826,6 +826,15 @@ def api(request, target):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'GET' and target == 'find-product':
+        try:
+            product = ShopifyProduct.objects.get(user=user, shopify_export__shopify_id=data.get('product'))
+            return JsonResponse({
+                'status': 'ok',
+                'url': 'http://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
+            })
+        except:
+            return JsonResponse({'error': 'Product not found'})
 
     return JsonResponse({'error': 'Non-handled endpoint'})
 
