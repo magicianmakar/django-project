@@ -819,7 +819,7 @@ def api(request, target):
         else:
             return JsonResponse({'error': 'Shopify API Error'})
 
-    if method == 'POST' and 'order-fullfill-hide':
+    if method == 'POST' and target == 'order-fullfill-hide':
         order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
         order.hidden = data.get('hide', False)
         order.save()
