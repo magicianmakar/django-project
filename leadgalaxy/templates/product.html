@@ -79,7 +79,7 @@
         <div class="ibox">
             <div class="ibox-content product-box" product-id="{{item.id}}">
                 <div class="product-imitation" style="padding: 0;">
-                    <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                    <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
                     <label for="product_{{item.id}}"><img src="{{item.images|first}}" style="width: 100%"></label>
                     <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button>
                 </div>
