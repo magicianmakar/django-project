@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load perms_helper %}
+{% load template_helper %}
 
 {% block main-container %}
 
@@ -103,12 +104,60 @@
                             <input type="text" class="form-control" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
                         </div>
                     </div>
-                    <div class="row">
+                    {% if shopify_product %}
+                        <div class="panel panel-default m-b-lg">
+                            <div class="panel-heading">Variants</div>
+                            <div class="panel-body" style="padding-bottom:0">
+                        <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Compare at price</th>
+                                    <th>Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in shopify_product.variants %}
+                                <tr class="shopify-variant" variant-id="{{item.id}}">
+                                    <td style="vertical-align: middle">
+                                        <input type="hidden" name="variant" value="{{item.id}}">
+                                        <input type="hidden" name="option1" value="{{item.option1|default:''}}">
+                                        <input type="hidden" name="option2" value="{{item.option2|default:''}}">
+                                        <input type="hidden" name="option3" value="{{item.option3|default:''}}">
+                                        <input type="hidden" name="title" value="{{item.title}}"/>
+                                        <!-- <input class="var-input var-input-title" type="text" name="title" value="{{item.title}}" /> -->
+                                        <span>{{item.title}}</span>
+                                    </td>
+                                    <td>
+                                        <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
+                                        <span class="var-pad">$</span>
+                                    </td>
+                                    <td>
+                                        <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
+                                        <span class="var-pad">$</span>
+                                    </td>
+                                    <td>
+                                        <input class="var-input" type="text" name="weight" value="{{item.weight}}" />
+                                        <span class="var-pad">{{item.weight_unit|default:''}}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row" {% if shopify_product %}style="display:none"{% endif %}>
                         <div class="form-group col-xs-6">
                             <label for="">Variants</label>
                         </div>
                     </div>
-                    <div id="variants" class="row well" style="margin:5px 0px 10px 0;padding: 20px 0 0px;">
+
+                    <div id="variants" class="row well"
+                         style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if shopify_product %}display:none{% endif %}">
+
                         <div class="variant-simple form-group col-xs-10" style="display:none">
                             <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
                             <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0px;" placeholder="Values (separeted by comma)">
@@ -121,15 +170,16 @@
                         </div>
                     </div>
 
-                    <div class="form-group col-xs-12">
+
+                    <div class="form-group col-xs-12" style="padding:0">
+                        <textarea name="product-description" class="form-control"></textarea>
+                    </div>
+
+                    <div class="form-group col-xs-12" style="padding:0">
                         <label for="product-visible">
                             <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
                             Make Product Visible
                         </label>
-                    </div>
-
-                    <div class="form-group col-xs-12">
-                        <textarea name="product-description" class="form-control"></textarea>
                     </div>
                 </div>
             </div>
@@ -177,11 +227,14 @@
             <div class="buttons col-xs-12">
                 <div class="row">
                     <div class="col-md-6">
-                        {% if not product.shopify_url %}
+                        {% if not product.shopify_url and not shopify_product %}
                         <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
-                        {% else %}
+                        {% endif %}
+
+                        {% if shopify_product %}
                         <button id="export-btn" target="shopify-update" type="button" class="btn btn-primary" data-loading-text="Updating...">Update in Shopify</button>
                         {% endif %}
+
                         <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
 
                     <div class="btn-group dropup">
@@ -354,22 +407,20 @@
                         <label>Product link in Shopify:</label>
                         <input id="product-shopify-link" type="text" class="form-control" value="{{product.qelem.shopify_link|default:''}}">
                     </div>
-                    <div class="form-group col-xs-12">
+                    <div class="form-group col-xs-6">
                         <button id="save-metadata" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
                     </div>
-                </div>
-
-                {% if product.qelem.get_shopify_id %}
-                    <hr />
-                    <div class="row">
-                        <div class="col-md-6">
-                        <a class="btn btn-success" href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
+                    {% if product.qelem.get_shopify_id %}
+                        <div class="col-xs-6 text-right">
+                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
                             Variants Mapping
                             <i class="fa fa-external-link"></i>
                         </a>
                         </div>
-                    </div>
                 {% endif %}
+
+                </div>
+
             </div>
         </div>
     </div>
@@ -475,6 +526,32 @@
 .var-image-block, .add-var-image-block {
     margin-top: 15px;
 }
+
+.var-input {
+    margin: 0px;
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-right: 0 none;
+    width:70px;
+}
+
+.var-input-title {
+    border-right: 1px solid #ddd;
+    width:100%;
+}
+
+.var-pad {
+    border: 1px solid #ddd;
+    padding: 10px 5px;
+    border-left: 0 none;
+    margin-left: -5px;
+}
+
+.table.no-border th, .table.no-border td {
+     border-top: none !important;
+ }
+
 </style>
 {% endblock %}
 
@@ -578,12 +655,17 @@ $('#export-btn').click(function () {
     var btn = $(this);
     var target = btn.attr('target');
 
+    if (target != 'shopify' && target != 'shopify-update') {
+        swal('Unknow target', 'Unknow target', 'error');
+        return;
+    }
+
     btn.bootstrapBtn('loading')
 
     var store_id = $('#store-select').val();
 
     if (!store_id || store_id.length==0) {
-        alert('Please choose a Shopify store first!');
+        swal('Product Export', 'Please choose a Shopify store first!', 'error');
         return;
     }
 
@@ -601,6 +683,7 @@ $('#export-btn').click(function () {
       }
     };
 
+
     if (product.images) {
         for (var i=0; i<product.images.length; i++) {
             api_data.product.images.push({
@@ -608,6 +691,8 @@ $('#export-btn').click(function () {
             })
         }
     }
+
+    {% if not shopify_product %}
 
     if ($('#variants .variant').length==0) {
         var vdata = {
@@ -686,6 +771,34 @@ $('#export-btn').click(function () {
         }
     }
 
+    {% else %}
+
+    $('#shopify-variants tr.shopify-variant').each(function(j, tr) {
+
+        var variant_data = {
+            id: $(tr).attr('variant-id')
+        };
+
+        var attrs = [
+            'option1', 'option2', 'option3', 'title',
+            'price', 'compare_at_price', 'weight'
+        ];
+
+        $.each(attrs, function(k, att) {
+            var att_val = $('[name="' + att + '"]', tr).val();
+            if (att_val && att_val.length > 0) {
+                variant_data[att] = att_val;
+            }
+        });
+
+        api_data.product.variants.push(variant_data);
+        console.dir(variant_data);
+    });
+
+    api_data.product.options = {% json_dumps shopify_product.options %};
+
+    {% endif %}
+
     $.ajax({
         url: api_base + '/api/' + target,
         type: 'POST',
@@ -710,6 +823,7 @@ $('#export-btn').click(function () {
                 $("#view-btn").attr("shopify-id", data.product.id);
                 $("#view-btn").attr("shopify-url", data.product.url);
                 $("#view-btn").show();
+
                 if (target == 'shopify') {
                     $('#export-btn, #save-for-later-btn').hide();
                     $('#more-options-btn').trigger('click')
