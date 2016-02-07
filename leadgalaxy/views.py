@@ -1237,7 +1237,6 @@ def product_mapping(request, store_id, product_id):
         for var in i['variant_ids']:
             images[var] = i['src']
 
-    print variants_map
     for i, v in enumerate(shopify_product['variants']):
         shopify_product['variants'][i]['image'] = images.get(v['id'])
 
