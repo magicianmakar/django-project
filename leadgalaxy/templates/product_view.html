@@ -235,7 +235,7 @@
                         <button id="export-btn" target="shopify-update" type="button" class="btn btn-primary" data-loading-text="Updating...">Update in Shopify</button>
                         {% endif %}
 
-                        <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
+                        <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving..." {% if shopify_product %}style="display:none"{% endif %}>Save for later</button>
 
                     <div class="btn-group dropup">
                         <button id="more-options-btn" data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
