@@ -1174,7 +1174,7 @@ def product_view(request, pid):
     export = product.shopify_export
     if export and export.shopify_id:
         p['shopify_url'] = export.store.get_link('/admin/products/{}'.format(export.shopify_id))
-        p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, product.id)
+        p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, export.shopify_id)
 
         shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
 
@@ -1194,14 +1194,20 @@ def product_view(request, pid):
 
 @login_required
 def variants_edit(request, store_id, pid):
+    """
+    pid: Shopify Product ID
+    """
+
     if not request.user.profile.can('product_variant_setup.use'):
         return render(request, 'upgrade.html')
 
     store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
-    api_url = store.get_link('/admin/products/{}.json'.format(pid), api=True)
 
-    r = requests.get(api_url)
-    product = json.dumps(r.json()['product'])
+    product = utils.get_shopify_product(store, pid)
+
+    if not product:
+        messages.warning(request, 'Product not found in Shopify')
+        return HttpResponseRedirect('/')
 
     return render(request, 'variants_edit.html', {
         'store': store,
