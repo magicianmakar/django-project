@@ -266,7 +266,7 @@ def api(request, target):
             else:
                 messages.success(request, 'Product updated in Shopify.')
 
-        else:  # save for later
+        elif target == 'save-for-later':  # save for later
             if 'product' in req_data:
                 # Saved product update
                 try:
@@ -302,6 +302,8 @@ def api(request, target):
 
             url = request.build_absolute_uri('/product/%d' % product.id)
             pid = product.id
+        else:
+            return JsonResponse({'error': 'Unknown target {}'.format(target)})
 
         return JsonResponse({
             'product': {
