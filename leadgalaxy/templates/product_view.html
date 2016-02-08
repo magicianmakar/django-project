@@ -57,53 +57,50 @@
                 <label for="product-title">Title</label>
                 <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
             </div>
-            <div class="form-group col-xs-4">
+        </div>
+        <div class=" row" {% if shopify_product %}style="display:none"{% endif %}>
+            <div class="form-group col-xs-3">
                 <label for="product-price">Price</label>
                 <div class="input-group">
                     <span class="input-group-addon">$</span>
-                    <input type="text" class="form-control" id="product-price" placeholder="Product Price">
+                    <input type="text" class="form-control" id="product-price" placeholder="Product Price"
+                        >
                 </div>
+            </div>
+            <div class="form-group col-xs-3">
+                <label for="product-type">Compare at price</label>
+                <input type="text" class="form-control" id="product-compare-at" placeholder=""
+                       value="{{product.product.compare_at_price|default:''}}">
+            </div>
+            <div class="form-group col-xs-6">
+                <label for="product-type" style="display: block">Weight</label>
+                <input type="text" class="form-control" id="product-weight" placeholder="Product Weight"
+                style="display: inline;width: 30%;">
+
+                <select name="product-weight-unit" id="product-weight-unit" class="form-control"
+                    style="display: inline;width: 20%;">
+                    <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                    <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                    <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                    <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                </select>
             </div>
         </div>
         <div class="row">
-            <div class="form-group col-xs-6">
+            <div class="form-group col-xs-3">
                 <label for="product-type">Type</label>
                 <input type="text" class="form-control" id="product-type" placeholder="Product Type">
             </div>
+            <div class="form-group col-xs-6">
+                <label for="product-type">Tags</label>
+                <input type="text" class="form-control tag-it" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
+            </div>
+
         </div>
 
         <div class="row">
             <div id="more-options" class="col-xs-12">
                 <div class="childs" style="">
-                    <div class="row">
-                    <div class="form-group col-xs-6">
-                        <label for="product-type">Weight</label>
-                        <input type="text" class="form-control" id="product-weight" placeholder="Product Weight">
-                    </div>
-
-                    <div class="form-group col-xs-3" style="padding-top: 24px">
-                        <select name="product-weight-unit" id="product-weight-unit" class="form-control">
-                            <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
-                            <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
-                            <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                            <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                        </select>
-                    </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-xs-6">
-                            <label for="product-type">Compare at price</label>
-                            <input type="text" class="form-control" id="product-compare-at" placeholder="" value="{{product.product.compare_at_price|default:''}}">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-xs-6">
-                            <label for="product-type">Tags</label>
-                            <input type="text" class="form-control" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
-                        </div>
-                    </div>
                     {% if shopify_product %}
                         <div class="panel panel-default m-b-lg">
                             <div class="panel-heading">Variants</div>
