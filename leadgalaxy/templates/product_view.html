@@ -483,6 +483,7 @@
 {% block extracss %}
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 
 <style type="text/css">
 .buttons {
@@ -568,6 +569,7 @@
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 
 <!-- Load Feather code -->
 <script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
@@ -611,6 +613,10 @@ function showProductInfo(rproduct) {
                 v.find('#product-variant-name').val(el.title);
                 v.find('#product-variant-values').val(el.values.join(','));
 
+                $("#product-variant-values", v).tagit({
+                    allowSpaces: true
+                });
+
                 $('#variants .area').append(v);
             });
         }
@@ -635,8 +641,10 @@ $("a.add-variant").click(function (e) {
     v.removeClass('variant-simple');
     v.show();
     v.find("a.remove-variant").click(removeVariant);
-    // v.find('#product-variant-name').val(product.variants_title);
-    // v.find('#product-variant-values').val(product.variants_values.join(','));
+
+    $("#product-variant-values", v).tagit({
+        allowSpaces: true
+    });
 
     $('#variants .area').append(v);
 });
@@ -1272,6 +1280,10 @@ $(function() {
         element.editor.setSelectedRange([0, 0])
         element.editor.insertHTML('{{product.notes|escapejs}}');
     }, 2000);
+
+    $(".tag-it").tagit({
+        allowSpaces: true
+    });
 });
 
 $(function() {
