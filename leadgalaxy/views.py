@@ -241,6 +241,9 @@ def api(request, target):
                 product_data = r.json()['product']
             except:
                 traceback.print_exc()
+                print '-----'
+                print r.text
+                print '-----'
 
                 try:
                     d = r.json()
