@@ -228,10 +228,13 @@ def api(request, target):
                     r = requests.put(update_endpoint, json=api_data)
                 else:
                     r = requests.post(endpoint, json=json.loads(data))
+                    product_to_map = r.json()['product']
 
                     try:
                         # Link images with variants
-                        r = utils.shopify_link_images(store, r.json()['product'])
+                        mapped = utils.shopify_link_images(store, product_to_map)
+                        if mapped:
+                            r = mapped
                     except Exception as e:
                         traceback.print_exc()
 

@@ -284,6 +284,9 @@ def shopify_link_images(store, product):
         mapping[var[0]] = val['id']
         mapping_idx[var[0]] = key
 
+    if not len(mapping_idx):
+        return None
+
     for key, val in enumerate(product[u'variants']):
         for option in [val['option1'], val['option2'], val['option3']]:
             if not option:
