@@ -558,7 +558,6 @@
 {% endblock %}
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
     var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
     $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
@@ -573,6 +572,7 @@
 <!-- Load Feather code -->
 <script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
 
+{% compress js %}
 <script type="text/javascript">
 
 var api_base = '';
@@ -1045,8 +1045,8 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
                 $('.description-images-add').append($('<div class="col-xs-12"></div>'));
             }
 
-            var d = $('<div>', {class:'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
-            var img = $('<img>', {src: $(el).attr('src'), class: 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
+            var d = $('<div>', {'class':'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
+            var img = $('<img>', {src: $(el).attr('src'), 'class': 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
             d.append(img);
 
             img.click(function (e) {
