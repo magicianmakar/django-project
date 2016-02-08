@@ -26,6 +26,7 @@ import re
 import json
 import requests
 import arrow
+import traceback
 
 import utils
 from province_helper import load_uk_provincess
@@ -228,8 +229,16 @@ def api(request, target):
                 else:
                     r = requests.post(endpoint, json=json.loads(data))
 
+                    try:
+                        # Link images with variants
+                        r = utils.shopify_link_images(store, r.json()['product'])
+                    except Exception as e:
+                        traceback.print_exc()
+
                 product_data = r.json()['product']
             except:
+                traceback.print_exc()
+
                 try:
                     d = r.json()
                     return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(

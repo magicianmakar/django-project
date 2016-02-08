@@ -268,6 +268,42 @@ def add_shopify_order_note(store, order_id, new_note):
     return set_shopify_order_note(store, order_id, note)
 
 
+def shopify_link_images(store, product):
+    """
+    Link Shopify variants with their images
+    """
+
+    mapping = {}
+    mapping_idx = {}
+    for key, val in enumerate(product[u'images']):
+        var = re.findall('/v-(.+)__', val[u'src'])
+
+        if len(var) != 1:
+            continue
+
+        mapping[var[0]] = val['id']
+        mapping_idx[var[0]] = key
+
+    for key, val in enumerate(product[u'variants']):
+        for option in [val['option1'], val['option2'], val['option3']]:
+            if not option:
+                continue
+
+            option = option.replace(' ', '_')
+            img_idx = mapping_idx.get(option)
+
+            if not img_idx:
+                continue
+
+            if val['id'] not in product['images'][img_idx]['variant_ids']:
+                product['images'][img_idx]['variant_ids'].append(val['id'])
+
+    return requests.put(
+        url=store.get_link('/admin/products/{}.json'.format(product['id']), api=True),
+        json={'product': product}
+    )
+
+
 def get_tracking_orders(store, tracker_orders):
     ids = []
     for i in tracker_orders:
