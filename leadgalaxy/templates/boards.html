@@ -39,13 +39,14 @@
             <option value="delete">Delete</option>
         </select>
         <button class="btn btn-primary apply-btn">Apply</button>
+        <button class="btn btn-default btn-outline select-all-btn">Select All</button>
     </div>
 </div>
 {% endif %}
 
 <div class="row">
     {% for item in board.products %}
-    <div class="col-md-3">
+    <div class="col-xs-3 col-md-3 ">
         <div class="ibox">
             <div class="ibox-content product-box" product-id="{{item.id}}">
                 <div class="product-imitation" style="padding: 0;">
@@ -58,7 +59,14 @@
                         {{item.price}}
                     </span>
                     <small class="text-muted">{{item.product.type}}</small>
-                    <a href="/product/{{item.id}}" class="product-name"> {{item.product.title}}</a>
+                    {% if item.source %}
+                    <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                        <a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a>
+                        </small>
+                    {% endif %}
+
+                    <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
+                    <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
 
                     <div class="small m-t-xs">
                         Submitted at {{item.created_at|date}}

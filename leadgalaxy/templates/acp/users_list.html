@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Users Count: {{users_count}}<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Plan</th>
+                            {% if request.GET.products %}
+                            <th>Stores</th>
+                            <th>Products</th>
+                            {% endif %}
+                            <th>Join Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-plan-select" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Sending To Shopify</h3>
+
+                        <label for="send-select-store">Select Plan:</label>
+                        <select class="form-control" name="selected-actions" id="plan-change-select" style="display: inline-block; width: 191px; ">
+                            {% for item in plans %}
+                            <option value="{{item.id}}">{{item.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="change-plan-apply" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="/static/css/plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
+    <link href="/static/css/plugins/dataTables/dataTables.responsive.css" rel="stylesheet">
+    <link href="/static/css/plugins/dataTables/dataTables.tableTools.min.css" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+    <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+    <script src="/static/js/plugins/dataTables/dataTables.responsive.js"></script>
+    <script src="/static/js/plugins/dataTables/dataTables.tableTools.min.js"></script>
+    <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script>
+
+    <script type="text/javascript">
+        function changePlan(e) {
+            $('.active-plan-change').removeClass('active-plan-change');
+            $(this).parents('tr').find('.profile-plan').addClass('active-plan-change');
+            $('#modal-plan-select').prop('user-id', $(this).attr('user-id'));
+            $('#modal-plan-select').modal('show');
+        }
+
+        var data = [
+{% for item in users %}
+['<span style="display:none">{{item.id}}|{{item.username}}</span>',
+'{{item.email}}',
+'{{item.profile.plan.title}}',
+
+{% if show_products %}
+'{{item.shopifystore_set.count}}',
+'{{item.shopifyproduct_set.count}}',
+{% endif %}
+
+'{{item.date_joined|date}}', ''],
+{% endfor %}
+        ];
+
+        $(document).ready(function() {
+            $('.dataTables').on( 'draw.dt', function (e) {
+                console.dir(e);
+                $('.dataTables tr').each(function (i, el) {
+                    var info = $(el).find('td').first().find('span').text();
+                    info = info.split('|');
+                    $(el).find('td').find('a').remove()
+                    $(el).find('td').first().append($('<a>', {href: '/admin/auth/user/'+info[0]+'/', target: '_blank', text: info[1]}));
+
+                    $(el).find('td').last().empty()
+                    .append($('<a>', {
+                        'href': '/hijack/'+info[0]+'/',
+                        'class': 'btn btn-success btn-xs m-r-xs',
+                        'text': 'Login with'
+                    }))
+                    .append(
+                        $('<a>', {
+                            'href': '#',
+                            'class': 'btn btn-primary btn-xs change-plan-btn',
+                            'user-id': info[0],
+                            'text': 'Change Plan'
+                        }).click(changePlan)
+                    );
+                });
+            });
+
+            var table = $('.dataTables').dataTable({
+                responsive: true,
+                'data': data,
+                "dom": 'T<"clear">lfrtip',
+                "tableTools": {
+                    "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
+                }
+            });
+
+            $('#change-plan-apply').click(function (e) {
+                var btn = $(this);
+                var user = $('#modal-plan-select').prop('user-id');
+                var plan = $('#plan-change-select').val();
+
+                btn.button('loading');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/change-plan',
+                    context: {},
+                    data: {
+                        'plan':plan,
+                        'user': user
+                    },
+                    success: function(data) {
+                        if (data.status == 'ok') {
+                            $('#modal-plan-select').modal('hide');
+                            $('.active-plan-change').find('b').text(data.plan.title);
+                        } else {
+                            alert('Server Error');
+                        }
+                    },
+                    error: function(data) {
+                        alert('Server Error');
+                    },
+                    complete: function() {
+                        btn.button('reset');
+                    }
+                });
+            })
+        });
+    </script>
+{% endblock %}
+

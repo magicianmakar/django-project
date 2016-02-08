@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load template_helper %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+            {% for item in user.profile.get_active_stores %}
+                {% if store == item or item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
+                            <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
+                        </div>
+                        <div class="col-md-2 col-md-offset-6 text-right">
+                            <button class="btn btn-default btn-rounded btn-sm expand-btn">Expand All</button>
+                        </div>
+                    </div>
+                    <form method="get" action="/orders" class="filter-form m-t-sm" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Query:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="query" value="{{query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order name or ID">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Sort:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="sort" class="form-control" style="padding: 6px 0px">
+                                <option {% if sort == 'asc' %}selected="selected"{% endif %}value="asc">Newst orders first</option>
+                                <option {% if sort == 'desc' %}selected="selected"{% endif %}value="desc">Oldest orders first</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-control help-select" style="padding: 6px 0px">
+                                <option {% if status == 'open' %}selected="selected"{% endif %}value="open">All open orders</option>
+                                <option {% if status == 'closed' %}selected="selected"{% endif %}value="closed">Show only closed orders</option>
+                                <option {% if status == 'cancelled' %}selected="selected"{% endif %}value="cancelled">Show only cancelled orders</option>
+                                <option {% if status == 'any' %}selected="selected"{% endif %}value="any">Any order status</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Fulfillment Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="fulfillment" class="form-control help-select" style="padding: 6px 0px">
+                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}value="unshipped" title="fff">Show orders that have not yet been shipped</option>
+                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %}value="shipped">Show orders that have been shipped</option>
+                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}value="partial">Show partially shipped orders</option>
+                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %}value="any">Show orders with any fulfillment status</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Financial Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="financial" class="form-control help-select" style="padding: 6px 0px">
+                                <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all authorized, pending, and paid orders</option>
+                                <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>
+                                <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
+                                <option value="paid" {% if financial == 'paid' %}selected="selected"{% endif %}>Show only paid orders</option>
+                                <option value="partially_paid" {% if financial == 'partially_paid' %}selected="selected"{% endif %}>Show only partially paid orders</option>
+                                <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only refunded orders</option>
+                                <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only voided orders</option>
+                                <!-- <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option> -->
+                                <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            {% if request.GET.store %}
+                            <input type="hidden" name="store" value="{{ request.GET.store }}">
+                            {% endif %}
+                        <button class="btn btn-primary">Apply</button>
+                        </div>
+                    </div>
+                    <hr >
+                    </form>
+                    <table class="table table-condensed xtable-hover">
+                      <thead>
+                        <tr>
+                          <th>Order #</th>
+                          <th>Date</th>
+                          <th>Payment Status</th>
+                          <th>Fulfillment Status</th>
+                          <th>Customer</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>
+                                    <a href="#" class="more-info"><i class="fa fa-plus" style="margin-right:10px"></i></a>
+                                    <a href="{{order.order_url}}" target="_blank">
+                                        {{order.name}}
+                                    </a>
+                                </td>
+                                <td>{{order.date_str}}</td>
+                                <td>{{order.financial_status|title}}</td>
+                                <td class="fulfillment-status">
+                                     <div class="btn-group">
+                                        <button data-toggle="dropdown" class="btn btn-xs dropdown-toggle {% if not order.fulfillment_status %}btn-warning{% else %}btn-success{% endif %}" aria-expanded="false">
+                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
+                                            <span class="caret"></span></button>
+
+                                        <ul class="dropdown-menu">
+                                            <li><a class="add-order-note" href="#" store="{{order.store.id}}" order-id="{{order.id}}">Add notes</a></li>
+                                        </ul>
+                                    </div>
+
+                                    {% if order.note %}
+
+                                    <button
+                                        class="btn btn-outline  btn-xs itooltip no-outline view-order-notes"
+                                        notes="{% base64_encode order.note %}"
+                                        title="Order Notes"
+                                        style="padding: 0; margin: 0 3px; color: #999999">
+                                        <i class="fa fa-sticky-note"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <img class="itooltip" style="width: 16px" title="{{order.shipping_address.country}}" src="http://lipis.github.io/flag-icon-css/flags/4x3/{{order.shipping_address.country_code|lower}}.svg">
+                                    {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}
+                                </td>
+                                <td>
+                                    <b>{% if order.currency == 'USD' %} ${% else %} {{order.currency}} {% endif %}{{order.total_price}}</b>
+                                </td>
+                            </tr>
+
+                            <tr class="var-info" style="display:none">
+                                <td colspan="6">
+                                    <table class="table table-condensed xtable-hover xtable-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th style="width:310px"></th>
+                                                <th>Variant</th>
+                                                <th>Qty</th>
+                                                <th>Vendor</th>
+                                                <th></th>
+                                                <th></th>
+                                                <th style="width:200px">Shipping Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in order.line_items %}
+                                            {% with image=item.image original=item.product.get_original_info %}
+                                            <tr {% if item.shopify_order %}class="success"{% endif %}>
+                                                <td>
+                                                    <img
+                                                    class="lazyload"
+                                                    store="{{image.store}}"
+                                                    product="{{image.product}}"
+                                                    variant="{{image.variant}}"
+                                                    {% if image %}
+                                                    src=""
+                                                    {% else %}
+                                                    src="{{item.product.get_images|first}}"
+                                                    {% endif %}
+                                                    style="width:64px" />
+                                                </td>
+                                                <td>
+                                                    {% if item.product %}
+                                                    <a href="/product/{{item.product.id}}" target="_blank">{{item.name}}</a>
+                                                    {% else %}
+                                                    {{item.name}}
+                                                    {% endif %}
+                                                </td>
+                                                <td><a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a></td>
+                                                <td>
+                                                    <span style="{% if item.quantity > 1 %} font-weight: bolder; color: blue{% endif %}">{{item.quantity}}</span>
+                                                </td>
+                                                <td>{{item.vendor}}</td>
+                                                <td class="text-center">
+                                                    {% if original %}
+                                                        <div class="btn-group">
+                                                            <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">
+                                                                Place Order
+                                                                <span class="caret"></span></button>
+
+                                                            <ul class="dropdown-menu">
+                                                                {% if item.shopify_order %}
+                                                                <li><a class="placed-order-details" href="#" order-id="{{order.id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}" data="{{item.shopify_order.encoded}}">Order Details</a></li>
+                                                                {% else %}
+                                                                <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
+                                                                {% endif %}
+
+                                                                <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
+
+                                                                {% if item.order_data %}
+                                                                <li><a href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data False|urlencode  %}" target="_blank">Step By Step Order</a></li>
+                                                                <li><a href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}" target="_blank">Auto Place Order</a></li>
+                                                                {% endif %}
+                                                            </ul>
+                                                        </div>
+                                                    {% else %}
+                                                    <span class="label label-warning">Not Tracked</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                {% if not item.fulfillment_status %}
+
+                                                    <div class="btn-group">
+                                                        <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                                            Unfulfilled
+                                                            <span class="caret"></span></button>
+
+                                                            <ul class="dropdown-menu">
+                                                                <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}">Fulfill in Shopify</a></li>
+                                                            </ul>
+                                                        </div>
+                                                {% else %}
+                                                    <span class="label label-success">{{item.fulfillment_status|title}}</span>
+                                                {% endif %}
+                                                </td>
+                                                {% if forloop.counter0 == 0 %}
+                                                <td rowspan="{{order.line_items|length}}" style="background-color:white;vertical-align:middle">
+                                                    {{order.shipping_address.address1}}<br>
+                                                    {{order.shipping_address.address2}}{% if order.shipping_address.address2 %}<br>{% endif %}
+                                                    {{order.shipping_address.city}}, {{order.shipping_address.province_code|default:''}} {{order.shipping_address.zip}}
+                                                    {% if order.shipping_address.country_code != 'US' %}
+                                                    <br> <b>{{order.shipping_address.country}}</b>
+                                                    {% endif %}
+                                                    <br>
+                                                </td>
+                                                {% endif %}
+                                            </tr>
+                                            {% endwith %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+
+
+                            {% empty %}
+                            <tr>
+                              <td colspan="6" class="text-center">No orders found.</td>
+                            </tr>
+                            {% endfor %}
+                      </tbody>
+                    </table>
+
+                    {% include "partial/paginator.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'partial/fulfillment_modal.html' with notify=True only %}
+
+{% endblock %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+
+    var image_cache = {};
+
+    $(function () {
+        $(".itooltip").tooltip();
+    });
+
+    $(".more-info").click(function (e) {
+        e.preventDefault();
+
+        var element = $(this).find('i');
+        var target = $(this).parents('tr').next();
+
+        $('.lazyload', target).each(function (i, el) {
+            if (!$(el).prop('image-loaded')) {
+                var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
+
+                if (cache_name in image_cache) {
+                    $(el).attr('src', image_cache[cache_name]);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/product-variant-image',
+                    type: 'GET',
+                    data: {
+                        store: $(el).attr('store'),
+                        product: $(el).attr('product'),
+                        variant: $(el).attr('variant'),
+                    },
+                    context: {img: $(el), cache_name: cache_name},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            this.img.attr('src', data.image);
+
+                            image_cache[cache_name] = data.image;
+                        }
+                    },
+                    error: function (data) {
+                    },
+                    complete: function () {
+                        this.img.prop('image-loaded', true);
+                    }
+                });
+            }
+        });
+
+        target.toggle('fade', function() {
+            if (target.is(":visible")) {
+                element.removeClass('fa-plus');
+                element.addClass('fa-minus');
+            } else {
+                element.removeClass('fa-minus');
+                element.addClass('fa-plus');
+            }
+        });
+    });
+
+    $('.fulfill-btn').click(function (e) {
+        $('#modal-fulfillment #fulfill-quantity').val($(this).attr('quantity'));
+        $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
+        $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
+        $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
+
+         if ($(this).prop('fulfilled')) {
+            return;
+        };
+
+        $('#modal-fulfillment').modal('show');
+    });
+
+    $('#fullfill-order-btn').click(function (e) {
+        e.preventDefault();
+
+        $(this).button('loading');
+        var line_btn = $('.fulfill-btn[line-id="'+$('#modal-fulfillment #fulfill-line-id').val()+'"]');
+
+        $.ajax({
+            url: '/api/fulfill-order',
+            type: 'POST',
+            data:  $('#modal-fulfillment form').serialize(),
+            context: {btn: $(this), line: line_btn},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    $('#modal-fulfillment').modal('hide');
+                    swal('Fulfillment Status', 'Fulfillment Status changed to Fulfilled', 'success');
+                    this.line.prop('fulfilled', true);
+                } else {
+                    displayAjaxError('Fulfill Order', data);
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Fulfill Order', data);
+            },
+            complete: function () {
+                this.btn.button('reset');
+
+                var btn = this.line;
+                setTimeout(function() {
+                    if (btn.prop('fulfilled')) {
+                        btn.removeClass('btn-default');
+                        btn.addClass('btn-success');
+                        btn.text('Fulfilled');
+                    }
+                }, 100);
+            }
+        });
+    });
+
+    $('.filter-btn').click(function (e) {
+        $('.filter-form').toggle('fade');
+    });
+
+    $(".filter-form").submit(function() {
+        $(this).find(":input").filter(function(){
+            return ((this.name == 'sort' && this.value == 'desc') ||
+                (this.name == 'status' && this.value == 'open') ||
+                (this.name == 'fulfillment' && this.value == 'unshipped') ||
+                (this.name == 'financial' && this.value == 'any') ||
+                (this.name == 'query' && this.value.trim().length == 0));
+        }).attr("disabled", "disabled");
+        return true; // ensure form still submits
+    });
+
+    function toTitleCase(str) {
+        return str.replace('_', ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+    }
+
+    $('.expand-btn').click(function (e) {
+        $(".more-info").trigger('click');
+    });
+    $('.placed-order-details').click(function (e) {
+        e.preventDefault();
+
+        var tr_parent = $(this).parents('tr').first();
+        var order_id = $(this).attr('order-id');
+        var line_id = $(this).attr('line-id');
+        var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
+        var html = '<ul>';
+        html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" href="http://trade.aliexpress.com/order_detail.htm?orderId='+data.aliexpress.order.id+'">'+data.aliexpress.order.id+'</a></li>';
+        html += '<li style="list-style:none">Order date: '+$(this).attr('order-date')+'</li>';
+        html += '</ul';
+
+        swal({
+            title: '',
+            text: html,
+            showCancelButton: true,
+            html: true,
+            animation:false,
+            cancelButtonText: "Close",
+            confirmButtonText: 'Delete Order ID',
+            confirmButtonColor: "#DD6B55",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+        },
+        function(isConfirm) {
+            if (isConfirm) {
+                deleteOrderID(tr_parent, order_id, line_id);
+            }
+        });
+    });
+
+    function deleteOrderID(tr_parent, order_id, line_id) {
+        swal({
+            title: 'Delete Order ID',
+            text: 'Are you sure you want to delete the Order ID?',
+            type: "warning",
+            showCancelButton: true,
+            animation: false,
+            cancelButtonText: "Cancel",
+            confirmButtonText: 'Yes',
+            confirmButtonColor: "#DD6B55",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirm) {
+            if (isConfirm) {
+                $.ajax({
+                    url: '/api/order-fulfill' + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
+                    type: 'DELETE',
+                    context: {tr: tr_parent},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            swal({
+                                title: "Order ID",
+                                text: "Product Order ID has been deleted.\nNote: The Order ID has not been removed from the order notes.",
+                                type: "success"
+                            });
+                            $(this.tr).removeClass('success');
+                        } else {
+                            displayAjaxError('Delete Order ID', data);
+                        }
+                    },
+                    error: function (data) {
+                        displayAjaxError('Delete Order ID', data);
+                    }
+                });
+            }
+        });
+    }
+
+    $('.mark-as-ordered').click(function (e) {
+        e.preventDefault();
+
+        var orderData = {
+            order_id: $(this).attr('order-id'),
+            line_id: $(this).attr('line-id'),
+            store: $(this).attr('store'),
+            btn:  $(this)
+        }
+
+        swal({
+            title: "Order Placed",
+            text: "Aliexpress Order ID:",
+            type: "input",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            animation: "slide-from-top",
+            inputPlaceholder: "Order ID",
+            showLoaderOnConfirm: true
+        }, function(inputValue) {
+            if (inputValue === false) return false;
+            inputValue = inputValue.trim();
+
+            if (inputValue === "") {
+                swal.showInputError("You need to enter an Order ID.");
+                return false
+            }
+
+            var order_link = inputValue.match(/orderId=([0-9]+)/);
+            if (order_link && order_link.length == 2) {
+                inputValue = order_link[1];
+            }
+
+            if (inputValue.match(/^[0-9]+$/) === null) {
+                swal.showInputError("The entered Order ID is not valid.");
+                return false
+            }
+
+            $.ajax({
+                url: '/api/order-fulfill',
+                type: 'POST',
+                data: {
+                    'store': orderData.store,
+                    'order_id': orderData.order_id,
+                    'line_id': orderData.line_id,
+                    'aliexpress_order_id': inputValue,
+                    'aliexpress_order_trade': ''
+                },
+                context: {orderData: orderData},
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        this.orderData.btn.parents('tr').first().addClass('success');
+                        findMarkedLines();
+                        swal('Marked as Ordered.', 'Item was marked as ordered in Shopified App', 'success');
+                    } else {
+                        displayAjaxError('Mark as Ordered', data);
+                    }
+                },
+                error: function (data) {
+                    displayAjaxError('Mark as Ordered', data);
+                },
+                complete: function () {
+                }
+            });
+        });
+    });
+
+    $('.add-order-note').click(function (e) {
+        e.preventDefault();
+
+        var order_id = $(this).attr('order-id');
+        var store = $(this).attr('store');
+
+        swal({
+            title: "Add Note",
+            text: "Append note to this order notes:",
+            type: "input",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            animation: "slide-from-top",
+            inputPlaceholder: "Notes",
+            showLoaderOnConfirm: true
+        }, function(inputValue) {
+            if (inputValue === false) return false;
+            if (inputValue === "") {
+                swal.showInputError("You need to enter a note.");
+                return false
+            }
+
+            $.ajax({
+                url: '/api/order-add-note',
+                type: 'POST',
+                data: {
+                    'order_id': order_id,
+                    'store': store,
+                    'note': inputValue
+                },
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        swal('Add Note', 'Note added to the order in Shopify.', 'success');
+                    } else {
+                        displayAjaxError('Add Note', data);
+                    }
+                },
+                error: function (data) {
+                    displayAjaxError('Add Note', data);
+                },
+                complete: function () {
+                }
+            });
+        });
+    });
+
+    $('.view-order-notes').click(function (e) {
+        e.preventDefault();
+
+        swal({
+            title: '',
+            text: atob($(this).attr('notes')),
+            type: '',
+            animation: 'none'
+        });
+    });
+    function findMarkedLines() {
+        $('.fulfillment-status button.status-orderd-btn').remove();
+
+        $('.var-info table tr[class="success"]').each(function (i, tr) {
+            var orderTR = $(tr).parents('tr').prev();
+            orderTR.find('.fulfillment-status').append(
+                $('<button class="btn btn-info btn-circle btn-xs itooltip no-outline status-orderd-btn" type="button" title="Order with lines marked as Ordered"><i class="fa fa-check"></i></button>').click(function (e) {
+                    $(this).parents('tr').find('.more-info').trigger('click');
+                })
+            );
+        });
+
+        $(".itooltip").tooltip();
+    }
+
+    $(function () {
+        $('.help-select').each(function (i, el) {
+            $('option', el).each(function (index, option) {
+                $(option).attr('title', $(option).text());
+                $(option).text(toTitleCase($(option).val()));
+            });
+
+            $(el).change(function (e) {
+                var helpTag = $(this).parents('.row').find('.help-block');
+                $('option', el).each(function (index, option) {
+                    if ($(option).prop('selected')) {
+                        helpTag.text($(option).attr('title'));
+                    }
+                });
+            });
+
+            $(el).trigger('change');
+        });
+
+        findMarkedLines();
+    })
+</script>
+{% endblock %}
+

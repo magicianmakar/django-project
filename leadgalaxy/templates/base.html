@@ -16,11 +16,12 @@
 
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/toastr/toastr.min.css' %}" rel="stylesheet">
 
     <link href="{% static 'css/animate.css' %}" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <link href="{% static 'css/trix.css' %}" rel="stylesheet">
-    <link href="{% static 'css/extra.css' %}" rel="stylesheet">
+    <link href="{% static 'css/extra.css' %}?v=4" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.1/skins/square/blue.css" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.0.0/jquery.contextMenu.min.css" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css" rel="stylesheet">
@@ -36,6 +37,16 @@
 
   </head>
   <body>
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-TPLKSQ"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-TPLKSQ');</script>
+    <!-- End Google Tag Manager -->
+
     <div id="wrapper">
     {{ request|hijackNotification }}
     {% block main-nav %}
@@ -69,7 +80,33 @@
 
                 <li {% if page == 'product' %}class="active"{% endif %}><a href="{% url 'product' %}"> <i class="fa fa-shopping-cart"></i> <span class="nav-label">Products</span></a></li>
 
+                {% if request.user|can:'bulk_editing.view' %}
                 <li {% if page == 'bulk' %}class="active"{% endif %}><a href="{% url 'bulk_edit' %}"> <i class="fa fa-table"></i> <span class="nav-label">Bulk edit</span></a> </li>
+                {% endif %}
+
+                {% if request.user|can:'orders.view' %}
+                <li {% if page == 'orders' or page == 'orders_track' %}class="active"{% endif %}>
+                    <a href="#">
+                        <i class="fa fa-check-square-o"></i>
+                        <span class="nav-label">Orders</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse out">
+                        <li {% if page == 'orders' %}class="active"{% endif %}>
+                            <a href="{% url 'orders' %}" class="">
+                                {# <span class="fa fa-plus"></span> #}
+                                <span class="nav-label">Shopify Orders</span>
+                            </a>
+                        </li>
+                        <li {% if page == 'orders_track' %}class="active"{% endif %}>
+                            <a href="{% url 'orders_track' %}" class="">
+                                {# <span class="fa fa-plus"></span> #}
+                                <span class="nav-label">Tracking</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
 
                 <li {% if page == 'boards' %}class="active"{% endif %}>
                     <a href="{% url 'boards' %}">
@@ -96,10 +133,15 @@
                     </a>
                     <ul class="nav nav-second-level collapse">
                         <li {% if page == 'acp_users_list' %}class="active"{% endif %}><a href="{% url 'acp_users_list' %}">Users</a></li>
-                        <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Graph</a></li>
+                        <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans &amp; Groups</a></li>
+                        <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Analytics</a></li>
+                        <li {% if page == 'acp_pages' %}class="active"{% endif %}><a href="/pages/">Pages</a></li>
+                        <li><a href="/admin/article/sidebarlink/">Sidebar Links</a></li>
                     </ul>
                 </li>
                 {% endif %}
+
+                {% include 'partial/sidebar_link.html' with links=sidebar_links plan=user.profile.plan.register_hash %}
             </ul>
 
         </div>
@@ -111,17 +153,32 @@
             <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
                 <div class="navbar-header">
                     <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
-                    <form role="search" class="navbar-form-custom" method="post" action="#">
+                    <form role="search" class="navbar-form-custom" method="get" action="/product">
                         <div class="form-group">
-                            <input type="text" placeholder="Search" class="form-control" name="top-search" id="top-search">
+                            <input type="text" placeholder="Search" class="form-control" name="title" id="top-search"
+                            {% if request.GET.title and request.GET.f %}
+                                   value="{{request.GET.title}}"
+                            {% endif %}
+                            >
+                            <input type="hidden" name="f" value="1">
+
+                            {% if request.GET.store %}
+                            <input type="hidden" name="store" value="{{request.GET.store}}">
+                            {% endif %}
                         </div>
                     </form>
                 </div>
                 <ul class="nav navbar-top-links navbar-right">
                     <li>
                         <span class="m-r-sm text-muted welcome-message">
-                            {% if request.user|in_group:'VIP Members' %}
-                                <img style="height: 35px;" src="{% static 'img/vip-badge.png' %}" alt="VIP Member">
+                            {% if request.user.is_authenticated %}
+                                {% if request.user.profile.plan.description %}
+                                    <span>{{request.user.profile.plan.description}}</span>
+                                {% endif %}
+
+                                {% if request.user.profile.plan.badge_image %}
+                                    <img style="height: 35px;" src="{{ request.user.profile.plan.badge_image }}" alt="">
+                                {% endif %}
                             {% endif %}
                         </span>
                     </li>
@@ -135,7 +192,6 @@
                             <i class="fa fa-sign-in"></i> Log in
                         </a>
                         {% endif %}
-                        </a>
                     </li>
                 </ul>
 
@@ -148,9 +204,9 @@
                 <ol class="breadcrumb">
                     {% for item in breadcrumbs %}
                         {% if item.url %}
-                        <li><a href="{{item.url}}">{{item.title}}</a></li>
+                        <li><a href="{{item.url}}">{{item.title|safe}}</a></li>
                         {% else %}
-                        <li class="active"><strong>{{item}}</strong></li>
+                        <li class="active"><strong>{{item|safe}}</strong></li>
                         {% endif %}
                     {% endfor %}
                 </ol>
@@ -159,12 +215,12 @@
             <div class="col-lg-2"></div>
         </div>
 
-      <div class="wrapper wrapper-content animated fadeInRight">
+      <div class="wrapper wrapper-content animated fadeIn">
         {% if messages %}
             {% for message in messages %}
             <div class="alert {% if message.tags %} alert-{{ message.tags }} {% endif %} alert-dismissable">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                {{ message }}
+                {{ message|safe }}
             </div>
             {% endfor %}
         {% endif %}
@@ -210,6 +266,9 @@
 
     <!-- Mainly scripts -->
     <script src="{% static 'js/jquery-2.1.1.js' %}"></script>
+
+    {% block extrajs-before %}{% endblock %}
+
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
     <script src="{% static 'js/plugins/metisMenu/jquery.metisMenu.js' %}"></script>
     <script src="{% static 'js/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
@@ -217,91 +276,15 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.0.0/jquery.contextMenu.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.0.0/jquery.ui.position.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
-     <!--<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script> -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 
     <!-- Custom and plugin javascript -->
     <script src="{% static 'js/inspinia.js' %}"></script>
     <script src="{% static 'js/plugins/pace/pace.min.js' %}"></script>
+    <script src="{% static 'js/plugins/toastr/toastr.min.js' %}"></script>
     <script src="{% static 'js/trix.js' %}"></script>
-    <script src="{% static 'js/main.js' %}"></script>
-
-    {% compress js %}
-    <script type="text/javascript">
-        $(function() {
-            $('.icheck').iCheck({
-                checkboxClass: 'icheckbox_square-blue',
-                radioClass: 'iradio_square-blue',
-            });
-
-            $(".add-board-btn").click(function(e) {
-                e.preventDefault();
-                $('#modal-board-add').modal('show');
-            });
-
-            var tout = null;
-            $('#hijacked-warning').css('top', '-22px');
-            $('#hijacked-warning').mouseenter(function (e) {
-                $( this ).animate({
-                    top: "0",
-                }, 500, function() {
-                    // Animation complete.
-                });
-                if (tout) {
-                    clearTimeout(tout);
-                    tout = null;
-                }
-            }).mouseleave(function (e) {
-                // $(this).css('top', '-22px');
-                var el = this;
-                tout = setTimeout(function() {
-                    $( el ).animate({
-                        top: "-22px",
-                    }, 500, function() {
-                        // Animation complete.
-                    });
-                }, 1000);
-            });
-
-            function createBoard(e) {
-                e.preventDefault();
-
-                $.ajax({
-                    url: '/api/boards-add',
-                    type: 'POST',
-                    data: {
-                        title: $('#add-board-name').val()
-                    },
-                    success: function(data) {
-                        if ('status' in data && data.status == 'ok') {
-                            $('#modal-board-add').modal('hide');
-                            if (typeof(window.onBoardAdd) == 'function') {
-                                window.onBoardAdd(data.board);
-                            } else {
-                                window.location.href = window.location.href;
-                            }
-
-                            $('#add-board-name').val('');
-                        } else {
-                            alert('error' in data ? data.error : 'Server error');
-                        }
-                    },
-                    error: function (data) {
-                        alert('error' in data ? data.error : 'Server error');
-                    }
-                })
-            };
-
-            $("#new-board-add-form").submit(createBoard);
-            $("#board-add-send").click(createBoard);
-            $("#board-add-send").keypress(function (e) {
-                  if (e.which == 13) {
-                    createBoard(e);
-                    return false;
-                  }
-            });
-        });
-    </script>
-    {% endcompress %}
+    <script src="{% static 'js/main.js' %}?v=6"></script>
 
     {% block extrajs %}{% endblock %}
 

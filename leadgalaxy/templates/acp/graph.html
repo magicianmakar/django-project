@@ -25,6 +25,26 @@
             </div>
         </div>
     </div>
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Users Registration<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <div id="users_graph" style="height:300px"></div>
+                <!-- <p>Products count: <b>{{products_count}}</b> in <b>{{stores_count}}</b> Stores</p> -->
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
@@ -66,6 +86,12 @@
                 {% endfor %}
             ];
 
+            var d2 = [
+                {% for item in users %}
+                    [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
+                {% endfor %}
+            ];
+
             var options = {
                 series: {
                     lines: {
@@ -90,6 +116,15 @@
                     {
                         label: "Shopify Saved Products",
                         data: d1
+                    },
+                ],
+                options
+            );
+            $.plot("#users_graph",
+                [
+                    {
+                        label: "New Users Per Day",
+                        data: d2
                     },
                 ],
                 options

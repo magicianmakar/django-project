@@ -1,9 +1,11 @@
 from django import template
 from django.template import Context, Template
+import json
 
 register = template.Library()
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def render_project(context, tpl, project):
     template = Template("{% load template_helper %}\n" + tpl)
     ctx = Context({
@@ -14,9 +16,10 @@ def render_project(context, tpl, project):
 
     return template.render(ctx)
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def render_category(context, tpl, category):
-    template = Template("{% load template_helper %}\n" +tpl)
+    template = Template("{% load template_helper %}\n" + tpl)
     ctx = Context({
         'project': category.project,
         'template': category.project.template,
@@ -27,3 +30,18 @@ def render_category(context, tpl, category):
 
     return template.render(ctx)
 
+
+@register.simple_tag(takes_context=True)
+def encode_order(context, data, auto):
+    data['auto'] = (auto == 'True')
+    return json.dumps(data).encode('base64')
+
+
+@register.simple_tag(takes_context=True)
+def base64_encode(context, data):
+    return data.encode('utf8').encode('base64')
+
+
+@register.simple_tag(takes_context=True)
+def json_dumps(context, data):
+    return json.dumps(data)

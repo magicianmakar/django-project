@@ -1,0 +1,39 @@
+{% load url_tools %}
+
+{% if paginator and paginator.num_pages > 1 %}
+<div class="row">
+    <nav style="text-align: center;">
+      <ul class="pagination pagination-lg">
+        {% if current_page.has_previous %}
+        <li>
+          <a href="{% url_replace 'page' current_page.previous_page_number %}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        {% endif %}
+
+        <!-- <li class="active"><a href="#">{{paginator.num_pages}} / {{current_page.number}}</span></a></li> -->
+
+        {% for pa in paginator.page_range %}
+
+            {% if pa == current_page.number %}
+            <li class="active"><span>{{pa}}</span></li>
+            {% elif pa == None %}
+            <li class="active"><span>...</span></li>
+            {% else %}
+            <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
+            {% endif %}
+
+        {% endfor %}
+
+        {% if current_page.has_next %}
+        <li>
+          <a href="{% url_replace 'page' current_page.next_page_number %}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+</div>
+{% endif %}

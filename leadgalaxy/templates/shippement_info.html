@@ -1,0 +1,70 @@
+{% extends "base2.html" %}
+
+{% block main-nav %}{% endblock %}
+{% block main-container %}
+<div class="ui-window-bd">
+    {% if store %}
+    <div>
+        <h3>Seller:</h3>
+        <h4>
+            <a href="{{store.url}}" target="_blank">{{store.name}}</a> |
+            <a href="{{store.contact}}" target="_blank" style="color: #f90">Contact Now</a>
+        </h4>
+
+        <hr />
+    </div>
+    {% endif %}
+
+    <div class="ui-window-content" data-role="content">
+        Ship order(s) to: <b>USA</b>
+    </div>
+    <div class="shipping-dialog-company">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <td>Shipping Company</td>
+                <td>Estimated Delivery Time</td>
+                <td>Shipping Cost</td>
+            </tr>
+        </thead>
+        <tbody>
+
+            {% for item in info.freight %}
+            <tr>
+                <td>
+                    {% if item.company == 'CPAM' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/china-post-air-mail.jpg" alt="China Post Registered Air Mail">
+                    {% elif item.company == 'EMS' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ems.jpg" alt="EMS">
+                    {% elif item.company == 'UPS' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ups-s.gif" alt="UPS Express Saver">
+                    {% elif item.company == 'DHL' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-dhl.jpg" alt="DHL">
+                    {% elif item.company == 'FEDEX' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-fedex.jpg" alt="Fedex IP">
+                    {% elif item.company == 'UPSE' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ups-e.gif" alt="UPS Expedited">
+                    {% else %}
+                        {{item.companyDisplayName}}
+                    {% endif %}
+                </td>
+
+                <td>{{item.time}} days</td>
+
+                <td>
+                <div class="shipping-cost">
+                {% if item.price == '0' %}
+                    <strong>Free Shipping</strong>
+                {% else %}
+                    <span class="ui-cost notranslate" style="color: #F60;"><b>US ${{item.price}}</b></span>
+                {% endif %}
+                </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% endblock %}

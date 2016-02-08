@@ -1,0 +1,34 @@
+
+{% for item in links %}
+{% if plan in item.plans %}
+<li>
+    {% with childs=item.childs.all %}
+    <a href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %} {% if item.title|length > 20 %}style="padding-right:0px"{%endif%}>
+        {% if item.icon %}<i class="fa fa-{{item.icon}}"></i>{% endif %}
+        <span class="nav-label">{{ item.title }}</span>
+        {% if childs %} <span class="fa arrow"></span>{% endif %}
+        {% if item.badge %}<span class="pull-right label label-info">{{ item.badge }}</span>{% endif %}
+
+        {% if childs %}
+    </a>
+            <ul class="nav nav-second-level collapse">
+                {% for child in childs %}
+                {% if plan in child.plans %}
+                 <li>
+                    <a href="{{ child.link }}" {% if child.new_tab %}target="_blank"{% endif %}>
+                        {% if child.icon %}<i class="fa fa-{{child.icon}}"></i>{% endif %}
+                        <span class="nav-label">{{ child.title }}</span>
+                        {% if child.badge %}<span class="pull-right label label-info">{{ child.badge }}</span>{% endif %}
+                    </a>
+                </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        {% else %}
+    </a>
+        {% endif %}
+
+    {% endwith %}
+</li>
+{% endif %}
+{% endfor %}

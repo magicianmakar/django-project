@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+
+<div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Variants Mapping</h5>
+    </div>
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-10">
+                <form id="mapping-form">
+                    <table class="table table-borderd table-compact">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Shopify</th>
+                                <th>{{product.get_original_info.source|default:'Source'|title}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for variant in shopify_product.variants %}
+                            <tr>
+                                <td style="vertical-align:middle">
+                                    {% if variant.image %}
+                                        <img src="{{variant.image}}" style="width: 50px" />
+                                    {% else %}
+                                        <span style="width: 50px; height:50px"></span>
+                                    {% endif %}
+                                </td>
+                                <td style="vertical-align:middle">{{variant.title}}</td>
+                                <td style="vertical-align:middle">
+                                    <input class="tag-it" class="form-control" value="{{variant.default}}" name="{{variant.id}}">
+
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    Product doesn't have any variant.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <input type="hidden" name="product" value="{{product.id}}">
+                </form>
+            </div>
+        </div>
+        {% if shopify_product.variants %}
+            <div class="row">
+                <div class="col-md-6">
+                    <button id="save-mapping" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
+    $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+</script>
+
+<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+
+<script type="text/javascript">
+    var source_variants = {{source_variants|safe}};
+    $(document).ready(function() {
+        $(".tag-it").tagit({
+            availableTags: source_variants,
+            autocomplete: {delay: 0, minLength: 0},
+            showAutocompleteOnFocus: true
+        });
+    });
+
+    $('#save-mapping').click(function (e) {
+        $(this).bootstrapBtn('loading');
+
+        $.ajax({
+            url: '/api/variants-mapping',
+            type: 'POST',
+            data: $('#mapping-form').serialize(),
+            context: {btn: $(this)},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    toastr.success('Variants Mapping','Mapping Saved');
+                } else {
+                    displayAjaxError('Variants Mapping', data);
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Variants Mapping', data);
+            },
+            complete: function () {
+                this.btn.bootstrapBtn('reset');
+            }
+        });
+        $('#mapping-form').serialize();
+    });
+</script>
+
+{% endblock %}
+

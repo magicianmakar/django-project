@@ -1,25 +1,52 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load url_tools %}
+{% load perms_helper %}
 {% load compress %}
 
 {% block main-container %}
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5>Saved Products<small></small></h5>
-                <div class="ibox-tools">
-                    <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
-                    <a href="/product"  title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
-                </div>
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+        {% if not request.GET.store %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Not Connected</a></li>
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
 
-            </div>
-            <div class="ibox-content">
+            {% for item in user.profile.get_active_stores %}
+            <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+            {% endfor %}
+
+        {% else %}
+            {% if request.GET.store == 'n' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Not Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
+            {% endif %}
+
+            {% if request.GET.store == 'c' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
+            {% endif %}
+
+            {% for item in user.profile.get_active_stores %}
+                {% if item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
                 {% if products %}
                 <div class="row" style="margin-bottom: 20px">
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <label for="selected-actions">Selected Items:</label>
                         <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
                             <option value=""></option>
@@ -31,17 +58,32 @@
                             <option value="delete">Delete</option>
                         </select>
                         <button id="apply-btn" class="btn btn-primary">Apply</button>
+                        <button class="btn btn-default btn-outline select-all-btn">Select All</button>
+                        {% if request.user|can:'product_filters.view' %}
+                            <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
+
+                            {% if filter_products %}
+                            <a href="/product/table" class="btn btn-outline btn-default">Clear Filter</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="col-md-1 pull-right text-right">
+                        <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
+                        <a href="/product" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
                     </div>
                 </div>
                 {% endif %}
-                <table class="table table-bordered dataTables">
+                <table class="table table-striped table-bordered xdataTables">
                     <thead>
                         <tr>
+                            <th style="width:40px"></th>
+                            <th style="width:64px">Preview</th>
                             <th style="width:40%">Title</th>
                             <th>Price</th>
                             <th>Category</th>
                             <th>Tags</th>
-                            <th>Date</th>
+                            <th style="width: 110px">Date</th>
+                            <th style="width: 110px">Sourced from</th>
                             <th>Options</th>
                         </tr>
                     </thead>
@@ -49,22 +91,21 @@
                     {% for item in products %}
                         <tr product-id="{{item.id}}">
                             <td>
-                                <ul class="media-list">
-                                  <li class="media">
-                                      <input class="item-select icheck" style="margin:0" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
-                                    <label class="pull-left" for="product_{{item.id}}">
-                                      <img style="width: 64px; height: 64px;" class="media-object" src="{{item.images|first}}" alt="">
-                                    </label>
-                                    <div class="media-body">
-                                      <h4 class="media-heading"><a href="/product/{{item.id}}">{{item.product.title}}</a></h4>
-                                    </div>
-                                  </li>
-                                </ul>
+                                <input class="item-select icheck" style="" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                                <label class="pull-left" for="product_{{item.id}}"></label>
                             </td>
-                            <td>{{item.product.price}}</td>
+                            <td>
+                                <img style="width: 64px; height: 64px;" class="media-object" src="{{item.images|first}}" alt="">
+
+                            </td>
+                            <td>
+                                <a href="/product/{{item.id}}">{{item.product.title}}</a>
+                            </td>
+                            <td>${{item.product.price|floatformat:2}}</td>
                             <td>{{item.product.type}}</td>
                             <td>{{item.product.tags}}</td>
                             <td>{{item.created_at|date}}</td>
+                            <td><a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a></td>
                             <td>
                                 <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button>
                             </td>
@@ -72,10 +113,12 @@
                     {% endfor %}
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</div>
+
+                {% include "partial/paginator.html" %}
+            </div> <!-- div.ibox-content -->
+        </div> <!-- div.ibox.float-e-margins -->
+    </div> <!-- div.col-md-12 -->
+</div> <!-- div.row -->
 
 
 <div id="modal-form" class="modal fade" aria-hidden="true">
@@ -191,6 +234,9 @@
         </div>
     </div>
 </div>
+
+{% include 'partial/filter_modal.html' %}
+
 {% endblock %}
 
 {% block extracss %}
@@ -201,33 +247,11 @@
             background-color: #fff;
         }
     </style>
-
-    <!-- Data Tables -->
-    <link href="/static/css/plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
-    <link href="/static/css/plugins/dataTables/dataTables.responsive.css" rel="stylesheet">
-    <link href="/static/css/plugins/dataTables/dataTables.tableTools.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-    <!-- Data Tables -->
-    <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.responsive.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.tableTools.min.js"></script>
-    <!-- <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script> -->
-
     {% compress js %}
     <script type="text/javascript">
-       $(document).ready(function() {
-            var oTable = $('.dataTables').dataTable({
-                responsive: true,
-                "dom": 'T<"clear">lfrtip',
-                "tableTools": {
-                    "sSwfPath": "/static/js/plugins/dataTables/swf/copy_csv_xls_pdf.swf",
-                    "aButtons": []
-                }
-            });
-        });
 
     function changeProductStat(product, stat, callback, erroback) {
         $.ajax({
@@ -441,6 +465,11 @@
             });
         });
 
+        $("#product-filter-form").submit(function() {
+            $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+            return true; // ensure form still submits
+        });
+
         $('#shopify-send-btn').click(function (e) {
 
             $(this).button('loading');
@@ -517,6 +546,27 @@
                             }
                         );
                     });
+                }
+            });
+        });
+
+        $(function() {
+            $("#product-filter-form").submit(function() {
+                $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+                return true; // ensure form still submits
+            });
+
+            $('#filter-type').autocomplete({
+                serviceUrl: '/autocomplete/types',
+                minChars: 1,
+                onSelect: function (suggestion) {
+                }
+            });
+
+            $('#filter-tag').autocomplete({
+                serviceUrl: '/autocomplete/tags',
+                minChars: 1,
+                onSelect: function (suggestion) {
                 }
             });
         });

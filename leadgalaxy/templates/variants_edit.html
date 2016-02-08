@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load template_helper %}
 {% load compress %}
 
 {% block main-container %}
@@ -115,7 +116,7 @@
 <script type="text/javascript">
 
 var api_base = '';
-var product = {{product|safe}};
+var product = {% json_dumps product %};
 
 /* Product Variants Linking */
 
