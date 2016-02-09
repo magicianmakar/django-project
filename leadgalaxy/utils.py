@@ -6,6 +6,8 @@ import md5
 from django.core.mail import send_mail
 from leadgalaxy.models import *
 
+from app import settings
+
 
 def safeInt(v, default=0.0):
     try:
@@ -305,6 +307,51 @@ def shopify_link_images(store, product):
         url=store.get_link('/admin/products/{}.json'.format(product['id']), api=True),
         json={'product': product}
     )
+
+
+def create_shopify_webhook(store, topic):
+    token = md5.new('{}-{}'.format(store.id, settings.SECRET_KEY)).hexdigest()
+    endpoint = store.get_link('/admin/webhooks.json', api=True)
+    data = {
+        'webhook': {
+            'topic': topic,
+            'format': 'json',
+            'address': 'http://app.shopifiedapp.com/webhook/shopify/{}?store={}&t={}'.format(topic.replace('/', '-'), store.id, token)
+        }
+    }
+
+    rep = requests.post(endpoint, json=data)
+
+    webhook_id = 0
+    try:
+        webhook_id = rep.json()['webhook']['id']
+    except:
+        print 'WEBHOOK:', rep.text
+
+    if not webhook_id:
+        return None
+
+    webhook = ShopifyWebhook(store=store, token=token, topic=topic, shopify_id=webhook_id)
+    webhook.save()
+
+    return webhook
+
+
+def attach_webhooks(store):
+    print 'WEBHOOK: attach_webhooks', store
+    default_topics = ['products/update']
+
+    for topic in default_topics:
+        create_shopify_webhook(store, topic)
+
+
+def detach_webhooks(store, delete_too=False):
+    print 'WEBHOOK: detach_webhooks', store, delete_too
+    for webhook in store.shopifywebhook_set.all():
+        webhook.detach()
+
+        if delete_too:
+            webhook.delete()
 
 
 def get_tracking_orders(store, tracker_orders):

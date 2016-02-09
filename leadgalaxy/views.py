@@ -133,6 +133,8 @@ def api(request, target):
         store = ShopifyStore(title=name, api_url=url, user=user)
         store.save()
 
+        utils.create_shopify_webhook(store)
+
         stores = []
         for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
@@ -150,6 +152,8 @@ def api(request, target):
         ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
         ShopifyStore.objects.get(id=store_id, user=user).shopifyproduct_set.update(store=move_to_store)
 
+        utils.detach_webhooks(ShopifyStore.objects.get(id=store_id, user=user))
+
         stores = []
         for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
@@ -162,9 +166,18 @@ def api(request, target):
 
     if method == 'POST' and target == 'update-store':
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+
+        attach = False
+        if True or store.api_url != data.get('url'):
+            utils.detach_webhooks(store)
+            attach = True
+
         store.title = data.get('title')
         store.api_url = data.get('url')
         store.save()
+
+        if attach:
+            utils.attach_webhooks(store)
 
         return JsonResponse({'status': 'ok'})
 
