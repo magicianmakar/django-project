@@ -992,6 +992,7 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
+            print 'WEBHOOK:', 'GET:', shopify_product['id'], 'FOR:', store.user, 'STORE:', store
             product = ShopifyProduct.objects.get(
                 user=store.user,
                 shopify_export__shopify_id=shopify_product['id'])
@@ -1001,6 +1002,8 @@ def webhook(request, provider, option):
         except:
             print 'WEBHOOK: exception:'
             traceback.print_exc()
+            print '-- shopify_product --'
+            print shopify_product
             return JsonResponse({'status': 'ok'})
 
         if option == 'products/update':
