@@ -364,7 +364,11 @@ class ShopifyWebhook(models.Model):
 
         import requests
         endpoint = self.store.get_link('/admin/webhooks/{}.json'.format(self.shopify_id))
-        requests.delete(endpoint)
+        try:
+            requests.delete(endpoint)
+        except Exception as e:
+            print 'WEBHOOK: detach excption', repr(e)
+            return None
 
 
 class AppPermission(models.Model):

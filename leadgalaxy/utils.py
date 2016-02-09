@@ -342,15 +342,18 @@ def create_shopify_webhook(store, topic):
 
 
 def attach_webhooks(store):
-    print 'WEBHOOK: attach_webhooks', store
     default_topics = ['products/update', 'products/delete']
 
+    webhooks = []
     for topic in default_topics:
-        create_shopify_webhook(store, topic)
+        webhook = create_shopify_webhook(store, topic)
+        if webhook:
+            webhooks.append(webhook)
+
+    return webhooks
 
 
 def detach_webhooks(store, delete_too=False):
-    print 'WEBHOOK: detach_webhooks', store, delete_too
     for webhook in store.shopifywebhook_set.all():
         webhook.detach()
 
