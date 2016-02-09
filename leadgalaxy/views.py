@@ -1015,10 +1015,10 @@ def webhook(request, provider, option):
                 compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
 
                 if len(set(prices)) == 1:  # If all variants have the same price
-                    product_data['price'] = safeFloat(prices[0])
+                    product_data['price'] = utils.safeFloat(prices[0])
 
                 if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
-                    product_data['compare_at_price'] = safeFloat(compare_at_prices[0])
+                    product_data['compare_at_price'] = utils.safeFloat(compare_at_prices[0])
 
                 utils.object_dump(product_data, 'product_data (after)')
 
