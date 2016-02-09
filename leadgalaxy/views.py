@@ -983,7 +983,6 @@ def webhook(request, provider, option):
     if provider == 'shopify' and request.method == 'POST':
         # Shopify send a JSON POST request
         shopify_product = json.loads(request.body)
-        utils.object_dump(shopify_product, 'shopify_product')
 
         try:
             token = request.GET['t']
@@ -993,19 +992,16 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
-            print 'WEBHOOK:', 'GET:', shopify_product['id'], 'FOR:', store.user, 'STORE:', store, 'OPTION:', option
-            product = ShopifyProduct.objects.get(
-                user=store.user,
-                shopify_export__shopify_id=shopify_product['id'])
+                try:
+                    product = ShopifyProduct.objects.get(
+                        user=store.user,
+                        shopify_export__shopify_id=shopify_product['id'])
+                except:
+                    return JsonResponse({'status': 'ok'})
 
             product_data = json.loads(product.data)
 
-            print 'product.id:', product.id
-            utils.object_dump(product_data, 'product_data')
-
-            print 'OPTION START:', option
             if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
-                print 'IN OPTION:', option
                 product_data['title'] = shopify_product['title']
                 product_data['type'] = shopify_product['product_type']
                 product_data['tags'] = shopify_product['tags']
@@ -1020,27 +1016,21 @@ def webhook(request, provider, option):
                 if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
                     product_data['compare_at_price'] = utils.safeFloat(compare_at_prices[0])
 
-                utils.object_dump(product_data, 'product_data (after)')
-
                 product.data = json.dumps(product_data)
                 product.save()
 
                 return JsonResponse({'status': 'ok'})
 
             elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
-                print 'IN OPTION:', option
                 if product.shopify_export:
                     product.shopify_export.delete()
 
                 JsonResponse({'status': 'ok'})
             else:
-                print 'WEBHOOK: options not found:', option
-                JsonResponse({'status': 'ok'})
+                raise Exception('WEBHOOK: options not found: {}'.format(option))
         except:
             print 'WEBHOOK: exception:'
             traceback.print_exc()
-            print '-- shopify_product --'
-            print shopify_product
             return JsonResponse({'status': 'ok'})
 
     else:
