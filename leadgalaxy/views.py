@@ -1223,7 +1223,7 @@ def variants_edit(request, store_id, pid):
     product = utils.get_shopify_product(store, pid)
 
     if not product:
-        messages.warning(request, 'Product not found in Shopify')
+        messages.error(request, 'Product not found in Shopify')
         return HttpResponseRedirect('/')
 
     return render(request, 'variants_edit.html', {
@@ -1243,9 +1243,10 @@ def product_mapping(request, store_id, product_id):
     if not shopify_id:
         raise Http404("Product doesn't exists on Shopify Store.")
 
-    api_url = product.store.get_link('/admin/products/{}.json'.format(shopify_id), api=True)
-    r = requests.get(api_url)
-    shopify_product = r.json()['product']
+    shopify_product = utils.get_shopify_product(product.store, shopify_id)
+    if not shopify_product:
+        messages.error(request, 'Product not found in Shopify')
+        return HttpResponseRedirect('/')
 
     source_variants = []
     images = {}
