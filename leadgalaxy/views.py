@@ -168,7 +168,7 @@ def api(request, target):
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
 
         attach = False
-        if True or store.api_url != data.get('url'):
+        if store.api_url != data.get('url'):
             utils.detach_webhooks(store)
             attach = True
 
@@ -993,12 +993,12 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
-                try:
-                    product = ShopifyProduct.objects.get(
-                        user=store.user,
-                        shopify_export__shopify_id=shopify_product['id'])
-                except:
-                    return JsonResponse({'status': 'ok'})
+            try:
+                product = ShopifyProduct.objects.get(
+                    user=store.user,
+                    shopify_export__shopify_id=shopify_product['id'])
+            except:
+                return JsonResponse({'status': 'ok'})
 
             product_data = json.loads(product.data)
 
