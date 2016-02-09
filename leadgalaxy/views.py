@@ -1003,42 +1003,45 @@ def webhook(request, provider, option):
             print 'product.id:', product.id
             utils.object_dump(product_data, 'product_data')
 
+            print 'OPTION START:', option
+            if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
+                print 'IN OPTION:', option
+                product_data['title'] = shopify_product['title']
+                product_data['type'] = shopify_product['product_type']
+                product_data['tags'] = shopify_product['tags']
+                product_data['images'] = [i['src'] for i in shopify_product['images']]
+
+                prices = [i['price'] for i in shopify_product['variants']]
+                compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
+
+                if len(set(prices)) == 1:  # If all variants have the same price
+                    product_data['price'] = safeFloat(prices[0])
+
+                if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
+                    product_data['compare_at_price'] = safeFloat(compare_at_prices[0])
+
+                utils.object_dump(product_data, 'product_data (after)')
+
+                product.data = json.dumps(product_data)
+                product.save()
+
+                return JsonResponse({'status': 'ok'})
+
+            elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
+                print 'IN OPTION:', option
+                if product.shopify_export:
+                    product.shopify_export.delete()
+
+                JsonResponse({'status': 'ok'})
+            else:
+                print 'WEBHOOK: options not found:', option
+                JsonResponse({'status': 'ok'})
         except:
             print 'WEBHOOK: exception:'
             traceback.print_exc()
             print '-- shopify_product --'
             print shopify_product
             return JsonResponse({'status': 'ok'})
-
-        if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
-            product_data['title'] = shopify_product['title']
-            product_data['type'] = shopify_product['product_type']
-            product_data['tags'] = shopify_product['tags']
-            product_data['images'] = [i['src'] for i in shopify_product['images']]
-
-            prices = [i['price'] for i in shopify_product['variants']]
-            compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
-
-            if len(set(prices)) == 1:  # If all variants have the same price
-                product_data['price'] = safeFloat(prices[0])
-
-            if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
-                product_data['compare_at_price'] = safeFloat(compare_at_prices[0])
-
-            utils.object_dump(product_data, 'product_data (after)')
-
-            product.data = json.dumps(product_data)
-            product.save()
-
-            return JsonResponse({'status': 'ok'})
-
-        elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
-            if product.shopify_export:
-                product.shopify_export.delete()
-
-            JsonResponse({'status': 'ok'})
-        else:
-            print 'WEBHOOK: options not found:', option
 
     else:
         return JsonResponse({'status': 'ok'})
