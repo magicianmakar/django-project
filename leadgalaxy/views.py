@@ -853,6 +853,20 @@ def api(request, target):
         except:
             return JsonResponse({'error': 'Product not found'})
 
+    if method == 'POST' and 'generate-reg-link':
+        if not user.is_superuser:
+            return JsonResponse({'error': 'Unauthorized API call'})
+
+        plan = GroupPlan.objects.get(id=data.get('plan'))
+        reg = utils.generate_plan_registration(plan, {
+            'email': data.get('email')
+        })
+
+        return JsonResponse({
+            'status': 'ok',
+            'hash': reg.register_hash
+        })
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 

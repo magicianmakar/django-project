@@ -45,6 +45,7 @@
                             <th>Products</th>
                             <th>Boards</th>
                             <th>Users Count</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,6 +57,7 @@
                             <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
                             <td>{% if item.boards == -1 %}Unlimited{% else %}{{item.boards}}{% endif %}</td>
                             <td><a href="{% url 'acp_users_list' %}?plan={{item.id}}">{{item.userprofile_set.count}}</a></td>
+                            <td><button class="btn btn-outline btn-success btn-xs gen-link" plan-title="{{item.title}}" plan-id="{{item.id}}">Generate Link</button></td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -174,6 +176,53 @@
             if (t.val().length==0) {
                 t.val($(this).val().toLowerCase().replace(/ /g, '_'));
             }
+        });
+
+        $('.gen-link').click(function () {
+            var btn = $(this);
+            btn.button('loading');
+
+            swal({
+                title: "Generate Registration link",
+                text: "For "+$(this).attr('plan-title')+" plan",
+                type: "input",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                animation: "slide-from-top",
+                inputPlaceholder: "Email address (optional)",
+                showLoaderOnConfirm: true
+            }, function(inputValue) {
+                $.ajax({
+                    url: '/api/generate-reg-link',
+                    type: 'POST',
+                    data: {
+                        'plan': btn.attr('plan-id'),
+                        'email': inputValue
+                    },
+                    context: {btn: btn},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            var link = 'http://app.shopifiedapp.com/accounts/register/';
+                            link += data.hash;
+
+                            swal({
+                                title: 'Link Generated',
+                                text: 'Registration Link:<br/>'+'<a href="'+link+'">'+link+'</a>',
+                                type: 'success',
+                                html: true,
+                            });
+                        } else {
+                            displayAjaxError('Generate Link', data);
+                        }
+                    },
+                    error: function (data) {
+                        displayAjaxError('Generate Link', data);
+                    },
+                    complete: function () {
+                        this.btn.button('reset');
+                    }
+                });
+            });
         });
     </script>
 {% endblock %}
