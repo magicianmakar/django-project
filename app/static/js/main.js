@@ -26,6 +26,10 @@ function displayAjaxError(desc, data) {
     swal(desc, error_msg, 'error');
 }
 
+function cleanImageLink(link) {
+    return link.replace(/\?[^\?]+$/,'');
+}
+
 function sendProductToShopify (product, store_id, product_id, callback, callback_data) {
     if (!store_id || store_id.length==0) {
         alert('Please choose a Shopify store first!');
