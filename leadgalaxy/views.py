@@ -1006,7 +1006,7 @@ def webhook(request, provider, option):
             print shopify_product
             return JsonResponse({'status': 'ok'})
 
-        if option == 'products/update':
+        if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
             product_data['title'] = shopify_product['title']
             product_data['type'] = shopify_product['product_type']
             product_data['tags'] = shopify_product['tags']
@@ -1026,7 +1026,7 @@ def webhook(request, provider, option):
 
             return JsonResponse({'status': 'ok'})
 
-        elif option == 'products/delete':
+        elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
             if product.shopify_export:
                 product.shopify_export.delete()
 
