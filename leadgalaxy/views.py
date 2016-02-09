@@ -983,6 +983,7 @@ def webhook(request, provider, option):
     if provider == 'shopify' and request.method == 'POST':
         # Shopify send a JSON POST request
         shopify_product = json.loads(request.body)
+        utils.object_dump(shopify_product, 'shopify_product')
 
         try:
             token = request.GET['t']
@@ -998,6 +999,9 @@ def webhook(request, provider, option):
                 shopify_export__shopify_id=shopify_product['id'])
 
             product_data = json.loads(product.data)
+
+            print 'product.id:', product.id
+            utils.object_dump(shopify_product, 'product_data')
 
         except:
             print 'WEBHOOK: exception:'
@@ -1020,6 +1024,8 @@ def webhook(request, provider, option):
 
             if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
                 product_data['compare_at_price'] = safeFloat(compare_at_prices[0])
+
+            utils.object_dump(shopify_product, 'product_data (after)')
 
             product.data = json.dumps(product_data)
             product.save()
