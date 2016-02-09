@@ -391,9 +391,6 @@ def get_tracking_orders(store, tracker_orders):
 
 def object_dump(obj, desc=None):
     if desc:
-        print 'object_dump Start:', desc
-
-    print json.dumps(obj, indent=4)
-
-    if desc:
-        print 'object_dump End:', desc
+        print 'object_dump (%s):' % desc, obj
+    else:
+        print json.dumps(obj, indent=4)
