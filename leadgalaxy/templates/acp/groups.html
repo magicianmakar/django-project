@@ -204,10 +204,11 @@
                         if (data.status == 'ok') {
                             var link = 'http://app.shopifiedapp.com/accounts/register/';
                             link += data.hash;
+                            var msg = 'Registration Link:<br/>'+'<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
 
                             swal({
                                 title: 'Link Generated',
-                                text: 'Registration Link:<br/>'+'<a href="'+link+'">'+link+'</a>',
+                                text: msg,
                                 type: 'success',
                                 html: true,
                             });
