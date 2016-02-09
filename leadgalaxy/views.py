@@ -133,7 +133,7 @@ def api(request, target):
         store = ShopifyStore(title=name, api_url=url, user=user)
         store.save()
 
-        utils.create_shopify_webhook(store)
+        utils.attach_webhooks(store)
 
         stores = []
         for i in user.shopifystore_set.filter(is_active=True):
