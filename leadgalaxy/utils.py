@@ -309,8 +309,12 @@ def shopify_link_images(store, product):
     )
 
 
+def webhook_token(store_id):
+    return md5.new('{}-{}'.format(store.id, settings.SECRET_KEY)).hexdigest()
+
+
 def create_shopify_webhook(store, topic):
-    token = md5.new('{}-{}'.format(store.id, settings.SECRET_KEY)).hexdigest()
+    token = webhook_token(store.id)
     endpoint = store.get_link('/admin/webhooks.json', api=True)
     data = {
         'webhook': {

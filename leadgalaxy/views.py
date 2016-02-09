@@ -980,6 +980,49 @@ def webhook(request, provider, option):
                             repr(request.POST.urlencode()),
                             '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
+    if provider == 'shopify' and request.method == 'POST':
+        # Shopify send a JSON POST request
+        shopify_product = json.loads(request.body)
+
+        try:
+            token = request.GET['t']
+            store = ShopifyStore.objects.get(id=request.GET['store'])
+
+            if token != utils.webhook_token(store.id):
+                raise Exception('Unvalide token: {} <> {}'.format(
+                    token, utils.webhook_token(store.id)))
+
+            product = ShopifyProduct.objects.get(
+                user=store.user,
+                shopify_export__shopify_id=shopify_product['product'])
+
+            product_data = json.loads(product.data)
+
+        except:
+            print 'WEBHOOK: exception:'
+            traceback.print_exc()
+            return JsonResponse({'status': 'ok'})
+
+        if option == 'products/update':
+            product_data['title'] = shopify_product['title']
+            product_data['type'] = shopify_product['product_type']
+            product_data['tags'] = shopify_product['tags']
+            product_data['images'] = [i['src'] for i in shopify_product['images']]
+
+            prices = [i['price'] for i in shopify_product['variants']]
+            compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
+
+            if len(set(prices)) == 1:  # If all variants have the same price
+                product_data['price'] = safeFloat(prices[0])
+
+            if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
+                product_data['compare_at_price'] = safeFloat(compare_at_prices[0])
+
+            product.data = json.dumps(product_data)
+            product.save()
+
+            return JsonResponse({'status': 'ok'})
+
     else:
         return JsonResponse({'status': 'ok'})
 
