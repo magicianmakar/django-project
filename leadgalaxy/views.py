@@ -993,7 +993,7 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
-            print 'WEBHOOK:', 'GET:', shopify_product['id'], 'FOR:', store.user, 'STORE:', store
+            print 'WEBHOOK:', 'GET:', shopify_product['id'], 'FOR:', store.user, 'STORE:', store, 'OPTION:', option
             product = ShopifyProduct.objects.get(
                 user=store.user,
                 shopify_export__shopify_id=shopify_product['id'])
@@ -1001,7 +1001,7 @@ def webhook(request, provider, option):
             product_data = json.loads(product.data)
 
             print 'product.id:', product.id
-            utils.object_dump(shopify_product, 'product_data')
+            utils.object_dump(product_data, 'product_data')
 
         except:
             print 'WEBHOOK: exception:'
@@ -1025,7 +1025,7 @@ def webhook(request, provider, option):
             if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
                 product_data['compare_at_price'] = safeFloat(compare_at_prices[0])
 
-            utils.object_dump(shopify_product, 'product_data (after)')
+            utils.object_dump(product_data, 'product_data (after)')
 
             product.data = json.dumps(product_data)
             product.save()
@@ -1037,6 +1037,8 @@ def webhook(request, provider, option):
                 product.shopify_export.delete()
 
             JsonResponse({'status': 'ok'})
+        else:
+            print 'WEBHOOK: options not found:', option
 
     else:
         return JsonResponse({'status': 'ok'})
