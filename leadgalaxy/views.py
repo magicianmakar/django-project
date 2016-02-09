@@ -994,7 +994,7 @@ def webhook(request, provider, option):
 
             product = ShopifyProduct.objects.get(
                 user=store.user,
-                shopify_export__shopify_id=shopify_product['product'])
+                shopify_export__shopify_id=shopify_product['id'])
 
             product_data = json.loads(product.data)
 
