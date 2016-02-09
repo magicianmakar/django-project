@@ -985,6 +985,7 @@ def webhook(request, provider, option):
         shopify_product = json.loads(request.body)
 
         try:
+            product = None
             token = request.GET['t']
             store = ShopifyStore.objects.get(id=request.GET['store'])
 
