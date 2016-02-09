@@ -310,7 +310,7 @@ def shopify_link_images(store, product):
 
 
 def webhook_token(store_id):
-    return md5.new('{}-{}'.format(store.id, settings.SECRET_KEY)).hexdigest()
+    return md5.new('{}-{}'.format(store_id, settings.SECRET_KEY)).hexdigest()
 
 
 def create_shopify_webhook(store, topic):
