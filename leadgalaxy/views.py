@@ -1023,6 +1023,12 @@ def webhook(request, provider, option):
 
             return JsonResponse({'status': 'ok'})
 
+        elif option == 'products/delete':
+            if product.shopify_export:
+                product.shopify_export.delete()
+
+            JsonResponse({'status': 'ok'})
+
     else:
         return JsonResponse({'status': 'ok'})
 

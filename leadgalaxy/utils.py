@@ -343,7 +343,7 @@ def create_shopify_webhook(store, topic):
 
 def attach_webhooks(store):
     print 'WEBHOOK: attach_webhooks', store
-    default_topics = ['products/update']
+    default_topics = ['products/update', 'products/delete']
 
     for topic in default_topics:
         create_shopify_webhook(store, topic)
