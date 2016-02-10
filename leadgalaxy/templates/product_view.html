@@ -602,7 +602,7 @@ var config = {
 
     product_extra_images: [
     {% for item in original.extra_images %}
-        cleanImageLink("{{item}}"),
+        '{% remove_link_query item %}',
     {% endfor %}
     ],
 };
