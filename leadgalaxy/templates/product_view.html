@@ -585,6 +585,7 @@ var config = {
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
+    shopify_images: {% json_dumps shopify_product.images %},
 {% else %}
     shopify_options: null,
 {% endif %}

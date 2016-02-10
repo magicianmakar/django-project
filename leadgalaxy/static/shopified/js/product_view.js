@@ -210,6 +210,9 @@ $('#export-btn').click(function () {
         });
 
         api_data.product.options = config.shopify_options;
+
+        // Match images with shopify images
+        api_data.product.images = config.shopify_images;
     }
 
     $.ajax({
