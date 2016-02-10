@@ -1020,11 +1020,18 @@ def webhook(request, provider, option):
                 product.data = json.dumps(product_data)
                 product.save()
 
+                # Delete Product images cache
+                ShopifyProductImage.objects.filter(store=store,
+                                                   product=shopify_product['id']).delete()
+
                 return JsonResponse({'status': 'ok'})
 
             elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
                 if product.shopify_export:
                     product.shopify_export.delete()
+
+                ShopifyProductImage.objects.filter(store=store,
+                                                   product=shopify_product['id']).delete()
 
                 JsonResponse({'status': 'ok'})
             else:
