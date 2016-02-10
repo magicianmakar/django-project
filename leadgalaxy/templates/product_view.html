@@ -588,6 +588,7 @@ var config = {
     shopify_images: {% json_dumps shopify_product.images %},
 {% else %}
     shopify_options: null,
+    shopify_images: null,
 {% endif %}
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},

@@ -1,4 +1,4 @@
-// 'use strict';
+'use strict';
 /* global $, config, toastr, swal, product:true, renderImages, allPossibleCases */
 /* global setup_full_editor, cleanImageLink */
 
@@ -38,6 +38,13 @@ function showProductInfo(rproduct) {
 
         if (product.description) {
             document.editor.setData(product.description);
+        }
+
+        if (config.shopify_images !== null) {
+            product.images = [];
+            $.each(config.shopify_images, function (i, img) {
+                product.images.push(img.src);
+            });
         }
 
         renderImages();
@@ -212,7 +219,25 @@ $('#export-btn').click(function () {
         api_data.product.options = config.shopify_options;
 
         // Match images with shopify images
-        api_data.product.images = config.shopify_images;
+        //api_data.product.images = config.shopify_images;
+
+        var shopify_images_map = {};
+        $.each(config.shopify_images, function(i, img) {
+            shopify_images_map[img.src] = img;
+        });
+
+        var new_images = [];
+        $.each(api_data.product.images, function (i, el) {
+            if (shopify_images_map.hasOwnProperty(el.src)) {
+                new_images.push({
+                    id: shopify_images_map[el.src].id
+                });
+            } else {
+                new_images.push(el);
+            }
+        });
+
+        api_data.product.images = new_images;
     }
 
     $.ajax({
