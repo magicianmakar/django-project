@@ -2,6 +2,8 @@
 /* global $, config, toastr, swal, product:true, renderImages, allPossibleCases */
 /* global setup_full_editor, cleanImageLink */
 
+var image_cache = {};
+
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -75,11 +77,11 @@ $('#export-btn').click(function () {
         return;
     }
 
-    btn.bootstrapBtn('loading')
+    btn.bootstrapBtn('loading');
 
     var store_id = $('#store-select').val();
 
-    if (!store_id || store_id.length==0) {
+    if (!store_id || store_id.length === 0) {
         swal('Product Export', 'Please choose a Shopify store first!', 'error');
         return;
     }
