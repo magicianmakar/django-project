@@ -6,6 +6,8 @@ import md5
 from django.core.mail import send_mail
 from leadgalaxy.models import *
 
+from app import settings
+
 
 def safeInt(v, default=0.0):
     try:
@@ -284,6 +286,9 @@ def shopify_link_images(store, product):
         mapping[var[0]] = val['id']
         mapping_idx[var[0]] = key
 
+    if not len(mapping_idx):
+        return None
+
     for key, val in enumerate(product[u'variants']):
         for option in [val['option1'], val['option2'], val['option3']]:
             if not option:
@@ -302,6 +307,58 @@ def shopify_link_images(store, product):
         url=store.get_link('/admin/products/{}.json'.format(product['id']), api=True),
         json={'product': product}
     )
+
+
+def webhook_token(store_id):
+    return md5.new('{}-{}'.format(store_id, settings.SECRET_KEY)).hexdigest()
+
+
+def create_shopify_webhook(store, topic):
+    token = webhook_token(store.id)
+    endpoint = store.get_link('/admin/webhooks.json', api=True)
+    data = {
+        'webhook': {
+            'topic': topic,
+            'format': 'json',
+            'address': 'http://app.shopifiedapp.com/webhook/shopify/{}?store={}&t={}'.format(topic.replace('/', '-'), store.id, token)
+        }
+    }
+
+    rep = requests.post(endpoint, json=data)
+
+    webhook_id = 0
+    try:
+        webhook_id = rep.json()['webhook']['id']
+    except:
+        print 'WEBHOOK:', rep.text
+
+    if not webhook_id:
+        return None
+
+    webhook = ShopifyWebhook(store=store, token=token, topic=topic, shopify_id=webhook_id)
+    webhook.save()
+
+    return webhook
+
+
+def attach_webhooks(store):
+    default_topics = ['products/update', 'products/delete']
+
+    webhooks = []
+    for topic in default_topics:
+        webhook = create_shopify_webhook(store, topic)
+        if webhook:
+            webhooks.append(webhook)
+
+    return webhooks
+
+
+def detach_webhooks(store, delete_too=False):
+    for webhook in store.shopifywebhook_set.all():
+        webhook.detach()
+
+        if delete_too:
+            webhook.delete()
 
 
 def get_tracking_orders(store, tracker_orders):
@@ -333,3 +390,10 @@ def get_tracking_orders(store, tracker_orders):
         new_tracker_orders.append(tracked)
 
     return new_tracker_orders
+
+
+def object_dump(obj, desc=None):
+    if desc:
+        print 'object_dump (%s):' % desc, obj
+    else:
+        print json.dumps(obj, indent=4)

@@ -34,12 +34,12 @@ def render_category(context, tpl, category):
 @register.simple_tag(takes_context=True)
 def encode_order(context, data, auto):
     data['auto'] = (auto == 'True')
-    return json.dumps(data).encode('base64')
+    return json.dumps(data).encode('base64').replace('\n', '')
 
 
 @register.simple_tag(takes_context=True)
 def base64_encode(context, data):
-    return data.encode('utf8').encode('base64')
+    return data.encode('utf8').encode('base64').replace('\n', '')
 
 
 @register.simple_tag(takes_context=True)

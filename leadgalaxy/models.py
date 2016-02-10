@@ -341,6 +341,36 @@ class ShopifyBoard(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
 
+class ShopifyWebhook(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    store = models.ForeignKey(ShopifyStore)
+    topic = models.CharField(max_length=64)
+    token = models.CharField(max_length=64)
+    shopify_id = models.BigIntegerField(default=0, verbose_name='Webhook Shopify ID')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.token
+
+    def detach(self):
+        """ Remove the webhook from Shopify """
+
+        if not self.shopify_id:
+            return
+
+        import requests
+        endpoint = self.store.get_link('/admin/webhooks/{}.json'.format(self.shopify_id), api=True)
+        try:
+            requests.delete(endpoint)
+        except Exception as e:
+            print 'WEBHOOK: detach excption', repr(e)
+            return None
+
+
 class AppPermission(models.Model):
     name = models.CharField(max_length=512, verbose_name="Permission")
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")

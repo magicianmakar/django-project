@@ -133,6 +133,8 @@ def api(request, target):
         store = ShopifyStore(title=name, api_url=url, user=user)
         store.save()
 
+        utils.attach_webhooks(store)
+
         stores = []
         for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
@@ -150,6 +152,8 @@ def api(request, target):
         ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
         ShopifyStore.objects.get(id=store_id, user=user).shopifyproduct_set.update(store=move_to_store)
 
+        utils.detach_webhooks(ShopifyStore.objects.get(id=store_id, user=user))
+
         stores = []
         for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
@@ -162,9 +166,18 @@ def api(request, target):
 
     if method == 'POST' and target == 'update-store':
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+
+        attach = False
+        if store.api_url != data.get('url'):
+            utils.detach_webhooks(store)
+            attach = True
+
         store.title = data.get('title')
         store.api_url = data.get('url')
         store.save()
+
+        if attach:
+            utils.attach_webhooks(store)
 
         return JsonResponse({'status': 'ok'})
 
@@ -228,16 +241,22 @@ def api(request, target):
                     r = requests.put(update_endpoint, json=api_data)
                 else:
                     r = requests.post(endpoint, json=json.loads(data))
+                    product_to_map = r.json()['product']
 
                     try:
                         # Link images with variants
-                        r = utils.shopify_link_images(store, r.json()['product'])
+                        mapped = utils.shopify_link_images(store, product_to_map)
+                        if mapped:
+                            r = mapped
                     except Exception as e:
                         traceback.print_exc()
 
                 product_data = r.json()['product']
             except:
                 traceback.print_exc()
+                print '-----'
+                print r.text
+                print '-----'
 
                 try:
                     d = r.json()
@@ -847,6 +866,20 @@ def api(request, target):
         except:
             return JsonResponse({'error': 'Product not found'})
 
+    if method == 'POST' and 'generate-reg-link':
+        if not user.is_superuser:
+            return JsonResponse({'error': 'Unauthorized API call'})
+
+        plan = GroupPlan.objects.get(id=data.get('plan'))
+        reg = utils.generate_plan_registration(plan, {
+            'email': data.get('email')
+        })
+
+        return JsonResponse({
+            'status': 'ok',
+            'hash': reg.register_hash
+        })
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 
@@ -947,6 +980,60 @@ def webhook(request, provider, option):
                             repr(request.POST.urlencode()),
                             '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
+    if provider == 'shopify' and request.method == 'POST':
+        # Shopify send a JSON POST request
+        shopify_product = json.loads(request.body)
+
+        try:
+            product = None
+            token = request.GET['t']
+            store = ShopifyStore.objects.get(id=request.GET['store'])
+
+            if token != utils.webhook_token(store.id):
+                raise Exception('Unvalide token: {} <> {}'.format(
+                    token, utils.webhook_token(store.id)))
+
+            try:
+                product = ShopifyProduct.objects.get(
+                    user=store.user,
+                    shopify_export__shopify_id=shopify_product['id'])
+            except:
+                return JsonResponse({'status': 'ok'})
+
+            product_data = json.loads(product.data)
+
+            if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
+                product_data['title'] = shopify_product['title']
+                product_data['type'] = shopify_product['product_type']
+                product_data['tags'] = shopify_product['tags']
+                product_data['images'] = [i['src'] for i in shopify_product['images']]
+
+                prices = [i['price'] for i in shopify_product['variants']]
+                compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
+
+                if len(set(prices)) == 1:  # If all variants have the same price
+                    product_data['price'] = utils.safeFloat(prices[0])
+
+                if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
+                    product_data['compare_at_price'] = utils.safeFloat(compare_at_prices[0])
+
+                product.data = json.dumps(product_data)
+                product.save()
+
+                return JsonResponse({'status': 'ok'})
+
+            elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
+                if product.shopify_export:
+                    product.shopify_export.delete()
+
+                JsonResponse({'status': 'ok'})
+            else:
+                raise Exception('WEBHOOK: options not found: {}'.format(option))
+        except:
+            print 'WEBHOOK: exception:'
+            traceback.print_exc()
+            return JsonResponse({'status': 'ok'})
+
     else:
         return JsonResponse({'status': 'ok'})
 
@@ -1217,7 +1304,7 @@ def variants_edit(request, store_id, pid):
     product = utils.get_shopify_product(store, pid)
 
     if not product:
-        messages.warning(request, 'Product not found in Shopify')
+        messages.error(request, 'Product not found in Shopify')
         return HttpResponseRedirect('/')
 
     return render(request, 'variants_edit.html', {
@@ -1237,9 +1324,10 @@ def product_mapping(request, store_id, product_id):
     if not shopify_id:
         raise Http404("Product doesn't exists on Shopify Store.")
 
-    api_url = product.store.get_link('/admin/products/{}.json'.format(shopify_id), api=True)
-    r = requests.get(api_url)
-    shopify_product = r.json()['product']
+    shopify_product = utils.get_shopify_product(product.store, shopify_id)
+    if not shopify_product:
+        messages.error(request, 'Product not found in Shopify')
+        return HttpResponseRedirect('/')
 
     source_variants = []
     images = {}
@@ -1634,6 +1722,9 @@ def autocomplete(request, target):
 def upload_file_sign(request):
     import time, base64, hmac, urllib
     from hashlib import sha1
+
+    if not request.user.can('image_uploader.use'):
+        return JsonResponse({'error': 'You don\'t have access to this feature.'})
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
