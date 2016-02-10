@@ -981,10 +981,10 @@ def webhook(request, provider, option):
                             '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
     if provider == 'shopify' and request.method == 'POST':
-        # Shopify send a JSON POST request
-        shopify_product = json.loads(request.body)
-
         try:
+            # Shopify send a JSON POST request
+            shopify_product = json.loads(request.body)
+
             product = None
             token = request.GET['t']
             store = ShopifyStore.objects.get(id=request.GET['store'])
