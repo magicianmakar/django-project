@@ -108,6 +108,7 @@
                         <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
                             <thead>
                                 <tr>
+                                    <th style="width:64px">Preview</th>
                                     <th>Title</th>
                                     <th>Price</th>
                                     <th>Compare at price</th>
@@ -117,6 +118,11 @@
                             <tbody>
                                 {% for item in shopify_product.variants %}
                                 <tr class="shopify-variant" variant-id="{{item.id}}">
+                                    <td>
+                                        <img class="lazyload" store="{{product.store.id}}" product="{{item.product_id}}"
+                                             variant="{{item.id}}" src="" style="width:64px;display:none" />
+                                    </td>
+
                                     <td style="vertical-align: middle">
                                         <input type="hidden" name="variant" value="{{item.id}}">
                                         <input type="hidden" name="option1" value="{{item.option1|default:''}}">
