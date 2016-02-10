@@ -265,7 +265,6 @@
 {% endblock %}
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
     var boardsMenu = {
     {% for item in request.user.shopifyboard_set.all %}
@@ -277,8 +276,9 @@
     };
 </script>
 
+{% compress js %}
 <script type="text/javascript" src="{% static 'shopified/js/products_grid.js' %}"></script>
-
 {% endcompress %}
+
 {% endblock %}
 

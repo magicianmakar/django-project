@@ -486,8 +486,8 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
                 $('.description-images-add').append($('<div class="col-xs-12"></div>'));
             }
 
-            var d = $('<div>', {class:'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
-            var img = $('<img>', {src: $(el).attr('src'), class: 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
+            var d = $('<div>', {'class':'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
+            var img = $('<img>', {src: $(el).attr('src'), 'class': 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
             d.append(img);
 
             img.click(function (e) {
