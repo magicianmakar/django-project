@@ -1227,7 +1227,9 @@ def product_view(request, pid):
     #  /AWS
     if request.user.is_superuser:
         product = get_object_or_404(ShopifyProduct, id=pid)
-        messages.warning(request, 'Preview Mode: Other features (like Variant Mapping, Product info Tab, etc) will not work.')
+        if product.user != request.user:
+            messages.warning(request, 'Preview Mode: Other features (like Variant Mapping,'
+                                      ' Product info Tab, etc) will not work.')
     else:
         product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
 
