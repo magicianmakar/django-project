@@ -26,6 +26,8 @@
                                 <td style="vertical-align:middle">
                                     {% if variant.image %}
                                         <img src="{{variant.image}}" style="width: 50px" />
+                                    {% elif shopify_product.image %}
+                                        <img src="{{shopify_product.image.src}}" style="width: 50px" />
                                     {% else %}
                                         <span style="width: 50px; height:50px"></span>
                                     {% endif %}
