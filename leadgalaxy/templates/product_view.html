@@ -108,7 +108,7 @@
                         <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
                             <thead>
                                 <tr>
-                                    <th style="width:64px">Preview</th>
+                                    <th style="width:64px">Image</th>
                                     <th>Title</th>
                                     <th>Price</th>
                                     <th>Compare at price</th>
@@ -123,7 +123,7 @@
                                              variant="{{item.id}}" src="" style="width:64px;display:none" />
                                     </td>
 
-                                    <td style="vertical-align: middle">
+                                    <td>
                                         <input type="hidden" name="variant" value="{{item.id}}">
                                         <input type="hidden" name="option1" value="{{item.option1|default:''}}">
                                         <input type="hidden" name="option2" value="{{item.option2|default:''}}">
@@ -554,6 +554,10 @@
 
 .table.no-border th, .table.no-border td {
      border-top: none !important;
+ }
+
+ .shopify-variant td {
+    vertical-align: middle !important;
  }
 
 </style>
