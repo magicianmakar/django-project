@@ -1225,7 +1225,11 @@ def product_view(request, pid):
         hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
 
     #  /AWS
-    product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
+    if request.user.is_superuser:
+        product = get_object_or_404(ShopifyProduct, id=pid)
+    else:
+        product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
+
     p = {
         'qelem': product,
         'id': product.id,
