@@ -153,4 +153,17 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "noreply@shopifiedapp.com"
 
 COMPRESS_ENABLED = True
-COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.SlimItFilter']
+COMPRESS_OFFLINE = True
+COMPRESS_OUTPUT_DIR = 'shopified'
+
+COMPRESS_JS_FILTERS = [
+    #'compressor.filters.yuglify.YUglifyJSFilter'
+    'compressor.filters.jsmin.SlimItFilter'
+]
+
+COMPRESS_CSS_FILTERS = [
+    # Creates absolute urls from relative ones.
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    # CSS minimizer.
+    'compressor.filters.cssmin.CSSMinFilter'
+]

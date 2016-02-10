@@ -697,12 +697,14 @@ $(function() {
 
 </script>
 
-{% compress js %}
-<script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
-{% endcompress %}
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
+    {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}
-<script type="text/javascript" src="{% static 'shopified/js/uploader.js' %}"></script>
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'shopified/js/uploader.js' %}"></script>
+    {% endcompress %}
 {% endif %}
 
 
