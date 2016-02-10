@@ -1364,7 +1364,7 @@ def product_mapping(request, store_id, product_id):
             options = mapped.split(',')
         else:
             options = []
-            if v.get('option1'):
+            if v.get('option1') and v.get('option1').lower() != 'default title':
                 options.append(v.get('option1'))
             if v.get('option2'):
                 options.append(v.get('option2'))
