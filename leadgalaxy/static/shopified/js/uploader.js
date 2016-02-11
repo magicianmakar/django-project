@@ -1,5 +1,7 @@
-// 'use strict';
 /* global $, config, toastr, product, renderImages */
+
+(function(config, product) {
+'use strict';
 
 $('#modal-upload-image').on('show.bs.modal', function (e) {
     $('.upload-image-btn').bootstrapBtn('reset');
@@ -69,3 +71,4 @@ function file_uploaded(url) {
         error: function(data) {},
     });
 }
+})();

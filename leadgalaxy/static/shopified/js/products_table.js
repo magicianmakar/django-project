@@ -1,5 +1,7 @@
-//'use strict';
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
+
+(function(config, product) {
+'use strict';
 
 function changeProductStat(product, stat, callback, erroback) {
     $.ajax({
@@ -323,3 +325,4 @@ $(function() {
         onSelect: function(suggestion) {}
     });
 });
+})();

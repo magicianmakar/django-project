@@ -1,6 +1,8 @@
-// 'use strict';
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
 /* global boardsMenu */
+
+(function(config, product) {
+'use strict';
 
 var currentBoardBox = null;
 
@@ -397,3 +399,4 @@ $('#shopify-send-btn').click(function(e) {
         }
     });
 });
+})();

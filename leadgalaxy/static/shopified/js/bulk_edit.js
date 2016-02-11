@@ -1,5 +1,7 @@
-// 'use strict';
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
+
+(function(config, product) {
+'use strict';
 
 $('#save-btn').click(function() {
     var btn = $(this);
@@ -144,3 +146,5 @@ $(function() {
         onSelect: function(suggestion) {}
     });
 });
+
+})();

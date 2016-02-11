@@ -1,6 +1,7 @@
-// 'use strict';
 /* global $, toastr, swal, displayAjaxError */
 
+(function(config, product) {
+'use strict';
 
 $('.add-store-btn').click(function (e) {
     e.preventDefault();
@@ -206,3 +207,5 @@ $('.show-api-url').click(function (e) {
 $(function () {
     showDescriptionHelp();
 });
+
+})();

@@ -1,6 +1,8 @@
-'use strict';
 /* global $, config, toastr, swal, product:true, renderImages, allPossibleCases */
 /* global setup_full_editor, cleanImageLink */
+
+(function(config, product) {
+'use strict';
 
 var image_cache = {};
 
@@ -682,3 +684,4 @@ $(function() {
         }
     });
 });
+})(config, product);

@@ -1,5 +1,7 @@
-//'use strict';
 /* global $, toastr, swal, displayAjaxError */
+
+(function(config, product) {
+'use strict';
 
 var image_cache = {};
 
@@ -361,3 +363,4 @@ $(function () {
 
     findMarkedLines();
 });
+})();

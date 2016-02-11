@@ -1,5 +1,7 @@
-// 'use strict';
 /* global $, toastr, swal, displayAjaxError, api_url, product */
+
+(function(config, product) {
+'use strict';
 
 $('#btn-variants-img').click(function(e) {
     localStorage.current_product = JSON.stringify(document.savedProduct);
@@ -137,3 +139,4 @@ function setupVariantsLinking() {
 $(function() {
     setupVariantsLinking();
 });
+})();
