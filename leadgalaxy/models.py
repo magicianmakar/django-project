@@ -361,6 +361,7 @@ class ShopifyWebhook(models.Model):
     topic = models.CharField(max_length=64)
     token = models.CharField(max_length=64)
     shopify_id = models.BigIntegerField(default=0, verbose_name='Webhook Shopify ID')
+    call_count = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

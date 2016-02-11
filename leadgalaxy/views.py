@@ -7,7 +7,7 @@ from django.template import Context, Template, RequestContext
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count
+from django.db.models import Count, F
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -1020,6 +1020,9 @@ def webhook(request, provider, option):
                 product.data = json.dumps(product_data)
                 product.save()
 
+                ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
+                    call_count=F('call_count')+1)
+
                 # Delete Product images cache
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
@@ -1029,6 +1032,9 @@ def webhook(request, provider, option):
             elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
                 if product.shopify_export:
                     product.shopify_export.delete()
+
+                ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
+                    call_count=F('call_count')+1)
 
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
