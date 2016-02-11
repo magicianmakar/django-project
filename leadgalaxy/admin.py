@@ -56,7 +56,7 @@ class ShopifyStoreAdmin(admin.ModelAdmin):
 
 @admin.register(ShopifyWebhook)
 class ShopifyWebhookAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'store', 'created_at', 'updated_at')
+    list_display = ('__str__', 'store', 'topic', 'call_count', 'created_at', 'updated_at')
 
 
 @admin.register(AccessToken)
