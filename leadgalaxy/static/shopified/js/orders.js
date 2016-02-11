@@ -386,10 +386,20 @@ $('.note-panel .note-edit-save').click(function (e) {
             'store': store,
             'note': note
         },
-        context: {btn: this},
+        context: {btn: this, parent: parent},
         success: function (data) {
             if (data.status == 'ok') {
                 toastr.success('Order Note', 'Order note saved in Shopify.');
+
+                // Truncate note
+                var maxLength = 70;
+                var noteText = note.substr(0, maxLength);
+                noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
+                if (note.length > maxLength) {
+                    noteText = noteText+'...';
+                }
+
+                $('.note-preview .note-text', this.parent).text(noteText);
             } else {
                 displayAjaxError('Add Note', data);
             }
@@ -399,7 +409,7 @@ $('.note-panel .note-edit-save').click(function (e) {
         },
         complete: function () {
             $(this.btn).button('reset');
-            $(this.btn).parents('.note-panel').find('.note-edit-cancel').show().trigger('click');
+            $('.note-edit-cancel', this.parent).show().trigger('click');
         }
     });
 });

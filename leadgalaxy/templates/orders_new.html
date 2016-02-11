@@ -174,9 +174,7 @@
                                             </div>
                                             <div class="panel-body">
                                                 <div class="note-preview">
-                                                    {% if order.note %}
-                                                        <span class="">{{order.note|truncatewords:10 }}</span>
-                                                    {% endif %}
+                                                    <span class="note-text">{{order.note|default:''|truncatewords:10 }}</span>
                                                     <i class="fa fa-edit" style="
                                                         position: absolute;
                                                         bottom: 0px;
