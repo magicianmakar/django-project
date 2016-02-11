@@ -138,9 +138,9 @@
 
 {% block extracss %}
     <!-- Data Tables -->
-    <link href="/static/css/plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
-    <link href="/static/css/plugins/dataTables/dataTables.responsive.css" rel="stylesheet">
-    <link href="/static/css/plugins/dataTables/dataTables.tableTools.min.css" rel="stylesheet">
+    <link href={% static 'css/plugins/dataTables/dataTables.bootstrap.css' %} rel="stylesheet">
+    <link href={% static 'css/plugins/dataTables/dataTables.responsive.css' %} rel="stylesheet">
+    <link href={% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %} rel="stylesheet">
 
     <style type="text/css">
     tbody td {
@@ -152,10 +152,10 @@
 
 {% block extrajs %}
     <!-- Data Tables -->
-    <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.responsive.js"></script>
-    <script src="/static/js/plugins/dataTables/dataTables.tableTools.min.js"></script>
+    <script src={% static 'js/plugins/dataTables/jquery.dataTables.js' %}></script>
+    <script src={% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}></script>
+    <script src={% static 'js/plugins/dataTables/dataTables.responsive.js' %}></script>
+    <script src={% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}></script>
     <!-- <script src="http://www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script> -->
 
     {% compress js %}

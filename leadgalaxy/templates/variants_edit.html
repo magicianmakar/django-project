@@ -62,7 +62,7 @@
 
 {% block extracss %}
 
-<link href="/static/css/jquery.loader.min.css" rel="stylesheet">
+<link href={% static 'css/jquery.loader.min.css' %} rel="stylesheet">
 
 <style type="text/css">
 .buttons {
@@ -110,7 +110,7 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="/static/js/jquery.loader.min.js" type="text/javascript"></script>
+<script src={% static 'js/jquery.loader.min.js' %} type="text/javascript"></script>
 
 <script type="text/javascript">
 

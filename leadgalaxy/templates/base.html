@@ -9,8 +9,8 @@
     <!-- Meta, title, CSS, favicons, etc. -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="shortcut icon"  href="/static/favicon.png">
-    <link rel="icon" href="/static/favicon.png" >
+    <link rel="shortcut icon"  href="{% static 'favicon.png' %}">
+    <link rel="icon" href="{% static 'favicon.png' %}" >
 
     <title>{% block title %}Shopified App{% endblock %}</title>
 
@@ -57,7 +57,7 @@
         <div class="sidebar-collapse">
             <ul class="nav metismenu" id="side-menu">
                 <li>
-                    <img src="/static/Shopified-App.png" style="width: 100%; padding: 10px 25px;">
+                    <img src="{% static 'Shopified-App.png' %}" style="width: 100%; padding: 10px 25px;">
                 </li>
                 <li class="nav-header">
                     <div class="dropdown profile-element">
