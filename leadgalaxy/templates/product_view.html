@@ -109,6 +109,7 @@
                         <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
                             <thead>
                                 <tr>
+                                    <th style="width:64px">Image</th>
                                     <th>Title</th>
                                     <th>Price</th>
                                     <th>Compare at price</th>
@@ -118,7 +119,12 @@
                             <tbody>
                                 {% for item in shopify_product.variants %}
                                 <tr class="shopify-variant" variant-id="{{item.id}}">
-                                    <td style="vertical-align: middle">
+                                    <td>
+                                        <img class="lazyload" store="{{product.store.id}}" product="{{item.product_id}}"
+                                             variant="{{item.id}}" src="" style="width:64px;display:none" />
+                                    </td>
+
+                                    <td>
                                         <input type="hidden" name="variant" value="{{item.id}}">
                                         <input type="hidden" name="option1" value="{{item.option1|default:''}}">
                                         <input type="hidden" name="option2" value="{{item.option2|default:''}}">
@@ -551,6 +557,10 @@
      border-top: none !important;
  }
 
+ .shopify-variant td {
+    vertical-align: middle !important;
+ }
+
 </style>
 {% endblock %}
 
@@ -580,8 +590,10 @@ var config = {
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
+    shopify_images: {% json_dumps shopify_product.images %},
 {% else %}
     shopify_options: null,
+    shopify_images: null,
 {% endif %}
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
@@ -595,7 +607,7 @@ var config = {
 
     product_extra_images: [
     {% for item in original.extra_images %}
-        cleanImageLink("{{item}}"),
+        '{% remove_link_query item %}',
     {% endfor %}
     ],
 };

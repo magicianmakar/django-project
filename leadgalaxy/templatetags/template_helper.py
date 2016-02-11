@@ -1,6 +1,7 @@
 from django import template
 from django.template import Context, Template
 import json
+from urlparse import urlparse
 
 register = template.Library()
 
@@ -45,3 +46,9 @@ def base64_encode(context, data):
 @register.simple_tag(takes_context=True)
 def json_dumps(context, data):
     return json.dumps(data)
+
+
+@register.simple_tag(takes_context=True)
+def remove_link_query(context, link):
+    parsed = urlparse(link)
+    return parsed.scheme + "://" + parsed.netloc + parsed.path

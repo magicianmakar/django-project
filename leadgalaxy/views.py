@@ -981,10 +981,10 @@ def webhook(request, provider, option):
                             '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
     if provider == 'shopify' and request.method == 'POST':
-        # Shopify send a JSON POST request
-        shopify_product = json.loads(request.body)
-
         try:
+            # Shopify send a JSON POST request
+            shopify_product = json.loads(request.body)
+
             product = None
             token = request.GET['t']
             store = ShopifyStore.objects.get(id=request.GET['store'])
@@ -1020,11 +1020,18 @@ def webhook(request, provider, option):
                 product.data = json.dumps(product_data)
                 product.save()
 
+                # Delete Product images cache
+                ShopifyProductImage.objects.filter(store=store,
+                                                   product=shopify_product['id']).delete()
+
                 return JsonResponse({'status': 'ok'})
 
             elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
                 if product.shopify_export:
                     product.shopify_export.delete()
+
+                ShopifyProductImage.objects.filter(store=store,
+                                                   product=shopify_product['id']).delete()
 
                 JsonResponse({'status': 'ok'})
             else:
@@ -1225,7 +1232,14 @@ def product_view(request, pid):
         hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
 
     #  /AWS
-    product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
+    if request.user.is_superuser:
+        product = get_object_or_404(ShopifyProduct, id=pid)
+        if product.user != request.user:
+            messages.warning(request, 'Preview Mode: Other features (like Variant Mapping,'
+                                      ' Product info Tab, etc) will not work.')
+    else:
+        product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
+
     p = {
         'qelem': product,
         'id': product.id,
@@ -1350,7 +1364,7 @@ def product_mapping(request, store_id, product_id):
             options = mapped.split(',')
         else:
             options = []
-            if v.get('option1'):
+            if v.get('option1') and v.get('option1').lower() != 'default title':
                 options.append(v.get('option1'))
             if v.get('option2'):
                 options.append(v.get('option2'))

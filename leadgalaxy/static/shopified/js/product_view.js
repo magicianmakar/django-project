@@ -1,6 +1,8 @@
-// 'use strict';
+'use strict';
 /* global $, config, toastr, swal, product:true, renderImages, allPossibleCases */
 /* global setup_full_editor, cleanImageLink */
+
+var image_cache = {};
 
 function showProductInfo(rproduct) {
     product = rproduct;
@@ -36,6 +38,13 @@ function showProductInfo(rproduct) {
 
         if (product.description) {
             document.editor.setData(product.description);
+        }
+
+        if (config.shopify_images !== null) {
+            product.images = [];
+            $.each(config.shopify_images, function (i, img) {
+                product.images.push(img.src);
+            });
         }
 
         renderImages();
@@ -75,11 +84,11 @@ $('#export-btn').click(function () {
         return;
     }
 
-    btn.bootstrapBtn('loading')
+    btn.bootstrapBtn('loading');
 
     var store_id = $('#store-select').val();
 
-    if (!store_id || store_id.length==0) {
+    if (!store_id || store_id.length === 0) {
         swal('Product Export', 'Please choose a Shopify store first!', 'error');
         return;
     }
@@ -208,6 +217,27 @@ $('#export-btn').click(function () {
         });
 
         api_data.product.options = config.shopify_options;
+
+        // Match images with shopify images
+        //api_data.product.images = config.shopify_images;
+
+        var shopify_images_map = {};
+        $.each(config.shopify_images, function(i, img) {
+            shopify_images_map[img.src] = img;
+        });
+
+        var new_images = [];
+        $.each(api_data.product.images, function (i, el) {
+            if (shopify_images_map.hasOwnProperty(el.src)) {
+                new_images.push({
+                    id: shopify_images_map[el.src].id
+                });
+            } else {
+                new_images.push(el);
+            }
+        });
+
+        api_data.product.images = new_images;
     }
 
     $.ajax({
@@ -614,5 +644,41 @@ $(function() {
 
     $(".tag-it").tagit({
         allowSpaces: true
+    });
+
+    $('.lazyload').each(function (i, el) {
+        if (!$(el).prop('image-loaded')) {
+            var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
+
+            if (cache_name in image_cache) {
+                $(el).attr('src', image_cache[cache_name]);
+                $(el).show('fast');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/product-variant-image',
+                type: 'GET',
+                data: {
+                    store: $(el).attr('store'),
+                    product: $(el).attr('product'),
+                    variant: $(el).attr('variant'),
+                },
+                context: {img: $(el), cache_name: cache_name},
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        this.img.attr('src', data.image);
+                        this.img.show('fast');
+
+                        image_cache[cache_name] = data.image;
+                    }
+                },
+                error: function (data) {
+                },
+                complete: function () {
+                    this.img.prop('image-loaded', true);
+                }
+            });
+        }
     });
 });
