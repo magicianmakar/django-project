@@ -398,7 +398,7 @@ $('.note-panel .note-edit-save').click(function (e) {
         },
         complete: function () {
             $(this.btn).button('reset');
-            $('.note-panel .note-edit-cancel').show();
+            $(this.btn).parents('.note-panel').find('.note-edit-cancel').show().trigger('click');
         }
     });
 });
