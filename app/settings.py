@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'hijack',
     'multiselectfield',
     'compressor',
+    'storages',
 
     'article',
     'leadgalaxy'
@@ -152,9 +153,27 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "noreply@shopifiedapp.com"
 
-COMPRESS_ENABLED = True
+# Django Storage
+if not DEBUG:
+    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    AWS_STORAGE_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
+
+    AWS_S3_SECURE_URLS = False
+    AWS_QUERYSTRING_AUTH = False
+
+    STATICFILES_LOCATION = 'static'
+    MEDIAFILES_LOCATION = 'media'
+
+    STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
+    DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
+    STATIC_URL = "http://%s.s3.amazonaws.com/%s/" % (AWS_STORAGE_BUCKET_NAME, STATICFILES_LOCATION)
+
+# Django Compressor
+# COMPRESS_ENABLED = True
 COMPRESS_OFFLINE = True
 COMPRESS_OUTPUT_DIR = 'shopified'
+COMPRESS_ROOT = STATIC_ROOT
 
 COMPRESS_JS_FILTERS = [
     'compressor.filters.yuglify.YUglifyJSFilter'
@@ -168,3 +187,6 @@ COMPRESS_CSS_FILTERS = [
     # 'compressor.filters.cssmin.CSSMinFilter',
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
+
+COMPRESS_URL = STATIC_URL
+COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
