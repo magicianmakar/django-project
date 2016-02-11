@@ -842,9 +842,19 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'order-add-note':
+        # Append to the Order note
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
 
         if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
+            return JsonResponse({'status': 'ok'})
+        else:
+            return JsonResponse({'error': 'Shopify API Error'})
+
+    if method == 'POST' and target == 'order-note':
+        # Change the Order note
+        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+
+        if utils.set_shopify_order_note(store, data.get('order_id'), data['note']):
             return JsonResponse({'status': 'ok'})
         else:
             return JsonResponse({'error': 'Shopify API Error'})
