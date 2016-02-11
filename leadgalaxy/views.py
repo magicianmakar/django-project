@@ -1872,6 +1872,8 @@ def orders_view(request):
         order['date_str'] = arrow.get(order['created_at']).humanize()
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
         order['store'] = store
+        order['placed_orders'] = 0
+        order['lines_count'] = len(order['line_items'])
 
         for i, el in enumerate((order['line_items'])):
             var_link = store.get_link('/admin/products/{}/variants/{}'.format(el['product_id'],
@@ -1884,7 +1886,11 @@ def orders_view(request):
                 'variant': el['variant_id']
             }
 
-            order['line_items'][i]['shopify_order'] = orders_list.get('{}-{}'.format(order['id'], el['id']))
+            shopify_order = orders_list.get('{}-{}'.format(order['id'], el['id']))
+            order['line_items'][i]['shopify_order'] = shopify_order
+
+            if shopify_order:
+                order['placed_orders'] += 1
 
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
@@ -1957,7 +1963,11 @@ def orders_view(request):
 
         all_orders.append(order)
 
-    return render(request, 'orders.html', {
+    tpl = 'orders.html'
+    if request.GET.get('new'):
+        tpl = 'orders_new.html'
+
+    return render(request, tpl, {
         'orders': all_orders,
         'store': store,
         'paginator': paginator,

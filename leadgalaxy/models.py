@@ -221,6 +221,10 @@ class ShopifyProduct(models.Model):
 
         return None
 
+    def get_supplier_info(self):
+        data = json.loads(self.data)
+        return data.get('store')
+
     def set_original_url(self, url):
         data = json.loads(self.data)
         if url != data.get('original_url'):
@@ -316,6 +320,14 @@ class ShopifyOrder(models.Model):
         return status_map.get(self.source_status)
 
     get_source_status.admin_order_field = 'source_status'
+
+    def get_source_status_color(self):
+        if not self.source_status:
+            return 'danger'
+        elif self.source_status == 'FINISH':
+            return 'primary'
+        else:
+            return 'warning'
 
     def get_source_url(self):
         if self.source_id:

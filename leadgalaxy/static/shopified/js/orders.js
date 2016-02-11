@@ -7,13 +7,14 @@ $(function () {
     $(".itooltip").tooltip();
 });
 
-$(".more-info").click(function (e) {
-    e.preventDefault();
+function loadVriantImages(target) {
+    if (typeof(terget) === 'undefined') {
+        target = $('.lazyload');
+    } else {
+        target = $('.lazyload', target);
+    }
 
-    var element = $(this).find('i');
-    var target = $(this).parents('tr').next();
-
-    $('.lazyload', target).each(function (i, el) {
+    target.each(function (i, el) {
         if (!$(el).prop('image-loaded')) {
             var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
 
@@ -46,6 +47,15 @@ $(".more-info").click(function (e) {
             });
         }
     });
+}
+
+$(".more-info").click(function (e) {
+    e.preventDefault();
+
+    var element = $(this).find('i');
+    var target = $(this).parents('tr').next();
+
+    loadVriantImages(target);
 
     target.toggle('fade', function() {
         if (target.is(":visible")) {
@@ -136,10 +146,11 @@ $('.placed-order-details').click(function (e) {
 
     var tr_parent = $(this).parents('tr').first();
     var order_id = $(this).attr('order-id');
+    var source_id = $(this).attr('source-order-id');
     var line_id = $(this).attr('line-id');
     var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
     var html = '<ul>';
-    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" href="http://trade.aliexpress.com/order_detail.htm?orderId='+data.aliexpress.order.id+'">'+data.aliexpress.order.id+'</a></li>';
+    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" href="http://trade.aliexpress.com/order_detail.htm?orderId='+source_id+'">'+source_id+'</a></li>';
     html += '<li style="list-style:none">Order date: '+$(this).attr('order-date')+'</li>';
     html += '</ul';
 
@@ -360,4 +371,5 @@ $(function () {
     });
 
     findMarkedLines();
+    loadVriantImages('.orders .line');
 });
