@@ -370,10 +370,11 @@ $('.note-panel .note-edit-cancel').click(function (e) {
 });
 
 $('.note-panel .note-edit-save').click(function (e) {
-    $(this).parents('.note-panel').find('.note-edit-cancel').hide();
+    var parent = $(this).parents('.note-panel');
+    parent.find('.note-edit-cancel').hide();
     $(this).button('loading');
 
-    var note = $('.note-panel .edit-note textarea.note').val();
+    var note = $('.edit-note textarea.note', parent).val();
     var order_id = $(this).attr('order-id');
     var store = $(this).attr('store-id');
 
