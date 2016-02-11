@@ -7,12 +7,6 @@
             <span class="caret"></span></button>
 
         <ul class="dropdown-menu">
-            {% if item.shopify_order %}
-            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}" data="{{item.shopify_order.encoded}}">Order Details</a></li>
-            {% else %}
-            <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
-            {% endif %}
-
             <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
 
             {% if item.order_data %}
