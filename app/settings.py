@@ -169,11 +169,14 @@ if not DEBUG:
     DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
     STATIC_URL = "http://%s.s3.amazonaws.com/%s/" % (AWS_STORAGE_BUCKET_NAME, STATICFILES_LOCATION)
 
+    COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
+
 # Django Compressor
-# COMPRESS_ENABLED = True
+COMPRESS_ENABLED = DEBUG
 COMPRESS_OFFLINE = True
 COMPRESS_OUTPUT_DIR = 'shopified'
 COMPRESS_ROOT = STATIC_ROOT
+COMPRESS_URL = STATIC_URL
 
 COMPRESS_JS_FILTERS = [
     'compressor.filters.yuglify.YUglifyJSFilter'
@@ -187,6 +190,3 @@ COMPRESS_CSS_FILTERS = [
     # 'compressor.filters.cssmin.CSSMinFilter',
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
-
-COMPRESS_URL = STATIC_URL
-COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
