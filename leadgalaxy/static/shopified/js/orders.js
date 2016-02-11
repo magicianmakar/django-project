@@ -370,7 +370,7 @@ $('.note-panel .note-edit-cancel').click(function (e) {
 });
 
 $('.note-panel .note-edit-save').click(function (e) {
-    $('.note-panel .note-edit-cancel').hide();
+    $(this).parents('.note-panel').find('.note-edit-cancel').hide();
     $(this).button('loading');
 
     var note = $('.note-panel .edit-note textarea.note').val();
