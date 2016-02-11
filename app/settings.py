@@ -157,13 +157,14 @@ COMPRESS_OFFLINE = True
 COMPRESS_OUTPUT_DIR = 'shopified'
 
 COMPRESS_JS_FILTERS = [
-    #'compressor.filters.yuglify.YUglifyJSFilter'
-    'compressor.filters.jsmin.SlimItFilter'
+    'compressor.filters.yuglify.YUglifyJSFilter'
+    # 'compressor.filters.jsmin.SlimItFilter'
 ]
 
 COMPRESS_CSS_FILTERS = [
     # Creates absolute urls from relative ones.
     'compressor.filters.css_default.CssAbsoluteFilter',
     # CSS minimizer.
-    'compressor.filters.cssmin.CSSMinFilter'
+    # 'compressor.filters.cssmin.CSSMinFilter',
+    'compressor.filters.yuglify.YUglifyJSFilter'
 ]
