@@ -1875,7 +1875,8 @@ def orders_view(request):
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
     for index, order in enumerate(page):
-        order['date_str'] = arrow.get(order['created_at']).humanize()
+        order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
+        order['date_tooltip'] = arrow.get(order['created_at']).format('YYYY-MM-DD HH:mm:ss ZZ')
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
         order['store'] = store
         order['placed_orders'] = 0

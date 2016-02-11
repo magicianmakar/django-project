@@ -118,7 +118,7 @@
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
                                     </div>
                                     <div class="col-md-2">
-                                        {{order.date_str}}
+                                        <span class="itooltip" title="{{order.date_tooltip}}">{{order.date_str}}</span>
                                     </div>
                                     <div class="col-md-2">
                                         <span class="badge badge-{% if order.financial_status == 'Paid' %}warning{% else %}primary{% endif %}">
