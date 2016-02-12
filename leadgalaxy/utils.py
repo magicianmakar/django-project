@@ -228,17 +228,13 @@ def get_shopify_variant_image(store, product_id, variant_id):
     except:
         pass
 
-    if variant_id:
-        variant = requests.get(store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)).json()
+    images = get_product_images_dict(store, product_id)
 
-    try:
-        image_id = variant['variant']['image_id']
-        image = requests.get(
-            store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
-        image = image['image']['src']
-    except:
-        product = requests.get(store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
-        image = product['product']['image']['src']
+    if variant_id and variant_id in images:
+        image = images[variant_id]
+
+    if not image:
+        image = images.get(0)  # Default image
 
     if image:
         cached = ShopifyProductImage(store=store, product=product_id, variant=variant_id, image=image)
