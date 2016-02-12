@@ -191,6 +191,10 @@ CACHES = {
             'retry_timeout': 2,
             'dead_timeout': 10
         }
+    },
+    'compressor': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'compressor'
     }
 }
 
@@ -218,6 +222,7 @@ COMPRESS_OFFLINE = True
 COMPRESS_OUTPUT_DIR = ''
 COMPRESS_ROOT = STATIC_ROOT
 COMPRESS_URL = STATIC_URL
+COMPRESS_CACHE_BACKEND = 'compressor'
 
 COMPRESS_JS_FILTERS = [
     'compressor.filters.yuglify.YUglifyJSFilter'
