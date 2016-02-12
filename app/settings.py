@@ -162,6 +162,17 @@ if not DEBUG:
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
 
+    AWS_IS_GZIPPED = True
+    AWS_HEADERS = {
+        'Cache-Control': 'max-age=86400',
+    }
+    GZIP_CONTENT_TYPES = (
+        'text/css',
+        'application/javascript',
+        'application/x-javascript',
+        'text/javascript'
+    )
+
     STATICFILES_LOCATION = 'static'
     MEDIAFILES_LOCATION = 'media'
 
