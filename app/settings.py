@@ -190,3 +190,5 @@ COMPRESS_CSS_FILTERS = [
     # 'compressor.filters.cssmin.CSSMinFilter',
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
+
+COMPRESS_YUGLIFY_BINARY = '/app/node_modules/.bin/uglifyjs'
