@@ -338,6 +338,84 @@ $('.view-order-notes').click(function (e) {
         animation: 'none'
     });
 });
+
+$('.note-panel').click(function (e) {
+    if ($(this).prop('editing-mode') === true) {
+        return;
+    } else {
+        $(this).prop('editing-mode', true);
+        $(this).prop('init-width', $(this).css('width'));
+        $(this).prop('init-height', $(this).css('height'));
+    }
+
+    $(this).animate({
+        width: '500px',
+        height: '300px',
+    }, 300);
+
+    $('.edit-note', this).toggle();
+    $('.note-preview', this).toggle();
+});
+
+$('.note-panel .note-edit-cancel').click(function (e) {
+    var parent = $(this).parents('.note-panel');
+    parent.animate({
+        width: $(parent).prop('init-width'),
+        height: $(parent).prop('init-height'),
+    }, 300, function() {
+        $(parent).prop('editing-mode', false);
+    });
+
+    $('.edit-note', parent).toggle();
+    $('.note-preview', parent).toggle();
+
+});
+
+$('.note-panel .note-edit-save').click(function (e) {
+    var parent = $(this).parents('.note-panel');
+    parent.find('.note-edit-cancel').hide();
+    $(this).button('loading');
+
+    var note = $('.edit-note textarea.note', parent).val();
+    var order_id = $(this).attr('order-id');
+    var store = $(this).attr('store-id');
+
+    $.ajax({
+        url: '/api/order-note',
+        type: 'POST',
+        data: {
+            'order_id': order_id,
+            'store': store,
+            'note': note
+        },
+        context: {btn: this, parent: parent},
+        success: function (data) {
+            if (data.status == 'ok') {
+                toastr.success('Order Note', 'Order note saved in Shopify.');
+
+                // Truncate note
+                var maxLength = 70;
+                var noteText = note.substr(0, maxLength);
+                noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
+                if (note.length > maxLength) {
+                    noteText = noteText+'...';
+                }
+
+                $('.note-preview .note-text', this.parent).text(noteText);
+            } else {
+                displayAjaxError('Add Note', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Add Note', data);
+        },
+        complete: function () {
+            $(this.btn).button('reset');
+            $('.note-edit-cancel', this.parent).show().trigger('click');
+        }
+    });
+});
+
 function findMarkedLines() {
     $('.fulfillment-status button.status-orderd-btn').remove();
 

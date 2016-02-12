@@ -118,7 +118,7 @@
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
                                     </div>
                                     <div class="col-md-2">
-                                        {{order.date_str}}
+                                        <span class="itooltip" title="{{order.date_tooltip}}">{{order.date_str}}</span>
                                     </div>
                                     <div class="col-md-2">
                                         <span class="badge badge-{% if order.financial_status == 'Paid' %}warning{% else %}primary{% endif %}">
@@ -168,10 +168,34 @@
                                         <a href="mailto:{{order.customer.email}}" class="itooltip" title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>
                                     </div>
                                     <div class="col-md-3 col-md-offset-6">
-                                        Order Notes:
-                                        {% if order.note %}
-                                            {{order.note|truncatewords:6 }}
-                                        {% endif %}
+                                        <div class="note-panel panel panel-default">
+                                            <div class="panel-heading">
+                                                Order Notes
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="note-preview">
+                                                    <span class="note-text">{{order.note|default:''|truncatewords:10 }}</span>
+                                                    <i class="fa fa-edit" style="
+                                                        position: absolute;
+                                                        bottom: 0px;
+                                                        right: 2px;
+                                                    "></i>
+                                                </div>
+                                                <div class="edit-note">
+                                                    <textarea class="note" style="width: 99%;height: 250px; margin-bottom: 40px;">{{order.note}}</textarea>
+                                                    <button class="btn btn-primary btn-sm note-edit-save"
+                                                            style="position: absolute; bottom: 5px; right: 5px; "
+                                                            order-id="{{order.id}}" store-id="{{store.id}}">
+                                                        <i class="fa fa-save"></i> Save
+                                                    </button>
+                                                    <button class="btn btn-default btn-sm note-edit-cancel"
+                                                            style="position: absolute; bottom: 5px; right: 70px; ">
+                                                        <i class="fa fa-times"></i> Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
                                     </div>
                                 </div>
 
@@ -227,11 +251,11 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width:64px">Image</th>
-                                                        <th style="width:30%">Item</th>
+                                                        <th style="width:64px"></th>
+                                                        <th style="width:30%;text-align:center">Item</th>
                                                         <th>Variant</th>
                                                         <th>Qty</th>
-                                                        <th>Order Option</th>
+                                                        <th></th>
                                                         <th>Tracking #</th>
                                                     </tr>
                                                 </thead>
@@ -334,6 +358,30 @@
     }
     .orders .order .details .line .table{
         margin: 0px;
+    }
+
+    .orders .order .details .panel {
+        margin: 0;
+    }
+    .orders .order .details .panel .panel-heading {
+        font-weight: bold;
+        padding: 2px 0px 0px 5px;
+        background: none;
+        border-bottom: 0;
+    }
+    .orders .order .details .panel .panel-body {
+        padding: 0px 0px 0px 5px;
+    }
+    .note-panel {
+        cursor: pointer;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        width: 300px;
+        z-index: 1000;
+    }
+    .note-panel .edit-note{
+        display: none;
     }
 </style>
 {% endblock %}

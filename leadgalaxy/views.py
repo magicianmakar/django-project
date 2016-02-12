@@ -842,9 +842,19 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'order-add-note':
+        # Append to the Order note
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
 
         if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
+            return JsonResponse({'status': 'ok'})
+        else:
+            return JsonResponse({'error': 'Shopify API Error'})
+
+    if method == 'POST' and target == 'order-note':
+        # Change the Order note
+        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+
+        if utils.set_shopify_order_note(store, data.get('order_id'), data['note']):
             return JsonResponse({'status': 'ok'})
         else:
             return JsonResponse({'error': 'Shopify API Error'})
@@ -1875,7 +1885,8 @@ def orders_view(request):
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
     for index, order in enumerate(page):
-        order['date_str'] = arrow.get(order['created_at']).humanize()
+        order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
+        order['date_tooltip'] = arrow.get(order['created_at']).format('YYYY-MM-DD HH:mm:ss ZZ')
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
         order['store'] = store
         order['placed_orders'] = 0
