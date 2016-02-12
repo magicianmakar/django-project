@@ -1991,9 +1991,9 @@ def orders_view(request):
 
         all_orders.append(order)
 
-    tpl = 'orders.html'
-    if request.GET.get('new'):
-        tpl = 'orders_new.html'
+    tpl = 'orders_new.html'
+    if request.GET.get('table'):
+        tpl = 'orders.html'
 
     return render(request, tpl, {
         'orders': all_orders,
