@@ -22,7 +22,7 @@
                     ><i class="fa fa-history"></i>Original</a></li>
                 {% endif %}
                 {% if product.original_product_source and request.user|can:'shipping_methods.view' %}
-                <li class=""><a
+                <li class="shipping-tab"><a
                     {% if request.user|can:'shipping_methods.use' %}
                     data-toggle="tab" href="#tab-3"
                     {% else %}
@@ -383,7 +383,7 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="form-group col-xs-12">
-                        <iframe src="/shipping/info?id={{product.original_product_id}}&product={{product.id}}" style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
+                        <iframe data-src="/shipping/info?id={{product.original_product_id}}&product={{product.id}}" style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
                     </div>
                 </div>
             </div>
