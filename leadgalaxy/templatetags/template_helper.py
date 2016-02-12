@@ -50,5 +50,8 @@ def json_dumps(context, data):
 
 @register.simple_tag(takes_context=True)
 def remove_link_query(context, link):
+    if not link:
+        return ''
+
     parsed = urlparse(link)
     return parsed.scheme + "://" + parsed.netloc + parsed.path
