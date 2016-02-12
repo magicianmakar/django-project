@@ -1,5 +1,5 @@
 #!/bin/bash -e
 
 git push heroku master
-heroku run python manage.py migrate
+heroku run 'python manage.py migrate ; python manage.py compress'
 
