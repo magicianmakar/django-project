@@ -185,16 +185,13 @@
                                             <tr {% if item.shopify_order %}class="success"{% endif %}>
                                                 <td>
                                                     <img
-                                                    class="lazyload"
-                                                    store="{{image.store}}"
-                                                    product="{{image.product}}"
-                                                    variant="{{image.variant}}"
-                                                    {% if image %}
-                                                    src=""
+                                                    {% if not item.image_src %}
+                                                        class="lazyload" store="{{image.store}}"
+                                                        product="{{image.product}}" variant="{{image.variant}}"
                                                     {% else %}
-                                                    src="{{item.product.get_images|first}}"
+                                                        src="{{item.image_src}}"
                                                     {% endif %}
-                                                    style="width:64px" />
+                                                        style="width:64px" />
                                                 </td>
                                                 <td>
                                                     {% if item.product %}

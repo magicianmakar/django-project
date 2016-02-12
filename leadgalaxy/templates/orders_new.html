@@ -263,10 +263,14 @@
                                                 <thead>
                                                     <tr>
                                                         <td>
-                                                            <img class="lazyload" store="{{image.store}}" product="{{image.product}}"
-                                                                 variant="{{image.variant}}"
-                                                                 {% if image %} src="" {% else %} src="{{item.product.get_images|first}}" {% endif %}
-                                                                 style="width:64px" />
+                                                            <img
+                                                                {% if not item.image_src %}
+                                                                    class="lazyload" store="{{image.store}}"
+                                                                    product="{{image.product}}" variant="{{image.variant}}"
+                                                                {% else %}
+                                                                    src="{{item.image_src}}"
+                                                                {% endif %}
+                                                                    style="width:64px" />
                                                          </td>
                                                         <td>
                                                             {% if item.product %}

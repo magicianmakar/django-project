@@ -1876,13 +1876,22 @@ def orders_view(request):
     uk_provinces = None
 
     orders_ids = []
+    products_ids = []
     for order in page:
         orders_ids.append(order['id'])
+        for line in order['line_items']:
+            line_id = line.get('product_id')
+            products_ids.append(line_id)
 
     orders_list = {}
     res = ShopifyOrder.objects.filter(user=request.user, order_id__in=orders_ids)
     for i in res:
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
+
+    images_list = {}
+    res = ShopifyProductImage.objects.filter(store=store, product__in=products_ids)
+    for i in res:
+        images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
@@ -1902,6 +1911,8 @@ def orders_view(request):
                 'product': el['product_id'],
                 'variant': el['variant_id']
             }
+
+            order['line_items'][i]['image_src'] = images_list.get('{}-{}'.format(el['product_id'], el['variant_id']))
 
             shopify_order = orders_list.get('{}-{}'.format(order['id'], el['id']))
             order['line_items'][i]['shopify_order'] = shopify_order
