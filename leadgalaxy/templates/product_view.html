@@ -120,8 +120,10 @@
                                 {% for item in shopify_product.variants %}
                                 <tr class="shopify-variant" variant-id="{{item.id}}">
                                     <td>
-                                        <img class="lazyload" store="{{product.store.id}}" product="{{item.product_id}}"
-                                             variant="{{item.id}}" src="" style="width:64px;display:none" />
+                                        {% if item.image_src %}
+                                        <img class="_lazyload" store="{{product.store.id}}" product="{{item.product_id}}"
+                                             variant="{{item.id}}" src="{{item.image_src}}" style="width:64px" />
+                                        {% endif %}
                                     </td>
 
                                     <td>

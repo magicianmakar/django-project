@@ -193,6 +193,29 @@ def get_shopify_product(store, product_id):
     return rep.get('product')
 
 
+def get_product_images_dict(store, product):
+    images = {}
+    product = get_shopify_product(store, product)
+    for i in product['images']:
+        for var in i['variant_ids']:
+            images[var] = i['src']
+
+    # Default image
+    images[0] = product['image'].get('src')
+
+    return images
+
+
+def link_product_images(product):
+    for i in product['images']:
+        for var in i['variant_ids']:
+            for idx, el in enumerate(product['variants']):
+                if el['id'] == var:
+                    product['variants'][idx]['image_src'] = i['src']
+
+    return product
+
+
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
     product_id = safeInt(product_id)
