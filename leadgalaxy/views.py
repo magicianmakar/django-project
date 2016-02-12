@@ -1049,7 +1049,7 @@ def webhook(request, provider, option):
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
 
-                JsonResponse({'status': 'ok'})
+                return JsonResponse({'status': 'ok'})
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(option))
         except:
