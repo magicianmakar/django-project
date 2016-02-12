@@ -381,12 +381,15 @@ def get_tracking_orders(store, tracker_orders):
     for order in rep.json()['orders']:
         orders[order['id']] = order
         for line in order['line_items']:
-            lines['{}-{}'.format(order['id'], line['id'])] = line
+            try:
+                lines['{}-{}'.format(order['id'], line['id'])] = line
+            except:
+                pass
 
     new_tracker_orders = []
     for tracked in tracker_orders:
-        tracked.order = orders[tracked.order_id]
-        tracked.line = lines['{}-{}'.format(tracked.order_id, tracked.line_id)]
+        tracked.order = orders.get(tracked.order_id)
+        tracked.line = lines.get('{}-{}'.format(tracked.order_id, tracked.line_id))
         new_tracker_orders.append(tracked)
 
     return new_tracker_orders
