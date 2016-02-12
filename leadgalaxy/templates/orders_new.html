@@ -391,6 +391,8 @@
 {% endblock %}
 
 {% block extrajs %}
+{% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/orders.js' %}"></script>
+{% endcompress %}
 {% endblock %}
 
