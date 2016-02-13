@@ -1,7 +1,7 @@
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
 /* global boardsMenu */
 
-(function(config, product) {
+(function(boardsMenu) {
 'use strict';
 
 function changeProductStat(product, stat, callback, erroback) {
@@ -448,4 +448,4 @@ $(function() {
         onSelect: function(suggestion) {}
     });
 });
-})();
+})(boardsMenu);

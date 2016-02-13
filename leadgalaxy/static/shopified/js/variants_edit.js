@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError, api_url, product */
 
-(function(config, product) {
+(function(api_url, product) {
 'use strict';
 
 $('#btn-variants-img').click(function(e) {
@@ -41,8 +41,8 @@ $('.var-btn-prev').click(function(e) {
 });
 
 $('#view-btn').click(function(e) {
-    var api_url = api_url.replace(/\/[^:]+:[^@]+@/, '/');
-    window.open(api_url + '/admin/products/' + product.id, '_blank');
+    var url = api_url.replace(/\/[^:]+:[^@]+@/, '/');
+    window.open(url + '/admin/products/' + product.id, '_blank');
 });
 
 function imageClicked(e) {
@@ -139,4 +139,4 @@ function setupVariantsLinking() {
 $(function() {
     setupVariantsLinking();
 });
-})();
+})(api_url, product);

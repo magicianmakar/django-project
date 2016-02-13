@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function(config, product) {
+(function() {
 'use strict';
 
 var image_cache = {};
