@@ -55,7 +55,7 @@
                         <div class="col-md-2">
                             <select name="status" class="form-control help-select" style="padding: 6px 0px">
                                 <option {% if status == 'open' %}selected="selected"{% endif %} value="open">All open orders</option>
-                                <option {% if status == 'closed' %}selected="selected"{% endif % value="closed">Show only closed orders</option>
+                                <option {% if status == 'closed' %}selected="selected"{% endif %} value="closed">Show only closed orders</option>
                                 <option {% if status == 'cancelled' %}selected="selected"{% endif %} value="cancelled">Show only cancelled orders</option>
                                 <option {% if status == 'any' %}selected="selected"{% endif %} value="any">Any order status</option>
                             </select>
