@@ -13,7 +13,7 @@
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-edit"></i> Saved Product</a></li>
                 {% if original and request.user|can:'original_product.view' %}
-                <li class=""><a
+                <li class="original-tab"><a
                     {% if request.user|can:'original_product.use' %}
                     data-toggle="tab" href="#tab-2"
                     {% else %}
@@ -368,7 +368,8 @@
                 <div class="row original-description">
                     <div class="col-xs-12">
                         <strong>Description</strong>
-                        <p>{{original.description|safe}}</p>
+                        <iframe data-src="/api/product-original-desc?product={{product.id}}"
+                                style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
                     </div>
                 </div>
 
@@ -383,7 +384,8 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="form-group col-xs-12">
-                        <iframe data-src="/shipping/info?id={{product.original_product_id}}&product={{product.id}}" style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
+                        <iframe data-src="/shipping/info?id={{product.original_product_id}}&product={{product.id}}"
+                                style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
                     </div>
                 </div>
             </div>

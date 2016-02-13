@@ -890,6 +890,13 @@ def api(request, target):
             'hash': reg.register_hash
         })
 
+    if method == 'GET' and target == 'product-original-desc':
+        try:
+            product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+            return HttpResponse(json.loads(product.original_data)['description'])
+        except:
+            return HttpResponse('')
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 

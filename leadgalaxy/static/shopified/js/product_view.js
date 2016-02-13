@@ -577,6 +577,15 @@ $('.shipping-tab').click(function (e) {
     iframe.attr('src', iframe.attr('data-src'));
 });
 
+$('.original-tab').click(function (e) {
+    var iframe = $('#tab-2 .original-description iframe');
+    if (iframe.attr('src') && iframe.attr('src').length) {
+        return;
+    }
+
+    iframe.attr('src', iframe.attr('data-src'));
+});
+
 function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {
