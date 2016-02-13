@@ -642,6 +642,8 @@ function launchEditor(id, src) {
     }
 }
 
+document.renderImages = renderImages;
+
 $(function() {
     setup_full_editor('product-description');
 

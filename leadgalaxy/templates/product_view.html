@@ -652,7 +652,7 @@ $(function() {
             },
             FileUploaded: function(up, file, info) {
                 var url = 'http://{{aws_bucket}}.s3.amazonaws.com/uploads/u{{user.id}}/'+file.name;
-                file_uploaded(url);
+                document.file_uploaded(url);
             },
             UploadComplete: function(up, files){
                 $('#modal-upload-image').modal('hide');
