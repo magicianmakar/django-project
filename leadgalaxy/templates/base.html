@@ -65,7 +65,7 @@
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.entity.full_name|default:user.username}}</strong>
                              </span> <span class="text-muted text-xs block">Options <b class="caret"></b></span> </span> </a>
-                            <ul class="dropdown-menu animated fadeInRight m-t-xs">
+                            <ul class="dropdown-menu animated fadeInUp m-t-xs">
                                 {% if user.is_superuser %}
                                 <li><a href="{% url 'admin:index' %}">Admin Panel</a></li>
                                 {% endif %}
@@ -219,7 +219,7 @@
             <div class="col-lg-2"></div>
         </div>
 
-      <div class="wrapper wrapper-content animated fadeIn">
+      <div class="wrapper wrapper-content">
         {% if messages %}
             {% for message in messages %}
             <div class="alert
