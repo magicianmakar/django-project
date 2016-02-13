@@ -40,7 +40,7 @@
                         </div>
                         <div class="col-md-2">
                             <select name="sort" class="form-control" style="padding: 6px 0px">
-                                <option {% if sort == 'asc' %}selected="selected"{% endif %} value="asc">Newst orders first</option>
+                                <option {% if sort == 'asc' %}selected="selected"{% endif %} value="asc">Newest orders first</option>
                                 <option {% if sort == 'desc' %}selected="selected"{% endif %} value="desc">Oldest orders first</option>
                             </select>
                         </div>
@@ -53,7 +53,7 @@
                             <select name="status" class="form-control help-select" style="padding: 6px 0px">
                                 <option {% if status == 'open' %}selected="selected"{% endif %} value="open">All open orders</option>
                                 <option {% if status == 'closed' %}selected="selected"{% endif %} value="closed">Show only closed orders</option>
-                                <option {% if status == 'cancelled' %}selected="selected"{% endif %} value="cancelled">Show only cancelled orders</option>
+                                <option {% if status == 'cancelled' %}selected="selected"{% endif %} value="cancelled">Show only canceled orders</option>
                                 <option {% if status == 'any' %}selected="selected"{% endif %} value="any">Any order status</option>
                             </select>
                         </div>
@@ -134,7 +134,7 @@
                                     <div class="col-md-2 col-md-offset-2">
                                         {% if order.placed_orders == 0 %}
                                             <span class="badge badge-danger primary" style="width:15px;height:15px">&nbsp;</span>
-                                            No Ordered Placed
+                                            No Products Ordered
                                         {% elif order.placed_orders != order.lines_count %}
                                             <span class="badge badge-warning primary" style="width:15px;height:15px">&nbsp;</span>
                                             Partially Ordered
@@ -207,7 +207,7 @@
                                     <div class="line container-fluid">
                                         <div class="row source-order">
                                             <div class="col-md-3">
-                                                <span>Supllier:</span>
+                                                <span>Supplier:</span>
                                                 {% if item.product.get_supplier_info %}
                                                     <a href="{{item.product.get_supplier_info.url}}" target="_blank">
                                                         {{item.product.get_supplier_info.name|truncatechars:25}}

@@ -497,7 +497,7 @@ $('#save-metadata').click(function (e) {
             if (data.status == 'ok') {
                 toastr.success('Modification saved.','Product Metadata');
             } else {
-                swal('Product Metadata', (typeof(data.error) == 'string' ? data.error : 'Unknow Server Error'), 'error');
+                swal('Product Metadata', (typeof(data.error) == 'string' ? data.error : 'Unknown Server Error'), 'error');
             }
         },
         error: function(data) {
