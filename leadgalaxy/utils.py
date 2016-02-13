@@ -193,6 +193,29 @@ def get_shopify_product(store, product_id):
     return rep.get('product')
 
 
+def get_product_images_dict(store, product):
+    images = {}
+    product = get_shopify_product(store, product)
+    for i in product['images']:
+        for var in i['variant_ids']:
+            images[var] = i['src']
+
+    # Default image
+    images[0] = product['image'].get('src')
+
+    return images
+
+
+def link_product_images(product):
+    for i in product['images']:
+        for var in i['variant_ids']:
+            for idx, el in enumerate(product['variants']):
+                if el['id'] == var:
+                    product['variants'][idx]['image_src'] = i['src']
+
+    return product
+
+
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
     product_id = safeInt(product_id)
@@ -205,17 +228,13 @@ def get_shopify_variant_image(store, product_id, variant_id):
     except:
         pass
 
-    if variant_id:
-        variant = requests.get(store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)).json()
+    images = get_product_images_dict(store, product_id)
 
-    try:
-        image_id = variant['variant']['image_id']
-        image = requests.get(
-            store.get_link('/admin/products/{}/images/{}.json'.format(product_id, image_id), api=True)).json()
-        image = image['image']['src']
-    except:
-        product = requests.get(store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
-        image = product['product']['image']['src']
+    if variant_id and variant_id in images:
+        image = images[variant_id]
+
+    if not image:
+        image = images.get(0)  # Default image
 
     if image:
         cached = ShopifyProductImage(store=store, product=product_id, variant=variant_id, image=image)

@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function(config, product) {
+(function() {
 'use strict';
 
 var image_cache = {};
@@ -17,37 +17,39 @@ function loadVriantImages(target) {
     }
 
     target.each(function (i, el) {
-        if (!$(el).prop('image-loaded')) {
-            var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
+        setTimeout(function() {
+            if (!$(el).prop('image-loaded')) {
+                var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
 
-            if (cache_name in image_cache) {
-                $(el).attr('src', image_cache[cache_name]);
-                return;
-            }
-
-            $.ajax({
-                url: '/api/product-variant-image',
-                type: 'GET',
-                data: {
-                    store: $(el).attr('store'),
-                    product: $(el).attr('product'),
-                    variant: $(el).attr('variant'),
-                },
-                context: {img: $(el), cache_name: cache_name},
-                success: function (data) {
-                    if (data.status == 'ok') {
-                        this.img.attr('src', data.image);
-
-                        image_cache[cache_name] = data.image;
-                    }
-                },
-                error: function (data) {
-                },
-                complete: function () {
-                    this.img.prop('image-loaded', true);
+                if (cache_name in image_cache) {
+                    $(el).attr('src', image_cache[cache_name]);
+                    return;
                 }
-            });
-        }
+
+                $.ajax({
+                    url: '/api/product-variant-image',
+                    type: 'GET',
+                    data: {
+                        store: $(el).attr('store'),
+                        product: $(el).attr('product'),
+                        variant: $(el).attr('variant'),
+                    },
+                    context: {img: $(el), cache_name: cache_name},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            this.img.attr('src', data.image);
+
+                            image_cache[cache_name] = data.image;
+                        }
+                    },
+                    error: function (data) {
+                    },
+                    complete: function () {
+                        this.img.prop('image-loaded', true);
+                    }
+                });
+            }
+        }, ((i+1)*500));
     });
 }
 

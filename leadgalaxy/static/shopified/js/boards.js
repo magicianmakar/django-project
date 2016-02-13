@@ -1,7 +1,7 @@
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
 /* global boardsMenu */
 
-(function(config, product) {
+(function() {
 'use strict';
 
 var currentBoardBox = null;

@@ -79,3 +79,8 @@ class AppPermissionAdmin(admin.ModelAdmin):
 class PlanRegistrationAdmin(admin.ModelAdmin):
     list_display = ('plan', 'user', 'register_hash', 'expired', 'created_at', 'updated_at')
     list_filter = ('expired',)
+
+
+@admin.register(ShopifyProductImage)
+class ShopifyProductImageAdmin(admin.ModelAdmin):
+    list_display = ('product', 'variant', 'store')

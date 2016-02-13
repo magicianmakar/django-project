@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
 
-(function(config, product) {
+(function() {
 'use strict';
 
 function changeProductStat(product, stat, callback, erroback) {

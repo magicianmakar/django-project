@@ -1305,6 +1305,7 @@ def product_view(request, pid):
         p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, export.shopify_id)
 
         shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
+        shopify_product = utils.link_product_images(shopify_product)
 
     return render(request, 'product_view.html', {
         'product': p,
@@ -1991,9 +1992,9 @@ def orders_view(request):
 
         all_orders.append(order)
 
-    tpl = 'orders.html'
-    if request.GET.get('new'):
-        tpl = 'orders_new.html'
+    tpl = 'orders_new.html'
+    if request.GET.get('table'):
+        tpl = 'orders.html'
 
     return render(request, tpl, {
         'orders': all_orders,

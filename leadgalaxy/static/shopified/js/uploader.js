@@ -1,4 +1,4 @@
-/* global $, config, toastr, product, renderImages */
+/* global $, config, toastr, product */
 
 (function(config, product) {
 'use strict';
@@ -58,7 +58,7 @@ function upload_file(file, signed_request, url){
 
 function file_uploaded(url) {
     product.images.push(url);
-    renderImages();
+    document.renderImages();
 
     $.ajax({
         type: 'POST',
@@ -71,4 +71,6 @@ function file_uploaded(url) {
         error: function(data) {},
     });
 }
-})();
+
+document.file_uploaded = file_uploaded;
+})(config, product);

@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load template_helper %}
+{% load compress %}
 
 {% block main-container %}
 
@@ -39,8 +40,8 @@
                         </div>
                         <div class="col-md-2">
                             <select name="sort" class="form-control" style="padding: 6px 0px">
-                                <option {% if sort == 'asc' %}selected="selected"{% endif %}value="asc">Newst orders first</option>
-                                <option {% if sort == 'desc' %}selected="selected"{% endif %}value="desc">Oldest orders first</option>
+                                <option {% if sort == 'asc' %}selected="selected"{% endif %} value="asc">Newst orders first</option>
+                                <option {% if sort == 'desc' %}selected="selected"{% endif %} value="desc">Oldest orders first</option>
                             </select>
                         </div>
                     </div>
@@ -50,10 +51,10 @@
                         </div>
                         <div class="col-md-2">
                             <select name="status" class="form-control help-select" style="padding: 6px 0px">
-                                <option {% if status == 'open' %}selected="selected"{% endif %}value="open">All open orders</option>
-                                <option {% if status == 'closed' %}selected="selected"{% endif %}value="closed">Show only closed orders</option>
-                                <option {% if status == 'cancelled' %}selected="selected"{% endif %}value="cancelled">Show only cancelled orders</option>
-                                <option {% if status == 'any' %}selected="selected"{% endif %}value="any">Any order status</option>
+                                <option {% if status == 'open' %}selected="selected"{% endif %} value="open">All open orders</option>
+                                <option {% if status == 'closed' %}selected="selected"{% endif %} value="closed">Show only closed orders</option>
+                                <option {% if status == 'cancelled' %}selected="selected"{% endif %} value="cancelled">Show only cancelled orders</option>
+                                <option {% if status == 'any' %}selected="selected"{% endif %} value="any">Any order status</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
@@ -66,10 +67,10 @@
                         </div>
                         <div class="col-md-2">
                             <select name="fulfillment" class="form-control help-select" style="padding: 6px 0px">
-                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}value="unshipped" title="fff">Show orders that have not yet been shipped</option>
-                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %}value="shipped">Show orders that have been shipped</option>
-                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}value="partial">Show partially shipped orders</option>
-                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %}value="any">Show orders with any fulfillment status</option>
+                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %} value="unshipped" title="fff">Show orders that have not yet been shipped</option>
+                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %} value="shipped">Show orders that have been shipped</option>
+                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %} value="partial">Show partially shipped orders</option>
+                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %} value="any">Show orders with any fulfillment status</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
@@ -391,6 +392,8 @@
 {% endblock %}
 
 {% block extrajs %}
+{% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/orders.js' %}"></script>
+{% endcompress %}
 {% endblock %}
 

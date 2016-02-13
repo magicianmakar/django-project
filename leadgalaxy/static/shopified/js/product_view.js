@@ -568,6 +568,15 @@ $('#modal-add-image .add-var-image').click(function (e) {
     renderImages();
 });
 
+$('.shipping-tab').click(function (e) {
+    var iframe = $('#tab-3').find('iframe');
+    if (iframe.attr('src') && iframe.attr('src').length) {
+        return;
+    }
+
+    iframe.attr('src', iframe.attr('data-src'));
+});
+
 function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {
@@ -632,6 +641,8 @@ function launchEditor(id, src) {
         swal('Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
 }
+
+document.renderImages = renderImages;
 
 $(function() {
     setup_full_editor('product-description');
