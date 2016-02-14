@@ -1,3 +1,5 @@
+// 'use strict';
+/* global $, toastr, swal, CKEDITOR */
 
 function allPossibleCases(arr) {
   if (arr.length == 1) {
@@ -31,7 +33,7 @@ function cleanImageLink(link) {
 }
 
 function sendProductToShopify (product, store_id, product_id, callback, callback_data) {
-    if (!store_id || store_id.length==0) {
+    if (!store_id || store_id.length === 0) {
         alert('Please choose a Shopify store first!');
         return;
     }
@@ -54,11 +56,11 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
         for (var i=0; i<product.images.length; i++) {
             api_data.product.images.push({
                 src: product.images[i]
-            })
+            });
         }
     }
 
-    if (product.variants.length==0) {
+    if (product.variants.length === 0) {
         var vdata = {
             "price": product.price,
         };
@@ -273,8 +275,8 @@ $(function() {
             error: function (data) {
                 alert('error' in data ? data.error : 'Server error');
             }
-        })
-    };
+        });
+    }
 
     $("#new-board-add-form").submit(createBoard);
     $("#board-add-send").click(createBoard);
@@ -295,10 +297,10 @@ $(function() {
             $(el).iCheck(selectStat ? 'check' : 'uncheck');
         });
 
-        $(this).prop('select-all', !selectStat)
+        $(this).prop('select-all', !selectStat);
         $(this).text(!selectStat ? 'Select All' : 'Unselect All');
         document.body.focus();
-    })
+    });
 
     toastr.options.timeOut = 3000;
 });
