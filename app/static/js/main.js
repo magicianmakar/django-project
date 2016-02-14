@@ -122,7 +122,10 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
                 api_data.product.variants.push(vdata);
             }
         } else {
-            // alert('Variants should have more than one value separated by comma (,)');
+            var data = {
+                error: 'Variants should have more than one value separated by comma (,)'
+            };
+
             callback(product, data, callback_data, false);
             return;
         }
