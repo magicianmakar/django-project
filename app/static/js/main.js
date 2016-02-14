@@ -302,5 +302,7 @@ $(function() {
         document.body.focus();
     });
 
+    $('.unveil').unveil();
+
     toastr.options.timeOut = 3000;
 });
