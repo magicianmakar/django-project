@@ -1291,13 +1291,7 @@ def product_view(request, pid):
             except:
                 pass
 
-    try:
-        if 'aliexpress' in p['product'].get('original_url', '').lower():
-            p['source'] = 'AliExpress'
-        elif 'alibaba' in p['product'].get('original_url', '').lower():
-            p['source'] = 'AliBaba'
-    except:
-        pass
+    p['source'] = product.get_original_info()
 
     original = None
     try:

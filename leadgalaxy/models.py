@@ -203,19 +203,17 @@ class ShopifyProduct(models.Model):
         return json.loads(self.data)['images']
 
     def get_original_info(self):
+        from urlparse import urlparse
+
         data = json.loads(self.data)
 
         url = data.get('original_url')
-        source = ''
-
         if url:
-            if 'aliexpress' in url.lower():
-                source = 'AliExpress'
-            elif 'alibaba' in url.lower():
-                source = 'AliBaba'
+            parsed_uri = urlparse(url)
+            domain = parsed_uri.netloc.split('.')[-2]
 
             return {
-                'source': source,
+                'source': domain.title(),
                 'url': url
             }
 
