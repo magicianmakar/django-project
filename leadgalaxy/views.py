@@ -206,7 +206,6 @@ def api(request, target):
 
         data = req_data['data']
         original_data = req_data.get('original', '')
-        original_url = req_data.get('original_url', '')
 
         if 'access_token' in req_data:
             token = req_data['access_token']
@@ -225,6 +224,14 @@ def api(request, target):
         except:
             return JsonResponse({
                 'error': 'Selected store (%s) not found for user: %s' % (store, user.username if user else 'None')
+            })
+
+        original_url = json.loads(data).get('original_url', '')
+
+        print 'original_url', original_url
+        if 'amazon.com/' in original_url.lower() and not user.can('amazon_import.use'):
+            return JsonResponse({
+                'error': 'Importing from Amazon is not included in your current plan.'
             })
 
         endpoint = store.get_link('/admin/products.json', api=True)
@@ -654,6 +661,9 @@ def api(request, target):
 
         if not config.get('description_mode'):
             config['description_mode'] = 'empty'
+
+        if user.can('amazon_import.use'):
+            config['amazon_import'] = True
 
         return JsonResponse(config)
 
