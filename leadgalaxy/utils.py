@@ -196,6 +196,10 @@ def get_shopify_product(store, product_id):
 def get_product_images_dict(store, product):
     images = {}
     product = get_shopify_product(store, product)
+
+    if not product:
+        return images
+
     for i in product['images']:
         for var in i['variant_ids']:
             images[var] = i['src']
