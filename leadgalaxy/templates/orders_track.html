@@ -11,7 +11,7 @@
                 {% if store == item or item.id|stringformat:"i" == request.GET.store %}
                     <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}
-                    <li class=""><a href="/orders?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                    <li class=""><a href="/orders/track?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>
