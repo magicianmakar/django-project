@@ -1962,6 +1962,10 @@ def orders_view(request):
                         else:
                             shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
 
+                    phone = shipping_address_asci.get('phone')
+                    if not phone or request.user.get_config('order_default_phone') != 'customer':
+                        phone = request.user.get_config('order_phone_number')
+
                     order_data = {
                         'auto': False,  # False mean step-by-step order placing
                         'variant': el['variant_title'],
@@ -1971,7 +1975,7 @@ def orders_view(request):
                         'line_id': el['id'],
                         'store': store.id,
                         'order': {
-                            'phone': request.user.get_config('order_phone_number'),
+                            'phone': phone,
                             'note': request.user.get_config('order_custom_note'),
                             'epacket': bool(request.user.get_config('epacket_shipping')),
                         }
