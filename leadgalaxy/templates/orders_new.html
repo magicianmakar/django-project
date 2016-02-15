@@ -159,6 +159,11 @@
                                             {{order.shipping_address.province_code|default:''}}
                                             {{order.shipping_address.zip}}
 
+                                        {% if order.shipping_address.phone %}
+                                        <br> {{order.shipping_address.phone}}
+                                        {% endif %}
+
+
 
                                         <br> <b>{{order.shipping_address.country}}</b>
                                     </div>
