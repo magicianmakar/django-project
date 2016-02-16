@@ -34,7 +34,7 @@ class Command(BaseCommand):
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
             for store in stores:
-                self.handle_store(store)
+                self.handle_store(store, action)
 
         for store_id in options['store_id']:
             try:
