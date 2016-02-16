@@ -115,7 +115,7 @@
 
                     <div class="orders">
                         {% for order in orders %}
-                        <div class="order">
+                        <div class="order" order-id="{{order.id}}">
                             <div class="header">
                                 <div class="row">
                                     <div class="col-md-2">
@@ -212,7 +212,7 @@
                                     {% for item in order.line_items %}
                                     {% with image=item.image original=item.product.get_original_info %}
 
-                                    <div class="line container-fluid">
+                                    <div class="line container-fluid" line-id="{{item.id}}">
                                         <div class="row source-order">
                                             <div class="col-md-3">
                                                 <span>Supplier:</span>
@@ -224,7 +224,7 @@
                                                     N/A
                                                 {% endif %}
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 line-order-id">
                                                 Order ID:
                                                 {% if item.shopify_order %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
@@ -236,15 +236,15 @@
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
                                                 {% endif %}
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 line-ordered">
                                                 <span class="badge badge-{% if not item.shopify_order %}danger{% else %}primary{% endif %}" style="width:15px;height:15px">&nbsp;</span>
                                                 {% if item.shopify_order %}
-                                                    <span title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}">Order Placed</span>
+                                                    <span class="ordered-status" title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}">Order Placed</span>
                                                 {% else %}
-                                                    Not ordered
+                                                    <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 line-tracking">
                                                 {% if item.shopify_order %}
                                                     <span class="badge badge-{{ item.shopify_order.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
                                                     {{item.shopify_order.get_source_status|default:'No Tracking Status'}}

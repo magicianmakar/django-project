@@ -4,6 +4,7 @@
 'use strict';
 
 var image_cache = {};
+var placed_order_interval = {};
 
 $(function () {
     $(".itooltip").tooltip();
@@ -446,6 +447,42 @@ $('.hide-ordered-btn').click(function () {
     } else {
         $(this).text('Hide Ordered');
     }
+});
+
+$('.place-order-btn').click(function (e) {
+    var btn = $(this);
+    var order_id = $(this).attr('order-id');
+    var line_id = $(this).attr('line-id');
+
+    var interval = setInterval(function() {
+        $.ajax({
+            url: '/api/order-fulfill',
+            type: 'GET',
+            data: {
+                order_id: order_id,
+                line_id: line_id
+            },
+            context: {
+                btn: btn,
+                order_id: order_id,
+                line_id: line_id,
+            },
+            success: function (data) {
+                if (data.length) {
+                    this.btn.parents('.order').find('.line-order-id').text('Order ID: #'+data[0].source_id);
+                    this.btn.parents('.order').find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
+                    this.btn.parents('.order').find('.line-ordered .ordered-status').text('Order Placed');
+                    this.btn.parents('.order').find('.line-tracking').empty();
+
+                    clearInterval(placed_order_interval[this.order_id+'|'+this.line_id]);
+                }
+            },
+            error: function (data) {},
+            complete: function () {}
+        });
+    }, 1500);
+
+    placed_order_interval[order_id+'|'+line_id] = interval;
 });
 
 $(function () {

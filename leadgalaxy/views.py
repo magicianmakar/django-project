@@ -775,9 +775,18 @@ def api(request, target):
         from django.core import serializers
 
         orders = []
-        data = serializers.serialize('python',
-                                     ShopifyOrder.objects.filter(user=user, hidden=False).order_by('updated_at'),
-                                     fields=('id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking',))
+        shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False).order_by('updated_at')
+
+        if data.get('order_id'):
+            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'))
+
+        if data.get('line_id'):
+            shopify_orders = shopify_orders.filter(line_id=data.get('line_id'))
+
+        data = serializers.serialize('python', shopify_orders,
+                                     fields=('id', 'order_id', 'line_id',
+                                             'source_id', 'source_status',
+                                             'source_tracking'))
         for i in data:
             fields = i['fields']
             fields['id'] = i['pk']
