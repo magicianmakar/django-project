@@ -286,7 +286,7 @@ def add_shopify_order_note(store, order_id, new_note):
     note = get_shopify_order_note(store, order_id)
 
     if note:
-        note = '{}\n{}'.format(note, new_note)
+        note = '{}\n{}'.format(note.encode('utf-8'), new_note)
     else:
         note = new_note
 
