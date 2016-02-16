@@ -24,6 +24,9 @@
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
                             <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
                         </div>
+                        <div class="col-md-2 col-md-offset-6 text-right">
+                            <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
+                        </div>
                     </div>
                     <form method="get" action="/orders" class="filter-form m-t-sm" style="display:none;">
                     <div class="row">
@@ -139,7 +142,7 @@
                                             <span class="badge badge-warning primary" style="width:15px;height:15px">&nbsp;</span>
                                             Partially Ordered
                                         {% else %}
-                                            <span class="badge badge-primary" style="width:15px;height:15px">&nbsp;</span>
+                                            <span class="badge badge-primary completed-order" style="width:15px;height:15px">&nbsp;</span>
                                             Order Complete
                                         {% endif %}
                                     </div>

@@ -433,6 +433,18 @@ function findMarkedLines() {
     $(".itooltip").tooltip();
 }
 
+$('.hide-ordered-btn').click(function () {
+    $('.completed-order').parents('.order').toggle('slide');
+
+    $(this).toggleClass('hidded');
+
+    if ($(this).hasClass('hidded')) {
+        $(this).text('Show Ordered');
+    } else {
+        $(this).text('Hide Ordered');
+    }
+});
+
 $(function () {
     $('.help-select').each(function (i, el) {
         $('option', el).each(function (index, option) {
