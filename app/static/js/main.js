@@ -305,4 +305,8 @@ $(function() {
     $('.unveil').unveil();
 
     toastr.options.timeOut = 3000;
+
+    Pace.options = {
+      ajax: false
+    }
 });
