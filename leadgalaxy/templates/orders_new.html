@@ -260,8 +260,9 @@
                                                         <th style="width:64px"></th>
                                                         <th style="width:30%;text-align:center">Item</th>
                                                         <th>Variant</th>
-                                                        <th>Qty</th>
-                                                        <th></th>
+                                                        <th style="width:30px">Qty</th>
+                                                        <th style="width:64px"></th>
+                                                        <th style="width:64px"></th>
                                                         <th>Tracking #</th>
                                                     </tr>
                                                 </thead>
@@ -295,6 +296,22 @@
                                                         </td>
                                                         <td>
                                                             {% include 'partial/place_order_btn.html' %}
+                                                        </td>
+                                                        <td>
+                                                            {% if not item.fulfillment_status %}
+
+                                                                <div class="btn-group">
+                                                                    <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                                                        Unfulfilled
+                                                                        <span class="caret"></span></button>
+
+                                                                        <ul class="dropdown-menu">
+                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}">Fulfill in Shopify</a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                            {% else %}
+                                                                <span class="label label-success">{{item.fulfillment_status|title}}</span>
+                                                            {% endif %}
                                                         </td>
                                                         <td>
                                                             {% if item.shopify_order %}
