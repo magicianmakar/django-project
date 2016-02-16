@@ -154,7 +154,8 @@ $('.placed-order-details').click(function (e) {
     var line_id = $(this).attr('line-id');
     var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
     var html = '<ul>';
-    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" href="http://trade.aliexpress.com/order_detail.htm?orderId='+source_id+'">'+source_id+'</a></li>';
+    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" '+
+            'href="http://trade.aliexpress.com/order_detail.htm?orderId='+source_id+'">'+source_id+'</a></li>';
     html += '<li style="list-style:none">Order date: '+$(this).attr('order-date')+'</li>';
     html += '</ul';
 
@@ -424,7 +425,9 @@ function findMarkedLines() {
     $('.var-info table tr[class="success"]').each(function (i, tr) {
         var orderTR = $(tr).parents('tr').prev();
         orderTR.find('.fulfillment-status').append(
-            $('<button class="btn btn-info btn-circle btn-xs itooltip no-outline status-orderd-btn" type="button" title="Order with lines marked as Ordered"><i class="fa fa-check"></i></button>').click(function (e) {
+            $('<button class="btn btn-info btn-circle btn-xs itooltip no-outline status-orderd-btn" '+
+                'type="button" title="Order with lines marked as Ordered"><i class="fa fa-check"></i></button>'
+                ).click(function (e) {
                 $(this).parents('tr').find('.more-info').trigger('click');
             })
         );
