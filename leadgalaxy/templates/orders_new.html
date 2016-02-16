@@ -317,8 +317,10 @@
                                                             {% endif %}
                                                         </td>
                                                         <td>
-                                                            {% if item.shopify_order %}
-                                                            {{item.shopify_order.source_tracking}}
+                                                            {% if item.shopify_order and item.shopify_order.source_tracking %}
+                                                            <a href="https://track.aftership.com/{{item.shopify_order.source_tracking}}" target="_blank">
+                                                                {{item.shopify_order.source_tracking}}
+                                                            </a>
                                                             {% endif %}
                                                         </td>
                                                     </tr>

@@ -54,7 +54,16 @@
                             </td>
                             <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
                             <td>{{item.get_source_status|default:'N/A'}}</td>
-                            <td>{{item.source_tracking|default:'N/A'}}</td>
+                            <td>
+                                {% if item.source_tracking %}
+                                N/A
+                                {% else %}
+                                <a href="https://track.aftership.com/{{item.source_tracking}}" target="_blank">
+                                    {{item.source_tracking}}
+                                </a>
+                                {% endif %}
+                            </td>
+
                             <td>{{item.created_at|date:'DATETIME_FORMAT'}}</td>
                             <td>{{item.updated_at|date:'DATETIME_FORMAT'}}</td>
                             <td>
