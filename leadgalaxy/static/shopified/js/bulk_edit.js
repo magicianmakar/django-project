@@ -102,17 +102,6 @@ $('#shopify-send-btn').click(function(e) {
                         $('#modal-shopify-send .progress-bar-success').css('width', ((total_sent_success * 100.0) / products.length) + '%');
                         $('#modal-shopify-send .progress-bar-danger').css('width', ((total_sent_error * 100.0) / products.length) + '%');
 
-                        /*
-                        var btn = callback_data.element.find('.sent-btn');
-                        changeProductStat(callback_data.product, 1, function(data) {
-                            if (data.status == 'ok') {
-                                btn.show();
-                            }
-                        }, function(data) {
-                            console.log("Set as sent error", "Server side error");
-                        });
-                        */
-
                         if ((total_sent_success + total_sent_error) == products.length) {
                             $('#modal-shopify-send').modal('hide');
                         }

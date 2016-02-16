@@ -6,54 +6,6 @@
 
 var currentBoardBox = null;
 
-function changeProductStat(product, stat, callback, erroback) {
-    $.ajax({
-        url: '/api/product-stat',
-        type: 'POST',
-        data: {
-            product: product,
-            sent: stat
-        },
-        success: function(data) {
-            callback(data);
-        },
-        error: function(data) {
-            erroback(data);
-        }
-    });
-}
-
-$('.sent-btn')
-    .mouseenter(function() {
-        $('span', this).text("Unsent");
-        $(this).toggleClass('btn-success');
-        $(this).toggleClass('btn-warning');
-    })
-    .mouseleave(function() {
-        $('span', this).text("Sent");
-        $(this).toggleClass('btn-warning');
-        $(this).toggleClass('btn-success');
-    })
-    .click(function(e) {
-        var btn = $(this);
-        btn.button('loading');
-
-
-        changeProductStat(btn.attr('product-id'), 0,
-            function(data) {
-                if ('error' in data) {
-                    alert(data.error);
-                    btn.button('reset');
-                } else {
-                    btn.hide();
-                }
-            },
-            function(data) {
-                btn.button('reset');
-                alert('Server side error');
-            });
-    });
-
 function deletFromBoard(board_id, products, products_el) {
     $.ajax({
         url: '/api/product-remove-board',
@@ -121,29 +73,7 @@ $('.apply-btn').click(function(e) {
     boardBox.find('input[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             var product = $(el).parents('.product-box').attr('product-id');
-            if (action == 'unsent') {
-                var btn = $(el).parents('.product-box').find('.sent-btn');
-                btn.button('loading');
-
-                changeProductStat(product, 0, function(data) {
-                    if (data.status == 'ok') {
-                        btn.hide();
-                    }
-                }, function(data) {
-                    btn.button('reset');
-                    alert('Server side error');
-                });
-            } else if (action == 'sent') {
-                var btn = $(el).parents('.product-box').find('.sent-btn');
-
-                changeProductStat(product, 1, function(data) {
-                    if (data.status == 'ok') {
-                        btn.show();
-                    }
-                }, function(data) {
-                    alert('Server side error');
-                });
-            } else if (action == 'delete') {
+            if (action == 'delete') {
                 $.ajax({
                     url: '/api/product-delete',
                     type: 'POST',
@@ -377,15 +307,6 @@ $('#shopify-send-btn').click(function(e) {
                         $('#modal-shopify-send .progress-bar-danger').css('width', ((total_sent_error * 100.0) / products.length) + '%');
 
                         callback_data.element.find('input[type=checkbox]').iCheck('uncheck');
-
-                        var btn = callback_data.element.find('.sent-btn');
-                        changeProductStat(callback_data.product, 1, function(data) {
-                            if (data.status == 'ok') {
-                                btn.show();
-                            }
-                        }, function(data) {
-                            console.log("Set as sent error", "Server side error");
-                        });
 
                         if ((total_sent_success + total_sent_error) == products.length) {
                             $('#modal-shopify-send').modal('hide');
