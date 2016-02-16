@@ -307,6 +307,7 @@ $(function() {
     toastr.options.timeOut = 3000;
 
     Pace.options = {
-      ajax: false
-    }
+      ajax: false,
+      restartOnRequestAfter: false
+    };
 });
