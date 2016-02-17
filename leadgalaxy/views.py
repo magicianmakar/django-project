@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
+from django.utils import timezone
 
 from unidecode import unidecode
 
@@ -775,7 +776,7 @@ def api(request, target):
         from django.core import serializers
 
         orders = []
-        shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False).order_by('updated_at')
+        shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False).order_by('updated_at')[:20]
 
         if data.get('order_id'):
             shopify_orders = shopify_orders.filter(order_id=data.get('order_id'))
@@ -791,6 +792,8 @@ def api(request, target):
             fields = i['fields']
             fields['id'] = i['pk']
             orders.append(fields)
+
+        ShopifyOrder.objects.filter(id__in=[i['id'] for i in orders]).update(check_count=F('check_count')+1)
 
         return JsonResponse(orders, safe=False)
 
@@ -845,6 +848,7 @@ def api(request, target):
         order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
         order.source_status = data.get('status')
         order.source_tracking = data.get('tracking_number')
+        order.status_updated_at = timezone.now()
 
         try:
             order_data = json.loads(order.data)
@@ -2064,7 +2068,7 @@ def orders_track(request):
                                          store=store,
                                          hidden=(request.GET.get('hidden', False)))
 
-    orders = orders.order_by('-updated_at')
+    orders = orders.order_by('-status_updated_at')
 
     paginator = Paginator(orders, post_per_page)
     page = min(max(1, page), paginator.num_pages)

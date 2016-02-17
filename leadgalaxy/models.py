@@ -290,10 +290,12 @@ class ShopifyOrder(models.Model):
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
     hidden = models.BooleanField(default=False)
+    check_count = models.IntegerField(default=0)
     data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
 
     def encoded(self):
         return json.dumps(self.data).encode('base64')
