@@ -480,7 +480,7 @@ $('.place-order-btn').click(function (e) {
             error: function (data) {},
             complete: function () {}
         });
-    }, 1500);
+    }, 10000);
 
     placed_order_interval[order_id+'|'+line_id] = interval;
 });
