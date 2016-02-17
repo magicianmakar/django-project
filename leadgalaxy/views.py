@@ -796,7 +796,8 @@ def api(request, target):
             fields['id'] = i['pk']
             orders.append(fields)
 
-        ShopifyOrder.objects.filter(id__in=[i['id'] for i in orders]).update(check_count=F('check_count')+1)
+        if not data.get('order_id') and not data.get('line_id'):
+            ShopifyOrder.objects.filter(id__in=[i['id'] for i in orders]).update(check_count=F('check_count')+1)
 
         return JsonResponse(orders, safe=False)
 
