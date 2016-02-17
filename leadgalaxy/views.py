@@ -787,11 +787,11 @@ def api(request, target):
         if data.get('line_id'):
             shopify_orders = shopify_orders.filter(line_id=data.get('line_id'))
 
-        data = serializers.serialize('python', shopify_orders,
+        shopify_orders = serializers.serialize('python', shopify_orders,
                                      fields=('id', 'order_id', 'line_id',
                                              'source_id', 'source_status',
                                              'source_tracking'))
-        for i in data:
+        for i in shopify_orders:
             fields = i['fields']
             fields['id'] = i['pk']
             orders.append(fields)
