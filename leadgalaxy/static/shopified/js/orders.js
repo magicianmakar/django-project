@@ -455,17 +455,20 @@ $('.place-order-btn').click(function (e) {
     var line_id = $(this).attr('line-id');
 
     var interval = setInterval(function() {
+        var interval_id = placed_order_interval[order_id+'|'+line_id];
         $.ajax({
             url: '/api/order-fulfill',
             type: 'GET',
             data: {
                 order_id: order_id,
-                line_id: line_id
+                line_id: line_id,
+                count: interval_id.count
             },
             context: {
                 btn: btn,
                 order_id: order_id,
                 line_id: line_id,
+                interval_id: interval_id,
             },
             success: function (data) {
                 if (data.length) {
@@ -474,15 +477,28 @@ $('.place-order-btn').click(function (e) {
                     this.btn.parents('.order').find('.line-ordered .ordered-status').text('Order Placed');
                     this.btn.parents('.order').find('.line-tracking').empty();
 
-                    clearInterval(placed_order_interval[this.order_id+'|'+this.line_id]);
+                    clearInterval(this.interval_id.interval);
+                }
+
+                if  (this.interval_id.count > 30) {
+                    clearInterval(this.interval_id.interval);
+                } else {
+                    this.interval_id.count += 1;
                 }
             },
-            error: function (data) {},
-            complete: function () {}
+            error: function (data) {
+                clearInterval(this.interval_id.interval);
+            },
+            complete: function () {
+                placed_order_interval[this.order_id+'|'+this.line_id] = this.interval_id;
+            }
         });
-    }, 10000);
+    }, 10*1000);
 
-    placed_order_interval[order_id+'|'+line_id] = interval;
+    placed_order_interval[order_id + '|' + line_id] = {
+        interval: interval,
+        count: 1
+    };
 });
 
 $(function () {
