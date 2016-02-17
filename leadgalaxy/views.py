@@ -772,6 +772,9 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'GET' and target == 'order-fulfill':
+        if data.get('order_id') and data.get('line_id'):
+            return HttpResponse('ERROR')
+
         # Get Orders marked as Ordered
         from django.core import serializers
 
