@@ -3,6 +3,8 @@
 {% load static %}
 {% load template_helper %}
 
+{% block title %}Alerts{% endblock %}
+
 {% block main-container %}
 
 <div class="row">
@@ -10,11 +12,11 @@
          <div class="tabs-container">
             <ul class="nav nav-tabs">
                 {% if not show_hidden %}
-                <li class="active"><a data-toggle="tab" href="#tab-1"> New Changes</a></li>
-                <li class=""><a href="{% url 'products_update' %}?hidden=1"> Hidden Changes</a></li>
+                <li class="active"><a data-toggle="tab" href="#tab-1"> New Alerts</a></li>
+                <li class=""><a href="{% url 'products_update' %}?hidden=1"> Archived</a></li>
                 {% else %}
-                <li class=""><a href="{% url 'products_update' %}"> New Changes</a></li>
-                <li class="active"><a data-toggle="tab" href="#tab-1"> Hidden Changes</a></li>
+                <li class=""><a href="{% url 'products_update' %}"> New Alerts</a></li>
+                <li class="active"><a data-toggle="tab" href="#tab-1"> Archived</a></li>
                 {% endif %}
             </ul>
             <div class="tab-content">
@@ -126,7 +128,7 @@
                                 {% empty %}
                                     <tr>
                                         <td class="text-center" colspan="4">
-                                            <i>No changes to display</i>
+                                            <i>No alerts to display at this time</i>
                                         </td>
                                     </tr>
                                 {% endfor %}

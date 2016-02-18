@@ -2132,7 +2132,7 @@ def products_update(request):
         'product_changes': product_changes,
         'show_hidden': show_hidden,
         'page': 'products_update',
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Prices &amp; Availability']
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
     })
 
 
