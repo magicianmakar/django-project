@@ -1349,7 +1349,9 @@ def product_view(request, pid):
         p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, export.shopify_id)
 
         shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
-        shopify_product = utils.link_product_images(shopify_product)
+
+        if shopify_product:
+            shopify_product = utils.link_product_images(shopify_product)
 
     return render(request, 'product_view.html', {
         'product': p,
