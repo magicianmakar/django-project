@@ -2117,7 +2117,6 @@ def products_update(request):
         change = {'qelem': i}
         change['data'] = json.loads(i.data)
         change['changes'] = utils.product_changes_remap(change['data'])
-        utils.object_dump(change['changes'])
 
         product_changes.append(change)
 
