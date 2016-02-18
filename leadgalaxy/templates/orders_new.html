@@ -238,8 +238,12 @@
                                             </div>
                                             <div class="col-md-3 line-ordered">
                                                 <span class="badge badge-{% if not item.shopify_order %}danger{% else %}primary{% endif %}" style="width:15px;height:15px">&nbsp;</span>
-                                                {% if item.shopify_order %}
-                                                    <span class="ordered-status" title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}">Order Placed</span>
+                                                {% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}
+                                                    <span class="ordered-status"
+                                                    {% if item.shopify_order.source_id %}
+                                                        title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}"
+                                                    {% endif %}
+                                                        >Order Placed</span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
