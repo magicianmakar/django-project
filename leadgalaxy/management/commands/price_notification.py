@@ -72,6 +72,10 @@ class Command(BaseCommand):
         print 'product {} Action {}'.format(product.id, action)
         data = json.loads(product.data)
         try:
+            if product.price_notification_id:
+                self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.' % products.count()))
+                return
+
             origin = product.get_original_info()
             if not origin or 'aliexpress.com' not in origin.get('url').lower():
                 self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.' % products.count()))
