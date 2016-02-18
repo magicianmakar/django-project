@@ -803,7 +803,8 @@ def api(request, target):
             orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):
-            ShopifyOrder.objects.filter(id__in=[i['id'] for i in orders]).update(check_count=F('check_count')+1)
+            ShopifyOrder.objects.filter(user=user, id__in=[i['id'] for i in orders]) \
+                                .update(check_count=F('check_count')+1, updated_at=timezone.now())
 
         return JsonResponse(orders, safe=False)
 
