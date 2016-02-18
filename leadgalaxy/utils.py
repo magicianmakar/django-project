@@ -213,7 +213,7 @@ def get_product_images_dict(store, product):
 
 
 def link_product_images(product):
-    for i in product['images']:
+    for i in product.get('images', []):
         for var in i['variant_ids']:
             for idx, el in enumerate(product['variants']):
                 if el['id'] == var:
