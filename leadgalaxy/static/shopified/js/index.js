@@ -166,6 +166,7 @@ $('.edit-store').click(function (e) {
 $('#update-store').click(function (e) {
     e.preventDefault();
 
+    var btn = $(this);
     var store = $('#store-name').attr('store-id');
     var name = $('#store-name').val();
     var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
@@ -177,13 +178,16 @@ $('#update-store').click(function (e) {
         url = 'https://' + url[0];
     }
 
+    btn.button('loading');
+
     $.ajax({
         url: '/api/update-store',
         type: 'POST',
         data: {
             store: store,
             title: name,
-            url: url
+            url: url,
+            btn: btn
         },
         context: {},
         success: function (data) {
@@ -198,6 +202,7 @@ $('#update-store').click(function (e) {
             displayAjaxError('Store update', data);
         },
         complete: function () {
+            this.btn.button('reset');
         }
     });
 });
