@@ -772,6 +772,9 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'GET' and target == 'order-fulfill':
+        if int(data.get('count', 0)) >= 30:
+            raise Http404('Not found')
+
         # Get Orders marked as Ordered
         from django.core import serializers
 
