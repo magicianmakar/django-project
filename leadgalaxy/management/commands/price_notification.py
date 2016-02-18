@@ -108,7 +108,7 @@ class Command(BaseCommand):
         store_id: Source Store ID (ex. Aliexpress Store ID)
         """
 
-        webhook_url = '{}/?product={}'.format(SHOPIFIEDAPP_WEBHOOK_BASE, product.id)
+        webhook_url = '{}?product={}'.format(SHOPIFIEDAPP_WEBHOOK_BASE, product.id)
         notification_api_url = '{}/product/add'.format(ALI_WEB_API_BASE)
 
         try:
