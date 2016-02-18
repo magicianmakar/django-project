@@ -263,8 +263,11 @@ def api(request, target):
             except:
                 traceback.print_exc()
                 print '-----'
-                print r.text
-                print '-----'
+                try:
+                    print r.text
+                    print '-----'
+                except:
+                    pass
 
                 try:
                     d = r.json()
