@@ -439,7 +439,7 @@ def product_change_notify(user):
     email_html = template.render(ctx)
     email_html = email_html.replace('\n', '<br />')
 
-    send_mail(subject='Aliexpress Product change',
+    send_mail(subject='[Shopified App] AliExpress Product Alert',
               recipient_list=[data['email']],
               from_email='chase@rankengine.com',
               message=email_html,
