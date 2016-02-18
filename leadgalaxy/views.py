@@ -1030,7 +1030,7 @@ def webhook(request, provider, option):
                             repr(request.POST.urlencode()),
                             '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
-    if provider == 'shopify' and request.method == 'POST':
+    elif provider == 'shopify' and request.method == 'POST':
         try:
             # Shopify send a JSON POST request
             shopify_product = json.loads(request.body)
@@ -1146,10 +1146,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         }
 
         try:
-            if 'aliexpress' in p['product'].get('original_url', '').lower():
-                p['source'] = 'AliExpress'
-            elif 'alibaba' in p['product'].get('original_url', '').lower():
-                p['source'] = 'AliBaba'
+            p['source'] = i.get_original_info(url=p['product']['original_url'])['source']
         except:
             pass
 
