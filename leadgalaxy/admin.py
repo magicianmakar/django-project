@@ -86,3 +86,8 @@ class PlanRegistrationAdmin(admin.ModelAdmin):
 @admin.register(ShopifyProductImage)
 class ShopifyProductImageAdmin(admin.ModelAdmin):
     list_display = ('product', 'variant', 'store')
+
+
+@admin.register(AliexpressProductChange)
+class AliexpressProductChangeAdmin(admin.ModelAdmin):
+    list_display = ('product', 'user', 'hidden', 'created_at', 'updated_at')

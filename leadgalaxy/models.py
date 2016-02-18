@@ -195,6 +195,18 @@ class ShopifyProduct(models.Model):
         else:
             return None
 
+    def get_source_id(self):
+        """
+        Return product source id (ex. Aliexpress Product ID)
+        """
+
+        try:
+            original_url = self.get_original_info()['url']
+            original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
+            return original_id
+        except:
+            return None
+
     def get_product(self):
         try:
             return json.loads(self.data)['title']
@@ -204,12 +216,13 @@ class ShopifyProduct(models.Model):
     def get_images(self):
         return json.loads(self.data)['images']
 
-    def get_original_info(self):
+    def get_original_info(self, url=None):
         from urlparse import urlparse
 
-        data = json.loads(self.data)
+        if not url:
+            data = json.loads(self.data)
+            url = data.get('original_url')
 
-        url = data.get('original_url')
         if url:
             parsed_uri = urlparse(url)
             domain = parsed_uri.netloc.split('.')[-2]
@@ -443,3 +456,19 @@ class PlanRegistration(models.Model):
 
     def __str__(self):
         return '{} | {}'.format(self.plan.title, self.register_hash)
+
+
+class AliexpressProductChange(models.Model):
+    class Meta:
+        ordering = ['-updated_at']
+
+    user = models.ForeignKey(User, null=True)
+    product = models.ForeignKey(ShopifyProduct)
+    hidden = models.BooleanField(default=False)
+    data = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        return self.product.get_product()

@@ -1,9 +1,11 @@
+import os
 import json
 import requests
 import uuid
 import md5
 
 from django.core.mail import send_mail
+from django.template import Context, Template
 from leadgalaxy.models import *
 
 from app import settings
@@ -416,6 +418,101 @@ def get_tracking_orders(store, tracker_orders):
         new_tracker_orders.append(tracked)
 
     return new_tracker_orders
+
+
+def product_change_notify(user):
+
+    if user.get_config('product_change_notify', False):
+        # We already sent the user a notification for a product change
+        return
+
+    template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'product_change_notify.html')
+    template = Template(open(template_file).read())
+
+    data = {
+        'username': user.username,
+        'email': user.email,
+    }
+
+    ctx = Context(data)
+
+    email_html = template.render(ctx)
+    email_html = email_html.replace('\n', '<br />')
+
+    send_mail(subject='Aliexpress Product change',
+              recipient_list=[data['email']],
+              from_email='chase@rankengine.com',
+              message=email_html,
+              html_message=email_html)
+
+    user.set_config('product_change_notify', True)
+
+
+def get_variant_name(variant):
+    options = re.findall('#([^;:]+)', variant['variant_desc'])
+    if len(options):
+        return ' / '.join([i.title() for i in options])
+    else:
+        return i['variant_id']
+
+
+def product_changes_remap(changes):
+
+    remapped = {
+        'product': {
+            'offline': [],
+        },
+        'variants': {
+            'quantity': [],
+            'price': [],
+            'new': [],
+            'removed': [],
+        }
+    }
+
+    for i in changes['changes']['product']:
+        remapped['product']['offline'].append({
+            'category': i['category'],
+            'new_value': i['new_value'],
+            'old_value': i['old_value'],
+        })
+
+    for i in changes['changes']['variants']:
+        for change in i['changes']:
+            if change['category'] == 'Availability':
+                remapped['variants']['quantity'].append({
+                    'category': change['category'],
+                    'new_value': change['new_value'],
+                    'old_value': change['old_value'],
+                    'variant_desc': get_variant_name(i),
+                    'variant_id': i['variant_id'],
+                })
+            if change['category'] == 'Price':
+                remapped['variants']['price'].append({
+                    'category': change['category'],
+                    'new_value': change['new_value'],
+                    'old_value': change['old_value'],
+                    'variant_desc': get_variant_name(i),
+                    'variant_id': i['variant_id'],
+                })
+            if change['category'] == 'new':
+                remapped['variants']['new'].append({
+                    'category': change['category'],
+                    'price': change['price'],
+                    'quantity': change['quantity'],
+                    'variant_desc': get_variant_name(i),
+                    'variant_id': i['variant_id'],
+                })
+            if change['category'] == 'removed':
+                remapped['variants']['removed'].append({
+                    'category': change['category'],
+                    'price': change['price'],
+                    'quantity': change['quantity'],
+                    'variant_desc': get_variant_name(i),
+                    'variant_id': i['variant_id'],
+                })
+
+    return remapped
 
 
 def object_dump(obj, desc=None):

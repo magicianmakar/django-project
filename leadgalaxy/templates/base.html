@@ -89,6 +89,15 @@
                 <li {% if page == 'bulk' %}class="active"{% endif %}><a href="{% url 'bulk_edit' %}"> <i class="fa fa-table"></i> <span class="nav-label">Bulk edit</span></a> </li>
                 {% endif %}
 
+                {% if request.user|can:'price_changes.use' %}
+                <li {% if page == 'products_update' %}class="active"{% endif %}>
+                    <a href="{% url 'products_update' %}">
+                        <i class="fa fa-line-chart"></i>
+                        <span class="nav-label">Prices Change</span>
+                    </a>
+                </li>
+                {% endif %}
+
                 {% if request.user|can:'orders.view' %}
                 <li {% if page == 'orders' or page == 'orders_track' %}class="active"{% endif %}>
                     <a href="#">

@@ -1096,6 +1096,16 @@ def webhook(request, provider, option):
             print 'WEBHOOK: exception:'
             traceback.print_exc()
             return JsonResponse({'status': 'ok'})
+    elif provider == 'price-notification' and request.method == 'product':
+        product_id = request.GET['product']
+        product = ShopifyProduct.objects.get(id=product_id)
+
+        product_change = AliexpressProductChange(product=product, user=product.user, data=request.body)
+        product_change.save()
+
+        utils.product_change_notify(product.user)
+
+        return JsonResponse({'status': 'ok'})
 
     else:
         return JsonResponse({'status': 'ok'})
@@ -2095,6 +2105,35 @@ def orders_track(request):
         'current_page': page,
         'page': 'orders_track',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
+    })
+
+
+@login_required
+def products_update(request):
+    if not request.user.profile.can('price_changes.use'):
+        return render(request, 'upgrade.html')
+
+    show_hidden = request.GET.get('hidden', False)
+    product_changes = []
+    changes = AliexpressProductChange.objects.filter(user=request.user, hidden=show_hidden).order_by('-updated_at')
+    for i in changes:
+        change = {'qelem': i}
+        change['data'] = json.loads(i.data)
+        change['changes'] = utils.product_changes_remap(change['data'])
+        utils.object_dump(change['changes'])
+
+        product_changes.append(change)
+
+    if not show_hidden:
+        changes.update(hidden=True)
+        # Allow sending notification for new changes
+        request.user.set_config('product_change_notify', False)
+
+    return render(request, 'products_update.html', {
+        'product_changes': product_changes,
+        'show_hidden': show_hidden,
+        'page': 'products_update',
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Prices &amp; Availability']
     })
 
 
