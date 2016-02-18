@@ -18,6 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('action', nargs=1, type=str,
                             choices=['attach', 'detach'], help='Action')
 
+        parser.add_argument('--new', dest='new_products', action='store_true', help='Only New Products')
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
         parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
 
@@ -40,6 +41,9 @@ class Command(BaseCommand):
                 '{} webhooks for plan: {}'.format(action.title(), plan.title)))
 
             products = ShopifyProduct.objects.filter(user__profile__plan=plan)
+            if options['new_products']:
+                products = products.filter(price_notification_id=0)
+
             self.stdout.write(self.style.HTTP_INFO('Products count: %d' % products.count()))
             count = 0
             for product in products:
