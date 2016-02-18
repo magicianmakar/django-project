@@ -5,8 +5,12 @@
 
 $('.add-store-btn').click(function (e) {
     e.preventDefault();
+
     $('#add-store').show();
     $('#update-store').hide();
+
+    $('#store-name').val('');
+    $('#store-url').val('');
 
     $('#modal-form').modal('show');
 });
