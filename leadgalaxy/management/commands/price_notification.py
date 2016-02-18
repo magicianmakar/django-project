@@ -68,43 +68,36 @@ class Command(BaseCommand):
                 self.handle_product(product, action)
 
     def handle_product(self, product, action):
-        # if action == 'attach':
-        #     webhooks = utils.attach_webhooks(store)
-        # else:
-        #     webhooks = utils.detach_webhooks(store, True)
+        # print 'product {} Action {}'.format(product.id, action)
 
-        print 'product {} Action {}'.format(product.id, action)
         data = json.loads(product.data)
         try:
             if product.price_notification_id:
-                self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.' % products.count()))
+                self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.'))
                 return
 
             origin = product.get_original_info()
             if not origin or 'aliexpress.com' not in origin.get('url').lower():
-                self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.' % products.count()))
+                self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.'))
                 return
 
-            store = data.get('store')
-            store_id = store.get('url')
-            store_id = int(re.findall('/([0-9]+)', store_id)[0])
+            try:
+                store = data.get('store')
+                store_id = store.get('url')
+                store_id = int(re.findall('/([0-9]+)', store_id)[0])
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Store ID'.format(product.id)))
+                return
 
             product_id = product.get_source_id()
             if not product_id:
                 self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Product ID'.format(product.id)))
                 return
-        except:
-            self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Store ID'.format(product.id)))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(' * Excpetion: {} - Product: {}'.format(repr(e), product.id)))
             return
 
         self.attach_product(product, product_id, store_id)
-
-        # if action != 'attach':
-        #     self.stdout.write(self.style.MIGRATE_SUCCESS('    * {}'.format(store.title)))
-        # elif len(webhooks) == 2:
-        #     self.stdout.write(self.style.MIGRATE_SUCCESS('    * {}: {}'.format(store.title, len(webhooks))))
-        # else:
-        #     self.stdout.write(self.style.ERROR('    * {}: {}'.format(store.title, len(webhooks))))
 
     def attach_product(self, product, product_id, store_id):
         """
@@ -139,5 +132,4 @@ class Command(BaseCommand):
             product.save()
         except Exception as e:
             self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(product.id, repr(e), rep.text)))
-            open('/home/naruto/Desktop/err.html','w').write(rep.text)
             return
