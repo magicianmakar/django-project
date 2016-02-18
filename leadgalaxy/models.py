@@ -471,4 +471,4 @@ class AliexpressProductChange(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.product.get_product()
+        return '{}'.format(self.id)
