@@ -1099,7 +1099,7 @@ def webhook(request, provider, option):
             print 'WEBHOOK: exception:'
             traceback.print_exc()
             return JsonResponse({'status': 'ok'})
-    elif provider == 'price-notification' and request.method == 'product':
+    elif provider == 'price-notification' and request.method == 'POST':
         product_id = request.GET['product']
         product = ShopifyProduct.objects.get(id=product_id)
 
