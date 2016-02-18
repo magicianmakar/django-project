@@ -456,6 +456,11 @@ $('.place-order-btn').click(function (e) {
 
     var interval = setInterval(function() {
         var interval_id = placed_order_interval[order_id+'|'+line_id];
+        if (interval_id.count >= 30) {
+            clearInterval(interval_id.interval);
+            return;
+        }
+
         $.ajax({
             url: '/api/order-fulfill',
             type: 'GET',
@@ -472,15 +477,16 @@ $('.place-order-btn').click(function (e) {
             },
             success: function (data) {
                 if (data.length) {
-                    this.btn.parents('.order').find('.line-order-id').text('Order ID: #'+data[0].source_id);
-                    this.btn.parents('.order').find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
-                    this.btn.parents('.order').find('.line-ordered .ordered-status').text('Order Placed');
-                    this.btn.parents('.order').find('.line-tracking').empty();
+                    this.btn.parents('.line').find('.line-order-id').text('Order ID: #'+data[0].source_id);
+                    this.btn.parents('.line').find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
+                    this.btn.parents('.line').find('.line-ordered .ordered-status').text('Order Placed');
+                    this.btn.parents('.line').find('.line-tracking').empty();
 
+                    this.interval_id.count = 100;
                     clearInterval(this.interval_id.interval);
                 }
 
-                if  (this.interval_id.count > 30) {
+                if  (this.interval_id.count >= 30) {
                     clearInterval(this.interval_id.interval);
                 } else {
                     this.interval_id.count += 1;
