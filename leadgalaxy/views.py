@@ -230,9 +230,12 @@ def api(request, target):
         original_url = json.loads(data).get('original_url', '')
 
         print 'original_url', original_url
-        if 'amazon.com/' in original_url.lower() and not user.can('amazon_import.use'):
+        if 'amazon.com/' in original_url.lower() and not user.can('amazon_import.use') or \
+           'sammydress.com/' in original_url.lower() and not user.can('sammydress_import.use') or \
+           'ebay.com/' in original_url.lower() and not user.can('ebay_import.use'):
+
             return JsonResponse({
-                'error': 'Importing from Amazon is not included in your current plan.'
+                'error': 'Importing from this store is not included in your current plan.'
             })
 
         endpoint = store.get_link('/admin/products.json', api=True)
@@ -668,6 +671,12 @@ def api(request, target):
 
         if user.can('amazon_import.use'):
             config['amazon_import'] = True
+
+        if user.can('sammydress_import.use'):
+            config['sammydress_import'] = True
+
+        if user.can('ebay_import.use'):
+            config['ebay_import'] = True
 
         return JsonResponse(config)
 
