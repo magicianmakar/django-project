@@ -449,11 +449,12 @@ def product_change_notify(user):
 
 
 def get_variant_name(variant):
-    options = re.findall('#([^;:]+)', variant['variant_desc'])
+    options = re.findall('#([^;:]+)', variant.get('variant_desc', ''))
     if len(options):
         return ' / '.join([i.title() for i in options])
     else:
-        return i['variant_id']
+        name = variant.get('variant_id')
+        return name if name else '<Default>'
 
 
 def product_changes_remap(changes):
