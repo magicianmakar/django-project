@@ -64,19 +64,20 @@
                 <label for="product-price">Price</label>
                 <div class="input-group">
                     <span class="input-group-addon">$</span>
-                    <input type="text" class="form-control" id="product-price" placeholder="Product Price"
-                        >
+                    <input type="text" class="form-control" id="product-price">
                 </div>
             </div>
             <div class="form-group col-xs-3">
                 <label for="product-type">Compare at price</label>
-                <input type="text" class="form-control" id="product-compare-at" placeholder=""
-                       value="{{product.product.compare_at_price|default:''}}">
+                <div class="input-group">
+                    <span class="input-group-addon">$</span>
+                    <input type="text" class="form-control" id="product-compare-at"
+                           value="{{product.product.compare_at_price|default:''}}">
+                </div>
             </div>
             <div class="form-group col-xs-6">
                 <label for="product-type" style="display: block">Weight</label>
-                <input type="text" class="form-control" id="product-weight" placeholder="Product Weight"
-                style="display: inline;width: 30%;">
+                <input type="text" class="form-control" id="product-weight" style="display: inline;width: 30%;">
 
                 <select name="product-weight-unit" id="product-weight-unit" class="form-control"
                     style="display: inline;width: 20%;">
