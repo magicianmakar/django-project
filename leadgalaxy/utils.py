@@ -422,7 +422,7 @@ def get_tracking_orders(store, tracker_orders):
 
 def product_change_notify(user):
 
-    if user.get_config('product_change_notify', False):
+    if user.get_config('product_change_notify'):
         # We already sent the user a notification for a product change
         return
 

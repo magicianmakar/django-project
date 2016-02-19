@@ -2116,7 +2116,8 @@ def products_update(request):
     if not request.user.profile.can('price_changes.use'):
         return render(request, 'upgrade.html')
 
-    show_hidden = request.GET.get('hidden', False)
+    show_hidden = 'hidden' in request.GET
+
     product_changes = []
     changes = AliexpressProductChange.objects.filter(user=request.user, hidden=show_hidden).order_by('-updated_at')
     for i in changes:
@@ -2128,8 +2129,9 @@ def products_update(request):
 
     if not show_hidden:
         changes.update(hidden=True)
-        # Allow sending notification for new changes
-        request.user.set_config('product_change_notify', False)
+
+    # Allow sending notification for new changes
+    request.user.set_config('product_change_notify', False)
 
     return render(request, 'products_update.html', {
         'product_changes': product_changes,
