@@ -6,6 +6,7 @@ from django.utils.functional import cached_property
 import re
 import json
 import requests
+import textwrap
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -178,10 +179,9 @@ class ShopifyProduct(models.Model):
     def __str__(self):
         try:
             title = json.loads(self.data)['title']
+            return '{}...'.format(textwrap.wrap(title, width=79)[0])
         except:
-            title = 'Product'
-
-        return title
+            return '<ShopifyProduct: %d>' % self.id
 
     def shopify_link(self):
         if self.shopify_export and self.shopify_export.shopify_id:
