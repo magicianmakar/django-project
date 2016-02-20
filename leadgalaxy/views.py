@@ -2127,17 +2127,29 @@ def products_update(request):
 
     show_hidden = 'hidden' in request.GET
 
-    product_changes = []
+
+    post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
+    page = utils.safeInt(request.GET.get('page'), 1)
+
     changes = AliexpressProductChange.objects.filter(user=request.user, hidden=show_hidden).order_by('-updated_at')
+    paginator = Paginator(changes, post_per_page)
+    page = min(max(1, page), paginator.num_pages)
+    page = paginator.page(page)
+    changes = page.object_list
+
+    product_changes = []
     for i in changes:
         change = {'qelem': i}
+        change['id'] = i.id
         change['data'] = json.loads(i.data)
         change['changes'] = utils.product_changes_remap(change['data'])
 
         product_changes.append(change)
 
     if not show_hidden:
-        changes.update(hidden=True)
+        AliexpressProductChange.objects.filter(user=request.user,
+                                               id__in=[i['id'] for i in product_changes]) \
+                                       .update(seen=True)
 
     # Allow sending notification for new changes
     request.user.set_config('product_change_notify', False)
@@ -2145,6 +2157,8 @@ def products_update(request):
     return render(request, 'products_update.html', {
         'product_changes': product_changes,
         'show_hidden': show_hidden,
+        'paginator': paginator,
+        'current_page': page,
         'page': 'products_update',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
     })

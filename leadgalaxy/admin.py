@@ -90,5 +90,5 @@ class ShopifyProductImageAdmin(admin.ModelAdmin):
 
 @admin.register(AliexpressProductChange)
 class AliexpressProductChangeAdmin(admin.ModelAdmin):
-    list_display = ('product', 'user', 'hidden', 'created_at', 'updated_at')
+    list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')

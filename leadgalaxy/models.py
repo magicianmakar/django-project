@@ -464,7 +464,8 @@ class AliexpressProductChange(models.Model):
 
     user = models.ForeignKey(User, null=True)
     product = models.ForeignKey(ShopifyProduct)
-    hidden = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False, verbose_name='Archived change')
+    seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
     data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')

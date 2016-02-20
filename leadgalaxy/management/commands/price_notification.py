@@ -67,6 +67,9 @@ class Command(BaseCommand):
             for product in products:
                 self.handle_product(product, action)
 
+        # Archive seen changes
+        AliexpressProductChange.objects.filter(seen=True, hidden=False).update(hidden=True)
+
     def handle_product(self, product, action):
         # print 'product {} Action {}'.format(product.id, action)
 
