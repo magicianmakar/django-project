@@ -471,47 +471,51 @@ def product_changes_remap(changes):
         }
     }
 
-    for i in changes['changes']['product']:
-        remapped['product']['offline'].append({
-            'category': i['category'],
-            'new_value': i['new_value'],
-            'old_value': i['old_value'],
-        })
+    products = changes['changes'].get('product')
+    if products and len(products):
+        for i in products:
+            remapped['product']['offline'].append({
+                'category': i['category'],
+                'new_value': i['new_value'],
+                'old_value': i['old_value'],
+            })
 
-    for i in changes['changes']['variants']:
-        for change in i['changes']:
-            if change['category'] == 'Availability':
-                remapped['variants']['quantity'].append({
-                    'category': change['category'],
-                    'new_value': change['new_value'],
-                    'old_value': change['old_value'],
-                    'variant_desc': get_variant_name(i),
-                    'variant_id': i['variant_id'],
-                })
-            if change['category'] == 'Price':
-                remapped['variants']['price'].append({
-                    'category': change['category'],
-                    'new_value': change['new_value'],
-                    'old_value': change['old_value'],
-                    'variant_desc': get_variant_name(i),
-                    'variant_id': i['variant_id'],
-                })
-            if change['category'] == 'new':
-                remapped['variants']['new'].append({
-                    'category': change['category'],
-                    'price': change['price'],
-                    'quantity': change['quantity'],
-                    'variant_desc': get_variant_name(i),
-                    'variant_id': i['variant_id'],
-                })
-            if change['category'] == 'removed':
-                remapped['variants']['removed'].append({
-                    'category': change['category'],
-                    'price': change['price'],
-                    'quantity': change['quantity'],
-                    'variant_desc': get_variant_name(i),
-                    'variant_id': i['variant_id'],
-                })
+    variants = changes['changes'].get('variants')
+    if variants and len(variants):
+        for i in variants:
+            for change in i.get('changes'):
+                if change['category'] == 'Availability':
+                    remapped['variants']['quantity'].append({
+                        'category': change['category'],
+                        'new_value': change['new_value'],
+                        'old_value': change['old_value'],
+                        'variant_desc': get_variant_name(i),
+                        'variant_id': i['variant_id'],
+                    })
+                if change['category'] == 'Price':
+                    remapped['variants']['price'].append({
+                        'category': change['category'],
+                        'new_value': change['new_value'],
+                        'old_value': change['old_value'],
+                        'variant_desc': get_variant_name(i),
+                        'variant_id': i['variant_id'],
+                    })
+                if change['category'] == 'new':
+                    remapped['variants']['new'].append({
+                        'category': change['category'],
+                        'price': change['price'],
+                        'quantity': change['quantity'],
+                        'variant_desc': get_variant_name(i),
+                        'variant_id': i['variant_id'],
+                    })
+                if change['category'] == 'removed':
+                    remapped['variants']['removed'].append({
+                        'category': change['category'],
+                        'price': change['price'],
+                        'quantity': change['quantity'],
+                        'variant_desc': get_variant_name(i),
+                        'variant_id': i['variant_id'],
+                    })
 
     return remapped
 
