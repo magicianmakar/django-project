@@ -950,7 +950,7 @@ def api(request, target):
 def webhook(request, provider, option):
     if provider == 'paylio' and request.method == 'POST':
         if option not in ['vip-elite', 'elite', 'pro', 'basic']:
-            raise Http404('Page not found..')
+            return JsonResponse({'error': 'Unknown Plan'}, status=404)
 
         plan_map = {
             'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
@@ -981,10 +981,11 @@ def webhook(request, provider, option):
             send_mail(subject='Shopified App: Webhook exception',
                       recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
                       from_email='chase@rankengine.com',
-                      message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
-                              repr(request.GET.urlencode()),
-                              repr(request.POST.urlencode()),
-                              '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
+                      message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
+                              traceback.format_exc(),
+                              utils.format_data(dict(request.GET.iteritems()), False),
+                              utils.format_data(dict(request.POST.iteritems()), False),
+                              utils.format_data(request.META, False)))
 
             raise Http404('Error during proccess')
 
@@ -1038,11 +1039,13 @@ def webhook(request, provider, option):
             except Exception as e:
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
                           recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-                          from_email='chase@rankengine.com',
-                          message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
-                                  repr(request.GET.urlencode()),
-                                  repr(request.POST.urlencode()),
-                                  '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
+                          from_email=settings.DEFAULT_FROM_EMAIL,
+                          message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
+                              traceback.format_exc(),
+                              utils.format_data(dict(request.GET.iteritems()), False),
+                              utils.format_data(dict(request.POST.iteritems()), False),
+                              utils.format_data(request.META, False)))
+
                 raise Http404('Error during proccess')
 
     elif provider == 'jvzoo':
