@@ -173,8 +173,8 @@ def slack_invite(data):
 
     if not success:
         send_mail(subject='Slack Invite Fail',
-                  recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-                  from_email='chase@rankengine.com',
+                  recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
+                  from_email=settings.DEFAULT_FROM_EMAIL,
                   message='Slack Invite was not sent to {} due the following error:\n{}'.format(data['email'], rep))
 
 

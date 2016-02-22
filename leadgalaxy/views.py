@@ -979,8 +979,8 @@ def webhook(request, provider, option):
             }
         except Exception as e:
             send_mail(subject='Shopified App: Webhook exception',
-                      recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
-                      from_email='chase@rankengine.com',
+                      recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
+                      from_email=settings.DEFAULT_FROM_EMAIL,
                       message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
                               utils.format_data(dict(request.GET.iteritems()), False),
@@ -1004,14 +1004,14 @@ def webhook(request, provider, option):
 
             send_mail(subject='Your Shopified App Access',
                       recipient_list=[data['email']],
-                      from_email='chase@rankengine.com',
+                      from_email='support@shopifiedapp.com',
                       message=email_html,
                       html_message=email_html)
 
             utils.slack_invite(data)
 
             send_mail(subject='Shopified App: New Registration',
-                      recipient_list=['chase@rankengine.com'],
+                      recipient_list=['chase@shopifiedapp.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(
                           utils.format_data(data)))
@@ -1029,7 +1029,7 @@ def webhook(request, provider, option):
                 data['new_plan'] = free_plan.title
 
                 send_mail(subject='Shopified App: Cancel/Refund',
-                          recipient_list=['chase@rankengine.com'],
+                          recipient_list=['chase@shopifiedapp.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(
                               utils.format_data(data)))
@@ -1038,7 +1038,7 @@ def webhook(request, provider, option):
 
             except Exception as e:
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
-                          recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                          recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
@@ -1094,7 +1094,7 @@ def webhook(request, provider, option):
 
                 send_mail(subject='Your Shopified App Access',
                           recipient_list=[data['email']],
-                          from_email='chase@rankengine.com',
+                          from_email='support@shopifiedapp.com',
                           message=email_html,
                           html_message=email_html)
 
@@ -1104,7 +1104,7 @@ def webhook(request, provider, option):
                 # email_info = '\n\nMore information:{}\n{}'.format(email_info, utils.format_data(params), utils.format_data(data))
                 # send_mail(subject='Shopified App: New Registration',
                 #           recipient_list=['ma7dev@gmail.com'],
-                #           from_email='chase@rankengine.com',
+                #           from_email='chase@shopifiedapp.com',
                 #           message=email_info)
 
                 data.update(params)
@@ -1154,7 +1154,7 @@ def webhook(request, provider, option):
                               '</a>').format(payment.id)
 
                 send_mail(subject='Shopified App: Cancel/Refund',
-                          recipient_list=['chase@rankengine.com'],
+                          recipient_list=['chase@shopifiedapp.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message=email_info,
                           html_message=email_info)
@@ -1165,7 +1165,7 @@ def webhook(request, provider, option):
             print 'Exception:', e
             traceback.print_exc()
             send_mail(subject='[Shopified App] JVZoo Webhook Exception',
-                      recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                      recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
