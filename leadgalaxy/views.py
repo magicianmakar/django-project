@@ -1011,7 +1011,7 @@ def webhook(request, provider, option):
 
             send_mail(subject='Shopified App: New Registration',
                       recipient_list=['chase@rankengine.com'],
-                      from_email='chase@rankengine.com',
+                      from_email=settings.DEFAULT_FROM_EMAIL,
                       message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(
                           utils.format_data(data)))
 
@@ -1029,7 +1029,7 @@ def webhook(request, provider, option):
 
                 send_mail(subject='Shopified App: Cancel/Refund',
                           recipient_list=['chase@rankengine.com'],
-                          from_email='chase@rankengine.com',
+                          from_email=settings.DEFAULT_FROM_EMAIL,
                           message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(
                               utils.format_data(data)))
 
