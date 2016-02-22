@@ -303,6 +303,7 @@ class ShopifyOrder(models.Model):
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
     hidden = models.BooleanField(default=False)
+    seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
     check_count = models.IntegerField(default=0)
     data = models.TextField(blank=True, default='')
 

@@ -2250,6 +2250,10 @@ def orders_track(request):
     if len(orders):
         orders = utils.get_tracking_orders(store, orders)
 
+    ShopifyOrder.objects.filter(user=request.user,
+                                id__in=[i.id for i in orders]) \
+                        .update(seen=True)
+
     return render(request, 'orders_track.html', {
         'store': store,
         'orders': orders,

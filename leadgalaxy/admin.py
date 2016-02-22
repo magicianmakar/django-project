@@ -47,9 +47,10 @@ class ShopifyProductExportAdmin(admin.ModelAdmin):
 @admin.register(ShopifyOrder)
 class ShopifyOrderAdmin(admin.ModelAdmin):
     list_display = ('order_id', 'line_id', 'store', 'source_id', 'get_source_status',
-                    'status_updated_at', 'hidden', 'check_count', 'source_tracking',
+                    'status_updated_at', 'seen', 'hidden', 'check_count', 'source_tracking',
                     'created_at', 'updated_at')
 
+    list_filter = ('source_status', 'seen', 'hidden',)
 
 @admin.register(ShopifyStore)
 class ShopifyStoreAdmin(admin.ModelAdmin):
@@ -92,6 +93,7 @@ class ShopifyProductImageAdmin(admin.ModelAdmin):
 class AliexpressProductChangeAdmin(admin.ModelAdmin):
     list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
+    list_filter = ('seen', 'hidden',)
 
 
 @admin.register(PlanPayment)
