@@ -3,6 +3,7 @@ import json
 import requests
 import uuid
 import md5
+import hashlib
 
 from django.core.mail import send_mail
 from django.template import Context, Template
@@ -529,3 +530,38 @@ def object_dump(obj, desc=None):
         print
     else:
         print json.dumps(obj, indent=4)
+
+
+def jvzoo_verify_post(params, secretkey):
+    """Verifies if received POST is a valid JVZoo POST request.
+
+    :param params: POST parameters sent by JVZoo Notification Service
+    :type params: dict"""
+
+    if not secretkey:
+        raise Exception('JVZoo secret-key is not set.')
+
+    strparams = u""
+
+    for key in iter(sorted(params.iterkeys())):
+        if key in ['cverify', 'secretkey']:
+            continue
+        strparams += params[key] + "|"
+    strparams += secretkey
+    sha = hashlib.sha1(strparams.encode('utf-8')).hexdigest().upper()
+    assert params['cverify'] == sha[:8], 'Checksum verification failed. ({} <> {})'.format(params['cverify'], sha[:8])
+
+
+def jvzoo_parse_post(params):
+        """Parse POST from JVZoo and extract information we need.
+
+        :param params: POST parameters sent by JVZoo Notification Service
+        :type params: dict """
+
+        return {
+            'email': params['ccustemail'],
+            'fullname': u"%s" % params['ccustname'].decode("utf-8"),
+            'product_id': params['cproditem'],
+            'affiliate': params['ctransaffiliate'],
+            'trans_type': params['ctransaction'],
+        }

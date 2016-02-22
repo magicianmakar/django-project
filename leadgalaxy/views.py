@@ -1044,6 +1044,23 @@ def webhook(request, provider, option):
                                   repr(request.POST.urlencode()),
                                   '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
+
+    elif provider == 'jvzoo' and request.method == 'POST':
+        try:
+            params = request.POST
+            secretkey = settings.JVZOO_SECRET_KEY
+            # verify and parse post
+            utils.jvzoo_verify_post(params, secretkey)
+            data = utils.jvzoo_parse_post(params)
+
+            utils.object_dump(data, 'data')
+            utils.object_dump(params, 'params')
+        except Exception as e:
+            print e
+            traceback.print_exc()
+
+        return HttpResponse('jvzoo ok')
+
     elif provider == 'shopify' and request.method == 'POST':
         try:
             # Shopify send a JSON POST request

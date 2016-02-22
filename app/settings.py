@@ -201,3 +201,5 @@ COMPRESS_CSS_FILTERS = [
     # 'compressor.filters.cssmin.CSSMinFilter',
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
+
+JVZOO_SECRET_KEY = os.environ['JVZOO_SECRET']
