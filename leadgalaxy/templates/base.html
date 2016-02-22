@@ -61,6 +61,8 @@
                 <li class="profile-element">
                     <img src="{% static 'Shopified-App.png' %}" style="width: 100%; padding: 10px 25px;">
                 </li>
+
+                {% if user.is_authenticated %}
                 <li class="nav-header">
                     <div class="dropdown profile-element">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
@@ -80,6 +82,7 @@
                         <img src="{% static 'logo-element.png' %}" style="width: 50%; ">
                     </div>
                 </li>
+                {% endif %}
 
                 <li {% if page == 'index' %}class="active"{% endif %}><a href="{% url 'index' %}"> <i class="fa fa-th-large"></i> <span class="nav-label">Stores</span></a></li>
 

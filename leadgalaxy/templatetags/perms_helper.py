@@ -12,7 +12,7 @@ def can(user, perm_name):
     {% endif %}
     """
 
-    return user.profile.can(perm_name)
+    return user.is_authenticated() and user.profile.can(perm_name)
 
 @register.filter(name='in_groups')
 def in_groups(user, groups_name):
