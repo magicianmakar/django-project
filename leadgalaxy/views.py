@@ -792,7 +792,7 @@ def api(request, target):
         from django.core import serializers
 
         orders = []
-        shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False).order_by('updated_at')
+        shopify_orders = ShopifyOrder.objects.filter(user=user, source_tracking='', hidden=False).order_by('updated_at')
 
         if not data.get('order_id') and not data.get('line_id'):
             shopify_orders = shopify_orders[:20]
