@@ -564,6 +564,7 @@ def api(request, target):
             target_user.profile.plan = plan
         except:
             profile = UserProfile(user=target_user, plan=plan)
+            profile.save()
 
         target_user.profile.save()
 
