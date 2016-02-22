@@ -138,10 +138,13 @@ def smart_board_by_board(user, board):
             board.save()
 
 
-def format_data(data):
+def format_data(data, title=True):
     text = ''
     for k, v in data.items():
-        text = '{}    {}: {}\n'.format(text, k.replace('_', ' ').title(), v)
+        t = k
+        if title:
+            t = t.replace('_', ' ').title()
+        text = '{}    {}: {}\n'.format(text, t, v)
 
     return text
 
@@ -560,7 +563,9 @@ def jvzoo_parse_post(params):
 
         return {
             'email': params['ccustemail'],
-            'fullname': u"%s" % params['ccustname'].decode("utf-8"),
+            'fullname': params['ccustname'],
+            'firstname': params['ccustname'].split(' ')[0],
+            'lastname': ' '.join(params['ccustname'].split(' ')[1:]),
             'product_id': params['cproditem'],
             'affiliate': params['ctransaffiliate'],
             'trans_type': params['ctransaction'],

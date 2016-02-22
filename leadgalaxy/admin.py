@@ -92,3 +92,10 @@ class ShopifyProductImageAdmin(admin.ModelAdmin):
 class AliexpressProductChangeAdmin(admin.ModelAdmin):
     list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
+
+
+@admin.register(PlanPayment)
+class PlanPaymentAdmin(admin.ModelAdmin):
+    list_display = ('provider', 'payment_id', 'transaction_type', 'fullname',
+                    'email', 'user', 'created_at')
+    list_filter = ('provider', 'transaction_type',)

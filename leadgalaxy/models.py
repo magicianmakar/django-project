@@ -473,3 +473,21 @@ class AliexpressProductChange(models.Model):
 
     def __str__(self):
         return '{}'.format(self.id)
+
+
+class PlanPayment(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User, null=True)
+    fullname = models.CharField(blank=True, max_length=120)
+    email = models.CharField(blank=True, max_length=120)
+    provider = models.CharField(max_length=50)
+    payment_id = models.CharField(max_length=120)
+    transaction_type = models.CharField(blank=True, max_length=32)
+    data = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '{} | {}'.format(self.provider, self.payment_id)

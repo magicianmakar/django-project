@@ -1045,21 +1045,134 @@ def webhook(request, provider, option):
                                   '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
 
-    elif provider == 'jvzoo' and request.method == 'POST':
+    elif provider == 'jvzoo':
         try:
-            params = request.POST
+            if option not in ['vip-elite', 'elite', 'pro', 'basic']:
+                return JsonResponse({'error': 'Unknown Plan'}, status=404)
+
+            plan_map = {
+                'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
+                'elite': '3eccff4f178db4b85ff7245373102aec',
+                'pro': '55cb8a0ddbc9dacab8d99ac7ecaae00b',
+                'basic': '2877056b74f4683ee0cf9724b128e27b',
+                'free': '606bd8eb8cb148c28c4c022a43f0432d'
+            }
+
+            plan = GroupPlan.objects.get(register_hash=plan_map[option])
+
+            if request.method == 'GET':
+                return HttpResponse('<i>JVZoo</i> Webhook for <b>{}</b>'.format(plan.title))
+            elif request.method != 'POST':
+                raise Exception('Unexcpected HTTP Method: {}'.request.method)
+
+            params = dict(request.POST.iteritems())
             secretkey = settings.JVZOO_SECRET_KEY
+
             # verify and parse post
             utils.jvzoo_verify_post(params, secretkey)
             data = utils.jvzoo_parse_post(params)
 
-            utils.object_dump(data, 'data')
-            utils.object_dump(params, 'params')
-        except Exception as e:
-            print e
-            traceback.print_exc()
+            trans_type = data['trans_type']
+            if trans_type not in ['SALE', 'BILL', 'RFND', 'CGBK', 'INSF']:
+                raise Exception('Unknown Transaction Type: {}'.format(trans_type))
 
-        return HttpResponse('jvzoo ok')
+            if trans_type == 'SALE':
+                reg = utils.generate_plan_registration(plan, {'data': data, 'jvzoo': params})
+                data['reg_hash'] = reg.register_hash
+                data['plan_title'] = plan.title
+
+                template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'webhook_register.html')
+                template = Template(open(template_file).read())
+
+                ctx = Context(data)
+
+                email_html = template.render(ctx)
+                email_html = email_html.replace('\n', '<br />')
+
+                send_mail(subject='Your Shopified App Access',
+                          recipient_list=[data['email']],
+                          from_email='chase@rankengine.com',
+                          message=email_html,
+                          html_message=email_html)
+
+                utils.slack_invite(data)
+
+                # email_info = 'A new registration link was generated and send to a new user.'
+                # email_info = '\n\nMore information:{}\n{}'.format(email_info, utils.format_data(params), utils.format_data(data))
+                # send_mail(subject='Shopified App: New Registration',
+                #           recipient_list=['ma7dev@gmail.com'],
+                #           from_email='chase@rankengine.com',
+                #           message=email_info)
+
+                data.update(params)
+
+                payment = PlanPayment(fullname=data['fullname'],
+                                      email=data['email'],
+                                      provider='JVZoo',
+                                      transaction_type=trans_type,
+                                      payment_id=params['ctransreceipt'],
+                                      data=json.dumps(data))
+                payment.save()
+
+                return JsonResponse({'status': 'ok'})
+
+            elif trans_type == 'BILL':
+                payment = PlanPayment(fullname=data['fullname'],
+                                      email=data['email'],
+                                      provider='JVZoo',
+                                      transaction_type=trans_type,
+                                      payment_id=params['ctransreceipt'],
+                                      data=json.dumps(data))
+                payment.save()
+
+            elif trans_type in ['RFND', 'CGBK', 'INSF']:
+                user = User.objects.get(email=data['email'])
+
+                free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                user.profile.plan = free_plan
+                user.profile.save()
+
+                data['previous_plan'] = plan.title
+                data['new_plan'] = free_plan.title
+
+                payment = PlanPayment(fullname=data['fullname'],
+                                      email=data['email'],
+                                      user=user,
+                                      provider='JVZoo',
+                                      transaction_type=trans_type,
+                                      payment_id=params['ctransreceipt'],
+                                      data=json.dumps(data))
+                payment.save()
+
+                email_info = ('A Shopified App User has canceled his/her subscription.\n<br>'
+                              'More information:\n<br>'
+                              '<a href="http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/">'
+                              'http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/'
+                              '</a>').format(payment.id)
+
+                send_mail(subject='Shopified App: Cancel/Refund',
+                          recipient_list=['chase@rankengine.com'],
+                          from_email=settings.DEFAULT_FROM_EMAIL,
+                          message=email_info,
+                          html_message=email_info)
+
+                return HttpResponse('ok')
+
+        except Exception as e:
+            print 'Exception:', e
+            traceback.print_exc()
+            send_mail(subject='[Shopified App] JVZoo Webhook Exception',
+                      recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
+                      from_email=settings.DEFAULT_FROM_EMAIL,
+                      message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
+                              traceback.format_exc(),
+                              utils.format_data(dict(request.GET.iteritems()), False),
+                              utils.format_data(dict(request.POST.iteritems()), False),
+                              utils.format_data(request.META, False)))
+
+            return JsonResponse({'error': 'Server '}, status=500)
+
+        return JsonResponse({'status': 'ok', 'warning': 'Unknown'})
 
     elif provider == 'shopify' and request.method == 'POST':
         try:
