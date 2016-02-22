@@ -522,6 +522,10 @@ def product_changes_remap(changes):
 
 def object_dump(obj, desc=None):
     if desc:
-        print 'object_dump (%s):' % desc, obj
+        print 'object_dump'
+        print '==========='
+        print desc, '=', json.dumps(obj, indent=4)
+        print '==========='
+        print
     else:
         print json.dumps(obj, indent=4)
