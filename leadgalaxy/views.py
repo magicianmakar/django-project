@@ -804,9 +804,9 @@ def api(request, target):
             shopify_orders = shopify_orders.filter(line_id=data.get('line_id'))
 
         shopify_orders = serializers.serialize('python', shopify_orders,
-                                     fields=('id', 'order_id', 'line_id',
-                                             'source_id', 'source_status',
-                                             'source_tracking'))
+                                               fields=('id', 'order_id', 'line_id',
+                                                       'source_id', 'source_status',
+                                                       'source_tracking'))
         for i in shopify_orders:
             fields = i['fields']
             fields['id'] = i['pk']
@@ -982,9 +982,9 @@ def webhook(request, provider, option):
                       recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
                       from_email='chase@rankengine.com',
                       message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
-                        repr(request.GET.urlencode()),
-                        repr(request.POST.urlencode()),
-                        '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
+                              repr(request.GET.urlencode()),
+                              repr(request.POST.urlencode()),
+                              '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
 
             raise Http404('Error during proccess')
 
@@ -1040,9 +1040,9 @@ def webhook(request, provider, option):
                           recipient_list=['chase@rankengine.com', 'ma7dev@gmail.com'],
                           from_email='chase@rankengine.com',
                           message='EXCEPTION: {}\nGET: {}\nPOST: {}\nMETA: \n\t{}'.format(repr(e),
-                            repr(request.GET.urlencode()),
-                            repr(request.POST.urlencode()),
-                            '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
+                                  repr(request.GET.urlencode()),
+                                  repr(request.POST.urlencode()),
+                                  '\n\t'.join(re.findall("'[^']+': '[^']+'", repr(request.META)))))
                 raise Http404('Error during proccess')
     elif provider == 'shopify' and request.method == 'POST':
         try:
@@ -1276,7 +1276,8 @@ def products_list(request, tpl='grid'):
 @login_required
 def product_view(request, pid):
     #  AWS
-    import base64, hmac
+    import base64
+    import hmac
     from hashlib import sha1
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID', '')
@@ -1808,7 +1809,10 @@ def autocomplete(request, target):
 
 @login_required
 def upload_file_sign(request):
-    import time, base64, hmac, urllib
+    import time
+    import base64
+    import hmac
+    import urllib
     from hashlib import sha1
 
     if not request.user.can('image_uploader.use'):
@@ -1852,7 +1856,9 @@ def save_image_s3(request):
     if not request.user.profile.can('aviary_photo_editor.use'):
         return render(request, 'upgrade.html')
 
-    import boto, urllib2, StringIO
+    import boto
+    import urllib2
+    import StringIO
     from boto.s3.key import Key
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
@@ -2127,7 +2133,6 @@ def products_update(request):
         return render(request, 'upgrade.html')
 
     show_hidden = 'hidden' in request.GET
-
 
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
