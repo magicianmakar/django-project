@@ -1062,7 +1062,7 @@ def webhook(request, provider, option):
                     user=store.user,
                     shopify_export__shopify_id=shopify_product['id'])
             except:
-                return JsonResponse({'status': 'ok'})
+                return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
             product_data = json.loads(product.data)
 
@@ -1109,7 +1109,7 @@ def webhook(request, provider, option):
         except:
             print 'WEBHOOK: exception:'
             traceback.print_exc()
-            return JsonResponse({'status': 'ok'})
+            return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
     elif provider == 'price-notification' and request.method == 'POST':
         product_id = request.GET['product']
         product = ShopifyProduct.objects.get(id=product_id)
@@ -1122,7 +1122,7 @@ def webhook(request, provider, option):
         return JsonResponse({'status': 'ok'})
 
     else:
-        return JsonResponse({'status': 'ok'})
+        return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'})
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
