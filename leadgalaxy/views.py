@@ -927,7 +927,11 @@ def api(request, target):
         if not user.is_superuser and not user.has_perm('leadgalaxy.add_planregistration'):
             return JsonResponse({'error': 'Unauthorized API call'})
 
-        plan = GroupPlan.objects.get(id=data.get('plan'))
+        plan_id = int(data.get('plan'))
+        if not user.is_superuser and plan_id != 8:
+            return JsonResponse({'error': 'Unauthorized API call'})
+
+        plan = GroupPlan.objects.get(id=plan_id)
         reg = utils.generate_plan_registration(plan, {
             'email': data.get('email')
         })
@@ -1857,10 +1861,11 @@ def acp_groups(request):
 
         return JsonResponse(data, safe=False)
 
-    plans = GroupPlan.objects.all()
-
-    tpl = 'acp/groups.html'
-    if not request.user.is_superuser:
+    if request.user.is_superuser:
+        plans = GroupPlan.objects.all()
+        tpl = 'acp/groups.html'
+    else:
+        plans = GroupPlan.objects.filter(id=8)
         tpl = 'acp/groups_limited.html'
 
     return render(request, tpl, {
