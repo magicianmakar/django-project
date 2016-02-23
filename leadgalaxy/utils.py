@@ -488,7 +488,7 @@ def product_changes_remap(changes):
     variants = changes['changes'].get('variants')
     if variants and len(variants):
         for i in variants:
-            if not i.get('changes'):
+            if not i or not i.get('changes'):
                 continue
 
             for change in i.get('changes'):
