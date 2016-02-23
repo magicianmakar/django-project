@@ -229,7 +229,6 @@ def api(request, target):
 
         original_url = json.loads(data).get('original_url', '')
 
-        print 'original_url', original_url
         if 'amazon.com/' in original_url.lower() and not user.can('amazon_import.use') or \
            'sammydress.com/' in original_url.lower() and not user.can('sammydress_import.use') or \
            'ebay.com/' in original_url.lower() and not user.can('ebay_import.use'):
