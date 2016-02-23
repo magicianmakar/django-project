@@ -73,7 +73,15 @@ class UserProfile(models.Model):
             return {}
 
     def get_config_value(self, name, default=None):
-        return self.get_config().get(name, default)
+        if type(name) is list:
+            config = self.get_config()
+            values = []
+            for i in name:
+                values.append(config.get(i, default))
+
+            return values
+        else:
+            return self.get_config().get(name, default)
 
     def set_config_value(self, name, value):
         data = self.get_config()
