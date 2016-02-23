@@ -67,6 +67,7 @@
                             <td>{{item.created_at|date:'DATETIME_FORMAT'}}</td>
                             <td>{{item.updated_at|date:'DATETIME_FORMAT'}}</td>
                             <td>
+                                {% if item.order.fulfillment_status != 'fulfilled' %}
                                 <button class="btn btn-success btn-xs fulfill-btn"
                                         store="{{item.store_id}}"
                                         order-id="{{item.order.id}}"
@@ -74,6 +75,11 @@
                                         quantity="{{item.line.quantity}}"
                                         tracking-number="{{item.source_tracking|default:''}}"
                                         >Fulfill in Shopify</button>
+                                {% else %}
+                                    <span class="badge badge-primary">
+                                        {{item.order.fulfillment_status|default:"Unfulfilled"|title}}
+                                    </span>
+                                {% endif %}
 
                                 {% if not request.GET.hidden %}
                                 <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order m-t-xs">Archive Order</button>
