@@ -396,6 +396,7 @@ def get_tracking_orders(store, tracker_orders):
         ids.append(str(i.order_id))
 
     params = {
+        'status': 'any',
         'ids': ','.join(ids),
     }
 
