@@ -17,9 +17,9 @@
 
             {% if item.order_data %}
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
-                   href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data False|urlencode  %}">Step By Step Order</a></li>
+                   href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data False|urlencode  %}">Step By Step Order</a></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
-                   href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}">Auto Place Order</a></li>
+                   href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data True|urlencode  %}">Auto Place Order</a></li>
             {% endif %}
         </ul>
     </div>

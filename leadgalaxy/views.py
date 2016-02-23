@@ -2274,6 +2274,28 @@ def orders_track(request):
 
 
 @login_required
+def orders_place(request):
+    product = request.GET['product']
+    data = request.GET['SAPlaceOrder']
+
+    # Check for Aliexpress Affiliate Program
+    api_key, tracking_id = request.user.get_config(['aliexpress_affiliate_key',
+                                                    'aliexpress_affiliate_tracking'])
+
+    redirect_url = None
+    if api_key and tracking_id:
+        affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product)
+
+        if affiliate_link:
+            redirect_url = '{}&SAPlaceOrder={}'.format(affiliate_link, data)
+
+    if not redirect_url:
+        redirect_url = '{}?SAPlaceOrder={}'.format(product, data)
+
+    return HttpResponseRedirect(redirect_url)
+
+
+@login_required
 def products_update(request):
     if not request.user.profile.can('price_changes.use'):
         return render(request, 'upgrade.html')

@@ -4,6 +4,7 @@ import requests
 import uuid
 import md5
 import hashlib
+import traceback
 
 from django.core.mail import send_mail
 from django.template import Context, Template
@@ -574,3 +575,30 @@ def jvzoo_parse_post(params):
             'affiliate': params['ctransaffiliate'],
             'trans_type': params['ctransaction'],
         }
+
+
+def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
+    try:
+        r = requests.get(
+            url='http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/{}'.format(appkey),
+            params={
+                'fields': fields,
+                'trackingId': trackingID,
+                'urls': urls
+
+            }
+        )
+
+        r = r.json()
+        errorCode = r['errorCode']
+        if errorCode != 20010000:
+            print 'Aliexpress Promotion Error:', r
+            return None
+
+        return r['result']['promotionUrls'][0]['promotionUrl']
+
+    except:
+        print 'Aliexpress Promotion Exception:'
+        traceback.print_exc()
+
+    return None
