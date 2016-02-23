@@ -438,14 +438,29 @@ function findMarkedLines() {
 }
 
 $('.hide-ordered-btn').click(function () {
-    $('.completed-order').parents('.order').toggle('slide');
+    $('.completed-order').parents('.order').toggle();
 
     $(this).toggleClass('hidded');
 
+    var hash = '#hide-compete';
     if ($(this).hasClass('hidded')) {
         $(this).text('Show Ordered');
+
+        $('.pagination a').each(function (i, el) {
+            var url = $(el).attr('href');
+            if (url.indexOf(hash)==-1) {
+                $(el).attr('href', url+hash);
+            }
+        });
     } else {
         $(this).text('Hide Ordered');
+
+        $('.pagination a').each(function (i, el) {
+            var url = $(el).attr('href');
+            if (url.indexOf(hash)!=-1) {
+                $(el).attr('href', url.replace(hash, ''));
+            }
+        });
     }
 });
 
@@ -528,5 +543,10 @@ $(function () {
 
     findMarkedLines();
     loadVriantImages('.orders .line');
+
+    if (window.location.hash == '#hide-compete') {
+        $('.hide-ordered-btn').trigger('click');
+        window.location.hash = '';
+    }
 });
 })();
