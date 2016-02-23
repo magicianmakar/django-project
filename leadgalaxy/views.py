@@ -924,7 +924,7 @@ def api(request, target):
             return JsonResponse({'error': 'Product not found'})
 
     if method == 'POST' and 'generate-reg-link':
-        if not user.is_superuser:
+        if not user.is_superuser and not user.has_perm('leadgalaxy.add_planregistration'):
             return JsonResponse({'error': 'Unauthorized API call'})
 
         plan = GroupPlan.objects.get(id=data.get('plan'))
@@ -1780,7 +1780,7 @@ def acp_graph(request):
 
 @login_required
 def acp_groups(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser and not request.user.has_perm('leadgalaxy.add_planregistration'):
         return HttpResponseRedirect('/')
 
     if request.method == 'POST':
@@ -1858,7 +1858,12 @@ def acp_groups(request):
         return JsonResponse(data, safe=False)
 
     plans = GroupPlan.objects.all()
-    return render(request, 'acp/groups.html', {
+
+    tpl = 'acp/groups.html'
+    if not request.user.is_superuser:
+        tpl = 'acp/groups_limited.html'
+
+    return render(request, tpl, {
         'plans': plans,
         'page': 'acp_groups',
         'breadcrumbs': ['ACP', 'Plans &amp; Groups']

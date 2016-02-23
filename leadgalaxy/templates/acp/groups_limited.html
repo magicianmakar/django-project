@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Plans<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <p style="margin-bottom:20px"></p>
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Stores</th>
+                            <th>Products</th>
+                            <th>Boards</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in plans %}
+                        <tr plans-id="{{item.id}}">
+                            <td><b>{{item.title}}</b></td>
+                            <td>{% if item.stores == -1 %}Unlimited{% else %}{{item.stores}}{% endif %}</td>
+                            <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
+                            <td>{% if item.boards == -1 %}Unlimited{% else %}{{item.boards}}{% endif %}</td>
+                            <td><button class="btn btn-outline btn-success btn-xs gen-link" plan-title="{{item.title}}" plan-id="{{item.id}}">Generate Link</button></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="4">No Plan found</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+    <script src="//www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script>
+
+    <script type="text/javascript">
+        $('input[name="perm-description"]').change(function() {
+            var t = $('input[name="perm-name"]');
+            if (t.val().length==0) {
+                t.val($(this).val().toLowerCase().replace(/ /g, '_'));
+            }
+        });
+
+        $('.gen-link').click(function () {
+            var btn = $(this);
+            btn.button('loading');
+
+            swal({
+                title: "Generate Registration link",
+                text: "For "+$(this).attr('plan-title')+" plan",
+                type: "input",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                animation: "slide-from-top",
+                inputPlaceholder: "Email address (optional)",
+                showLoaderOnConfirm: true
+            }, function(inputValue) {
+                $.ajax({
+                    url: '/api/generate-reg-link',
+                    type: 'POST',
+                    data: {
+                        'plan': btn.attr('plan-id'),
+                        'email': inputValue
+                    },
+                    context: {btn: btn},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            var link = 'http://app.shopifiedapp.com/accounts/register/';
+                            link += data.hash;
+                            var msg = 'Registration Link:<br/>'+'<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
+
+                            swal({
+                                title: 'Link Generated',
+                                text: msg,
+                                type: 'success',
+                                html: true,
+                            });
+                        } else {
+                            displayAjaxError('Generate Link', data);
+                        }
+                    },
+                    error: function (data) {
+                        displayAjaxError('Generate Link', data);
+                    },
+                    complete: function () {
+                        this.btn.button('reset');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+

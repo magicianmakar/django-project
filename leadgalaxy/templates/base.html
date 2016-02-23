@@ -156,6 +156,17 @@
                         <li><a href="/admin/article/sidebarlink/">Sidebar Links</a></li>
                     </ul>
                 </li>
+                {% elif user|can:'leadgalaxy.add_planregistration' %}
+                    <li {% if 'acp' in page %}class="active"{% endif %}>
+                    <a href="#">
+                        <i class="fa fa-cogs"></i>
+                        <span class="nav-label">Admin</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse">
+                        <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans &amp; Groups</a></li>
+                    </ul>
+                </li>
                 {% endif %}
 
                 {% include 'partial/sidebar_link.html' with links=sidebar_links plan=user.profile.plan.register_hash %}
