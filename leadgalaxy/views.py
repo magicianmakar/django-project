@@ -2222,6 +2222,7 @@ def orders_view(request):
         'financial': financial,
         'fulfillment': fulfillment,
         'query': query,
+        'aliexpress_affiliate': (api_key and tracking_id),
         'page': 'orders',
         'breadcrumbs': ['Orders']
     })
@@ -2274,7 +2275,6 @@ def orders_track(request):
         'orders': orders,
         'paginator': paginator,
         'current_page': page,
-        'aliexpress_affiliate': (api_key and tracking_id),
         'page': 'orders_track',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
     })
