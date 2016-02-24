@@ -333,9 +333,20 @@ def shopify_link_images(store, product):
             if val['id'] not in product['images'][img_idx]['variant_ids']:
                 product['images'][img_idx]['variant_ids'].append(val['id'])
 
+    api_product = {
+        'id': product['id'],
+        'images': []
+    }
+
+    for image in product['images']:
+        api_product['images'].append({
+            'id': image['id'],
+            'variant_ids': image['variant_ids'],
+        })
+
     return requests.put(
         url=store.get_link('/admin/products/{}.json'.format(product['id']), api=True),
-        json={'product': product}
+        json={'product': api_product}
     )
 
 
