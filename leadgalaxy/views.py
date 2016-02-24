@@ -59,7 +59,7 @@ def api(request, target):
         token = data.get('access_token')
         user = utils.get_user_from_token(token)
     else:
-        if request.user.is_authenticated:
+        if request.user.is_authenticated():
             user = request.user
         else:
             user = None
@@ -215,7 +215,7 @@ def api(request, target):
             if not user:
                 return JsonResponse({'error': 'Unvalide access token: %s' % (token)})
         else:
-            if request.user.is_authenticated:
+            if request.user.is_authenticated():
                 user = request.user
             else:
                 return JsonResponse({'error': 'Unauthenticated user'})
@@ -1915,7 +1915,7 @@ def acp_groups_install(request):
 
 
 def autocomplete(request, target):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated():
         return JsonResponse({'error': 'User login required'})
 
     q = request.GET.get('query', '')
