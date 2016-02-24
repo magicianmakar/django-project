@@ -2102,6 +2102,9 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
+    api_key, tracking_id = request.user.get_config(['aliexpress_affiliate_key',
+                                                    'aliexpress_affiliate_tracking'])
+
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
         order['date_tooltip'] = arrow.get(order['created_at']).format('YYYY-MM-DD HH:mm:ss ZZ')
@@ -2271,6 +2274,7 @@ def orders_track(request):
         'orders': orders,
         'paginator': paginator,
         'current_page': page,
+        'aliexpress_affiliate': (api_key and tracking_id),
         'page': 'orders_track',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
     })
