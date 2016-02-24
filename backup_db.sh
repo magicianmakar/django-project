@@ -51,9 +51,9 @@ EOF
     	scp -P 8465 -C $TEMP_FILE "root@162.243.76.139:/tmp/backupcmd_$BACKUP_ID.sh"
 
     	echo "* Execute backup script on remote"
-    	ssh -p 8465 root@162.243.76.139 "nohup bash /tmp/backupcmd.sh >>/root/backups/shopifiedapp/database/backup.log 2>&1 &"
+    	ssh -p 8465 root@162.243.76.139 "nohup bash /tmp/backupcmd_$BACKUP_ID.sh >>/root/backups/shopifiedapp/database/backup.log 2>&1 &"
 
-    	rm -f $TEMP_FILE
+    	echo rm -f $TEMP_FILE
 
     	date >> $BACKUP_MARK
     fi
