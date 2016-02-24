@@ -681,7 +681,10 @@ def api(request, target):
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
-        config = {}
+        try:
+            config = json.loads(user.profile.config)
+        except:
+            config = {}
 
         for key in data:
             if not data[key]:
