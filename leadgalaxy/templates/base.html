@@ -126,19 +126,17 @@
                 {% endif %}
 
                 <li {% if page == 'boards' %}class="active"{% endif %}>
-                    <a href="{% url 'boards' %}">
+                    <a href="#">
                         <i class="fa fa-edit"></i>
                         <span class="nav-label">Boards</span>
                         <span class="fa arrow"></span>
                     </a>
-                    {% if page == 'boards' %}
-                    <ul class="nav nav-second-level collapse in">
+                    <ul class="nav nav-second-level collapse">
                         {% for item in request.user.shopifyboard_set.all %}
-                        <li><a href="#b{{item.id}}">{{item.title}}</a></li>
+                        <li><a href="{% url 'boards' board_id=item.id %}">{{item.title}}</a></li>
                         {% endfor %}
                         <li><a href="#" class="add-board-btn"><span class="fa fa-plus"></span> Add Board</a></li>
                     </ul>
-                    {% endif %}
                 </li>
 
                 {% if request.user.is_superuser %}

@@ -1264,7 +1264,7 @@ def webhook(request, provider, option):
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'})
 
 
-def get_product(request, filter_products, post_per_page=25, sort=None, store=None):
+def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None):
     products = []
     paginator = None
     page = request.GET.get('page', 1)
@@ -1277,6 +1277,9 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             res = res.filter(shopify_export__isnull=True)
         else:
             res = res.filter(shopify_export__store=store)
+
+    if board:
+        res = res.filter(shopifyboard=board)
 
     if not filter_products and not sort:
         paginator = Paginator(res, post_per_page)
@@ -1641,47 +1644,30 @@ def bulk_edit(request):
 
 
 @login_required
-def boards(request):
+def boards(request, board_id):
     boards = []
-    for b in request.user.shopifyboard_set.all():
-        board = {
-            'id': b.id,
-            'title': b.title,
-            'products': []
-        }
+    board = ShopifyBoard.objects.get(id=board_id)
 
-        for i in b.products.all():
-            p = {
-                'id': i.id,
-                'store': i.store,
-                'stat': i.stat,
-                'shopify_url': i.shopify_link(),
-                'user': i.user,
-                'created_at': i.created_at,
-                'updated_at': i.updated_at,
-                'product': json.loads(i.data),
-            }
+    args = {
+        'request': request,
+        'filter_products': (request.GET.get('f') == '1'),
+        'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
+        'sort': request.GET.get('sort'),
+        'board': board.id
+    }
 
-            try:
-                if 'aliexpress' in p['product'].get('original_url', '').lower():
-                    p['source'] = 'AliExpress'
-                elif 'alibaba' in p['product'].get('original_url', '').lower():
-                    p['source'] = 'AliBaba'
-            except:
-                pass
+    products, paginator, page = get_product(**args)
 
-            if 'images' not in p['product'] or not p['product']['images']:
-                p['product']['images'] = []
-
-            p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
-
-            p['images'] = p['product']['images']
-            board['products'].append(p)
-
-        boards.append(board)
+    boards.append({
+        'id': board.id,
+        'title': board.title,
+        'products': products
+    })
 
     return render(request, 'boards.html', {
         'boards': boards,
+        'paginator': paginator,
+        'current_page': page,
         'page': 'boards',
         'breadcrumbs': ['Boards']
     })
