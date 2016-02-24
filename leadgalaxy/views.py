@@ -687,22 +687,22 @@ def api(request, target):
             config = {}
 
         for key in data:
-            if not data[key]:
-                continue
-
             if key in ['auto_margin', 'auto_compare_at']:
                 if not data.get(key).endswith('%'):
                     config[key] = data[key] + '%'
-            if key in ['auto_margin_cents', 'auto_compare_at_cents']:
+                else:
+                    config[key] = data[key]
+
+            elif key in ['auto_margin_cents', 'auto_compare_at_cents']:
                 try:
                     config[key] = int(data[key])
                 except:
                     config[key] = ''
 
-            if key in ['make_visisble', 'epacket_shipping']:
+            elif key in ['make_visisble', 'epacket_shipping']:
                 config[key] = bool(data.get(key))
 
-            if key not in config:  # In case the second if above is not true
+            else:
                 config[key] = data[key]
 
         user.profile.config = json.dumps(config)
