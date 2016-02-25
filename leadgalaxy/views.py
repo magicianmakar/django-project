@@ -1791,7 +1791,10 @@ def acp_groups(request):
                     info = info + '%s: ' % perm.name
 
                     for p in i['plans']:
-                        plan = GroupPlan.objects.get(title=p['title'])
+                        try:
+                            plan = GroupPlan.objects.get(title=p['title'])
+                        except:
+                            continue
                         plan.permissions.add(perm)
 
                         info = info + '%s, ' % plan.title
