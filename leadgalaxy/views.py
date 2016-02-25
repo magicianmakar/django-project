@@ -669,14 +669,15 @@ def api(request, target):
         if not config.get('description_mode'):
             config['description_mode'] = 'empty'
 
-        if user.can('amazon_import.use'):
-            config['amazon_import'] = True
+        config['import'] = []
+        perms = user.profile.get_perms
+        for i in perms:
+            if i.endswith('_import.use'):
+                name = i.split('_')[0]
+                config['import'].append(name)
 
-        if user.can('sammydress_import.use'):
-            config['sammydress_import'] = True
-
-        if user.can('ebay_import.use'):
-            config['ebay_import'] = True
+        # Base64 encode the store import list
+        config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
 
         return JsonResponse(config)
 
