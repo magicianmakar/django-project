@@ -227,7 +227,9 @@ def api(request, target):
                 'error': 'Selected store (%s) not found for user: %s' % (store, user.username if user else 'None')
             })
 
-        original_url = json.loads(data).get('original_url', '')
+        original_url = json.loads(data).get('original_url')
+        if not original_url:
+            original_url = req_data.get('original_url', '')
 
         try:
             import_store = re.findall('([^\.]+).com/', original_url.lower())[0]
