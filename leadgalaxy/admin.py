@@ -5,9 +5,18 @@ from django.core.urlresolvers import reverse
 
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'montly_price', 'description', 'stores', 'products', 'boards', 'register_hash')
+    list_display = ('title', 'montly_price', 'description', 'stores', 'products',
+                    'boards', 'register_hash', 'permissions_count')
+
     exclude = ('default_plan',)
     filter_horizontal = ('permissions',)
+
+
+@admin.register(FeatureBundle)
+class FeatureBundleAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'register_hash', 'permissions_count')
+    filter_horizontal = ('permissions',)
+    prepopulated_fields = {'slug': ('title',)}
 
 
 @admin.register(UserUpload)
@@ -52,6 +61,7 @@ class ShopifyOrderAdmin(admin.ModelAdmin):
 
     list_filter = ('source_status', 'seen', 'hidden',)
 
+
 @admin.register(ShopifyStore)
 class ShopifyStoreAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_active', 'created_at', 'updated_at')
@@ -70,7 +80,8 @@ class AccessTokenAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'status')
-    list_filter = ('plan', 'status',)
+    list_filter = ('plan', 'status', 'bundles')
+    filter_horizontal = ('bundles',)
 
 
 @admin.register(AppPermission)

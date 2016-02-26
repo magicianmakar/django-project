@@ -24,6 +24,7 @@ YES_NO_CHOICES = (
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
     plan = models.ForeignKey('GroupPlan', null=True)
+    bundles = models.ManyToManyField('FeatureBundle', blank=True)
 
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
 
@@ -49,7 +50,13 @@ class UserProfile(models.Model):
 
     @cached_property
     def get_perms(self):
-        return self.plan.permissions.all().values_list('name', flat=True)
+        perms = list(self.plan.permissions.all().values_list('name', flat=True))
+        for bundle in self.bundles.all():
+            for i in bundle.permissions.values_list('name', flat=True):
+                if i not in perms:
+                    perms.append(i)
+
+        return perms
 
     def can(self, perm_name):
         perm_name = perm_name.lower()
@@ -422,7 +429,7 @@ class GroupPlan(models.Model):
     stores = models.IntegerField(default=0)
     products = models.IntegerField(default=0)
     boards = models.IntegerField(default=0)
-    register_hash = models.CharField(blank=True, default='', max_length=50)
+    register_hash = models.CharField(unique=True, max_length=50)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='')
@@ -430,6 +437,24 @@ class GroupPlan(models.Model):
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+
+    def permissions_count(self):
+        return self.permissions.count()
+
+    def __str__(self):
+        return self.title
+
+
+class FeatureBundle(models.Model):
+    title = models.CharField(max_length=30, verbose_name="Bundle Title")
+    slug = models.SlugField(unique=True, max_length=30, verbose_name="Bundle Slug")
+    register_hash = models.CharField(unique=True, max_length=50)
+    description = models.CharField(max_length=512, blank=True, default='')
+
+    permissions = models.ManyToManyField(AppPermission, blank=True)
+
+    def permissions_count(self):
+        return self.permissions.count()
 
     def __str__(self):
         return self.title
