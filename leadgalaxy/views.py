@@ -232,6 +232,8 @@ def api(request, target):
         try:
             import_store = re.findall('([^\.]+).com/', original_url.lower())[0]
         except:
+            print 'original_url:', original_url.lower()
+            traceback.print_exc()
             return JsonResponse({
                 'error': 'Original URL is not set.'
             })
