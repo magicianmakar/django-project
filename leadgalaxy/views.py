@@ -229,10 +229,14 @@ def api(request, target):
 
         original_url = json.loads(data).get('original_url', '')
 
-        if 'amazon.com/' in original_url.lower() and not user.can('amazon_import.use') or \
-           'sammydress.com/' in original_url.lower() and not user.can('sammydress_import.use') or \
-           'ebay.com/' in original_url.lower() and not user.can('ebay_import.use'):
+        try:
+            import_store = re.findall('([^\.]+).com/', original_url.lower())[0]
+        except:
+            return JsonResponse({
+                'error': 'Original URL is not set.'
+            })
 
+        if not user.can('%s_import.use' % import_store):
             return JsonResponse({
                 'error': 'Importing from this store is not included in your current plan.'
             })
