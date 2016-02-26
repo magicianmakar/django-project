@@ -232,7 +232,11 @@ def api(request, target):
             original_url = req_data.get('original_url', '')
 
         try:
-            import_store = re.findall('([^\.]+).com/', original_url.lower())[0]
+            import_store = re.findall('([^\.]+).com/', original_url.lower())
+            if len(import_store):
+                import_store = import_store[0]
+            else:
+                import_store = None
         except:
             print 'original_url:', original_url.lower()
             traceback.print_exc()
@@ -240,7 +244,7 @@ def api(request, target):
                 'error': 'Original URL is not set.'
             })
 
-        if not user.can('%s_import.use' % import_store):
+        if import_store and not user.can('%s_import.use' % import_store):
             return JsonResponse({
                 'error': 'Importing from this store is not included in your current plan.'
             })
