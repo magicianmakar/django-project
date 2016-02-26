@@ -1079,7 +1079,7 @@ def webhook(request, provider, option):
 
     elif provider == 'jvzoo':
         try:
-            if option not in ['vip-elite', 'elite', 'pro', 'basic']:
+            if ':' not in option and option not in ['vip-elite', 'elite', 'pro', 'basic']:
                 return JsonResponse({'error': 'Unknown Plan'}, status=404)
 
             plan_map = {
@@ -1090,12 +1090,32 @@ def webhook(request, provider, option):
                 'free': '606bd8eb8cb148c28c4c022a43f0432d'
             }
 
-            plan = GroupPlan.objects.get(register_hash=plan_map[option])
+            plan = None
+            bundle = None
+
+            if ':' in option:
+                option_type, option_title = option.split(':')
+                if option_type == 'bundle':
+                    bundle = FeatureBundle.objects.get(slug=option_title)
+                elif option_type == 'plan':
+                    plan = FeatureBundle.objects.get(register_hash=plan_map[option_title])
+            else:
+                # Before bundles, option is the plan slug
+                plan = GroupPlan.objects.get(register_hash=plan_map[option])
 
             if request.method == 'GET':
-                return HttpResponse('<i>JVZoo</i> Webhook for <b>{}</b>'.format(plan.title))
+                webhook_type = 'Plan'
+                if bundle:
+                    webhook_type = 'Bundle'
+
+                if not request.user.is_superuser:
+                    return JsonResponse({'status': 'ok'})
+                else:
+                    return HttpResponse('<i>JVZoo</i> Webhook for <b><span style=color:green>{}</span>: {}</b>'
+                                        .format(webhook_type, (bundle.title if bundle else plan.title)))
+
             elif request.method != 'POST':
-                raise Exception('Unexcpected HTTP Method: {}'.request.method)
+                raise Exception('Unexpected HTTP Method: {}'.request.method)
 
             params = dict(request.POST.iteritems())
             secretkey = settings.JVZOO_SECRET_KEY
@@ -1109,32 +1129,41 @@ def webhook(request, provider, option):
                 raise Exception('Unknown Transaction Type: {}'.format(trans_type))
 
             if trans_type == 'SALE':
-                reg = utils.generate_plan_registration(plan, {'data': data, 'jvzoo': params})
-                data['reg_hash'] = reg.register_hash
-                data['plan_title'] = plan.title
+                if plan:
+                    reg = utils.generate_plan_registration(plan, {'data': data, 'jvzoo': params})
+                    data['reg_hash'] = reg.register_hash
+                    data['plan_title'] = plan.title
 
-                template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'webhook_register.html')
-                template = Template(open(template_file).read())
+                    utils.send_email_from_template(tpl='webhook_register.html',
+                                                   subject='Your Shopified App Access',
+                                                   recipient=data['email'],
+                                                   data=data)
 
-                ctx = Context(data)
+                    utils.slack_invite(data)
+                else:
+                    # Handle bundle purchase
+                    data['bundle_title'] = bundle.title
 
-                email_html = template.render(ctx)
-                email_html = email_html.replace('\n', '<br />')
+                    user = User.objects.get(email=data['email'])
+                    user.profile.bundles.add(bundle)
 
-                send_mail(subject='Your Shopified App Access',
-                          recipient_list=[data['email']],
-                          from_email='support@shopifiedapp.com',
-                          message=email_html,
-                          html_message=email_html)
+                    utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
+                                                   subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                                                   recipient=data['email'],
+                                                   data=data)
 
-                utils.slack_invite(data)
+                if plan:
+                    email_info = 'A new registration link was generated and send to a new user.'
+                else:
+                    email_info = 'User {} purchased {} bundle.'.format(user.username, bundle.title)
 
-                # email_info = 'A new registration link was generated and send to a new user.'
-                # email_info = '\n\nMore information:{}\n{}'.format(email_info, utils.format_data(params), utils.format_data(data))
-                # send_mail(subject='Shopified App: New Registration',
-                #           recipient_list=['ma7dev@gmail.com'],
-                #           from_email='chase@shopifiedapp.com',
-                #           message=email_info)
+                email_info = email_info + '\n\nMore information:\n{}\n{}'.format(utils.format_data(params, title=False),
+                                                                                 utils.format_data(data, title=False))
+
+                send_mail(subject='[Shopified App]: New Purchase',
+                          recipient_list=['chase@shopifiedapp.com'],
+                          from_email='"Shopified App" <support@shopifiedapp.com>',
+                          message=email_info)
 
                 data.update(params)
 
@@ -1160,12 +1189,16 @@ def webhook(request, provider, option):
             elif trans_type in ['RFND', 'CGBK', 'INSF']:
                 user = User.objects.get(email=data['email'])
 
-                free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
-                user.profile.plan = free_plan
-                user.profile.save()
+                if plan:
+                    free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                    user.profile.plan = free_plan
+                    user.profile.save()
 
-                data['previous_plan'] = plan.title
-                data['new_plan'] = free_plan.title
+                    data['previous_plan'] = plan.title
+                    data['new_plan'] = free_plan.title
+                else:
+                    data['removed_bundle'] = bundle.title
+                    user.profile.bundles.remove(bundle)
 
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
@@ -1184,7 +1217,7 @@ def webhook(request, provider, option):
 
                 send_mail(subject='Shopified App: Cancel/Refund',
                           recipient_list=['chase@shopifiedapp.com'],
-                          from_email=settings.DEFAULT_FROM_EMAIL,
+                          from_email='"Shopified App" <support@shopifiedapp.com>',
                           message=email_info,
                           html_message=email_info)
 
