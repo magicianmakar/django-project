@@ -36,7 +36,7 @@ $('#add-store').click(function(e) {
         },
         success: function(data) {
             if ('error' in data) {
-                alert(data.error);
+                displayAjaxError('Add Store', data);
                 $('#add-store').button('reset');
             } else {
                 window.location.href = window.location.href;
@@ -44,7 +44,7 @@ $('#add-store').click(function(e) {
 
         },
         error: function(data) {
-            alert('Unknow error!');
+            displayAjaxError('Add Store', data)
             $('#add-store').button('reset');
         }
     });
