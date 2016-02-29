@@ -615,14 +615,16 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
     return None
 
 
-def send_email_from_template(tpl, subject, recipient, data):
+def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
         template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
         template = Template(open(template_file).read())
 
         ctx = Context(data)
 
         email_html = template.render(ctx)
-        email_html = email_html.replace('\n', '<br />')
+
+        if nl2br:
+            email_html = email_html.replace('\n', '<br />')
 
         if type(recipient) is not list:
             recipient = [recipient]
