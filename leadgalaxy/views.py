@@ -2038,10 +2038,19 @@ def upload_file_sign(request):
 
     return JsonResponse(content, safe=False)
 
+
 @login_required
 def user_profile(request):
+    import pytz
+    import collections
+
+    country_names = pytz.country_names
+    country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
+    countries = zip(country_names.keys(), country_names.values())
 
     return render(request, 'user/profile.html', {
+        'timezones': pytz.all_timezones,
+        'countries': countries,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
