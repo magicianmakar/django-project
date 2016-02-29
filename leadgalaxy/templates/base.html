@@ -152,6 +152,7 @@
                         <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Analytics</a></li>
                         <li {% if page == 'acp_pages' %}class="active"{% endif %}><a href="/pages/">Pages</a></li>
                         <li><a href="/admin/article/sidebarlink/">Sidebar Links</a></li>
+                        <li><a href="/admin/leadgalaxy/featurebundle/">Bundles</a></li>
                     </ul>
                 </li>
                 {% elif user|can:'leadgalaxy.add_planregistration' %}
