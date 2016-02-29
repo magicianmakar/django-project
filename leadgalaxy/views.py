@@ -126,10 +126,11 @@ def api(request, target):
         user_saved_stores = user.shopifystore_set.filter(is_active=True).count()
 
         if (total_stores > -1) and (user_saved_stores + 1 > total_stores):
-            return JsonResponse({
-                'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.' \
-                         % (total_stores, user_saved_stores)
-            })
+            if not user.can('unlimited_stores.use'):
+                return JsonResponse({
+                    'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.'
+                             % (total_stores, user_saved_stores)
+                })
 
         store = ShopifyStore(title=name, api_url=url, user=user)
         store.save()
@@ -338,10 +339,11 @@ def api(request, target):
                 user_saved_products = user.shopifyproduct_set.count()
 
                 if (total_products > -1) and (user_saved_products + 1 > total_products):
-                    return JsonResponse({
-                        'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.' \
-                                 % (total_products, user_saved_products)
-                    })
+                    if not user.can('unlimited_products.use'):
+                        return JsonResponse({
+                            'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'
+                                     % (total_products, user_saved_products)
+                        })
 
                 is_active = req_data.get('activate', True)
 
@@ -441,10 +443,11 @@ def api(request, target):
         user_saved_boards = user.shopifyboard_set.count()
 
         if (total_boards > -1) and (user_saved_boards + 1 > total_boards):
-            return JsonResponse({
-                'error': 'Your current plan allow up to %d boards, currently you have %d boards.' \
-                         % (total_boards, user_saved_boards)
-            })
+            if not user.can('unlimited_boards.use'):
+                return JsonResponse({
+                    'error': 'Your current plan allow up to %d boards, currently you have %d boards.'
+                             % (total_boards, user_saved_boards)
+                })
 
         board = ShopifyBoard(title=data.get('title').strip(), user=user)
         board.save()
