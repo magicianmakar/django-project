@@ -4,20 +4,21 @@ from django.http import QueryDict
 
 register = template.Library()
 
-# @register.simple_tag(takes_context = True)
-# def in_group(context, group):
-#     user = context['user']
-    # return LEAD_GROUPS[group_name] in user.groups.all().values_list('id', flat=True)
-
-@register.filter(name='in_group')
-def in_group(user, group_name):
+@register.filter(name='can')
+def can(user, perm_name):
     """
     Usage in template:
-    {% if request.user|in_group:'galaxy_admin' %}
-        In galaxy_admin Group
+    {% if request.user|can:'image_uploader.view' %}
     {% endif %}
     """
-    return group_name in user.groups.all().values_list('name', flat=True)
+
+    if user.is_authenticated():
+        if 'leadgalaxy.' in perm_name:
+            return user.has_perm(perm_name)
+        else:
+            return user.profile.can(perm_name)
+
+    return False
 
 @register.filter(name='in_groups')
 def in_groups(user, groups_name):

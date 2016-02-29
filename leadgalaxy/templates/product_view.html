@@ -1,30 +1,53 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
 
 {% block main-container %}
 
 <div class="row">
-    <div class="col-md-8 col-md-offset-2">
-<div class="ibox float-e-margins">
-<!--     <div class="ibox-title">
-        <h5>Product View<small></small></h5>
-        <div class="ibox-tools">
-            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-        </div>
-    </div> -->
-    <div class="ibox-content">
-
+    <div class="col-md-10 col-md-offset-1">
          <div class="tabs-container">
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-edit"></i> Saved Product</a></li>
-                {% if original %}
-                <li class=""><a data-toggle="tab" href="#tab-2"><i class="fa fa-history"></i>Original</a></li>
+                {% if original and request.user|can:'original_product.view' %}
+                <li class="original-tab"><a
+                    {% if request.user|can:'original_product.use' %}
+                    data-toggle="tab" href="#tab-2"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-history"></i>Original</a></li>
                 {% endif %}
-                {% if product.original_product_source %}
-                <li class=""><a data-toggle="tab" href="#tab-3"><i class="fa fa-file-o"></i>Shipping Method</a></li>
+                {% if product.original_product_source and request.user|can:'shipping_methods.view' %}
+                <li class="shipping-tab"><a
+                    {% if request.user|can:'shipping_methods.use' %}
+                    data-toggle="tab" href="#tab-3"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-file-o"></i>Product Info</a></li>
                 {% endif %}
-                <li class=""><a data-toggle="tab" href="#tab-4"><i class="fa fa-file-o"></i>Notes</a></li>
+                {% if request.user|can:'notes.view' %}
+                <li class=""><a
+                    {% if request.user|can:'notes.use' %}
+                    data-toggle="tab" href="#tab-4"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-file-o"></i>Notes</a></li>
+                {% endif %}
+                {% if request.user|can:'product_metadata.view' %}
+                <li class=""><a
+                    {% if request.user|can:'product_metadata.use' %}
+                    data-toggle="tab" href="#tab-5"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-cogs"></i> Connections</a></li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -35,59 +58,113 @@
                 <label for="product-title">Title</label>
                 <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
             </div>
-            <div class="form-group col-xs-4">
+        </div>
+        <div class=" row" {% if shopify_product %}style="display:none"{% endif %}>
+            <div class="form-group col-xs-3">
                 <label for="product-price">Price</label>
                 <div class="input-group">
                     <span class="input-group-addon">$</span>
-                    <input type="text" class="form-control" id="product-price" placeholder="Product Price">
+                    <input type="text" class="form-control" id="product-price">
                 </div>
+            </div>
+            <div class="form-group col-xs-3">
+                <label for="product-type">Compare at price</label>
+                <div class="input-group">
+                    <span class="input-group-addon">$</span>
+                    <input type="text" class="form-control" id="product-compare-at"
+                           value="{{product.product.compare_at_price|default:''}}">
+                </div>
+            </div>
+            <div class="form-group col-xs-6">
+                <label for="product-type" style="display: block">Weight</label>
+                <input type="text" class="form-control" id="product-weight" style="display: inline;width: 30%;">
+
+                <select name="product-weight-unit" id="product-weight-unit" class="form-control"
+                    style="display: inline;width: 20%;">
+                    <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                    <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                    <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                    <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                </select>
             </div>
         </div>
         <div class="row">
-            <div class="form-group col-xs-6">
+            <div class="form-group col-xs-3">
                 <label for="product-type">Type</label>
                 <input type="text" class="form-control" id="product-type" placeholder="Product Type">
             </div>
+            <div class="form-group col-xs-6">
+                <label for="product-type">Tags</label>
+                <input type="text" class="form-control tag-it" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
+            </div>
+
         </div>
 
         <div class="row">
             <div id="more-options" class="col-xs-12">
                 <div class="childs" style="">
-                    <div class="row">
-                    <div class="form-group col-xs-6">
-                        <label for="product-type">Weight</label>
-                        <input type="text" class="form-control" id="product-weight" placeholder="Product Weight">
-                    </div>
+                    {% if shopify_product %}
+                        <div class="panel panel-default m-b-lg">
+                            <div class="panel-heading">Variants</div>
+                            <div class="panel-body" style="padding-bottom:0">
+                        <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
+                            <thead>
+                                <tr>
+                                    <th style="width:64px">Image</th>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Compare at price</th>
+                                    <th>Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in shopify_product.variants %}
+                                <tr class="shopify-variant" variant-id="{{item.id}}">
+                                    <td>
+                                        {% if item.image_src %}
+                                        <img class="_lazyload" store="{{product.store.id}}" product="{{item.product_id}}"
+                                             variant="{{item.id}}" src="{{item.image_src}}" style="width:64px" />
+                                        {% endif %}
+                                    </td>
 
-                    <div class="form-group col-xs-3" style="padding-top: 24px">
-                        <select name="product-weight-unit" id="product-weight-unit" class="form-control">
-                            <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
-                            <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
-                            <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                            <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                        </select>
-                    </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-xs-6">
-                            <label for="product-type">Compare at price</label>
-                            <input type="text" class="form-control" id="product-compare-at" placeholder="" value="{{product.product.compare_at_price|default:''}}">
+                                    <td>
+                                        <input type="hidden" name="variant" value="{{item.id}}">
+                                        <input type="hidden" name="option1" value="{{item.option1|default:''}}">
+                                        <input type="hidden" name="option2" value="{{item.option2|default:''}}">
+                                        <input type="hidden" name="option3" value="{{item.option3|default:''}}">
+                                        <input type="hidden" name="title" value="{{item.title}}"/>
+                                        <!-- <input class="var-input var-input-title" type="text" name="title" value="{{item.title}}" /> -->
+                                        <span>{{item.title}}</span>
+                                    </td>
+                                    <td>
+                                        <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
+                                        <span class="var-pad">$</span>
+                                    </td>
+                                    <td>
+                                        <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
+                                        <span class="var-pad">$</span>
+                                    </td>
+                                    <td>
+                                        <input class="var-input" type="text" name="weight" value="{{item.weight}}" />
+                                        <span class="var-pad">{{item.weight_unit|default:''}}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                         </div>
                     </div>
+                    {% endif %}
 
-                    <div class="row">
-                        <div class="form-group col-xs-6">
-                            <label for="product-type">Tags</label>
-                            <input type="text" class="form-control" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
-                        </div>
-                    </div>
-                    <div class="row">
+                    <div class="row" {% if shopify_product %}style="display:none"{% endif %}>
                         <div class="form-group col-xs-6">
                             <label for="">Variants</label>
                         </div>
                     </div>
-                    <div id="variants" class="row well" style="margin:5px 0px 10px 0;padding: 20px 0 0px;">
+
+                    <div id="variants" class="row well"
+                         style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if shopify_product %}display:none{% endif %}">
+
                         <div class="variant-simple form-group col-xs-10" style="display:none">
                             <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
                             <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0px;" placeholder="Values (separeted by comma)">
@@ -100,16 +177,16 @@
                         </div>
                     </div>
 
-                    <div class="form-group col-xs-12">
-                        <label for="product-visible">
-                            <input type="checkbox" class="" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
-                            Make Product Visible
-                        </label>
+
+                    <div class="form-group col-xs-12" style="padding:0">
+                        <textarea name="product-description" class="form-control"></textarea>
                     </div>
 
-                    <div class="form-group col-xs-12">
-                        <input id="product-description" type="hidden" name="content">
-                        <trix-editor id="trix-description" input="product-description"></trix-editor>
+                    <div class="form-group col-xs-12" style="padding:0">
+                        <label for="product-visible">
+                            <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
+                            Make Product Visible
+                        </label>
                     </div>
                 </div>
             </div>
@@ -120,49 +197,89 @@
 
                 <div class="row">
                     <div class="col-xs-12 text-right" style="margin-top: 15px;">
-                        {% if images_upload %}
-                        <button class="btn btn-success btn-xs" data-toggle="modal" data-target="#modal-upload-image">
+                        {% if aws_available and request.user|can:'image_uploader.view' %}
+                        <a class="btn btn-success btn-xs"
+                            {% if request.user|can:'image_uploader.use' %}
+                            data-toggle="modal" data-target="#modal-upload-image"
+                            {% else %}
+                            href="{% url 'upgrade_required' %}"
+                            {% endif %}
+                        >
                             <i class="fa fa-upload"></i> Upload Image
-                        </button>
+                        </a>
                         {% endif %}
                         <button class="btn btn-success btn-xs add-images-btn " data-toggle="modal" data-target="#modal-add-image">More images</button>
                     </div>
                 </div>
             </div>
 
+            {% if not product.shopify_url %}
             <div class="form-group col-xs-12">
                 <label for="store-select">Export to:</label>
                 <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
                 {% for i in request.user.shopifystore_set.all %}
-                    <option value="{{i.id}}">
-                        {{i.title}}
-                        {% if not i.is_active %}
-                        [deleted]
-                        {% endif %}
-                    </option>
+                    {% if i.is_active %}
+                    <option value="{{i.id}}">{{i.title}}</option>
+                    {% endif %}
                 {% endfor %}
                 </select>
             </div>
+            {% else %}
+            <input type="hidden" id="store-select" name="store-select" value="{{product.qelem.store_id}}">
+            {% endif %}
 
             <div class="buttons col-xs-12">
-                <p>
-                    <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
-                    <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving...">Save for later</button>
-                    <button id="view-btn" type="button" class="btn btn-info" style="display:none">View in Shopify</button>
-                    <button id="btn-variants-img" type="button" class="btn btn-success" style="display:none">Setup Variants Images</button>
+                <div class="row">
+                    <div class="col-xs-12">
+                        {% if not product.shopify_url and not shopify_product %}
+                        <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
+                        {% endif %}
 
-                    {% if product.product.original_url %}
-                        <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source}}</a>
-                    {% endif %}
+                        {% if shopify_product %}
+                        <button id="export-btn" target="shopify-update" type="button" class="btn btn-primary" data-loading-text="Updating...">Update in Shopify</button>
+                        {% endif %}
 
-                </p>
+                        <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving..." {% if shopify_product %}style="display:none"{% endif %}>Save for later</button>
+
+                    <div class="btn-group dropup">
+                        <button id="more-options-btn" data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
+                            More Options<span class="caret" style="margin-left:10px"></span></button>
+
+                        <ul class="dropdown-menu">
+                        {% if product.shopify_url %}
+                            <li><a href="{{product.shopify_url}}" target="_blank" >View in Shopify</a></li>
+                            {% if request.user|can:'product_variant_setup.view' %}
+                            <li><a href="{{product.variant_edit}}" target="_blank">Setup Variants Images</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li><a id="view-btn" type="button" style="display:none">View in Shopify</a></li>
+                            {% if request.user|can:'product_variant_setup.view' %}
+                            <li><a id="btn-variants-img" type="button" style="display:none">Setup Variants Images</a></li>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if product.qelem.get_shopify_id %}
+                        <li><a href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank"> <i class="fa fa-chain"></i> Variants Mapping</a></li>
+                        {% endif %}
+
+                        {% if product.shopify_url %}
+                            <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
+                        {% endif %}
+
+                        {% if product.product.original_url %}
+                            <li><a href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source.source}}</a></li>
+                        {% endif %}
+                        </ul>
+                    </div>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- / Product view -->
 
             </div> <!-- / #tab-1 -->
         </div>
-        {% if original %}
+        {% if original and request.user|can:'original_product.use' %}
         <div id="tab-2" class="tab-pane">
             <div class="panel-body">
         <!-- Product view -->
@@ -176,7 +293,7 @@
                 </div>
                 {% if product.product.original_url %}
                 <div class="col-xs-3">
-                    <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source}}</a>
+                    <a class="btn btn-outline btn-default btn-sm pull-right" href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source.source}}</a>
                 </div>
                 {% endif %}
             </div>
@@ -249,7 +366,8 @@
                 <div class="row original-description">
                     <div class="col-xs-12">
                         <strong>Description</strong>
-                        <p>{{original.description|safe}}</p>
+                        <iframe data-src="/api/product-original-desc?product={{product.id}}"
+                                style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
                     </div>
                 </div>
 
@@ -259,33 +377,59 @@
             </div>
         </div>
         {% endif %}
-        {% if product.original_product_source %}
+        {% if product.original_product_source and request.user|can:'shipping_methods.use' %}
         <div id="tab-3" class="tab-pane">
             <div class="panel-body">
                 <div class="row">
                     <div class="form-group col-xs-12">
-                        <iframe src="/shipping/info?id={{product.original_product_id}}" style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
+                        <iframe data-src="/shipping/info?id={{product.original_product_id}}&product={{product.id}}"
+                                style="width: 100%; height: 600px; border: 0px none #ccc"></iframe>
                     </div>
                 </div>
             </div>
         </div>
         {% endif %}
         <div id="tab-4" class="tab-pane">
-            <div class="panel-body">
+            <div class="panel-body" style="min-height:300px">
                 <div class="row">
                     <div class="form-group col-xs-12">
                         <input id="product-notes" type="hidden" name="content-notes">
-                        <trix-editor id="trix-notes" input="product-notes">dsd</trix-editor>
+                        <trix-editor id="trix-notes" input="product-notes" style="min-height: 250px"></trix-editor>
                     </div>
                     <div class="form-group col-xs-12">
-                        <button id="save-product-notes" class="btn btn-success"><i class="fa fa-check"></i> Save Notes</button>
+                        <button id="save-product-notes" class="btn btn-success"><i class="fa fa-save"></i> Save Notes</button>
                     </div>
                 </div>
             </div>
         </div>
+        <div id="tab-5" class="tab-pane">
+            <div class="panel-body"  style="min-height:300px">
+                <div class="row">
+                    <div class="form-group col-xs-12">
+                        <label>Original Product link:</label>
+                        <input id="product-original-link" type="text" class="form-control" value="{{product.qelem.get_original_info.url|default:''}}">
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <label>Product link in Shopify:</label>
+                        <input id="product-shopify-link" type="text" class="form-control" value="{{product.qelem.shopify_link|default:''}}">
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <button id="save-metadata" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                    {% if product.qelem.get_shopify_id %}
+                        <div class="col-xs-6 text-right">
+                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
+                            Variants Mapping
+                            <i class="fa fa-external-link"></i>
+                        </a>
+                        </div>
+                {% endif %}
+
+                </div>
+
+            </div>
+        </div>
     </div>
-</div>
-    </div> <!-- / .ibox-content -->
 </div>
     </div>
 </div>
@@ -324,6 +468,7 @@
     </div>
 </div>
 
+{% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -337,11 +482,14 @@
         </div>
     </div>
 </div>
+{% endif %}
+
 {% endblock %}
 
 {% block extracss %}
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 
 <style type="text/css">
 .buttons {
@@ -385,585 +533,90 @@
 .var-image-block, .add-var-image-block {
     margin-top: 15px;
 }
+
+.var-input {
+    margin: 0px;
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-right: 0 none;
+    width:70px;
+}
+
+.var-input-title {
+    border-right: 1px solid #ddd;
+    width:100%;
+}
+
+.var-pad {
+    border: 1px solid #ddd;
+    padding: 10px 5px;
+    border-left: 0 none;
+    margin-left: -5px;
+}
+
+.table.no-border th, .table.no-border td {
+     border-top: none !important;
+ }
+
+ .shopify-variant td {
+    vertical-align: middle !important;
+ }
+
 </style>
 {% endblock %}
 
-{% block extrajs-before %}
-    <script type="text/javascript" src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
-{% endblock %}
 
 {% block extrajs %}
+<script type="text/javascript">
+    var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
+    $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+</script>
+
+<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+
+<!-- Load Feather code -->
+<script type="text/javascript" src="//feather.aviary.com/imaging/v2/editor.js"></script>
 
 <script type="text/javascript">
 
-var api_base = '';
 var product = {{product.data|safe}};
-
-function removeVariant(e) {
-    e.preventDefault();
-
-    $(this).parent().remove();
-
-    $('#variants .area').append(v);
-};
-
-function showProductInfo(rproduct) {
-    product = rproduct;
-    if (product) {
-        $('#product-title').val(product.title);
-        $('#product-price').val(product.price);
-        $('#product-type').val(product.type);
-        $('#product-tag').val(product.tags);
-        $('#product-compare-at').val(product.compare_at_price);
-
-        if (product.variants.length) {
-            $.each(product.variants, function(i, el) {
-                var v = $('#variants .variant-simple').clone();
-                v.removeClass('variant-simple');
-                v.addClass('variant');
-                v.find("a.remove-variant").click(removeVariant);
-                v.show();
-
-                v.find('#product-variant-name').val(el.title);
-                v.find('#product-variant-values').val(el.values.join(','));
-
-                $('#variants .area').append(v);
-            });
-        }
-
-        if (product.weight) {
-            $('#product-weight').val(product.weight);
-        }
-
-        if (product.description) {
-            setTimeout(function() {
-                var element = document.querySelector("#trix-description");
-                element.editor.setSelectedRange([0, 0])
-                element.editor.insertHTML(product.description);
-            }, 1000);
-        }
-
-        renderImages();
-    }
-}
-
-$("a.add-variant").click(function (e) {
-    e.preventDefault();
-
-    var v = $('#variants .variant-simple').clone();
-    v.addClass('variant');
-    v.removeClass('variant-simple');
-    v.show();
-    v.find("a.remove-variant").click(removeVariant);
-    // v.find('#product-variant-name').val(product.variants_title);
-    // v.find('#product-variant-values').val(product.variants_values.join(','));
-
-    $('#variants .area').append(v);
-});
-
-function removeVariant(e) {
-    e.preventDefault();
-
-    $(this).parent().remove();
-
-    $('#variants .area').append(v);
-};
-
-$('#export-btn').click(function () {
-    var btn = $(this);
-    var target = btn.attr('target');
-
-    btn.button('loading')
-
-    var api_url = $('#store-select').val();
-
-    if (!api_url || api_url.length==0) {
-        alert('Please choose a Shopify store first!');
-        return;
-    // } else {
-        // api_url = api_url + '/admin/products.json';
-    }
-
-    var api_data = {
-      "product": {
-        "title": $('#product-title').val(),
-        "body_html": $('#product-description').val(),
-        "product_type": $('#product-type').val(),
-        "vendor": "",
-        "published": $('#product-visible')[0].checked,
-        "tags": $('#product-tag').val(),
-        "variants": [],
-        "options": [],
-        "images" :[]
-      }
-    };
-
-    if (product.images) {
-        for (var i=0; i<product.images.length; i++) {
-            api_data.product.images.push({
-                src: product.images[i]
-            })
-        }
-    }
-
-    if ($('#variants .variant').length==0) {
-        var vdata = {
-            "price": parseFloat($('#product-price').val()),
-        };
-
-        if ($('#product-compare-at').val().length) {
-            vdata.compare_at_price = parseFloat($('#product-compare-at').val());
-        }
-
-        if ($('#product-weight').val().length) {
-            vdata.weight = parseFloat($('#product-weight').val());
-            vdata.weight_unit = $('#product-weight-unit').val();
-        }
-
-        api_data.product.variants.push(vdata);
-
-    } else {
-        var vars_list = $('#product-variant-values').val().split(',');
-
-        $('#variants .variant').each(function (i, el) {
-            var vals = $(el).find('#product-variant-values').val().split(',');
-            if (vals.length>1) {
-                api_data.product.options.push({
-                    'name': $(el).find('#product-variant-name').val(),
-                    'values': vals
-                });
-            }
-        });
-
-        var vars_list = [];
-        $('#variants .variant').each(function (i, el) {
-            var vals = $(el).find('#product-variant-values').val().split(',');
-            if (vals.length>1) {
-                vars_list.push(vals);
-            }
-        });
-
-        if (vars_list.length>0) {
-            vars_list = allPossibleCases(vars_list);
-            for (var i=0; i<vars_list.length; i++) {
-                var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
-
-                var vdata = {
-                    "price": parseFloat($('#product-price').val()),
-                    "title": title,
-                };
-
-                if (typeof(vars_list[i]) == "string") {
-                    vdata["option1"] = vars_list[i];
-                } else {
-                    $.each(vars_list[i], function (j, va) {
-                        vdata["option"+(j+1)] = va;
-                    });
-                }
-
-                if ($('#product-compare-at').val().length) {
-                    vdata.compare_at_price = parseFloat($('#product-compare-at').val());
-                }
-
-                if ($('#product-weight').val().length) {
-                    vdata.weight = parseFloat($('#product-weight').val());
-                    vdata.weight_unit = $('#product-weight-unit').val();
-                }
-
-                api_data.product.variants.push(vdata);
-            }
-        } else {
-            alert('Variants should have more than one value separated by comma (,)');
-            btn.button('reset');
-            return;
-        }
-    }
-
-    $.ajax({
-        url: api_base + '/api/' + target,
-        type: 'POST',
-        data: JSON.stringify ({
-            'product': {{product.id}},
-            'store': api_url,
-            'data': JSON.stringify(api_data),
-        }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        context: {btn: this},
-        success: function (data) {
-            $(this.btn).button('reset');
-
-            if ('product' in data) {
-                if (data.product.data) {
-                    $('#btn-variants-img').prop('store-id', $('#store-select').val());
-                    $('#btn-variants-img').prop('product-id', data.product.data.id);
-                    $('#btn-variants-img').show();
-                }
-
-                $("#view-btn").attr("shopify-id", data.product.id);
-                $("#view-btn").attr("shopify-url", data.product.url);
-                $("#view-btn").show();
-                $('#export-btn, #save-for-later-btn').hide();
-            }  else {
-                $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
-            }
-        },
-        error: function (data) {
-            console.log(data);
-            $(this.btn).button('reset');
-
-            $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
-        }
-
-    });
-});
-
-$('#save-for-later-btn').click(function (e) {
-    var btn = $(this);
-    var target = btn.attr('target');
-
-    btn.button('loading')
-
-    var api_url = $('#store-select').val();
-
-    if (!api_url || api_url.length==0) {
-        alert('Please choose a Shopify store first!');
-        return;
-    }
-
-    var api_data = {
-        'title': $('#product-title').val(),
-        'description': $('#product-description').val(),
-        'price': parseFloat($('#product-price').val()),
-        'compare_at_price': parseFloat($('#product-compare-at').val()),
-        'images': product.images,
-        'original_url': product.original_url,
-        'type': $('#product-type').val(),
-        'tags': $('#product-tag').val(),
-        'weight': parseFloat($('#product-weight').val()),
-        'weight_unit': $('#product-weight-unit').val(),
-        'published': $('#product-visible').prop('checked'),
-
-        'variants': []
-    }
-
-
-
-    if ($('#variants .variant').length) {
-        $('#variants .variant').each(function (i, el) {
-            api_data.variants.push({
-                'title': $(el).find('#product-variant-name').val(),
-                'values': $(el).find('#product-variant-values').val().split(',')
-            });
-
-        });
-    }
-
-    $.ajax({
-        url: api_base + '/api/' + target,
-        type: 'POST',
-        data: JSON.stringify ({
-            'product': {{product.id}},
-            'store': api_url,
-            'data': JSON.stringify(api_data),
-        }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        context: {btn: this},
-        success: function (data) {
-            $(this.btn).button('reset');
-
-            if ('product' in data) {
-                $("#view-btn").attr("shopify-id", data.product.id);
-                $("#view-btn").attr("shopify-url", data.product.url);
-            }  else {
-                $("body").append($('<span>', {text: 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error')}));
-            }
-        },
-        error: function (data) {
-            console.log(data);
-            $(this.btn).button('reset');
-
-            $("body").append($('<span>', {text: 'Export Error: Unknow error'}));
-        }
-    });
-});
-
-$("#view-btn").click(function () {
-    window.open($(this).attr('shopify-url'), '_blank');
-});
-
-function matchImagesWithExtra() {
-    $('#modal-add-image .extra-added').remove();
-    $('#modal-add-image .add-var-image-block').each(function(i, el) {
-            if (indexOfImages(product.images, $('img', el).attr('src')) != -1) {
-                $(el).append($('<img class="extra-added" src="//i.imgur.com/HDg5nrv.png" style="position: absolute;left: 16px;top: 1px;border-radius: 0 0 8px 0;background-color: #fff;">'));
-            }
-    });
-}
-
-function imageClicked(e) {
-    var imageID = $(this).parent().find('img').attr('image-id');
-    var new_images = [];
-
-    for (var i = 0; i < product.images.length; i++) {
-        if (i != imageID) {
-            new_images.push(product.images[i]);
-        }
-    };
-
-    product.images = new_images;
-    $(this).parent().remove();
-
-    renderImages();
-}
-
-$('.var-image-block button').click(imageClicked);
-
-$('.var-image-block').mouseenter(function() {
-    $(this).find('button').show();
-})
-.mouseleave(function() {
-    $(this).find('button').fadeOut();
-});
-
-$('#btn-variants-img').click(function (e) {
-    var store_id = $('#btn-variants-img').prop('store-id');
-    var product_id = $('#btn-variants-img').prop('product-id');
-
-    window.location.href = '/product/variants/'+store_id+'/'+product_id;
-});
-
-$('#save-product-notes i').hide();
-$('#save-product-notes').click(function (e) {
-    var btn = $(this);
-
-    btn.button('loading');
-
-    $.ajax({
-        type: 'POST',
-        url: '/api/product-notes',
-        context: btn,
-        data: {
-            'notes': $('#product-notes').val(),
-            'product': {{product.id}},
-        },
-        success: function(data) {
-            if (data.status == 'ok') {
-                setTimeout(function () {
-                    btn.find('i').slideDown(300, function () {
-                        setTimeout(function () {
-                            $('i', btn).slideUp();
-                        }, 1000);
-                    });
-                }, 100);
-            } else {
-                alert('Server Error');
-            }
-        },
-        error: function(data) {
-            alert('Server Error');
-        },
-        complete: function() {
-            btn.button('reset');
-        }
-    });
-});
-
-$('#modal-add-image').on('show.bs.modal', function (e) {
-    $('#modal-add-image .description-images-add').empty();
-    var counter=0;
-    $('.original-description img').each(function (i, el) {
-        if (indexOfImages(product_extra_images, $(el).attr('src'))==-1) {
-            if(counter%4==0) {
-                $('.description-images-add').append($('<div class="col-xs-12"></div>'));
-            }
-
-            var d = $('<div>', {class:'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
-            var img = $('<img>', {src: $(el).attr('src'), class: 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
-            d.append(img);
-
-            img.click(function (e) {
-                var imageIdx = indexOfImages(product.images, $(this).attr('src'));
-                if (imageIdx == -1) {
-                    product.images.push($(this).attr('src'));
-                } else {
-                    var images = [];
-
-                    for (var i = 0; i < product.images.length; i++) {
-                        if (i!=imageIdx) {
-                            images.push(product.images[i]);
-                        }
-                    };
-
-                    product.images = images;
-                }
-
-                renderImages();
-            });
-
-            $('.description-images-add').append(d);
-            counter++;
-        }
-    });
-
-    matchImagesWithExtra();
-});
-
-$('#modal-add-image .add-var-image').click(function (e) {
-    var imageIdx = indexOfImages(product.images, $(this).attr('src'));
-    if (imageIdx == -1) {
-        product.images.push($(this).attr('src'));
-    } else {
-        var images = [];
-
-        for (var i = 0; i < product.images.length; i++) {
-            if (i!=imageIdx) {
-                images.push(product.images[i]);
-            }
-        };
-
-        product.images = images;
-    }
-
-    renderImages();
-});
-
-{% if images_upload %}
-
-$('#modal-upload-image').on('show.bs.modal', function (e) {
-    $('.upload-image-btn').button('reset');
-    $('#file_input').prop('value', '');
-});
-
-$('.upload-image-btn').click(function (e) {
-    var files = document.getElementById("file_input").files;
-    var file = files[0];
-    if(file == null){
-        alert("No file selected.");
-    }
-    else{
-        $(this).button('loading');
-        get_signed_request(file);
-    }
-});
-
-function get_signed_request(file){
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/upload/sign_s3?file_name=uploads/u{{user.id}}/"+file.name+"&file_type="+file.type);
-    xhr.onreadystatechange = function(){
-        if(xhr.readyState === 4) {
-            if(xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                if ('error' in response && typeof(response.error)=='string') {
-                    alert('Upload error: '+response.error);
-                } else {
-                    upload_file(file, response.signed_request, response.url);
-                }
-            } else {
-                alert("Could not get signed URL.");
-            }
-
-            $('.upload-image-btn').button('reset');
-        }
-    };
-    xhr.send();
-}
-
-function upload_file(file, signed_request, url){
-    var xhr = new XMLHttpRequest();
-    xhr.open("PUT", signed_request);
-    xhr.setRequestHeader('x-amz-acl', 'public-read');
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            file_uploaded(url);
-        }
-    };
-    xhr.onerror = function() {
-        alert("Could not upload file.");
-    };
-    xhr.send(file);
-}
-
-function file_uploaded(url) {
-    product.images.push(url);
-    renderImages();
-
-    $.ajax({
-        type: 'POST',
-        url: '/api/add-user-upload',
-        data: {
-            'url': url,
-            'product': {{product.id}},
-        },
-        success: function(data) {},
-        error: function(data) {},
-    });
-}
+var config = {
+    user_id: {{user.id}},
+    product_id: {{product.id}},
+    product_notes: '{{product.notes|default:''|escapejs}}',
+
+{% if shopify_product %}
+    shopify_options: {% json_dumps shopify_product.options %},
+    shopify_images: {% json_dumps shopify_product.images %},
+{% else %}
+    shopify_options: null,
+    shopify_images: null,
 {% endif %}
 
-function cleanImageLink(link) {
-    return link.replace(/\?[^\?]+$/,'');
-}
+    image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
+    photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
+    feather_editor: null,
+    shopify_variants: {
+    {% for variant in shopify_product.variants %}
+        '{{variant.title}}': {{variant.id}},
+    {% endfor %}
+    },
 
-function indexOfImages(images, link) {
-    for (var i = images.length - 1; i >= 0; i--) {
-        if(cleanImageLink(images[i]) == cleanImageLink(link)) {
-            return i;
-        }
-        if(cleanImageLink(images[i]).toLocaleLowerCase() == cleanImageLink(link).toLocaleLowerCase()) {
-            console.log('Lower issue',cleanImageLink(images[i]), cleanImageLink(link));
-        }
-    }
-
-    return -1;
-}
-
-function renderImages() {
-    $('#var-images').empty();
-    $.each(product.images, function (i, el) {
-        if(i!=0&&i%4==0) {
-            $('#var-images').append($('<div class="col-xs-12"></div>'));
-        }
-
-        var d = $('<div>', {'class':'col-xs-3 var-image-block','image-url': el});
-        var img = $('<img>', {src: el, 'class': 'var-image', 'image-url': el, 'image-id':i, 'style':'cursor: default'});
-        d.append(img);
-        d.append($('<button class="btn btn-danger  btn-xs" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
-
-        d.find('button').click(imageClicked);
-
-        d.mouseenter(function() {
-            $(this).find('button').show();
-        })
-        .mouseleave(function() {
-            $(this).find('button').fadeOut();
-        })
-
-        $('#var-images').append(d);
-    });
-
-    matchImagesWithExtra();
-}
-var product_extra_images = [
-{% for item in original.extra_images %}
-        cleanImageLink("{{item}}"),
-{% endfor %}
-];
+    product_extra_images: [
+    {% for item in original.extra_images %}
+        '{% remove_link_query item %}',
+    {% endfor %}
+    ],
+};
 
 $(function() {
-    showProductInfo(product);
+    {% if aws_available and request.user|can:'image_uploader.use' %}
 
-    setTimeout(function() {
-        var element = document.querySelector("#trix-notes");
-        element.editor.setSelectedRange([0, 0])
-        element.editor.insertHTML('{{product.notes|escapejs}}');
-    }, 2000);
-});
-
-$(function() {
     $("#uploader").plupload({
         runtimes : 'html5,flash',
         flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/Moxie.swf',
@@ -999,15 +652,75 @@ $(function() {
             },
             FileUploaded: function(up, file, info) {
                 var url = 'http://{{aws_bucket}}.s3.amazonaws.com/uploads/u{{user.id}}/'+file.name;
-                file_uploaded(url);
+                document.file_uploaded(url);
             },
             UploadComplete: function(up, files){
                 $('#modal-upload-image').modal('hide');
             }
         }
     });
+    {% endif %}
+
+    {% if request.user|can:'aviary_photo_editor.use' %}
+
+    config.feather_editor = new Aviary.Feather({
+        apiKey: '220489e3e16f4691bc88d1ef81e05a8b',
+        theme: 'dark', // Check out our new 'light' and 'dark' themes!
+        tools: 'all',
+        appendTo: '',
+        onSave: function(imageID, newURL) {
+            var img = document.getElementById(imageID);
+            img.src = newURL;
+
+            config.feather_editor.disableControls();
+            config.feather_editor.showWaitIndicator();
+
+            $.ajax({
+                url: '/upload/save_image_s3',
+                type: 'POST',
+                data: {
+                    'url': newURL,
+                    'product': config.product_id
+                },
+                context: {'img': img, 'imageID': imageID},
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        this.img.src = data.url;
+                        product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
+                    } else {
+                        swal('Image Editor', 'Error occured when saving the image', 'error');
+                    }
+                },
+                error: function(data) {
+                    swal('Image Editor', 'Error occured when saving the image', 'error');
+                },
+                complete: function() {
+                    config.feather_editor.enableControls();
+                    config.feather_editor.hideWaitIndicator();
+                }
+            });
+        },
+        onError: function(errorObj) {
+            alert(errorObj.message);
+        }
+    });
+    {% endif %}
+
+    $('.original-description').css('overflow', 'auto');
 });
 
 </script>
+
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
+    {% endcompress %}
+
+{% if request.user|can:'image_uploader.use' %}
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'shopified/js/uploader.js' %}"></script>
+    {% endcompress %}
+{% endif %}
+
+
 {% endblock %}
 

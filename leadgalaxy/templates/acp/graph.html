@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Shopify Products<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <div id="products_graph" style="height:300px"></div>
+                <p>Products count: <b>{{products_count}}</b> in <b>{{stores_count}}</b> Stores</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Users Registration<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <div id="users_graph" style="height:300px"></div>
+                <!-- <p>Products count: <b>{{products_count}}</b> in <b>{{stores_count}}</b> Stores</p> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.min.js"></script>
+
+    <script type="text/javascript">
+        function gd(year, month, day) {
+            return new Date(year, month - 1, day).getTime();
+        }
+
+        $(document).ready(function() {
+
+            var d1 = [
+                {% for item in products %}
+                    [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
+                {% endfor %}
+            ];
+
+            var d2 = [
+                {% for item in users %}
+                    [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
+                {% endfor %}
+            ];
+
+            var options = {
+                series: {
+                    lines: {
+                        show: true,
+                        lineWidth: 3,
+                    },
+                    points: {
+                        show: true
+                    }
+                },
+                shadowSize: 0,
+                xaxis: {
+                    mode: "time",
+                    timeformat: "%Y/%m/%d",
+                    minTickSize: [1, "day"]
+                },
+                colors: ['#357EBD']
+            };
+
+            $.plot("#products_graph",
+                [
+                    {
+                        label: "Shopify Saved Products",
+                        data: d1
+                    },
+                ],
+                options
+            );
+            $.plot("#users_graph",
+                [
+                    {
+                        label: "New Users Per Day",
+                        data: d2
+                    },
+                ],
+                options
+            );
+        });
+
+    </script>
+{% endblock %}
+

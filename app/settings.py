@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
 ALLOWED_HOSTS = [
     'app.shopifiedapp.com',
@@ -43,7 +43,11 @@ INSTALLED_APPS = (
 
     'widget_tweaks',    # For forms
     'hijack',
+    'multiselectfield',
+    'compressor',
+    'storages',
 
+    'article',
     'leadgalaxy'
 )
 
@@ -73,10 +77,18 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'article.context_processors.sidebarlinks',
             ],
         },
     },
 ]
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    # other finders..
+    'compressor.finders.CompressorFinder',
+)
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
@@ -103,10 +115,9 @@ USE_TZ = True
 SESSION_COOKIE_AGE = 6048000
 
 # Parse database configuration from $DATABASE_URL
-DATABASES['default'] =  dj_database_url.config()
-
-# Enable Connection Pooling (if desired)
-DATABASES['default']['ENGINE'] = 'django_postgrespool'
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config()
+    DATABASES['default']['ENGINE'] = 'django_postgrespool'
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -133,12 +144,62 @@ MEDIA_URL = 'http://localhost/'
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after hijacking the user.
-REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/admin/"  # where you want to be redirected to, after releasing the user.
-
+REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after releasing the user.
 
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
 EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = "noreply@shopifiedapp.com"
+DEFAULT_FROM_EMAIL = "support@shopifiedapp.com"
+
+# Django Storage
+if not DEBUG:
+    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    AWS_STORAGE_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
+
+    AWS_S3_SECURE_URLS = False
+    AWS_QUERYSTRING_AUTH = False
+
+    AWS_IS_GZIPPED = True
+    AWS_HEADERS = {
+        'Cache-Control': 'max-age=86400',
+    }
+    GZIP_CONTENT_TYPES = (
+        'text/css',
+        'application/javascript',
+        'application/x-javascript',
+        'text/javascript'
+    )
+
+    STATICFILES_LOCATION = 'static'
+    MEDIAFILES_LOCATION = 'media'
+
+    STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
+    DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
+    STATIC_URL = "http://%s.s3.amazonaws.com/%s/" % (AWS_STORAGE_BUCKET_NAME, STATICFILES_LOCATION)
+
+    COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
+
+# Django Compressor
+COMPRESS_ENABLED = not DEBUG
+COMPRESS_OFFLINE = True
+COMPRESS_OUTPUT_DIR = 'cdn'
+COMPRESS_ROOT = STATIC_ROOT
+COMPRESS_URL = STATIC_URL
+
+COMPRESS_JS_FILTERS = [
+    'compressor.filters.yuglify.YUglifyJSFilter'
+    # 'compressor.filters.jsmin.SlimItFilter'
+]
+
+COMPRESS_CSS_FILTERS = [
+    # Creates absolute urls from relative ones.
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    # CSS minimizer.
+    # 'compressor.filters.cssmin.CSSMinFilter',
+    'compressor.filters.yuglify.YUglifyJSFilter'
+]
+
+JVZOO_SECRET_KEY = os.environ['JVZOO_SECRET']

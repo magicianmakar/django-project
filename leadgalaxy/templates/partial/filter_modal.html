@@ -1,0 +1,60 @@
+<div id="modal-filter" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Filter</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <form id="product-filter-form" class="form-inline" method="get">
+                        <input type="hidden" name="f" value="1">
+                        <input type="hidden" name="ppp" value="{{request.GET.ppp}}">
+                        <input type="hidden" name="sort" value="{{request.GET.sort}}">
+                        <input type="hidden" name="store" value="{{request.GET.store}}">
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Title</label>
+                                <input name="title" type="text" class="form-control" value="{{request.GET.title}}" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Price</label>
+                                <input name="price_min" type="text" class="form-control" value="{{request.GET.price_min}}" style="width: 80px;padding: 0 5px" placeholder="Min.">
+                                <input name="price_max" type="text" class="form-control" value="{{request.GET.price_max}}" style="width: 80px;padding: 0 5px" placeholder="Max.">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Type</label>
+                                <input id="filter-type" name="type" type="text" class="form-control" value="{{request.GET.type}}" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Tag</label>
+                                <input id="filter-tag" name="tag" type="text" class="form-control" value="{{request.GET.tag}}" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Product Visibility</label>
+                                <select name="visibile" type="text" class="form-control">
+                                    <option value=""></option>
+                                    <option value="yes" {% if request.GET.visibile %}selected="selected"{% endif %}>Yes</option>
+                                    <option value="no"  {% if request.GET.visibile %}selected="selected"{% endif %}>No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 col-md-offset-8 m-t-md">
+                            <button id="product-filter-form-btn" class="btn btn-primary">Apply</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,3 +6,4 @@ db.sqlite3
 seo-repport.sublime-project
 seo-repport.sublime-workspace
 docs
+node_modules

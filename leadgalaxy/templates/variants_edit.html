@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load template_helper %}
+{% load compress %}
 
 {% block main-container %}
 
@@ -60,7 +62,7 @@
 
 {% block extracss %}
 
-<link href="/static/css/jquery.loader.min.css" rel="stylesheet">
+<link href={% static 'css/jquery.loader.min.css' %} rel="stylesheet">
 
 <style type="text/css">
 .buttons {
@@ -108,160 +110,17 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="/static/js/jquery.loader.min.js" type="text/javascript"></script>
+<script src={% static 'js/jquery.loader.min.js' %} type="text/javascript"></script>
 
 <script type="text/javascript">
 
-var api_base = '';
-var product = {{product|safe}};
-
-/* Product Variants Linking */
-
-$('#btn-variants-img').click(function (e) {
-    localStorage.current_product = JSON.stringify(document.savedProduct);
-    //window.location.href='/variants.html';
-});
-
-function displayAjaxError(desc, data) {
-    var error_msg = 'Server error.';
-    if ('error' in data && typeof (data.error) == 'string') {
-        error_msg = data.error;
-    }
-    $('.displayAjaxError').remove();
-    $(".container-fluid").prepend($('<div>', {
-        'class': 'displayAjaxError row alert alert-danger',
-        'text': desc +': '+ error_msg
-    }));
-}
-
-function updateSelectButton() {
-    var current = parseInt($('.current-var').val());
-    var total = $('.current-var').prop('total');
-
-    $('.var-btn-prev').prop('disabled', current<=0);
-    $('.var-btn-next').prop('disabled', current+1>=total);
-}
-
-$('.var-btn-next').click(function (e) {
-    var current = parseInt($('.current-var').val());
-    var total = $('.current-var').prop('total');
-    var next = current + 1;
-
-    if (next<product.variants.length) {
-        $('.current-var').val(next);
-    }
-
-     updateSelectButton();
-});
-
-$('.var-btn-prev').click(function (e) {
-    var current = parseInt($('.current-var').val());
-    var total = $('.current-var').prop('total');
-    var next = current - 1;
-
-    if (next>=0) {
-        $('.current-var').val(next);
-    }
-
-     updateSelectButton();
-});
-
-$('#view-btn').click(function (e) {
-    var api_url = '{{store.api_url}}'.replace(/\/[^:]+:[^@]+@/, '/');
-    window.open(api_url+'/admin/products/'+product.id,'_blank');
-});
-
-function imageClicked(e) {
-    var img = $(this);
-    var current = $('.current-var').val();
-    var variant_id = product.variants[current].id;
-    var image_id = $(this).attr('image-id');
-
-    $('.var-btn-prev').prop('disabled', true);
-    $('.var-btn-next').prop('disabled', true);
-
-    var api_data = {
-        "variant": {
-            "id": variant_id,
-            "image_id": image_id,
-        }
-    }
-
-    var api_url = '{{store.api_url}}';
-
-    img.parent().loader('show');
-
-    $.ajax({
-        url: '/api/variant-image',
-        type: 'POST',
-        data: {
-            'url': '{{store.api_url}}/admin/variants/'+variant_id+'.json',
-            'data': JSON.stringify(api_data)
-        },
-        // contentType: "application/json; charset=utf-8",
-        // dataType: "json",
-        context: {image: this},
-        success: function (data) {
-            console.dir(data);
-            img.parent().find('.link-success').fadeIn();
-            setTimeout(function() {
-                img.parent().find('.link-success').fadeOut();
-            }, 1500);
-        },
-        error: function (data) {
-            console.dir(data);
-            displayAjaxError('Image linking error', data);
-        },
-        complete: function() {
-            img.parent().loader('hide');
-        }
-    });
-
-    updateSelectButton();
-};
-
-function setupVariantsLinking() {
-    // product = JSON.parse(localStorage.current_product);
-
-    $('.product-title').text(product.title);
-    $('.product-variants').text(product.variants.length);
-
-    if (product.variants.length) {
-        $('.current-var').prop('total', product.variants.length);
-        // $('.current-var').text(product.variants[0].title);
-
-        $.each(product.variants, function (i, el) {
-            $('.current-var').append($('<option>', {text: product.variants[i].title, value: i}));
-        });
-
-        // $('.current-var > option').prop('selected');
-
-
-        $.each(product.images, function (i, el) {
-            var d = $('<div>', {'class':'col-xs-3 var-image-block'});
-            var img = $('<img>', {src: el.src, 'class': 'var-image', 'image-id': el.id});
-            d.append(img);
-            d.append($('<img class="link-success" src="/static/img/checked-checkbox-24.png" style="display:none;position: absolute;left: 25px;top: 5px;background-color: #fff;border-radius: 5px;">'));
-
-            img.click(imageClicked);
-
-            $('#var-images').append(d);
-
-            // if (i!=0&&i%4==0) {
-                // $('#var-images').append($('<div>', {class:'clearfix visible-xs-block'}));
-            // }
-        })
-        updateSelectButton();
-
-        $('.current-var').change(updateSelectButton);
-    }
-}
-/* Product Variants Linking */
-
-$(function() {
-    setupVariantsLinking();
-});
+var product = {% json_dumps product %};
+var api_url = '{{store.api_url}}';
 
 </script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'shopified/js/variants_edit.js' %}"></script>
+{% endcompress %}
 {% endblock %}
 

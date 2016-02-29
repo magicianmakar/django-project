@@ -3,6 +3,18 @@
 {% block main-nav %}{% endblock %}
 {% block main-container %}
 <div class="ui-window-bd">
+    {% if store %}
+    <div>
+        <h3>Seller:</h3>
+        <h4>
+            <a href="{{store.url}}" target="_blank">{{store.name}}</a> |
+            <a href="{{store.contact}}" target="_blank" style="color: #f90">Contact Now</a>
+        </h4>
+
+        <hr />
+    </div>
+    {% endif %}
+
     <div class="ui-window-content" data-role="content">
         Ship order(s) to: <b>USA</b>
     </div>

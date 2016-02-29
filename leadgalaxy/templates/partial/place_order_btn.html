@@ -1,0 +1,38 @@
+{% load template_helper %}
+
+{% if original %}
+    <div class="btn-group">
+        <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">
+            Place Order
+            <span class="caret"></span></button>
+
+        <ul class="dropdown-menu">
+            {% if item.shopify_order %}
+            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}" data="{{item.shopify_order.encoded}}">Order Details</a></li>
+            {% else %}
+            <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
+            {% endif %}
+
+            <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
+
+            {% if item.order_data %}
+            <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
+                   {% if aliexpress_affiliate %}
+                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data False|urlencode  %}"
+                   {% else %}
+                        href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data False|urlencode %}"
+                   {% endif %}
+                   >Step By Step Order</a></li>
+            <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
+                   {% if aliexpress_affiliate %}
+                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data True|urlencode  %}"
+                   {% else %}
+                        href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}"
+                   {% endif %}
+                   >Auto Place Order</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% else %}
+    <span class="label label-warning">Not Tracked</span>
+{% endif %}
