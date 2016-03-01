@@ -5,9 +5,12 @@ import uuid
 import md5
 import hashlib
 import traceback
+import pytz
+import collections
 
 from django.core.mail import send_mail
 from django.template import Context, Template
+from django.utils import timezone
 from leadgalaxy.models import *
 
 from app import settings
@@ -634,3 +637,32 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
                   from_email='support@shopifiedapp.com',
                   message=email_html,
                   html_message=email_html)
+
+
+def get_countries():
+    country_names = pytz.country_names
+    country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
+    countries = zip(country_names.keys(), country_names.values())
+
+    return countries
+
+
+def get_timezones(country=None):
+    if country:
+        return pytz.country_timezones(country)
+    else:
+        return pytz.common_timezones
+
+
+class TimezoneMiddleware(object):
+    def process_request(self, request):
+        tzname = request.session.get('django_timezone')
+        if not tzname:
+            if request.user.is_authenticated():
+                tzname = request.user.profile.timezone
+                request.session['django_timezone'] = request.user.profile.timezone
+
+        if tzname:
+            timezone.activate(pytz.timezone(tzname))
+        else:
+            timezone.deactivate()

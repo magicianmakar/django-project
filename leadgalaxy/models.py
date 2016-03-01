@@ -32,6 +32,7 @@ class UserProfile(models.Model):
     city = models.CharField(max_length=255, blank=True, default='')
     state = models.CharField(max_length=255, blank=True, default='')
     country = models.CharField(max_length=255, blank=True, default='')
+    timezone = models.CharField(max_length=255, null=True, blank=True, default='')
 
     config = models.TextField(default='', blank=True)
 

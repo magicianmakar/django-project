@@ -976,6 +976,53 @@ def api(request, target):
         except:
             return HttpResponse('')
 
+    if method == 'GET' and target == 'timezones':
+        return JsonResponse(utils.get_timezones(data.get('country')), safe=False)
+
+    if method == 'POST' and target == 'user-profile':
+        form = UserProfileForm(data)
+        if form.is_valid():
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            user.save()
+
+            profile = user.profile
+            profile.timezone = form.cleaned_data['timezone']
+            profile.country = form.cleaned_data['country']
+            profile.save()
+
+            request.session['django_timezone'] = form.cleaned_data['timezone']
+
+            return JsonResponse({'status': 'ok'})
+
+    if method == 'POST' and target == 'user-email':
+        # TODO: Handle Payements and email changing
+        form = UserProfileEmailForm(data=data, user=user)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password2']
+
+            email_change = (user.email != email)
+            if email_change:
+                user.email = email
+                user.save()
+
+            if password:
+                user.set_password(password)
+                user.save()
+
+                auth_user = authenticate(username=user.username, password=password)
+                login(request, auth_user)
+
+            return JsonResponse({
+                'status': 'ok',
+                'email': email_change,
+                'password': password
+            })
+        else:
+            print form.errors
+            return JsonResponse({'error': form.errors})
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 
@@ -2053,16 +2100,10 @@ def upload_file_sign(request):
 
 @login_required
 def user_profile(request):
-    import pytz
-    import collections
-
-    country_names = pytz.country_names
-    country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
-    countries = zip(country_names.keys(), country_names.values())
 
     return render(request, 'user/profile.html', {
-        'timezones': pytz.all_timezones,
-        'countries': countries,
+        'countries': utils.get_countries(),
+        'timezones': utils.get_timezones(),
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })

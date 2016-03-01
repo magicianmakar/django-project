@@ -1,72 +1,115 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load compress %}
 
 {% block main-container %}
 
 <div class="row">
-    <div class="col-md-8 col-md-offset-2">
-        <div class="ibox float-e-margins">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a data-toggle="tab" href="#tab-1" aria-expanded="true">Profile</a>
+                </li>
+                <li class="">
+                    <a data-toggle="tab" href="#tab-2" aria-expanded="false">Email &amp; Password</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane active">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class=" col-md-12 col-md-offset-0 ">
+                                <form id="user-profile" method="get" class="form-horizontal">
+                                    <div class="form-group"><label class="col-sm-2 control-label">Name</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control" placeholder="First Name">
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control" placeholder="Last Name">
+                                        </div>
+                                    </div>
 
-             <div class="ibox-title">
-                <h5>Your Profile<small></small></h5>
-                <div class="ibox-tools">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
-                        <i class="fa fa-wrench"></i>
-                    </a>
+                                    <div class="form-group"><label class="col-sm-2 control-label">Country</label>
+                                        <div class="col-sm-10">
+                                            <select id="country" name="country" style="width:350px;">
+                                                <option value=""></option>
+                                                {% for item in countries %}
+                                                <option value="{{item.0}}"
+                                                    {% if user.profile.country == item.0 %}selected="selected"{% endif %}
+                                                    >{{item.1}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
 
-                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                </div>
-            </div>
+                                    <div class="form-group"><label class="col-sm-2 control-label">Time Zone</label>
+                                        <div class="col-sm-10">
+                                            <select id="timezone" name="timezone" style="width:350px;">
+                                                <option value=""></option>
+                                                {% for item in timezones %}
+                                                <option value="{{item}}"
+                                                    {% if user.profile.timezone == item %}selected="selected"{% endif %}
+                                                    >{{item}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
 
-            <div class="ibox-content">
-                <div class="row">
-                    <div class=" col-md-12 col-md-offset-0 ">
-                        <form method="get" class="form-horizontal">
-                            <div class="form-group"><label class="col-sm-2 control-label">Name</label>
-                                <div class="col-sm-4"><input type="text" class="form-control" placeholder="First Name"></div>
-                                <div class="col-sm-4"><input type="text" class="form-control" placeholder="Last Name"></div>
+                                    <div class="hr-line-dashed"></div>
+                                </form>
                             </div>
-                            <div class="form-group"><label class="col-sm-2 control-label">Country</label>
-                                <div class="col-sm-10">
-                                    <select id="country" style="width:350px;">
-                                        <option value=""></option>
-                                        {% for item in countries %}
-                                        <option value="{{item.0}}">{{item.1}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="hr-line-dashed"></div>
-                            <div class="form-group"><label class="col-sm-2 control-label">Email</label>
-                                <div class="col-sm-10"><input type="email" class="form-control"></div>
-                            </div>
-                            <div class="form-group"><label class="col-sm-2 control-label">Password</label>
 
-                                <div class="col-sm-10"><input type="password" class="form-control" name="password"></div>
+                            <div class=" col-md-10 col-md-offset-1 ">
+                                  <button id="save-profile" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                             </div>
-                            <div class="form-group"><label class="col-sm-2 control-label">Password Verification</label>
-
-                                <div class="col-sm-10"><input type="password" class="form-control" name="password"></div>
-                            </div>
-                            <div class="hr-line-dashed"></div>
-
-                            <div class="form-group"><label class="col-sm-2 control-label">Time Zone</label>
-                                <div class="col-sm-10">
-                                    <select id="timezone" style="width:350px;">
-                                        <option value=""></option>
-                                        {% for item in timezones %}
-                                        <option value="{{item}}">{{item}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="hr-line-dashed"></div>
-                        </form>
+                        </div>
                     </div>
+                </div>
+                <div id="tab-2" class="tab-pane">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class=" col-md-12 col-md-offset-0 ">
+                                <form id="user-email" method="get" class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Current Password</label>
+                                        <div class="col-sm-4">
+                                            <input type="password" class="form-control" name="password">
+                                        </div>
+                                    </div>
 
-                    <div class=" col-md-10 col-md-offset-1 ">
-                          <a href="#" class="btn btn-primary">My Sales Performance</a>
+                                    <div class="hr-line-dashed"></div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Email</label>
+                                        <div class="col-sm-4">
+                                            <input type="email" name="email" value="{{ user.email }}" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">New Password</label>
+
+                                        <div class="col-sm-4">
+                                            <input type="password" class="form-control" name="password1">
+                                        </div>
+                                        <span class="help-block ">(Leave blank if you don't want to change it)</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Confirm Password</label>
+                                        <div class="col-sm-4">
+                                            <input type="password" class="form-control" name="password2">
+                                        </div>
+                                    </div>
+
+                                    <div class="hr-line-dashed"></div>
+                                </form>
+
+                                <div class=" col-md-10 col-md-offset-1 ">
+                                      <button id="save-email" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -82,15 +125,9 @@
 {% endblock %}
 
 {% block extrajs %}
-    <script src="{% static 'js/plugins/chosen/chosen.jquery.min.js' %}" type="text/javascript"></script>
-
-    <script type="text/javascript">
-    $(function () {
-        $('select').chosen({
-            width: '200px'
-        });
-    });
-
-    </script>
+{% compress js %}
+    <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
+    <script src="{% static 'shopified/js/profile.js' %}" type="text/javascript"></script>
+{% endcompress %}
 {% endblock %}
 
