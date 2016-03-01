@@ -36,7 +36,7 @@ class UserProfile(models.Model):
     config = models.TextField(default='', blank=True)
 
     plan_expire_at = models.DateTimeField(blank=True, null=True, verbose_name="Plan Expire Date")
-    plan_after_expire = models.ForeignKey('GroupPlan',blank=True, null=True, related_name="expire_plan",
+    plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
                                           verbose_name="Plan to user after Expire Date")
 
     def __str__(self):
