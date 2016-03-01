@@ -13,14 +13,17 @@ from django.core.paginator import Paginator
 
 import requests
 
+
 class BsErrorList(ErrorList):
     def __unicode__(self):
         return self.as_divs()
 
     def as_divs(self):
-        if not self: return u''
-        return u'%s' % ''.join([u'<div class="has-error"><label class="control-label" style="text-align: left">%s</label></div>' % e.rstrip('.') \
-            for e in self])
+        if not self:
+            return u''
+        return u'%s' % ''.join([u'<div class="has-error"><label class="control-label" style="text-align: left">%s</label></div>' % e.rstrip('.')
+                                for e in self])
+
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
@@ -40,7 +43,6 @@ class RegisterForm(UserCreationForm):
             code='duplicate_email',
         )
 
-
     def save(self, commit=True):
         user = super(RegisterForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
@@ -49,6 +51,7 @@ class RegisterForm(UserCreationForm):
             user.save()
 
         return user
+
 
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
@@ -60,9 +63,10 @@ class EmailAuthenticationForm(AuthenticationForm):
                 raise ValidationError(
                     self.error_messages['invalid_login'],
                     code='invalid_login',
-                    params={'username':self.username_field.verbose_name},
+                    params={'username': self.username_field.verbose_name},
                 )
         return username
+
 
 class ShopifyOrderPaginator(Paginator):
     def __init__(self, *args, **kwargs):
@@ -133,8 +137,8 @@ class ShopifyOrderPaginator(Paginator):
 
         if self.query and type(self.query) is long:
             rep = requests.get(
-                url = self.store.get_link('/admin/orders/{}.json'.format(self.query), api=True),
-                params = {
+                url=self.store.get_link('/admin/orders/{}.json'.format(self.query), api=True),
+                params={
                     'limit': self.order_limit,
                     'page': page,
                     'status': self.status,
@@ -144,7 +148,11 @@ class ShopifyOrderPaginator(Paginator):
                 }
             )
             rep = rep.json()
-            return [rep['order']]
+            if 'order' in rep:
+                return [rep['order']]
+            else:
+                return []
+
         else:
             params = {
                 'limit': self.order_limit,
@@ -159,10 +167,12 @@ class ShopifyOrderPaginator(Paginator):
                 params['name'] = self.query
 
             rep = requests.get(
-                url = self.store.get_link('/admin/orders.json', api=True),
-                params = params
+                url=self.store.get_link('/admin/orders.json', api=True),
+                params=params
             )
 
             rep = rep.json()
-            return rep['orders']
-
+            if 'orders' in rep:
+                return rep['orders']
+            else:
+                return []

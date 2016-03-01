@@ -1,0 +1,52 @@
+<div class="ui-window-bd">
+    <div style="margin-bottom: 10px">
+        Shipping methods to: <b>{{country_code}}</b>
+    </div>
+    <div class="shipping-dialog-company">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Shipping Company</th>
+                <th>Estimated Delivery Time</th>
+                <th>Shipping Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            {% for item in info.freight %}
+            <tr company="{{ item.company }}" country="{{ country_code }}">
+                <td>
+                    {% if item.company == 'CPAM' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/china-post-air-mail.jpg" alt="China Post Registered Air Mail">
+                    {% elif item.company == 'EMS' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ems.jpg" alt="EMS">
+                    {% elif item.company == 'UPS' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ups-s.gif" alt="UPS Express Saver">
+                    {% elif item.company == 'DHL' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-dhl.jpg" alt="DHL">
+                    {% elif item.company == 'FEDEX' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-fedex.jpg" alt="Fedex IP">
+                    {% elif item.company == 'UPSE' %}
+                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ups-e.gif" alt="UPS Expedited">
+                    {% else %}
+                        {{item.companyDisplayName}}
+                    {% endif %}
+                </td>
+
+                <td>{{item.time}} days</td>
+
+                <td>
+                <div class="shipping-cost">
+                {% if item.price == '0' %}
+                    <strong>Free Shipping</strong>
+                {% else %}
+                    <span class="ui-cost notranslate" style="color: #F60;"><b>US ${{item.price}}</b></span>
+                {% endif %}
+                </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>

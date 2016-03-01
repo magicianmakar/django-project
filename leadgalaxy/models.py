@@ -156,7 +156,7 @@ class ShopifyStore(models.Model):
                 'financial_status': financial,
                 'query': query
             }
-        ).json()['count']
+        ).json().get('count', 0)
 
 
 class AccessToken(models.Model):

@@ -522,6 +522,49 @@ $('.place-order-btn').click(function (e) {
     };
 });
 
+$('.auto-shipping-btn').click(function (e) {
+    e.preventDefault();
+
+    $('#shipping-modal').prop('data-href', $(this).attr('data-href'));
+    $('#shipping-modal').prop('data-order', $(this).attr('data-order'));
+
+    $('#shipping-modal .shipping-info').load('/shipping/info?' + $.param({
+        'id': $(this).attr('original-id'),
+        'product': $(this).attr('product-id'),
+        'country': $(this).attr('country-code'),
+        'for': 'order'
+    }), function (response, status, xhr) {
+        if (xhr.status != 200) {
+            displayAjaxError('Shiping Method', 'Server Error, Please try again.');
+            return;
+        }
+
+        $('#shipping-modal').modal('show');
+
+        $('#shipping-modal .shipping-info tbody tr')
+            .click(function (e) {
+                e.preventDefault();
+
+                var url = $('#shipping-modal').prop('data-href');
+                var data = JSON.parse(atob($('#shipping-modal').prop('data-order')));
+
+                data.company = $(this).attr('company');
+                data.country_code = $(this).attr('country');
+
+                url = url + $.param({SAPlaceOrder: btoa(JSON.stringify(data))});
+
+                window.open(url, '_blank');
+                $('#shipping-modal').modal('hide');
+
+                $('#shipping-modal').prop('data-href', null);
+                $('#shipping-modal').prop('data-order', null);
+            })
+            .css({cursor: 'pointer', height: '35px'})
+            .find('td').css({'padding': '0 10px', 'vertical-align': 'middle'});
+    });
+
+});
+
 $(function () {
     $('.help-select').each(function (i, el) {
         $('option', el).each(function (index, option) {

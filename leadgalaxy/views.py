@@ -1738,12 +1738,16 @@ def get_shipping_info(request):
     product = request.GET.get('product')
     product = ShopifyProduct.objects.get(user=request.user, id=request.GET.get('product', 0))
 
+    country_code = request.GET.get('country', 'US')
+    if country_code == 'GB':
+        country_code = 'UK'
+
     r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
                      params={
                          'f': 'd',
                          'productid': aliexpress_id,
                          'userType': 'cnfm',
-                         'country': 'US',
+                         'country': country_code,
                          'province': '',
                          'city': '',
                          'count': '1',
@@ -1756,6 +1760,9 @@ def get_shipping_info(request):
     except:
         shippement_data = {}
 
+    if request.GET.get('type') == 'json':
+        return JsonResponse(shippement_data, safe=False)
+
     product_data = json.loads(product.data)
 
     if 'store' in product_data:
@@ -1763,7 +1770,12 @@ def get_shipping_info(request):
     else:
         store = None
 
-    return render(request, 'shippement_info.html', {
+    tpl = 'shippement_info.html'
+    if request.GET.get('for') == 'order':
+        tpl = 'shippement_info_order.html'
+
+    return render(request, tpl, {
+        'country_code': country_code,
         'info': shippement_data,
         'store': store
     })
@@ -2213,6 +2225,8 @@ def orders_view(request):
                     original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
                     order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
                         original_id)
+
+                    order['line_items'][i]['original_id'] = original_id
                 except:
                     print 'WARNIGN ID NOT FOUND FOR:', original_url
 
