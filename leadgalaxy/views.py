@@ -951,7 +951,7 @@ def api(request, target):
         except:
             return JsonResponse({'error': 'Product not found'})
 
-    if method == 'POST' and 'generate-reg-link':
+    if method == 'POST' and target == 'generate-reg-link':
         if not user.is_superuser and not user.has_perm('leadgalaxy.add_planregistration'):
             return JsonResponse({'error': 'Unauthorized API call'})
 
