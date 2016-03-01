@@ -144,7 +144,11 @@ class ShopifyOrderPaginator(Paginator):
                 }
             )
             rep = rep.json()
-            return [rep['order']]
+            if 'order' in rep:
+                return [rep['order']]
+            else:
+                return []
+
         else:
             params = {
                 'limit': self.order_limit,
@@ -164,5 +168,7 @@ class ShopifyOrderPaginator(Paginator):
             )
 
             rep = rep.json()
-            return rep['orders']
-
+            if 'orders' in rep:
+                return rep['orders']
+            else:
+                return []
