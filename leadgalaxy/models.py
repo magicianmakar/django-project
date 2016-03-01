@@ -28,7 +28,6 @@ class UserProfile(models.Model):
 
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
 
-    full_name = models.CharField(max_length=255, blank=True, default='')
     address1 = models.CharField(max_length=255, blank=True, default='')
     city = models.CharField(max_length=255, blank=True, default='')
     state = models.CharField(max_length=255, blank=True, default='')
