@@ -16,6 +16,7 @@
             <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
 
             {% if item.order_data %}
+            <li class="divider"></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}
                         href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data False|urlencode  %}"
@@ -30,6 +31,19 @@
                         href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}"
                    {% endif %}
                    >Auto Place Order</a></li>
+            <li><a class="auto-shipping-btn" target="_blank"
+                    order-id="{{order.id}}" line-id="{{item.id}}"
+                    product-id="{{item.product.id}}" original-id="{{item.original_id}}" country-code="{{order.shipping_address.country_code}}"
+                    href="#"
+
+                {% if aliexpress_affiliate %}
+                    data-href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&"
+                {% else %}
+                    data-href="{{item.original_url}}?"
+                {% endif %}
+
+                    data-order="{% encode_order item.order_data True|urlencode  %}"
+                >Auto - Choose Shipping</a></li>
             {% endif %}
         </ul>
     </div>

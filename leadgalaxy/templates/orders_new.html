@@ -350,6 +350,20 @@
 
     {% include 'partial/fulfillment_modal.html' with notify=True only %}
 
+<div id="shipping-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Choose Shipping Method</h4>
+            </div>
+            <div class="modal-body">
+                <div class="shipping-info"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 
@@ -414,7 +428,7 @@
         top: 0px;
         right: 0px;
         width: 300px;
-        z-index: 1000;
+        z-index: 999;
     }
     .note-panel .edit-note{
         display: none;
