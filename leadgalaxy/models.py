@@ -33,6 +33,7 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=255, blank=True, default='')
     country = models.CharField(max_length=255, blank=True, default='')
     timezone = models.CharField(max_length=255, null=True, blank=True, default='')
+    emails = models.TextField(null=True, blank=True, default='', verbose_name="Other Emails")
 
     config = models.TextField(default='', blank=True)
 
@@ -99,6 +100,17 @@ class UserProfile(models.Model):
         data[name] = value
 
         self.config = json.dumps(data)
+        self.save()
+
+    def add_email(self, email):
+        try:
+            emails = json.loads(self.emails)
+        except:
+            emails = []
+
+        emails.append(email)
+
+        self.emails = json.dumps(emails)
         self.save()
 
 

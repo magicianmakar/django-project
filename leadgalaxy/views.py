@@ -1007,6 +1007,8 @@ def api(request, target):
                 user.email = email
                 user.save()
 
+                user.profile.add_email(email)
+
             if password:
                 user.set_password(password)
                 user.save()
