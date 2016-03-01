@@ -37,6 +37,9 @@ $('#save-profile').click(function () {
         success: function (data) {
             if (data.status == 'ok') {
                 toastr.success('Saved', 'User Profile');
+                if (data.reload) {
+                    window.location.reload();
+                }
             } else {
                 displayAjaxError('User Profile', data);
             }
@@ -76,6 +79,7 @@ $('#save-email').click(function () {
 
                 if (msg.length > 0) {
                     toastr.success(msg + 'Changed', 'Email & Password');
+                    window.location.reload();
                 } else {
                     toastr.warning('No Change made', 'Email & Password');
                 }

@@ -993,7 +993,7 @@ def api(request, target):
 
             request.session['django_timezone'] = form.cleaned_data['timezone']
 
-            return JsonResponse({'status': 'ok'})
+            return JsonResponse({'status': 'ok', 'reload': True})
 
     if method == 'POST' and target == 'user-email':
         # TODO: Handle Payements and email changing
