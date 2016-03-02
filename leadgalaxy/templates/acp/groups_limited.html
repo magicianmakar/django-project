@@ -86,7 +86,6 @@
 
         $('.gen-link').click(function () {
             var btn = $(this);
-            btn.button('loading');
 
             swal({
                 title: "Generate Registration link",
@@ -94,10 +93,15 @@
                 type: "input",
                 showCancelButton: true,
                 closeOnConfirm: false,
+                closeOnCancel: true,
                 animation: "slide-from-top",
                 inputPlaceholder: "Email address (optional)",
                 showLoaderOnConfirm: true
             }, function(inputValue) {
+                if (inputValue === false) {
+                    return;
+                }
+
                 $.ajax({
                     url: '/api/generate-reg-link',
                     type: 'POST',
@@ -126,7 +130,6 @@
                         displayAjaxError('Generate Link', data);
                     },
                     complete: function () {
-                        this.btn.button('reset');
                     }
                 });
             });
