@@ -504,6 +504,31 @@ class PlanRegistration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
+    def get_usage_count(self):
+        try:
+            data = json.loads(self.data)
+            return {
+                'allowed': data['allowed_count'],
+                'used': data['used_count']
+            }
+        except:
+            return None
+
+    def set_used_count(self, used):
+        data = json.loads(self.data)
+        data['used_count'] = used
+
+        self.data = json.dumps(data)
+
+    def add_user(self, user_id):
+        data = json.loads(self.data)
+        users = data.get('users', [])
+        users.append(user_id)
+
+        data['users'] = users
+
+        self.data = json.dumps(data)
+
     def __str__(self):
         return '{} | {}'.format(self.plan.title, self.register_hash)
 

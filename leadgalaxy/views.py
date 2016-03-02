@@ -2515,8 +2515,19 @@ def register(request, registration=None):
                 new_profile.plan = registration.plan
                 new_profile.save()
 
-                registration.expired = True
-                registration.user = new_user
+                usage = registration.get_usage_count()
+                if usage is not None:
+                    usage['used'] = usage['used'] + 1
+
+                    if usage['used'] >= usage['allowed']:
+                        registration.expired = True
+
+                    registration.set_used_count(usage['used'])
+                    registration.add_user(new_user.id)
+                else:
+                    registration.expired = True
+                    registration.user = new_user
+
                 registration.save()
 
             messages.info(request, "Thanks for registering. You are now logged in.")
