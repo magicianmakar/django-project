@@ -2105,7 +2105,6 @@ def user_profile(request):
 
     return render(request, 'user/profile.html', {
         'countries': utils.get_countries(),
-        'timezones': utils.get_timezones(),
         'now': timezone.now(),
         'page': 'user_profile',
         'breadcrumbs': ['Profile']

@@ -3,6 +3,7 @@ $(function () {
         width: '250px'
     });
 
+    $('#country').trigger('change');
 });
 
 $('#country').change(function (e) {
@@ -16,8 +17,17 @@ $('#country').change(function (e) {
         success: function (data) {
             $('#timezone').empty();
 
+            if (!el.attr('current') && !el.attr('current').length && !el.val().length) {
+                $('#timezone').append($('<option>'));
+            }
+
             $.each(data, function (i, tz) {
-                $('#timezone').append($('<option>', {value: tz, text: tz.replace(/_/g, ' ')}));
+                var op = $('<option>', {value: tz[0], text: tz[1]});
+                if (el.attr('current') == tz[0]) {
+                    op.prop('selected', true);
+                }
+
+                $('#timezone').append(op);
             });
 
             $('#timezone').trigger("chosen:updated");

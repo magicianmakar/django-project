@@ -33,7 +33,7 @@
 
                                     <div class="form-group"><label class="col-sm-2 control-label">Country</label>
                                         <div class="col-sm-10">
-                                            <select id="country" name="country" style="width:350px;">
+                                            <select id="country" name="country" current="{{user.profile.country}}" style="width:350px;">
                                                 <option value=""></option>
                                                 {% for item in countries %}
                                                 <option value="{{item.0}}"
@@ -49,9 +49,9 @@
                                             <select id="timezone" name="timezone" style="width:350px;">
                                                 <option value=""></option>
                                                 {% for item in timezones %}
-                                                <option value="{{item}}"
-                                                    {% if user.profile.timezone == item %}selected="selected"{% endif %}
-                                                    >{{item}}</option>
+                                                <option value="{{item.0}}"
+                                                    {% if user.profile.timezone == item.0 %}selected="selected"{% endif %}
+                                                    >{{item.1}}</option>
                                                 {% endfor %}
                                             </select>
                                             <span>

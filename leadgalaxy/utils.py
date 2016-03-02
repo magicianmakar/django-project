@@ -648,10 +648,30 @@ def get_countries():
 
 
 def get_timezones(country=None):
+    import datetime
+    import re
+
     if country:
-        return pytz.country_timezones(country)
+        zones = pytz.country_timezones(country)
     else:
-        return pytz.common_timezones
+        zones = pytz.common_timezones
+
+    timezones = []
+    for i in zones:
+        offset = datetime.datetime.now(pytz.timezone(i)).strftime('%z')
+        offset = re.sub(r'([^0-9])([0-9]{2})([0-9]{2})', r'\1\2:\3', offset)
+        # offset = re.sub(r':00$', '', offset)
+
+        name = i.replace('_', ' ')
+        if country == 'US' and name.startswith('America/'):
+            name = name.replace('America/', '')
+
+        timezones.append([
+            i,
+            '{} ({})'.format(name, offset)
+        ])
+
+    return timezones
 
 
 class TimezoneMiddleware(object):
