@@ -618,6 +618,16 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
     return None
 
 
+def get_user_affiliate(user):
+    api_key, tracking_id = user.get_config(['aliexpress_affiliate_key',
+                                            'aliexpress_affiliate_tracking'])
+
+    if not api_key or not tracking_id:
+        api_key, tracking_id = ['37954', 'shopifiedapp']
+
+    return api_key, tracking_id
+
+
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
         template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
         template = Template(open(template_file).read())
