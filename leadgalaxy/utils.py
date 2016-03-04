@@ -614,6 +614,10 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
     except:
         print 'Aliexpress Promotion Exception:'
         traceback.print_exc()
+        try:
+            print utils.object_dump(r, 'Aliexpress API Response')
+        except:
+            pass
 
     return None
 
