@@ -694,16 +694,6 @@ def api(request, target):
         # Base64 encode the store import list
         config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
 
-        # For Extension version 0.38.1 and below
-        if user.can('amazon_import.use'):
-            config['amazon_import'] = True
-
-        if user.can('sammydress_import.use'):
-            config['sammydress_import'] = True
-
-        if user.can('ebay_import.use'):
-            config['ebay_import'] = True
-
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
