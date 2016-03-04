@@ -694,6 +694,10 @@ def api(request, target):
         # Base64 encode the store import list
         config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
 
+        for k in config.keys():
+            if k.startswith('_'):
+                del config[k]
+
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
