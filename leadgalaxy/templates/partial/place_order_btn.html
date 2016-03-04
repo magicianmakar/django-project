@@ -15,20 +15,20 @@
 
             <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
 
-            {% if item.order_data %}
+            {% if item.order_data_id %}
             <li class="divider"></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data False|urlencode  %}"
+                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    {% else %}
-                        href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data False|urlencode %}"
+                        href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    {% endif %}
                    >Step By Step Order</a></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={% encode_order item.order_data True|urlencode  %}"
+                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    {% else %}
-                        href="{{item.original_url}}?SAPlaceOrder={% encode_order item.order_data True|urlencode  %}"
+                        href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    {% endif %}
                    >Auto Place Order</a></li>
             <li><a class="auto-shipping-btn" target="_blank"
@@ -42,7 +42,7 @@
                     data-href="{{item.original_url}}?"
                 {% endif %}
 
-                    data-order="{% encode_order item.order_data True|urlencode  %}"
+                    data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}
         </ul>

@@ -14,6 +14,7 @@ from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.core.cache import cache
 
 from unidecode import unidecode
 
@@ -772,6 +773,13 @@ def api(request, target):
                     return JsonResponse({'error': 'Shopify API Error: ' + d['errors']})
                 except:
                     return JsonResponse({'error': 'Shopify API Error'})
+
+    if method == 'GET' and target == 'order-data':
+        order = cache.get(data.get('order'))
+        if order:
+            return JsonResponse(order, safe=False)
+        else:
+            return JsonResponse({'error': 'Not found'}, status=404)
 
     if method == 'GET' and target == 'product-variant-image':
         try:
@@ -2295,7 +2303,7 @@ def orders_view(request):
                         phone = request.user.get_config('order_phone_number')
 
                     order_data = {
-                        'auto': False,  # False mean step-by-step order placing
+                        'id': 'order_{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'variant': el['variant_title'],
                         'quantity': el['fulfillable_quantity'],
                         'shipping_address': shipping_address_asci,
@@ -2318,6 +2326,9 @@ def orders_view(request):
                         mapped = variants_map.get(str(el['variant_id']))
                         if mapped:
                             order_data['variant'] = ' / '.join(mapped.split(','))
+
+                    if cache.set(order_data['id'], order_data, timeout=3600):
+                        order['line_items'][i]['order_data_id'] = order_data['id']
 
                     order['line_items'][i]['order_data'] = order_data
                 except:
@@ -2415,6 +2426,10 @@ def orders_place(request):
 
     if not redirect_url:
         redirect_url = '{}?SAPlaceOrder={}'.format(product, data)
+
+    for k in request.GET.keys():
+        if k.startswith('SA') and k not in redirect_url:
+            redirect_url = '{}&{}={}'.format(redirect_url, k, request.GET[k])
 
     return HttpResponseRedirect(redirect_url)
 

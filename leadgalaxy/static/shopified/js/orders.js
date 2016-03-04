@@ -546,12 +546,12 @@ $('.auto-shipping-btn').click(function (e) {
                 e.preventDefault();
 
                 var url = $('#shipping-modal').prop('data-href');
-                var data = JSON.parse(atob($('#shipping-modal').prop('data-order')));
 
-                data.company = $(this).attr('company');
-                data.country_code = $(this).attr('country');
-
-                url = url + $.param({SAPlaceOrder: btoa(JSON.stringify(data))});
+                url = url + $.param({
+                    SAPlaceOrder: $('#shipping-modal').prop('data-order'),
+                    SACompany: $(this).attr('company'),  // company
+                    SACountry: $(this).attr('country')   // country_code
+                });
 
                 window.open(url, '_blank');
                 $('#shipping-modal').modal('hide');
