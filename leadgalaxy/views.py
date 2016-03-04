@@ -1359,7 +1359,10 @@ def webhook(request, provider, option):
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
     elif provider == 'price-notification' and request.method == 'POST':
         product_id = request.GET['product']
-        product = ShopifyProduct.objects.get(id=product_id)
+        try:
+            product = ShopifyProduct.objects.get(id=product_id)
+        except ShopifyProduct.DoesNotExist:
+            return JsonResponse({'error': 'Product Not Found'}, status=404)
 
         product_change = AliexpressProductChange(product=product, user=product.user, data=request.body)
         product_change.save()
@@ -2222,8 +2225,7 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-    api_key, tracking_id = request.user.get_config(['aliexpress_affiliate_key',
-                                                    'aliexpress_affiliate_tracking'])
+    api_key, tracking_id = utils.get_user_affiliate(request.user)
 
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
@@ -2408,8 +2410,7 @@ def orders_place(request):
     data = request.GET['SAPlaceOrder']
 
     # Check for Aliexpress Affiliate Program
-    api_key, tracking_id = request.user.get_config(['aliexpress_affiliate_key',
-                                                    'aliexpress_affiliate_tracking'])
+    api_key, tracking_id = utils.get_user_affiliate(request.user)
 
     redirect_url = None
     if api_key and tracking_id:
