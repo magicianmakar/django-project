@@ -3,7 +3,6 @@
 {% load static %}
 {% load template_helper %}
 {% load url_tools %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -165,7 +164,6 @@
 
 
 {% block extrajs %}
-{% compress js %}
 <script type="text/javascript">
 
     var image_cache = {};
@@ -334,5 +332,5 @@
         });
     });
 </script>
-{% endcompress %}
 {% endblock %}
+
