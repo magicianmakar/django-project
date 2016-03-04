@@ -442,7 +442,7 @@ def get_tracking_orders(store, tracker_orders):
 
 def product_change_notify(user):
 
-    if user.get_config('product_change_notify'):
+    if user.get_config('_product_change_notify'):
         # We already sent the user a notification for a product change
         return
 
@@ -465,7 +465,7 @@ def product_change_notify(user):
               message=email_html,
               html_message=email_html)
 
-    user.set_config('product_change_notify', True)
+    user.set_config('_product_change_notify', True)
 
 
 def get_variant_name(variant):

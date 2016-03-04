@@ -2456,7 +2456,7 @@ def products_update(request):
                                        .update(seen=True)
 
     # Allow sending notification for new changes
-    request.user.set_config('product_change_notify', False)
+    request.user.set_config('_product_change_notify', False)
 
     return render(request, 'products_update.html', {
         'product_changes': product_changes,
