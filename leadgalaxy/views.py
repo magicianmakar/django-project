@@ -7,7 +7,7 @@ from django.template import Context, Template, RequestContext
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -2362,9 +2362,27 @@ def orders_track(request):
     if not request.user.profile.can('orders.use'):
         return render(request, 'upgrade.html')
 
+    order_map = {
+        'order': 'order_id',
+        'source': 'source_id',
+        'status': 'source_status',
+        'tracking': 'source_tracking',
+        'add': 'created_at',
+        'update': 'status_updated_at',
+    }
+
+    for k, v in order_map.items():
+        order_map['-' + k] = '-' + v
+
+    sorting = request.GET.get('sort', '-update')
+    sorting = order_map.get(sorting, 'status_updated_at')
+
     store = None
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
+    query = request.GET.get('query')
+    tracking_filter = request.GET.get('tracking')
+    hidden_filter = request.GET.get('hidden')
 
     if request.GET.get('store'):
         store = ShopifyStore.objects.get(id=request.GET.get('store'), user=request.user)
@@ -2381,11 +2399,22 @@ def orders_track(request):
             messages.warning(request, 'Please add at least one store before using the Orders page.')
             return HttpResponseRedirect('/')
 
-    orders = ShopifyOrder.objects.filter(user=request.user,
-                                         store=store,
-                                         hidden=(request.GET.get('hidden', False)))
+    orders = ShopifyOrder.objects.filter(user=request.user, store=store)
 
-    orders = orders.order_by('-status_updated_at')
+    if query:
+        orders = orders.filter(Q(order_id=query) | Q(source_id=query) | Q(source_tracking=query))
+
+    if tracking_filter == '0':
+        orders = orders.filter(source_tracking='')
+    elif tracking_filter == '1':
+        orders = orders.exclude(source_tracking='')
+
+    if hidden_filter == '1':
+        orders = orders.filter(hidden=True)
+    elif not hidden_filter or hidden_filter == '0':
+        orders = orders.exclude(hidden=True)
+
+    orders = orders.order_by(sorting)
 
     paginator = Paginator(orders, post_per_page)
     page = min(max(1, page), paginator.num_pages)

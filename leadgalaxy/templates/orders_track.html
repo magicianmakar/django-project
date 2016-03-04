@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load template_helper %}
+{% load url_tools %}
 
 {% block main-container %}
 
@@ -18,24 +19,73 @@
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                    {% if not request.GET.hidden %}
                     <div class="row">
-                        <div class="col-md-2 col-md-offset-10 text-right">
+                        <div class="col-md-4">
+                            <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter</button>
+                            {# <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span> #}
+                        </div>
+                    {% if not request.GET.hidden %}
+                        <div class="col-md-2 col-md-offset-6 text-right">
                             <a href="{% url 'orders_track' %}?hidden=1" class="btn btn-default btn-rounded btn-outline btn-sm expand-btn">Archived Orders</a>
                         </div>
-                    </div>
                     {% endif %}
+                    </div>
+                    <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Query:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Tracking #:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="tracking" class="form-control" style="padding: 6px 0px">
+                                <option {% if request.GET.tracking != '0' and  request.GET.tracking != '1' %}selected="selected"{% endif %} value="">Any</option>
+                                <option {% if request.GET.tracking == '1' %}selected="selected"{% endif %} value="1">Has Tracking #</option>
+                                <option {% if request.GET.tracking == '0' %}selected="selected"{% endif %} value="0">No Tracking #</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Archived:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="hidden" class="form-control" style="padding: 6px 0px">
+                                <option {% if request.GET.hidden = '2' %}selected="selected"{% endif %} value="2">Any</option>
+                                <option {% if not request.GET.hidden or request.GET.hidden == '0' %}selected="selected"{% endif %} value="0">Not Archived</option>
+                                <option {% if request.GET.hidden == '1' %}selected="selected"{% endif %} value="1">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
+                            {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}
+
+                            <button class="btn btn-primary">Apply</button>
+                        </div>
+                    </div>
+                    <hr >
+                    </form>
 
                     <table class="table table-condensed xtable-hover">
                       <thead>
                         <tr>
-                          <th style="width:64px">Preview</th>
-                          <th style="width:26%">Shopify Order</th>
-                          <th>Aliexpress Order</th>
-                          <th>Aliexpress Status</th>
-                          <th>Tracking Number</th>
-                          <th>Order Date</th>
-                          <th>Updated</th>
+                          <th style="width:64px"></th>
+                          <th style="width:26%">
+                              <a href="{% url_toggle 'sort' '-order,order' %}">Shopify Order {% sort_icon 'sort' 'order' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-source,source' %}">Aliexpress Order {% sort_icon 'sort' 'source' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-status,status' %}">Aliexpress Status {% sort_icon 'sort' 'status' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
+                          <th><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
                           <th style="width:120px"></th>
                         </tr>
                       </thead>
@@ -90,7 +140,13 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td class="text-center" colspan="7">No tracked orders found.</td>
+                            <td class="text-center" colspan="7">
+                                {% if request.GET.query %}
+                                    No tracked orders found for: <b>{{request.GET.query}}</b>
+                                {% else %}
+                                    No tracked orders found.
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -222,6 +278,20 @@
         hideOrder($(this).attr('order-id'));
     });
 
+
+    $('.filter-btn').click(function (e) {
+        $('.filter-form').toggle('fade');
+    });
+
+    $(".filter-form").submit(function() {
+        $(this).find(":input").filter(function(){
+            return ((this.name == 'tracking' && this.value == '') ||
+                (this.name == 'hidden' && this.value == '0') ||
+                (this.name == 'query' && this.value.trim().length === 0));
+        }).attr("disabled", "disabled");
+        return true; // ensure form still submits
+    });
+
     $(function () {
         $('.lazyload').each(function (i, el) {
             setTimeout(function() {
@@ -260,7 +330,7 @@
                 }
             }, ((i+1)*1000));
         });
-    })
+    });
 </script>
 {% endblock %}
 

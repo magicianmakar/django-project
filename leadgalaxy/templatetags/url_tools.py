@@ -25,6 +25,20 @@ def query_toggle(context, field, values):
     dict_[field] = values[index]
 
     return ('%s=%s'%(field, dict_[field]))
+
+
+@register.simple_tag(takes_context=True)
+def sort_icon(context, field, value):
+    dict_ = context['request'].GET.copy()
+    if field in dict_:
+        if value in dict_[field]:
+            if dict_[field][0] == '-':
+                return '<i class="fa fa-sort-desc"></i>'
+            else:
+                return '<i class="fa fa-sort-asc"></i>'
+
+    return ''
+
 @register.simple_tag(takes_context = True)
 def url_toggle(context, field, values):
     url = context['request'].get_full_path()
