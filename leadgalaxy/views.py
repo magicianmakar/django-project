@@ -775,7 +775,12 @@ def api(request, target):
                     return JsonResponse({'error': 'Shopify API Error'})
 
     if method == 'GET' and target == 'order-data':
-        order = cache.get(data.get('order'))
+        order_key = data.get('order')
+
+        if not order_key.startswith('order_'):
+            order_key = 'order_{}'.format(order_key)
+
+        order = cache.get(order_key)
         if order:
             return JsonResponse(order, safe=False)
         else:
@@ -2328,7 +2333,7 @@ def orders_view(request):
                         if mapped:
                             order_data['variant'] = ' / '.join(mapped.split(','))
 
-                    order['line_items'][i]['order_data_id'] = order_data['id']
+                    order['line_items'][i]['order_data_id'] = order_data['id'].replace('order_', '')
                     orders_cache[order_data['id']] = order_data
 
                     order['line_items'][i]['order_data'] = order_data
