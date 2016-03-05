@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="ibox collapsed border-bottom">
+            <div class="ibox-title">
+                <h5>Product Feeds</h5>
+            </div>
+            <div class="ibox-content" style="display:block">
+                {% for item in user.profile.get_active_stores %}
+                    <a href="/api/feed?id={{ item.id }}">{{item.title}}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

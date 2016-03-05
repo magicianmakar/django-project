@@ -170,6 +170,12 @@ class ShopifyStore(models.Model):
             }
         ).json().get('count', 0)
 
+    @cached_property
+    def get_info(self):
+        return requests.get(
+            url=self.get_link('/admin/shop.json', api=True)
+        ).json()['shop']
+
 
 class AccessToken(models.Model):
     class Meta:

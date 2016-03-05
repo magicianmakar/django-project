@@ -7,12 +7,15 @@ import hashlib
 import traceback
 import pytz
 import collections
+import xml.etree.ElementTree as ET
 
 from django.core.mail import send_mail
 from django.template import Context, Template
 from django.utils import timezone
-from leadgalaxy.models import *
+from django.utils.html import strip_tags
+from django.utils.text import wrap
 
+from leadgalaxy.models import *
 from app import settings
 
 
@@ -196,6 +199,39 @@ def get_myshopify_link(user, default_store, link):
             return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
 
     return None
+
+
+def get_shopify_products_count(store):
+    return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
+
+
+def get_shopify_products(store, page=1, limit=50, all_products=False):
+    if not all_products:
+        print 'Get Page: %d Limit: %d' % (page, limit)
+        rep = requests.get(
+            url=store.get_link('/admin/products.json', api=True),
+            params={
+                'page': page,
+                'limit': limit
+            }
+        ).json()
+
+        for p in rep['products']:
+            yield p
+    else:
+        from math import ceil
+
+        limit = 200
+        count = get_shopify_products_count(store)
+        if not count:
+            return
+
+        print 'Count:', count
+        pages = int(ceil(count/float(limit)))
+        for page in xrange(1, pages+1):
+            rep = get_shopify_products(store, page=page, limit=limit, all_products=False)
+            for p in rep:
+                yield p
 
 
 def get_shopify_product(store, product_id):
@@ -700,3 +736,85 @@ class TimezoneMiddleware(object):
             timezone.activate(pytz.timezone(tzname))
         else:
             timezone.deactivate()
+
+
+class ProductFeed():
+    feed = None
+    domain = 'uncommonnow.com'
+    currency = 'USD'
+
+    def __init__(self, store):
+        self.store = store
+        self.info = store.get_info
+
+        self.currency = self.info['currency']
+        self.domain = self.info['domain']
+
+    def _add_element(self, parent, tag, text):
+        element = ET.SubElement(parent, tag)
+        element.text = text
+
+        return element
+
+    def init(self):
+        self.root = ET.Element("rss")
+        self.root.attrib['xmlns:g'] = 'http://base.google.com/ns/1.0'
+        self.root.attrib['version'] = '2.0'
+
+        self.channel = ET.SubElement(self.root, 'channel')
+
+        self._add_element(self.channel, 'title', self.info['name'])
+        self._add_element(self.channel, 'link', 'https://{}'.format(self.info['domain']))
+        self._add_element(self.channel, 'description', '{} Products Feed'.format(self.info['name']))
+
+    def add_product(self, product):
+        if len(product['variants']):
+            for variant in product['variants']:
+                self._add_variant(product, variant)
+
+    def _add_variant(self, product, variant):
+        item = ET.SubElement(self.channel, 'item')
+
+        self._add_element(item, 'g:id', '_store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
+        self._add_element(item, 'g:title', product.get('title'))
+        self._add_element(item, 'g:description', self._clean_description(product))
+        self._add_element(item, 'g:image_link', product.get('image').get('src'))
+        self._add_element(item, 'g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
+        self._add_element(item, 'g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
+        self._add_element(item, 'g:brand', product.get('vendor'))
+        self._add_element(item, 'g:google_product_category', product.get('product_type'))
+        self._add_element(item, 'g:availability', 'in stock')
+        self._add_element(item, 'g:condition', 'new')
+
+        return item
+
+    def _clean_description(self, product):
+        text = product.get('body_html', '')
+        text = re.sub('<br */?>', '\n', text)
+        text = strip_tags(text).strip()
+
+        if len(text) == 0:
+            text = product.get('title', '')
+
+        return text
+
+    def get_feed(self, formated=False):
+        xml = ET.tostring(self.root, encoding='utf-8', method="xml")
+
+        if formated:
+            xml = self.prettify(xml)
+
+        return xml
+
+    def prettify(self, xml_str):
+        """Return a pretty-printed XML string for the Element.
+        """
+        from xml.dom import minidom
+
+        reparsed = minidom.parseString(xml_str)
+        return reparsed.toprettyxml(indent="  ")
+
+    def save(self, filename):
+        tree = ET.ElementTree(self.root)
+        tree.write(filename, encoding='utf-8', xml_declaration=True)

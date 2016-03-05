@@ -29,6 +29,8 @@ urlpatterns = patterns('',
     url(r'^orders/place$', leadgalaxy.views.orders_place, name='orders_place'),
     url(r'^products/update$', leadgalaxy.views.products_update, name='products_update'),
 
+    url(r'^marketing/feeds$', leadgalaxy.views.product_feeds, name='product_feeds'),
+
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
 

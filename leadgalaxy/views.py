@@ -1032,6 +1032,20 @@ def api(request, target):
             print form.errors
             return JsonResponse({'error': form.errors})
 
+    if method == 'GET' and target == 'feed':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('id'))
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Non-handled endpoint'}, status=404)
+
+        feed = utils.ProductFeed(store)
+        feed.init()
+
+        for p in utils.get_shopify_products(store, all_products=True):
+            feed.add_product(p)
+
+        return HttpResponse(feed.get_feed(True))
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 
@@ -2512,6 +2526,14 @@ def products_update(request):
         'current_page': page,
         'page': 'products_update',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
+    })
+
+
+@login_required
+def product_feeds(request):
+    return render(request, 'product_feeds.html', {
+        'page': 'product_feeds',
+        'breadcrumbs': ['Marketing', 'Product Feeds']
     })
 
 

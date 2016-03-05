@@ -134,6 +134,21 @@
                 </li>
                 {% endif %}
 
+                {% if user.is_superuser %}
+                <li {% if page == 'product_feeds' %}class="active"{% endif %}>
+                    <a href="#">
+                        <i class="fa fa-bar-chart"></i>
+                        <span class="nav-label">Marketing</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    <ul class="nav nav-second-level collapse">
+                        <li><a  {% if page == 'product_feeds' %}class="active"{% endif %}
+                                href="{% url 'product_feeds' %}"
+                            >Product Feeds</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+
                 <li {% if page == 'boards' %}class="active"{% endif %}>
                     <a href="#">
                         <i class="fa fa-edit"></i>
