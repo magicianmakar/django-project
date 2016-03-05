@@ -441,12 +441,13 @@ class AppPermission(models.Model):
 
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
+    slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
+
     montly_price = models.FloatField(default=0.0, verbose_name="Price Per Month")
     stores = models.IntegerField(default=0)
     products = models.IntegerField(default=0)
     boards = models.IntegerField(default=0)
     register_hash = models.CharField(unique=True, max_length=50)
-    slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='')
