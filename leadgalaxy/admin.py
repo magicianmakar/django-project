@@ -6,10 +6,11 @@ from django.core.urlresolvers import reverse
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
     list_display = ('title', 'montly_price', 'description', 'stores', 'products',
-                    'boards', 'register_hash', 'permissions_count')
+                    'boards', 'slug', 'register_hash', 'permissions_count')
 
     exclude = ('default_plan',)
     filter_horizontal = ('permissions',)
+    prepopulated_fields = {'slug': ('title',)}
 
 
 @admin.register(FeatureBundle)
