@@ -1152,7 +1152,7 @@ def webhook(request, provider, option):
                 if option_type == 'bundle':
                     bundle = FeatureBundle.objects.get(slug=option_title)
                 elif option_type == 'plan':
-                    plan = FeatureBundle.objects.get(slug=option_title)
+                    plan = GroupPlan.objects.get(slug=option_title)
             else:
                 # Before bundles, option is the plan slug
                 plan = GroupPlan.objects.get(register_hash=plan_map[option])
