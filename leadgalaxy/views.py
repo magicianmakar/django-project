@@ -2206,6 +2206,7 @@ def orders_view(request):
     page = paginator.page(page)
 
     products_cache = {}
+    orders_cache = {}
     auto_orders = request.user.can('auto_order.use')
     uk_provinces = None
 
@@ -2327,14 +2328,17 @@ def orders_view(request):
                         if mapped:
                             order_data['variant'] = ' / '.join(mapped.split(','))
 
-                    if cache.set(order_data['id'], order_data, timeout=3600):
-                        order['line_items'][i]['order_data_id'] = order_data['id']
+                    order['line_items'][i]['order_data_id'] = order_data['id']
+                    orders_cache[order_data['id']] = order_data
 
                     order['line_items'][i]['order_data'] = order_data
                 except:
                     pass
 
         all_orders.append(order)
+
+    print orders_cache.keys()
+    cache.set_many(orders_cache, timeout=3600)
 
     tpl = 'orders_new.html'
     if request.GET.get('table'):
