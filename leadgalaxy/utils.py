@@ -799,6 +799,12 @@ class ProductFeed():
 
         return text
 
+    def get_feed_stream(self):
+        yield u'<?xml version="1.0" encoding="utf-8"?>'
+
+        for i in ET.tostringlist(self.root, encoding='utf-8', method="xml"):
+            yield i
+
     def get_feed(self, formated=False):
         xml = ET.tostring(self.root, encoding='utf-8', method="xml")
 
