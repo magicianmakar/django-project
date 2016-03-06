@@ -775,7 +775,7 @@ class ProductFeed():
     def _add_variant(self, product, variant):
         item = ET.SubElement(self.channel, 'item')
 
-        self._add_element(item, 'g:id', '_store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element(item, 'g:title', product.get('title'))
         self._add_element(item, 'g:description', self._clean_description(product))
