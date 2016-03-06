@@ -2298,8 +2298,12 @@ def orders_view(request):
                         if shipping_address_asci[u'country'] == u'United Kingdom':
                             if not uk_provinces:
                                 uk_provinces = load_uk_provincess()
-                            shipping_address_asci[u'province'] = uk_provinces.get(
-                                shipping_address_asci[u'city'].lower().strip(), u'')
+
+                            province = uk_provinces.get(shipping_address_asci[u'city'].lower().strip(), u'')
+                            if not province:
+                                print 'WARNING: UK Province not found for:', shipping_address_asci[u'city']
+
+                            shipping_address_asci[u'province'] = province
                         else:
                             shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
 
