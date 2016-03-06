@@ -797,9 +797,6 @@ class ProductFeed():
         if len(text) == 0:
             text = product.get('title', '')
 
-        if text.isupper():
-            text = text.title()
-
         return text
 
     def get_feed_stream(self):
