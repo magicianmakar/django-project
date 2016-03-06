@@ -803,9 +803,9 @@ class ProductFeed():
         xml = ET.tostring(self.root, encoding='utf-8', method="xml")
 
         if formated:
-            xml = self.prettify(xml)
-
-        return xml
+            return self.prettify(xml)
+        else:
+            return u'{}\n{}'.format(u'<?xml version="1.0" encoding="utf-8"?>', xml.decode('utf-8'))
 
     def prettify(self, xml_str):
         """Return a pretty-printed XML string for the Element.
