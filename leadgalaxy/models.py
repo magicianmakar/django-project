@@ -453,7 +453,7 @@ class GroupPlan(models.Model):
     stores = models.IntegerField(default=0)
     products = models.IntegerField(default=0)
     boards = models.IntegerField(default=0)
-    register_hash = models.CharField(unique=True, max_length=50)
+    register_hash = models.CharField(unique=True, max_length=50, editable=False)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='')
@@ -461,6 +461,15 @@ class GroupPlan(models.Model):
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+
+    def save(self, *args, **kwargs):
+        from hashlib import md5
+        import uuid
+
+        if not self.register_hash:
+            self.register_hash = md5(str(uuid.uuid4())).hexdigest()
+
+        super(GroupPlan, self).save(*args, **kwargs)
 
     def permissions_count(self):
         return self.permissions.count()
@@ -472,10 +481,19 @@ class GroupPlan(models.Model):
 class FeatureBundle(models.Model):
     title = models.CharField(max_length=30, verbose_name="Bundle Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Bundle Slug")
-    register_hash = models.CharField(unique=True, max_length=50)
+    register_hash = models.CharField(unique=True, max_length=50, editable=False)
     description = models.CharField(max_length=512, blank=True, default='')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+
+    def save(self, *args, **kwargs):
+        from hashlib import md5
+        import uuid
+
+        if not self.register_hash:
+            self.register_hash = md5(str(uuid.uuid4())).hexdigest()
+
+        super(FeatureBundle, self).save(*args, **kwargs)
 
     def permissions_count(self):
         return self.permissions.count()
@@ -505,12 +523,21 @@ class PlanRegistration(models.Model):
 
     plan = models.ForeignKey(GroupPlan)
     user = models.ForeignKey(User, blank=True, null=True)
-    register_hash = models.CharField(max_length=40, unique=True)
+    register_hash = models.CharField(max_length=40, unique=True, editable=False)
     data = models.CharField(max_length=512, blank=True, default='')
     expired = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def save(self, *args, **kwargs):
+        from hashlib import md5
+        import uuid
+
+        if not self.register_hash:
+            self.register_hash = md5(str(uuid.uuid4())).hexdigest()
+
+        super(PlanRegistration, self).save(*args, **kwargs)
 
     def get_usage_count(self):
         try:
