@@ -1044,7 +1044,7 @@ def api(request, target):
         for p in utils.get_shopify_products(store, all_products=True):
             feed.add_product(p)
 
-        return HttpResponse(feed.get_feed(True))
+        return HttpResponse(feed.get_feed(), content_type='application/xml')
 
     return JsonResponse({'error': 'Non-handled endpoint'})
 
