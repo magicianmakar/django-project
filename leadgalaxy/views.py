@@ -2280,7 +2280,7 @@ def orders_view(request):
 
                     order['line_items'][i]['original_id'] = original_id
                 except:
-                    print 'WARNIGN ID NOT FOUND FOR:', original_url
+                    print 'WARNING: ID not found for:', original_url
 
             products_cache[el['product_id']] = product
 
