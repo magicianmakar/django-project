@@ -1032,20 +1032,6 @@ def api(request, target):
             print form.errors
             return JsonResponse({'error': form.errors})
 
-    if method == 'GET' and target == 'feed':
-        try:
-            store = ShopifyStore.objects.get(id=data.get('id'))
-        except ShopifyStore.DoesNotExist:
-            return JsonResponse({'error': 'Non-handled endpoint'}, status=404)
-
-        feed = utils.ProductFeed(store)
-        feed.init()
-
-        for p in utils.get_shopify_products(store, all_products=True):
-            feed.add_product(p)
-
-        return HttpResponse(feed.get_feed(), content_type='application/xml')
-
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 
@@ -2552,6 +2538,26 @@ def acp_users_emails(request):
         o = '{}{}<br>\n'.format(o, i.email)
 
     return HttpResponse(o)
+
+
+def get_product_feed(request, store_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+    except ShopifyStore.DoesNotExist:
+        raise Http404('Feed not found')
+
+    feed = utils.ProductFeed(store)
+    feed.init()
+
+    for p in utils.get_shopify_products(store, all_products=True):
+        feed.add_product(p)
+
+    if request.GET.get('stream') == '1':
+        from django.http import StreamingHttpResponse
+
+        return StreamingHttpResponse(feed.get_feed(), content_type='application/xml')
+    else:
+        return HttpResponse(feed.get_feed(), content_type='application/xml')
 
 
 @login_required
