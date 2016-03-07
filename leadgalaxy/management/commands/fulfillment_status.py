@@ -11,7 +11,6 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        # Archive seen changes
         self.stdout.write(self.style.HTTP_INFO('* Get Orders Fulfillment Status'))
 
         orders = ShopifyOrder.objects.filter(shopify_status='').exclude(store=None).order_by('store')
@@ -19,26 +18,26 @@ class Command(BaseCommand):
         self.stdout.write(self.style.HTTP_INFO('* Found %d Orders' % orders.count()))
 
         store_title = ''
-        # with transaction.atomic():
-        for order in orders[:100]:
-            if store_title != order.store.title:
-                store_title = order.store.title
-                self.stdout.write(self.style.MIGRATE_SUCCESS('Store {}'.format(store_title)))
+        with transaction.atomic():
+            for order in orders:
+                if store_title != order.store.title:
+                    store_title = order.store.title
+                    self.stdout.write(self.style.MIGRATE_SUCCESS('Store {}'.format(store_title)))
 
-            try:
-                line = utils.get_shopify_order_line(order.store, order.order_id, order.line_id)
-            except Exception as e:
-                self.stdout.write(self.style.ERROR('Exception: {}'.format(repr(e))))
-                self.stdout.write(self.style.ERROR('Order: {} / {}'.format(order.order_id, order.line_id)))
+                try:
+                    line = utils.get_shopify_order_line(order.store, order.order_id, order.line_id)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR('Exception: {}'.format(repr(e))))
+                    self.stdout.write(self.style.ERROR('Order: {} / {}'.format(order.order_id, order.line_id)))
 
-                continue
+                    continue
 
-            fulfillment_status = line.get('fulfillment_status')
-            if not fulfillment_status:
-                fulfillment_status = ''
+                fulfillment_status = line.get('fulfillment_status')
+                if not fulfillment_status:
+                    fulfillment_status = ''
 
-            self.stdout.write(self.style.MIGRATE_SUCCESS(
-                '{}/{} {}'.format(order.order_id, order.line_id, fulfillment_status)))
+                self.stdout.write(self.style.MIGRATE_SUCCESS(
+                    '{}/{} {}'.format(order.order_id, order.line_id, fulfillment_status)))
 
-            # order.shopify_status = line.get('fulfillment_status', '')
-            #order.save()
+                order.shopify_status = line.get('fulfillment_status', '')
+                order.save()
