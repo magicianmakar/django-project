@@ -1300,10 +1300,6 @@ def webhook(request, provider, option):
 
     elif provider == 'shopify' and request.method == 'POST':
         try:
-            # Shopify send a JSON POST request
-            shopify_product = json.loads(request.body)
-
-            product = None
             token = request.GET['t']
             store = ShopifyStore.objects.get(id=request.GET['store'])
 
@@ -1311,14 +1307,22 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
-            try:
-                product = ShopifyProduct.objects.get(
-                    user=store.user,
-                    shopify_export__shopify_id=shopify_product['id'])
-            except:
-                return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
+            if 'products' in option:
+                # Shopify send a JSON POST request
+                shopify_product = json.loads(request.body)
+                product = None
+                try:
+                    product = ShopifyProduct.objects.get(
+                        user=store.user,
+                        shopify_export__shopify_id=shopify_product['id'])
+                except:
+                    return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
-            product_data = json.loads(product.data)
+                product_data = json.loads(product.data)
+            elif 'orders' in option:
+                shopify_order = json.loads(request.body)
+            else:
+                return JsonResponse({'status': 'ok', 'warning': 'Unhandled Option'})
 
             if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
                 product_data['title'] = shopify_product['title']
@@ -1356,6 +1360,15 @@ def webhook(request, provider, option):
 
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
+
+                return JsonResponse({'status': 'ok'})
+
+            elif option == 'orders-updated':
+                for line in shopify_order['line_items']:
+                    print '{} / {}: {}'.format(shopify_order['id'], line['id'], line['fulfillment_status'])
+
+                    ShopifyOrder.objects.filter(order_id=shopify_order['id'], line_id=line['id']) \
+                                        .update(shopify_status=line['fulfillment_status'])
 
                 return JsonResponse({'status': 'ok'})
             else:
