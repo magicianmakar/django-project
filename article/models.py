@@ -22,7 +22,9 @@ PLAN_CHOICES = (
     ('b17d8eacbb02bb907c2ccc854f7c282d', 'Team Shopify'),
     ('55cb8a0ddbc9dacab8d99ac7ecaae00b', 'Pro'),
     ('2877056b74f4683ee0cf9724b128e27b', 'Basic'),
-    ('606bd8eb8cb148c28c4c022a43f0432d', 'Free')
+    ('606bd8eb8cb148c28c4c022a43f0432d', 'Free'),
+    ('5427f85640fb78728ec7fd863db20e4c', 'JVZoo Pro Plan'),
+    ('3fd1d6a2djskflsdad815487weurjda08b31575f', 'JV Review Access'),
 )
 
 
