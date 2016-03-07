@@ -56,11 +56,11 @@ class ShopifyProductExportAdmin(admin.ModelAdmin):
 
 @admin.register(ShopifyOrder)
 class ShopifyOrderAdmin(admin.ModelAdmin):
-    list_display = ('order_id', 'line_id', 'store', 'source_id', 'get_source_status',
+    list_display = ('order_id', 'line_id', 'shopify_status', 'store', 'source_id', 'get_source_status',
                     'status_updated_at', 'seen', 'hidden', 'check_count', 'source_tracking',
                     'created_at', 'updated_at')
 
-    list_filter = ('source_status', 'seen', 'hidden',)
+    list_filter = ('shopify_status', 'source_status', 'seen', 'hidden',)
 
 
 @admin.register(ShopifyStore)
