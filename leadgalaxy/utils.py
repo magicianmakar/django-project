@@ -363,7 +363,9 @@ def shopify_link_images(store, product):
             if not option:
                 continue
 
-            option = option.replace(' ', '_')
+            option = re.sub ('[^A-Za-z0-9 _-]', '', option)
+            option = re.sub (' +', '_', option)
+
             img_idx = mapping_idx.get(option)
 
             if not img_idx:
