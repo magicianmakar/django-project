@@ -336,6 +336,9 @@ class ShopifyOrder(models.Model):
     store = models.ForeignKey(ShopifyStore, null=True)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
+    shopify_status = models.CharField(max_length=128, blank=True, null=True, default='',
+                                      verbose_name="Shopify Fulfillment Status")
+
     source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
