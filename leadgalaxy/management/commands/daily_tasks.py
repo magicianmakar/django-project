@@ -35,6 +35,6 @@ class Command(BaseCommand):
 
         utils.send_email_from_template(tpl='expire_plan_change.html',
                                        subject='[Shopified App] Plan Expire',
-                                       recipient='ma7dev@gmail.com', #'chase@shopifiedapp.com',
+                                       recipient=['ma7dev@gmail.com', 'chase@shopifiedapp.com'],
                                        data=data,
                                        nl2br=False)
