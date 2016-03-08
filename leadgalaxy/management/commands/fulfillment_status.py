@@ -5,6 +5,8 @@ from django.db import IntegrityError, transaction
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
+import time
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
@@ -15,13 +17,17 @@ class Command(BaseCommand):
 
         orders = ShopifyOrder.objects.filter(shopify_status='').exclude(store=None).order_by('store', 'order_id')
 
-        self.stdout.write(self.style.HTTP_INFO('* Found %d Orders' % orders.count()))
+        total_count = orders.count()
+        self.stdout.write(self.style.HTTP_INFO('* Found %d Orders' % total_count))
 
         store_title = ''
+        count = 0
         self.order = {'id': 0}
+        self.last_call = 0
         for order in orders:
             if store_title != order.store.title:
                 store_title = order.store.title
+                self.last_call = 0
                 self.stdout.write(self.style.MIGRATE_SUCCESS('Store {}'.format(store_title)))
 
             try:
@@ -37,14 +43,26 @@ class Command(BaseCommand):
                 fulfillment_status = ''
 
             self.stdout.write(self.style.HTTP_INFO(
-                '{}/{} {} [Order: {}]'.format(order.order_id, order.line_id, fulfillment_status, shopify_order.get('fulfillment_status', ''))))
+                '{}/{}: {} | {}'.format(order.order_id, order.line_id, fulfillment_status, shopify_order.get('fulfillment_status', ''))))
 
             order.shopify_status = line.get('fulfillment_status', '')
             order.save()
 
+            count += 1
+
+            if (count % 100 == 0):
+                self.stdout.write(self.style.MIGRATE_SUCCESS('Progress: %d/%d' % (count, total_count)))
+
     def get_order(self, store, order_id):
+        took = time.time() - self.last_call
+        if took < 0.5:
+            time.sleep(0.5 - took)
+
+        self.last_call = time.time()
+
         rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True))
         data = rep.json()
+
         if 'order' in data:
             return data['order']
         else:
