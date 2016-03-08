@@ -2404,6 +2404,7 @@ def orders_track(request):
     page = utils.safeInt(request.GET.get('page'), 1)
     query = request.GET.get('query')
     tracking_filter = request.GET.get('tracking')
+    fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
 
     if request.GET.get('store'):
@@ -2430,6 +2431,11 @@ def orders_track(request):
         orders = orders.filter(source_tracking='')
     elif tracking_filter == '1':
         orders = orders.exclude(source_tracking='')
+
+    if fulfillment_filter == '1':
+        orders = orders.filter(shopify_status='fulfilled')
+    elif fulfillment_filter == '0':
+        orders = orders.exclude(shopify_status='fulfilled')
 
     if hidden_filter == '1':
         orders = orders.filter(hidden=True)

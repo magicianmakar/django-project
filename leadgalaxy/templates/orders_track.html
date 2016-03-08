@@ -53,6 +53,19 @@
                     </div>
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Shopify Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="fulfillment" class="form-control" style="padding: 6px 0px">
+                                <option {% if not request.GET.fulfillment  or request.GET.fulfillment = '2' %}selected="selected"{% endif %} value="2">Any</option>
+                                <option {% if request.GET.fulfillment == '1' %}selected="selected"{% endif %} value="1">Fulfilled</option>
+                                <option {% if request.GET.fulfillment == '0' %}selected="selected"{% endif %} value="0">Not Fulfilled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Archived:</label>
                         </div>
                         <div class="col-md-2">
@@ -287,6 +300,7 @@
         $(this).find(":input").filter(function(){
             return ((this.name == 'tracking' && this.value == '') ||
                 (this.name == 'hidden' && this.value == '0') ||
+                (this.name == 'fulfillment' && this.value == '2') ||
                 (this.name == 'query' && this.value.trim().length === 0));
         }).attr("disabled", "disabled");
         return true; // ensure form still submits
