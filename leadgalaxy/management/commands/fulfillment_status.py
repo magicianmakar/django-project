@@ -19,29 +19,28 @@ class Command(BaseCommand):
 
         store_title = ''
         self.order = {'id': 0}
-        with transaction.atomic():
-            for order in orders:
-                if store_title != order.store.title:
-                    store_title = order.store.title
-                    self.stdout.write(self.style.MIGRATE_SUCCESS('Store {}'.format(store_title)))
+        for order in orders:
+            if store_title != order.store.title:
+                store_title = order.store.title
+                self.stdout.write(self.style.MIGRATE_SUCCESS('Store {}'.format(store_title)))
 
-                try:
-                    shopify_order, line = self.get_order_line(order.store, order.order_id, order.line_id)
-                except Exception as e:
-                    self.stdout.write(self.style.ERROR('Exception: {}'.format(repr(e))))
-                    self.stdout.write(self.style.ERROR('Order: {} / {}'.format(order.order_id, order.line_id)))
+            try:
+                shopify_order, line = self.get_order_line(order.store, order.order_id, order.line_id)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR('Exception: {}'.format(repr(e))))
+                self.stdout.write(self.style.ERROR('Order: {} / {}'.format(order.order_id, order.line_id)))
 
-                    continue
+                continue
 
-                fulfillment_status = line.get('fulfillment_status')
-                if not fulfillment_status:
-                    fulfillment_status = ''
+            fulfillment_status = line.get('fulfillment_status')
+            if not fulfillment_status:
+                fulfillment_status = ''
 
-                self.stdout.write(self.style.HTTP_INFO(
-                    '{}/{} {} [Order: {}]'.format(order.order_id, order.line_id, fulfillment_status, shopify_order.get('fulfillment_status', ''))))
+            self.stdout.write(self.style.HTTP_INFO(
+                '{}/{} {} [Order: {}]'.format(order.order_id, order.line_id, fulfillment_status, shopify_order.get('fulfillment_status', ''))))
 
-                order.shopify_status = line.get('fulfillment_status', '')
-                order.save()
+            order.shopify_status = line.get('fulfillment_status', '')
+            order.save()
 
     def get_order(self, store, order_id):
         rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True))
