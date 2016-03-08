@@ -48,7 +48,7 @@ class Command(BaseCommand):
         if 'order' in data:
             return data['order']
         else:
-            raise Exceprion(rep.text)
+            raise Exception(rep.text)
 
     def get_order_line(self, store, order_id, line_id):
         if int(self.order['id']) != int(order_id):
