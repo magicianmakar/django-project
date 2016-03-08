@@ -1365,7 +1365,6 @@ def webhook(request, provider, option):
 
             elif option == 'orders-updated':
                 for line in shopify_order['line_items']:
-                    print '{} / {}: {}'.format(shopify_order['id'], line['id'], line['fulfillment_status'])
                     fulfillment_status = line['fulfillment_status']
                     if not fulfillment_status:
                         fulfillment_status = ''
