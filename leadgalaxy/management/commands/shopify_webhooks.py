@@ -55,7 +55,7 @@ class Command(BaseCommand):
 
         if action != 'attach':
             self.stdout.write(self.style.MIGRATE_SUCCESS('    * {}'.format(store.title)))
-        elif len(webhooks) == 2:
+        elif len(webhooks) == 3:
             self.stdout.write(self.style.MIGRATE_SUCCESS('    * {}: {}'.format(store.title, len(webhooks))))
         else:
             self.stdout.write(self.style.ERROR('    * {}: {}'.format(store.title, len(webhooks))))
