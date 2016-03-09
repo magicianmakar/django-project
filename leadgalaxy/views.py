@@ -670,7 +670,7 @@ def api(request, target):
         else:
             # make sure this fields are populated so the extension can display them
             for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
-                if i not in config:
+                if i not in config or config[i] == '%':
                     config[i] = ''
 
         if not user.can('auto_order.use'):
