@@ -1377,6 +1377,9 @@ def webhook(request, provider, option):
                     ShopifyOrder.objects.filter(order_id=shopify_order['id'], line_id=line['id']) \
                                         .update(shopify_status=fulfillment_status)
 
+                    ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
+                                                  call_count=F('call_count')+1)
+                    
                 return JsonResponse({'status': 'ok'})
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(option))
