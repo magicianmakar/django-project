@@ -2327,7 +2327,7 @@ def orders_view(request):
                         phone = request.user.get_config('order_phone_number')
 
                     order_data = {
-                        'id': 'order_{}_{}_{}'.format(store.id, order['id'], el['id']),
+                        'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'variant': el['variant_title'],
                         'quantity': el['fulfillable_quantity'],
                         'shipping_address': shipping_address_asci,
@@ -2351,8 +2351,8 @@ def orders_view(request):
                         if mapped:
                             order_data['variant'] = ' / '.join(mapped.split(','))
 
-                    if cache.set(order_data['id'], order_data, timeout=3600):
-                        order['line_items'][i]['order_data_id'] = order_data['id'].replace('order_', '')
+                    if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
+                        order['line_items'][i]['order_data_id'] = order_data['id']
 
                     order['line_items'][i]['order_data'] = order_data
                 except:
