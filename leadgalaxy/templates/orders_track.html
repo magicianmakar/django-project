@@ -144,7 +144,7 @@
                                     </span>
                                 {% endif %}
 
-                                {% if not request.GET.hidden %}
+                                {% if request.GET.hidden != '1' %}
                                 <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order m-t-xs">Archive Order</button>
                                 {% else %}
                                 <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order m-t-xs">Un-Archive</button>
@@ -247,7 +247,7 @@
             context: {order_id: order_id},
             success: function (data) {
                 if (data.status == 'ok') {
-                    {% if not request.GET.hidden %}
+                    {% if request.GET.hidden != '1' %}
                     $('tr[id="'+this.order_id+'"]').hide();
 
                     swal('Archive Order', 'Order has been Archived.', 'success');
