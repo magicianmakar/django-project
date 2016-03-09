@@ -527,7 +527,7 @@ class PlanRegistration(models.Model):
     plan = models.ForeignKey(GroupPlan)
     user = models.ForeignKey(User, blank=True, null=True)
     register_hash = models.CharField(max_length=40, unique=True, editable=False)
-    data = models.CharField(max_length=512, blank=True, default='')
+    data = models.TextField(blank=True, default='')
     expired = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
