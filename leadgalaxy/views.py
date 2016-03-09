@@ -707,6 +707,7 @@ def api(request, target):
         except:
             config = {}
 
+        bool_config = ['make_visisble', 'epacket_shipping']
         for key in data:
             if key in ['auto_margin', 'auto_compare_at']:
                 if not data.get(key).endswith('%'):
@@ -722,9 +723,13 @@ def api(request, target):
 
             elif key in ['make_visisble', 'epacket_shipping']:
                 config[key] = bool(data.get(key))
+                bool_config.remove(key)
 
             else:
                 config[key] = data[key]
+
+        for key in bool_config:
+            config[key] = (key in data)
 
         user.profile.config = json.dumps(config)
         user.profile.save()
