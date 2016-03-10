@@ -79,7 +79,11 @@ class Command(BaseCommand):
             }
         }
 
-        notify_customer = user.get_config('send_shipping_confirmation', 'default')
+        if user.get_config('validate_tracking_number', True) and not re.match('^[0-9]+$', tracking):
+            notify_customer = 'no'
+        else:
+            notify_customer = user.get_config('send_shipping_confirmation', 'default')
+
         if notify_customer and notify_customer != 'default':
             api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
 

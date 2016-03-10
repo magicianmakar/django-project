@@ -228,14 +228,26 @@
                             <div class="col-sm-2">
                                 <select id="send_shipping_confirmation" name="send_shipping_confirmation" class="form-control">
                                     <option value="default" {% if not config.send_shipping_confirmation or config.send_shipping_confirmation == 'default' %}selected="selected"{% endif %}>Default</option>
-                                    <option value="yes" {% if config.send_shipping_confirmation == 'yes' %}selected="selected"{% endif %}>Yes</option>
-                                    <option value="no" {% if config.send_shipping_confirmation == 'no' %}selected="selected"{% endif %}>No</option>
+                                    <option value="yes" {% if config.send_shipping_confirmation == 'yes' %}selected="selected"{% endif %}>Always</option>
+                                    <option value="no" {% if config.send_shipping_confirmation == 'no' %}selected="selected"{% endif %}>Never</option>
                                 </select>
                             </div>
 
                             <span class="help-block col-sm-7">
                                 Select "Default" to notify the customer if all items in his order have been shipped.
                             </span>
+                        </div>
+
+                        <div class="form-group shiping-confirmation">
+                            <div class="col-sm-1 col-sm-offset-2">
+                                <input type="checkbox" class="icheck" id="validate_tracking_number" name="validate_tracking_number"
+                                {% if config.validate_tracking_number or 'validate_tracking_number' not in config %}
+                                    checked="checked"
+                                {% endif %}>
+                            </div>
+                            <label for="validate_tracking_number" class="col-sm-4 control-label" style="text-align:left;padding-left:0;margin-left:-40px">
+                                Only send confirmation if Tracking Number is valid
+                            </label>
                         </div>
 
                         <div class="col-sm-offset-2"><hr /></div>
