@@ -92,7 +92,7 @@ class AppPermissionAdmin(admin.ModelAdmin):
 
 @admin.register(PlanRegistration)
 class PlanRegistrationAdmin(admin.ModelAdmin):
-    list_display = ('plan', 'user', 'register_hash', 'expired', 'created_at', 'updated_at')
+    list_display = ('__str__', 'user', 'email', 'register_hash', 'expired', 'created_at', 'updated_at')
     list_filter = ('expired',)
 
 

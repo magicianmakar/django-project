@@ -524,8 +524,11 @@ class PlanRegistration(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    plan = models.ForeignKey(GroupPlan)
+    plan = models.ForeignKey(GroupPlan, blank=True, null=True, verbose_name='Purchased Plan')
+    bundle = models.ForeignKey(FeatureBundle, blank=True, null=True, verbose_name='Purchased Bundle')
+
     user = models.ForeignKey(User, blank=True, null=True)
+    email = models.CharField(blank=True, default='', max_length=120)
     register_hash = models.CharField(max_length=40, unique=True, editable=False)
     data = models.TextField(blank=True, default='')
     expired = models.BooleanField(default=False)
@@ -568,7 +571,12 @@ class PlanRegistration(models.Model):
         self.data = json.dumps(data)
 
     def __str__(self):
-        return '{} | {}'.format(self.plan.title, self.register_hash)
+        if self.plan:
+            return 'Plan: {}'.format(self.plan.title)
+        elif self.bundle:
+            return 'Bundle: {}'.format(self.bundle.title)
+        else:
+            return '<PlanRegistration: {}>'.format(self.id)
 
 
 class AliexpressProductChange(models.Model):

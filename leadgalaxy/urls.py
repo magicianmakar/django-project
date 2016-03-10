@@ -37,7 +37,7 @@ urlpatterns = patterns('',
 
     url(r'^user/profile$', leadgalaxy.views.user_profile, name='user_profile'),
 
-    url(r'^accounts/register(/(?P<registration>[a-z0-9]+))?$', leadgalaxy.views.register, name='register'),
+    url(r'^accounts/register/?(?P<registration>[a-z0-9]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         {'authentication_form': EmailAuthenticationForm}, name='login'),
     url(r'^accounts/password/reset/$', password_reset, {'template_name': 'registration/password_reset.html'}),

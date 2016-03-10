@@ -1224,7 +1224,9 @@ def webhook(request, provider, option):
 
             if trans_type == 'SALE':
                 if plan:
-                    reg = utils.generate_plan_registration(plan, {'data': data, 'jvzoo': params})
+                    data['jvzoo'] = params
+                    reg = utils.generate_plan_registration(plan, data)
+
                     data['reg_hash'] = reg.register_hash
                     data['plan_title'] = plan.title
 
@@ -1238,8 +1240,18 @@ def webhook(request, provider, option):
                     # Handle bundle purchase
                     data['bundle_title'] = bundle.title
 
-                    user = User.objects.get(email=data['email'])
-                    user.profile.bundles.add(bundle)
+                    data['jvzoo'] = params
+                    reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
+
+                    try:
+                        user = User.objects.get(email=data['email'])
+                        user.profile.bundles.add(bundle)
+
+                        reg.expired = True
+                    except User.DoesNotExist:
+                        user = None
+
+                    reg.save()
 
                     utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
                                                    subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
@@ -1249,7 +1261,7 @@ def webhook(request, provider, option):
                 if plan:
                     email_info = 'A new registration link was generated and send to a new user.'
                 else:
-                    email_info = 'User {} purchased {} bundle.'.format(user.username, bundle.title)
+                    email_info = 'User {} purchased {} bundle.'.format(user.username if user else data['email'], bundle.title)
 
                 email_info = email_info + '\n\nMore information:\n{}\n{}'.format(utils.format_data(params, title=False),
                                                                                  utils.format_data(data, title=False))
@@ -2631,40 +2643,27 @@ def logout(request):
 
 
 def register(request, registration=None):
-    if request.method == 'POST':
-        registration = request.POST.get('rid')
-
     if registration:
         # Convert the hash to a PlanRegistration model
         registration = get_object_or_404(PlanRegistration, register_hash=registration)
 
-    if registration and registration.expired:
-        raise Http404('Registration link expired')
+        if registration.expired:
+            raise Http404('Registration link expired')
 
     if request.method == 'POST':
         form = RegisterForm(request.POST)
+        form.set_plan_registration(registration)
+
         if form.is_valid():
             new_user = form.save()
             new_profile = utils.create_new_profile(new_user)
 
+            if not registration:
+                registration = PlanRegistration.objects.filter(email=form.cleaned_data['email']) \
+                                                       .exclude(plan=None).first()
+
             if registration:
-                new_profile.plan = registration.plan
-                new_profile.save()
-
-                usage = registration.get_usage_count()
-                if usage is not None:
-                    usage['used'] = usage['used'] + 1
-
-                    if usage['used'] >= usage['allowed']:
-                        registration.expired = True
-
-                    registration.set_used_count(usage['used'])
-                    registration.add_user(new_user.id)
-                else:
-                    registration.expired = True
-                    registration.user = new_user
-
-                registration.save()
+                utils.apply_plan_registrations(new_profile, registration)
 
             messages.info(request, "Thanks for registering. You are now logged in.")
             new_user = authenticate(username=request.POST['username'],
@@ -2676,12 +2675,15 @@ def register(request, registration=None):
     else:
         try:
             initial = {
-                'email': json.loads(registration.data).get('email'),
+                'email': registration.email,
             }
         except:
             initial = {}
 
         form = RegisterForm(initial=initial)
+
+    if registration:
+        form.fields['email'].widget.attrs['readonly'] = True
 
     return render(request, "registration/register.html", {
         'form': form,

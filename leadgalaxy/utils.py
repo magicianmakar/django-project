@@ -71,12 +71,47 @@ def get_user_from_token(token):
     return None
 
 
-def generate_plan_registration(plan, data={}):
-    reg = PlanRegistration(plan=plan, data=json.dumps(data))
+def generate_plan_registration(plan, data={}, bundle=None):
+    reg = PlanRegistration(plan=plan, bundle=bundle, email=data['email'], data=json.dumps(data))
     reg.register_hash = random_hash()
     reg.save()
 
     return reg
+
+
+def apply_plan_registrations(profile, registration):
+    profile.plan = registration.plan
+
+    usage = registration.get_usage_count()
+    if usage is not None:
+        usage['used'] = usage['used'] + 1
+
+        if usage['used'] >= usage['allowed']:
+            registration.expired = True
+
+        registration.set_used_count(usage['used'])
+        registration.add_user(profile.user.id)
+    else:
+        registration.expired = True
+        registration.user = profile.user
+
+    registration.save()
+
+    # Process other purchases (like additional bundles)
+    purchases = PlanRegistration.objects.filter(email=profile.user.email) \
+                                        .filter(expired=False) \
+                                        .exclude(id=registration.id)
+
+    for p in purchases:
+        if not p.bundle:
+            continue
+
+        profile.bundles.add(p.bundle)
+        p.user = profile.user
+        p.expired = True
+        p.save()
+
+    profile.save()
 
 
 def smart_board_by_product(user, product):

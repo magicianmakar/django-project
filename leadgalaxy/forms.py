@@ -27,6 +27,7 @@ class BsErrorList(ErrorList):
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
+    plan_registration = None
 
     def __init__(self, *args, **kwargs):
         super(RegisterForm, self).__init__(*args, **kwargs)
@@ -34,6 +35,13 @@ class RegisterForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data["email"]
+
+        if self.plan_registration:
+            if email != self.plan_registration.email:
+                raise forms.ValidationError(
+                    'Email is different than the purshase email',
+                    code='duplicate_email',
+                )
         try:
             User._default_manager.get(email=email)
         except User.DoesNotExist:
@@ -51,6 +59,9 @@ class RegisterForm(UserCreationForm):
             user.save()
 
         return user
+
+    def set_plan_registration(self, plan):
+        self.plan_registration = plan
 
 
 class UserProfileForm(forms.Form):
