@@ -27,15 +27,19 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                            <h5>Tags:</h5>
-                            {% for tag in article.tags.all %}
-                            <a class="btn btn-white btn-xs" href="{{tag.get_link}}">{{tag.title}}</a>
-                            {% endfor %}
+                        {% for tag in article.tags.all %}
+
+                        {% if forloop.counter0 == 0 %}
+                        <h5>Tags:</h5>
+                        {% endif %}
+
+                        <a class="btn btn-white btn-xs" href="{{tag.get_link}}">{{tag.title}}</a>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         <div class="small text-right">
-                            <h5>Options:</h5>
                             {% if user.is_superuser %}
+                            <h5>Options:</h5>
                                 <a class="btn btn-xs btn-success" href="{% url 'edit' article.id %}"><i class="fa fa-edit"></i> Edit</a>
                                 <a class="btn btn-xs btn-danger" href="{% url 'admin:article_article_delete' article.id %}"><i class="fa fa-remove"></i> Delete</a>
                             {% endif %}
