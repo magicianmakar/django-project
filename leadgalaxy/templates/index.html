@@ -197,6 +197,47 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label for="auto_ordered_mark" class="col-sm-2 control-label">Automatically Mark as Ordered</label>
+                            <div class="col-sm-10">
+                                <input type="checkbox" class="icheck" id="auto_ordered_mark" name="auto_ordered_mark" {% if config.auto_ordered_mark %}checked="checked"{% endif %}>
+                            </div>
+                            <span class="help-block col-sm-9" style="margin-left:50px">
+                                After you click on "Place Order" button, the order will be marked as Ordered and linked with Aliexpress Order ID.
+                            </span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="auto_shopify_fulfill" class="col-sm-2 control-label">Automatically Fulfill (in Shopify)</label>
+                            <div class="col-sm-2">
+                                <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
+                                    <option value="disable" {% if not config.auto_shopify_fulfill or config.auto_shopify_fulfill == 'disable' %}selected="selected"{% endif %}>Disable</option>
+                                    <option value="hourly" {% if config.auto_shopify_fulfill == 'hourly' %}selected="selected"{% endif %}>Hourly</option>
+                                    <option value="daily" {% if config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Daily</option>
+                                </select>
+                            </div>
+
+                            <span class="help-block col-sm-7" style="margin-top: 0px;">
+                                Tracked Orders will be fulfilled in Shopify if the Application detect a tracking number.<br />
+                                <span class="auto-fulfill-affected" style="font-weight:bold"></span>
+                            </span>
+                        </div>
+
+                        <div class="form-group shiping-confirmation">
+                            <label for="send_shipping_confirmation" class="col-sm-2 control-label">Send Shipping Confirmation</label>
+                            <div class="col-sm-2">
+                                <select id="send_shipping_confirmation" name="send_shipping_confirmation" class="form-control">
+                                    <option value="default" {% if not config.send_shipping_confirmation or config.send_shipping_confirmation == 'default' %}selected="selected"{% endif %}>Default</option>
+                                    <option value="yes" {% if config.send_shipping_confirmation == 'yes' %}selected="selected"{% endif %}>Yes</option>
+                                    <option value="no" {% if config.send_shipping_confirmation == 'no' %}selected="selected"{% endif %}>No</option>
+                                </select>
+                            </div>
+
+                            <span class="help-block col-sm-7">
+                                Select "Default" to notify the customer if all items in his order have been shipped.
+                            </span>
+                        </div>
+
                         <div class="col-sm-offset-2"><hr /></div>
 
                         <div class="col-sm-offset-2">
@@ -290,6 +331,51 @@
 {% endblock %}
 
 {% block extrajs %}
+
+<script type="text/javascript">
+    $('#auto_shopify_fulfill').change(function (e) {
+        var threshold = $(this).val();
+        if(threshold == 'disable') {
+            $('.shiping-confirmation').hide();
+        } else {
+            $('.shiping-confirmation').show();
+        }
+
+        if (threshold != 'disable') {
+            $.ajax({
+                url: '/api/auto-fulfill-count',
+                type: 'GET',
+                data: {threshold: threshold},
+                context: {},
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        $('.auto-fulfill-affected').text('The Application will Fulfill '+
+                            data.count+' Order'+(data.count>1 ? 's' : ''));
+
+                        if (data.count > 0) {
+                            $('.auto-fulfill-affected').show();
+                        } else {
+                            $('.auto-fulfill-affected').hide();
+                        }
+                    }
+                },
+                error: function (data) {
+                    $('.auto-fulfill-affected').hide();
+                },
+                complete: function () {
+                }
+            });
+        } else {
+            $('.auto-fulfill-affected').hide();
+        }
+    });
+
+    $(function () {
+        $('#auto_shopify_fulfill').trigger('change');
+    });
+
+</script>
+
 {% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}

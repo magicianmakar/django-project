@@ -13,24 +13,9 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        # Archive seen changes
-        self.stdout.write(self.style.HTTP_INFO('* Archive seen alerts'))
-        AliexpressProductChange.objects.filter(seen=True, hidden=False).update(hidden=True)
-
-        # Expired plans
-        self.stdout.write(self.style.HTTP_INFO('* Change plan of expired profiles'))
-        for profile in UserProfile.objects.filter(plan_expire_at__lte=timezone.now()):
-            if profile.plan_after_expire:
-                print 'Changing:', profile
-                self.profile_changed(profile, profile.plan, profile.plan_after_expire)
-
-                profile.plan = profile.plan_after_expire
-                profile.plan_after_expire = None
-                profile.plan_expire_at = None
-                profile.save()
-
-        # Auto fulfill (Daily)
-        time_threshold = timezone.now() - timezone.timedelta(days=1)
+        # TODO: Repeated code
+        # Auto fulfill (Hourly)
+        time_threshold = timezone.now() - timezone.timedelta(hours=1)
         orders = ShopifyOrder.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
                                      .filter(status_updated_at__lt=time_threshold) \
                                      .order_by('store', 'status_updated_at')
@@ -42,7 +27,7 @@ class Command(BaseCommand):
             else:
                 user = order.store.user
 
-            if not user or not user.get_config('auto_shopify_fulfill') != 'daily':
+            if not user or not user.get_config('auto_shopify_fulfill') != 'hourly':
                 users[order.store_id] = False
                 continue
                 pass

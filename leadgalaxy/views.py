@@ -707,7 +707,7 @@ def api(request, target):
         except:
             config = {}
 
-        bool_config = ['make_visisble', 'epacket_shipping']
+        bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark']
         for key in data:
             if key in ['auto_margin', 'auto_compare_at']:
                 if not data.get(key).endswith('%'):
@@ -927,6 +927,36 @@ def api(request, target):
         order.save()
 
         return JsonResponse({'status': 'ok'})
+
+    if method == 'GET' and target == 'auto-fulfill-count':
+        time_now = timezone.now()
+        if data.get('threshold') in ['hour', 'hourly']:
+            time_threshold = time_now - timezone.timedelta(hours=1)
+        elif data.get('threshold') in ['day', 'daily']:
+            time_threshold = time_now - timezone.timedelta(days=1)
+        elif data.get('threshold') == 'any':
+            time_threshold = None
+        else:
+            return JsonResponse({'error': 'Threshold is not properly set.'}, status=500)
+
+        orders = ShopifyOrder.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+
+        if user.is_superuser:
+            if 'user' in data:
+                if data.get('user') != 'all':
+                    orders = orders.filter(id__in=User.objects.get(id=data.get('user')).shopifystore_set.all())
+            else:
+                orders = orders.filter(id__in=user.shopifystore_set.all())
+        else:
+            orders = orders.filter(id__in=user.shopifystore_set.all())
+
+        if time_threshold:
+            orders = orders.filter(status_updated_at__lt=time_threshold)
+
+        return JsonResponse({
+            'status': 'ok',
+            'count': orders.count()
+        })
 
     if method == 'POST' and target == 'order-add-note':
         # Append to the Order note
@@ -2346,6 +2376,7 @@ def orders_view(request):
                             'phone': phone,
                             'note': request.user.get_config('order_custom_note'),
                             'epacket': bool(request.user.get_config('epacket_shipping')),
+                            'auto_mark': bool(request.user.get_config('auto_ordered_mark')), # Auto mark as Ordered
                         }
                     }
 
