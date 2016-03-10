@@ -42,7 +42,7 @@ class Command(BaseCommand):
             else:
                 user = order.store.user
 
-            if not user or not user.get_config('auto_shopify_fulfill') != 'daily':
+            if not user or user.get_config('auto_shopify_fulfill') != 'daily':
                 users[order.store_id] = False
                 continue
                 pass
