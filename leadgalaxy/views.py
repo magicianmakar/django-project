@@ -707,8 +707,17 @@ def api(request, target):
         except:
             config = {}
 
-        bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark']
+        form_webapp = (data.get('from', False) == 'webapp')
+
+        if form_webapp:
+            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'validate_tracking_number']
+        else:
+            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark']
+
         for key in data:
+            if key == 'from':
+                continue
+
             if key in ['auto_margin', 'auto_compare_at']:
                 if not data.get(key).endswith('%'):
                     config[key] = data[key] + '%'

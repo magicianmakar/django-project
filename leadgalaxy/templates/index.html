@@ -65,6 +65,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <form id="config-form" class="form-horizontal" role="form">
+                        <input type="hidden" name="from" value="webapp">
                         {% if user|can:'auto_margin.use' %}
                         <div class="form-group">
                             <label for="auto_margin" class="col-sm-2 control-label">Price Markup</label>
