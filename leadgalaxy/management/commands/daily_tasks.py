@@ -52,6 +52,7 @@ class Command(BaseCommand):
 
             if self.fulfill_order(order, order.store, user):
                 order.shopify_status = 'fulfilled'
+                order.auto_fulfilled = True
                 order.save()
 
     def profile_changed(self, profile, expired_plan, new_plan):
