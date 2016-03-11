@@ -32,7 +32,7 @@ class Command(BaseCommand):
         # Auto fulfill (Daily)
         time_threshold = timezone.now() - timezone.timedelta(days=1)
         orders = ShopifyOrder.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
-                                     .filter(status_updated_at__lt=time_threshold, store=2) \
+                                     .filter(status_updated_at__lt=time_threshold) \
                                      .order_by('store', 'status_updated_at')
 
         users = {}
@@ -44,7 +44,6 @@ class Command(BaseCommand):
 
             if not user or user.get_config('auto_shopify_fulfill') != 'daily':
                 users[order.store_id] = False
-                print 'Ignore Store:', order.store_id
                 continue
             else:
                 users[order.store_id] = user
@@ -52,7 +51,6 @@ class Command(BaseCommand):
             if self.fulfill_order(order, order.store, user):
                 order.shopify_status = 'fulfilled'
                 order.save()
-                # pass
 
     def profile_changed(self, profile, expired_plan, new_plan):
         data = {
@@ -99,4 +97,3 @@ class Command(BaseCommand):
             utils.add_shopify_order_note(store, order.order_id, note)
 
         return fulfilled
-        # return False
