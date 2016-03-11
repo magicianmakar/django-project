@@ -35,6 +35,8 @@ class Command(BaseCommand):
                                      .filter(status_updated_at__lt=time_threshold) \
                                      .order_by('store', 'status_updated_at')
 
+        print 'Orders Count (daily):', orders.count()
+
         users = {}
         for order in orders:
             if order.store_id in users:
@@ -94,6 +96,9 @@ class Command(BaseCommand):
         fulfilled = 'fulfillment' in rep.json()
         if fulfilled:
             note = "Auto Fulfilled by Shopified App (Line Item #{})".format(order.line_id)
-            utils.add_shopify_order_note(store, order.order_id, note)
+            try:
+                utils.add_shopify_order_note(store, order.order_id, note)
+            except Exception as e:
+                print '- Add Note Exception:', e
 
         return fulfilled
