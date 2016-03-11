@@ -2698,7 +2698,7 @@ def register(request, registration=None):
 
         form = RegisterForm(initial=initial)
 
-    if registration:
+    if registration and registration.email:
         form.fields['email'].widget.attrs['readonly'] = True
 
     return render(request, "registration/register.html", {

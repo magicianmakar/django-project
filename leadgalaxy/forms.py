@@ -33,7 +33,7 @@ class RegisterForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data["email"]
 
-        if self.plan_registration:
+        if self.plan_registration and self.plan_registration.email:
             if email != self.plan_registration.email:
                 raise forms.ValidationError(
                     'Email is different than the purshase email',
