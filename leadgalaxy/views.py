@@ -1481,7 +1481,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         res = res.filter(shopifyboard=board)
 
     if not filter_products and not sort:
-        paginator = Paginator(res, post_per_page)
+        paginator = utils.SimplePaginator(res, post_per_page)
 
         page = min(max(1, int(page)), paginator.num_pages)
         page = paginator.page(page)
@@ -1523,7 +1523,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             products = sorted_products(products, sort)
 
         if filter_products or sort:
-            paginator = Paginator(products, post_per_page)
+            paginator = utils.SimplePaginator(products, post_per_page)
 
             page = min(max(1, int(page)), paginator.num_pages)
             page = paginator.page(page)
@@ -2281,7 +2281,7 @@ def orders_view(request):
     open_orders = store.get_orders_count(status, fulfillment, financial)
     orders = xrange(0, open_orders)
 
-    paginator = ShopifyOrderPaginator(orders, post_per_page)
+    paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
     paginator.set_store(store)
     paginator.set_order_limit(post_per_page)
     paginator.set_filter(status, fulfillment, financial)
@@ -2513,7 +2513,7 @@ def orders_track(request):
 
     orders = orders.order_by(sorting)
 
-    paginator = Paginator(orders, post_per_page)
+    paginator = utils.SimplePaginator(orders, post_per_page)
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
     orders = page.object_list
@@ -2571,7 +2571,7 @@ def products_update(request):
     page = utils.safeInt(request.GET.get('page'), 1)
 
     changes = AliexpressProductChange.objects.filter(user=request.user, hidden=show_hidden).order_by('-updated_at')
-    paginator = Paginator(changes, post_per_page)
+    paginator = utils.SimplePaginator(changes, post_per_page)
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
     changes = page.object_list
