@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -17,7 +17,7 @@ def index(request, tag=None):
     else:
         if not request.user.is_superuser:
             messages.error(request, 'You don\'t have permissions to access that page')
-            return HttpResponse('/')
+            return HttpResponseRedirect('/')
         articles = Article.objects.filter(stat=0).order_by('-created_at')
 
     return render(request, 'article/index.html', {
