@@ -891,11 +891,8 @@ class SimplePaginator(Paginator):
 
 
 class ShopifyOrderPaginator(Paginator):
-    def __init__(self, *args, **kwargs):
-        super(ShopifyOrderPaginator, self).__init__(*args, **kwargs)
-
-        self.reverse_order = False
-        self.query = None
+    reverse_order = False
+    query = None
 
     def set_store(self, store):
         self.store = store
