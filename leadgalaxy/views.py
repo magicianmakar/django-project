@@ -1302,18 +1302,25 @@ def webhook(request, provider, option):
                 payment.save()
 
             elif trans_type in ['RFND', 'CGBK', 'INSF']:
-                user = User.objects.get(email=data['email'])
+                try:
+                    user = User.objects.get(email=data['email'])
+                except User.DoesNotExist:
+                    user = None
 
-                if plan:
-                    free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
-                    user.profile.plan = free_plan
-                    user.profile.save()
+                if user:
+                    if plan:
+                        free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                        user.profile.plan = free_plan
+                        user.profile.save()
 
-                    data['previous_plan'] = plan.title
-                    data['new_plan'] = free_plan.title
+                        data['previous_plan'] = plan.title
+                        data['new_plan'] = free_plan.title
+                    elif bundle:
+                        data['removed_bundle'] = bundle.title
+                        user.profile.bundles.remove(bundle)
                 else:
-                    data['removed_bundle'] = bundle.title
-                    user.profile.bundles.remove(bundle)
+                    PlanRegistration.objects.filter(plan=plan, bundle=bundle, email=data['email']) \
+                                            .update(expired=True)
 
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
