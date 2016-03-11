@@ -60,6 +60,8 @@ class Command(BaseCommand):
         api_data = {
             "fulfillment": {
                 "tracking_number": tracking,
+                "tracking_company": "Other",
+                "tracking_url": "https://track.aftership.com/{}".format(tracking),
                 "line_items": [{
                     "id": order.line_id,
                     # "quantity": int(data.get('fulfill-quantity'))
