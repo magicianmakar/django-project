@@ -15,6 +15,9 @@
                 <li class="">
                     <a data-toggle="tab" href="#tab-2" aria-expanded="false">Email &amp; Password</a>
                 </li>
+                <li class="">
+                    <a data-toggle="tab" href="#tab-3" aria-expanded="false">Plan &amp; Bundles</a>
+                </li>
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -112,6 +115,50 @@
                                       <button id="save-email" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="tab-3" class="tab-pane">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        Plan
+                                    </div>
+                                    <div class="panel-body">
+                                        <p>Your current Plan:</p>
+                                        <ul class="list-group">
+                                            <li class="list-group-item" style="border:0 none"><b>{{ user.profile.plan.title }}</b></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% with bundles=user.profile.bundles.all %}
+                            <div class="col-md-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        Bundles
+                                    </div>
+                                    <div class="panel-body">
+                                        {% if bundles %}
+                                            You have the following Bundles:
+
+                                            <ul class="list-group">
+                                            {% for item in bundles %}
+                                                <li class="list-group-item" style="border:0 none">
+                                                    <b>{{item.title}}</b>
+                                                </li>
+                                            {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            You don't have any bundle.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endwith %}
                         </div>
                     </div>
                 </div>
