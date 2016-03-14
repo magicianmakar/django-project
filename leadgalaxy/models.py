@@ -137,11 +137,21 @@ class ShopifyStore(models.Model):
     title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
     is_active = models.BooleanField(default=True)
+    store_hash = models.CharField(null=True, blank=True, default='', max_length=50, editable=False)
 
     user = models.ForeignKey(User)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def save(self, *args, **kwargs):
+        from hashlib import md5
+        import uuid
+
+        if not self.store_hash:
+            self.store_hash = md5(str(uuid.uuid4())).hexdigest()
+
+        super(ShopifyStore, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title
