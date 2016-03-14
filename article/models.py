@@ -25,6 +25,7 @@ PLAN_CHOICES = (
     ('606bd8eb8cb148c28c4c022a43f0432d', 'Free'),
     ('5427f85640fb78728ec7fd863db20e4c', 'JVZoo Pro Plan'),
     ('3fd1d6a2djskflsdad815487weurjda08b31575f', 'JV Review Access'),
+    ('be2cc3908b196a573f6c079c1dd7f4bd', 'Team Shopify ePacket ID'),
 )
 
 
