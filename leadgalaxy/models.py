@@ -137,7 +137,7 @@ class ShopifyStore(models.Model):
     title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
     is_active = models.BooleanField(default=True)
-    store_hash = models.CharField(null=True, blank=True, default='', max_length=50, editable=False)
+    store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
 
     user = models.ForeignKey(User)
 
