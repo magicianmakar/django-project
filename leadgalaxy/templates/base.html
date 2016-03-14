@@ -135,7 +135,7 @@
                 </li>
                 {% endif %}
 
-                {% if user.is_superuser %}
+                {% if user|can:'product_feeds.use' %}
                 <li {% if page == 'product_feeds' %}class="active"{% endif %}>
                     <a href="#">
                         <i class="fa fa-bar-chart"></i>
