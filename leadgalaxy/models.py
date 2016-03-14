@@ -186,6 +186,9 @@ class ShopifyStore(models.Model):
             url=self.get_link('/admin/shop.json', api=True)
         ).json()['shop']
 
+    def get_short_hash(self):
+        return self.store_hash[:8] if self.store_hash else ''
+
 
 class AccessToken(models.Model):
     class Meta:

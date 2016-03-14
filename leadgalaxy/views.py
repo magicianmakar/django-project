@@ -2634,7 +2634,7 @@ def acp_users_emails(request):
 
 def get_product_feed(request, store_id):
     try:
-        store = ShopifyStore.objects.get(id=store_id)
+        store = ShopifyStore.objects.get(store_hash__startswith=store_id)
     except ShopifyStore.DoesNotExist:
         raise Http404('Feed not found')
 

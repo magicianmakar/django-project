@@ -4,15 +4,17 @@
 
 {% block main-container %}
 <div class="row">
-    <div class="col-lg-12">
+    <div class="col-md-offset-2 col-md-8">
         <div class="ibox collapsed border-bottom">
             <div class="ibox-title">
                 <h5>Product Feeds</h5>
             </div>
             <div class="ibox-content" style="display:block">
-                <ul>
+                <ul class="list-group">
                 {% for item in user.profile.get_active_stores %}
-                    <li><a href="{% url 'get_product_feed' store_id=item.id %}">{{item.title}}</a></li>
+                    <li class="list-group-item">
+                        <a href="{% url 'get_product_feed' store_id=item.get_short_hash %}">{{item.title}}</a>
+                    </li>
                 {% endfor %}
                 </ul>
             </div>
