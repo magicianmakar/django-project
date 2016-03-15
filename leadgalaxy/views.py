@@ -208,9 +208,6 @@ def api(request, target):
         req_data = json.loads(request.body)
         delayed = req_data.get('b')
 
-        if not delayed:
-            return JsonResponse({'error': 'Please update the Shopified App extension.'}, status=500)
-
         if 'access_token' in req_data:
             token = req_data['access_token']
             user = utils.get_user_from_token(token)
