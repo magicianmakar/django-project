@@ -110,7 +110,7 @@
 
                         <label for="send-select-store">Select Store:</label>
                         <select class="form-control" name="selected-actions" id="send-select-store" style="display: inline-block; width: 191px; ">
-                            {% for item in user.shopifystore_set.all %}
+                            {% for item in user.profile.get_active_stores %}
                             <option value="{{item.id}}">{{item.title}}</option>
                             {% endfor %}
                         </select>

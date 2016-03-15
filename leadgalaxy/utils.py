@@ -223,7 +223,7 @@ def slack_invite(data):
 
 def get_myshopify_link(user, default_store, link):
     stores = [default_store, ]
-    for i in user.shopifystore_set.all():
+    for i in user.profile.get_active_stores():
         if i not in stores:
             stores.append(i)
 
