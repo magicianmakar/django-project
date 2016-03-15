@@ -75,6 +75,59 @@ function removeVariant(e) {
     $(this).parent().remove();
 }
 
+function productExported(data, target, btn) {
+    if ('product' in data) {
+        if (data.product.data) {
+            $('#btn-variants-img').prop('store-id', $('#store-select').val());
+            $('#btn-variants-img').prop('product-id', data.product.data.id);
+            $('#btn-variants-img').show();
+        }
+
+        $("#view-btn").attr("shopify-id", data.product.id);
+        $("#view-btn").attr("shopify-url", data.product.url);
+        $("#view-btn").show();
+
+        if (target == 'shopify') {
+            $('#export-btn, #save-for-later-btn').hide();
+            $('#more-options-btn').trigger('click');
+
+            toastr.success('Product Exported.','Shopify Export');
+        } else {
+            toastr.success('Product Updated in Shopify.','Shopify Update');
+            window.location.href = window.location.href;
+        }
+    }  else {
+        displayAjaxError('Product Export', data);
+    }
+
+    $(btn).bootstrapBtn('reset');
+}
+
+function waitForTask(task_id, target, button) {
+    document.taskInterval = setInterval(function () {
+        $.ajax({
+            url: '/api/export-product',
+            type: 'GET',
+            data: {id: task_id, count: document.taskCount},
+            context: {target: target, btn: button},
+            success: function (data) {
+                if (data.ready) {
+                    clearInterval(document.taskInterval);
+
+                    productExported(data.data, this.target, this.btn);
+                }
+            },
+            error: function (data) {
+                clearInterval(document.taskInterval);
+                displayAjaxError('Export Error', data);
+            },
+            complete: function() {
+                document.taskCount += 1;
+            }
+        });
+    }, 1000);
+}
+
 $('#export-btn').click(function () {
     $('#save-for-later-btn').prop('no-confirm', true).trigger('click');
 
@@ -249,38 +302,17 @@ $('#export-btn').click(function () {
             'product': config.product_id,
             'store': store_id,
             'data': JSON.stringify(api_data),
+            'b': true,
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        context: {btn: this},
+        context: {btn: this, target: target},
         success: function (data) {
-            $(this.btn).bootstrapBtn('reset');
-
-            if ('product' in data) {
-                if (data.product.data) {
-                    $('#btn-variants-img').prop('store-id', $('#store-select').val());
-                    $('#btn-variants-img').prop('product-id', data.product.data.id);
-                    $('#btn-variants-img').show();
-                }
-
-                $("#view-btn").attr("shopify-id", data.product.id);
-                $("#view-btn").attr("shopify-url", data.product.url);
-                $("#view-btn").show();
-
-                if (target == 'shopify') {
-                    $('#export-btn, #save-for-later-btn').hide();
-                    $('#more-options-btn').trigger('click');
-
-                    toastr.success('Product Exported.','Shopify Export');
-                } else {
-                    toastr.success('Product Updated in Shopify.','Shopify Update');
-                    window.location.href = window.location.href;
-                }
-
-            }  else {
-
-                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error');
-                swal('Shopify Export', error, 'error');
+            if (data.hasOwnProperty('id')) {
+                document.taskCount = 1;
+                waitForTask(data.id, this.target, this.btn);
+            } else {
+                productExported(data, this.target, this.btn);
             }
         },
         error: function (data) {
@@ -338,6 +370,7 @@ $('#save-for-later-btn').click(function (e) {
             'product': config.product_id,
             'store': store_id,
             'data': JSON.stringify(api_data),
+            'b': true,
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",

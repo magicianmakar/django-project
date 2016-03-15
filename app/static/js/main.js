@@ -1,6 +1,9 @@
 // 'use strict';
 /* global $, toastr, swal, CKEDITOR */
 
+var taskIntervals = {};
+var taskCallsCount = {};
+
 function allPossibleCases(arr) {
   if (arr.length == 1) {
     return arr[0];
@@ -140,12 +143,18 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
             'product': product_id,
             'store': store_id,
             'data': JSON.stringify(api_data),
+            'b': true,
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (data) {
-            if (callback) {
-                callback(product, data, callback_data, true);
+             if (data.hasOwnProperty('id')) {
+                taskCallsCount[data.id] = 1;
+                waitForTask(data.id, product, data, callback, callback_data);
+            } else {
+                if (callback) {
+                    callback(product, data, callback_data, true);
+                }
             }
         },
         error: function (data) {
@@ -154,6 +163,45 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
             }
         }
     });
+}
+
+function waitForTask(task_id, product, data, callback, callback_data) {
+    taskIntervals[task_id] = setInterval(function () {
+        $.ajax({
+            url: '/api/export-product',
+            type: 'GET',
+            data: {
+                id: task_id,
+                count: taskCallsCount[task_id]
+            },
+            context: {
+                task_id: task_id,
+                product: product,
+                data: data,
+                callback: callback,
+                callback_data: callback_data
+            },
+            success: function (data) {
+                if (data.ready) {
+                    clearInterval(taskIntervals[this.task_id]);
+
+                    if (this.callback) {
+                        this.callback(this.product, data.data, this.callback_data, true);
+                    }
+                }
+            },
+            error: function (data) {
+                clearInterval(taskIntervals[this.task_id]);
+
+                if (this.callback) {
+                    this.callback(this.product, data.hasOwnProperty('data') ? data.data : data, this.callback_data, false);
+                }
+            },
+            complete: function() {
+                taskCallsCount[this.task_id] += 1;
+            }
+        });
+    }, 1000);
 }
 
 function setup_full_editor(textarea_name, include_css) {
