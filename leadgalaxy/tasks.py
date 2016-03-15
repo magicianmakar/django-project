@@ -22,7 +22,8 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 app.conf.update(BROKER_URL=os.environ['REDISCLOUD_URL'],
                 CELERY_RESULT_BACKEND=os.environ['REDISCLOUD_URL'],
                 CELERY_ACCEPT_CONTENT=['pickle', 'json', 'msgpack', 'yaml'],
-                CELERY_REDIS_MAX_CONNECTIONS=10)
+                CELERY_REDIS_MAX_CONNECTIONS=10,
+                BROKER_POOL_LIMIT=0)
 
 
 @app.task
