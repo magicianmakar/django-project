@@ -2414,8 +2414,11 @@ def orders_track(request):
 
 @login_required
 def orders_place(request):
-    product = request.GET['product']
-    data = request.GET['SAPlaceOrder']
+    try:
+        product = request.GET['product']
+        data = request.GET['SAPlaceOrder']
+    except:
+        raise Http404("Product or Order not set")
 
     # Check for Aliexpress Affiliate Program
     api_key, tracking_id = utils.get_user_affiliate(request.user)
