@@ -1,5 +1,4 @@
 import os
-import time
 import requests
 import traceback
 from celery import Celery
@@ -8,7 +7,6 @@ from celery import Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
 from django.conf import settings
-from django.http import JsonResponse
 from django.contrib.auth.models import User
 
 from .models import *
@@ -25,12 +23,6 @@ app.conf.update(BROKER_URL=os.environ['REDIS_URL'],
                 CELERY_RESULT_BACKEND=os.environ['REDIS_URL'],
                 CELERY_ACCEPT_CONTENT=['pickle', 'json', 'msgpack', 'yaml'],
                 CELERY_REDIS_MAX_CONNECTIONS=10)
-
-
-@app.task
-def add(x, y):
-    time.sleep(10)
-    return x + y
 
 
 @app.task
