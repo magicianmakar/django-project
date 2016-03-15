@@ -279,7 +279,7 @@ $('#shopify-send-btn').click(function(e) {
                         $('#modal-shopify-send .progress-bar-success').css('width', ((total_sent_success * 100.0) / products.length) + '%');
                         $('#modal-shopify-send .progress-bar-danger').css('width', ((total_sent_error * 100.0) / products.length) + '%');
 
-                        callback_data.element.find('input.item-select[type=checkbox]').iCheck('uncheck');
+                        callback_data.element.find('input.item-select[type=checkbox]').iCheck('disable');
 
                         if ((total_sent_success + total_sent_error) == products.length) {
                             $('#modal-shopify-send').modal('hide');
