@@ -355,8 +355,7 @@ $('#save-for-later-btn').click(function (e) {
                     toastr.success('Save for later.','Product Saved');
                 }
             }  else {
-                var error = 'Export Error'+('error' in data ? ': '+data.error : ': Unknow error');
-                swal('Save for later', error, 'error');
+                displayAjaxError('Save for later', data);
             }
         },
         error: function (data) {
