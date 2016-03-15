@@ -89,7 +89,7 @@ $('#shopify-send-btn').click(function(e) {
 
                         if (req_success && 'product' in data) {
                             total_sent_success += 1;
-                            var chk_el = callback_data.element.find('input[type=checkbox]');
+                            var chk_el = callback_data.element.find('input.item-select[type=checkbox]');
                             chk_el.iCheck('uncheck');
                             chk_el.parents('td').html('<span class="label label-success">Sent</span>');
                         } else {

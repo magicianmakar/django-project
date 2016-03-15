@@ -25,7 +25,7 @@ $('#apply-btn').click(function(e) {
             },
             function(isConfirmed) {
                 if (isConfirmed) {
-                    $('input[type=checkbox]').each(function(i, el) {
+                    $('input.item-select[type=checkbox]').each(function(i, el) {
                         if (el.checked) {
                             var product = $(el).parents('.product-box').attr('product-id');
                             $.ajax({
@@ -59,7 +59,7 @@ $('#apply-btn').click(function(e) {
     }
 
     $('#selected-actions').val('');
-    $('input[type=checkbox]').each(function(i, el) {
+    $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             var product = $(el).parents('.product-box').attr('product-id');
 
@@ -74,7 +74,7 @@ $('#save-changes').click(function(e) {
     var btn = $(this);
     var products = [];
 
-    $('input[type=checkbox]').each(function(i, el) {
+    $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             products.push($(el).parents('.product-box').attr('product-id'));
             $(el).iCheck('uncheck');
@@ -138,7 +138,7 @@ $('#board-product-send').click(function(e) {
         return;
     }
 
-    $('input[type=checkbox]').each(function(i, el) {
+    $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             products.push($(el).parents('.product-box').attr('product-id'));
             $(el).iCheck('uncheck');
@@ -248,7 +248,7 @@ $('#shopify-send-btn').click(function(e) {
 
     $('#modal-shopify-send .progress').show();
 
-    $('input[type=checkbox]').each(function(i, el) {
+    $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             products.push({
                 product: $(el).parents('.product-box').attr('product-id'),
@@ -297,7 +297,7 @@ $('#shopify-send-btn').click(function(e) {
                         $('#modal-shopify-send .progress-bar-success').css('width', ((total_sent_success * 100.0) / products.length) + '%');
                         $('#modal-shopify-send .progress-bar-danger').css('width', ((total_sent_error * 100.0) / products.length) + '%');
 
-                        callback_data.element.find('input[type=checkbox]').iCheck('uncheck');
+                        callback_data.element.find('input.item-select[type=checkbox]').iCheck('uncheck');
 
                         if ((total_sent_success + total_sent_error) == products.length) {
                             $('#modal-shopify-send').modal('hide');
