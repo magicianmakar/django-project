@@ -232,7 +232,7 @@ def api(request, target):
             })
 
     if method == 'GET' and target == 'export-product':
-        task = tasks.add.AsyncResult(data.get('id'))
+        task = tasks.export_product.AsyncResult(data.get('id'))
 
         if not task.ready():
             return JsonResponse({

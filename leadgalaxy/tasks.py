@@ -27,7 +27,7 @@ app.conf.update(BROKER_URL=os.environ['REDISCLOUD_URL'],
 
 @app.task
 def export_product(req_data, target, user_id):
-    print 'export_product'
+    print 'Begin:', target.replace('-', ' ').title()
 
     store = req_data['store']
     data = req_data['data']
