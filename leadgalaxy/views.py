@@ -240,10 +240,15 @@ def api(request, target):
                 'ready': False
             })
         else:
+            data = task.result
+
+            if not data['product']['url'].startswith('http'):
+                data['product']['url'] = request.build_absolute_uri(data['product']['url'])
+
             return JsonResponse({
                 'status': 'ok',
                 'ready': True,
-                'data': task.result
+                'data': data
             }, safe=False)
 
     if method == 'POST' and target == 'product-stat':
