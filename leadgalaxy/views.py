@@ -222,6 +222,10 @@ def api(request, target):
 
         if not user.is_superuser or not delayed or target == 'save-for-later':
             result = tasks.export_product(req_data, target, user.id)
+
+            if not result['product']['url'].startswith('http'):
+                result['product']['url'] = request.build_absolute_uri(result['product']['url'])
+
             return JsonResponse(result, safe=False)
         else:
             task = tasks.export_product.delay(req_data, target, user.id)
