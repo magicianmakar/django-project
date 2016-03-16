@@ -640,6 +640,8 @@ def api(request, target):
         api_data = {
             "fulfillment": {
                 "tracking_number": tracking,
+                "tracking_company": "Other",
+                "tracking_url": "https://track.aftership.com/{}".format(tracking),
                 "line_items": [{
                     "id": int(data.get('fulfill-line-id')),
                     "quantity": int(data.get('fulfill-quantity'))
