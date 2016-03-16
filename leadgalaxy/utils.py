@@ -762,6 +762,16 @@ def get_timezones(country=None):
     return timezones
 
 
+def fix_product_url(data, request):
+    if 'product' in data:
+        if not data['product']['url'].startswith('http'):
+            data['product']['url'] = request.build_absolute_uri(data['product']['url'])
+
+    return data
+
+
+# Helper Classes
+
 class TimezoneMiddleware(object):
     def process_request(self, request):
         tzname = request.session.get('django_timezone')
@@ -862,8 +872,6 @@ class ProductFeed():
     def save(self, filename):
         tree = ET.ElementTree(self.root)
         tree.write(filename, encoding='utf-8', xml_declaration=True)
-
-# Helper Classes
 
 
 class SimplePaginator(Paginator):
