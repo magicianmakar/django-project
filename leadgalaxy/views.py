@@ -2513,7 +2513,12 @@ def bundles_bonus(request, bundle_id):
             return HttpResponseRedirect('/')
 
     else:
-        form = RegisterForm()
+        initial = {}
+
+        if request.user.is_authenticated():
+            initial = {'email': request.user.email}
+
+        form = RegisterForm(initial=initial)
 
     return render(request, "bundles_bonus.html", {
         'form': form,
