@@ -32,7 +32,6 @@
             <h3>Register to Shopified App</h3>
             <p>Create account to see it in action.</p>
             <form class="m-t" role="form" method="post" action="{% url 'leadgalaxy.views.register' %}/{{ registration.register_hash }}">
-                <form method="post" action="{% url 'leadgalaxy.views.register' %}" class="xform-signin" role="form">
                 {% csrf_token %}
 
                 <div class="row">
