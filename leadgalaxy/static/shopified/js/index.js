@@ -213,8 +213,46 @@ $('.show-api-url').click(function (e) {
     $(this).parent().find('.api-url').toggle();
 });
 
+$('#auto_shopify_fulfill').change(function (e) {
+    var threshold = $(this).val();
+    if(threshold == 'disable') {
+        $('.shiping-confirmation').hide();
+    } else {
+        $('.shiping-confirmation').show();
+    }
+
+    if (threshold != 'disable') {
+        $.ajax({
+            url: '/api/auto-fulfill-count',
+            type: 'GET',
+            data: {threshold: threshold},
+            context: {},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    $('.auto-fulfill-affected').text('The Application will Fulfill '+
+                        data.count+' Order'+(data.count>1 ? 's' : ''));
+
+                    if (data.count > 0) {
+                        $('.auto-fulfill-affected').show();
+                    } else {
+                        $('.auto-fulfill-affected').hide();
+                    }
+                }
+            },
+            error: function (data) {
+                $('.auto-fulfill-affected').hide();
+            },
+            complete: function () {
+            }
+        });
+    } else {
+        $('.auto-fulfill-affected').hide();
+    }
+});
+
 $(function () {
     showDescriptionHelp();
+    $('#auto_shopify_fulfill').trigger('change');
 });
 
 })();
