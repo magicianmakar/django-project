@@ -245,11 +245,14 @@ def api(request, target):
             data = task.result
             data = utils.fix_product_url(data, request)
 
-            return JsonResponse({
-                'status': 'ok',
-                'ready': True,
-                'data': data
-            }, safe=False)
+            if 'product' in data:
+                return JsonResponse({
+                    'status': 'ok',
+                    'ready': True,
+                    'data': data
+                }, safe=False)
+            else:
+                return JsonResponse(data, safe=False, status=500)
 
     if method == 'POST' and target == 'product-stat':
         try:
