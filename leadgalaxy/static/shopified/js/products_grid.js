@@ -117,11 +117,11 @@ $('#save-changes').click(function(e) {
             if ('status' in data && data.status == 'ok') {
                 window.location.href = window.location.href;
             } else {
-                swal("Error", 'error' in data ? data.error : 'Server side error', "error");
+                displayAjaxError('Bulk Edit', data);
             }
         },
         error: function(data) {
-            swal("Error", 'error' in data ? data.error : 'Server side error', "error");
+            displayAjaxError('Bulk Edit', data);
         },
         complete: function() {
             btn.button('reset');
@@ -160,11 +160,11 @@ $('#board-product-send').click(function(e) {
             if ('status' in data && data.status == 'ok') {
                 $('#modal-board-product').modal('hide');
             } else {
-                swal("Error", 'error' in data ? data.error : 'Server error', "error");
+                displayAjaxError('Add to board', data);
             }
         },
         error: function(data) {
-            swal("Error", 'error' in data ? data.error : 'Server error', "error");
+            displayAjaxError('Add to board', data);
         },
         complete: function() {
             btn.button('reset');
@@ -191,12 +191,12 @@ function changeBoard(board_id, options) {
                     options.$trigger.text('Board');
                 }
             } else {
-                swal("Error", 'error' in data ? data.error : 'Server side error', "error");
+                displayAjaxError('Board Products', data);
             }
         },
         error: function(data) {
             options.$trigger.button('reset');
-            swal("Error", 'error' in data ? data.error : 'Server side error', "error");
+            displayAjaxError('Board Products', data);
         },
         complete: function() {
             // options.$trigger.button('reset');
@@ -232,7 +232,7 @@ $('.delete-product-btn').click(function(e) {
                         swal("Deleted!", "The product has been deleted.", "success");
                     },
                     error: function(data) {
-                        swal("Error", "Server side error", "error");
+                        displayAjaxError('Delete Product', data);
                     }
                 });
             }

@@ -242,7 +242,7 @@ $('#export-btn').click(function () {
                     api_data.product.variants.push(vdata);
                 }
             } else {
-                alert('Variants should have more than one value separated by comma (,)');
+                swal('Variants should have more than one value separated by comma (,)');
                 btn.bootstrapBtn('reset');
                 return;
             }
@@ -333,7 +333,7 @@ $('#save-for-later-btn').click(function (e) {
     var store_id = $('#store-select').val();
 
     if (!store_id || store_id.length === 0) {
-        alert('Please choose a Shopify store first!');
+        swal('Save for later', 'Please choose a Shopify store first!', 'error');
         return;
     }
 
@@ -393,7 +393,7 @@ $('#save-for-later-btn').click(function (e) {
         },
         error: function (data) {
             $(this.btn).bootstrapBtn('reset');
-            swal('Save for later', 'Export Error: Server error', 'error');
+            displayAjaxError('Save for later', data);
         }
     });
 });
@@ -499,11 +499,11 @@ $('#save-product-notes').click(function (e) {
             if (data.status == 'ok') {
                 toastr.success('Modification saved.','Product Notes');
             } else {
-                swal('Product Notes', (typeof(data.error) == 'string' ? data.error : 'Unknow Server Error'), 'error');
+                displayAjaxError('Product Notes', data);
             }
         },
         error: function(data) {
-            swal('Product Notes', 'Server Error', 'error');
+            displayAjaxError('Product Notes', data);
         },
         complete: function() {
             btn.bootstrapBtn('reset');
@@ -529,11 +529,11 @@ $('#save-metadata').click(function (e) {
             if (data.status == 'ok') {
                 toastr.success('Modification saved.','Product Metadata');
             } else {
-                swal('Product Metadata', (typeof(data.error) == 'string' ? data.error : 'Unknown Server Error'), 'error');
+                displayAjaxError('Product Metadata', data);
             }
         },
         error: function(data) {
-            swal('Product Metadata', 'Server Error', 'error');
+            displayAjaxError('Product Metadata', data);
         },
         complete: function() {
             btn.bootstrapBtn('reset');

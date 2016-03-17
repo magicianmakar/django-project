@@ -19,7 +19,7 @@ $('#add-store').click(function(e) {
     var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
 
     if (!url || url.length != 1) {
-        alert('API URL is not correct!');
+        swal('Add Store', 'API URL is not correct!', 'error');
         return;
     } else {
         url = 'https://' + url[0];
@@ -44,7 +44,7 @@ $('#add-store').click(function(e) {
 
         },
         error: function(data) {
-            displayAjaxError('Add Store', data)
+            displayAjaxError('Add Store', data);
             $('#add-store').button('reset');
         }
     });
@@ -81,13 +81,13 @@ $('#store-move-btn').click(function (e) {
         },
         success: function(data) {
             if ('error' in data) {
-                swal('Delete Store', data.error, 'error');
+                displayAjaxError('Delet Store', data);
             } else {
                 $('tr[store-id="'+store+'"]').remove();
             }
         },
         error: function(data) {
-            swal('Delete Store', 'Server error', 'error');
+            displayAjaxError('Delet Store', data);
         },
         complete: function () {
             $('#modal-store-move').modal('hide');
@@ -110,11 +110,11 @@ $('form#config-form').submit(function (e) {
             if (data.status == 'ok') {
                 toastr.success('Saved.','User Config');
             } else {
-                swal('User Config', ('error' in data ? data.error : 'Unknow error'), 'error');
+                displayAjaxError('User Config', data);
             }
         },
         error: function (data) {
-            swal('User Config', 'Server error', 'error');
+            displayAjaxError('User Config', data);
         },
         complete: function () {
         }
@@ -172,7 +172,7 @@ $('#update-store').click(function (e) {
     var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
 
     if (!url || url.length != 1) {
-        alert('API URL is not correct!');
+        swal('Add Store', 'API URL is not correct!', 'error');
         return;
     } else {
         url = 'https://' + url[0];

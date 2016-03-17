@@ -20,11 +20,11 @@ function deletFromBoard(board_id, products, products_el) {
                     elc.parents('.col-md-3').remove();
                 });
             } else {
-                alert('Server side error');
+                displayAjaxError('Board Product', data);
             }
         },
         error: function(data) {
-            alert('Server side error');
+            displayAjaxError('Board Product', data);
         }
     });
 }
@@ -84,7 +84,7 @@ $('.apply-btn').click(function(e) {
                         $(el).parents('.col-md-3').remove();
                     },
                     error: function(data) {
-                        alert('Server side error');
+                        displayAjaxError('Delete Product', data);
                     }
                 });
             }
@@ -141,11 +141,11 @@ $('#save-changes').click(function(e) {
             if ('status' in data && data.status == 'ok') {
                 window.location.href = window.location.href;
             } else {
-                alert('error' in data ? data.error : 'Server error');
+                displayAjaxError('Edit Products', data);
             }
         },
         error: function(data) {
-            alert('error' in data ? data.error : 'Server error');
+            displayAjaxError('Edit Products', data);
         },
         complete: function() {
             btn.button('reset');
@@ -170,11 +170,11 @@ $('.board-empty').click(function(e) {
                     '<h3 class="text-center">No product in this board.</h3>'
                 );
             } else {
-                alert('error' in data ? data.error : 'Server error');
+                displayAjaxError('Empty Board', data);
             }
         },
         error: function(data) {
-            alert('error' in data ? data.error : 'Server error');
+            displayAjaxError('Empty Board', data);
         },
         complete: function() {}
     });
@@ -195,11 +195,11 @@ $('.board-delete').click(function(e) {
             if ('status' in data && data.status == 'ok') {
                 btn.parents('.board-box').remove();
             } else {
-                alert('error' in data ? data.error : 'Server error');
+                displayAjaxError('Delete Board', data);
             }
         },
         error: function(data) {
-            alert('error' in data ? data.error : 'Server error');
+            displayAjaxError('Delete Board', data);
         },
         complete: function() {}
     });

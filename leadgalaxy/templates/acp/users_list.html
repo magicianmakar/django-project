@@ -166,11 +166,11 @@
                             $('#modal-plan-select').modal('hide');
                             $('.active-plan-change').find('b').text(data.plan.title);
                         } else {
-                            alert('Server Error');
+                            displayAjaxError('Change Plan', data);
                         }
                     },
                     error: function(data) {
-                        alert('Server Error');
+                        displayAjaxError('Change Plan', data);
                     },
                     complete: function() {
                         btn.button('reset');

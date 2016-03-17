@@ -48,7 +48,7 @@ $('.delete-product-btn').click(function(e) {
                         swal("Deleted!", "The product has been deleted.", "success");
                     },
                     error: function(data) {
-                        swal("Error", "Server side error", "error");
+                        displayAjaxError('Delete Product', data);
                     }
                 });
             }
@@ -82,14 +82,14 @@ $('#apply-btn').click(function(e) {
                         btn.hide();
                     }
                 }, function(data) {
-                    alert('Server side error');
+                    displayAjaxError('Change Product Status', data);
                 });
             } else if (action == 'sent') {
 
                 changeProductStat(product, 1, function(data) {
                     if (data.status == 'ok') {}
                 }, function(data) {
-                    alert('Server side error');
+                    displayAjaxError('Change Product Status', data);
                 });
             } else if (action == 'delete') {
                 $.ajax({
@@ -102,7 +102,7 @@ $('#apply-btn').click(function(e) {
                         $(el).parents('tr').remove();
                     },
                     error: function(data) {
-                        alert('Server side error');
+                        displayAjaxError('Delete Product', data);
                     }
                 });
             }
@@ -159,11 +159,11 @@ $('#save-changes').click(function(e) {
             if ('status' in data && data.status == 'ok') {
                 window.location.href = window.location.href;
             } else {
-                alert('error' in data ? data.error : 'Server error');
+                displayAjaxError('Edit Product', data);
             }
         },
         error: function(data) {
-            alert('error' in data ? data.error : 'Server error');
+            displayAjaxError('Edit Product', data);
         },
         complete: function() {
             btn.button('reset');
@@ -176,7 +176,7 @@ $('#board-product-send').click(function(e) {
     var products = [];
 
     if ($('#selected-board').val().length === 0) {
-        alert('Please select a board.');
+        swal('Please select a board.');
         return;
     }
 
@@ -202,11 +202,11 @@ $('#board-product-send').click(function(e) {
             if ('status' in data && data.status == 'ok') {
                 $('#modal-board-product').modal('hide');
             } else {
-                alert('error' in data ? data.error : 'Server error');
+                displayAjaxError('Board Product', data);
             }
         },
         error: function(data) {
-            alert('error' in data ? data.error : 'Server error');
+            displayAjaxError('Board Product', data);
         },
         complete: function() {
             btn.button('reset');
