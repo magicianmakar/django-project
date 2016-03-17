@@ -220,7 +220,7 @@ def api(request, target):
             else:
                 return JsonResponse({'error': 'Unauthenticated user'}, status=401)
 
-        if not user.is_superuser or not delayed or target == 'save-for-later':
+        if not delayed or target == 'save-for-later':
             result = tasks.export_product(req_data, target, user.id)
             result = utils.fix_product_url(result, request)
 
