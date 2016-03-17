@@ -1,6 +1,7 @@
 import os
 import requests
 import traceback
+import time
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
@@ -29,6 +30,7 @@ app.conf.update(BROKER_URL=os.environ['REDISCLOUD_URL'],
 @app.task
 def export_product(req_data, target, user_id):
     print 'Begin:', target.replace('-', ' ').title()
+    start = time.time()
 
     store = req_data['store']
     data = req_data['data']
@@ -180,6 +182,8 @@ def export_product(req_data, target, user_id):
         return {
             'error': 'Unknown target {}'.format(target)
         }
+
+    print '%s Took: %.02f ms' % (target.replace('-', ' ').title(), time.time() - start)
 
     return {
         'product': {
