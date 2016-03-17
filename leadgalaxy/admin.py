@@ -24,6 +24,7 @@ class FeatureBundleAdmin(admin.ModelAdmin):
 class UserUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('product',)
+    search_fields = ['url']
 
     def view_on_site(self, obj):
         return obj.url
@@ -33,6 +34,7 @@ class UserUploadAdmin(admin.ModelAdmin):
 class ShopifyBoardAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('products',)
+    search_fields = ['title']
 
 
 @admin.register(ShopifyProduct)
@@ -40,6 +42,7 @@ class ShopifyProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store_', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('parent_product', 'shopify_export', 'store', 'user')
     ordering = ('-updated_at',)
+    search_fields = ['data', 'notes', 'price_notification_id']
 
     def store_(self, obj):
         return obj.store.title
@@ -52,6 +55,7 @@ class ShopifyProductAdmin(admin.ModelAdmin):
 class ShopifyProductExportAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'created_at')
     raw_id_fields = ('store',)
+    search_fields = ['original_url', 'shopify_id']
 
 
 @admin.register(ShopifyOrder)
@@ -61,11 +65,13 @@ class ShopifyOrderAdmin(admin.ModelAdmin):
                     'created_at', 'updated_at')
 
     list_filter = ('shopify_status', 'source_status', 'seen', 'hidden',)
+    search_fields = ['order_id', 'line_id', 'source_id', 'source_tracking', 'data']
 
 
 @admin.register(ShopifyStore)
 class ShopifyStoreAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_active', 'created_at', 'updated_at')
+    search_fields = ['title', 'api_url', 'store_hash']
 
 
 @admin.register(ShopifyWebhook)
@@ -76,29 +82,34 @@ class ShopifyWebhookAdmin(admin.ModelAdmin):
 @admin.register(AccessToken)
 class AccessTokenAdmin(admin.ModelAdmin):
     list_display = ('token', 'user', 'created_at', 'updated_at')
+    search_fields = ['token']
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'plan', 'status')
+    list_display = ('user', 'plan', 'country', 'timezone', 'status')
     list_filter = ('plan', 'status', 'bundles')
     filter_horizontal = ('bundles',)
+    search_fields = ['emails', 'country', 'timezone']
 
 
 @admin.register(AppPermission)
 class AppPermissionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
+    search_fields = ['name', 'description']
 
 
 @admin.register(PlanRegistration)
 class PlanRegistrationAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'email', 'register_hash', 'expired', 'created_at', 'updated_at')
     list_filter = ('expired',)
+    search_fields = ['data', 'email', 'register_hash']
 
 
 @admin.register(ShopifyProductImage)
 class ShopifyProductImageAdmin(admin.ModelAdmin):
     list_display = ('product', 'variant', 'store')
+    search_fields = ['image']
 
 
 @admin.register(AliexpressProductChange)
@@ -106,6 +117,7 @@ class AliexpressProductChangeAdmin(admin.ModelAdmin):
     list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
     list_filter = ('seen', 'hidden',)
+    search_fields = ['data']
 
 
 @admin.register(PlanPayment)
@@ -113,3 +125,4 @@ class PlanPaymentAdmin(admin.ModelAdmin):
     list_display = ('provider', 'payment_id', 'transaction_type', 'fullname',
                     'email', 'user', 'created_at')
     list_filter = ('provider', 'transaction_type',)
+    search_fields = ['fullname', 'email', 'payment_id', 'data']
