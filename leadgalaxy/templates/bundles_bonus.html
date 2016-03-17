@@ -1,0 +1,60 @@
+{% load widget_tweaks %}
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon"  href="{% static 'favicon.png' %}">
+    <link rel="icon" href="{% static 'favicon.png' %}" >
+
+    <title>Shopified App | Bundle Bonus</title>
+
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+
+    <link href="{% static 'css/animate.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+
+<body class="gray-bg">
+
+    <div class="middle-box text-center loginscreen   animated fadeInDown">
+        <div>
+            <div>
+                <h1 class="logo-name">
+                    <img style="width: 100%; margin-left: -30px;" src={% static 'Shopified-App2.png' %}>
+                </h1>
+            </div>
+            <h3>{{bundle.title}}</h3>
+            <p>Enter your email to add this bundle to your account.</p>
+            <form class="m-t" role="form" method="post" action="{% url 'leadgalaxy.views.bundles_bonus' bundle_id=bundle.register_hash %}">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        {% render_field form.email class+="form-control input-lg" placeholder="Email" %}
+                        {{ form.email.errors | safe }}
+                    </div>
+                </div>
+
+                {% if registration %}
+                    <input type="hidden" name="bid" value="{{ bundle.register_hash }}">
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary block full-width m-b">Submit</button>
+            </form>
+            <p class="m-t"> <small>Shopified App &copy; 2016</small> </p>
+        </div>
+    </div>
+
+    <!-- Mainly scripts -->
+    <script src="{% static 'js/jquery-2.1.1.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+</body>
+
+</html>

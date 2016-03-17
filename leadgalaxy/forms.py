@@ -98,6 +98,7 @@ class UserProfileEmailForm(forms.Form):
 
         return password2
 
+
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']
@@ -111,3 +112,11 @@ class EmailAuthenticationForm(AuthenticationForm):
                     params={'username': self.username_field.verbose_name},
                 )
         return username
+
+
+class EmailForm(forms.Form):
+    email = forms.EmailField()
+
+    def __init__(self, *args, **kwargs):
+        super(EmailForm, self).__init__(*args, **kwargs)
+        self.error_class = BsErrorList

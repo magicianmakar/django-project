@@ -2491,6 +2491,37 @@ def products_update(request):
 
 
 @login_required
+def bundles_bonus(request, bundle_id):
+    bundle = get_object_or_404(FeatureBundle, register_hash=bundle_id)
+    if request.method == 'POST':
+        form = EmailForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            reg = utils.generate_plan_registration(plan=None, bundle=bundle, data={'email': email})
+
+            try:
+                user = User.objects.get(email=email)
+                user.profile.bundles.add(bundle)
+
+                reg.expired = True
+            except User.DoesNotExist:
+                user = None
+
+            reg.save()
+
+            messages.success(request, 'Bundle %s has been added to your account.' % bundle.title)
+            return HttpResponseRedirect('/')
+
+    else:
+        form = RegisterForm()
+
+    return render(request, "bundles_bonus.html", {
+        'form': form,
+        'bundle': bundle
+    })
+
+
+@login_required
 def product_feeds(request):
     return render(request, 'product_feeds.html', {
         'page': 'product_feeds',

@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     url(r'^orders/track$', leadgalaxy.views.orders_track, name='orders_track'),
     url(r'^orders/place$', leadgalaxy.views.orders_place, name='orders_place'),
     url(r'^products/update$', leadgalaxy.views.products_update, name='products_update'),
+    url(r'^bundles/(?P<bundle_id>[a-z0-9]+)$', leadgalaxy.views.bundles_bonus, name='bundles_bonus'),
 
     url(r'^marketing/feeds$', leadgalaxy.views.product_feeds, name='product_feeds'),
     url(r'^marketing/feeds/(?P<store_id>[0-9a-z]+)$', leadgalaxy.views.get_product_feed, name='get_product_feed'),
