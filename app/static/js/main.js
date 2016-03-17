@@ -24,6 +24,8 @@ function displayAjaxError(desc, data) {
 
     if (typeof (data.error) == 'string') {
         error_msg = data.error;
+    } else if (data.responseJSON && typeof (data.responseJSON.error) == 'string') {
+        error_msg = data.responseJSON.error;
     } else if (typeof (data) == 'string') {
         error_msg = data;
     }
