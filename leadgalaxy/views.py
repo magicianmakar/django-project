@@ -39,10 +39,15 @@ from province_helper import load_uk_provincess
 def index_view(request):
     stores = request.user.shopifystore_set.filter(is_active=True)
     config = request.user.profile.get_config()
+    first_visit = config.get('_first_visit', True)
+
+    if first_visit:
+        request.user.set_config('_first_visit', False)
 
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
+        'first_visit': first_visit or request.GET.get('new'),
         'page': 'index',
         'breadcrumbs': ['Stores']
     })

@@ -50,6 +50,8 @@
             <a class="add-store-btn btn btn-primary" href="#">Add Store</a>
 
             Need a new Shopify store?  <a href="https://www.shopify.com/?ref=rank-engine">Get your Free Trial here</a>
+            <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
+               class="btn btn-default btn-outline btn-xs pull-right extension-link" target="_blank">Chrome Extension</a>
                 </div>
             </div>
 
@@ -72,7 +74,7 @@
                         <div class="form-group">
                             <label for="auto_margin" class="col-sm-2 control-label">Price Markup</label>
                             <div class="col-sm-1">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{{config.auto_margin}}">
+                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
                             </div>
                             <span class="help-block ">(For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
                         </div>
@@ -89,7 +91,7 @@
                         <div class="form-group">
                             <label for="auto_compare_at" class="col-sm-2 control-label">Compare At Price Markup</label>
                             <div class="col-sm-1">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at" value="{{config.auto_compare_at}}">
+                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at" value="{% if config.auto_compare_at != '%' %}{{config.auto_compare_at}}{% endif %}">
                             </div>
                             <span class="help-block ">(For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00)</span>
                         </div>
@@ -345,8 +347,40 @@
 </div>
 {% endblock %}
 
+{% block extracss %}
+<link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block extrajs %}
 {% compress js %}
+    <script type="text/javascript" src="{% static 'js/bootstrap-tour.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
+
+{% if first_visit %}
+<script type="text/javascript">
+    $(function() {
+        var tour = new Tour({
+            name: 'tour-intro',
+            steps: [{
+                element: '.add-store-btn',
+                title: 'Connect your store',
+                content: 'You can use the videos from <a href="www.shopifiedapp.com/start">www.shopifiedapp.com/start</a>'
+            }, {
+                element: '.extension-link',
+                title: 'Chrome Extension',
+                content: 'Install the Shopified App Chrome Extension to start importing products to your stores.',
+                placement: 'left',
+            }, {
+                element: '.profile-options',
+                title: 'Your Profile',
+                content: 'Edit your email, password and other settings here.',
+            }, ]
+        });
+        tour.init();
+        tour.start();
+    });
+</script>
+{% endif %}
+
 {% endblock %}
