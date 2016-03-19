@@ -149,6 +149,12 @@
                                 {% else %}
                                 <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order m-t-xs">Un-Archive</button>
                                 {% endif %}
+
+                                {% if item.auto_fulfilled %}
+                                <div style="padding:5px 0px">
+                                    <span class="label label-primary" style="margin-top:5px">Auto Fulfilled</span>
+                                </div>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
