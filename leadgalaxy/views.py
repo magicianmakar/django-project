@@ -140,6 +140,13 @@ def api(request, target):
                 })
 
         store = ShopifyStore(title=name, api_url=url, user=user)
+        try:
+            info = store.get_info
+            if not store.title:
+                store.title = info['name']
+        except:
+            return JsonResponse({'error': 'Shopify Store link is not corret.'}, status=500)
+
         store.save()
 
         utils.attach_webhooks(store)
@@ -175,17 +182,26 @@ def api(request, target):
 
     if method == 'POST' and target == 'update-store':
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        store_title = data.get('title')
+        store_api_url = data.get('url')
+        api_url_changes = (store.api_url != data.get('url'))
 
-        attach = False
-        if store.api_url != data.get('url'):
+        store_check = ShopifyStore(title=store_title, api_url=store_api_url, user=user)
+        try:
+            info = store_check.get_info
+            if not store_title:
+                store_title = info['name']
+        except:
+            return JsonResponse({'error': 'Shopify Store link is not corret.'}, status=500)
+
+        if api_url_changes:
             utils.detach_webhooks(store)
-            attach = True
 
-        store.title = data.get('title')
-        store.api_url = data.get('url')
+        store.title = store_title
+        store.api_url = store_api_url
         store.save()
 
-        if attach:
+        if api_url_changes:
             utils.attach_webhooks(store)
 
         return JsonResponse({'status': 'ok'})
