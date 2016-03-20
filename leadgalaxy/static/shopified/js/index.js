@@ -187,10 +187,9 @@ $('#update-store').click(function (e) {
         data: {
             store: store,
             title: name,
-            url: url,
-            btn: btn
+            url: url
         },
-        context: {},
+        context: {btn: btn},
         success: function (data) {
             if (data.status == 'ok') {
                 $('#modal-form').modal('hide');
