@@ -37,14 +37,15 @@ $('#add-store').click(function(e) {
         success: function(data) {
             if ('error' in data) {
                 displayAjaxError('Add Store', data);
-                $('#add-store').button('reset');
             } else {
-                window.location.href = window.location.href;
+                window.location.reload();
             }
 
         },
         error: function(data) {
             displayAjaxError('Add Store', data);
+        },
+        complete: function () {
             $('#add-store').button('reset');
         }
     });
