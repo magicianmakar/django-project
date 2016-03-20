@@ -66,7 +66,7 @@ $('#store-move-btn').click(function (e) {
         swal('Delete Store', 'Please select a store', 'warning');
         return;
     }
-    if (move_to == store) {
+    if (move_to == store && $('#move-select-store option').length > 1) {
         swal('Delete Store', 'Please choose an other store ', 'warning');
         return;
     }
