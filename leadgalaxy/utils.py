@@ -209,7 +209,7 @@ def slack_invite(data):
                 }
         )
 
-        success = (r.json()['ok'] or r.json().get('error') == 'already_invited')
+        success = (r.json()['ok'] or r.json().get('error') in ['already_invited', 'already_in_team'])
         rep = r.text
     except Exception as e:
         rep = str(e)
@@ -1003,3 +1003,101 @@ class ShopifyOrderPaginator(Paginator):
                 return rep['orders']
             else:
                 return []
+
+
+class ProductsCollectionPaginator(Paginator):
+    order = None
+    query = None
+    ppp = 25
+
+    def set_product_per_page(self, ppp):
+        self.ppp = ppp
+
+    def set_current_page(self, page):
+        self.current_page = page
+
+    def set_query(self, query):
+        self.query = query
+
+    def page(self, number):
+        """
+        Returns a Page object for the given 1-based page number.
+        """
+
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        self.set_current_page(number)
+
+        api_page = number
+        orders = self.get_orders(api_page)
+
+        return self._get_page(orders, number, self)
+
+    def page_range(self):
+        """
+        Returns a 1-based range of pages for iterating through within
+        a template for loop.
+        """
+        page_count = self.num_pages
+
+        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
+        if 1 not in pages:
+            pages = [1, None] + pages
+
+        if page_count not in pages:
+            pages = pages + [None, page_count]
+
+        return pages
+
+    def get_orders(self, page):
+        print 'get_orders', page
+        rep = requests.get(
+            url='http://127.0.0.1:8000/api/products/collections',
+            params={
+                'ppp': self.ppp,
+                'page': page,
+                'query': self.query,
+                'order': self.order,
+            }
+        )
+
+        rep = rep.json()
+
+        products = rep.get('products', [])
+        # self.object_list = xrange(0, rep.get('count', 0))
+        # self._num_pages = self._count = None
+
+        print 'Got %d Products' % len(products)
+        return products
+
+    def _get_product_count(self):
+        """
+        Returns the total number of objects, across all pages.
+        """
+        if self._count is None:
+            try:
+                print '_get_product_count'
+                rep = requests.get(
+                    url='http://127.0.0.1:8000/api/products/collections',
+                    params={
+                        'ppp': self.ppp,
+                        'query': self.query,
+                        'order': self.order,
+                        'count': 1
+                    }
+                )
+
+                self._count = rep.json().get('count', 0)
+                print 'Got:', self._count
+
+            except:
+                import traceback
+                traceback.print_exc()
+                self._count = 0
+        return self._count
+
+    count = property(_get_product_count)
