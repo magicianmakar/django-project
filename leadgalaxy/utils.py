@@ -202,8 +202,8 @@ def slack_invite(data):
                     'email': data['email'],
                     'first_name': data['firstname'],
                     'last_name': data['lastname'],
-                    'channels': 'C0F23PPE2,C0FA60BC6,C0FA6GYHM,C0F1M7X8R,C0FA6RYKW',
-                    'token': 'xoxp-15055768838-15056514242-19294251986-f79c8c24f4',
+                    'channels': 'C0LV8AAA0',
+                    'token': 'xoxp-21001000400-20999486737-21000357922-4047773e5d',
                     'set_active': True,
                     '_attempts': 1
                 }
