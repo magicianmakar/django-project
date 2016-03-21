@@ -80,7 +80,7 @@ def api(request, target):
 
         if '@' in username:
             try:
-                username = User.objects.get(email=username).username
+                username = User.objects.get(email__iexact=username).username
             except:
                 return JsonResponse({'error': 'Unvalide email or password'})
 
@@ -1061,7 +1061,7 @@ def webhook(request, provider, option):
             return HttpResponse('ok')
         elif status in ['canceled', 'refunded']:
             try:
-                user = User.objects.get(email=data['email'])
+                user = User.objects.get(email__iexact=data['email'])
 
                 free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
                 user.profile.plan = free_plan
@@ -1163,7 +1163,7 @@ def webhook(request, provider, option):
                     reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
 
                     try:
-                        user = User.objects.get(email=data['email'])
+                        user = User.objects.get(email__iexact=data['email'])
                         user.profile.bundles.add(bundle)
 
                         reg.expired = True
@@ -1213,7 +1213,7 @@ def webhook(request, provider, option):
 
             elif trans_type in ['RFND', 'CGBK', 'INSF']:
                 try:
-                    user = User.objects.get(email=data['email'])
+                    user = User.objects.get(email__iexact=data['email'])
                 except User.DoesNotExist:
                     user = None
 
@@ -1229,7 +1229,7 @@ def webhook(request, provider, option):
                         data['removed_bundle'] = bundle.title
                         user.profile.bundles.remove(bundle)
                 else:
-                    PlanRegistration.objects.filter(plan=plan, bundle=bundle, email=data['email']) \
+                    PlanRegistration.objects.filter(plan=plan, bundle=bundle, email__iexact=data['email']) \
                                             .update(expired=True)
 
                 payment = PlanPayment(fullname=data['fullname'],
@@ -2526,7 +2526,7 @@ def bundles_bonus(request, bundle_id):
             reg = utils.generate_plan_registration(plan=None, bundle=bundle, data={'email': email})
 
             try:
-                user = User.objects.get(email=email)
+                user = User.objects.get(email__iexact=email)
                 user.profile.bundles.add(bundle)
 
                 reg.expired = True
@@ -2625,7 +2625,7 @@ def register(request, registration=None):
             new_profile = utils.create_new_profile(new_user)
 
             if not registration:
-                registration = PlanRegistration.objects.filter(email=form.cleaned_data['email']) \
+                registration = PlanRegistration.objects.filter(email__iexact=form.cleaned_data['email']) \
                                                        .exclude(plan=None).first()
 
             if registration:

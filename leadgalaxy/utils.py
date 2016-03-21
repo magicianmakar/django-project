@@ -99,7 +99,7 @@ def apply_plan_registrations(profile, registration):
     registration.save()
 
     # Process other purchases (like additional bundles)
-    purchases = PlanRegistration.objects.filter(email=profile.user.email) \
+    purchases = PlanRegistration.objects.filter(email__iexact=profile.user.email) \
                                         .filter(expired=False) \
                                         .exclude(id=registration.id)
 

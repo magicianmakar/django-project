@@ -110,7 +110,7 @@ class EmailAuthenticationForm(AuthenticationForm):
         username = self.data['username']
         if '@' in username:
             try:
-                username = User.objects.get(email=username).username
+                username = User.objects.get(email__iexact=username).username
             except ObjectDoesNotExist:
                 raise ValidationError(
                     self.error_messages['invalid_login'],
