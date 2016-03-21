@@ -30,6 +30,12 @@ class RegisterForm(UserCreationForm):
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.error_class = BsErrorList
 
+    def clean_username(self):
+        if '@' in self.cleaned_data["username"]:
+            raise forms.ValidationError('@ is not allowed in username')
+
+        return self.cleaned_data["username"]
+
     def clean_email(self):
         email = self.cleaned_data["email"]
 
