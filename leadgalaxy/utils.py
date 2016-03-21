@@ -209,7 +209,7 @@ def slack_invite(data):
                 }
         )
 
-        success = r.json()['ok']
+        success = (r.json()['ok'] or r.json().get('error') == 'already_invited')
         rep = r.text
     except Exception as e:
         rep = str(e)
