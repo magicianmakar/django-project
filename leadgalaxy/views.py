@@ -2623,8 +2623,8 @@ def register(request, registration=None):
             utils.apply_plan_registrations(form.cleaned_data['email'])
 
             messages.info(request, "Thanks for registering. You are now logged in.")
-            new_user = authenticate(username=request.POST['username'],
-                                    password=request.POST['password1'])
+            new_user = authenticate(username=form.cleaned_data['username'],
+                                    password=form.cleaned_data['password1'])
 
             login(request, new_user)
 
