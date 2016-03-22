@@ -2618,14 +2618,9 @@ def register(request, registration=None):
 
         if form.is_valid():
             new_user = form.save()
-            new_profile = utils.create_new_profile(new_user)
+            utils.create_new_profile(new_user)
 
-            if not registration:
-                registration = PlanRegistration.objects.filter(email__iexact=form.cleaned_data['email']) \
-                                                       .exclude(plan=None).first()
-
-            if registration:
-                utils.apply_plan_registrations(new_profile, registration)
+            utils.apply_plan_registrations(form.cleaned_data['email'])
 
             messages.info(request, "Thanks for registering. You are now logged in.")
             new_user = authenticate(username=request.POST['username'],

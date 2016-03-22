@@ -80,39 +80,42 @@ def generate_plan_registration(plan, data={}, bundle=None):
     return reg
 
 
-def apply_plan_registrations(profile, registration):
-    profile.plan = registration.plan
+def apply_plan_registrations(email=''):
+    registartions = PlanRegistration.objects.filter(expired=False)
 
-    usage = registration.get_usage_count()
-    if usage is not None:
-        usage['used'] = usage['used'] + 1
-
-        if usage['used'] >= usage['allowed']:
-            registration.expired = True
-
-        registration.set_used_count(usage['used'])
-        registration.add_user(profile.user.id)
+    if email:
+        registartions = registartions.filter(email=email)
     else:
-        registration.expired = True
-        registration.user = profile.user
+        registartions = registartions.exclude(email='')
 
-    registration.save()
-
-    # Process other purchases (like additional bundles)
-    purchases = PlanRegistration.objects.filter(email__iexact=profile.user.email) \
-                                        .filter(expired=False) \
-                                        .exclude(id=registration.id)
-
-    for p in purchases:
-        if not p.bundle:
+    for reg in registartions:
+        if reg.get_usage_count() is not None:
             continue
 
-        profile.bundles.add(p.bundle)
-        p.user = profile.user
-        p.expired = True
-        p.save()
+        try:
+            user = User.objects.get(email__iexact=reg.email)
+            profile = user.profile
+        except User.DoesNotExist:
+            #print 'Not registred yet:', reg.email
+            continue
 
-    profile.save()
+        if reg.plan:
+            print "REGISTRATIONS: Change user {} from '{}' to '{}'".format(user.username, profile.plan.title, reg.plan.title)
+
+            profile.plan = reg.plan
+            profile.save()
+
+            reg.expired = True
+            reg.user = profile.user
+            reg.save()
+
+        elif re.bundle:
+            print "REGISTRATIONS: Add Bundle '{}' to: {}".format(reg.bundle.title, user.username)
+
+            profile.bundles.add(reg.bundle)
+            reg.user = user
+            reg.expired = True
+            reg.save()
 
 
 def smart_board_by_product(user, product):
