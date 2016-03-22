@@ -559,6 +559,17 @@ class PlanRegistration(models.Model):
 
         super(PlanRegistration, self).save(*args, **kwargs)
 
+    def get_email(self):
+        email = self.email
+        if not email:
+            try:
+                data = json.loads(self.data)
+                email = data['email']
+            except:
+                pass
+
+        return email
+
     def get_usage_count(self):
         try:
             data = json.loads(self.data)
