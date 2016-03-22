@@ -31,7 +31,7 @@
                             <th>Products</th>
                             {% endif %}
                             <th>Join Date</th>
-                            <th>Actions</th>
+                            <th style="width:240px">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,6 +77,10 @@
         padding: 0px;
         margin: 0px;
     }
+
+    .user-profile-btn {
+        margin-right: 5px;
+    }
     </style>
 {% endblock %}
 
@@ -90,11 +94,25 @@
 
     <script type="text/javascript">
         function changePlan(e) {
+            e.preventDefault();
+
             $('.active-plan-change').removeClass('active-plan-change');
             $(this).parents('tr').find('.profile-plan').addClass('active-plan-change');
             $('#modal-plan-select').prop('user-id', $(this).attr('user-id'));
             $('#modal-plan-select').modal('show');
         }
+
+        function userProfile(e) {
+            e.preventDefault();
+
+            window.open('/admin/leadgalaxy/userprofile/'+profiles[$(this).attr('user-id')]+'/', '_blank');
+        }
+
+        var profiles = {
+{% for profile in profiles  %}
+    {{profile.user_id}}: {{profile.id}},
+{% endfor %}
+        };
 
         var data = [
 {% for item in users %}
@@ -120,7 +138,14 @@
                     $(el).find('td').find('a').remove()
                     $(el).find('td').first().append($('<a>', {href: '/admin/auth/user/'+info[0]+'/', target: '_blank', text: info[1]}));
 
-                    $(el).find('td').last().empty()
+                    $(el).find('td').last().empty();
+
+                    if (info.length != 2) {
+                         $(el).find('td').last().text('No user found.').addClass('text-center');
+                        return;
+                    }
+
+                    $(el).find('td').last()
                     .append($('<a>', {
                         'href': '/hijack/'+info[0]+'/',
                         'class': 'btn btn-success btn-xs m-r-xs',
@@ -133,6 +158,13 @@
                             'user-id': info[0],
                             'text': 'Change Plan'
                         }).click(changePlan)
+                    ).prepend(
+                        $('<a>', {
+                            'href': '#',
+                            'class': 'btn btn-default btn-outline btn-xs user-profile-btn',
+                            'user-id': info[0],
+                            'text': 'Profile'
+                        }).click(userProfile)
                     );
                 });
             });
