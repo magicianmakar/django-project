@@ -360,4 +360,6 @@ $(function() {
       ajax: false,
       restartOnRequestAfter: false
     };
+
+    $('.itooltip').tooltip();
 });

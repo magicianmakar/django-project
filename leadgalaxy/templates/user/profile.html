@@ -4,23 +4,23 @@
 {% load compress %}
 
 {% block main-container %}
-
+{% with plan_tab=request.GET.plan %}
 <div class="row">
     <div class="col-md-10 col-md-offset-1">
         <div class="tabs-container">
             <ul class="nav nav-tabs">
-                <li class="active">
+                <li class="{% if not plan_tab %}active{% endif %}">
                     <a data-toggle="tab" href="#tab-1" aria-expanded="true">Profile</a>
                 </li>
                 <li class="">
                     <a data-toggle="tab" href="#tab-2" aria-expanded="false">Email &amp; Password</a>
                 </li>
-                <li class="">
+                <li class="{% if plan_tab %}active{% endif %}">
                     <a data-toggle="tab" href="#tab-3" aria-expanded="false">Plan &amp; Bundles</a>
                 </li>
             </ul>
             <div class="tab-content">
-                <div id="tab-1" class="tab-pane active">
+                <div id="tab-1" class="tab-pane {% if not plan_tab %}active{% endif %}">
                     <div class="panel-body">
                         <div class="row">
                             <div class=" col-md-12 col-md-offset-0 ">
@@ -118,7 +118,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="tab-3" class="tab-pane">
+                <div id="tab-3" class="tab-pane {% if plan_tab %}active{% endif %}">
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-12">
@@ -167,6 +167,7 @@
     </div>
 </div>
 
+{% endwith %}
 {% endblock %}
 
 
