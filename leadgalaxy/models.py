@@ -28,9 +28,6 @@ class UserProfile(models.Model):
 
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
 
-    address1 = models.CharField(max_length=255, blank=True, default='')
-    city = models.CharField(max_length=255, blank=True, default='')
-    state = models.CharField(max_length=255, blank=True, default='')
     country = models.CharField(max_length=255, blank=True, default='')
     timezone = models.CharField(max_length=255, null=True, blank=True, default='')
     emails = models.TextField(null=True, blank=True, default='', verbose_name="Other Emails")
