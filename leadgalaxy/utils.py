@@ -109,7 +109,7 @@ def apply_plan_registrations(email=''):
             reg.user = profile.user
             reg.save()
 
-        elif re.bundle:
+        elif reg.bundle:
             print "REGISTRATIONS: Add Bundle '{}' to: {}".format(reg.bundle.title, user.username)
 
             profile.bundles.add(reg.bundle)
