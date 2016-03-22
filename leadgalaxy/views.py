@@ -129,15 +129,13 @@ def api(request, target):
         name = data.get('name')
         url = data.get('url')
 
-        total_stores = user.profile.plan.stores  # -1 mean unlimited
-        user_saved_stores = user.shopifystore_set.filter(is_active=True).count()
+        can_add, total_allowed, user_count = user.profile.can_add_store()
 
-        if (total_stores > -1) and (user_saved_stores + 1 > total_stores):
-            if not user.can('unlimited_stores.use'):
-                return JsonResponse({
-                    'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.'
-                             % (total_stores, user_saved_stores)
-                })
+        if not can_add:
+            return JsonResponse({
+                'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.'
+                         % (total_allowed, user_count)
+            })
 
         store = ShopifyStore(title=name, api_url=url, user=user)
         try:
@@ -346,15 +344,13 @@ def api(request, target):
         }, safe=False)
 
     if method == 'POST' and target == 'boards-add':
-        total_boards = user.profile.plan.boards  # -1 mean unlimited
-        user_saved_boards = user.shopifyboard_set.count()
+        can_add, total_allowed, user_count = user.profile.can_add_board()
 
-        if (total_boards > -1) and (user_saved_boards + 1 > total_boards):
-            if not user.can('unlimited_boards.use'):
-                return JsonResponse({
-                    'error': 'Your current plan allow up to %d boards, currently you have %d boards.'
-                             % (total_boards, user_saved_boards)
-                })
+        if can_add:
+            return JsonResponse({
+                'error': 'Your current plan allow up to %d boards, currently you have %d boards.'
+                         % (total_allowed, user_count)
+            })
 
         board = ShopifyBoard(title=data.get('title').strip(), user=user)
         board.save()

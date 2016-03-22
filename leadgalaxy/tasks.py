@@ -149,16 +149,12 @@ def export_product(req_data, target, user_id):
 
         else:  # New product to save
 
-            # Check if the user plan allow more product saving
-            total_products = user.profile.plan.products  # -1 mean unlimited
-            user_saved_products = user.shopifyproduct_set.count()
-
-            if (total_products > -1) and (user_saved_products + 1 > total_products):
-                if not user.can('unlimited_products.use'):
-                    return {
-                        'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'
-                                 % (total_products, user_saved_products)
-                    }
+            can_add, total_allowed, user_count = user.profile.can_add_product()
+            if not can_add:
+                return {
+                    'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'
+                             % (total_allowed, user_count)
+                }
 
             is_active = req_data.get('activate', True)
 

@@ -113,6 +113,42 @@ class UserProfile(models.Model):
         self.emails = json.dumps(emails)
         self.save()
 
+    def can_add_store(self):
+        """ Check if the user plan allow him to add a new store """
+
+        total_allowed = self.plan.stores  # -1 mean unlimited
+        user_count = self.user.shopifystore_set.filter(is_active=True).count()
+        can_add = True
+
+        if (total_allowed > -1) and (user_count + 1 > total_allowed):
+            if not self.can('unlimited_stores.use'):
+                can_add = False
+
+        return can_add, total_allowed, user_count
+
+    def can_add_product(self):
+        """ Check if the user plan allow one more product saving """
+        total_allowed = self.plan.products  # -1 mean unlimited
+        user_count = self.user.shopifyproduct_set.count()
+        can_add = True
+
+        if (total_allowed > -1) and (user_count + 1 > total_allowed):
+            if not self.can('unlimited_products.use'):
+                can_add = False
+
+        return can_add, total_allowed, user_count
+
+    def can_add_board(self):
+        total_allowed = self.plan.boards  # -1 mean unlimited
+        user_count = self.user.shopifyboard_set.count()
+        can_add = True
+
+        if (total_allowed > -1) and (user_count + 1 > total_allowed):
+            if not self.can('unlimited_boards.use'):
+                can_add = False
+
+        return can_add, total_allowed, user_count
+
 
 def user_can(self, perms):
     return self.profile.can(perms)
