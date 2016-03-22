@@ -117,10 +117,11 @@ class UserProfile(models.Model):
     def can_add_store(self):
         """ Check if the user plan allow him to add a new store """
 
-        if self.stores == -2:
+        user_stores = int(self.stores)
+        if user_stores == -2:
             total_allowed = self.plan.stores  # -1 mean unlimited
         else:
-            total_allowed = self.stores
+            total_allowed = user_stores
 
         user_count = self.user.shopifystore_set.filter(is_active=True).count()
         can_add = True
@@ -133,10 +134,11 @@ class UserProfile(models.Model):
 
     def can_add_product(self):
         """ Check if the user plan allow one more product saving """
-        if self.products == -2:
+        user_products = int(self.products)
+        if user_products == -2:
             total_allowed = self.plan.products  # -1 mean unlimited
         else:
-            total_allowed = self.products
+            total_allowed = user_products
 
         user_count = self.user.shopifyproduct_set.count()
         can_add = True
@@ -148,10 +150,11 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def can_add_board(self):
-        if self.boards == -2:
+        user_boards = int(self.boards)
+        if user_boards == -2:
             total_allowed = self.plan.boards  # -1 mean unlimited
         else:
-            total_allowed = self.boards
+            total_allowed = user_boards
 
         user_count = self.user.shopifyboard_set.count()
         can_add = True
