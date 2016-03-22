@@ -346,7 +346,7 @@ def api(request, target):
     if method == 'POST' and target == 'boards-add':
         can_add, total_allowed, user_count = user.profile.can_add_board()
 
-        if can_add:
+        if not can_add:
             return JsonResponse({
                 'error': 'Your current plan allow up to %d boards, currently you have %d boards.'
                          % (total_allowed, user_count)
