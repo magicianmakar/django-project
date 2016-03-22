@@ -21,13 +21,34 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(email__iexact=reg.email)
             except User.DoesNotExist:
-                print 'Not registred yet:', reg.email
+                #print 'Not registred yet:', reg.email
                 continue
 
             profile = user.profile
             print 'Change user {} Plan from {} to {}'.format(user.username, profile.plan.title, reg.plan.title)
 
             self.apply_plan_registrations(profile, reg)
+
+        registartions = PlanRegistration.objects.filter(expired=False).exclude(bundle=None).exclude(email='')
+        for reg in registartions:
+            if not reg.bundle or reg.get_usage_count() is not None:
+                continue
+
+            try:
+                user = User.objects.get(email__iexact=reg.email)
+            except User.DoesNotExist:
+                #print 'Not registred yet:', reg.email
+                continue
+
+            profile = user.profile
+            print ' + Add Bundle:', reg.bundle.title, 'for:', user.username
+
+            profile.bundles.add(reg.bundle)
+            reg.user = user
+            reg.expired = True
+            reg.save()
+
+            profile.save()
 
     def apply_plan_registrations(self, profile, registration):
         profile.plan = registration.plan
