@@ -26,6 +26,10 @@ class UserProfile(models.Model):
     plan = models.ForeignKey('GroupPlan', null=True)
     bundles = models.ManyToManyField('FeatureBundle', blank=True)
 
+    stores = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores')
+    products = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Products')
+    boards = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Boards')
+
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
 
     country = models.CharField(max_length=255, blank=True, default='')
@@ -113,7 +117,11 @@ class UserProfile(models.Model):
     def can_add_store(self):
         """ Check if the user plan allow him to add a new store """
 
-        total_allowed = self.plan.stores  # -1 mean unlimited
+        if self.stores == -2:
+            total_allowed = self.plan.stores  # -1 mean unlimited
+        else:
+            total_allowed = self.stores
+
         user_count = self.user.shopifystore_set.filter(is_active=True).count()
         can_add = True
 
@@ -125,7 +133,11 @@ class UserProfile(models.Model):
 
     def can_add_product(self):
         """ Check if the user plan allow one more product saving """
-        total_allowed = self.plan.products  # -1 mean unlimited
+        if self.products == -2:
+            total_allowed = self.plan.products  # -1 mean unlimited
+        else:
+            total_allowed = self.products
+
         user_count = self.user.shopifyproduct_set.count()
         can_add = True
 
@@ -136,7 +148,11 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def can_add_board(self):
-        total_allowed = self.plan.boards  # -1 mean unlimited
+        if self.boards == -2:
+            total_allowed = self.plan.boards  # -1 mean unlimited
+        else:
+            total_allowed = self.boards
+
         user_count = self.user.shopifyboard_set.count()
         can_add = True
 
