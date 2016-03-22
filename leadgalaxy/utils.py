@@ -224,6 +224,28 @@ def slack_invite(data):
                   message='Slack Invite was not sent to {} due the following error:\n{}'.format(data['email'], rep))
 
 
+def aliexpress_shipping_info(aliexpress_id, country_code):
+    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
+                     params={
+                         'f': 'd',
+                         'productid': aliexpress_id,
+                         'userType': 'cnfm',
+                         'country': country_code,
+                         'province': '',
+                         'city': '',
+                         'count': '1',
+                         'currencyCode': 'USD',
+                         'sendGoodsCountry': ''
+                     })
+
+    try:
+        shippement_data = json.loads(r.text[1:-1])
+    except:
+        shippement_data = {}
+
+    return shippement_data
+
+
 def get_myshopify_link(user, default_store, link):
     stores = [default_store, ]
     for i in user.profile.get_active_stores():

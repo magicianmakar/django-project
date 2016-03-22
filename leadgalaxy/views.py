@@ -71,7 +71,7 @@ def api(request, target):
         else:
             user = None
 
-    if target not in ['login', 'shopify', 'shopify-update', 'save-for-later'] and not user:
+    if target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress'] and not user:
         return JsonResponse({'error': 'Unauthenticated api call.'})
 
     if target == 'login':
@@ -982,6 +982,16 @@ def api(request, target):
             print form.errors
             return JsonResponse({'error': form.errors})
 
+    if method == 'GET' and target == 'shipping-aliexpress':
+        aliexpress_id = data.get('id')
+
+        country_code = data.get('country', 'US')
+        if country_code == 'GB':
+            country_code = 'UK'
+
+        data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
+        return JsonResponse(data, safe=False)
+
     return JsonResponse({'error': 'Non-handled endpoint'})
 
 
@@ -1778,37 +1788,20 @@ def boards(request, board_id):
     })
 
 
-@login_required
 def get_shipping_info(request):
     aliexpress_id = request.GET.get('id')
     product = request.GET.get('product')
-    product = ShopifyProduct.objects.get(user=request.user, id=request.GET.get('product', 0))
 
     country_code = request.GET.get('country', 'US')
     if country_code == 'GB':
         country_code = 'UK'
 
-    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
-                     params={
-                         'f': 'd',
-                         'productid': aliexpress_id,
-                         'userType': 'cnfm',
-                         'country': country_code,
-                         'province': '',
-                         'city': '',
-                         'count': '1',
-                         'currencyCode': 'USD',
-                         'sendGoodsCountry': ''
-                     })
-
-    try:
-        shippement_data = json.loads(r.text[1:-1])
-    except:
-        shippement_data = {}
+    shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
 
     if request.GET.get('type') == 'json':
         return JsonResponse(shippement_data, safe=False)
 
+    product = ShopifyProduct.objects.get(user=request.user, id=request.GET.get('product', 0))
     product_data = json.loads(product.data)
 
     if 'store' in product_data:
