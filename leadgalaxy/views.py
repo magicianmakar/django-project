@@ -1846,10 +1846,12 @@ def acp_users_list(request):
         users_count = User.objects.count()
 
     plans = GroupPlan.objects.all()
+    profiles = UserProfile.objects.all()
 
     return render(request, 'acp/users_list.html', {
         'users': users,
         'plans': plans,
+        'profiles': profiles,
         'users_count': users_count,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
