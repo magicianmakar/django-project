@@ -28,16 +28,20 @@
                         </div>
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
-                                <label class="m-r-sm" style="width: 95px">Product Type</label>
+                                <label class="m-r-sm" style="width: 95px">{{filter_product_type|default:'Product Type'}}</label>
                                 <input id="filter-type" name="type" type="text" class="form-control" value="{{request.GET.type}}" placeholder="">
                             </div>
                         </div>
+                        {% if not filter_no_tag %}
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Tag</label>
                                 <input id="filter-tag" name="tag" type="text" class="form-control" value="{{request.GET.tag}}" placeholder="">
                             </div>
                         </div>
+                        {% endif %}
+
+                        {% if not filter_no_visibility %}
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Product Visibility</label>
@@ -48,6 +52,7 @@
                                 </select>
                             </div>
                         </div>
+                        {% endif %}
 
                         <div class="col-md-5 col-md-offset-8 m-t-md">
                             <button id="product-filter-form-btn" class="btn btn-primary">Apply</button>

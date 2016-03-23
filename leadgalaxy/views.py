@@ -1353,7 +1353,7 @@ def webhook(request, provider, option):
 
                     ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
                                                   call_count=F('call_count')+1)
-                    
+
                 return JsonResponse({'status': 'ok'})
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(option))
@@ -2548,6 +2548,43 @@ def product_feeds(request):
     return render(request, 'product_feeds.html', {
         'page': 'product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
+    })
+
+
+@login_required
+def products_collections(request, collection):
+    post_per_page = request.GET.get('ppp', 25)
+    page = request.GET.get('page', 1)
+    page = max(1, page)
+
+    paginator = utils.ProductsCollectionPaginator([], post_per_page)
+    paginator.set_product_per_page(post_per_page)
+    paginator.set_current_page(page)
+    paginator.set_query(request.GET.get('title'))
+
+    extra_filter = {}
+    filter_map = {
+        'price_min': 'price_min',
+        'price_max': 'price_max',
+        'type': 'category',
+        'sort': 'order'
+    }
+
+    for k, v in filter_map.items():
+        if request.GET.get(k):
+            extra_filter[v] = request.GET.get(k)
+
+    paginator.set_extra_filter(extra_filter)
+
+    page = paginator.page(page)
+
+    return render(request, 'products_collections.html', {
+        'products': page.object_list,
+        'paginator': paginator,
+        'current_page': page,
+
+        'page': 'products_collections',
+        'breadcrumbs': ['Products', 'Collections', 'US']
     })
 
 

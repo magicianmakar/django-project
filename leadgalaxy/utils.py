@@ -1036,16 +1036,21 @@ class ShopifyOrderPaginator(Paginator):
 class ProductsCollectionPaginator(Paginator):
     order = None
     query = None
+    extra_filter = None
     ppp = 25
 
     def set_product_per_page(self, ppp):
         self.ppp = ppp
 
     def set_current_page(self, page):
-        self.current_page = page
+        self.current_page = int(page)
 
     def set_query(self, query):
         self.query = query
+
+    def set_extra_filter(self, extra_filter):
+        if len(extra_filter):
+            self.extra_filter = extra_filter
 
     def page(self, number):
         """
@@ -1060,10 +1065,10 @@ class ProductsCollectionPaginator(Paginator):
 
         self.set_current_page(number)
 
-        api_page = number
-        orders = self.get_orders(api_page)
+        if self._count > 0 and (not self._products or number != self.current_page):
+            self._get_products()
 
-        return self._get_page(orders, number, self)
+        return self._get_page(self._products, number, self)
 
     def page_range(self):
         """
@@ -1081,26 +1086,9 @@ class ProductsCollectionPaginator(Paginator):
 
         return pages
 
-    def get_orders(self, page):
-        print 'get_orders', page
-        rep = requests.get(
-            url='http://127.0.0.1:8000/api/products/collections',
-            params={
-                'ppp': self.ppp,
-                'page': page,
-                'query': self.query,
-                'order': self.order,
-            }
-        )
-
-        rep = rep.json()
-
-        products = rep.get('products', [])
-        # self.object_list = xrange(0, rep.get('count', 0))
-        # self._num_pages = self._count = None
-
-        print 'Got %d Products' % len(products)
-        return products
+    def _get_products(self):
+        rep = self._api_request()
+        self._products = rep.get('products', [])
 
     def _get_product_count(self):
         """
@@ -1108,24 +1096,31 @@ class ProductsCollectionPaginator(Paginator):
         """
         if self._count is None:
             try:
-                print '_get_product_count'
-                rep = requests.get(
-                    url='http://127.0.0.1:8000/api/products/collections',
-                    params={
-                        'ppp': self.ppp,
-                        'query': self.query,
-                        'order': self.order,
-                        'count': 1
-                    }
-                )
-
-                self._count = rep.json().get('count', 0)
-                print 'Got:', self._count
-
+                rep = self._api_request()
+                self._count = rep.get('count', 0)
+                self._products = rep.get('products')
             except:
-                import traceback
                 traceback.print_exc()
                 self._count = 0
+
         return self._count
 
     count = property(_get_product_count)
+
+    def _api_request(self):
+        params = {
+            'ppp': self.ppp,
+            'query': self.query,
+            'order': self.order,
+            'page': self.current_page,
+        }
+
+        if (self.extra_filter):
+            params.update(self.extra_filter)
+
+        rep = requests.get(
+            url='http://ali-web-api.herokuapp.com/api/products/collections',
+            params=params
+        )
+
+        return rep.json()

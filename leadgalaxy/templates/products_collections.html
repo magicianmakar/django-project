@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                <div class="row" style="margin-bottom: 20px">
+                    <div class="col-md-8">
+                        <p>
+                            <i>US Products Database</i>
+                        </p>
+                    </div>
+                    <div class="col-md-1 pull-right text-right">
+                        <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
+                        {# <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Table Layout"><i class="fa fa-lg fa-list"></i></a> #}
+                        {# <a href="/product" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a> #}
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered xdataTables">
+                    <thead>
+                        <tr>
+                            <!-- <th style="width:40px"></th> -->
+                            <th style="width:64px"></th>
+                            <th style="width:40%"><a href="{% url_toggle 'sort' '-title,title' %}">Title {% sort_icon 'sort' 'title' %}</a></th>
+                            <th><a href="{% url_toggle 'sort' '-price,price' %}">Price {% sort_icon 'sort' 'price' %}</a></th>
+                            <th><a href="{% url_toggle 'sort' '-category,category' %}">Category {% sort_icon 'sort' 'category' %}</a></th>
+                            <th><a href="{% url_toggle 'sort' '-rating,rating' %}">Rating {% sort_icon 'sort' 'rating' %}</a></th>
+                            <th style="width: 110px">Store</th>
+                            {# <th>Options</th> #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in products %}
+                        <tr product-id="{{item.id}}">
+                            <!-- <td>
+                                <input class="item-select icheck" style="" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                                <label class="pull-left" for="product_{{item.id}}"></label>
+                            </td> -->
+                            <td>
+                                <img style="width: 64px; height: 64px;" class="media-object unveil" data-src="{{item.images|first}}" alt="">
+
+                            </td>
+                            <td>
+                                <a href="http://aliexpress.com/store/product//{{item.store_id}}_{{item.product_id}}.html" target="_blank">{{item.title}}</a>
+                            </td>
+                            <td>${{item.price|floatformat:2}}</td>
+                            <td><a href="?f=1&type={{item.category|urlencode}}">{{item.category}}</a></td>
+                            <td>{{item.rating}}</td>
+                            <td><a href="{{item.store.url}}" target="_blank">{{item.store.name}}</a></td>
+                            {# <td> <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button> </td> #}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="9">
+                                No products found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "partial/paginator.html" %}
+            </div> <!-- div.ibox-content -->
+        </div> <!-- div.ibox.float-e-margins -->
+    </div> <!-- div.col-md-12 -->
+</div> <!-- div.row -->
+
+
+<div id="modal-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Edit selected products</h3>
+                        <p class="m-t-none m-b">Empty fields will be ignored.</p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" id="product-price" placeholder="Product Price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-compare-at" placeholder="Compare at price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-type" placeholder="Product type" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-tags" placeholder="Tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="form-group col-xs-6">
+                                        <label for="product-type">Weight</label>
+                                        <input type="text" class="form-control" id="product-weight" placeholder="Product Weight">
+                                    </div>
+
+                                    <div class="form-group col-xs-3" style="padding-top: 24px">
+                                        <select name="product-weight-unit" id="product-weight-unit" class="form-control">
+                                            <option value="g">g</option>
+                                            <option value="kg">kg</option>
+                                            <option value="oz">oz</option>
+                                            <option value="lb">lb</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button id="save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Save</strong></button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-board-product" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add to board</h3>
+                        <form role="form">
+                            <div class="form-group text-center">
+            <label for="selected-board">Select board</label>
+            <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
+                <!-- <option value=""></option> -->
+                {% for item in request.user.shopifyboard_set.all %}
+                <option value="{{item.id}}">{{item.title}}</option>
+                {% endfor %}
+            </select>
+                            </div>
+
+                            <div>
+                                <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Apply</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-shopify-send" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Sending To Shopify</h3>
+
+                        <label for="send-select-store">Select Store:</label>
+                        <select class="form-control" name="selected-actions" id="send-select-store" style="display: inline-block; width: 191px; ">
+                            {% for item in user.profile.get_active_stores %}
+                            <option value="{{item.id}}">{{item.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="shopify-send-btn" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Send</button>
+
+                        <div class="progress progress-striped active" style="margin-top: 20px;display:none;">
+                            <div style="width: 0%" class="progress-bar progress-bar-danger">
+                                    <span class="sr-only">0% Complete (danger)</span>
+                                </div>
+                            <div style="width: 0%;" class="progress-bar progress-bar-success">
+                                <span class="sr-only">0% Complete (success)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partial/filter_modal.html' with filter_no_tag=True filter_no_visibility=True filter_product_type='Category' %}
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        .icheckbox_square-blue {
+            position: absolute;
+            margin: 0;
+            background-color: #fff;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+    <script type="text/javascript" src="{% static 'shopified/js/products_table.js' %}"></script>
+{% endcompress %}
+{% endblock %}
+
