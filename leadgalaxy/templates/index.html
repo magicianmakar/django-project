@@ -405,6 +405,16 @@
         tour.init();
         tour.start();
     });
+
+</script>
+{% endif %}
+
+{% if intro_video %}
+<script type="text/javascript">
+    $('.welcome-intro-btn').click(function () {
+        $('.welcome-intro').hide('fade');
+    });
+
 </script>
 {% endif %}
 

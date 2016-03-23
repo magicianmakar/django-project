@@ -40,14 +40,19 @@ def index_view(request):
     stores = request.user.shopifystore_set.filter(is_active=True)
     config = request.user.profile.get_config()
     first_visit = config.get('_first_visit', True)
+    intro_video = config.get('_intro_video', True)
 
     if first_visit:
         request.user.set_config('_first_visit', False)
+
+    if intro_video:
+        request.user.set_config('_intro_video', False)
 
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
+        'intro_video': intro_video or request.GET.get('intro'),
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
