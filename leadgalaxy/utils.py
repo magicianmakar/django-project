@@ -708,7 +708,10 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             print 'Aliexpress Promotion Error:', r
             return None
 
-        return r['result']['promotionUrls'][0]['promotionUrl']
+        if len(r['result']['promotionUrls']):
+            return r['result']['promotionUrls'][0]['promotionUrl']
+        else:
+            return None
 
     except:
         print 'Aliexpress Promotion Exception:'
