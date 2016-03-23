@@ -190,9 +190,9 @@ def format_data(data, title=True):
         t = k
         if title:
             t = t.replace('_', ' ').title()
-        text = '{}    {}: {}\n'.format(text, t, v)
+        text = u'{}    {}: {}\n'.format(text, t, v)
 
-    return text
+    return text.encode('utf-8')
 
 
 def slack_invite(data):
