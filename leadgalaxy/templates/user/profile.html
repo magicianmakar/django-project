@@ -129,7 +129,9 @@
                                     <div class="panel-body">
                                         <p>Your current Plan:</p>
                                         <ul class="list-group">
-                                            <li class="list-group-item" style="border:0 none"><b>{{ user.profile.plan.title }}</b></li>
+                                            <li class="list-group-item" style="border:0 none"><b>
+                                                {{ user.profile.plan.description|default:user.profile.plan.title }}
+                                            </b></li>
                                         </ul>
                                     </div>
 
