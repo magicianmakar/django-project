@@ -7,7 +7,7 @@ from django.forms.utils import ErrorList
 
 # for login with email
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms import ValidationError
 
 
@@ -111,7 +111,9 @@ class EmailAuthenticationForm(AuthenticationForm):
         if '@' in username:
             try:
                 username = User.objects.get(email__iexact=username).username
-            except ObjectDoesNotExist:
+            except (ObjectDoesNotExist, MultipleObjectsReturned):
+                print 'WARNING: LOGIN EXCEPTION: {}'.format(username)
+
                 raise ValidationError(
                     self.error_messages['invalid_login'],
                     code='invalid_login',
