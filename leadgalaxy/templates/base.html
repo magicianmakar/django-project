@@ -227,7 +227,7 @@
                         <span class="m-r-sm text-muted welcome-message">
                             {% if request.user.is_authenticated %}
                                 {% if request.user.profile.plan.description %}
-                                    <a href="/user/profile?plan=1" class="itooltip" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="View Your Plans &amp; Bundles" style="font-size: 13px">
+                                    <a href="/user/profile?plan=1" class="current-plan itooltip" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="View Your Plans &amp; Bundles" style="font-size: 13px">
                                         {{request.user.profile.plan.description}}
                                     </a>
                                 {% endif %}
