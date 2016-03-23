@@ -46,7 +46,7 @@ class RegisterForm(UserCreationForm):
                     code='duplicate_email',
                 )
         try:
-            User._default_manager.get(email=email)
+            User._default_manager.get(email__iexact=email)
         except User.DoesNotExist:
             return email
         raise forms.ValidationError(
