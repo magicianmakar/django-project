@@ -46,6 +46,8 @@ INSTALLED_APPS = (
     'multiselectfield',
     'compressor',
     'storages',
+    'django_extensions',
+    'debug_toolbar',
 
     'article',
     'leadgalaxy'
@@ -63,6 +65,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'leadgalaxy.utils.TimezoneMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware'
 )
 
 ROOT_URLCONF = 'app.urls'
