@@ -23,6 +23,9 @@ class Command(BaseCommand):
             except User.DoesNotExist:
                 #print 'Not registred yet:', reg.email
                 continue
+            except:
+                print 'WARNING: Get Email Exception for:', reg.email
+                continue
 
             profile = user.profile
             print 'Change user {} Plan from {} to {}'.format(user.username, profile.plan.title, reg.plan.title)

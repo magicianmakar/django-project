@@ -98,6 +98,9 @@ def apply_plan_registrations(email=''):
         except User.DoesNotExist:
             #print 'Not registred yet:', reg.email
             continue
+        except:
+            print 'WARNING: REGISTRATIONS: Get Email Exception for:', reg.email
+            continue
 
         if reg.plan:
             print "REGISTRATIONS: Change user {} from '{}' to '{}'".format(user.username, profile.plan.title, reg.plan.title)
