@@ -1761,7 +1761,7 @@ def bulk_edit(request):
 @login_required
 def boards(request, board_id):
     boards = []
-    board = ShopifyBoard.objects.get(id=board_id)
+    board = get_object_or_404(ShopifyBoard, id=board_id, user=request.user)
 
     args = {
         'request': request,
