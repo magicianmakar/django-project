@@ -232,6 +232,11 @@
                                     </a>
                                 {% endif %}
 
+                                {% if extra_bundle %}
+                                    <a class="btn btn-default btn-outline btn-xs" href="{{extra_bundle.url}}"
+                                       style="min-height:0;padding: 0 5px;font-size:13px" target="_blank">{{extra_bundle.title}}</a>
+                                {% endif %}
+
                                 {% if request.user.profile.plan.badge_image %}
                                     <img style="height: 35px;" src="{{ request.user.profile.plan.badge_image }}" alt="">
                                 {% endif %}

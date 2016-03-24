@@ -82,6 +82,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'article.context_processors.sidebarlinks',
+                'leadgalaxy.context_processors.extra_bundles',
             ],
         },
     },
