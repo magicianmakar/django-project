@@ -52,7 +52,7 @@ python-dateutil==2.4.2
 pytz==2015.7
 queuelib==1.4.2
 redis==2.10.5
-requests==2.7.0
+requests==2.9.1
 rsa==3.1.4
 service-identity==14.0.0
 simplejson==3.7.3
