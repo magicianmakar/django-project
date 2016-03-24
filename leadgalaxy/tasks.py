@@ -56,7 +56,7 @@ def export_product(req_data, target, user_id):
             'error': 'Original URL is not set.'
         }
 
-    if import_store and not user.can('%s_import.use' % import_store):
+    if import_store and not user.can('%s_import.use' % import_store) and not user.is_superuser:
         return {
             'error': 'Importing from this store is not included in your current plan.'
         }
