@@ -50,8 +50,8 @@ class Command(BaseCommand):
                 self.handle_product(product, action)
                 count += 1
 
-                if (count % 10 == 0):
-                    self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
+                # if (count % 10 == 0):
+                    # self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
         for user_id in options['user_id']:
             try:
@@ -78,7 +78,7 @@ class Command(BaseCommand):
 
             origin = product.get_original_info()
             if not origin or 'aliexpress.com' not in origin.get('url').lower():
-                self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.'))
+                # self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.'))
                 return
 
             try:
@@ -86,7 +86,7 @@ class Command(BaseCommand):
                 store_id = store.get('url')
                 store_id = int(re.findall('/([0-9]+)', store_id)[0])
             except Exception as e:
-                self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Store ID'.format(product.id)))
+                # self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Store ID'.format(product.id)))
                 return
 
             product_id = product.get_source_id()
