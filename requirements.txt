@@ -25,9 +25,6 @@ django-storages==1.4
 django-widget-tweaks==1.3
 docutils==0.12
 enum34==1.0.4
-Flask==0.10.1
-Flask-SQLAlchemy==2.0
-google-api-python-client==1.4.0
 gunicorn==19.3.0
 html5lib==0.9999999
 httplib2==0.9.1
@@ -51,20 +48,16 @@ pyasn1-modules==0.0.5
 pycparser==2.14
 pyOpenSSL==0.15.1
 PyPDF2==1.25.1
-python-daemon==2.0.5
 python-dateutil==2.4.2
 pytz==2015.7
 queuelib==1.4.2
 redis==2.10.5
-reportlab==3.2.0
 requests==2.7.0
 rsa==3.1.4
-Scrapy==1.0.3
 service-identity==14.0.0
 simplejson==3.7.3
 six==1.10.0
 slimit==0.8.1
-SQLAlchemy==1.0.4
 sqlparse==0.1.18
 Twisted==15.4.0
 Unidecode==0.4.18
@@ -72,5 +65,4 @@ uritemplate==0.6
 w3lib==1.12.0
 Werkzeug==0.10.4
 whitenoise==1.0.6
-xhtml2pdf==0.0.6
 zope.interface==4.1.2
