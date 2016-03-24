@@ -1254,17 +1254,18 @@ def webhook(request, provider, option):
                                       data=json.dumps(data))
                 payment.save()
 
-                email_info = ('A Shopified App User has canceled his/her subscription.\n<br>'
-                              'More information:\n<br>'
-                              '<a href="http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/">'
-                              'http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/'
-                              '</a>').format(payment.id)
+                if PlanPayment.objects.filter(payment_id=params['ctransreceipt'], transaction_type='RFND').count() == 1:
+                    email_info = ('A Shopified App User has canceled his/her subscription.\n<br>'
+                                  'More information:\n<br>'
+                                  '<a href="http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/">'
+                                  'http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/'
+                                  '</a>').format(payment.id)
 
-                send_mail(subject='Shopified App: Cancel/Refund',
-                          recipient_list=['chase@shopifiedapp.com'],
-                          from_email='"Shopified App" <support@shopifiedapp.com>',
-                          message=email_info,
-                          html_message=email_info)
+                    send_mail(subject='Shopified App: Cancel/Refund',
+                              recipient_list=['chase@shopifiedapp.com'],
+                              from_email='"Shopified App" <support@shopifiedapp.com>',
+                              message=email_info,
+                              html_message=email_info)
 
                 return HttpResponse('ok')
 
