@@ -5,11 +5,9 @@ def extra_bundles(request):
     """ Extra bundles link """
 
     extra_cache_key = 'extra_bundle_{}'.format(request.user.id)
-    extra_cache = cache.get(extra_cache_key)
+    extra_bundle = cache.get(extra_cache_key)
 
-    if extra_cache is not None:
-        extra_bundle = extra_cache
-    else:
+    if extra_bundle is None:
         profile = request.user.profile
         bundles = profile.bundles.all().values_list('register_hash', flat=True)
         if profile.plan.register_hash == '5427f85640fb78728ec7fd863db20e4c':  # JVZoo Pro Plan
