@@ -208,7 +208,7 @@ def slack_invite(data):
                     'email': data['email'],
                     'first_name': data['firstname'],
                     'last_name': data['lastname'],
-                    'channels': 'C0LV8AAA0',
+                    'channels': 'C0M6TTRAM,C0M6V41S4,C0V7P4TTM',
                     'token': 'xoxp-21001000400-20999486737-21000357922-4047773e5d',
                     'set_active': True,
                     '_attempts': 1
