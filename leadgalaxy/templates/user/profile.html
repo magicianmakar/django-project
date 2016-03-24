@@ -157,6 +157,17 @@
                                         {% else %}
                                             You don't have any bundle.
                                         {% endif %}
+
+                                        {% for item in extra_bundles %}
+                                            <div class="row">
+                                                <div class="col-md-3 m-t-sm">
+                                                    <a class="btn btn-default btn-outline btn-sm btn-block text-right" href="{{item.url}}"
+                                                       style="background-color:#B95F29;color:#fff;border-color:#AA6B41" target="_blank">
+                                                        <i class="fa fa-plus"></i> {{item.title}}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>

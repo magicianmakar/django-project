@@ -2102,10 +2102,28 @@ def upload_file_sign(request):
 
 @login_required
 def user_profile(request):
+    profile = request.user.profile
+    bundles = profile.bundles.all().values_list('register_hash', flat=True)
+    extra_bundles = []
+
+    if profile.plan.register_hash == '5427f85640fb78728ec7fd863db20e4c':  # JVZoo Pro Plan
+        if 'b961a2a0f7101efa5c79b8ac80b75c47' not in bundles:  # JVZoo Elite Bundle
+            extra_bundles.append({
+                'title': 'Add Elite Bundle',
+                'url': 'http://www.shopifiedapp.com/elite',
+            })
+
+        if '2fba7df0791f67b61581cfe37e0d7b7d' not in bundles:  # JVZoo Unlimited
+            extra_bundles.append({
+                'title': 'Add Unlimited Bundle',
+                'url': 'http://www.shopifiedapp.com/unlimited',
+            })
+
 
     return render(request, 'user/profile.html', {
         'countries': utils.get_countries(),
         'now': timezone.now(),
+        'extra_bundles': extra_bundles,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
