@@ -1243,6 +1243,8 @@ def webhook(request, provider, option):
                     PlanRegistration.objects.filter(plan=plan, bundle=bundle, email__iexact=data['email']) \
                                             .update(expired=True)
 
+                data['jvzoo'] = params
+
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
                                       user=user,
