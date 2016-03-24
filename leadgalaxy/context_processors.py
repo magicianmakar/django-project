@@ -4,6 +4,9 @@ from django.core.cache import cache
 def extra_bundles(request):
     """ Extra bundles link """
 
+    if not request.user.is_authenticated():
+        return {'extra_bundle': None}
+
     extra_cache_key = 'extra_bundle_{}'.format(request.user.id)
     extra_bundle = cache.get(extra_cache_key)
 
