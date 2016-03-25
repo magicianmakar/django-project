@@ -1169,7 +1169,7 @@ def webhook(request, provider, option):
                         user = None
 
                     if user:
-                        reg.user = reg
+                        reg.user = user
                         reg.expired = True
                         reg.save()
                     else:
