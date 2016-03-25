@@ -98,12 +98,12 @@ def apply_plan_registrations(email=''):
         except User.DoesNotExist:
             #print 'Not registred yet:', reg.email
             continue
-        except:
-            print 'WARNING: REGISTRATIONS: Get Email Exception for:', reg.email
+        except Exception as e:
+            print 'WARNING: REGISTRATIONS: Get Email Exception for: {} - Error: {}'.format(reg.email, repr(e))
             continue
 
         if reg.plan:
-            print "REGISTRATIONS: Change user {} from '{}' to '{}'".format(user.username, profile.plan.title, reg.plan.title)
+            print "REGISTRATIONS: Change user {} ({}) from '{}' to '{}'".format(user.username, user.email, profile.plan.title, reg.plan.title)
 
             profile.plan = reg.plan
             profile.save()
@@ -113,7 +113,7 @@ def apply_plan_registrations(email=''):
             reg.save()
 
         elif reg.bundle:
-            print "REGISTRATIONS: Add Bundle '{}' to: {}".format(reg.bundle.title, user.username)
+            print "REGISTRATIONS: Add Bundle '{}' to: {} ({})".format(reg.bundle.title, user.username, user.email)
 
             profile.bundles.add(reg.bundle)
             reg.user = user

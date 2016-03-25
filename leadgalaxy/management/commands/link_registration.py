@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 continue
 
             profile = user.profile
-            print 'Change user {} Plan from {} to {}'.format(user.username, profile.plan.title, reg.plan.title)
+            print 'Change user {} ({}) Plan from {} to {}'.format(user.username, user.email, profile.plan.title, reg.plan.title)
 
             self.apply_plan_registrations(profile, reg)
 
@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 continue
 
             profile = user.profile
-            print ' + Add Bundle:', reg.bundle.title, 'for:', user.username
+            print 'Add Bundle: {} for: {} ({})'.format(reg.bundle.title, user.username, user.email)
 
             profile.bundles.add(reg.bundle)
             reg.user = user
