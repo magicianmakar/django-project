@@ -984,7 +984,6 @@ def api(request, target):
                 'password': password
             })
         else:
-            print form.errors
             return JsonResponse({'error': form.errors})
 
     if method == 'GET' and target == 'shipping-aliexpress':
