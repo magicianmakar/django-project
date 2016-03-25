@@ -1160,10 +1160,24 @@ def webhook(request, provider, option):
                     data['reg_hash'] = reg.register_hash
                     data['plan_title'] = plan.title
 
-                    utils.send_email_from_template(tpl='webhook_register.html',
-                                                   subject='Your Shopified App Access',
-                                                   recipient=data['email'],
-                                                   data=data)
+                    try:
+                        user = User.objects.get(email__iexact=data['email'])
+                        print 'WARNING: JVZOO SALE UPGARDING: {} to {}'.format(data['email'], plan.title)
+                    except User.DoesNotExist:
+                        user = None
+                    except Exception as e:
+                        print 'WARNING: JVZOO SALE EXCEPTION: {}'.format(repr(e))
+                        user = None
+
+                    if user:
+                        reg.user = reg
+                        reg.expired = True
+                        reg.save()
+                    else:
+                        utils.send_email_from_template(tpl='webhook_register.html',
+                                                       subject='Your Shopified App Access',
+                                                       recipient=data['email'],
+                                                       data=data)
 
                     utils.slack_invite(data)
                 else:
