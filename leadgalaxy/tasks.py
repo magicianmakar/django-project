@@ -23,7 +23,6 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 @app.task
 def export_product(req_data, target, user_id):
-    print 'Begin: %s' % target.replace('-', ' ').title()
     start = time.time()
 
     store = req_data['store']
