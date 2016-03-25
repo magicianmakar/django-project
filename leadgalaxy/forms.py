@@ -36,13 +36,15 @@ class RegisterForm(UserCreationForm):
 
         try:
             User.objects.get(username__iexact=self.cleaned_data["username"])
-        except ObjectDoesNotExist:
+
             raise forms.ValidationError('Username is already registred to an other account.')
+        except ObjectDoesNotExist:
+            return self.cleaned_data["username"]
         except Exception as e:
             raise forms.ValidationError('Username is already registred to an other account.')
             print 'WARNING: Register Form Exception: {}'.format(repr(e))
 
-        return self.cleaned_data["username"]
+        raise forms.ValidationError('Username is already registred to an other account.')
 
     def clean_email(self):
         email = self.cleaned_data["email"]
