@@ -1177,6 +1177,7 @@ def webhook(request, provider, option):
                         user = User.objects.get(email__iexact=data['email'])
                         user.profile.bundles.add(bundle)
 
+                        reg.user = user
                         reg.expired = True
                     except User.DoesNotExist:
                         user = None
