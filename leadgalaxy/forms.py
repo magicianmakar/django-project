@@ -116,17 +116,29 @@ class UserProfileEmailForm(forms.Form):
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']
-        if '@' in username:
-            try:
-                username = User.objects.get(email__iexact=username).username
-            except (ObjectDoesNotExist, MultipleObjectsReturned):
-                print 'WARNING: LOGIN EXCEPTION: {}'.format(username)
+        email_login = '@' in username
+        try:
+            if email_login:
+                return User.objects.get(email__iexact=username).username
+            else:
+                return User.objects.get(username__iexact=username).username
 
-                raise ValidationError(
-                    self.error_messages['invalid_login'],
-                    code='invalid_login',
-                    params={'username': self.username_field.verbose_name},
-                )
+        except ObjectDoesNotExist as e:
+            print 'WARNING: LOGIN EXCEPTION: {} For {}'.format(repr(e), username)
+
+            raise ValidationError(
+                "The {} you've entered doesn't match any account.".format('Email' if email_login else 'Username'),
+                code='invalid_login',
+                params={'username': self.username_field.verbose_name},
+            )
+        except Exception as e:
+            print 'WARNING: LOGIN EXCEPTION: {} For {}'.format(repr(e), username)
+
+            raise ValidationError(
+                self.error_messages['invalid_login'],
+                code='invalid_login',
+                params={'username': self.username_field.verbose_name},
+            )
         return username
 
 
