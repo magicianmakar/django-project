@@ -34,6 +34,14 @@ class RegisterForm(UserCreationForm):
         if '@' in self.cleaned_data["username"]:
             raise forms.ValidationError('@ is not allowed in username')
 
+        try:
+            User.objects.get(username__iexact=self.cleaned_data["username"])
+        except ObjectDoesNotExist:
+            raise forms.ValidationError('Username is already registred to an other account.')
+        except Exception as e:
+            raise forms.ValidationError('Username is already registred to an other account.')
+            print 'WARNING: Register Form Exception: {}'.format(repr(e))
+
         return self.cleaned_data["username"]
 
     def clean_email(self):
