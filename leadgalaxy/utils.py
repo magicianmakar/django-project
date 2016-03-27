@@ -852,13 +852,19 @@ class ProductFeed():
                 self._add_variant(product, variant)
 
     def _add_variant(self, product, variant):
+        image = product.get('image')
+        if image:
+            image = image.get('src')
+        else:
+            return None
+
         item = ET.SubElement(self.channel, 'item')
 
         self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element(item, 'g:title', product.get('title'))
         self._add_element(item, 'g:description', self._clean_description(product))
-        self._add_element(item, 'g:image_link', product.get('image').get('src'))
+        self._add_element(item, 'g:image_link', image)
         self._add_element(item, 'g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element(item, 'g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
         self._add_element(item, 'g:brand', product.get('vendor'))
