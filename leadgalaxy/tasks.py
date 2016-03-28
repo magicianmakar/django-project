@@ -44,10 +44,8 @@ def export_product(req_data, target, user_id):
 
     if not original_url:  # Could be sent from the web app
         try:
-            print 'From Web App'
             product = ShopifyProduct.objects.get(id=req_data.get('product'), user=user)
             original_url = product.get_original_info().get('url', '')
-            print 'URL:', original_url
         except:
             original_url = ''
 
