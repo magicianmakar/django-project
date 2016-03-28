@@ -97,16 +97,18 @@ def export_product(req_data, target, user_id):
         except JSONDecodeError:
             return {'error': 'Shopify API is not available, please try again.'}
         except:
-            traceback.print_exc()
-            print '-----'
-            try:
-                print r.text
-                print '-----'
-            except:
-                pass
-
             try:
                 d = r.json()
+                if 'errors' in d:
+                    print 'SHOPIFY EXPORT:', d['errors']
+                else:
+                    traceback.print_exc()
+                    print '-----'
+                    try:
+                        print r.text
+                        print '-----'
+                    except:
+                        pass
                 return {'error': '[Shopify API Error] ' + ' | '.join([k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])}
             except:
                 return {'error': 'Shopify API Error'}
