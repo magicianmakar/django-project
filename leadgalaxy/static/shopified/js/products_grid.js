@@ -337,7 +337,20 @@ function setupContextMenus() {
                 changeBoard(key, options);
             }
         },
-        items: boardsMenu
+        items: boardsMenu,
+        events: {
+            show: function(opt) {
+                setTimeout(function() {
+                    opt.$menu.css({
+                        'z-index': '10000',
+                        'max-height': '300px',
+                        'overflow': 'auto',
+                    });
+                }, 100);
+
+                return true;
+            }
+        }
     });
 }
 
