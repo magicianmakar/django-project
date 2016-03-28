@@ -52,6 +52,9 @@ def export_product(req_data, target, user_id):
         }
 
     if not import_store or not user.can('%s_import.use' % import_store):
+        if not import_store:
+            import_store = 'N/A'
+
         return {
             'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
         }
