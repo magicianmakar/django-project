@@ -119,6 +119,8 @@ function waitForTask(task_id, target, button) {
             },
             error: function (data) {
                 clearInterval(document.taskInterval);
+                $(this.btn).bootstrapBtn('reset');
+
                 displayAjaxError('Export Error', data);
             },
             complete: function() {
