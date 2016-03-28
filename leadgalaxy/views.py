@@ -758,7 +758,8 @@ def api(request, target):
             limit = utils.calc_orders_limit(orders_count=shopify_orders.count())
             shopify_orders = shopify_orders[:limit]
 
-            print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
+            if limit != 20:
+                print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
 
         if data.get('order_id'):
             shopify_orders = shopify_orders.filter(order_id=data.get('order_id'))
