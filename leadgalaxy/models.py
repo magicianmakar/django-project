@@ -7,6 +7,7 @@ import re
 import json
 import requests
 import textwrap
+from urlparse import urlparse
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -319,15 +320,20 @@ class ShopifyProduct(models.Model):
         return json.loads(self.data)['images']
 
     def get_original_info(self, url=None):
-        from urlparse import urlparse
-
         if not url:
             data = json.loads(self.data)
             url = data.get('original_url')
 
         if url:
-            parsed_uri = urlparse(url)
-            domain = parsed_uri.netloc.split('.')[-2]
+            # Extract domain name
+            domain = urlparse(url).hostname
+            if domain is None:
+                return domain
+
+            for i in ['com', 'co.uk', 'org', 'net']:
+                domain = domain.replace('.%s' % i, '')
+
+            domain = domain.split('.')[-1]
 
             return {
                 'source': domain.title(),
