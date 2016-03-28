@@ -55,6 +55,8 @@ def export_product(req_data, target, user_id):
         if not import_store:
             import_store = 'N/A'
 
+        print 'STORE PERMSSION FOR {} URL: {}'.format(import_store, original_url)
+
         return {
             'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
         }
