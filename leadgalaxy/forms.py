@@ -126,8 +126,6 @@ class EmailAuthenticationForm(AuthenticationForm):
                 return User.objects.get(username__iexact=username).username
 
         except ObjectDoesNotExist as e:
-            print 'WARNING: LOGIN EXCEPTION: {} For {}'.format(repr(e), username)
-
             raise ValidationError(
                 "The {} you've entered doesn't match any account.".format('Email' if email_login else 'Username'),
                 code='invalid_login',
