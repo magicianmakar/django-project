@@ -52,10 +52,9 @@ def export_product(req_data, target, user_id):
         }
 
     if not import_store or not user.can('%s_import.use' % import_store):
-        if not user.is_superuser:
-            return {
-                'error': 'Importing from this store is not included in your current plan.'
-            }
+        return {
+            'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
+        }
 
     endpoint = store.get_link('/admin/products.json', api=True)
 
