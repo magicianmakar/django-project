@@ -3,6 +3,7 @@ import requests
 import traceback
 import time
 from celery import Celery
+from simplejson import JSONDecodeError
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -93,6 +94,8 @@ def export_product(req_data, target, user_id):
                     traceback.print_exc()
 
             product_data = r.json()['product']
+        except JSONDecodeError:
+            return {'error': 'Shopify API is not available, please try again.'}
         except:
             traceback.print_exc()
             print '-----'
