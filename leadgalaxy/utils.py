@@ -96,7 +96,7 @@ def apply_plan_registrations(email=''):
     registartions = PlanRegistration.objects.filter(expired=False)
 
     if email:
-        registartions = registartions.filter(mail__iexact=email)
+        registartions = registartions.filter(email__iexact=email)
     else:
         registartions = registartions.exclude(email='')
 
