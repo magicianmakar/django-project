@@ -751,6 +751,7 @@ def api(request, target):
 
         orders = []
         shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False) \
+                                             .filter(source_tracking='') \
                                              .exclude(source_status='FINISH') \
                                              .order_by('updated_at')
 
