@@ -43,11 +43,7 @@ def export_product(req_data, target, user_id):
         original_url = req_data.get('original_url', '')
 
     try:
-        import_store = re.findall('([^\.]+).com/', original_url.lower())
-        if len(import_store):
-            import_store = import_store[0]
-        else:
-            import_store = None
+        import_store = utils.get_domain(original_url.lower())
     except:
         print 'original_url:', original_url.lower()
         traceback.print_exc()
@@ -55,10 +51,11 @@ def export_product(req_data, target, user_id):
             'error': 'Original URL is not set.'
         }
 
-    if import_store and not user.can('%s_import.use' % import_store) and not user.is_superuser:
-        return {
-            'error': 'Importing from this store is not included in your current plan.'
-        }
+    if not import_store or not user.can('%s_import.use' % import_store):
+        if not user.is_superuser:
+            return {
+                'error': 'Importing from this store is not included in your current plan.'
+            }
 
     endpoint = store.get_link('/admin/products.json', api=True)
 
