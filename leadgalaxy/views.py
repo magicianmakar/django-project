@@ -755,7 +755,8 @@ def api(request, target):
                                              .order_by('updated_at')
 
         if not data.get('order_id') and not data.get('line_id'):
-            shopify_orders = shopify_orders[:20]
+            limit = utils.calc_orders_limit(orders_count=shopify_orders.count())
+            shopify_orders = shopify_orders[:limit]
 
         if data.get('order_id'):
             shopify_orders = shopify_orders.filter(order_id=data.get('order_id'))
