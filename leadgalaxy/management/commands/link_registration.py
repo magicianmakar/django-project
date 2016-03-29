@@ -11,7 +11,7 @@ from leadgalaxy import utils
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--unregistered', dest='unregistered',
-                            action='store_false', help='Show Unregistered Emails')
+                            action='store_true', help='Show Unregistered Emails')
 
     def handle(self, *args, **options):
         registartions = PlanRegistration.objects.filter(expired=False).exclude(plan=None).exclude(email='')
