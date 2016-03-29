@@ -1170,6 +1170,10 @@ def webhook(request, provider, option):
                         user = None
 
                     if user:
+                        profile = user.profile
+                        profile.plan = plan
+                        profile.save()
+
                         reg.user = user
                         reg.expired = True
                         reg.save()
