@@ -7,7 +7,7 @@ import hashlib
 import traceback
 import pytz
 import collections
-import urlparse
+from urlparse import urlparse
 import xml.etree.ElementTree as ET
 
 from django.core.mail import send_mail
@@ -36,7 +36,7 @@ def safeFloat(v, default=0.0):
 
 
 def get_domain(url):
-    hostname = urlparse.urlparse(url).hostname
+    hostname = urlparse(url).hostname
     if hostname is None:
         return hostname
 
