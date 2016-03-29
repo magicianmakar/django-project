@@ -336,6 +336,7 @@ class ShopifyProduct(models.Model):
             domain = domain.split('.')[-1]
 
             return {
+                'domain': domain,
                 'source': domain.title(),
                 'url': url
             }
