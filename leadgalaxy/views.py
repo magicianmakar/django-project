@@ -2351,7 +2351,7 @@ def orders_view(request):
                             'phone': phone,
                             'note': request.user.get_config('order_custom_note'),
                             'epacket': bool(request.user.get_config('epacket_shipping')),
-                            'auto_mark': bool(request.user.get_config('auto_ordered_mark')), # Auto mark as Ordered
+                            'auto_mark': bool(request.user.get_config('auto_ordered_mark')),  # Auto mark as Ordered
                         }
                     }
 
