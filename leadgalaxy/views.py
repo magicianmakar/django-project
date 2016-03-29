@@ -746,7 +746,13 @@ def api(request, target):
                                              .order_by('updated_at')
 
         if not data.get('order_id') and not data.get('line_id'):
-            limit = utils.calc_orders_limit(orders_count=shopify_orders.count())
+            limit_key = 'order_fulfill_limit_%d' % user.id
+            limit = cache.get(limit_key)
+
+            if limit is None:
+                limit = utils.calc_orders_limit(orders_count=shopify_orders.count())
+                cache.set(limit_key, limit, timeout=3600)
+
             shopify_orders = shopify_orders[:limit]
 
             if limit != 20:
