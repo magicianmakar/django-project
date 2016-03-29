@@ -65,8 +65,7 @@ def api(request, target):
     elif method == 'GET' or method == 'DELETE':
         data = request.GET
     else:
-        print 'ERROR: UNSUPPORTED REQUEST METHOD %s' % method
-        return JsonResponse({'error': 'Unsupported Request Method'}, status=501)
+        return JsonResponse({'error': 'Unknown method: {}'.format(method)})
 
     if 'access_token' in data:
         token = data.get('access_token')
@@ -78,25 +77,8 @@ def api(request, target):
             user = None
 
     if target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress'] and not user:
-        return JsonResponse({'error': 'Unauthenticated API call.'}, status=401)
+        return JsonResponse({'error': 'Unauthenticated api call.'})
 
-    try:
-        res = proccess_api(request, user, method, target, data)
-        if res is None:
-            print 'ERROR: API Response is empty'
-            res = JsonResponse({'error': 'Internal Server Error'}, status=500)
-    except PermissionDenied as e:
-        res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
-    except:
-        print 'ERROR: API EXCEPTION:'
-        traceback.print_exc()
-
-        res = JsonResponse({'error': 'Internal Server Error'}, status=500)
-
-    return res
-
-
-def proccess_api(request, user, method, target, data):
     if target == 'login':
         username = data.get('username')
         password = data.get('password')
@@ -129,7 +111,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'stores':
         stores = []
-        for i in user.profile.get_active_stores():
+        for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
                 'id': i.id,
                 'name': i.title,
@@ -150,9 +132,6 @@ def proccess_api(request, user, method, target, data):
                          % (total_allowed, user_count)
             })
 
-        if user.is_subuser():
-            return JsonResponse({'error': 'Sub-Users can not add new stores.'})
-
         store = ShopifyStore(title=name, api_url=url, user=user)
         try:
             info = store.get_info
@@ -166,7 +145,7 @@ def proccess_api(request, user, method, target, data):
         utils.attach_webhooks(store)
 
         stores = []
-        for i in user.profile.get_active_stores():
+        for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
                 'name': i.title,
                 'url': i.api_url
@@ -178,17 +157,14 @@ def proccess_api(request, user, method, target, data):
         store_id = data.get('store')
         move_to = data.get('move-to')
 
-        store = ShopifyStore.objects.get(id=store_id)
-        user.can_delete(store)
+        move_to_store = ShopifyStore.objects.get(id=move_to, user=user)
+        ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
+        ShopifyStore.objects.get(id=store_id, user=user).shopifyproduct_set.update(store=move_to_store)
 
-        # move_to_store = ShopifyStore.objects.get(id=move_to, user=user)
-        # ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
-        # ShopifyStore.objects.get(id=store_id, user=user).shopifyproduct_set.update(store=move_to_store)
-
-        # utils.detach_webhooks(ShopifyStore.objects.get(id=store_id, user=user))
+        utils.detach_webhooks(ShopifyStore.objects.get(id=store_id, user=user))
 
         stores = []
-        for i in user.profile.get_active_stores():
+        for i in user.shopifystore_set.filter(is_active=True):
             stores.append({
                 'id': i.id,
                 'name': i.title,
@@ -1021,7 +997,7 @@ def proccess_api(request, user, method, target, data):
         data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
         return JsonResponse(data, safe=False)
 
-    return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
+    return JsonResponse({'error': 'Non-handled endpoint'})
 
 
 def webhook(request, provider, option):
@@ -1194,10 +1170,6 @@ def webhook(request, provider, option):
                         user = None
 
                     if user:
-                        profile = user.profile
-                        profile.plan = plan
-                        profile.save()
-
                         reg.user = user
                         reg.expired = True
                         reg.save()
