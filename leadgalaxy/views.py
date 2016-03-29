@@ -1286,7 +1286,7 @@ def webhook(request, provider, option):
                               message=email_info,
                               html_message=email_info)
 
-                return HttpResponse('ok')
+                return JsonResponse({'status': 'ok'})
 
         except Exception as e:
             print 'Exception:', e
