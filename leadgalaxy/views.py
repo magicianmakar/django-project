@@ -2294,8 +2294,12 @@ def orders_view(request):
                     product = None
 
             if product:
+                original_info = product.get_original_info()
+
                 order['line_items'][i]['product'] = product
-                original_url = product.get_original_info()['url']
+                order['line_items'][i]['domain'] = original_info.get('domain')
+
+                original_url = original_info.get('url')
                 try:
                     original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
                     order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
@@ -2303,6 +2307,7 @@ def orders_view(request):
 
                     order['line_items'][i]['original_id'] = original_id
                 except:
+                    order['line_items'][i]['original_url'] = original_url
                     print 'WARNING: ID not found for:', original_url
 
             products_cache[el['product_id']] = product
@@ -2360,10 +2365,11 @@ def orders_view(request):
                         if mapped:
                             order_data['variant'] = ' / '.join(mapped.split(','))
 
-                    if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
-                        order['line_items'][i]['order_data_id'] = order_data['id']
+                    if order['line_items'][i]['domain'] == 'aliexpress':
+                        if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
+                            order['line_items'][i]['order_data_id'] = order_data['id']
 
-                    order['line_items'][i]['order_data'] = order_data
+                        order['line_items'][i]['order_data'] = order_data
                 except:
                     pass
 
