@@ -3,23 +3,6 @@
 (function() {
 'use strict';
 
-function changeProductStat(product, stat, callback, erroback) {
-    $.ajax({
-        url: '/api/product-stat',
-        type: 'POST',
-        data: {
-            product: product,
-            sent: stat
-        },
-        success: function(data) {
-            callback(data);
-        },
-        error: function(data) {
-            erroback(data);
-        }
-    });
-}
-
 $('.delete-product-btn').click(function(e) {
     var btn = $(this);
     var product = btn.attr('product-id');
@@ -76,22 +59,7 @@ $('#apply-btn').click(function(e) {
     $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             var product = $(el).parents('tr').attr('product-id');
-            if (action == 'unsent') {
-                changeProductStat(product, 0, function(data) {
-                    if (data.status == 'ok') {
-                        btn.hide();
-                    }
-                }, function(data) {
-                    displayAjaxError('Change Product Status', data);
-                });
-            } else if (action == 'sent') {
-
-                changeProductStat(product, 1, function(data) {
-                    if (data.status == 'ok') {}
-                }, function(data) {
-                    displayAjaxError('Change Product Status', data);
-                });
-            } else if (action == 'delete') {
+            if (action == 'delete') {
                 $.ajax({
                     url: '/api/product-delete',
                     type: 'POST',

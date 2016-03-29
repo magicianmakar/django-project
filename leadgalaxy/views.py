@@ -268,17 +268,6 @@ def api(request, target):
             else:
                 return JsonResponse(data, safe=False, status=500)
 
-    if method == 'POST' and target == 'product-stat':
-        try:
-            product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
-        except:
-            return JsonResponse({'error': 'Selected product not found.'})
-
-        product.stat = data.get('sent')
-        product.save()
-
-        return JsonResponse({'status': 'ok'})
-
     if method == 'POST' and target == 'product-delete':
         product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
         product.userupload_set.update(product=None)
