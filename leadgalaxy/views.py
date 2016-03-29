@@ -106,18 +106,8 @@ def api(request, target):
         return JsonResponse({'error': 'Unvalide username or password'})
 
     if method == 'POST' and target == 'register':
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            new_user = form.save()
-            utils.create_new_profile(new_user)
-
-            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])
-            if user is not None:
-                if user.is_active:
-                    token = utils.get_access_token(user)
-                    return JsonResponse({'token': token})
-        else:
-            return JsonResponse({'error': 'Unvalid form'})
+        return JsonResponse({'error': 'Please Visit Shopified App Website to register a new account:\n\n'
+                                      'http://app.shopifiedapp.com/accounts/register\n.'}, status=501)
 
     if method == 'GET' and target == 'stores':
         stores = []
