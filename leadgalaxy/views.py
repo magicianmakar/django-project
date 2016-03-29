@@ -148,7 +148,7 @@ def api(request, target):
             if not store.title:
                 store.title = info['name']
         except:
-            return JsonResponse({'error': 'Shopify Store link is not corret.'}, status=500)
+            return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
         store.save()
 
@@ -195,7 +195,7 @@ def api(request, target):
             if not store_title:
                 store_title = info['name']
         except:
-            return JsonResponse({'error': 'Shopify Store link is not corret.'}, status=500)
+            return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
         if api_url_changes:
             utils.detach_webhooks(store)
