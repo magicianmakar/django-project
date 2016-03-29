@@ -210,6 +210,24 @@ def format_data(data, title=True):
     return text.encode('utf-8')
 
 
+def format_shopify_error(data):
+    errors = data['errors']
+
+    msg = []
+    for k, v in errors.items():
+        if type(v) is list:
+            error = ','.join(v)
+        else:
+            error = v
+
+        if k == 'base':
+            msg.append(error)
+        else:
+            msg.append('{}: {}'.format(k, error))
+
+    return ' | '.join(msg)
+
+
 def slack_invite(data):
     success = False
     rep = ''

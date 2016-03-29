@@ -101,16 +101,15 @@ def export_product(req_data, target, user_id):
             try:
                 d = r.json()
                 if 'errors' in d:
-                    print 'SHOPIFY EXPORT:', d['errors']
+                    print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(d))
                 else:
                     traceback.print_exc()
+
                     print '-----'
-                    try:
-                        print r.text
-                        print '-----'
-                    except:
-                        pass
-                return {'error': '[Shopify API Error] ' + ' | '.join([k + ': ' + ''.join(d['errors'][k]) for k in d['errors']])}
+                    print r.text
+                    print '-----'
+
+                return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(d))}
             except:
                 return {'error': 'Shopify API Error'}
 
