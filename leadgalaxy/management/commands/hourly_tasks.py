@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 import requests
+import traceback
+from simplejson import JSONDecodeError
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -36,10 +38,17 @@ class Command(BaseCommand):
             else:
                 users[order.store_id] = user
 
-            if self.fulfill_order(order, order.store, user):
-                order.shopify_status = 'fulfilled'
-                order.auto_fulfilled = True
-                order.save()
+            try:
+                if self.fulfill_order(order, order.store, user):
+                    order.shopify_status = 'fulfilled'
+                    order.auto_fulfilled = True
+                    order.save()
+
+            except JSONDecodeError:
+                print 'ERROR: JSON DECODE ERROR'
+            except:
+                print 'ERROR: Fulfill Exception:'
+                traceback.print_exc()
 
     def profile_changed(self, profile, expired_plan, new_plan):
         data = {
