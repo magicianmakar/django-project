@@ -1243,21 +1243,25 @@ def webhook(request, provider, option):
                 except User.DoesNotExist:
                     user = None
 
-                if user:
-                    if plan:
-                        free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
-                        user.profile.plan = free_plan
-                        user.profile.save()
+                new_refund = PlanPayment.objects.filter(payment_id=params['ctransreceipt'], transaction_type='RFND').count() == 0
 
-                        data['previous_plan'] = plan.title
-                        data['new_plan'] = free_plan.title
-                    elif bundle:
-                        data['removed_bundle'] = bundle.title
-                        user.profile.bundles.remove(bundle)
-                else:
-                    PlanRegistration.objects.filter(plan=plan, bundle=bundle, email__iexact=data['email']) \
-                                            .update(expired=True)
+                if new_refund:
+                    if user:
+                        if plan:
+                            free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                            user.profile.plan = free_plan
+                            user.profile.save()
 
+                            data['previous_plan'] = plan.title
+                            data['new_plan'] = free_plan.title
+                        elif bundle:
+                            data['removed_bundle'] = bundle.title
+                            user.profile.bundles.remove(bundle)
+                    else:
+                        PlanRegistration.objects.filter(plan=plan, bundle=bundle, email__iexact=data['email']) \
+                                                .update(expired=True)
+
+                data['new_refund'] = new_refund
                 data['jvzoo'] = params
 
                 payment = PlanPayment(fullname=data['fullname'],
@@ -1269,7 +1273,7 @@ def webhook(request, provider, option):
                                       data=json.dumps(data))
                 payment.save()
 
-                if PlanPayment.objects.filter(payment_id=params['ctransreceipt'], transaction_type='RFND').count() == 1:
+                if new_refund:
                     email_info = ('A Shopified App User has canceled his/her subscription.\n<br>'
                                   'More information:\n<br>'
                                   '<a href="http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/">'
@@ -1277,7 +1281,7 @@ def webhook(request, provider, option):
                                   '</a>').format(payment.id)
 
                     send_mail(subject='Shopified App: Cancel/Refund',
-                              recipient_list=['chase@shopifiedapp.com'],
+                              recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                               from_email='"Shopified App" <support@shopifiedapp.com>',
                               message=email_info,
                               html_message=email_info)
