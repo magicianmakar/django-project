@@ -207,7 +207,7 @@ def api(request, target):
 
         return JsonResponse(json.loads(product.data), safe=False)
 
-    if method == 'POST' and target == 'products-info':
+    if method == 'GET' and target == 'products-info':
         products = {}
         for p in data.getlist('products[]'):
             try:

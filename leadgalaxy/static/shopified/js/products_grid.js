@@ -270,7 +270,7 @@ $('#shopify-send-btn').click(function(e) {
 
     $.ajax({
         url: '/api/products-info',
-        type: 'POST',
+        type: 'GET',
         data: {
             products: products_ids
         },
