@@ -61,7 +61,7 @@ class Command(BaseCommand):
 
                     count += 1
                     if count % 50 == 0:
-                        print 'Fulfill Progress: %d' % counts
+                        print 'Fulfill Progress: %d' % count
 
             except JSONDecodeError:
                 print 'ERROR: JSON DECODE ERROR'
