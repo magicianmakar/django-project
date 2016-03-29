@@ -51,10 +51,11 @@ def export_product(req_data, target, user_id):
             original_url = ''
 
     try:
-        import_store = utils.get_domain(original_url.lower())
+        import_store = utils.get_domain(original_url)
     except:
-        print 'original_url:', original_url.lower()
+        print 'ERROR: Original URL: {}'.format(original_url)
         traceback.print_exc()
+
         return {
             'error': 'Original URL is not set.'
         }
@@ -63,7 +64,7 @@ def export_product(req_data, target, user_id):
         if not import_store:
             import_store = 'N/A'
 
-        print 'STORE PERMSSION FOR {} URL: {}'.format(import_store, original_url)
+        print 'ERROR: STORE PERMSSION FOR {} URL: {}'.format(import_store, original_url)
 
         return {
             'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
