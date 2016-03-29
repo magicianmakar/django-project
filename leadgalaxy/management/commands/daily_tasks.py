@@ -40,6 +40,7 @@ class Command(BaseCommand):
         print 'Orders Count (daily):', orders.count()
 
         users = {}
+        count = 0
         for order in orders:
             if order.store_id in users:
                 user = users[order.store_id]
@@ -57,6 +58,10 @@ class Command(BaseCommand):
                     order.shopify_status = 'fulfilled'
                     order.auto_fulfilled = True
                     order.save()
+
+                    count += 1
+                    if count % 50 == 0:
+                        print 'Fulfill Progress: %d' % counts
 
             except JSONDecodeError:
                 print 'ERROR: JSON DECODE ERROR'
