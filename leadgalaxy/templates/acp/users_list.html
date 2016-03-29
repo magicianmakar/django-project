@@ -31,7 +31,7 @@
                             <th>Products</th>
                             {% endif %}
                             <th>Join Date</th>
-                            <th style="width:240px">Actions</th>
+                            <th style="width:300px">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -116,7 +116,7 @@
 
         var data = [
 {% for item in users %}
-['<span style="display:none">{{item.id}}|{{item.username}}</span>',
+['<span style="display:none">{{item.id}}|{{item.username}}|{{item.email|urlencode}}</span>',
 '{{item.email}}',
 '{{item.profile.plan.title}}',
 
@@ -140,7 +140,7 @@
 
                     $(el).find('td').last().empty();
 
-                    if (info.length != 2) {
+                    if (info.length != 3) {
                          $(el).find('td').last().text('No user found.').addClass('text-center');
                         return;
                     }
@@ -165,6 +165,22 @@
                             'user-id': info[0],
                             'text': 'Profile'
                         }).click(userProfile)
+                    ).append(
+                        $('<a>', {
+                            'href': '/admin/leadgalaxy/planregistration/?q=' + info[2],
+                            'class': 'btn btn-default btn-outline btn-xs m-l-xs',
+                            'target': '_blank',
+                            'title': 'Registration Links',
+                            'text': 'L'
+                        })
+                    ).append(
+                        $('<a>', {
+                            'href': '/admin/leadgalaxy/planpayment/?q=' + info[2],
+                            'class': 'btn btn-default btn-outline btn-xs m-l-xs',
+                            'target': '_blank',
+                            'title': 'Payements',
+                            'text': 'P'
+                        })
                     );
                 });
             });
