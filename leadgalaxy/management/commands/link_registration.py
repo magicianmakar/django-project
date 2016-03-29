@@ -10,7 +10,8 @@ from leadgalaxy import utils
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        pass
+        parser.add_argument('--unregistered', dest='unregistered',
+                            action='store_false', help='Show Unregistered Emails')
 
     def handle(self, *args, **options):
         registartions = PlanRegistration.objects.filter(expired=False).exclude(plan=None).exclude(email='')
@@ -21,7 +22,8 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(email__iexact=reg.email)
             except User.DoesNotExist:
-                #print 'Not registred yet:', reg.email
+                if options['unregistered']:
+                    print 'Not Registred|{}|{}|{}'.format(reg.email, reg.plan.title, str(reg.created_at).split(' ')[0])
                 continue
             except:
                 print 'WARNING: Get Email Exception for:', reg.email
@@ -40,7 +42,8 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(email__iexact=reg.email)
             except User.DoesNotExist:
-                #print 'Not registred yet:', reg.email
+                if options['unregistered']:
+                    print 'Not Registred|{}|{}|{}'.format(reg.email, reg.bundle.title, str(reg.created_at).split(' ')[0])
                 continue
 
             profile = user.profile
