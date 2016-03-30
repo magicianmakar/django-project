@@ -37,7 +37,7 @@ from province_helper import load_uk_provincess
 
 @login_required
 def index_view(request):
-    stores = request.user.shopifystore_set.filter(is_active=True)
+    stores = request.user.profile.get_active_stores()
     config = request.user.profile.get_config()
     first_visit = config.get('_first_visit', True)
     intro_video = config.get('_intro_video', True)
@@ -111,7 +111,7 @@ def api(request, target):
 
     if method == 'GET' and target == 'stores':
         stores = []
-        for i in user.shopifystore_set.filter(is_active=True):
+        for i in user.profile.get_active_stores():
             stores.append({
                 'id': i.id,
                 'name': i.title,
@@ -145,7 +145,7 @@ def api(request, target):
         utils.attach_webhooks(store)
 
         stores = []
-        for i in user.shopifystore_set.filter(is_active=True):
+        for i in user.profile.get_active_stores():
             stores.append({
                 'name': i.title,
                 'url': i.api_url
@@ -164,7 +164,7 @@ def api(request, target):
         utils.detach_webhooks(ShopifyStore.objects.get(id=store_id, user=user))
 
         stores = []
-        for i in user.shopifystore_set.filter(is_active=True):
+        for i in user.profile.get_active_stores():
             stores.append({
                 'id': i.id,
                 'name': i.title,
