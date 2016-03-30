@@ -1399,7 +1399,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     paginator = None
     page = request.GET.get('page', 1)
 
-    res = ShopifyProduct.objects.select_related('store').prefetch_related('shopifyboard_set').filter(user=request.user)
+    res = ShopifyProduct.objects.select_related('store', 'shopify_export').prefetch_related('shopifyboard_set').filter(user=request.user)
     if store:
         if store == 'c':  # connected
             res = res.exclude(shopify_export__isnull=True)
