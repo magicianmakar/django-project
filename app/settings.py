@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 
     'widget_tweaks',    # For forms
     'hijack',
+    'compat',
     'multiselectfield',
     'compressor',
     'storages',
@@ -156,8 +157,10 @@ MEDIA_URL = 'http://localhost/'
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
-HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after hijacking the user.
-REVERSE_HIJACK_LOGIN_REDIRECT_URL = "/"  # where you want to be redirected to, after releasing the user.
+HIJACK_LOGIN_REDIRECT_URL = '/'
+HIJACK_LOGOUT_REDIRECT_URL = '/'
+HIJACK_DISPLAY_ADMIN_BUTTON = False
+HIJACK_USE_BOOTSTRAP = True
 
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')

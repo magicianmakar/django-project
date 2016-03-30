@@ -276,7 +276,7 @@ $(function() {
     });
 
     var tout = null;
-    $('#hijacked-warning').css('top', '-22px');
+    $('#hijacked-warning').css('top', '-35px');
     $('#hijacked-warning').mouseenter(function (e) {
         $( this ).animate({
             top: "0",
@@ -292,7 +292,7 @@ $(function() {
         var el = this;
         tout = setTimeout(function() {
             $( el ).animate({
-                top: "-22px",
+                top: "-35px",
             }, 500, function() {
                 // Animation complete.
             });
