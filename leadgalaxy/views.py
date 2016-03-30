@@ -1838,7 +1838,7 @@ def get_shipping_info(request):
 @login_required
 def acp_users_list(request):
     if not request.user.is_superuser:
-        return HttpResponseRedirect('/')
+        raise PermissionDenied()
 
     if request.GET.get('plan', None):
         users = User.objects.select_related('profile', 'profile__plan') \
@@ -1870,7 +1870,7 @@ def acp_users_list(request):
 @login_required
 def acp_graph(request):
     if not request.user.is_superuser:
-        return HttpResponseRedirect('/')
+        raise PermissionDenied()
 
     products = ShopifyProduct.objects.all() \
         .extra({'created': 'date(%s.created_at)' % ShopifyProduct._meta.db_table}) \
@@ -1900,7 +1900,7 @@ def acp_graph(request):
 @login_required
 def acp_groups(request):
     if not request.user.is_superuser and not request.user.has_perm('leadgalaxy.add_planregistration'):
-        return HttpResponseRedirect('/')
+        raise PermissionDenied()
 
     if request.method == 'POST':
         if request.POST.get('import'):
@@ -1996,7 +1996,7 @@ def acp_groups(request):
 @login_required
 def acp_groups_install(request):
     if not request.user.is_superuser:
-        return HttpResponseRedirect('/')
+        raise PermissionDenied()
 
     from django.db import transaction
 
