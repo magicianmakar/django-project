@@ -666,15 +666,10 @@ def api(request, target):
             return JsonResponse({'status': 'ok'})
         else:
             try:
-                d = rep.json()
-                errors = [k + ': ' + ''.join(d['errors'][k]) for k in d['errors']]
-                return JsonResponse({'error': '[Shopify API Error] ' + ' | '.join(errors)})
+                errors = utils.format_shopify_error(rep.json())
+                return JsonResponse({'error': 'Shopify Error: {}'.format(errors)})
             except:
-                try:
-                    d = rep.json()
-                    return JsonResponse({'error': 'Shopify API Error: ' + d['errors']})
-                except:
-                    return JsonResponse({'error': 'Shopify API Error'})
+                return JsonResponse({'error': 'Shopify API Error'})
 
     if method == 'GET' and target == 'order-data':
         order_key = data.get('order')
