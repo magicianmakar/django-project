@@ -486,7 +486,7 @@ def api(request, target):
             'status': 'ok',
         })
     if method == 'POST' and target == 'product-metadata':
-        if not user.profile.can('product_metadata.use'):
+        if not user.can('product_metadata.use'):
             return JsonResponse({'error': 'Your current plan doesn\'t have this feature.'})
 
         product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
@@ -1525,7 +1525,7 @@ def products_list(request, tpl='grid'):
         'store': request.GET.get('store', 'n')
     }
 
-    if args['filter_products'] and not request.user.profile.can('product_filters.use'):
+    if args['filter_products'] and not request.user.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
     products, paginator, page = get_product(**args)
@@ -1657,7 +1657,7 @@ def variants_edit(request, store_id, pid):
     pid: Shopify Product ID
     """
 
-    if not request.user.profile.can('product_variant_setup.use'):
+    if not request.user.can('product_variant_setup.use'):
         return render(request, 'upgrade.html')
 
     store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
@@ -1747,7 +1747,7 @@ def product_mapping(request, store_id, product_id):
 
 @login_required
 def bulk_edit(request):
-    if not request.user.profile.can('bulk_editing.use'):
+    if not request.user.can('bulk_editing.use'):
         return render(request, 'upgrade.html')
 
     args = {
@@ -1758,7 +1758,7 @@ def bulk_edit(request):
         'store': 'n'
     }
 
-    if args['filter_products'] and not request.user.profile.can('product_filters.use'):
+    if args['filter_products'] and not request.user.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
     products, paginator, page = get_product(**args)
@@ -2143,7 +2143,7 @@ def upgrade_required(request):
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
-    if not request.user.profile.can('aviary_photo_editor.use'):
+    if not request.user.can('aviary_photo_editor.use'):
         return render(request, 'upgrade.html')
 
     import boto
@@ -2182,7 +2182,7 @@ def save_image_s3(request):
 
 @login_required
 def orders_view(request):
-    if not request.user.profile.can('orders.use'):
+    if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
 
     stores = []
@@ -2390,7 +2390,7 @@ def orders_view(request):
 
 @login_required
 def orders_track(request):
-    if not request.user.profile.can('orders.use'):
+    if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
 
     order_map = {
@@ -2505,7 +2505,7 @@ def orders_place(request):
 
 @login_required
 def products_update(request):
-    if not request.user.profile.can('price_changes.use'):
+    if not request.user.can('price_changes.use'):
         return render(request, 'upgrade.html')
 
     show_hidden = 'hidden' in request.GET

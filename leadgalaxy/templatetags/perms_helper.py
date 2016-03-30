@@ -16,7 +16,7 @@ def can(user, perm_name):
         if 'leadgalaxy.' in perm_name:
             return user.has_perm(perm_name)
         else:
-            return user.profile.can(perm_name)
+            return user.can(perm_name)
 
     return False
 
