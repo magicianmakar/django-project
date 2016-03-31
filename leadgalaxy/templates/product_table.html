@@ -181,7 +181,7 @@
             <label for="selected-board">Select board</label>
             <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
                 <!-- <option value=""></option> -->
-                {% for item in request.user.shopifyboard_set.all %}
+                {% for item in request.user.get_boards %}
                 <option value="{{item.id}}">{{item.title}}</option>
                 {% endfor %}
             </select>

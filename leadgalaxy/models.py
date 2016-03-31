@@ -178,9 +178,15 @@ def user_get_config(self, name, default_value=None):
 def user_set_config(self, name, value):
     return self.profile.set_config_value(name, value)
 
+
+def user_get_boards(self):
+    return self.shopifyboard_set.all().order_by('title')
+
+
 User.add_to_class("can", user_can)
 User.add_to_class("get_config", user_get_config)
 User.add_to_class("set_config", user_set_config)
+User.add_to_class("get_boards", user_get_boards)
 
 
 class ShopifyStore(models.Model):

@@ -157,7 +157,7 @@
                         <span class="fa arrow"></span>
                     </a>
                     <ul class="nav nav-second-level collapse">
-                        {% for item in request.user.shopifyboard_set.all %}
+                        {% for item in request.user.get_boards %}
                         <li><a href="{% url 'boards' board_id=item.id %}">{{item.title}}</a></li>
                         {% endfor %}
                         <li><a href="#" class="add-board-btn"><span class="fa fa-plus"></span> Add Board</a></li>
