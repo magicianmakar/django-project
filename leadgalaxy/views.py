@@ -159,9 +159,16 @@ def api(request, target):
 
         move_to_store = ShopifyStore.objects.get(id=move_to, user=user)
         ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
-        ShopifyStore.objects.get(id=store_id, user=user).shopifyproduct_set.update(store=move_to_store)
 
-        utils.detach_webhooks(ShopifyStore.objects.get(id=store_id, user=user))
+        target_store = ShopifyStore.objects.get(id=store_id, user=user)
+        target_store.is_active = False
+        target_store.save()
+
+        target_store.shopifyproduct_set.update(store=move_to_store)
+        target_store.shopifyproductexport_set.update(store=move_to_store)
+        target_store.shopifyproductimage_set.update(store=move_to_store)
+
+        utils.detach_webhooks(target_store)
 
         stores = []
         for i in user.profile.get_active_stores():
