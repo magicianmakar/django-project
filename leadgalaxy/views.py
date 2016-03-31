@@ -2427,7 +2427,7 @@ def orders_track(request):
             messages.warning(request, 'Please add at least one store before using the Orders page.')
             return HttpResponseRedirect('/')
 
-    orders = ShopifyOrder.objects.select_related('store').filter(user=request.user.models_user, store=store)
+    orders = ShopifyOrder.objects.select_related('store').filter(user=request.user, store=store)
 
     if query:
         orders = orders.filter(Q(order_id=query) | Q(source_id=query) | Q(source_tracking=query))
