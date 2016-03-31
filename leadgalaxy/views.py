@@ -2279,7 +2279,7 @@ def orders_view(request):
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
-                product = ShopifyProduct.objects.filter(user=models_user, shopify_export__shopify_id=el['product_id']).first()
+                product = ShopifyProduct.objects.filter(user=request.user, shopify_export__shopify_id=el['product_id']).first()
 
             if product:
                 original_info = product.get_original_info()
