@@ -2915,6 +2915,10 @@ def logout(request):
 
 
 def register(request, registration=None):
+    if request.user.is_authenticated():
+        messages.warning(request, 'You are already logged in')
+        return HttpResponseRedirect('/')
+
     if registration:
         # Convert the hash to a PlanRegistration model
         registration = get_object_or_404(PlanRegistration, register_hash=registration)
