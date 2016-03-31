@@ -15,9 +15,11 @@
                 <li class="">
                     <a data-toggle="tab" href="#tab-2" aria-expanded="false">Email &amp; Password</a>
                 </li>
+                {% if not user.is_subuser %}
                 <li class="{% if plan_tab %}active{% endif %}">
                     <a data-toggle="tab" href="#tab-3" aria-expanded="false">Plan &amp; Bundles</a>
                 </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane {% if not plan_tab %}active{% endif %}">
@@ -118,6 +120,7 @@
                         </div>
                     </div>
                 </div>
+                {% if not user.is_subuser %}
                 <div id="tab-3" class="tab-pane {% if plan_tab %}active{% endif %}">
                     <div class="panel-body">
                         <div class="row">
@@ -175,6 +178,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

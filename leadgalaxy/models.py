@@ -2,6 +2,7 @@ from django.db import models
 
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
+from django.core.exceptions import PermissionDenied
 
 import re
 import json
@@ -55,8 +56,16 @@ class UserProfile(models.Model):
         except:
             return None
 
-    def get_active_stores(self):
-        return self.user.shopifystore_set.filter(is_active=True)
+    def get_active_stores(self, flat=False):
+        if self.user.is_subuser:
+            stores = self.subuser_stores.all()
+        else:
+            stores = self.user.shopifystore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
 
     @cached_property
     def get_perms(self):
@@ -69,6 +78,9 @@ class UserProfile(models.Model):
         return perms
 
     def can(self, perm_name):
+        if self.subuser_parent is not None:
+            return self.subuser_parent.profile.can(perm_name)
+
         perm_name = perm_name.lower()
         view_perm = perm_name.replace('.use', '.view')
         use_perm = perm_name.replace('.view', '.use')
@@ -121,6 +133,9 @@ class UserProfile(models.Model):
     def can_add_store(self):
         """ Check if the user plan allow him to add a new store """
 
+        if self.is_subuser:
+            return self.subuser_parent.profile.can_add_store()
+
         user_stores = int(self.stores)
         if user_stores == -2:
             total_allowed = self.plan.stores  # -1 mean unlimited
@@ -138,6 +153,10 @@ class UserProfile(models.Model):
 
     def can_add_product(self):
         """ Check if the user plan allow one more product saving """
+
+        if self.is_subuser:
+            return self.subuser_parent.profile.can_add_product()
+
         user_products = int(self.products)
         if user_products == -2:
             total_allowed = self.plan.products  # -1 mean unlimited
@@ -154,6 +173,9 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def can_add_board(self):
+        if self.is_subuser:
+            return self.subuser_parent.profile.can_add_board()
+
         user_boards = int(self.boards)
         if user_boards == -2:
             total_allowed = self.plan.boards  # -1 mean unlimited
@@ -228,6 +250,17 @@ class ShopifyStore(models.Model):
             url = 'https://{}/{}'.format(url, page.lstrip('/'))
         else:
             url = 'https://{}'.format(url)
+
+        return url
+
+    def get_api_url(self, hide_keys=False):
+        url = self.api_url
+
+        if not url.startswith('http'):
+            url = 'https://%s' % url
+
+        if hide_keys:
+            url = re.sub('[a-z0-9]+:[a-z0-9]+@', '*:*@', url)
 
         return url
 
@@ -706,3 +739,95 @@ class PlanPayment(models.Model):
 
     def __str__(self):
         return '{} | {}'.format(self.provider, self.payment_id)
+
+
+def user_is_subsuser(self):
+    return self.profile.subuser_parent is not None
+
+
+def user_models_user(self):
+    if not self.is_subuser:
+        return self
+    else:
+        return self.profile.subuser_parent
+
+
+def user_can_add(self, obj):
+    if not self.is_subuser:
+        can = obj.user == self
+    else:
+        if isinstance(obj, ShopifyStore):
+            raise PermissionDenied('Sub-User can not add new stores')
+
+        can = obj.user == self.profile.subuser_parent
+
+        if can:
+            if hasattr(obj, 'store'):
+                store = obj.store.id
+            else:
+                store = None
+
+            if store:
+                stores = self.profile.get_active_stores(flat=True)
+                if store not in stores:
+                    raise PermissionDenied("You don't have autorization to edit this store.")
+
+    if not can:
+        raise PermissionDenied('Unautorized Action (0x{})'.format(abs(hash('add'))))
+
+
+def user_can_view(self, obj):
+    if not self.is_subuser:
+        can = obj.user == self
+    else:
+        can = obj.user == self.profile.subuser_parent
+        if can:
+            if isinstance(obj, ShopifyStore):
+                store = obj.id
+            elif hasattr(obj, 'store'):
+                store = obj.store.id
+            else:
+                store = None
+
+            if store:
+                stores = self.profile.get_active_stores(flat=True)
+                if store not in stores:
+                    raise PermissionDenied("You don't have autorization to view this store.")
+
+    if not can:
+        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('view')))
+
+
+def user_can_edit(self, obj):
+    if not self.is_subuser:
+        can = obj.user == self
+    else:
+        if isinstance(obj, ShopifyStore):
+            raise PermissionDenied('Sub-User can not edit stores')
+
+        can = obj.user == self.profile.subuser_parent
+
+    if not can:
+        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('edit')))
+
+
+def user_can_delete(self, obj):
+    if not self.is_subuser:
+        can = obj.user == self
+    else:
+        if isinstance(obj, ShopifyStore):
+            raise PermissionDenied('Sub-User can not delete stores')
+
+        can = obj.user == self.profile.subuser_parent
+
+    if not can:
+        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('delete')))
+
+
+User.add_to_class("is_subuser", cached_property(user_is_subsuser))
+User.add_to_class("models_user", cached_property(user_models_user))
+
+User.add_to_class("can_add", user_can_add)
+User.add_to_class("can_view", user_can_view)
+User.add_to_class("can_edit", user_can_edit)
+User.add_to_class("can_delete", user_can_delete)

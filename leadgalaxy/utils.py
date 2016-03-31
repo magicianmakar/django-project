@@ -92,6 +92,19 @@ def generate_plan_registration(plan, data={}, bundle=None, sender=None):
     return reg
 
 
+def get_plan(plan_hash=None, plan_slug=None):
+    try:
+        assert plan_hash != plan_slug
+
+        if plan_hash:
+            return GroupPlan.objects.get(register_hash=plan_hash)
+        else:
+            return GroupPlan.objects.get(slug=plan_slug)
+    except:
+        print 'ERROR: PLAN NOT FOUND: plan_hash={}, plan_slug={}'.format(plan_hash, plan_slug)
+        return None
+
+
 def apply_plan_registrations(email=''):
     registartions = PlanRegistration.objects.filter(expired=False)
 
@@ -123,6 +136,10 @@ def apply_plan_registrations(email=''):
             reg.expired = True
             reg.user = profile.user
             reg.save()
+
+            if reg.plan.slug == 'subuser-plan':
+                profile.subuser_parent = reg.sender
+                profile.save()
 
         elif reg.bundle:
             print "REGISTRATIONS: Add Bundle '{}' to: {} ({})".format(reg.bundle.title, user.username, user.email)

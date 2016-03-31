@@ -38,7 +38,8 @@ from province_helper import load_uk_provincess
 @login_required
 def index_view(request):
     stores = request.user.profile.get_active_stores()
-    config = request.user.profile.get_config()
+    config = request.user.models_user.profile.get_config()
+
     first_visit = config.get('_first_visit', True)
     intro_video = config.get('_intro_video', True)
 
@@ -65,7 +66,8 @@ def api(request, target):
     elif method == 'GET' or method == 'DELETE':
         data = request.GET
     else:
-        return JsonResponse({'error': 'Unknown method: {}'.format(method)})
+        print 'ERROR: UNSUPPORTED REQUEST METHOD %s' % method
+        return JsonResponse({'error': 'Unsupported Request Method'}, status=501)
 
     if 'access_token' in data:
         token = data.get('access_token')
@@ -77,8 +79,25 @@ def api(request, target):
             user = None
 
     if target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress'] and not user:
-        return JsonResponse({'error': 'Unauthenticated api call.'})
+        return JsonResponse({'error': 'Unauthenticated API call.'}, status=401)
 
+    try:
+        res = proccess_api(request, user, method, target, data)
+        if res is None:
+            print 'ERROR: API Response is empty'
+            res = JsonResponse({'error': 'Internal Server Error'}, status=500)
+    except PermissionDenied as e:
+        res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
+    except:
+        print 'ERROR: API EXCEPTION:'
+        traceback.print_exc()
+
+        res = JsonResponse({'error': 'Internal Server Error'}, status=500)
+
+    return res
+
+
+def proccess_api(request, user, method, target, data):
     if target == 'login':
         username = data.get('username')
         password = data.get('password')
@@ -97,7 +116,6 @@ def api(request, target):
                 return JsonResponse({
                     'token': token,
                     'user': {
-                        'groups': [str(i) for i in user.groups.all().values_list('name', flat=True)],
                         'username': user.username,
                         'email': user.email
                     }
@@ -115,7 +133,7 @@ def api(request, target):
             stores.append({
                 'id': i.id,
                 'name': i.title,
-                'url': i.api_url
+                'url': i.get_api_url(hide_keys=True)
             })
 
         return JsonResponse(stores, safe=False)
@@ -132,7 +150,12 @@ def api(request, target):
                          % (total_allowed, user_count)
             })
 
-        store = ShopifyStore(title=name, api_url=url, user=user)
+        if user.is_subuser:
+            return JsonResponse({'error': 'Sub-Users can not add new stores.'})
+
+        store = ShopifyStore(title=name, api_url=url, user=user.models_user)
+        user.can_add(store)
+
         try:
             info = store.get_info
             if not store.title:
@@ -148,7 +171,7 @@ def api(request, target):
         for i in user.profile.get_active_stores():
             stores.append({
                 'name': i.title,
-                'url': i.api_url
+                'url': i.get_api_url(hide_keys=True)
             })
 
         return JsonResponse(stores, safe=False)
@@ -157,6 +180,10 @@ def api(request, target):
         store_id = data.get('store')
         move_to = data.get('move-to')
 
+        store = ShopifyStore.objects.get(id=store_id)
+        user.can_delete(store)
+
+        # Sub users can't reach here
         move_to_store = ShopifyStore.objects.get(id=move_to, user=user)
         ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
 
@@ -175,18 +202,20 @@ def api(request, target):
             stores.append({
                 'id': i.id,
                 'name': i.title,
-                'url': i.api_url
+                'url': i.get_api_url(hide_keys=True)
             })
 
         return JsonResponse(stores, safe=False)
 
     if method == 'POST' and target == 'update-store':
-        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_edit(store)
+
         store_title = data.get('title')
         store_api_url = data.get('url')
         api_url_changes = (store.api_url != data.get('url'))
 
-        store_check = ShopifyStore(title=store_title, api_url=store_api_url, user=user)
+        store_check = ShopifyStore(title=store_title, api_url=store_api_url, user=user)  # Can't be a sub user
         try:
             info = store_check.get_info
             if not store_title:
@@ -208,8 +237,10 @@ def api(request, target):
 
     if method == 'GET' and target == 'product':
         try:
-            product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
-        except:
+            product = ShopifyProduct.objects.get(id=data.get('product'))
+            user.can_view(product)
+
+        except ShopifyProduct.DoesNotExist:
             return JsonResponse({'error': 'Product not found'})
 
         return JsonResponse(json.loads(product.data), safe=False)
@@ -218,7 +249,9 @@ def api(request, target):
         products = {}
         for p in data.getlist('products[]'):
             try:
-                product = ShopifyProduct.objects.get(id=p, user=user)
+                product = ShopifyProduct.objects.get(id=p)
+                user.can_view(product)
+
                 products[p] = json.loads(product.data)
             except:
                 return JsonResponse({'error': 'Product not found'})
@@ -226,6 +259,7 @@ def api(request, target):
         return JsonResponse(products, safe=False)
 
     if method == 'POST' and (target == 'shopify' or target == 'shopify-update' or target == 'save-for-later'):
+        # TODO: Handle permissions in async task
         req_data = json.loads(request.body)
         delayed = req_data.get('b')
 
@@ -276,16 +310,22 @@ def api(request, target):
                 return JsonResponse(data, safe=False, status=500)
 
     if method == 'POST' and target == 'product-delete':
-        product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
-        product.userupload_set.update(product=None)
+        try:
+            product = ShopifyProduct.objects.get(id=data.get('product'))
+            user.can_delete(product)
+        except ShopifyProduct.DoesNotExist:
+            return JsonResponse({'error': 'Product does not exists'}, status=404)
 
+        product.userupload_set.update(product=None)
         product.delete()
 
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'bulk-edit':
         for p in data.getlist('product'):
-            product = ShopifyProduct.objects.get(id=p, user=user)
+            product = ShopifyProduct.objects.get(id=p)
+            user.can_edit(product)
+
             product_data = json.loads(product.data)
 
             product_data['title'] = data.get('title[%s]' % p)
@@ -294,16 +334,18 @@ def api(request, target):
             product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at[%s]' % p))
             product_data['type'] = data.get('type[%s]' % p)
             product_data['weight'] = data.get('weight[%s]' % p)
-            # send_to_shopify = data.get('send_to_shopify[%s]'%p)
 
             product.data = json.dumps(product_data)
             product.save()
 
         return JsonResponse({'status': 'ok'})
+
     if method == 'POST' and target == 'product-edit':
         products = []
         for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p, user=user)
+            product = ShopifyProduct.objects.get(id=p)
+            user.can_edit(product)
+
             product_data = json.loads(product.data)
 
             if 'tags' in data:
@@ -343,7 +385,9 @@ def api(request, target):
                          % (total_allowed, user_count)
             })
 
-        board = ShopifyBoard(title=data.get('title').strip(), user=user)
+        board = ShopifyBoard(title=data.get('title').strip(), user=user.models_user)
+        user.can_add(board)
+
         board.save()
 
         return JsonResponse({
@@ -355,11 +399,14 @@ def api(request, target):
         })
 
     if method == 'POST' and target == 'board-add-products':
-        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board = ShopifyBoard.objects.get(id=data.get('board'))
+        user.can_edit(board)
+
         products = []
         for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p, user=user)
-            # product.shopifyboard_set.clear()
+            product = ShopifyProduct.objects.get(id=p)
+            user.can_edit(product)
+
             board.products.add(product)
 
         board.save()
@@ -367,11 +414,14 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'product-remove-board':
-        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board = ShopifyBoard.objects.get(id=data.get('board'))
+        user.can_edit(board)
+
         products = []
         for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p, user=user)
-            # product.shopifyboard_set.clear()
+            product = ShopifyProduct.objects.get(id=p)
+            user.can_edit(product)
+
             board.products.remove(product)
 
         board.save()
@@ -379,7 +429,8 @@ def api(request, target):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'product-board':
-        product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(board)
 
         if data.get('board') == '0':
             product.shopifyboard_set.clear()
@@ -389,7 +440,9 @@ def api(request, target):
                 'status': 'ok'
             })
         else:
-            board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+            board = ShopifyBoard.objects.get(id=data.get('board'))
+            user.can_edit(board)
+
             board.products.add(product)
             board.save()
 
@@ -401,28 +454,36 @@ def api(request, target):
                 }
             })
     if method == 'POST' and target == 'board-delete':
-        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board = ShopifyBoard.objects.get(id=data.get('board'))
+        user.can_delete(board)
+
         board.delete()
+
         return JsonResponse({
             'status': 'ok'
         })
 
     if method == 'POST' and target == 'board-empty':
-        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board = ShopifyBoard.objects.get(id=data.get('board'))
+        user.can_edit(board)
+
         board.products.clear()
+
         return JsonResponse({
             'status': 'ok'
         })
 
     if method == 'POST' and target == 'variant-image':
-        r = requests.put(data.get('url'), json=json.loads(data.get('data')))
+        # TODO: Move to after boards endpoints
+        requests.put(data.get('url'), json=json.loads(data.get('data')))
 
         return JsonResponse({
             'status': 'ok'
         })
 
     if method == 'GET' and target == 'board-config':
-        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board = ShopifyBoard.objects.get(id=data.get('board'))
+        user.can_edit(board)
 
         try:
             return JsonResponse({
@@ -442,7 +503,8 @@ def api(request, target):
             })
 
     if method == 'POST' and target == 'board-config':
-        board = ShopifyBoard.objects.get(user=user, id=data.get('board'))
+        board = ShopifyBoard.objects.get(id=data.get('board'))
+        user.can_edit(board)
 
         board.title = data.get('store-title')
 
@@ -454,7 +516,7 @@ def api(request, target):
 
         board.save()
 
-        utils.smart_board_by_board(user, board)
+        utils.smart_board_by_board(user.models_user, board)
 
         return JsonResponse({
             'status': 'ok'
@@ -485,18 +547,23 @@ def api(request, target):
         })
 
     if method == 'POST' and target == 'product-notes':
-        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
         product.notes = data.get('notes')
         product.save()
 
         return JsonResponse({
             'status': 'ok',
         })
+
     if method == 'POST' and target == 'product-metadata':
         if not user.can('product_metadata.use'):
             return JsonResponse({'error': 'Your current plan doesn\'t have this feature.'})
 
-        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
         product.set_original_url(data.get('original-link'))
 
         shopify_link = data.get('shopify-link')
@@ -527,9 +594,12 @@ def api(request, target):
         })
 
     if method == 'POST' and target == 'add-user-upload':
-        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
 
-        upload = UserUpload(user=user, product=product, url=data.get('url'))
+        upload = UserUpload(user=user.models_user, product=product, url=data.get('url'))
+        user.can_add(upload)
+
         upload.save()
 
         return JsonResponse({
@@ -537,13 +607,18 @@ def api(request, target):
         })
 
     if method == 'POST' and target == 'product-duplicate':
-        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
-        duplicate_product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_view(product)
+
+        duplicate_product = ShopifyProduct.objects.get(id=data.get('product'))
 
         duplicate_product.pk = None
         duplicate_product.parent_product = product
         duplicate_product.shopify_export = None
         duplicate_product.stat = 0
+
+        user.can_add(duplicate_product)
+
         duplicate_product.save()
 
         return JsonResponse({
@@ -555,7 +630,8 @@ def api(request, target):
         })
 
     if method == 'GET' and target == 'user-config':
-        config = user.profile.get_config()
+        profile = user.models_user.profile
+        config = profile.get_config()
         if not user.can('auto_margin.use'):
             for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
                 if i in config:
@@ -579,7 +655,7 @@ def api(request, target):
             config['description_mode'] = 'empty'
 
         config['import'] = []
-        perms = user.profile.get_perms
+        perms = profile.get_perms
         for i in perms:
             if i.endswith('_import.use'):
                 name = i.split('_')[0]
@@ -595,8 +671,10 @@ def api(request, target):
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
+        profile = user.models_user.profile
+
         try:
-            config = json.loads(user.profile.config)
+            config = json.loads(profile.config)
         except:
             config = {}
 
@@ -633,16 +711,18 @@ def api(request, target):
         for key in bool_config:
             config[key] = (key in data)
 
-        user.profile.config = json.dumps(config)
-        user.profile.save()
+        profile.config = json.dumps(config)
+        profile.save()
 
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'fulfill-order':
         try:
-            store = ShopifyStore.objects.get(user=user, id=data.get('fulfill-store'))
-        except:
-            return JsonResponse({'error': 'Store not found'})
+            store = ShopifyStore.objects.get(id=data.get('fulfill-store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
 
         tracking = data.get('fulfill-traking-number')
         if not tracking:
@@ -692,9 +772,10 @@ def api(request, target):
 
     if method == 'GET' and target == 'product-variant-image':
         try:
-            store = ShopifyStore.objects.get(user=user, id=data.get('store'))
-        except:
-            return JsonResponse({'error': 'Store not found'})
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
 
         image = utils.get_shopify_variant_image(store, data.get('product'), data.get('variant'))
 
@@ -705,7 +786,8 @@ def api(request, target):
             })
 
     if method == 'POST' and target == 'variants-mapping':
-        product = ShopifyProduct.objects.get(user=user, id=data.get('product'))
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
 
         mapping = {}
         for k in data:
@@ -731,6 +813,7 @@ def api(request, target):
         from django.core import serializers
 
         orders = []
+        # TODO: handle sub-user filter
         shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False) \
                                              .filter(source_tracking='') \
                                              .exclude(source_status='FINISH') \
@@ -765,6 +848,7 @@ def api(request, target):
             orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):
+            # TODO: handle sub-user filter
             ShopifyOrder.objects.filter(user=user, id__in=[i['id'] for i in orders]) \
                                 .update(check_count=F('check_count')+1, updated_at=timezone.now())
 
@@ -782,16 +866,19 @@ def api(request, target):
             }
         }
 
-        order = ShopifyOrder(user=user,
+        order = ShopifyOrder(user=user.models_user,
                              order_id=order_id,
                              line_id=line_id,
                              source_id=source_id,
                              data=json.dumps(order_data))
+        user.can_add(order)
         order.save()
 
         store = data.get('store')
         if store:
-            store = ShopifyStore.objects.get(id=store, user=user)
+            store = ShopifyStore.objects.get(id=store)
+            user.can_view(store)
+
             order_line = utils.get_shopify_order_line(store, order_id, line_id)
             if order_line:
                 note = u'Aliexpress Order ID: {0}\n' \
@@ -813,15 +900,21 @@ def api(request, target):
         order_id = data.get('order_id')
         line_id = data.get('line_id')
 
-        orders = ShopifyOrder.objects.filter(user=user, order_id=order_id, line_id=line_id)
+        orders = ShopifyOrder.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
+
         if orders.count():
-            orders.delete()
+            for order in orders:
+                user.can_delete(order)
+                order.delete()
+
             return JsonResponse({'status': 'ok'})
         else:
-            return JsonResponse({'error': 'Order not found.'})
+            return JsonResponse({'error': 'Order not found.'}, status=404)
 
     if method == 'POST' and target == 'order-fulfill-update':
-        order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
+        order = ShopifyOrder.objects.get(id=data.get('order'))
+        user.can_edit(order)
+
         order.source_status = data.get('status')
         order.source_tracking = data.get('tracking_number')
         order.status_updated_at = timezone.now()
@@ -860,7 +953,7 @@ def api(request, target):
             else:
                 orders = orders.filter(id__in=user.shopifystore_set.all())
         else:
-            orders = orders.filter(id__in=user.shopifystore_set.all())
+            orders = orders.filter(id__in=user.models_user.shopifystore_set.all())
 
         if time_threshold:
             orders = orders.filter(status_updated_at__lt=time_threshold)
@@ -872,24 +965,28 @@ def api(request, target):
 
     if method == 'POST' and target == 'order-add-note':
         # Append to the Order note
-        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
 
         if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
             return JsonResponse({'status': 'ok'})
         else:
-            return JsonResponse({'error': 'Shopify API Error'})
+            return JsonResponse({'error': 'Shopify API Error'}, status=500)
 
     if method == 'POST' and target == 'order-note':
         # Change the Order note
-        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
 
         if utils.set_shopify_order_note(store, data.get('order_id'), data['note']):
             return JsonResponse({'status': 'ok'})
         else:
-            return JsonResponse({'error': 'Shopify API Error'})
+            return JsonResponse({'error': 'Shopify API Error'}, status=500)
 
     if method == 'POST' and target == 'order-fullfill-hide':
-        order = ShopifyOrder.objects.get(id=data.get('order'), user=user)
+        order = ShopifyOrder.objects.get(id=data.get('order'))
+        user.can_edit(order)
+
         order.hidden = data.get('hide', False)
         order.save()
 
@@ -897,21 +994,23 @@ def api(request, target):
 
     if method == 'GET' and target == 'find-product':
         try:
-            product = ShopifyProduct.objects.get(user=user, shopify_export__shopify_id=data.get('product'))
+            product = ShopifyProduct.objects.get(shopify_export__shopify_id=data.get('product'))
+            user.can_view(product)
+
             return JsonResponse({
                 'status': 'ok',
                 'url': 'http://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
             })
         except:
-            return JsonResponse({'error': 'Product not found'})
+            return JsonResponse({'error': 'Product not found'}, status=404)
 
     if method == 'POST' and target == 'generate-reg-link':
         if not user.is_superuser and not user.has_perm('leadgalaxy.add_planregistration'):
-            return JsonResponse({'error': 'Unauthorized API call'})
+            return JsonResponse({'error': 'Unauthorized API call'}, status=403)
 
         plan_id = int(data.get('plan'))
         if not user.is_superuser and plan_id != 8:
-            return JsonResponse({'error': 'Unauthorized API call'})
+            return JsonResponse({'error': 'Unauthorized API call'}, status=403)
 
         plan = GroupPlan.objects.get(id=plan_id)
         reg = utils.generate_plan_registration(plan, {
@@ -925,7 +1024,9 @@ def api(request, target):
 
     if method == 'GET' and target == 'product-original-desc':
         try:
-            product = ShopifyProduct.objects.get(id=data.get('product'), user=user)
+            product = ShopifyProduct.objects.get(id=data.get('product'))
+            user.can_view(product)
+
             return HttpResponse(json.loads(product.original_data)['description'])
         except:
             return HttpResponse('')
@@ -988,7 +1089,68 @@ def api(request, target):
         data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
         return JsonResponse(data, safe=False)
 
-    return JsonResponse({'error': 'Non-handled endpoint'})
+    if method == 'POST' and target == 'subuser-delete':
+        try:
+            subuser = User.objects.get(id=data.get('subuser'), profile__subuser_parent=user)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        except:
+            return JsonResponse({'error': 'Unknown Error'}, status=500)
+
+        profile = subuser.profile
+
+        profile.subuser_parent = None
+        profile.plan = utils.get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
+        profile.save()
+
+        AccessToken.objects.filter(user=subuser).delete()
+
+        return JsonResponse({'status': 'ok'})
+
+    if method == 'POST' and target == 'subuser-invite':
+        if not user.has_perm('sub_users.use'):
+            raise PermissionDenied('Sub User Invite')
+
+        if not EmailForm({'email': data.get('email')}).is_valid():
+            return JsonResponse({'error': 'Email is not valid'}, status=501)
+
+        if User.objects.filter(email__iexact=data.get('email')).count():
+            return JsonResponse({'error': 'Email is is already registered to an account'}, status=501)
+
+        if PlanRegistration.objects.filter(email__iexact=data.get('email')).count():
+            return JsonResponse({'error': 'An Invitation is already sent to this email'}, status=501)
+
+        plan = utils.get_plan(plan_slug='subuser-plan')
+        reg = utils.generate_plan_registration(plan=plan, sender=user, data={
+            'email': data.get('email')
+        })
+
+        data = {
+            'email': data.get('email'),
+            'sender': user,
+            'reg_hash': reg.register_hash
+        }
+
+        template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'subuser_invite.html')
+        template = Template(open(template_file).read())
+
+        ctx = Context(data)
+
+        email_html = template.render(ctx)
+        email_html = email_html.replace('\n', '<br />')
+
+        send_mail(subject='Invitation to join Shopified App',
+                  recipient_list=[data['email']],
+                  from_email='support@shopifiedapp.com',
+                  message=email_html,
+                  html_message=email_html)
+
+        return JsonResponse({
+            'status': 'ok',
+            'hash': reg.register_hash
+        })
+
+    return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
 
 def webhook(request, provider, option):
@@ -1402,21 +1564,31 @@ def webhook(request, provider, option):
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None):
+    # TODO: Optimize product's first board getting (don't use prefetch_related)
+
     products = []
     paginator = None
     page = request.GET.get('page', 1)
+    models_user = request.user.models_user
+    user = request.user
+    user_stores = request.user.profile.get_active_stores(flat=True)
 
-    res = ShopifyProduct.objects.select_related('store', 'shopify_export').prefetch_related('shopifyboard_set').filter(user=request.user)
+    res = ShopifyProduct.objects.select_related('store', 'shopify_export').prefetch_related('shopifyboard_set') \
+                                .filter(user=models_user).filter(store__in=user_stores)
     if store:
         if store == 'c':  # connected
             res = res.exclude(shopify_export__isnull=True)
         elif store == 'n':  # non-connected
             res = res.filter(shopify_export__isnull=True)
         else:
+            store = utils.safeInt(store)
             res = res.filter(shopify_export__store=store)
+
+            user.can_view(get_object_or_404(ShopifyStore, id=store))
 
     if board:
         res = res.filter(shopifyboard=board)
+        user.can_view(board)
 
     if not filter_products and not sort:
         paginator = utils.SimplePaginator(res, post_per_page)
@@ -1432,7 +1604,6 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             'store': i.store,
             'stat': i.stat,
             'shopify_url': i.shopify_link(),
-            'user': request.user,
             'created_at': i.created_at,
             'updated_at': i.updated_at,
             'product': json.loads(i.data),
@@ -1595,7 +1766,8 @@ def product_view(request, pid):
             messages.warning(request, 'Preview Mode: Other features (like Variant Mapping,'
                                       ' Product info Tab, etc) will not work.')
     else:
-        product = get_object_or_404(ShopifyProduct, id=pid, user=request.user)
+        product = get_object_or_404(ShopifyProduct, id=pid)
+        request.user.can_view(product)
 
     p = {
         'qelem': product,
@@ -1667,7 +1839,8 @@ def variants_edit(request, store_id, pid):
     if not request.user.can('product_variant_setup.use'):
         return render(request, 'upgrade.html')
 
-    store = get_object_or_404(ShopifyStore, id=store_id, user=request.user)
+    store = get_object_or_404(ShopifyStore, id=store_id)
+    user.can_view(store)
 
     product = utils.get_shopify_product(store, pid)
 
@@ -1686,7 +1859,8 @@ def variants_edit(request, store_id, pid):
 
 @login_required
 def product_mapping(request, store_id, product_id):
-    product = get_object_or_404(ShopifyProduct, user=request.user, id=product_id)
+    product = get_object_or_404(ShopifyProduct, id=product_id)
+    user.can_edit(product)
 
     shopify_id = product.get_shopify_id()
     if not shopify_id:
@@ -1783,7 +1957,8 @@ def bulk_edit(request):
 @login_required
 def boards(request, board_id):
     boards = []
-    board = get_object_or_404(ShopifyBoard, id=board_id, user=request.user)
+    board = get_object_or_404(ShopifyBoard, id=board_id)
+    request.user.can_view(board)
 
     args = {
         'request': request,
@@ -1823,7 +1998,9 @@ def get_shipping_info(request):
     if request.GET.get('type') == 'json':
         return JsonResponse(shippement_data, safe=False)
 
-    product = ShopifyProduct.objects.get(user=request.user, id=request.GET.get('product', 0))
+    product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
+    request.user.can_view(product)
+
     product_data = json.loads(product.data)
 
     if 'store' in product_data:
@@ -2045,7 +2222,7 @@ def autocomplete(request, target):
 
     if target == 'types':
         types = []
-        for product in request.user.shopifyproduct_set.all():
+        for product in request.user.models_user.shopifyproduct_set.all():
             prodct_info = json.loads(product.data)
             ptype = prodct_info.get('type')
             if ptype not in types:
@@ -2059,7 +2236,7 @@ def autocomplete(request, target):
 
     elif target == 'tags':
         tags = []
-        for product in request.user.shopifyproduct_set.all():
+        for product in request.user.models_user.shopifyproduct_set.all():
             prodct_info = json.loads(product.data)
             for i in prodct_info.get('tags', '').split(','):
                 i = i.strip()
@@ -2178,7 +2355,7 @@ def save_image_s3(request):
 
     upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
 
-    upload = UserUpload(user=request.user, product=product, url=upload_url)
+    upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
     return JsonResponse({
@@ -2199,11 +2376,11 @@ def orders_view(request):
     page = utils.safeInt(request.GET.get('page'), 1)
 
     if request.GET.get('store'):
-        store = ShopifyStore.objects.get(id=request.GET.get('store'), user=request.user)
+        store = ShopifyStore.objects.get(id=request.GET.get('store'))
         request.session['last_store'] = store.id
     else:
         if 'last_store' in request.session:
-            store = ShopifyStore.objects.get(id=request.session['last_store'], user=request.user)
+            store = ShopifyStore.objects.get(id=request.session['last_store'])
         else:
             stores = request.user.profile.get_active_stores()
             if len(stores):
@@ -2212,6 +2389,10 @@ def orders_view(request):
         if not store:
             messages.warning(request, 'Please add at least one store before using the Orders page.')
             return HttpResponseRedirect('/')
+
+    request.user.can_view(store)
+
+    models_user = request.user.models_user
 
     sort = request.GET.get('sort', 'desc')
     status = request.GET.get('status', 'open')
@@ -2245,7 +2426,7 @@ def orders_view(request):
             products_ids.append(line_id)
 
     orders_list = {}
-    res = ShopifyOrder.objects.filter(user=request.user, order_id__in=orders_ids)
+    res = ShopifyOrder.objects.filter(user=models_user, order_id__in=orders_ids)
     for i in res:
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
@@ -2254,7 +2435,7 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-    api_key, tracking_id = utils.get_user_affiliate(request.user)
+    api_key, tracking_id = utils.get_user_affiliate(models_user)
 
     for index, order in enumerate(page):
         order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
@@ -2286,7 +2467,7 @@ def orders_view(request):
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
-                product = ShopifyProduct.objects.filter(user=request.user, shopify_export__shopify_id=el['product_id']).first()
+                product = ShopifyProduct.objects.filter(user=models_user, shopify_export__shopify_id=el['product_id']).first()
 
             if product:
                 original_info = product.get_original_info()
@@ -2331,8 +2512,8 @@ def orders_view(request):
                             shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
 
                     phone = shipping_address_asci.get('phone')
-                    if not phone or request.user.get_config('order_default_phone') != 'customer':
-                        phone = request.user.get_config('order_phone_number')
+                    if not phone or models_user.get_config('order_default_phone') != 'customer':
+                        phone = models_user.get_config('order_phone_number')
 
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
@@ -2344,9 +2525,9 @@ def orders_view(request):
                         'store': store.id,
                         'order': {
                             'phone': phone,
-                            'note': request.user.get_config('order_custom_note'),
-                            'epacket': bool(request.user.get_config('epacket_shipping')),
-                            'auto_mark': bool(request.user.get_config('auto_ordered_mark')),  # Auto mark as Ordered
+                            'note': models_user.get_config('order_custom_note'),
+                            'epacket': bool(models_user.get_config('epacket_shipping')),
+                            'auto_mark': bool(models_user.get_config('auto_ordered_mark')),  # Auto mark as Ordered
                         }
                     }
 
@@ -2420,11 +2601,11 @@ def orders_track(request):
     hidden_filter = request.GET.get('hidden')
 
     if request.GET.get('store'):
-        store = ShopifyStore.objects.get(id=request.GET.get('store'), user=request.user)
+        store = ShopifyStore.objects.get(id=request.GET.get('store'))
         request.session['last_store'] = store.id
     else:
         if 'last_store' in request.session:
-            store = ShopifyStore.objects.get(id=request.session['last_store'], user=request.user)
+            store = ShopifyStore.objects.get(id=request.session['last_store'])
         else:
             stores = request.user.profile.get_active_stores()
             if len(stores):
@@ -2434,7 +2615,9 @@ def orders_track(request):
             messages.warning(request, 'Please add at least one store before using the Orders page.')
             return HttpResponseRedirect('/')
 
-    orders = ShopifyOrder.objects.select_related('store').filter(user=request.user, store=store)
+    request.user.can_view(store)
+
+    orders = ShopifyOrder.objects.select_related('store').filter(user=request.user.models_user, store=store)
 
     if query:
         orders = orders.filter(Q(order_id=query) | Q(source_id=query) | Q(source_tracking=query))
@@ -2464,7 +2647,7 @@ def orders_track(request):
     if len(orders):
         orders = utils.get_tracking_orders(store, orders)
 
-    ShopifyOrder.objects.filter(user=request.user,
+    ShopifyOrder.objects.filter(user=request.user.models_user,
                                 id__in=[i.id for i in orders]) \
                         .update(seen=True)
 
@@ -2487,7 +2670,7 @@ def orders_place(request):
         raise Http404("Product or Order not set")
 
     # Check for Aliexpress Affiliate Program
-    api_key, tracking_id = utils.get_user_affiliate(request.user)
+    api_key, tracking_id = utils.get_user_affiliate(request.user.models_user)
 
     redirect_url = None
     if api_key and tracking_id:
@@ -2516,7 +2699,9 @@ def products_update(request):
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
 
-    changes = AliexpressProductChange.objects.filter(user=request.user, hidden=show_hidden).order_by('-updated_at')
+    changes = AliexpressProductChange.objects.filter(user=request.user.models_user,
+                                                     hidden=show_hidden).order_by('-updated_at')
+
     paginator = utils.SimplePaginator(changes, post_per_page)
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
@@ -2532,7 +2717,7 @@ def products_update(request):
         product_changes.append(change)
 
     if not show_hidden:
-        AliexpressProductChange.objects.filter(user=request.user,
+        AliexpressProductChange.objects.filter(user=request.user.models_user,
                                                id__in=[i['id'] for i in product_changes]) \
                                        .update(seen=True)
 
@@ -2631,7 +2816,58 @@ def products_collections(request, collection):
 
 
 @login_required
+def subusers(request):
+    if not request.user.can('sub_users.use'):
+        return render(request, 'upgrade.html')
+
+    if request.user.is_subuser:
+        raise PermissionDenied()
+
+    sub_users = User.objects.filter(profile__subuser_parent=request.user)
+
+    return render(request, 'subusers_manage.html', {
+        'sub_users': sub_users,
+        'page': 'subusers',
+        'breadcrumbs': ['Account', 'Sub Users']
+    })
+
+
+@login_required
+def subusers_perms(request, user_id):
+    try:
+        user = User.objects.get(id=user_id, profile__subuser_parent=request.user)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    except:
+        return JsonResponse({'error': 'Unknown Error'}, status=500)
+
+    if request.method == 'POST':
+        form = SubUserStoresForm(request.POST,
+                                 instance=user.profile,
+                                 parent_user=request.user)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, 'User permissions has been updated')
+        else:
+            messages.error(request, 'Error occurred during user permissions update')
+
+        return HttpResponseRedirect(reverse('subusers'))
+
+    else:
+        form = SubUserStoresForm(instance=user.profile,
+                                 parent_user=request.user)
+
+    return render(request, 'subusers_perms.html', {
+        'subuser': user,
+        'form': form,
+        'page': 'subusers',
+        'breadcrumbs': ['Account', 'Sub Users']
+    })
+
+@login_required
 def acp_users_emails(request):
+    # TODO: Move to top
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
 

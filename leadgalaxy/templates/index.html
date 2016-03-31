@@ -39,8 +39,13 @@
             <table class="table table-condensed table-hover table-bordered">
               <thead>
                 <tr>
+                  {% if not user.is_subuser %}
                   <th style="">Title</th>
                   <th class="hidden-sm hidden-xs" style="width:55%">API URL</th>
+                  {% else %}
+                  <th style="width:80%">Title</th>
+                  {% endif %}
+
                   <th style="width:90px">Products</th>
                   <th style="">Options</th>
                 </tr>
@@ -48,16 +53,33 @@
               <tbody>
                     {% for item in stores %}
                     <tr store-id="{{item.id}}">
-                      <td><a class="edit-store" store-id="{{item.id}}" store-url="{{item.api_url}}" store-name="{{item.title}}" href="#">{{item.title}}</a></td>
+                    {% if not user.is_subuser %}
+                      <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
                       <td>
-                        <span class="api-url" style="display:none">{{item.api_url}}</span>
+                        <span class="api-url" style="display:none">{{item.get_api_url}}</span>
                         <a href="#" class="show-api-url btn btn-default btn-outline btn-xs">Show</a>
                       </td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
-                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank"> Visit Store</a>
-                        <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.api_url}}"> Delete</button>
+                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank">
+                            <i class="fa fa-external-link"></i> Visit Store
+                        </a>
+
+                        <button class="edit-store btn btn-xs btn-primary" store-id="{{item.id}}" store-url="{{item.get_api_url}}" store-name="{{item.title}}">
+                            <i class="fa fa-edit"></i> Edit
+                        </button>
+
+                        <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.get_api_url}}">
+                            <i class="fa fa-times"></i> Delete
+                        </button>
                       </td>
+                    {% else %}
+                      <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
+                      <td>{{item.shopifyproduct_set.count}}</td>
+                      <td>
+                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank"> Visit Store</a>
+                      </td>
+                    {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
@@ -67,11 +89,15 @@
               </tbody>
             </table>
 
+        {% if not user.is_subuser %}
             <a class="add-store-btn btn btn-primary" href="#">Add Store</a>
 
             Need a new Shopify store?  <a href="http://bit.ly/sashopifyspecial" class="itooltip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="21 day free trial with 10% off Shopify for Life">Get your Free Trial here</a>
+        {% endif %}
+
             <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
                class="btn btn-default btn-outline btn-xs pull-right extension-link" target="_blank">Install Chrome Extension</a>
+
                 </div>
             </div>
 

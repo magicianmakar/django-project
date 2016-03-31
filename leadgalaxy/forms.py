@@ -10,6 +10,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms import ValidationError
 
+from .models import UserProfile
+
 
 class BsErrorList(ErrorList):
     def __unicode__(self):
@@ -148,3 +150,41 @@ class EmailForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(EmailForm, self).__init__(*args, **kwargs)
         self.error_class = BsErrorList
+
+
+class SubUserStoresForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ["subuser_stores"]
+
+    def __init__(self, *args, **kwargs):
+        parent_user = kwargs.pop("parent_user")
+        super(SubUserStoresForm, self).__init__(*args, **kwargs)
+
+        # Taken from http://stackoverflow.com/a/2264722/3896300
+        if kwargs.get('instance'):
+            initial = kwargs.setdefault('initial', {})
+            initial['subuser_stores'] = [t.pk for t in kwargs['instance'].subuser_stores.all()]
+
+        self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
+        self.fields["subuser_stores"].help_text = ""
+        self.fields["subuser_stores"].queryset = parent_user.shopifystore_set.all()
+
+    def save(self, commit=True):
+        instance = forms.ModelForm.save(self, False)
+
+        old_save_m2m = self.save_m2m
+
+        def save_m2m():
+            old_save_m2m()
+            instance.subuser_stores.clear()
+            for store in self.cleaned_data['subuser_stores']:
+                instance.subuser_stores.add(store)
+
+        self.save_m2m = save_m2m
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+
+        return instance

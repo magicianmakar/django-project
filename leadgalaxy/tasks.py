@@ -10,6 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 
 from .models import *
 import utils
@@ -33,10 +34,15 @@ def export_product(req_data, target, user_id):
     user = User.objects.get(id=user_id)
 
     try:
-        store = ShopifyStore.objects.get(id=store, user=user)
-    except:
+        store = ShopifyStore.objects.get(id=store)
+        user.can_view(store)
+    except ShopifyStore.DoesNotExist:
         return {
             'error': 'Selected store (%s) not found for user: %s' % (store, user.username if user else 'None')
+        }
+    except PermissionDenied as e:
+        return {
+            'error': "Store: {}".format(e.message)
         }
 
     original_url = json.loads(data).get('original_url')
@@ -45,11 +51,18 @@ def export_product(req_data, target, user_id):
 
     if not original_url:  # Could be sent from the web app
         try:
-            product = ShopifyProduct.objects.get(id=req_data.get('product'), user=user)
+            product = ShopifyProduct.objects.get(id=req_data.get('product'))
+            user.can_edit(product)
+
             original_url = product.get_original_info().get('url', '')
-        except:
+
+        except ShopifyProduct.DoesNotExist:
             original_url = ''
 
+        except PermissionDenied as e:
+            return {
+                'error': "Product: {}".format(e.message)
+            }
     try:
         import_store = utils.get_domain(original_url)
     except:
@@ -76,7 +89,9 @@ def export_product(req_data, target, user_id):
     if target == 'shopify' or target == 'shopify-update':
         try:
             if target == 'shopify-update':
-                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                product = ShopifyProduct.objects.get(id=req_data['product'])
+                user.can_edit(product)
+
                 api_data = json.loads(data)
                 api_data['product']['id'] = product.get_shopify_id()
 
@@ -95,8 +110,20 @@ def export_product(req_data, target, user_id):
                     traceback.print_exc()
 
             product_data = r.json()['product']
+
         except JSONDecodeError:
             return {'error': 'Shopify API is not available, please try again.'}
+
+        except ShopifyProduct.DoesNotExist:
+            return {
+                'error': "Product {} does not exist".format(req_data['product'])
+            }
+
+        except PermissionDenied as e:
+            return {
+                'error': "Product: {}".format(e.message)
+            }
+
         except:
             try:
                 d = r.json()
@@ -119,14 +146,21 @@ def export_product(req_data, target, user_id):
         if target == 'shopify':
             if 'product' in req_data:
                 try:
-                    product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
+                    product = ShopifyProduct.objects.get(id=req_data['product'])
+                    user.can_edit(product)
 
                     original_info = product.get_original_info()
                     if original_info:
                         original_url = original_info.get('url', '')
-                except Exception as e:
+
+                except ShopifyProduct.DoesNotExist:
                     return {
-                        'error': 'Selected product not found ({})'.format(repr(e))
+                        'error': "Product {} does not exist".format(req_data['product'])
+                    }
+
+                except PermissionDenied as e:
+                    return {
+                        'error': "Product: {}".format(e.message)
                     }
 
                 product.shopify_id = pid
@@ -149,10 +183,17 @@ def export_product(req_data, target, user_id):
         if 'product' in req_data:
             # Saved product update
             try:
-                product = ShopifyProduct.objects.get(id=req_data['product'], user=user)
-            except:
+                product = ShopifyProduct.objects.get(id=req_data['product'])
+                user.can_edit(product)
+
+            except ShopifyProduct.DoesNotExist:
                 return {
-                    'error': 'Selected product not found.'
+                    'error': "Product {} does not exist".format(req_data['product'])
+                }
+
+            except PermissionDenied as e:
+                return {
+                    'error': "Product: {}".format(e.message)
                 }
 
             product.store = store
@@ -161,7 +202,7 @@ def export_product(req_data, target, user_id):
 
         else:  # New product to save
 
-            can_add, total_allowed, user_count = user.profile.can_add_product()
+            can_add, total_allowed, user_count = user.models_user.profile.can_add_product()
             if not can_add:
                 return {
                     'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'
@@ -170,13 +211,21 @@ def export_product(req_data, target, user_id):
 
             is_active = req_data.get('activate', True)
 
-            product = ShopifyProduct(store=store, user=user, data=data, original_data=original_data, stat=0,
-                                     is_active=is_active)
-            product.notes = req_data.get('notes', '')
+            try:
+                product = ShopifyProduct(store=store, user=user.models_user, data=data,
+                                         original_data=original_data, stat=0, is_active=is_active)
+                product.notes = req_data.get('notes', '')
+
+                user.can_add(product)
+
+            except PermissionDenied as e:
+                return {
+                    'error': "Add Product: {}".format(e.message)
+                }
 
         product.save()
 
-        utils.smart_board_by_product(user, product)
+        utils.smart_board_by_product(user.models_user, product)
 
         url = '/product/%d' % product.id
         pid = product.id

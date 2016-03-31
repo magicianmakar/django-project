@@ -1,0 +1,17 @@
+
+{% load static %}
+{% load widget_tweaks %}
+
+<h4><i>{{subuser.username}}</i> Can manage the following stores:</h4>
+<div class="row">
+    <div class="col-md-12">
+        <form method="POST" class="m-t-xs" role="form" action="{% url 'subusers_perms' user_id=subuser.id %}">
+            <div class="form-group">
+                {% render_field form.subuser_stores  %}
+                {{ form.subuser_stores.errors | safe }}
+            </div>
+            <button type="submit" class="btn btn-primary m-b">Save</button>
+        </form>
+    </div>
+</div>
+

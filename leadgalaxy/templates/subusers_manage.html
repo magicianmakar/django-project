@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Manage Sub Users<small></small></h5>
+            </div>
+
+            <div class="ibox-content">
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Join Date</th>
+                            <th style="width:100px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sub_users %}
+                        <tr>
+                            <td>
+                                <a class="edit-user-prems" user-id="{{item.id}}" href="#">
+                                {% if item.get_full_name %}
+                                    {{item.get_full_name}} ({{item.username}})
+                                {% else %}
+                                    {{item.username}}
+                                {% endif %}
+                                </a>
+                            </td>
+                            <td>{{item.email}}</td>
+                            <td>{{item.date_joined|date}}</td>
+                            <td>
+                                <button class="btn btn-danger btn-xs delete-sub-user" user-id="{{item.id}}" user-name="{{item.username}}">
+                                    <i class="fa fa-times"></i> Remove
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <button class="btn btn-success invite-subuser">
+                                    <i class="fa fa-plus"></i> Add sub user
+                                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-subuser-prems" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h3></h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="model-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+
+    .user-profile-btn {
+        margin-right: 5px;
+    }
+
+    #id_subuser_stores {
+        padding: 0 20px;
+    }
+
+    #id_subuser_stores li {
+        list-style: none;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+    <script src="//www.appelsiini.net/projects/jeditable/jquery.jeditable.js"></script>
+
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            $('.dataTables').on('draw.dt', function(e) {
+                $('.dataTables tr').each(function(i, el) {
+                    var info = $(el).find('td');
+
+                    if (info.length == 1) {
+                        $(el).find('td').last().text('No user found.').addClass('text-center');
+                        return;
+                    }
+                });
+            });
+
+            var table = $('.dataTables').dataTable({
+                responsive: true,
+                dom: 'T<"clear">lfrtip',
+                bLengthChange: false,
+                iDisplayLength: 50,
+                tableTools: {
+                    aButtons: [],
+                }
+            });
+        });
+
+        $('.edit-user-prems').click(function(e) {
+            e.preventDefault();
+
+            $('#modal-subuser-prems .model-content').html('<p>Loading content...</p>')
+                .load('/subusers/permissions/' + $(this).attr('user-id'),
+                    function(response, status, xhr) {
+                        if(status == 'error') {
+                            $('#modal-subuser-prems').modal('hide');
+                            displayAjaxError('User Permissions', JSON.parse(response));
+                        }
+                    });
+            $('#modal-subuser-prems .modal-header h3').text($(this).text() + 'Permissions');
+            $('#modal-subuser-prems').modal('show');
+        });
+
+        $('.delete-sub-user').click(function (e) {
+            var subuser_name = $(this).attr('user-name');
+            var subuser_id = $(this).attr('user-id');
+
+            swal({
+                title: "Delete " + subuser_name + " Account",
+                text: "This will remove the " + subuser_name + " permanently. Are you sure you want to remove this sub user?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Remove Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    console.log('Delete', subuser_id);
+                    $.ajax({
+                        url: '/api/subuser-delete',
+                        type: 'POST',
+                        data: {
+                            subuser: subuser_id,
+                        },
+                        success: function(data) {
+                            swal("Delete Sub User", "User has been deleted", "success");
+
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1000);
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Sub User', data);
+                        }
+                    });
+                }
+            });
+        });
+
+        $('.invite-subuser').click(function () {
+            var btn = $(this);
+
+            swal({
+                title: "Add Sub User",
+                text: "Add new sub user to your account",
+                type: "input",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                closeOnCancel: true,
+                animation: "slide-from-top",
+                inputPlaceholder: "Email address",
+                showLoaderOnConfirm: true
+            }, function(inputValue) {
+                if (inputValue === false) {
+                    return;
+                }
+
+                if (inputValue === '' || inputValue.trim() === '') {
+                    swal.showInputError("Email is required");
+                    return false
+                }
+
+                $.ajax({
+                    url: '/api/subuser-invite',
+                    type: 'POST',
+                    data: {
+                        'email': inputValue
+                    },
+                    context: {btn: btn},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            var link = 'http://app.shopifiedapp.com/accounts/register/';
+                            link += data.hash;
+                            var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
+                                      '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
+
+                            swal({
+                                title: 'Invitation Sent',
+                                text: msg,
+                                type: 'success',
+                                html: true,
+                            });
+                        } else {
+                            displayAjaxError('Add Sub User', data);
+                        }
+                    },
+                    error: function (data) {
+                        displayAjaxError('Add Sub User', data);
+                    },
+                    complete: function () {
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
