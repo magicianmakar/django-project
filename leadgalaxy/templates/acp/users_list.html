@@ -131,7 +131,6 @@
 
         $(document).ready(function() {
             $('.dataTables').on( 'draw.dt', function (e) {
-                console.dir(e);
                 $('.dataTables tr').each(function (i, el) {
                     var info = $(el).find('td').first().find('span').text();
                     info = info.split('|');
@@ -187,10 +186,12 @@
 
             var table = $('.dataTables').dataTable({
                 responsive: true,
-                'data': data,
-                "dom": 'T<"clear">lfrtip',
-                "tableTools": {
-                    "sSwfPath": '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
+                data: data,
+                dom: 'T<"clear">lfrtip',
+                bLengthChange: false,
+                iDisplayLength: 50,
+                tableTools: {
+                    sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }
             });
 
