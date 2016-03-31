@@ -319,11 +319,11 @@ $(function() {
 
                     $('#add-board-name').val('');
                 } else {
-                    alert('error' in data ? data.error : 'Server error');
+                    displayAjaxError('Create Board', data);
                 }
             },
             error: function (data) {
-                alert('error' in data ? data.error : 'Server error');
+                displayAjaxError('Create Board', data);
             }
         });
     }
