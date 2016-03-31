@@ -84,8 +84,8 @@ def get_user_from_token(token):
     return None
 
 
-def generate_plan_registration(plan, data={}, bundle=None):
-    reg = PlanRegistration(plan=plan, bundle=bundle, email=data['email'], data=json.dumps(data))
+def generate_plan_registration(plan, data={}, bundle=None, sender=None):
+    reg = PlanRegistration(plan=plan, bundle=bundle, sender=sender, email=data['email'], data=json.dumps(data))
     reg.register_hash = random_hash()
     reg.save()
 
