@@ -33,15 +33,18 @@ class RegisterForm(UserCreationForm):
         self.error_class = BsErrorList
 
     def clean_username(self):
-        if '@' in self.cleaned_data["username"]:
-            raise forms.ValidationError('@ is not allowed in username')
-
         try:
+
+            assert '@' not in self.cleaned_data["username"], '@ is not allowed in username'
+            assert len(self.cleaned_data["username"]) >= 5, 'Username should be at least 5 characters'
+
             User.objects.get(username__iexact=self.cleaned_data["username"])
 
             raise forms.ValidationError('Username is already registred to an other account.')
         except ObjectDoesNotExist:
             return self.cleaned_data["username"]
+        except AssertionError as e:
+            raise forms.ValidationError(e.message)
         except Exception as e:
             raise forms.ValidationError('Username is already registred to an other account.')
             print 'WARNING: Register Form Exception: {}'.format(repr(e))
