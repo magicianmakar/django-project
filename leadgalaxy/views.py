@@ -2060,18 +2060,11 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
+    users = User.objects.select_related('profile', 'profile__plan')
+
     if request.GET.get('plan', None):
-        users = User.objects.select_related('profile', 'profile__plan') \
-            .prefetch_related('shopifyproduct_set', 'shopifystore_set') \
-            .filter(profile__plan_id=request.GET.get('plan'))
-        users_count = User.objects.filter(profile__plan_id=request.GET.get('plan')).count()
-    else:
-        users = User.objects.select_related('profile', 'profile__plan')
+        users = users.filter(profile__plan_id=request.GET.get('plan'))
 
-        if request.GET.get('products'):
-            users = users.prefetch_related('shopifyproduct_set', 'shopifystore_set')
-
-        users_count = User.objects.count()
 
     plans = GroupPlan.objects.all()
     profiles = UserProfile.objects.all()
@@ -2080,7 +2073,7 @@ def acp_users_list(request):
         'users': users,
         'plans': plans,
         'profiles': profiles,
-        'users_count': users_count,
+        'users_count': users.count(),
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']
