@@ -1121,7 +1121,7 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'subuser-invite':
-        if not user.has_perm('sub_users.use'):
+        if not user.can('sub_users.use'):
             raise PermissionDenied('Sub User Invite')
 
         if not EmailForm({'email': data.get('email')}).is_valid():
