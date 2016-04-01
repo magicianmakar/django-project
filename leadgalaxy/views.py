@@ -1197,6 +1197,8 @@ def webhook(request, provider, option):
                 'payer_id': request.POST['payer_id'],
             }
         except Exception as e:
+            newrelic.agent.record_exception(*sys.exc_info())
+
             send_mail(subject='Shopified App: Webhook exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1256,6 +1258,8 @@ def webhook(request, provider, option):
                 return HttpResponse('ok')
 
             except Exception as e:
+                newrelic.agent.record_exception(*sys.exc_info())
+
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
                           recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1461,6 +1465,8 @@ def webhook(request, provider, option):
         except Exception as e:
             print 'Exception:', e
             traceback.print_exc()
+            newrelic.agent.record_exception(*sys.exc_info())
+
             send_mail(subject='[Shopified App] JVZoo Webhook Exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1557,7 +1563,10 @@ def webhook(request, provider, option):
         except:
             print 'WEBHOOK: exception:'
             traceback.print_exc()
+            newrelic.agent.record_exception(*sys.exc_info())
+
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
+
     elif provider == 'price-notification' and request.method == 'POST':
         product_id = request.GET['product']
         try:
