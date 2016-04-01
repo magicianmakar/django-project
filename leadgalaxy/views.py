@@ -268,7 +268,6 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse(products, safe=False)
 
     if method == 'POST' and (target == 'shopify' or target == 'shopify-update' or target == 'save-for-later'):
-        # TODO: Handle permissions in async task
         req_data = json.loads(request.body)
         delayed = req_data.get('b')
 
