@@ -436,7 +436,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-board':
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(board)
+        user.can_edit(product)
 
         if data.get('board') == '0':
             product.shopifyboard_set.clear()
