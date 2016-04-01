@@ -25,11 +25,13 @@ from .forms import *
 import tasks
 
 import os
+import sys
 import re
 import json
 import requests
 import arrow
 import traceback
+import newrelic.agent
 
 import utils
 from province_helper import load_uk_provincess
@@ -87,10 +89,14 @@ def api(request, target):
             print 'ERROR: API Response is empty'
             res = JsonResponse({'error': 'Internal Server Error'}, status=500)
     except PermissionDenied as e:
+        newrelic.agent.record_exception(*sys.exc_info())
+
         res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
     except:
         print 'ERROR: API EXCEPTION:'
         traceback.print_exc()
+
+        newrelic.agent.record_exception(*sys.exc_info())
 
         res = JsonResponse({'error': 'Internal Server Error'}, status=500)
 
