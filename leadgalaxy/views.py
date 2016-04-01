@@ -90,19 +90,19 @@ def api(request, target):
             print 'ERROR: API Response is empty'
             res = JsonResponse({'error': 'Internal Server Error'}, status=500)
     except PermissionDenied as e:
-        newrelic.agent.record_exception(*sys.exc_info())
+        newrelic.agent.record_exception(params={'user': user})
 
         res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
 
     except requests.Timeout:
-        newrelic.agent.record_exception(*sys.exc_info())
+        newrelic.agent.record_exception(params={'user': user})
         return JsonResponse({'error': 'API Request Timeout'}, status=501)
 
     except:
         print 'ERROR: API EXCEPTION:'
         traceback.print_exc()
 
-        newrelic.agent.record_exception(*sys.exc_info())
+        newrelic.agent.record_exception(params={'user': user})
 
         res = JsonResponse({'error': 'Internal Server Error'}, status=500)
 
@@ -1197,7 +1197,7 @@ def webhook(request, provider, option):
                 'payer_id': request.POST['payer_id'],
             }
         except Exception as e:
-            newrelic.agent.record_exception(*sys.exc_info())
+            newrelic.agent.record_exception()
 
             send_mail(subject='Shopified App: Webhook exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
@@ -1258,7 +1258,7 @@ def webhook(request, provider, option):
                 return HttpResponse('ok')
 
             except Exception as e:
-                newrelic.agent.record_exception(*sys.exc_info())
+                newrelic.agent.record_exception()
 
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
                           recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
@@ -1465,7 +1465,7 @@ def webhook(request, provider, option):
         except Exception as e:
             print 'Exception:', e
             traceback.print_exc()
-            newrelic.agent.record_exception(*sys.exc_info())
+            newrelic.agent.record_exception()
 
             send_mail(subject='[Shopified App] JVZoo Webhook Exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
@@ -1563,7 +1563,7 @@ def webhook(request, provider, option):
         except:
             print 'WEBHOOK: exception:'
             traceback.print_exc()
-            newrelic.agent.record_exception(*sys.exc_info())
+            newrelic.agent.record_exception()
 
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
@@ -2018,7 +2018,11 @@ def get_shipping_info(request):
     try:
         shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
     except requests.Timeout:
-        newrelic.agent.record_exception(*sys.exc_info())
+        newrelic.agent.record_exception(params={
+            'aliexpress_id': aliexpress_id,
+            'product': product,
+            'country': country_code
+        })
 
         if request.GET.get('type') == 'json':
             return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)
