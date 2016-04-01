@@ -42,7 +42,7 @@
     {% block extracss %}{% endblock %}
 
   </head>
-  <body>
+  <body class="fixed-sidebar">
     <!-- Google Tag Manager -->
     <script>
       var dataLayer = [{
@@ -63,7 +63,7 @@
     <div id="wrapper">
     {{ request|hijackNotification }}
     {% block main-nav %}
-    <nav class="navbar-default navbar-static-side" role="navigation" style="position: fixed; overflow: auto; top: 0; bottom: 0; ">
+    <nav class="navbar-default navbar-static-side" role="navigation">
         <div class="sidebar-collapse">
             <ul class="nav metismenu" id="side-menu">
                 <li class="profile-element">
