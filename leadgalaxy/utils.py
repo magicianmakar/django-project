@@ -692,7 +692,7 @@ def product_changes_remap(changes):
     return remapped
 
 
-def calc_orders_limit(orders_count, check_freq=30, total_time=720, min_count=20):
+def calc_orders_limit(orders_count, check_freq=30, total_time=1440, min_count=20):
     """
     Calculate Orders update check limit
 
