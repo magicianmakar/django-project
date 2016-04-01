@@ -1589,7 +1589,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
     if board:
         res = res.filter(shopifyboard=board)
-        user.can_view(board)
+        user.can_view(get_object_or_404(ShopifyBoard, id=board))
 
     if not filter_products and not sort:
         paginator = utils.SimplePaginator(res, post_per_page)
