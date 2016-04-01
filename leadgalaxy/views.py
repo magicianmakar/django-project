@@ -410,7 +410,6 @@ def proccess_api(request, user, method, target, data):
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
-        products = []
         for p in data.getlist('products[]'):
             product = ShopifyProduct.objects.get(id=p)
             user.can_edit(product)
@@ -425,7 +424,6 @@ def proccess_api(request, user, method, target, data):
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
-        products = []
         for p in data.getlist('products[]'):
             product = ShopifyProduct.objects.get(id=p)
             user.can_edit(product)
