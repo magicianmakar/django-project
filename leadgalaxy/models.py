@@ -133,7 +133,7 @@ class UserProfile(models.Model):
     def can_add_store(self):
         """ Check if the user plan allow him to add a new store """
 
-        if self.is_subuser:
+        if self.user.is_subuser:
             return self.subuser_parent.profile.can_add_store()
 
         user_stores = int(self.stores)
@@ -154,7 +154,7 @@ class UserProfile(models.Model):
     def can_add_product(self):
         """ Check if the user plan allow one more product saving """
 
-        if self.is_subuser:
+        if self.user.is_subuser:
             return self.subuser_parent.profile.can_add_product()
 
         user_products = int(self.products)
@@ -173,7 +173,7 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def can_add_board(self):
-        if self.is_subuser:
+        if self.user.is_subuser:
             return self.subuser_parent.profile.can_add_board()
 
         user_boards = int(self.boards)
