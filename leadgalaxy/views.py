@@ -1840,7 +1840,7 @@ def variants_edit(request, store_id, pid):
         return render(request, 'upgrade.html')
 
     store = get_object_or_404(ShopifyStore, id=store_id)
-    user.can_view(store)
+    request.user.can_view(store)
 
     product = utils.get_shopify_product(store, pid)
 
@@ -1860,7 +1860,7 @@ def variants_edit(request, store_id, pid):
 @login_required
 def product_mapping(request, store_id, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
-    user.can_edit(product)
+    request.user.can_edit(product)
 
     shopify_id = product.get_shopify_id()
     if not shopify_id:
