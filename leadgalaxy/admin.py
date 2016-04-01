@@ -89,7 +89,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'country', 'timezone', 'status')
     list_filter = ('plan', 'status', 'bundles')
-    filter_horizontal = ('bundles',)
+    filter_horizontal = ('bundles', 'subuser_stores')
     search_fields = ['emails', 'country', 'timezone']
 
 
