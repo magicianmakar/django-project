@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import *
+from django import forms
+
 from django.core.urlresolvers import reverse
 
 
@@ -89,7 +91,6 @@ class AccessTokenAdmin(admin.ModelAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'country', 'timezone', 'status')
     list_filter = ('plan', 'status', 'bundles')
-    filter_horizontal = ('bundles', 'subuser_stores')
     search_fields = ['emails', 'country', 'timezone']
 
     def get_form(self, request, obj=None, **kwargs):
@@ -97,7 +98,11 @@ class UserProfileAdmin(admin.ModelAdmin):
         return super(UserProfileAdmin, self).get_form(request, obj=obj, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        if db_field.name == 'subuser_stores' and self.instance:
+        if db_field.name == 'bundles':
+            kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
+        elif db_field.name == 'subuser_stores' and self.instance:
+            kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
+
             # restrict role queryset to those related to this instance:
             if self.instance.subuser_parent is not None:
                 kwargs['queryset'] = self.instance.subuser_parent.shopifystore_set.all()
