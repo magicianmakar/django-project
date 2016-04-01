@@ -1449,7 +1449,7 @@ def webhook(request, provider, option):
                                   '</a>').format(payment.id)
 
                     send_mail(subject='Shopified App: Cancel/Refund',
-                              recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
+                              recipient_list=['chase@shopifiedapp.com'],
                               from_email='"Shopified App" <support@shopifiedapp.com>',
                               message=email_info,
                               html_message=email_info)
@@ -1670,7 +1670,6 @@ def link_product_board(products):
     for i in fetched:
         board = i.shopifyboard_set.first()
         boards[i.id] = {'title': board.title} if board else None
-
 
     for i, v in enumerate(products):
         products[i]['board'] = boards[v['id']]
