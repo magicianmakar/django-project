@@ -2028,6 +2028,12 @@ def get_shipping_info(request):
     if request.GET.get('type') == 'json':
         return JsonResponse(shippement_data, safe=False)
 
+    if not request.user.is_authenticated():
+        from urllib import urlencode
+
+        return HttpResponseRedirect('%s?%s' % (reverse('django.contrib.auth.views.login'),
+                                               urlencode({'next': request.get_full_path()})))
+
     product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
     request.user.can_view(product)
 
