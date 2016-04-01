@@ -205,7 +205,10 @@ def user_set_config(self, name, value):
 
 
 def user_get_boards(self):
-    return self.shopifyboard_set.all().order_by('title')
+    if self.is_subuser:
+        return self.profile.subuser_parent.get_boards()
+    else:
+        return self.shopifyboard_set.all().order_by('title')
 
 
 User.add_to_class("can", user_can)
