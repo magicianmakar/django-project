@@ -806,6 +806,16 @@ def user_can_edit(self, obj):
             raise PermissionDenied('Sub-User can not edit stores')
 
         can = obj.user == self.profile.subuser_parent
+        if can:
+            if hasattr(obj, 'store'):
+                store = obj.store.id
+            else:
+                store = None
+
+            if store:
+                stores = self.profile.get_active_stores(flat=True)
+                if store not in stores:
+                    raise PermissionDenied("You don't have autorization to view this store.")
 
     if not can:
         raise PermissionDenied('Unautorized Action (0x{})'.format(hash('edit')))
