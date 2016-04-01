@@ -28,7 +28,7 @@ class UserProfile(models.Model):
     plan = models.ForeignKey('GroupPlan', null=True)
     bundles = models.ManyToManyField('FeatureBundle', blank=True)
 
-    subuser_parent = models.ForeignKey(User, null=True, related_name='subuser_parent')
+    subuser_parent = models.ForeignKey(User, null=True, blank=True, related_name='subuser_parent')
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
 
     stores = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores')
