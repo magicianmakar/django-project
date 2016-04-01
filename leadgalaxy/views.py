@@ -2027,7 +2027,7 @@ def get_shipping_info(request):
         if request.GET.get('type') == 'json':
             return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)
         else:
-            raise HttpResponseServerError()
+            return render(request, '500.html', status=500)
 
     if request.GET.get('type') == 'json':
         return JsonResponse(shippement_data, safe=False)
