@@ -31,9 +31,9 @@ class UserProfile(models.Model):
     subuser_parent = models.ForeignKey(User, null=True, blank=True, related_name='subuser_parent')
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
 
-    stores = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores')
-    products = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Products')
-    boards = models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Boards')
+    stores = models.IntegerField(default=-2)
+    products = models.IntegerField(default=-2)
+    boards = models.IntegerField(default=-2)
 
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
 
