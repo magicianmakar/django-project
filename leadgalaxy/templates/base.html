@@ -196,7 +196,7 @@
                 {% if user|can:'sub_users.use' and not user.is_subuser %}
                 <li {% if page == 'subusers' %}class="active"{% endif %}>
                     <a href="{% url 'subusers' %}">
-                        <i class="fa fa-cogs"></i>
+                        <i class="fa fa-users"></i>
                         <span class="nav-label">Sub Users</span>
                     </a>
                 </li>
