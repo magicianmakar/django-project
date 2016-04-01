@@ -1,6 +1,5 @@
 from django.shortcuts import render, get_object_or_404, render_to_response
-from django.http import HttpResponse, HttpResponseRedirect
-from django.http import Http404, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as user_logout
 from django.shortcuts import redirect
@@ -11,7 +10,6 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Count, F, Q
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
-from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -26,7 +24,6 @@ from .forms import *
 import tasks
 
 import os
-import sys
 import re
 import json
 import requests
