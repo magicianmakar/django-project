@@ -51,6 +51,9 @@ def random_hash():
     return md5.new(token).hexdigest()
 
 
+def hash_text(text):
+    return md5.new(text).hexdigest()
+
 def create_new_profile(user):
     plan = GroupPlan.objects.filter(default_plan=1).first()
     profile = UserProfile(user=user, plan=plan)

@@ -1656,23 +1656,35 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             products = page.object_list
 
     if load_boards:
-        link_product_board(products)
+        link_product_board(products, request.user.get_boards())
 
     return products, paginator, page
 
 
-def link_product_board(products):
-    fetched = ShopifyProduct.objects.prefetch_related('shopifyboard_set') \
-                                    .only('id') \
-                                    .filter(id__in=[i['id'] for i in products])
+def link_product_board(products, boards):
 
-    boards = {}
-    for i in fetched:
-        board = i.shopifyboard_set.first()
-        boards[i.id] = {'title': board.title} if board else None
+    fetch_list = ['p%d-%s' % (i['id'], i['qelem'].updated_at) for i in products]
+
+    for i in boards:
+        fetch_list.append('b%d-%s' % (i.id, i.updated_at))
+
+    fetch_key = 'link_product_board_%s' % utils.hash_text(reduce(lambda x, y: '{}.{}'.format(x, y), fetch_list))
+
+    boards = cache.get(fetch_key)
+    if boards is None:
+        fetched = ShopifyProduct.objects.prefetch_related('shopifyboard_set') \
+                                        .only('id') \
+                                        .filter(id__in=[i['id'] for i in products])
+
+        boards = {}
+        for i in fetched:
+            board = i.shopifyboard_set.first()
+            boards[i.id] = {'title': board.title} if board else None
+
+        cache.set(fetch_key, boards, timeout=3600)
 
     for i, v in enumerate(products):
-        products[i]['board'] = boards[v['id']]
+        products[i]['board'] = boards.get(v['id'])
 
     return products
 
