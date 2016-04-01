@@ -1581,7 +1581,7 @@ def webhook(request, provider, option):
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'})
 
 
-def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None):
+def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
     # TODO: Optimize product's first board getting (don't use prefetch_related)
 
     products = []
@@ -1591,7 +1591,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     user = request.user
     user_stores = request.user.profile.get_active_stores(flat=True)
 
-    res = ShopifyProduct.objects.select_related('store', 'shopify_export').prefetch_related('shopifyboard_set') \
+    res = ShopifyProduct.objects.select_related('store', 'shopify_export') \
                                 .filter(user=models_user).filter(store__in=user_stores)
     if store:
         if store == 'c':  # connected
@@ -1657,7 +1657,27 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
             products = page.object_list
 
+    if load_boards:
+        link_product_board(products)
+
     return products, paginator, page
+
+
+def link_product_board(products):
+    fetched = ShopifyProduct.objects.prefetch_related('shopifyboard_set') \
+                                    .only('id') \
+                                    .filter(id__in=[i['id'] for i in products])
+
+    boards = {}
+    for i in fetched:
+        board = i.shopifyboard_set.first()
+        boards[i.id] = {'title': board.title} if board else None
+
+
+    for i, v in enumerate(products):
+        products[i]['board'] = boards[v['id']]
+
+    return products
 
 
 def accept_product(product, fdata):
@@ -1718,7 +1738,8 @@ def products_list(request, tpl='grid'):
         'filter_products': (request.GET.get('f') == '1'),
         'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
         'sort': request.GET.get('sort'),
-        'store': request.GET.get('store', 'n')
+        'store': request.GET.get('store', 'n'),
+        'load_boards': (tpl is None or tpl == 'grid'),
     }
 
     if args['filter_products'] and not request.user.can('product_filters.use'):

@@ -104,7 +104,7 @@
                         </div>
                         <div class="col-md-7">
                         <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
-                            {% with board=item.qelem.shopifyboard_set.first %}
+                            {% with board=item.board %}
                                 {% if board %}
                                 Board: {{board.title}}
                                 {% else %}
