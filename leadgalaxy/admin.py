@@ -93,6 +93,34 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_filter = ('plan', 'status', 'bundles')
     search_fields = ['emails', 'country', 'timezone']
 
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'status', 'plan', 'bundles', 'country', 'timezone',)
+        }),
+
+        ('User Settings', {
+            'classes': ('collapse',),
+            'fields': ('config', 'emails')
+        }),
+
+        ('Custom Limits', {
+            'description': 'Special Values:<br/>-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores<br/>'
+                           '&nbsp;&nbsp;0 or more are the new limits for this user',
+            'classes': ('collapse',),
+            'fields': ('stores', 'products', 'boards'),
+        }),
+
+        ('Plan Expire', {
+            'classes': ('collapse',),
+            'fields': ('plan_after_expire', 'plan_expire_at')
+        }),
+
+        ('Sub User', {
+            'classes': ('collapse',),
+            'fields': ('subuser_parent', 'subuser_stores')
+        }),
+    )
+
     def get_form(self, request, obj=None, **kwargs):
         self.instance = obj  # Capture instance before the form gets generated
         return super(UserProfileAdmin, self).get_form(request, obj=obj, **kwargs)
