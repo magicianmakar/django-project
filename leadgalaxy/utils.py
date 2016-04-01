@@ -150,6 +150,36 @@ def apply_plan_registrations(email=''):
             reg.save()
 
 
+def apply_shared_registration(user, registration):
+    usage = registration.get_usage_count()
+    profile = user.profile
+
+    usage['used'] = usage['used'] + 1
+
+    if usage['used'] >= usage['allowed']:
+        registration.expired = True
+
+    registration.set_used_count(usage['used'])
+    registration.add_user(profile.user.id)
+
+    if registration.plan:
+        print "REGISTRATIONS SHARED: Change user {} from '{}' to '{}'".format(user.email,
+                                                                              profile.plan.title,
+                                                                              registration.plan.title)
+
+        profile.plan = registration.plan
+        profile.save()
+
+    elif registration.bundle:
+        print "REGISTRATIONS SHARED: Add Bundle '{}' to: {} ({})".format(registration.bundle.title,
+                                                                         user.username,
+                                                                         user.email)
+
+        profile.bundles.add(registration.bundle)
+
+    registration.save()
+
+
 def smart_board_by_product(user, product):
     product_info = json.loads(product.data)
     product_info = {

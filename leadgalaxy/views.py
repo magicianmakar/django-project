@@ -2964,7 +2964,10 @@ def register(request, registration=None):
             new_user = form.save()
             utils.create_new_profile(new_user)
 
-            utils.apply_plan_registrations(form.cleaned_data['email'])
+            if registration is None or registration.get_usage_count() is None:
+                utils.apply_plan_registrations(form.cleaned_data['email'])
+            else:
+                utils.apply_shared_registration(new_user, registration)
 
             messages.info(request, "Thanks for registering. You are now logged in.")
             new_user = authenticate(username=form.cleaned_data['username'],
