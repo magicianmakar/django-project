@@ -92,6 +92,21 @@ class UserProfileAdmin(admin.ModelAdmin):
     filter_horizontal = ('bundles', 'subuser_stores')
     search_fields = ['emails', 'country', 'timezone']
 
+    def get_form(self, request, obj=None, **kwargs):
+        self.instance = obj  # Capture instance before the form gets generated
+        return super(UserProfileAdmin, self).get_form(request, obj=obj, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        if db_field.name == 'subuser_stores' and self.instance:
+            # restrict role queryset to those related to this instance:
+            if self.instance.subuser_parent is not None:
+                kwargs['queryset'] = self.instance.subuser_parent.shopifystore_set.all()
+            else:
+                kwargs['queryset'] = ShopifyStore.objects.none()
+
+        return super(UserProfileAdmin, self).formfield_for_manytomany(
+            db_field, request=request, **kwargs)
+
 
 @admin.register(AppPermission)
 class AppPermissionAdmin(admin.ModelAdmin):
