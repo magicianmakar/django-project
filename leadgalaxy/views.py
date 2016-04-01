@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, render_to_response
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as user_logout
 from django.shortcuts import redirect
@@ -92,6 +93,11 @@ def api(request, target):
         newrelic.agent.record_exception(*sys.exc_info())
 
         res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
+
+    except requests.Timeout:
+        newrelic.agent.record_exception(*sys.exc_info())
+        return JsonResponse({'error': 'API Request Timeout'}, status=501)
+
     except:
         print 'ERROR: API EXCEPTION:'
         traceback.print_exc()
@@ -2000,7 +2006,15 @@ def get_shipping_info(request):
     if country_code == 'GB':
         country_code = 'UK'
 
-    shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
+    try:
+        shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
+    except requests.Timeout:
+        newrelic.agent.record_exception(*sys.exc_info())
+
+        if request.GET.get('type') == 'json':
+            return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)
+        else:
+            raise HttpResponseServerError()
 
     if request.GET.get('type') == 'json':
         return JsonResponse(shippement_data, safe=False)

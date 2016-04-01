@@ -276,6 +276,7 @@ def slack_invite(data):
 
 def aliexpress_shipping_info(aliexpress_id, country_code):
     r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
+                     timeout=10,
                      params={
                          'f': 'd',
                          'productid': aliexpress_id,
