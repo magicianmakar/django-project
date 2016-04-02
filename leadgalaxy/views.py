@@ -1655,7 +1655,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
             products = page.object_list
 
-    if load_boards:
+    if load_boards and len(products):
         link_product_board(products, request.user.get_boards())
 
     return products, paginator, page
