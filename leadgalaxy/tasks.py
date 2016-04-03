@@ -85,7 +85,6 @@ def export_product(req_data, target, user_id):
 
     endpoint = store.get_link('/admin/products.json', api=True)
 
-    product_data = {}
     if target == 'shopify' or target == 'shopify-update':
         try:
             if target == 'shopify-update':
@@ -109,7 +108,9 @@ def export_product(req_data, target, user_id):
                 except Exception as e:
                     traceback.print_exc()
 
-            product_data = r.json()['product']
+            if 'product' not in r.json():
+                print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(d))
+                return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(d))}
 
         except JSONDecodeError:
             return {'error': 'Shopify API is not available, please try again.'}
@@ -125,20 +126,10 @@ def export_product(req_data, target, user_id):
             }
 
         except:
-            try:
-                d = r.json()
-                if 'errors' in d:
-                    print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(d))
-                else:
-                    traceback.print_exc()
+            print 'WARNING: SHOPIFY EXPORT EXCEPTION:'
+            traceback.print_exc()
 
-                    print '-----'
-                    print r.text
-                    print '-----'
-
-                return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(d))}
-            except:
-                return {'error': 'Shopify API Error'}
+            return {'error': 'Shopify API Error'}
 
         pid = r.json()['product']['id']
         url = store.get_link('/admin/products/{}'.format(pid))
