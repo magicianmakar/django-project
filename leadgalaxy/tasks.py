@@ -98,15 +98,17 @@ def export_product(req_data, target, user_id):
                 r = requests.put(update_endpoint, json=api_data)
             else:
                 r = requests.post(endpoint, json=json.loads(data))
-                product_to_map = r.json()['product']
 
-                try:
-                    # Link images with variants
-                    mapped = utils.shopify_link_images(store, product_to_map)
-                    if mapped:
-                        r = mapped
-                except Exception as e:
-                    traceback.print_exc()
+                if 'product' not in r.json():
+                    product_to_map = r.json()['product']
+
+                    try:
+                        # Link images with variants
+                        mapped = utils.shopify_link_images(store, product_to_map)
+                        if mapped:
+                            r = mapped
+                    except Exception as e:
+                        traceback.print_exc()
 
             if 'product' not in r.json():
                 print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(d))
