@@ -206,8 +206,9 @@ def export_product(req_data, target, user_id):
                     'error': "Product: {}".format(e.message)
                 }
 
+            product.update_data(data)
+
             product.store = store
-            product.data = data
             product.stat = 0
 
         else:  # New product to save

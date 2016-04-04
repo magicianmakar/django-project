@@ -418,6 +418,16 @@ class ShopifyProduct(models.Model):
 
         return pid
 
+    def update_data(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        product_data = json.loads(self.data)
+
+        product_data.update(data)
+
+        self.data = json.dumps(product_data)
+
 
 class ShopifyProductExport(models.Model):
     class Meta:
