@@ -245,7 +245,8 @@ def export_product(req_data, target, user_id):
             'error': 'Unknown target {}'.format(target)
         }
 
-    print '%s Took: %.02f ms' % (target.replace('-', ' ').title(), time.time() - start)
+    if 'later' not in target:
+        print '%s Took: %.02f ms' % (target.replace('-', ' ').title(), time.time() - start)
 
     return {
         'product': {
