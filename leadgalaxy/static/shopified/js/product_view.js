@@ -166,10 +166,17 @@ $('#export-btn').click(function () {
 
 
     if (product.images) {
-        for (var i=0; i<product.images.length; i++) {
-            api_data.product.images.push({
+        for (var i = 0; i < product.images.length; i++) {
+            var image = {
                 src: product.images[i]
-            });
+            };
+
+            var imageFileName = hashUrlFileName(image.src);
+            if (product.variants_images && product.variants_images.hasOwnProperty(imageFileName)) {
+                image.filename = 'v-'+product.variants_images[imageFileName]+'__'+imageFileName;
+            }
+
+            api_data.product.images.push(image);
         }
     }
 

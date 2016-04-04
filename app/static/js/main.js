@@ -34,7 +34,33 @@ function displayAjaxError(desc, data) {
 }
 
 function cleanImageLink(link) {
-    return link.replace(/\?[^\?]+$/,'');
+    return link.replace(/\?[^\?]+$/, '');
+}
+
+function cleanUrlPatch(url) {
+    return url.replace(/\?.*$/, '').replace(/#.*$/, '');
+}
+
+function getFileName(url) {
+    return cleanUrlPatch(url).split('/').pop();
+}
+
+function getFileExt(url) {
+    return getFileName(url).split('.').pop();
+}
+
+function hashUrlFileName(s) {
+    var url = cleanUrlPatch(s);
+    var ext = getFileExt(s);
+
+    var hash = 0, i, chr, len;
+    if (url.length === 0) return hash;
+    for (i = 0, len = url.length; i < len; i++) {
+        chr = url.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash + '.' + ext;
 }
 
 function sendProductToShopify (product, store_id, product_id, callback, callback_data) {
