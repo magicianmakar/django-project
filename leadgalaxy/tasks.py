@@ -113,8 +113,10 @@ def export_product(req_data, target, user_id):
                         traceback.print_exc()
 
             if 'product' not in r.json():
-                print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(d))
-                return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(d))}
+                rep = r.json()
+
+                print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(rep))
+                return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
 
         except JSONDecodeError:
             newrelic.agent.record_exception(params={'user': user})
