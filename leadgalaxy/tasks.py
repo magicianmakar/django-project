@@ -46,6 +46,11 @@ def export_product(req_data, target, user_id):
             'error': "Store: {}".format(e.message)
         }
 
+    newrelic_params = {
+        'user': user.username,
+        'product': req_data.get('product')
+    }
+
     original_url = json.loads(data).get('original_url')
     if not original_url:
         original_url = req_data.get('original_url')
@@ -109,7 +114,7 @@ def export_product(req_data, target, user_id):
                         if mapped:
                             r = mapped
                     except Exception as e:
-                        newrelic.agent.record_exception(params={'user': user})
+                        newrelic.agent.record_exception(params=newrelic_params)
                         traceback.print_exc()
 
             if 'product' not in r.json():
@@ -119,23 +124,23 @@ def export_product(req_data, target, user_id):
                 return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
 
         except JSONDecodeError:
-            newrelic.agent.record_exception(params={'user': user})
+            newrelic.agent.record_exception(params=newrelic_params)
             return {'error': 'Shopify API is not available, please try again.'}
 
         except ShopifyProduct.DoesNotExist:
-            newrelic.agent.record_exception(params={'user': user})
+            newrelic.agent.record_exception(params=newrelic_params)
             return {
-                'error': "Product {} does not exist".format(req_data['product'])
+                'error': "Product {} does not exist".format(req_data.get('product'))
             }
 
         except PermissionDenied as e:
-            newrelic.agent.record_exception(params={'user': user})
+            newrelic.agent.record_exception(params=newrelic_params)
             return {
                 'error': "Product: {}".format(e.message)
             }
 
         except:
-            newrelic.agent.record_exception(params={'user': user})
+            newrelic.agent.record_exception(params=newrelic_params)
             print 'WARNING: SHOPIFY EXPORT EXCEPTION:'
             traceback.print_exc()
 
@@ -155,13 +160,13 @@ def export_product(req_data, target, user_id):
                         original_url = original_info.get('url', '')
 
                 except ShopifyProduct.DoesNotExist:
-                    newrelic.agent.record_exception(params={'user': user})
+                    newrelic.agent.record_exception(newrelic_params)
                     return {
                         'error': "Product {} does not exist".format(req_data['product'])
                     }
 
                 except PermissionDenied as e:
-                    newrelic.agent.record_exception(params={'user': user})
+                    newrelic.agent.record_exception(newrelic_params)
                     return {
                         'error': "Product: {}".format(e.message)
                     }
@@ -190,13 +195,13 @@ def export_product(req_data, target, user_id):
                 user.can_edit(product)
 
             except ShopifyProduct.DoesNotExist:
-                newrelic.agent.record_exception(params={'user': user})
+                newrelic.agent.record_exception(params={'user': user, 'product': req_data['product']})
                 return {
                     'error': "Product {} does not exist".format(req_data['product'])
                 }
 
             except PermissionDenied as e:
-                newrelic.agent.record_exception(params={'user': user})
+                newrelic.agent.record_exception(params={'user': user, 'product': req_data['product']})
                 return {
                     'error': "Product: {}".format(e.message)
                 }
@@ -224,7 +229,7 @@ def export_product(req_data, target, user_id):
                 user.can_add(product)
 
             except PermissionDenied as e:
-                newrelic.agent.record_exception(params={'user': user})
+                newrelic.agent.record_exception(newrelic_params)
                 return {
                     'error': "Add Product: {}".format(e.message)
                 }
