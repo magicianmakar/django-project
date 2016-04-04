@@ -591,5 +591,9 @@ $(function () {
         $('.hide-ordered-btn').trigger('click');
         window.location.hash = '';
     }
+
+    setTimeout(function() {
+        window.location.reload();
+    }, 3500);
 });
 })();
