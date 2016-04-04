@@ -819,11 +819,12 @@ def proccess_api(request, user, method, target, data):
         from django.core import serializers
 
         orders = []
-        # TODO: handle sub-user filter
-        shopify_orders = ShopifyOrder.objects.filter(user=user, hidden=False) \
+        shopify_orders = ShopifyOrder.objects.filter(user=user.models_user, hidden=False) \
                                              .filter(source_tracking='') \
                                              .exclude(source_status='FINISH') \
                                              .order_by('updated_at')
+        if user.is_subuser:
+            shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
 
         if not data.get('order_id') and not data.get('line_id'):
             limit_key = 'order_fulfill_limit_%d' % user.id
@@ -844,18 +845,19 @@ def proccess_api(request, user, method, target, data):
         if data.get('line_id'):
             shopify_orders = shopify_orders.filter(line_id=data.get('line_id'))
 
+        print shopify_orders.query
         shopify_orders = serializers.serialize('python', shopify_orders,
                                                fields=('id', 'order_id', 'line_id',
                                                        'source_id', 'source_status',
                                                        'source_tracking'))
+
         for i in shopify_orders:
             fields = i['fields']
             fields['id'] = i['pk']
             orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):
-            # TODO: handle sub-user filter
-            ShopifyOrder.objects.filter(user=user, id__in=[i['id'] for i in orders]) \
+            ShopifyOrder.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
                                 .update(check_count=F('check_count')+1, updated_at=timezone.now())
 
         return JsonResponse(orders, safe=False)
