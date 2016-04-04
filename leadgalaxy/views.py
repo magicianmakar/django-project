@@ -845,7 +845,6 @@ def proccess_api(request, user, method, target, data):
         if data.get('line_id'):
             shopify_orders = shopify_orders.filter(line_id=data.get('line_id'))
 
-        print shopify_orders.query
         shopify_orders = serializers.serialize('python', shopify_orders,
                                                fields=('id', 'order_id', 'line_id',
                                                        'source_id', 'source_status',
