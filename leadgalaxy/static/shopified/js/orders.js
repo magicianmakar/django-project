@@ -594,6 +594,6 @@ $(function () {
 
     setTimeout(function() {
         window.location.reload();
-    }, 3500);
+    }, 3500 * 1000);
 });
 })();
