@@ -396,7 +396,7 @@ def get_product_images_dict(store, product):
             images[var] = i['src']
 
     # Default image
-    images[0] = product['image'].get('src')
+    images[0] = product.get('image', {}).get('src')
 
     return images
 
