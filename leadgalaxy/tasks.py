@@ -4,6 +4,7 @@ import traceback
 import time
 from celery import Celery
 from simplejson import JSONDecodeError
+import newrelic.agent
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -108,6 +109,7 @@ def export_product(req_data, target, user_id):
                         if mapped:
                             r = mapped
                     except Exception as e:
+                        newrelic.agent.record_exception(params={'user': user})
                         traceback.print_exc()
 
             if 'product' not in r.json():
@@ -115,19 +117,23 @@ def export_product(req_data, target, user_id):
                 return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(d))}
 
         except JSONDecodeError:
+            newrelic.agent.record_exception(params={'user': user})
             return {'error': 'Shopify API is not available, please try again.'}
 
         except ShopifyProduct.DoesNotExist:
+            newrelic.agent.record_exception(params={'user': user})
             return {
                 'error': "Product {} does not exist".format(req_data['product'])
             }
 
         except PermissionDenied as e:
+            newrelic.agent.record_exception(params={'user': user})
             return {
                 'error': "Product: {}".format(e.message)
             }
 
         except:
+            newrelic.agent.record_exception(params={'user': user})
             print 'WARNING: SHOPIFY EXPORT EXCEPTION:'
             traceback.print_exc()
 
@@ -147,11 +153,13 @@ def export_product(req_data, target, user_id):
                         original_url = original_info.get('url', '')
 
                 except ShopifyProduct.DoesNotExist:
+                    newrelic.agent.record_exception(params={'user': user})
                     return {
                         'error': "Product {} does not exist".format(req_data['product'])
                     }
 
                 except PermissionDenied as e:
+                    newrelic.agent.record_exception(params={'user': user})
                     return {
                         'error': "Product: {}".format(e.message)
                     }
@@ -180,11 +188,13 @@ def export_product(req_data, target, user_id):
                 user.can_edit(product)
 
             except ShopifyProduct.DoesNotExist:
+                newrelic.agent.record_exception(params={'user': user})
                 return {
                     'error': "Product {} does not exist".format(req_data['product'])
                 }
 
             except PermissionDenied as e:
+                newrelic.agent.record_exception(params={'user': user})
                 return {
                     'error': "Product: {}".format(e.message)
                 }
@@ -212,6 +222,7 @@ def export_product(req_data, target, user_id):
                 user.can_add(product)
 
             except PermissionDenied as e:
+                newrelic.agent.record_exception(params={'user': user})
                 return {
                     'error': "Add Product: {}".format(e.message)
                 }
