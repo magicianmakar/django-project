@@ -831,12 +831,12 @@ def proccess_api(request, user, method, target, data):
 
             if limit is None:
                 limit = utils.calc_orders_limit(orders_count=shopify_orders.count())
-                cache.set(limit_key, limit, timeout=3600)
+
+                if limit != 20:
+                    cache.set(limit_key, limit, timeout=3600)
+                    print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
 
             shopify_orders = shopify_orders[:limit]
-
-            if limit != 20:
-                print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
 
         if data.get('order_id'):
             shopify_orders = shopify_orders.filter(order_id=data.get('order_id'))
