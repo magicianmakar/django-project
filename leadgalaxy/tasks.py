@@ -100,7 +100,7 @@ def export_product(req_data, target, user_id):
             else:
                 r = requests.post(endpoint, json=json.loads(data))
 
-                if 'product' not in r.json():
+                if 'product' in r.json():
                     product_to_map = r.json()['product']
 
                     try:
