@@ -872,33 +872,35 @@ def proccess_api(request, user, method, target, data):
             }
         }
 
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            newrelic.agent.record_exception(params={'user': user, 'store': data.get('store')})
+            return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
+
         order = ShopifyOrder(user=user.models_user,
+                             store=store,
                              order_id=order_id,
                              line_id=line_id,
                              source_id=source_id,
                              data=json.dumps(order_data))
+
         user.can_add(order)
         order.save()
 
-        store = data.get('store')
-        if store:
-            store = ShopifyStore.objects.get(id=store)
-            user.can_view(store)
+        order_line = utils.get_shopify_order_line(store, order_id, line_id)
+        if order_line:
+            note = u'Aliexpress Order ID: {0}\n' \
+                   'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n' \
+                   'Shopify Product: {1} / {2}'.format(source_id, order_line.get('name'),
+                                                       order_line.get('variant_title'))
+        else:
+            note = 'Aliexpress Order ID: {0}\n' \
+                   'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n'.format(source_id)
 
-            order_line = utils.get_shopify_order_line(store, order_id, line_id)
-            if order_line:
-                note = u'Aliexpress Order ID: {0}\n' \
-                       'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n' \
-                       'Shopify Product: {1} / {2}'.format(source_id, order_line.get('name'),
-                                                           order_line.get('variant_title'))
-            else:
-                note = 'Aliexpress Order ID: {0}\n' \
-                       'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n'.format(source_id)
-
-            utils.add_shopify_order_note(store, order_id, note)
-
-            order.store = store
-            order.save()
+        utils.add_shopify_order_note(store, order_id, note)
 
         return JsonResponse({'status': 'ok'})
 
