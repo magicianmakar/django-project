@@ -37,9 +37,10 @@ def export_product(req_data, target, user_id):
     try:
         store = ShopifyStore.objects.get(id=store)
         user.can_view(store)
-    except ShopifyStore.DoesNotExist:
+    except (ShopifyStore.DoesNotExist, KeyError):
+        newrelic.agent.record_exception(params={'store': store, 'user': user})
         return {
-            'error': 'Selected store (%s) not found for user: %s' % (store, user.username if user else 'None')
+            'error': 'Selected store (%s) not found' % (store)
         }
     except PermissionDenied as e:
         return {
