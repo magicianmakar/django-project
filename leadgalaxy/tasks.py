@@ -73,8 +73,8 @@ def export_product(req_data, target, user_id):
     try:
         import_store = utils.get_domain(original_url)
     except:
-        print 'ERROR: Original URL: {}'.format(original_url)
-        traceback.print_exc()
+        newrelic_params['original_url'] = original_url
+        newrelic.agent.record_exception(params=newrelic_params)
 
         return {
             'error': 'Original URL is not set.'
