@@ -43,7 +43,13 @@ def export_product(req_data, target, user_id):
     }
 
     try:
-        store = ShopifyStore.objects.get(id=store)
+        try:
+            store = ShopifyStore.objects.get(id=store)
+        except ValueError:
+            newrelic.agent.record_exception(params=newrelic_params)
+
+            store = ShopifyStore.objects.get(title=store)
+
         user.can_view(store)
 
     except (ShopifyStore.DoesNotExist, ValueError):
