@@ -48,7 +48,8 @@ def export_product(req_data, target, user_id):
 
     newrelic_params = {
         'user': user.username,
-        'product': req_data.get('product')
+        'product': req_data.get('product'),
+        'store': store.id
     }
 
     original_url = json.loads(data).get('original_url')
