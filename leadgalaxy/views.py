@@ -2690,7 +2690,9 @@ def orders_track(request):
     orders = ShopifyOrder.objects.select_related('store').filter(user=request.user.models_user, store=store)
 
     if query:
-        orders = orders.filter(Q(order_id=query) | Q(source_id=query) | Q(source_tracking=query))
+        orders = orders.filter(Q(order_id=utils.clean_query_id(query)) |
+                               Q(source_id=utils.clean_query_id(query)) |
+                               Q(source_tracking=query))
 
     if tracking_filter == '0':
         orders = orders.filter(source_tracking='')

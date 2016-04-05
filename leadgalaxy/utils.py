@@ -897,6 +897,14 @@ def fix_product_url(data, request):
     return data
 
 
+def clean_query_id(qid):
+    ids = re.findall('([0-9]+)', qid)
+    if len(ids):
+        return safeInt(ids[0], 0)
+    else:
+        return 0
+
+
 # Helper Classes
 
 class TimezoneMiddleware(object):
