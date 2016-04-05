@@ -158,25 +158,44 @@ $('.board-empty').click(function(e) {
     var board = $(this).attr('board-id');
     var btn = $(this);
 
-    $.ajax({
-        url: '/api/board-empty',
-        type: 'POST',
-        data: {
-            board: board
-        },
-        success: function(data) {
-            if ('status' in data && data.status == 'ok') {
-                $(btn.parents('.board-box').find('.ibox-content')[0]).html(
-                    '<h3 class="text-center">No product in this board.</h3>'
-                );
-            } else {
+    swal({
+        title: "Empty Board",
+        text: "This will empty the board from it's products. \n" +
+              "The products are not delete from your account. \n" +
+              "Are you sure you want to empty the board?",
+        type: "warning",
+        showCancelButton: true,
+        closeOnCancel: true,
+        closeOnConfirm: false,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Empty Board",
+        cancelButtonText: "Cancel"
+    },
+    function(isConfirmed) {
+        $.ajax({
+            url: '/api/board-empty',
+            type: 'POST',
+            data: {
+                board: board
+            },
+            success: function(data) {
+                if ('status' in data && data.status == 'ok') {
+                    swal('Empty Board', 'The board is now empty', 'success');
+
+                    $(btn.parents('.board-box').find('.ibox-content')[0]).html(
+                        '<h3 class="text-center">No product in this board.</h3>'
+                    );
+
+                    btn.parents('.board-box').find('.products-count').text('0');
+                } else {
+                    displayAjaxError('Empty Board', data);
+                }
+            },
+            error: function(data) {
                 displayAjaxError('Empty Board', data);
-            }
-        },
-        error: function(data) {
-            displayAjaxError('Empty Board', data);
-        },
-        complete: function() {}
+            },
+            complete: function() {}
+        });
     });
 });
 
@@ -185,23 +204,39 @@ $('.board-delete').click(function(e) {
     var board = $(this).attr('board-id');
     var btn = $(this);
 
-    $.ajax({
-        url: '/api/board-delete',
-        type: 'POST',
-        data: {
-            board: board
-        },
-        success: function(data) {
-            if ('status' in data && data.status == 'ok') {
-                btn.parents('.board-box').remove();
-            } else {
-                displayAjaxError('Delete Board', data);
-            }
-        },
-        error: function(data) {
-            displayAjaxError('Delete Board', data);
-        },
-        complete: function() {}
+    swal({
+        title: "Delete Board",
+        text: "This will delete the board permanently. Are you sure you want to delete it?",
+        type: "warning",
+        showCancelButton: true,
+        closeOnCancel: true,
+        closeOnConfirm: false,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Delete Permanently",
+        cancelButtonText: "Cancel"
+    },
+    function(isConfirmed) {
+        if (isConfirmed) {
+            $.ajax({
+                url: '/api/board-delete',
+                type: 'POST',
+                data: {
+                    board: board
+                },
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        btn.parents('.board-box').remove();
+                        swal('Delete Board', 'Board has been deleted', 'success');
+                    } else {
+                        displayAjaxError('Delete Board', data);
+                    }
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Board', data);
+                },
+                complete: function() {}
+            });
+        }
     });
 });
 
