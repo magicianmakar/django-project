@@ -31,14 +31,20 @@ def export_product(req_data, target, user_id):
     store = req_data['store']
     data = req_data['data']
     original_data = req_data.get('original', '')
+    from_extension = ('access_token' in req_data)
 
     user = User.objects.get(id=user_id)
 
     try:
         store = ShopifyStore.objects.get(id=store)
         user.can_view(store)
-    except (ShopifyStore.DoesNotExist, KeyError):
-        newrelic.agent.record_exception(params={'store': store, 'user': user})
+    except (ShopifyStore.DoesNotExist, ValueError):
+        newrelic.agent.record_exception(params={
+            'store': store,
+            'user': user,
+            'from_extension': from_extension
+        })
+
         return {
             'error': 'Selected store (%s) not found' % (store)
         }
@@ -50,7 +56,8 @@ def export_product(req_data, target, user_id):
     newrelic_params = {
         'user': user.username,
         'product': req_data.get('product'),
-        'store': store.id
+        'store': store.id,
+        'from_extension': from_extension,
     }
 
     original_url = json.loads(data).get('original_url')
