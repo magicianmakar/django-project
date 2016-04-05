@@ -157,9 +157,7 @@ def export_product(req_data, target, user_id):
                     product = ShopifyProduct.objects.get(id=req_data['product'])
                     user.can_edit(product)
 
-                    original_info = product.get_original_info()
-                    if original_info:
-                        original_url = original_info.get('url', '')
+                    original_url = product.get_original_info().get('url', '')
 
                 except ShopifyProduct.DoesNotExist:
                     newrelic.agent.record_exception(newrelic_params)

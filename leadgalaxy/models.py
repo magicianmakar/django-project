@@ -386,7 +386,7 @@ class ShopifyProduct(models.Model):
                 'url': url
             }
 
-        return None
+        return {}
 
     def get_supplier_info(self):
         data = json.loads(self.data)
