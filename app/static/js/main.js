@@ -332,11 +332,17 @@ $(function() {
     function createBoard(e) {
         e.preventDefault();
 
+        var board_name = $('#add-board-name').val().trim();
+        if (board_name.length === 0) {
+            swal('Add Board', 'Board name is required.', 'error');
+            return;
+        }
+
         $.ajax({
             url: '/api/boards-add',
             type: 'POST',
             data: {
-                title: $('#add-board-name').val()
+                title: board_name
             },
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {

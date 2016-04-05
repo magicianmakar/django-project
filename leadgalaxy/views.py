@@ -393,7 +393,12 @@ def proccess_api(request, user, method, target, data):
                          % (total_allowed, user_count)
             })
 
-        board = ShopifyBoard(title=data.get('title').strip(), user=user.models_user)
+        board_name = data.get('title', '').strip()
+
+        if not len(board_name):
+            return JsonResponse({'error': 'Board name is required'}, status=501)
+
+        board = ShopifyBoard(title=board_name, user=user.models_user)
         user.can_add(board)
 
         board.save()
