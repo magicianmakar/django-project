@@ -481,6 +481,13 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'variant-image':
         # TODO: Move to after boards endpoints
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
         requests.put(data.get('url'), json=json.loads(data.get('data')))
 
         return JsonResponse({
@@ -1903,6 +1910,7 @@ def variants_edit(request, store_id, pid):
         'store': store,
         'product_id': pid,
         'product': product,
+        'api_url': store.get_api_url(True),
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Variants']
     })

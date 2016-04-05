@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError, api_url, product */
 
-(function(api_url, product) {
+(function(api_url, product, store_id) {
 'use strict';
 
 $('#btn-variants-img').click(function(e) {
@@ -67,7 +67,8 @@ function imageClicked(e) {
         url: '/api/variant-image',
         type: 'POST',
         data: {
-            'url': api_url + '/admin/variants/' + variant_id + '.json',
+            'store': store_id,
+            'url': '/admin/variants/' + variant_id + '.json',
             'data': JSON.stringify(api_data)
         },
         context: {
@@ -139,4 +140,4 @@ function setupVariantsLinking() {
 $(function() {
     setupVariantsLinking();
 });
-})(api_url, product);
+})(api_url, product, store_id);
