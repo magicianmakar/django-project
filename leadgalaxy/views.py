@@ -2014,6 +2014,17 @@ def bulk_edit(request):
 
 
 @login_required
+def boards_list(request):
+    boards = request.user.models_user.shopifyboard_set.all()
+
+    return render(request, 'boards_list.html', {
+        'boards': boards,
+        'page': 'boards',
+        'breadcrumbs': ['Boards']
+    })
+
+
+@login_required
 def boards(request, board_id):
     boards = []
     board = get_object_or_404(ShopifyBoard, id=board_id)
@@ -2040,7 +2051,7 @@ def boards(request, board_id):
         'paginator': paginator,
         'current_page': page,
         'page': 'boards',
-        'breadcrumbs': ['Boards']
+        'breadcrumbs': [{'title': 'Boards', 'url': reverse(boards_list)}, boards[0]['title']]
     })
 
 
