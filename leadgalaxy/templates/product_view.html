@@ -230,14 +230,18 @@
                 <div class="row">
                     <div class="col-xs-12">
                         {% if not product.shopify_url and not shopify_product %}
-                        <button id="export-btn" target="shopify" type="button" class="btn btn-primary" data-loading-text="Sending...">Send to Shopify</button>
+                        <button id="export-btn" target="shopify" type="button"
+                                class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Send to Shopify</button>
                         {% endif %}
 
                         {% if shopify_product %}
-                        <button id="export-btn" target="shopify-update" type="button" class="btn btn-primary" data-loading-text="Updating...">Update in Shopify</button>
+                        <button id="export-btn" target="shopify-update" type="button"
+                                class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">Update in Shopify</button>
                         {% endif %}
 
-                        <button id="save-for-later-btn" target="save-for-later" type="button" class="btn btn-primary" data-loading-text="Saving..." {% if shopify_product %}style="display:none"{% endif %}>Save for later</button>
+                        <button id="save-for-later-btn" target="save-for-later"
+                                type="button" class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving"
+                                {% if shopify_product %}style="display:none"{% endif %}>Save for later</button>
 
                     <div class="btn-group dropup">
                         <button id="more-options-btn" data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
