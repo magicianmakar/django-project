@@ -250,6 +250,30 @@ $('#auto_shopify_fulfill').change(function (e) {
     }
 });
 
+$('.verify-api-url').click(function (e) {
+    $(this).button('loading');
+
+    $.ajax({
+        url: '/api/store-verify',
+        type: 'GET',
+        data: {
+            store: $(this).attr('store-id')
+        },
+        context: {
+            btn: $(this)
+        },
+        success: function (data) {
+            swal('API URL', 'The API URL is working properly for Shopify Store:\n' + data.store, 'success');
+        },
+        error: function (data) {
+            displayAjaxError('API URL', data);
+        },
+        complete: function () {
+            this.btn.button('reset');
+        }
+    });
+});
+
 $(function () {
     showDescriptionHelp();
     $('#auto_shopify_fulfill').trigger('change');

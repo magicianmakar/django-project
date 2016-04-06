@@ -57,7 +57,11 @@
                       <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
                       <td>
                         <span class="api-url" style="display:none">{{item.get_api_url}}</span>
-                        <a href="#" class="show-api-url btn btn-default btn-outline btn-xs">Show</a>
+                        <button class="show-api-url btn btn-default btn-outline btn-xs">Show</button>
+                        <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
+                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                            <i class="fa fa-check-circle-o"></i> Verify
+                        </button>
                       </td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>

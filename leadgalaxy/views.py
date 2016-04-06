@@ -244,6 +244,21 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'GET' and target == 'store-verify':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        try:
+            info = store.get_info
+            return JsonResponse({'status': 'ok', 'store': info['name']})
+
+        except:
+            return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
+
     if method == 'GET' and target == 'product':
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'))
