@@ -36,60 +36,60 @@ class Command(BaseCommand):
         if not options['permission']:
             options['permission'] = []
 
-        plans = set()
-        bundles = set()
         for plan_id in options['plan_id']:
             try:
                 plan = GroupPlan.objects.get(pk=plan_id)
-                plans.add(plan.id)
+                self.stdout.write(self.style.MIGRATE_SUCCESS(
+                    '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
+
+                for profile in plan.userprofile_set.select_related('user').all():
+                    self.handle_products(profile.user, profile.user.shopifyproduct_set.all(), action, options)
 
             except GroupPlan.DoesNotExist:
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
-            self.stdout.write(self.style.MIGRATE_SUCCESS(
-                '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
-
         for permission in options['permission']:
             for p in AppPermission.objects.filter(name='price_changes.use'):
                 for plan in p.groupplan_set.all():
-                    plans.add(plan.id)
                     self.stdout.write(self.style.MIGRATE_SUCCESS(
                         '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
 
+                    for profile in plan.userprofile_set.select_related('user').all():
+                        self.handle_products(profile.user, profile.user.shopifyproduct_set.all(), action, options)
+
                 for bundle in p.featurebundle_set.all():
-                    bundles.add(bundle.id)
                     self.stdout.write(self.style.MIGRATE_SUCCESS(
                         '{} webhooks for Bundle: {}'.format(action.title(), bundle.title)))
-
-        products = ShopifyProduct.objects.filter(Q(user__profile__plan__in=list(plans)) |
-                                                 Q(user__profile__bundles__in=list(bundles)))
-
-        if options['new_products']:
-            products = products.filter(price_notification_id=0)
-
-        self.stdout.write(self.style.HTTP_INFO('Products count: %d' % products.count()))
-        count = 0
-
-        for product in products:
-            self.handle_product(product, action)
-            count += 1
-
-            if (count % 100 == 0):
-                self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
+                    for profile in bundle.userprofile_set.select_related('user').all():
+                        self.handle_products(profile.user, profile.user.shopifyproduct_set.all(), action, options)
 
         for user_id in options['user_id']:
             try:
                 user = User.objects.get(pk=user_id)
+                products = ShopifyProduct.objects.filter(user=user)
+
+                self.handle_products(user, products, action, options)
+
             except ShopifyStore.DoesNotExist:
                 raise CommandError('User "%s" does not exist' % user_id)
 
-            self.stdout.write(self.style.MIGRATE_SUCCESS(
-                '{} webhooks for user: {}'.format(action.title(), user.username)))
+    def handle_products(self, user, products, action, options):
+        if options['new_products']:
+            products = products.filter(price_notification_id=0)
 
-            products = ShopifyProduct.objects.filter(user=user)
-            self.stdout.write(self.style.HTTP_INFO('products count: %d' % products.count()))
+        products_count = products.count()
+        if products_count:
+            self.stdout.write(self.style.HTTP_INFO('{} webhooks to {} product for user: {}'
+                .format(action.title(), products_count, user.username)))
+
+            count = 0
+
             for product in products:
                 self.handle_product(product, action)
+                count += 1
+
+                if (count % 100 == 0):
+                    self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
     def handle_product(self, product, action):
         # print 'product {} Action {}'.format(product.id, action)
