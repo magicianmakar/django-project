@@ -36,6 +36,7 @@ def export_product(req_data, target, user_id):
     user = User.objects.get(id=user_id)
 
     newrelic_params = {
+        'target': target,
         'store': store,
         'user': user.username,
         'product': req_data.get('product'),
