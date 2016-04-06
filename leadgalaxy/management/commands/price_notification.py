@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -21,6 +22,7 @@ class Command(BaseCommand):
         parser.add_argument('--new', dest='new_products', action='store_true', help='Only New Products')
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
         parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
+        parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
 
     def handle(self, *args, **options):
         action = options['action'][0]
@@ -31,27 +33,49 @@ class Command(BaseCommand):
         if not options['user_id']:
             options['user_id'] = []
 
+        if not options['permission']:
+            options['permission'] = []
+
+        plans = set()
+        bundles = set()
         for plan_id in options['plan_id']:
             try:
                 plan = GroupPlan.objects.get(pk=plan_id)
+                plans.add(plan.id)
+
             except GroupPlan.DoesNotExist:
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
             self.stdout.write(self.style.MIGRATE_SUCCESS(
-                '{} webhooks for plan: {}'.format(action.title(), plan.title)))
+                '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
 
-            products = ShopifyProduct.objects.filter(user__profile__plan=plan)
-            if options['new_products']:
-                products = products.filter(price_notification_id=0)
+        for permission in options['permission']:
+            for p in AppPermission.objects.filter(name='price_changes.use'):
+                for plan in p.groupplan_set.all():
+                    plans.add(plan.id)
+                    self.stdout.write(self.style.MIGRATE_SUCCESS(
+                        '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
 
-            self.stdout.write(self.style.HTTP_INFO('Products count: %d' % products.count()))
-            count = 0
-            for product in products:
-                self.handle_product(product, action)
-                count += 1
+                for bundle in p.featurebundle_set.all():
+                    bundles.add(bundle.id)
+                    self.stdout.write(self.style.MIGRATE_SUCCESS(
+                        '{} webhooks for Bundle: {}'.format(action.title(), bundle.title)))
 
-                # if (count % 10 == 0):
-                    # self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
+        products = ShopifyProduct.objects.filter(Q(user__profile__plan__in=list(plans)) |
+                                                 Q(user__profile__bundles__in=list(bundles)))
+
+        if options['new_products']:
+            products = products.filter(price_notification_id=0)
+
+        self.stdout.write(self.style.HTTP_INFO('Products count: %d' % products.count()))
+        count = 0
+
+        for product in products:
+            self.handle_product(product, action)
+            count += 1
+
+            if (count % 100 == 0):
+                self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
         for user_id in options['user_id']:
             try:
@@ -79,6 +103,8 @@ class Command(BaseCommand):
             origin = product.get_original_info()
             if not origin or 'aliexpress.com' not in origin.get('url').lower():
                 # self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.'))
+                product.price_notification_id = -1
+                product.save()
                 return
 
             try:
@@ -86,6 +112,8 @@ class Command(BaseCommand):
                 store_id = store.get('url')
                 store_id = int(re.findall('/([0-9]+)', store_id)[0])
             except Exception as e:
+                product.price_notification_id = -2
+                product.save()
                 # self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Store ID'.format(product.id)))
                 return
 
