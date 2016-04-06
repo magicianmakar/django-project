@@ -136,7 +136,7 @@ def export_product(req_data, target, user_id):
                 print 'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(rep))
                 return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
 
-        except JSONDecodeError:
+        except (JSONDecodeError, requests.exceptions.ConnectTimeout):
             newrelic.agent.record_exception(params=newrelic_params)
             return {'error': 'Shopify API is not available, please try again.'}
 
