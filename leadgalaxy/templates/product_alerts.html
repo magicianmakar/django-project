@@ -1,0 +1,125 @@
+{% load static %}
+{% load template_helper %}
+
+<table class="table products-changes">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for change in product_changes.changes.product %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% endfor %}
+
+        {% for item in product_changes %}
+            {% for change in item.changes.product.offline %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Vendor</td>
+                    <td>A vendor store has gone <b>{% if change.new_value %}Online{% else %}Offline{% endif %}</b></td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-3"><b>Old Price</b></div>
+                            <div class="col-md-3"><b>New Price</b></div>
+                        </div>
+
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
+                            <div class="col-md-3">{{change.old_value}}</div>
+                            <div class="col-md-3">{{change.new_value}}</div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+
+            {% for change in item.changes.variants.price %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Price</td>
+                    <td>The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-3"><b>Old Price</b></div>
+                            <div class="col-md-3"><b>New Price</b></div>
+                        </div>
+
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
+                            <div class="col-md-3">{{change.old_value}}</div>
+                            <div class="col-md-3">{{change.new_value}}</div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+
+            {% for change in item.changes.variants.quantity %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Availability</td>
+                    <td>The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-3"><b>Old Quantity</b></div>
+                            <div class="col-md-3"><b>New Quantity</b></div>
+                        </div>
+
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
+                            <div class="col-md-3">{{change.old_value}}</div>
+                            <div class="col-md-3">{{change.new_value}}</div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        {% empty %}
+            <tr>
+                <td class="text-center" colspan="4">
+                    <i>No alerts to display at this time</i>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include "partial/paginator.html" %}
+
+<script type="text/javascript">
+    $('.products-changes .view-details').click(function (e) {
+        e.preventDefault();
+
+        $(this).parents('tr').next('.details').toggle();
+    });
+</script>

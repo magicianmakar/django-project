@@ -627,6 +627,39 @@ $('.original-tab').click(function (e) {
     iframe.attr('src', iframe.attr('data-src'));
 });
 
+$('.product-alerts-tab').click(function () {
+    if ($(this).prop('loaded') !==  true) {
+        $('.product-alerts-loading i').addClass('fa-spin');
+        $('.product-alerts-loading').show();
+
+        var url = '/products/update?product=' + $(this).attr('product-id');
+        if ($(this).prop('page')) {
+            url = url + '&page=' + $(this).prop('page');
+        }
+
+        $('.product-alerts').load(url,
+            function() {
+                $('.product-alerts-tab').prop('loaded', true);
+
+                $('.product-alerts-loading i').removeClass('fa-spin');
+                $('.product-alerts-loading').hide();
+
+                $('.pagination a').click(function (e) {
+                    e.preventDefault();
+
+                    var page = getQueryVariable('page', $(this).prop('href'));
+                    if (page) {
+                        $('.product-alerts-tab').prop('page', page);
+                        $('.product-alerts-tab').prop('loaded', false);
+
+                        $('.product-alerts-tab').trigger('click');
+                    }
+                });
+            }
+        );
+    }
+});
+
 function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {

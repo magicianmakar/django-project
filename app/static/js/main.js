@@ -63,6 +63,42 @@ function hashUrlFileName(s) {
     return hash + '.' + ext;
 }
 
+
+function getQueryVariable(variable, url) {
+    var query = '';
+    if (url === undefined) {
+        query = window.location.search.substring(1);
+        if (query === '' && window.location.href.indexOf('#') != -1) {
+            var parts = window.location.href.split('#');
+            if (parts.length == 2) {
+                query = parts[1];
+            }
+        }
+    } else {
+        query = url.split('?');
+        if (query.length == 2) {
+            query = query[1];
+        } else {
+            query = url.split('#');
+            if (query.length == 2) {
+                query = query[1];
+            } else {
+                query = url;
+            }
+        }
+    }
+
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+        }
+    }
+
+    return null;
+}
+
 function sendProductToShopify (product, store_id, product_id, callback, callback_data) {
     if (!store_id || store_id.length === 0) {
         alert('Please choose a Shopify store first!');

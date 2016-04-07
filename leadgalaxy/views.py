@@ -2800,11 +2800,22 @@ def products_update(request):
 
     show_hidden = 'hidden' in request.GET
 
+    product = request.GET.get('product')
+    if product:
+        product = get_object_or_404(ShopifyProduct, id=product)
+        request.user.can_view(product)
+
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
 
-    changes = AliexpressProductChange.objects.filter(user=request.user.models_user,
-                                                     hidden=show_hidden).order_by('-updated_at')
+    changes = AliexpressProductChange.objects.filter(user=request.user.models_user)
+
+    if product:
+        changes = changes.filter(product=product)
+    else:
+        changes = changes.filter(hidden=show_hidden)
+
+    changes = changes.order_by('-updated_at')
 
     paginator = utils.SimplePaginator(changes, post_per_page)
     page = min(max(1, page), paginator.num_pages)
@@ -2828,9 +2839,12 @@ def products_update(request):
     # Allow sending notification for new changes
     request.user.set_config('_product_change_notify', False)
 
-    return render(request, 'products_update.html', {
+    tpl = 'product_alerts.html' if product else 'products_update.html'
+
+    return render(request, tpl, {
         'product_changes': product_changes,
         'show_hidden': show_hidden,
+        'product': product,
         'paginator': paginator,
         'current_page': page,
         'page': 'products_update',

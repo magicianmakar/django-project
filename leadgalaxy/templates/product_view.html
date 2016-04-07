@@ -48,6 +48,13 @@
                     {% endif %}
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
+                {% if request.user|can:'price_changes.use' %}
+                <li class="product-alerts-tab" product-id="{{product.id}}">
+                    <a data-toggle="tab" href="#tab-6">
+                        <i class="fa fa-line-chart"></i> Alerts
+                    </a>
+                </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -431,6 +438,18 @@
 
             </div>
         </div>
+
+        {% if request.user|can:'price_changes.use' %}
+        <div id="tab-6" class="tab-pane">
+            <div class="panel-body"  style="min-height:300px">
+                <div class="product-alerts-loading text-center" style="display:none">
+                    <i class='fa fa-circle-o-notch'></i>
+                </div>
+                <div class="product-alerts"></div>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
     </div>
