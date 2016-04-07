@@ -653,7 +653,7 @@ def product_change_notify(user):
     user.set_config('_product_change_notify', True)
 
     # Disable notification for a day
-    cache.get(notify_key, True, timeout=86400)
+    cache.set(notify_key, True, timeout=86400)
 
 
 def get_variant_name(variant):
