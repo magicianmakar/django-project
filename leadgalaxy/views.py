@@ -893,7 +893,17 @@ def proccess_api(request, user, method, target, data):
         # Mark Order as Ordered
         order_id = data.get('order_id')
         line_id = data.get('line_id')
-        source_id = data.get('aliexpress_order_id')
+        source_id = data.get('aliexpress_order_id', '')
+
+        try:
+            assert len(source_id) > 0, 'Empty Order ID'
+            assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
+        except AssertionError as e:
+            params = data.dict()
+            params['user'] = user.username
+            newrelic.agent.record_exception(params=params)
+
+            return JsonResponse({'error': e.message}, status=501)
 
         order_data = {
             'aliexpress': {
