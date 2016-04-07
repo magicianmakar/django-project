@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import wrap
 from django.core.paginator import Paginator
+from django.core.cache import cache
 
 from leadgalaxy.models import *
 from app import settings
@@ -625,7 +626,8 @@ def get_tracking_orders(store, tracker_orders):
 
 def product_change_notify(user):
 
-    if user.get_config('_product_change_notify'):
+    notify_key = 'product_change_%d' % user.id
+    if user.get_config('_product_change_notify') or cache.get(notify_key):
         # We already sent the user a notification for a product change
         return
 
@@ -649,6 +651,9 @@ def product_change_notify(user):
               html_message=email_html)
 
     user.set_config('_product_change_notify', True)
+
+    # Disable notification for a day
+    cache.get(notify_key, True, timeout=86400)
 
 
 def get_variant_name(variant):
