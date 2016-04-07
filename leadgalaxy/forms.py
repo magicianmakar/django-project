@@ -101,6 +101,18 @@ class UserProfileEmailForm(forms.Form):
         self.user = user
         super(UserProfileEmailForm, self).__init__(data=data)
 
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+
+        try:
+            User._default_manager.get(email__iexact=email)
+        except User.DoesNotExist:
+            return email
+        raise forms.ValidationError(
+            'A user with that email already exists',
+            code='duplicate_email',
+        )
+
     def clean_password(self):
         password = self.cleaned_data.get('password')
         if not self.user.check_password(password):
