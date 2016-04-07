@@ -93,7 +93,7 @@ class UserProfile(models.Model):
                 if i == perm_name:
                     return True
 
-        return False
+        return self.user.is_superuser
 
     def get_config(self):
         try:
