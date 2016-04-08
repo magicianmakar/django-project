@@ -42,9 +42,44 @@ $('.apply-btn').click(function(e) {
 
     var action = boardBox.find('.selected-actions').val();
     if (action == 'delete') {
-        if (!confirm('Are you sure that you want to permanently delete the selected products?')) {
-            return;
-        }
+        swal({
+            title: "Delete Products",
+            text: "Are you sure that you want to permanently delete the selected products?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnCancel: true,
+            closeOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Delete Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) {
+
+            if (isConfirmed) {
+                    boardBox.find('input.item-select[type=checkbox]').each(function(i, el) {
+                    if (el.checked) {
+                        var product = $(el).parents('.product-box').attr('product-id');
+                        if (action == 'delete') {
+                            $.ajax({
+                                url: '/api/product-delete',
+                                type: 'POST',
+                                data: {
+                                    product: product,
+                                },
+                                success: function(data) {
+                                    $(el).parents('.col-md-3').remove();
+                                },
+                                error: function(data) {
+                                    displayAjaxError('Delete Product', data);
+                                }
+                            });
+                        }
+
+                        $(el).iCheck('uncheck');
+                    }
+                });
+            }
+        });
     } else if (action == 'edit') {
         $('#modal-form').modal('show');
         return;
@@ -70,28 +105,6 @@ $('.apply-btn').click(function(e) {
     }
 
     boardBox.find('.selected-actions').val('');
-    boardBox.find('input.item-select[type=checkbox]').each(function(i, el) {
-        if (el.checked) {
-            var product = $(el).parents('.product-box').attr('product-id');
-            if (action == 'delete') {
-                $.ajax({
-                    url: '/api/product-delete',
-                    type: 'POST',
-                    data: {
-                        product: product,
-                    },
-                    success: function(data) {
-                        $(el).parents('.col-md-3').remove();
-                    },
-                    error: function(data) {
-                        displayAjaxError('Delete Product', data);
-                    }
-                });
-            }
-
-            $(el).iCheck('uncheck');
-        }
-    });
 });
 
 $('#save-changes').click(function(e) {
