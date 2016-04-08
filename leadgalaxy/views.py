@@ -2081,6 +2081,7 @@ def boards(request, board_id):
         'boards': boards,
         'paginator': paginator,
         'current_page': page,
+        'searchable': True,
         'page': 'boards',
         'breadcrumbs': [{'title': 'Boards', 'url': reverse(boards_list)}, boards[0]['title']]
     })
