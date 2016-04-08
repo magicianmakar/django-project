@@ -2788,8 +2788,10 @@ def orders_place(request):
     # Check for Aliexpress Affiliate Program
     api_key, tracking_id = utils.get_user_affiliate(request.user.models_user)
 
+    disable_affiliate = request.user.get_config('_disable_affiliate', False)
+
     redirect_url = None
-    if api_key and tracking_id:
+    if not disable_affiliate and api_key and tracking_id:
         affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product)
 
         if affiliate_link:
