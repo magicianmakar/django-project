@@ -2,10 +2,11 @@
 
 {% load static %}
 {% load compress %}
+{% load perms_helper %}
 
 {% block main-container %}
 
-{% for board in boards %}
+{% if board %}
 <div id="b{{board.id}}" board-id="{{board.id}}" class="board-box ibox float-e-margins">
 <div class="ibox-title">
     <h5>{{board.title}}<small></small></h5>
@@ -27,7 +28,7 @@
 
 {% if board.products %}
 <div class="row" style="margin-bottom: 20px">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <label for="selected-actions">Selected Items:</label>
         <select class="form-control selected-actions" name="selected-actions" style="display: inline-block; width: 191px; ">
             <option value=""></option>
@@ -38,6 +39,10 @@
         </select>
         <button class="btn btn-primary apply-btn">Apply</button>
         <button class="btn btn-default btn-outline select-all-btn">Select All</button>
+
+        {% if request.user|can:'product_filters.view' %}
+            <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -50,7 +55,7 @@
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
                     <label for="product_{{item.id}}"><img class="unveil"  src="{% static 'img/blank.gif' %}" data-src="{{item.images|first}}" style="width: 100%"></label>
-                    <button class="btn btn-xs btn-danger delete-from-board-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button>
+                    {# <button class="btn btn-xs btn-danger delete-from-board-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button> #}
                 </div>
                 <div class="product-desc">
                     <span class="product-price">
@@ -92,7 +97,7 @@
 
 </div>
 </div>
-{% empty %}
+{% else %}
 <div class="row">
     <div class="middle-box text-center animated fadeInDown">
         <h3 class="">No board found.</h3>
@@ -100,7 +105,7 @@
 
     </div>
 </div>
-{% endfor %}
+{% endif %}
 
 <div id="modal-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
@@ -225,6 +230,9 @@
         </div>
     </div>
 </div>
+
+{% include 'partial/filter_modal.html' %}
+
 {% endblock %}
 
 

@@ -2057,7 +2057,6 @@ def boards_list(request):
 
 @login_required
 def boards(request, board_id):
-    boards = []
     board = get_object_or_404(ShopifyBoard, id=board_id)
     request.user.can_view(board)
 
@@ -2071,19 +2070,19 @@ def boards(request, board_id):
 
     products, paginator, page = get_product(**args)
 
-    boards.append({
+    board = {
         'id': board.id,
         'title': board.title,
         'products': products
-    })
+    }
 
     return render(request, 'boards.html', {
-        'boards': boards,
+        'board': board,
         'paginator': paginator,
         'current_page': page,
         'searchable': True,
         'page': 'boards',
-        'breadcrumbs': [{'title': 'Boards', 'url': reverse(boards_list)}, boards[0]['title']]
+        'breadcrumbs': [{'title': 'Boards', 'url': reverse(boards_list)}, board['title']]
     })
 
 
