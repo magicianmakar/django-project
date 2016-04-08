@@ -442,13 +442,19 @@ $('.hide-ordered-btn').click(function () {
 
     $(this).toggleClass('hidded');
 
-    var hash = '#hide-compete';
     if ($(this).hasClass('hidded')) {
         $(this).text('Show Ordered');
 
         $('.pagination a').each(function (i, el) {
             var url = $(el).attr('href');
+            var hash = 'hide-compete';
             if (url.indexOf(hash)==-1) {
+                if (!url.match(/#/)) {
+                    hash = '#' + hash;
+                } else if (url.match(/#[a-z]+/)) {
+                    hash = ';' + hash;
+                }
+
                 $(el).attr('href', url+hash);
             }
         });
@@ -457,8 +463,43 @@ $('.hide-ordered-btn').click(function () {
 
         $('.pagination a').each(function (i, el) {
             var url = $(el).attr('href');
+            var hash = 'hide-compete';
             if (url.indexOf(hash)!=-1) {
-                $(el).attr('href', url.replace(hash, ''));
+                $(el).attr('href', url.replace(hash, '').replace(/#+;*/, '#'));
+            }
+        });
+    }
+});
+
+$('.hide-non-connected-btn').click(function () {
+    $('.order[connected="0"]').toggle();
+
+    $(this).toggleClass('hidded');
+
+    if ($(this).hasClass('hidded')) {
+        $(this).text('Show Non Connected');
+
+        $('.pagination a').each(function (i, el) {
+            var url = $(el).attr('href');
+            var hash = 'hide-non-connected';
+            if (url.indexOf(hash)==-1) {
+                if (!url.match(/#/)) {
+                    hash = '#' + hash;
+                } else if (url.match(/#[a-z]+/)) {
+                    hash = ';' + hash;
+                }
+
+                $(el).attr('href', url+hash);
+            }
+        });
+    } else {
+        $(this).text('Hide Non Connected');
+
+        $('.pagination a').each(function (i, el) {
+            var url = $(el).attr('href');
+            var hash = 'hide-non-connected';
+            if (url.indexOf(hash)!=-1) {
+                $(el).attr('href', url.replace(hash, '').replace(/#+;*/, '#'));
             }
         });
     }
@@ -587,8 +628,15 @@ $(function () {
     findMarkedLines();
     loadVriantImages('.orders .line');
 
-    if (window.location.hash == '#hide-compete') {
+    if (window.location.hash.match(/hide-compete/)) {
         $('.hide-ordered-btn').trigger('click');
+    }
+
+    if (window.location.hash.match(/hide-non-connected/)) {
+        $('.hide-non-connected-btn').trigger('click');
+    }
+
+    if (window.location.hash.length) {
         window.location.hash = '';
     }
 

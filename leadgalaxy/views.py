@@ -2555,6 +2555,7 @@ def orders_view(request):
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
         order['store'] = store
         order['placed_orders'] = 0
+        order['connected_lines'] = 0
         order['lines_count'] = len(order['line_items'])
 
         for i, el in enumerate((order['line_items'])):
@@ -2586,6 +2587,7 @@ def orders_view(request):
 
                 order['line_items'][i]['product'] = product
                 order['line_items'][i]['domain'] = original_info.get('domain')
+                order['connected_lines'] += 1
 
                 original_url = original_info.get('url')
                 try:
