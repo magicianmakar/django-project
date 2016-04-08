@@ -327,7 +327,7 @@ class ShopifyProduct(models.Model):
     def __str__(self):
         try:
             title = json.loads(self.data)['title']
-            return '{}...'.format(textwrap.wrap(title, width=79)[0])
+            return u'{}...'.format(textwrap.wrap(title, width=79)[0])
         except:
             return '<ShopifyProduct: %d>' % self.id
 
