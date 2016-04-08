@@ -3,7 +3,6 @@ venv
 staticfiles
 .env
 db.sqlite3
-seo-repport.sublime-project
-seo-repport.sublime-workspace
+*.sublime-*
 docs
 node_modules
