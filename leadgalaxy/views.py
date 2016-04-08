@@ -508,7 +508,7 @@ def proccess_api(request, user, method, target, data):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        url = stor.get_link(data.get('url'), api=True)
+        url = store.get_link(data.get('url'), api=True)
         requests.put(url, json=json.loads(data.get('data')))
 
         return JsonResponse({
