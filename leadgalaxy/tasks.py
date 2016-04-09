@@ -4,7 +4,7 @@ import traceback
 import time
 from celery import Celery
 from simplejson import JSONDecodeError
-import newrelic.agent
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -31,30 +31,34 @@ def export_product(req_data, target, user_id):
     store = req_data['store']
     data = req_data['data']
     original_data = req_data.get('original', '')
-    from_extension = ('access_token' in req_data)
 
     user = User.objects.get(id=user_id)
 
-    newrelic_params = {
+    raven_client.user_context({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email
+    })
+
+    raven_client.extra_context({
         'target': target,
         'store': store,
-        'user': user.username,
         'product': req_data.get('product'),
-        'from_extension': from_extension
-    }
+        'from_extension': ('access_token' in req_data)
+    })
 
     try:
         try:
             store = ShopifyStore.objects.get(id=store)
         except ValueError:
-            newrelic.agent.record_exception(params=newrelic_params)
+            raven_client.captureException()
 
             store = ShopifyStore.objects.get(title=store)
 
         user.can_view(store)
 
     except (ShopifyStore.DoesNotExist, ValueError):
-        newrelic.agent.record_exception(params=newrelic_params)
+        raven_client.captureException()
 
         return {
             'error': 'Selected store (%s) not found' % (store)
@@ -85,8 +89,7 @@ def export_product(req_data, target, user_id):
     try:
         import_store = utils.get_domain(original_url)
     except:
-        newrelic_params['original_url'] = original_url
-        newrelic.agent.record_exception(params=newrelic_params)
+        raven_client.captureException(extra={'original_url': original_url})
 
         return {
             'error': 'Original URL is not set.'
@@ -127,8 +130,7 @@ def export_product(req_data, target, user_id):
                         if mapped:
                             r = mapped
                     except Exception as e:
-                        newrelic.agent.record_exception(params=newrelic_params)
-                        traceback.print_exc()
+                        raven_client.captureException()
 
             if 'product' not in r.json():
                 rep = r.json()
@@ -137,23 +139,23 @@ def export_product(req_data, target, user_id):
                 return {'error': 'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
 
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
-            newrelic.agent.record_exception(params=newrelic_params)
+            raven_client.captureException()
             return {'error': 'Shopify API is not available, please try again.'}
 
         except ShopifyProduct.DoesNotExist:
-            newrelic.agent.record_exception(params=newrelic_params)
+            raven_client.captureException()
             return {
                 'error': "Product {} does not exist".format(req_data.get('product'))
             }
 
         except PermissionDenied as e:
-            newrelic.agent.record_exception(params=newrelic_params)
+            raven_client.captureException()
             return {
                 'error': "Product: {}".format(e.message)
             }
 
         except:
-            newrelic.agent.record_exception(params=newrelic_params)
+            raven_client.captureException()
             print 'WARNING: SHOPIFY EXPORT EXCEPTION:'
             traceback.print_exc()
 
@@ -171,13 +173,13 @@ def export_product(req_data, target, user_id):
                     original_url = product.get_original_info().get('url', '')
 
                 except ShopifyProduct.DoesNotExist:
-                    newrelic.agent.record_exception(newrelic_params)
+                    raven_client.captureException()
                     return {
                         'error': "Product {} does not exist".format(req_data['product'])
                     }
 
                 except PermissionDenied as e:
-                    newrelic.agent.record_exception(newrelic_params)
+                    raven_client.captureException()
                     return {
                         'error': "Product: {}".format(e.message)
                     }
@@ -206,13 +208,13 @@ def export_product(req_data, target, user_id):
                 user.can_edit(product)
 
             except ShopifyProduct.DoesNotExist:
-                newrelic.agent.record_exception(params={'user': user, 'product': req_data['product']})
+                raven_client.captureException()
                 return {
                     'error': "Product {} does not exist".format(req_data['product'])
                 }
 
             except PermissionDenied as e:
-                newrelic.agent.record_exception(params={'user': user, 'product': req_data['product']})
+                raven_client.captureException()
                 return {
                     'error': "Product: {}".format(e.message)
                 }
@@ -241,7 +243,7 @@ def export_product(req_data, target, user_id):
                 user.can_add(product)
 
             except PermissionDenied as e:
-                newrelic.agent.record_exception(newrelic_params)
+                raven_client.captureException()
                 return {
                     'error': "Add Product: {}".format(e.message)
                 }

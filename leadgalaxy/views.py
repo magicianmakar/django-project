@@ -29,7 +29,7 @@ import json
 import requests
 import arrow
 import traceback
-import newrelic.agent
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
 from province_helper import load_uk_provincess
@@ -66,7 +66,7 @@ def api(request, target):
     elif method == 'GET' or method == 'DELETE':
         data = request.GET
     else:
-        print 'ERROR: UNSUPPORTED REQUEST METHOD %s' % method
+        raven_client.captureMessage('Unsupported Request Method', extra={'method': method})
         return JsonResponse({'error': 'Unsupported Request Method'}, status=501)
 
     if 'access_token' in data:
@@ -81,26 +81,36 @@ def api(request, target):
     if target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress'] and not user:
         return JsonResponse({'error': 'Unauthenticated API call.'}, status=401)
 
+    if user:
+        raven_client.user_context({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        })
+    else:
+        raven_client.user_context({
+            'id': 0,
+            'username': 'Anonymous',
+        })
+
+    raven_client.context.merge(raven_client.get_data_from_request(request))
+
     try:
         res = proccess_api(request, user, method, target, data)
         if res is None:
-            print 'ERROR: API Response is empty'
+            raven_client.captureMessage('API Response is empty')
             res = JsonResponse({'error': 'Internal Server Error'}, status=500)
-    except PermissionDenied as e:
-        newrelic.agent.record_exception(params={'user': user})
 
+    except PermissionDenied as e:
+        raven_client.captureException()
         res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
 
     except requests.Timeout:
-        newrelic.agent.record_exception(params={'user': user})
-        return JsonResponse({'error': 'API Request Timeout'}, status=501)
+        raven_client.captureException()
+        res = JsonResponse({'error': 'API Request Timeout'}, status=501)
 
     except:
-        print 'ERROR: API EXCEPTION:'
-        traceback.print_exc()
-
-        newrelic.agent.record_exception(params={'user': user})
-
+        raven_client.captureException()
         res = JsonResponse({'error': 'Internal Server Error'}, status=500)
 
     return res
@@ -899,9 +909,7 @@ def proccess_api(request, user, method, target, data):
             assert len(source_id) > 0, 'Empty Order ID'
             assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
         except AssertionError as e:
-            params = data.dict()
-            params['user'] = user.username
-            newrelic.agent.record_exception(params=params)
+            raven_client.captureMessage('Non valid Aliexpress Order ID')
 
             return JsonResponse({'error': e.message}, status=501)
 
@@ -916,7 +924,7 @@ def proccess_api(request, user, method, target, data):
             user.can_view(store)
 
         except ShopifyStore.DoesNotExist:
-            newrelic.agent.record_exception(params={'user': user, 'store': data.get('store')})
+            raven_client.captureException()
             return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
 
         order = ShopifyOrder(user=user.models_user,
@@ -1198,6 +1206,7 @@ def proccess_api(request, user, method, target, data):
             'hash': reg.register_hash
         })
 
+    raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
 
@@ -1232,7 +1241,7 @@ def webhook(request, provider, option):
                 'payer_id': request.POST['payer_id'],
             }
         except Exception as e:
-            newrelic.agent.record_exception()
+            raven_client.captureException()
 
             send_mail(subject='Shopified App: Webhook exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
@@ -1293,7 +1302,7 @@ def webhook(request, provider, option):
                 return HttpResponse('ok')
 
             except Exception as e:
-                newrelic.agent.record_exception()
+                raven_client.captureException()
 
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
                           recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
@@ -1498,9 +1507,7 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
         except Exception as e:
-            print 'Exception:', e
-            traceback.print_exc()
-            newrelic.agent.record_exception()
+            raven_client.captureException()
 
             send_mail(subject='[Shopified App] JVZoo Webhook Exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
@@ -1596,9 +1603,7 @@ def webhook(request, provider, option):
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(option))
         except:
-            print 'WEBHOOK: exception:'
-            traceback.print_exc()
-            newrelic.agent.record_exception()
+            raven_client.captureException()
 
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
@@ -2097,11 +2102,8 @@ def get_shipping_info(request):
     try:
         shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
     except requests.Timeout:
-        newrelic.agent.record_exception(params={
-            'aliexpress_id': aliexpress_id,
-            'product': product,
-            'country': country_code
-        })
+        raven_client.context.merge(raven_client.get_data_from_request(request))
+        raven_client.captureException()
 
         if request.GET.get('type') == 'json':
             return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)

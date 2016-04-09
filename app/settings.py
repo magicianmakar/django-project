@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'raven.contrib.django.raven_compat',
     'widget_tweaks',    # For forms
     'hijack',
     'compat',
@@ -230,3 +231,7 @@ CELERY_TASK_RESULT_EXPIRES = 1800
 BROKER_TRANSPORT_OPTIONS = {'max_connections': 10}
 BROKER_POOL_LIMIT = 10
 CELERYD_CONCURRENCY = 4
+
+RAVEN_CONFIG = {
+    'dsn': 'https://30d5c32fb8974ed4852091787c978228:0bfa090f08724fa1a811c92f9faf45b6@app.getsentry.com/73543',
+}

@@ -435,3 +435,5 @@ $(function() {
 
     $('.itooltip').tooltip();
 });
+
+Raven.config('//9449f975eb984492bc9205e5acd0f36a@app.getsentry.com/73544').install();
