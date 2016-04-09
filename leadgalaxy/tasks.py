@@ -4,7 +4,6 @@ import traceback
 import time
 from celery import Celery
 from simplejson import JSONDecodeError
-from raven.contrib.django.raven_compat.models import client as raven_client
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
@@ -12,6 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import *
 import utils
