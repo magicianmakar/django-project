@@ -272,6 +272,10 @@ $('#export-btn').click(function () {
             $.each(attrs, function(k, att) {
                 var att_val = $('[name="' + att + '"]', tr).val();
                 if (att_val && att_val.length > 0) {
+                    if (k > 3) {
+                        att_val = parseFloat(att_val);
+                    }
+
                     variant_data[att] = att_val;
                 }
             });
