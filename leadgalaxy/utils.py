@@ -421,6 +421,9 @@ def get_shopify_variant_image(store, product_id, variant_id):
     variant_id = safeInt(variant_id)
     image = None
 
+    if not product_id:
+        return None
+
     try:
         cached = ShopifyProductImage.objects.get(store=store, product=product_id, variant=variant_id)
         return cached.image

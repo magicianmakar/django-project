@@ -835,6 +835,8 @@ def proccess_api(request, user, method, target, data):
                 'status': 'ok',
                 'image': image
             })
+        else:
+            return JsonResponse({'error': 'Image not found'}, status=404)
 
     if method == 'POST' and target == 'variants-mapping':
         product = ShopifyProduct.objects.get(id=data.get('product'))
