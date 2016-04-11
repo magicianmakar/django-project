@@ -280,9 +280,10 @@ class ShopifyStore(models.Model):
 
     @cached_property
     def get_info(self):
-        return requests.get(
-            url=self.get_link('/admin/shop.json', api=True)
-        ).json()['shop']
+        rep = requests.get(url=self.get_link('/admin/shop.json', api=True))
+        rep = rep.json()
+
+        return rep['shop']
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
