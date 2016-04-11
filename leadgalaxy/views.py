@@ -1585,8 +1585,11 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
-                if product.shopify_export:
-                    product.shopify_export.delete()
+                try:
+                    if product.shopify_export:
+                        product.shopify_export.delete()
+                except ShopifyProductExport.DoesNotExist:
+                    pass
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
                     call_count=F('call_count')+1)
