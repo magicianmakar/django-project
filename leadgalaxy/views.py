@@ -323,6 +323,11 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'export-product':
         task = tasks.export_product.AsyncResult(data.get('id'))
+        count = utils.safeInt(data.get('count'))
+
+        if count == 60:
+            raven_client.context.merge(raven_client.get_data_from_request(request))
+            raven_client.captureMessage('Celery Task is takaing too long.', level='warning')
 
         if not task.ready():
             return JsonResponse({
