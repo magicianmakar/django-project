@@ -264,6 +264,9 @@ def format_data(data, title=True):
 def format_shopify_error(data):
     errors = data['errors']
 
+    if isinstance(errors, basestring):
+        return errors
+
     msg = []
     for k, v in errors.items():
         if type(v) is list:
