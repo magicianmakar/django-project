@@ -113,6 +113,8 @@ def api(request, target):
         raven_client.captureException()
         res = JsonResponse({'error': 'Internal Server Error'}, status=500)
 
+    raven_client.context.clear()
+
     return res
 
 
@@ -2109,6 +2111,7 @@ def get_shipping_info(request):
     except requests.Timeout:
         raven_client.context.merge(raven_client.get_data_from_request(request))
         raven_client.captureException()
+        raven_client.context.clear()
 
         if request.GET.get('type') == 'json':
             return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)
