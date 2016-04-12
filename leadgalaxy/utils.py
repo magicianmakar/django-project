@@ -287,7 +287,7 @@ def verify_shopify_webhook(store, request):
     from hashlib import sha256
 
     api_secret = store.get_api_credintals().get('api_secret')
-    webhook_hash = hmac.new(api_secret, request.body, sha256).digest()
+    webhook_hash = hmac.new(api_secret.encode(), request.body, sha256).digest()
     webhook_hash = base64.encodestring(webhook_hash).strip()
 
     assert webhook_hash == request.META.get('X-Shopify-Hmac-Sha256'), 'Webhook Verification'
