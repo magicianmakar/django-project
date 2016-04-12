@@ -329,7 +329,7 @@ def proccess_api(request, user, method, target, data):
 
         if count == 60:
             raven_client.context.merge(raven_client.get_data_from_request(request))
-            raven_client.captureMessage('Celery Task is takaing too long.', level='warning')
+            raven_client.captureMessage('Celery Task is taking too long.', level='warning')
 
         if not task.ready():
             return JsonResponse({
