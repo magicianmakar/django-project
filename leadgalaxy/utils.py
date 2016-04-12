@@ -286,12 +286,11 @@ def verify_shopify_webhook(store, request):
     import base64
     from hashlib import sha256
 
-    webhook_data = request.body
     api_secret = store.get_api_credintals().get('api_secret')
-    webhook_hash = hmac.new(api_secret.encode(), webhook_data, sha256).digest()
+    webhook_hash = hmac.new(api_secret, request.body, sha256).digest()
     webhook_hash = base64.encodestring(webhook_hash).strip()
 
-    assert webhook_hash == request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256'), 'Webhook Verification'
+    assert webhook_hash == request.META.get('X-Shopify-Hmac-Sha256'), 'Webhook Verification'
 
 
 def slack_invite(data):
