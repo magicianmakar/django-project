@@ -234,4 +234,5 @@ CELERYD_CONCURRENCY = 4
 
 RAVEN_CONFIG = {
     'dsn': 'https://30d5c32fb8974ed4852091787c978228:0bfa090f08724fa1a811c92f9faf45b6@app.getsentry.com/73543',
+    'release': os.environ.get('HEROKU_SLUG_COMMIT')
 }
