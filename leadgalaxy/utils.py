@@ -281,6 +281,18 @@ def format_shopify_error(data):
     return ' | '.join(msg)
 
 
+def verify_shopify_webhook(store, request):
+    import hmac
+    import base64
+    from hashlib import sha256
+
+    api_secret = store.get_api_credintals().get('api_secret')
+    webhook_hash = hmac.new(api_secret.encode(), request.body.encode('utf8'), sha256).digest()
+    webhook_hash = base64.encodestring(webhook_hash).strip()
+
+    assert webhook_hash == request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256'), 'Webhook Verification'
+
+
 def slack_invite(data):
     success = False
     rep = ''

@@ -267,6 +267,14 @@ class ShopifyStore(models.Model):
 
         return url
 
+    def get_api_credintals(self):
+        api_key, api_secret = re.findall(r'(\w+):(\w+)', self.api_url).pop()
+
+        return {
+            'api_key': api_key,
+            'api_secret': api_secret
+        }
+
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query=''):
         return requests.get(
             url=self.get_link('/admin/orders/count.json', api=True),

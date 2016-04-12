@@ -1540,6 +1540,12 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
+            try:
+                utils.verify_shopify_webhook(store, request)
+            except:
+                raven_client.context.merge(raven_client.get_data_from_request(request))
+                raven_client.captureException()
+
             if 'products' in option:
                 # Shopify send a JSON POST request
                 shopify_product = json.loads(request.body)
