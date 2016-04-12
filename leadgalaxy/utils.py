@@ -2,7 +2,6 @@ import os
 import json
 import requests
 import uuid
-import md5
 import hashlib
 import traceback
 import pytz
@@ -49,11 +48,11 @@ def get_domain(url):
 
 def random_hash():
     token = str(uuid.uuid4())
-    return md5.new(token).hexdigest()
+    return hashlib.md5(token).hexdigest()
 
 
 def hash_text(text):
-    return md5.new(text).hexdigest()
+    return hashlib.md5(text).hexdigest()
 
 def create_new_profile(user):
     plan = GroupPlan.objects.filter(default_plan=1).first()
@@ -68,7 +67,7 @@ def get_access_token(user):
         access_token = AccessToken.objects.filter(user=user).latest('created_at')
     except:
         token = str(uuid.uuid4())
-        token = md5.new(token).hexdigest()
+        token = hashlib.md5(token).hexdigest()
 
         access_token = AccessToken(user=user, token=token)
         access_token.save()
@@ -544,7 +543,7 @@ def shopify_link_images(store, product):
 
 
 def webhook_token(store_id):
-    return md5.new('{}-{}'.format(store_id, settings.SECRET_KEY)).hexdigest()
+    return hashlib.md5('{}-{}'.format(store_id, settings.SECRET_KEY)).hexdigest()
 
 
 def create_shopify_webhook(store, topic):
