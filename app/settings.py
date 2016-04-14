@@ -27,7 +27,7 @@ SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
 DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
 ALLOWED_HOSTS = [
-    'app.shopifiedapp.com',
+    '.shopifiedapp.com',
 ]
 
 # Application definition
@@ -136,9 +136,6 @@ if os.environ.get('DATABASE_URL'):
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Allow all host headers
-ALLOWED_HOSTS = ['*']
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
