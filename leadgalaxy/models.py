@@ -67,6 +67,9 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_new_alerts(self):
+        return self.user.models_user.aliexpressproductchange_set.filter(seen=False).count()
+
     @cached_property
     def get_perms(self):
         perms = list(self.plan.permissions.all().values_list('name', flat=True))

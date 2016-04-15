@@ -2883,6 +2883,10 @@ def products_update(request):
 
     tpl = 'product_alerts.html' if product else 'products_update.html'
 
+    # Delete sidebar alert info cache
+    from django.core.cache.utils import make_template_fragment_key
+    cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
+
     return render(request, tpl, {
         'product_changes': product_changes,
         'show_hidden': show_hidden,
