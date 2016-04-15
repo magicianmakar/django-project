@@ -6,6 +6,7 @@ import hashlib
 import traceback
 import pytz
 import collections
+import time
 from urlparse import urlparse
 import xml.etree.ElementTree as ET
 
@@ -85,6 +86,28 @@ def get_user_from_token(token):
         return access_token.user
 
     return None
+
+
+def login_attempts_exceeded(username):
+    from django.core.cache import cache
+
+    tries_key = 'login_attempts_{}'.format(hash_text(username.lower()))
+    tries = cache.get(tries_key)
+    if tries is None:
+        tries = {'count': 1, 'username': username}
+    else:
+        tries['count'] = tries.get('count', 1) + 1
+
+    cache.set(tries_key, tries, timeout=600)
+
+    if tries['count'] != 1:
+        if tries['count'] < 5:
+            time.sleep(1)
+            return False
+        else:
+            return True
+    else:
+        return False
 
 
 def generate_plan_registration(plan, data={}, bundle=None, sender=None):

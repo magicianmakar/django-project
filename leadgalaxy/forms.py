@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms import ValidationError
 
 from .models import UserProfile
+from .utils import login_attempts_exceeded
 
 
 class BsErrorList(ErrorList):
@@ -135,6 +136,18 @@ class UserProfileEmailForm(forms.Form):
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']
+        if login_attempts_exceeded(username):
+            from raven.contrib.django.raven_compat.models import client as raven_client
+            raven_client.captureMessage('Maximum login attempts reached',
+                                        extra={'username': username, 'from': 'WebApp'},
+                                        level='warning')
+
+            raise ValidationError(
+                "You have reached the maximum login attempts. Please try again later.",
+                code='invalid_login',
+                params={'username': self.username_field.verbose_name},
+            )
+
         email_login = '@' in username
         try:
             if email_login:

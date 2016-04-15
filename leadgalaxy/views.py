@@ -26,6 +26,7 @@ import tasks
 import os
 import re
 import json
+import time
 import requests
 import arrow
 import traceback
@@ -122,6 +123,18 @@ def proccess_api(request, user, method, target, data):
     if target == 'login':
         username = data.get('username')
         password = data.get('password')
+
+        if not username or not password:
+            return JsonResponse({'error': 'Username or password not set'}, status=403)
+
+        if utils.login_attempts_exceeded(username):
+            raven_client.context.merge(raven_client.get_data_from_request(request))
+            raven_client.captureMessage('Maximum login attempts reached',
+                                        extra={'username': username, 'from': 'API'},
+                                        level='warning')
+
+            return JsonResponse({'error': 'You have reached the maximum login attempts.\n'
+                                          'Please try again later.'}, status=403)
 
         if '@' in username:
             try:
