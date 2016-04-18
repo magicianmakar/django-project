@@ -7,6 +7,7 @@ from leadgalaxy import utils
 import json
 import requests
 
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
 SHOPIFIEDAPP_WEBHOOK_BASE = 'http://app.shopifiedapp.com/webhook/price-notification/product'
@@ -25,6 +26,12 @@ class Command(BaseCommand):
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
 
     def handle(self, *args, **options):
+        try:
+            self.start_command(*args, **options)
+        except:
+            raven_client.captureException()
+
+    def start_command(self, *args, **options):
         action = options['action'][0]
 
         if not options['plan_id']:
@@ -119,9 +126,11 @@ class Command(BaseCommand):
 
             product_id = product.get_source_id()
             if not product_id:
+                raven_client.captureException()
                 self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Product ID'.format(product.id)))
                 return
         except Exception as e:
+            raven_client.captureException()
             self.stdout.write(self.style.ERROR(' * Excpetion: {} - Product: {}'.format(repr(e), product.id)))
             return
 
@@ -147,6 +156,7 @@ class Command(BaseCommand):
                 }
             )
         except Exception as e:
+            raven_client.captureException()
             self.stdout.write(self.style.ERROR(' * API Call error: {}'.format(repr(e))))
             return
 
@@ -159,5 +169,6 @@ class Command(BaseCommand):
             product.price_notification_id = data['id']
             product.save()
         except Exception as e:
+            raven_client.captureException()
             self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(product.id, repr(e), rep.text)))
             return

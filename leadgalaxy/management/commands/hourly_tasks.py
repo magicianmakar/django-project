@@ -3,11 +3,12 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 import requests
-import traceback
 from simplejson import JSONDecodeError
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
+
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 
 class Command(BaseCommand):
@@ -15,6 +16,12 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
+        try:
+            self.start_command(*args, **options)
+        except:
+            raven_client.captureException()
+
+    def start_command(self, *args, **options):
         # TODO: Repeated code
         # Auto fulfill (Hourly)
         time_threshold = timezone.now() - timezone.timedelta(hours=1)
@@ -48,12 +55,8 @@ class Command(BaseCommand):
                     count += 1
                     if count % 50 == 0:
                         print 'Fulfill Progress: %d' % count
-
-            except JSONDecodeError:
-                print 'ERROR: JSON DECODE ERROR'
             except:
-                print 'ERROR: Fulfill Exception:'
-                traceback.print_exc()
+                raven_client.captureException()
 
     def profile_changed(self, profile, expired_plan, new_plan):
         data = {

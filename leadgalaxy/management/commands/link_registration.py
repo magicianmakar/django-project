@@ -1,11 +1,9 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
-from django.utils import timezone
-
-import requests
 
 from leadgalaxy.models import *
-from leadgalaxy import utils
+
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 
 class Command(BaseCommand):
@@ -14,6 +12,12 @@ class Command(BaseCommand):
                             action='store_true', help='Show Unregistered Emails')
 
     def handle(self, *args, **options):
+        try:
+            self.start_command(*args, **options)
+        except:
+            raven_client.captureException()
+
+    def start_command(self, *args, **options):
         registartions = PlanRegistration.objects.filter(expired=False).exclude(plan=None).exclude(email='')
         for reg in registartions:
             if reg.get_usage_count() is not None:
@@ -27,6 +31,7 @@ class Command(BaseCommand):
                 continue
             except:
                 print 'WARNING: Get Email Exception for:', reg.email
+                raven_client.captureException()
                 continue
 
             profile = user.profile
