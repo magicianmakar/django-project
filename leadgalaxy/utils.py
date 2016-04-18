@@ -3,7 +3,6 @@ import json
 import requests
 import uuid
 import hashlib
-import traceback
 import pytz
 import collections
 import time
@@ -14,9 +13,10 @@ from django.core.mail import send_mail
 from django.template import Context, Template
 from django.utils import timezone
 from django.utils.html import strip_tags
-from django.utils.text import wrap
 from django.core.paginator import Paginator
 from django.core.cache import cache
+
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from app import settings
@@ -127,7 +127,9 @@ def get_plan(plan_hash=None, plan_slug=None):
         else:
             return GroupPlan.objects.get(slug=plan_slug)
     except:
-        print 'ERROR: PLAN NOT FOUND: plan_hash={}, plan_slug={}'.format(plan_hash, plan_slug)
+        raven_client.captureMessage('Plan Not Found',
+                                    extra={'plan_hash': plan_hash, 'plan_slug': plan_slug})
+
         return None
 
 
@@ -147,10 +149,10 @@ def apply_plan_registrations(email=''):
             user = User.objects.get(email__iexact=reg.email)
             profile = user.profile
         except User.DoesNotExist:
-            #print 'Not registred yet:', reg.email
+            # Not registred yet
             continue
-        except Exception as e:
-            print 'WARNING: REGISTRATIONS: Get Email Exception for: {} - Error: {}'.format(reg.email, repr(e))
+        except Exception:
+            raven_client.captureException(extra={'email': reg.email})
             continue
 
         if reg.plan:
@@ -598,7 +600,7 @@ def create_shopify_webhook(store, topic):
     try:
         webhook_id = rep.json()['webhook']['id']
     except:
-        print 'WEBHOOK:', rep.text
+        raven_client.captureException()
 
     if not webhook_id:
         return None
@@ -849,7 +851,9 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         r = r.json()
         errorCode = r['errorCode']
         if errorCode != 20010000:
-            print 'Aliexpress Promotion Error:', r
+            raven_client.captureMessage('Aliexpress Promotion Error',
+                                        extra={'errorCode': errorCode},
+                                        level='warning')
             return None
 
         if len(r['result']['promotionUrls']):
@@ -858,12 +862,7 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             return None
 
     except:
-        print 'Aliexpress Promotion Exception:'
-        traceback.print_exc()
-        try:
-            print utils.object_dump(r, 'Aliexpress API Response')
-        except:
-            pass
+        raven_client.captureException(level='warning')
 
     return None
 
@@ -1258,7 +1257,7 @@ class ProductsCollectionPaginator(Paginator):
                 self._count = rep.get('count', 0)
                 self._products = rep.get('products')
             except:
-                traceback.print_exc()
+                raven_client.captureException()
                 self._count = 0
 
         return self._count
