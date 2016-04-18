@@ -388,10 +388,10 @@ def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
 
 
-def get_shopify_products(store, page=1, limit=50, all_products=False):
+def get_shopify_products(store, page=1, limit=50, all_products=False, session=requests):
     if not all_products:
         print 'Get Page: %d Limit: %d' % (page, limit)
-        rep = requests.get(
+        rep = session.get(
             url=store.get_link('/admin/products.json', api=True),
             params={
                 'page': page,
@@ -412,7 +412,8 @@ def get_shopify_products(store, page=1, limit=50, all_products=False):
         print 'Count:', count
         pages = int(ceil(count/float(limit)))
         for page in xrange(1, pages+1):
-            rep = get_shopify_products(store, page=page, limit=limit, all_products=False)
+            rep = get_shopify_products(store=store, page=page, limit=limit,
+                                       all_products=False, session=requests.session())
             for p in rep:
                 yield p
 
