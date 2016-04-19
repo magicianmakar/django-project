@@ -2450,11 +2450,13 @@ def user_profile(request):
                 'url': 'http://www.shopifiedapp.com/unlimited',
             })
 
+    bundles = profile.bundles.filter(hidden_from_user=False)
 
     return render(request, 'user/profile.html', {
         'countries': utils.get_countries(),
         'now': timezone.now(),
         'extra_bundles': extra_bundles,
+        'bundles': bundles,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })

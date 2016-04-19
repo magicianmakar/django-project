@@ -140,7 +140,6 @@
 
                                 </div>
                             </div>
-                        {% with bundles=user.profile.bundles.all %}
                             <div class="col-md-12">
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
@@ -152,9 +151,11 @@
 
                                             <ul class="list-group">
                                             {% for item in bundles %}
+                                                {% if not item.hidden_from_user %}
                                                 <li class="list-group-item" style="border:0 none">
                                                     <b>{{item.title}}</b>
                                                 </li>
+                                                {% endif %}
                                             {% endfor %}
                                             </ul>
                                         {% else %}
@@ -174,7 +175,6 @@
                                     </div>
                                 </div>
                             </div>
-                        {% endwith %}
                         </div>
                     </div>
                 </div>

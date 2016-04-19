@@ -626,6 +626,7 @@ class FeatureBundle(models.Model):
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Bundle Slug")
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
     description = models.CharField(max_length=512, blank=True, default='')
+    hidden_from_user = models.BooleanField(default=False, verbose_name='Hide in User Profile')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
