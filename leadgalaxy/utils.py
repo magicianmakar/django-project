@@ -77,6 +77,9 @@ def get_access_token(user):
 
 
 def get_user_from_token(token):
+    if not token:
+        return None
+
     try:
         access_token = AccessToken.objects.get(token=token)
     except:
