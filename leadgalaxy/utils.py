@@ -80,6 +80,7 @@ def get_user_from_token(token):
     try:
         access_token = AccessToken.objects.get(token=token)
     except:
+        raven_client.captureException()
         return None
 
     if len(token) and access_token:
@@ -319,32 +320,24 @@ def verify_shopify_webhook(store, request):
 
 
 def slack_invite(data):
-    success = False
-    rep = ''
     try:
         r = requests.post(
-                url='https://shopifiedapp.slack.com/api/users.admin.invite',
-                data={
-                    'email': data['email'],
-                    'first_name': data['firstname'],
-                    'last_name': data['lastname'],
-                    'channels': 'C0M6TTRAM,C0M6V41S4,C0V7P4TTM',
-                    'token': 'xoxp-21001000400-20999486737-21000357922-4047773e5d',
-                    'set_active': True,
-                    '_attempts': 1
-                }
+            url='https://shopifiedapp.slack.com/api/users.admin.invite',
+            data={
+                'email': data['email'],
+                'first_name': data['firstname'],
+                'last_name': data['lastname'],
+                'channels': 'C0M6TTRAM,C0M6V41S4,C0V7P4TTM',
+                'token': 'xoxp-21001000400-20999486737-21000357922-4047773e5d',
+                'set_active': True,
+                '_attempts': 1
+            }
         )
 
-        success = (r.json()['ok'] or r.json().get('error') in ['already_invited', 'already_in_team'])
-        rep = r.text
-    except Exception as e:
-        rep = str(e)
+        assert (r.json()['ok'] or r.json().get('error') in ['already_invited', 'already_in_team']), 'Slack Invite Fail'
 
-    if not success:
-        send_mail(subject='Slack Invite Fail',
-                  recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
-                  from_email=settings.DEFAULT_FROM_EMAIL,
-                  message='Slack Invite was not sent to {} due the following error:\n{}'.format(data['email'], rep))
+    except:
+        raven_client.captureException()
 
 
 def aliexpress_shipping_info(aliexpress_id, country_code):
