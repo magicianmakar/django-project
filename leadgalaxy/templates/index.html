@@ -65,7 +65,7 @@
                       </td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
-                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank">
+                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
                             <i class="fa fa-external-link"></i> Visit Store
                         </a>
 
@@ -81,7 +81,7 @@
                       <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
-                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}" target="_blank"> Visit Store</a>
+                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank"> Visit Store</a>
                       </td>
                     {% endif %}
                     </tr>
