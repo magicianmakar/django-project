@@ -1385,7 +1385,7 @@ def webhook(request, provider, option):
             data = utils.jvzoo_parse_post(params)
 
             trans_type = data['trans_type']
-            if trans_type not in ['SALE', 'BILL', 'RFND', 'CGBK', 'INSF']:
+            if trans_type not in ['SALE', 'BILL', 'RFND', 'CANCEL-REBILL', 'CGBK', 'INSF']:
                 raise Exception('Unknown Transaction Type: {}'.format(trans_type))
 
             if trans_type == 'SALE':
@@ -1477,7 +1477,7 @@ def webhook(request, provider, option):
                                       data=json.dumps(data))
                 payment.save()
 
-            elif trans_type in ['RFND', 'CGBK', 'INSF']:
+            elif trans_type in ['RFND', 'CANCEL-REBILL', 'CGBK', 'INSF']:
                 try:
                     user = User.objects.get(email__iexact=data['email'])
                 except User.DoesNotExist:
