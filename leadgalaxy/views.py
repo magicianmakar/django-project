@@ -1401,8 +1401,8 @@ def webhook(request, provider, option):
                         print 'WARNING: JVZOO SALE UPGARDING: {} to {}'.format(data['email'], plan.title)
                     except User.DoesNotExist:
                         user = None
-                    except Exception as e:
-                        print 'WARNING: JVZOO SALE EXCEPTION: {}'.format(repr(e))
+                    except Exception:
+                        raven_client.captureException()
                         user = None
 
                     if user:
