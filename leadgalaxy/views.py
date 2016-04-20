@@ -1483,7 +1483,8 @@ def webhook(request, provider, option):
                 except User.DoesNotExist:
                     user = None
 
-                new_refund = PlanPayment.objects.filter(payment_id=params['ctransreceipt'], transaction_type='RFND').count() == 0
+                new_refund = PlanPayment.objects.filter(payment_id=params['ctransreceipt'],
+                                                        transaction_type=trans_type).count() == 0
 
                 if new_refund:
                     if user:
