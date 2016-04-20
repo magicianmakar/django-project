@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
         for permission in options['permission']:
-            for p in AppPermission.objects.filter(name='price_changes.use'):
+            for p in AppPermission.objects.filter(name=permission):
                 for plan in p.groupplan_set.all():
                     self.stdout.write(self.style.MIGRATE_SUCCESS(
                         '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
