@@ -476,7 +476,8 @@ var ravenOptions = {
     /extensions\//i,
     /^chrome:\/\//i,
     // Other plugins
-    /127\.0\.0\.1:4001\/isrunning/i,  // Cacaoweb
+    /127\.0\.0\.1/i,
+    /localhost/i,
     /webappstoolbarba\.texthelp\.com\//i,
     /metrics\.itunes\.apple\.com\.edgesuite\.net\//i,
     // AViary Image Editor
