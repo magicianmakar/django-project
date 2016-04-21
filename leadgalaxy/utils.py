@@ -82,6 +82,8 @@ def get_user_from_token(token):
 
     try:
         access_token = AccessToken.objects.get(token=token)
+    except AccessToken.DoesNotExist:
+        return None
     except:
         raven_client.captureException()
         return None
