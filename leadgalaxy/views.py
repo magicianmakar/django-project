@@ -1391,6 +1391,16 @@ def webhook(request, provider, option):
             if trans_type == 'SALE':
                 if plan:
                     data['jvzoo'] = params
+
+                    expire = request.GET.get('expire')
+                    if expire:
+                        if expire != '1y':
+                            raven_client.captureMessage('Unsupported Expire format',
+                                                        extra={'expire': expire})
+
+                        expire_date = timezone.now() + timezone.timedelta(days=365)
+                        data['expire_date'] = expire_date.isoformat()
+
                     reg = utils.generate_plan_registration(plan, data)
 
                     data['reg_hash'] = reg.register_hash
