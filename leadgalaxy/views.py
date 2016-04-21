@@ -1447,6 +1447,10 @@ def webhook(request, provider, option):
                 for team in slack_teams.split(','):
                     utils.slack_invite(data, team=team)
 
+                smartmemeber = request.GET.get('sm')
+                if smartmemeber:
+                    tasks.smartmemeber_webhook_call.delay(subdomain=smartmemeber, data=params)
+
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
                                       provider='JVZoo',

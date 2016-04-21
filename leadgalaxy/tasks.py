@@ -269,3 +269,13 @@ def export_product(req_data, target, user_id):
         },
         'target': target
     }
+
+
+@app.task
+def smartmemeber_webhook_call(subdomain, data):
+    rep = requests.post(
+        url='https://api.smartmember.com/transaction?type=jvzoo&subdomain={}'.format(subdomain),
+        data=data
+    )
+
+    print 'SMARTMEMEBER WEBHOOK: {} {}'.format(rep.status_code, rep.text)
