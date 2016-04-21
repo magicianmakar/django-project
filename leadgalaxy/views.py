@@ -611,6 +611,16 @@ def proccess_api(request, user, method, target, data):
             }
         })
 
+    if method == 'DELETE' and target == 'access-token':
+        if not user.is_superuser:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        for i in target_user.accesstoken_set.all():
+            i.delete()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'POST' and target == 'product-notes':
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)

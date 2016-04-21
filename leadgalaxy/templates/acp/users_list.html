@@ -107,6 +107,38 @@
             window.open('/admin/leadgalaxy/userprofile/'+profiles[$(this).attr('user-id')]+'/', '_blank');
         }
 
+        function clearAccessToken(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            swal({
+                title: "Delete Access Token",
+                text: 'Delete All Access Tokens for user: ' + $(this).attr('username') + '?',
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+
+                    $.ajax({
+                        type: 'DELETE',
+                        url: '/api/access-token' + '?' + $.param({'user': user_id}),
+                        success: function(data) {
+                            swal('Access Token', 'Deleted', 'success');
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Access Token', data);
+                        },
+                    });
+                }
+            });
+        }
+
         var profiles = {
 {% for profile in profiles  %}
     {{profile.user_id}}: {{profile.id}},
@@ -179,6 +211,15 @@
                             'title': 'Payements',
                             'text': 'P'
                         })
+                    ).append(
+                        $('<a>', {
+                            'href': '#',
+                            'class': 'btn btn-warning btn-outline btn-xs m-l-xs',
+                            'title': 'Clear Access Tokens',
+                            'user-id': info[0],
+                            'username': info[1],
+                            'text': 'C'
+                        }).click(clearAccessToken)
                     );
                 });
             });
