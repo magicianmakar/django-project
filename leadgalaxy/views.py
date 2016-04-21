@@ -1432,19 +1432,6 @@ def webhook(request, provider, option):
                                                    recipient=data['email'],
                                                    data=data)
 
-                if plan:
-                    email_info = 'A new registration link was generated and send to a new user.'
-                else:
-                    email_info = 'User {} purchased {} bundle.'.format(user.username if user else data['email'], bundle.title)
-
-                email_info = email_info + '\n\nMore information:\n{}\n{}'.format(utils.format_data(params, title=False),
-                                                                                 utils.format_data(data, title=False))
-
-                send_mail(subject='[Shopified App]: New Purchase',
-                          recipient_list=['chase@shopifiedapp.com'],
-                          from_email='"Shopified App" <support@shopifiedapp.com>',
-                          message=email_info)
-
                 data.update(params)
 
                 payment = PlanPayment(fullname=data['fullname'],
@@ -1454,6 +1441,20 @@ def webhook(request, provider, option):
                                       payment_id=params['ctransreceipt'],
                                       data=json.dumps(data))
                 payment.save()
+
+                tags = {'trans_type': trans_type}
+                if plan:
+                    tags['sale_type'] = 'Plan'
+                    tags['sale_title'] = plan.title
+                else:
+                    tags['sale_type'] = 'Bundle'
+                    tags['sale_title'] = bundle.title
+
+                raven_client.captureMessage('JVZoo New Purchase',
+                                            extra={'name': data['fullname'], 'email': data['email'],
+                                                   'trans_type': trans_type, 'payment': payment.id},
+                                            tags=tags,
+                                            level='info')
 
                 return JsonResponse({'status': 'ok'})
 
@@ -1504,33 +1505,17 @@ def webhook(request, provider, option):
                 payment.save()
 
                 if new_refund:
-                    email_info = ('A Shopified App User has canceled his/her subscription.\n<br>'
-                                  'More information:\n<br>'
-                                  '<a href="http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/">'
-                                  'http://app.shopifiedapp.com/admin/leadgalaxy/planpayment/{0}/'
-                                  '</a>').format(payment.id)
-
-                    send_mail(subject='Shopified App: Cancel/Refund',
-                              recipient_list=['chase@shopifiedapp.com'],
-                              from_email='"Shopified App" <support@shopifiedapp.com>',
-                              message=email_info,
-                              html_message=email_info)
+                    raven_client.captureMessage('JVZoo User Cancel/Refund',
+                                                extra={'name': data['fullname'], 'email': data['email'],
+                                                       'trans_type': trans_type, 'payment': payment.id},
+                                                tags={'trans_type': trans_type},
+                                                level='info')
 
                 return JsonResponse({'status': 'ok'})
 
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
-
-            send_mail(subject='[Shopified App] JVZoo Webhook Exception',
-                      recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
-                      from_email=settings.DEFAULT_FROM_EMAIL,
-                      message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
-                              traceback.format_exc(),
-                              utils.format_data(dict(request.GET.iteritems()), False),
-                              utils.format_data(dict(request.POST.iteritems()), False),
-                              utils.format_data(request.META, False)))
-
-            return JsonResponse({'error': 'Server '}, status=500)
+            return JsonResponse({'error': 'Server Error'}, status=500)
 
         return JsonResponse({'status': 'ok', 'warning': 'Unknown'})
 
