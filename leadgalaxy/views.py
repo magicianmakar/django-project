@@ -1423,7 +1423,6 @@ def webhook(request, provider, option):
                                                        recipient=data['email'],
                                                        data=data)
 
-                    utils.slack_invite(data)
                 else:
                     # Handle bundle purchase
                     data['bundle_title'] = bundle.title
@@ -1443,6 +1442,10 @@ def webhook(request, provider, option):
                                                    data=data)
 
                 data.update(params)
+
+                slack_teams = request.GET.get('slack', 'users')
+                for team in slack_teams.split(','):
+                    utils.slack_invite(data, team=team)
 
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
