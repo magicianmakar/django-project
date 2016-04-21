@@ -274,14 +274,16 @@ def export_product(req_data, target, user_id):
 @app.task
 def smartmemeber_webhook_call(subdomain, data):
     try:
+        data['cprodtitle'] = 'Shopified App Success Club OTO3'
+        data['cproditem'] = '205288'
+
         rep = requests.post(
             url='https://api.smartmember.com/transaction?type=jvzoo&subdomain={}'.format(subdomain),
             data=data
         )
 
-        raven_client.captureMessage('SmartMemeber Webhook',
-                                    extra={'status_code': rep.status_code, 'response': rep.text},
-                                    level='info')
+        raw_rep = rep.text  # variable will be accessible in Sentry
+        assert len(raw_rep) and 'email' in rep.json()
 
     except:
         raven_client.captureException()
