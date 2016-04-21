@@ -153,35 +153,15 @@ def apply_plan_registrations(email=''):
 
         try:
             user = User.objects.get(email__iexact=reg.email)
-            profile = user.profile
+            user.profile.apply_registration(reg, verbose=True)
+
         except User.DoesNotExist:
             # Not registred yet
             continue
+
         except Exception:
             raven_client.captureException(extra={'email': reg.email})
             continue
-
-        if reg.plan:
-            print "REGISTRATIONS: Change user {} ({}) from '{}' to '{}'".format(user.username, user.email, profile.plan.title, reg.plan.title)
-
-            profile.plan = reg.plan
-            profile.save()
-
-            reg.expired = True
-            reg.user = profile.user
-            reg.save()
-
-            if reg.plan.slug == 'subuser-plan':
-                profile.subuser_parent = reg.sender
-                profile.save()
-
-        elif reg.bundle:
-            print "REGISTRATIONS: Add Bundle '{}' to: {} ({})".format(reg.bundle.title, user.username, user.email)
-
-            profile.bundles.add(reg.bundle)
-            reg.user = user
-            reg.expired = True
-            reg.save()
 
 
 def apply_shared_registration(user, registration):

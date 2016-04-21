@@ -1406,13 +1406,7 @@ def webhook(request, provider, option):
                         user = None
 
                     if user:
-                        profile = user.profile
-                        profile.plan = plan
-                        profile.save()
-
-                        reg.user = user
-                        reg.expired = True
-                        reg.save()
+                        user.profile.apply_registration(reg)
                     else:
                         utils.send_email_from_template(tpl='webhook_register.html',
                                                        subject='Your Shopified App Access',
@@ -1429,14 +1423,9 @@ def webhook(request, provider, option):
 
                     try:
                         user = User.objects.get(email__iexact=data['email'])
-                        user.profile.bundles.add(bundle)
-
-                        reg.user = user
-                        reg.expired = True
+                        user.profile.apply_registration(reg)
                     except User.DoesNotExist:
                         user = None
-
-                    reg.save()
 
                     utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
                                                    subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),

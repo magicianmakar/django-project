@@ -56,6 +56,44 @@ class UserProfile(models.Model):
         except:
             return None
 
+    def apply_registration(self, reg, verbose=False):
+        if reg.plan is None and reg.bundle is None:
+            return
+
+        if reg.plan:
+            self.plan = reg.plan
+
+            if reg.plan.slug == 'subuser-plan':
+                self.subuser_parent = reg.sender
+
+            expire = reg.get_data().get('expire_date')
+            if expire:
+                import arrow
+                from leadgalaxy.utils import get_plan
+
+                expire = arrow.get(expire)  # expire is an ISO format date
+
+                # Chane to Free Plan after expiration
+                self.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
+                self.plan_expire_at = expire.datetime
+
+            if verbose:
+                print "APPLY REGISTRATION: Change User {} ({}) from '{}' to '{}'".format(
+                    self.user.username, self.user.email, self.plan.title, reg.plan.title)
+
+        if reg.bundle:
+            self.bundles.add(reg.bundle)
+
+            if verbose:
+                print "APPLY REGISTRATION: Add Bundle '{}' to: {} ({})".format(
+                    reg.bundle.title, self.user.username, self.user.email)
+
+        self.save()
+
+        reg.user = self.user
+        reg.expired = True
+        reg.save()
+
     def get_active_stores(self, flat=False):
         if self.user.is_subuser:
             stores = self.subuser_stores.all()
@@ -686,6 +724,12 @@ class PlanRegistration(models.Model):
             self.register_hash = md5(str(uuid.uuid4())).hexdigest()
 
         super(PlanRegistration, self).save(*args, **kwargs)
+
+    def get_data(self):
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
 
     def get_email(self):
         email = self.email

@@ -62,11 +62,7 @@ class Command(BaseCommand):
             profile.save()
 
     def apply_plan_registrations(self, profile, registration):
-        profile.plan = registration.plan
-
-        registration.expired = True
-        registration.user = profile.user
-        registration.save()
+        profile.apply_registration(registration)
 
         # Process other purchases (like additional bundles)
         purchases = PlanRegistration.objects.filter(email__iexact=profile.user.email) \
@@ -78,10 +74,4 @@ class Command(BaseCommand):
                 continue
 
             print ' + Add Bundle:', p.bundle.title
-
-            profile.bundles.add(p.bundle)
-            p.user = profile.user
-            p.expired = True
-            p.save()
-
-        profile.save()
+            profile.apply_registration(p)
