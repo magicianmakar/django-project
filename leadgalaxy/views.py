@@ -1443,9 +1443,7 @@ def webhook(request, provider, option):
 
                 data.update(params)
 
-                slack_teams = request.GET.get('slack', 'users')
-                for team in slack_teams.split(','):
-                    utils.slack_invite(data, team=team)
+                tasks.invite_user_to_slack.delay(slack_teams=request.GET.get('slack', 'users'), data=data)
 
                 smartmemeber = request.GET.get('sm')
                 if smartmemeber:
