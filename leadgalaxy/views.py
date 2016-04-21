@@ -52,6 +52,7 @@ def index_view(request):
 
     if request.user.profile.plan.slug == 'jvzoo-free-gift':
         first_visit = False
+        intro_video = True
 
     return render(request, 'index.html', {
         'stores': stores,
