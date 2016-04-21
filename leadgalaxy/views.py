@@ -204,6 +204,7 @@ def proccess_api(request, user, method, target, data):
         stores = []
         for i in user.profile.get_active_stores():
             stores.append({
+                'id': i.id,
                 'name': i.title,
                 'url': i.get_api_url(hide_keys=True)
             })
