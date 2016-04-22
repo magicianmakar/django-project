@@ -1415,6 +1415,7 @@ def webhook(request, provider, option):
 
                         expire_date = timezone.now() + timezone.timedelta(days=365)
                         data['expire_date'] = expire_date.isoformat()
+                        data['expire_param'] = expire
 
                     reg = utils.generate_plan_registration(plan, data)
 

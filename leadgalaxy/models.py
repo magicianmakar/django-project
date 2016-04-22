@@ -69,13 +69,24 @@ class UserProfile(models.Model):
             expire = reg.get_data().get('expire_date')
             if expire:
                 import arrow
+                from django.utils import timezone
                 from leadgalaxy.utils import get_plan
 
                 expire = arrow.get(expire)  # expire is an ISO format date
 
-                # Chane to Free Plan after expiration
-                self.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
-                self.plan_expire_at = expire.datetime
+                if self.plan_expire_at is not None:
+                    delta = self.plan_expire_at - timezone.now()
+                    if delta.days < 30:
+                        # Purchase was made 30 days before the expire date (or after the expire date
+                        # usually 1-2 days, since the daily_task will disable expired account)
+                        # we will renew the expire date to an other 1 year
+                        # TODO: handle dates other than 1 year.
+                        self.plan_expire_at = None
+
+                if self.plan_expire_at is None:
+                    # Chane to Free Plan after expiration
+                    self.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
+                    self.plan_expire_at = expire.datetime
 
             if verbose:
                 print "APPLY REGISTRATION: Change User {} ({}) from '{}' to '{}'".format(
