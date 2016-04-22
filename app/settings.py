@@ -156,7 +156,7 @@ MEDIA_URL = 'http://localhost/'
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 HIJACK_LOGIN_REDIRECT_URL = '/'
-HIJACK_LOGOUT_REDIRECT_URL = '/'
+HIJACK_LOGOUT_REDIRECT_URL = '/acp/users/list'
 HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_USE_BOOTSTRAP = True
 
