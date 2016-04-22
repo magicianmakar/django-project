@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load cache %}
 
 {% block main-container %}
 
@@ -139,6 +140,9 @@
             });
         }
 
+
+{% cache 600 acp_users user.id %}
+
         var profiles = {
 {% for profile in profiles  %}
     {{profile.user_id}}: {{profile.id}},
@@ -159,6 +163,8 @@
 '{{item.date_joined|date}}', ''],
 {% endfor %}
         ];
+
+{% endcache %}
 
         $(document).ready(function() {
             $('.dataTables').on( 'draw.dt', function (e) {
