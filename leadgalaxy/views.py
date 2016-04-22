@@ -1489,6 +1489,7 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif trans_type == 'BILL':
+                data['jvzoo'] = params
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
                                       provider='JVZoo',
