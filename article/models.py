@@ -9,6 +9,8 @@ from django.dispatch import receiver
 
 from multiselectfield import MultiSelectField
 
+from leadgalaxy.models import GroupPlan
+
 PUBLISH_STAT = (
     (0, 'Published'),
     (1, 'Draft'),
@@ -98,10 +100,14 @@ class SidebarLink(models.Model):
     icon = models.CharField(blank=True, default='', max_length=20)
 
     parent = models.ForeignKey('SidebarLink', on_delete=models.SET_NULL, related_name='childs', blank=True, null=True)
-    plans = MultiSelectField(choices=PLAN_CHOICES)
+    display_plans = models.ManyToManyField(GroupPlan, blank=True)
 
     def __str__(self):
         return self.title
+
+    def plans(self):
+        return self.display_plans.values_list('register_hash', flat=True)
+
 
 class Comment(models.Model):
     title = models.CharField(max_length=140)

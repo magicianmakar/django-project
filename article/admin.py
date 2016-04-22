@@ -48,8 +48,13 @@ class CommentAdmin(admin.ModelAdmin):
         }),
     )
 
-admin.site.register(Article)
-# admin.site.register(Comment, CommentAdmin)
-admin.site.register(ArticleTag)
-admin.site.register(SidebarLink)
 
+class SidebarLinkAdmin(admin.ModelAdmin):
+    list_display = ('title', 'order', 'link')
+    search_fields = ('title', 'link')
+    filter_horizontal = ('display_plans',)
+
+
+admin.site.register(Article)
+admin.site.register(ArticleTag)
+admin.site.register(SidebarLink, SidebarLinkAdmin)
