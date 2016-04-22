@@ -106,9 +106,11 @@ class UserProfileEmailForm(forms.Form):
         email = self.cleaned_data["email"]
 
         try:
-            User._default_manager.get(email__iexact=email)
+            if self.user == User._default_manager.get(email__iexact=email):
+                return email
         except User.DoesNotExist:
             return email
+
         raise forms.ValidationError(
             'A user with that email already exists',
             code='duplicate_email',
