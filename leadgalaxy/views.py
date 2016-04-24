@@ -3157,6 +3157,10 @@ def register(request, registration=None):
     })
 
 
+def robots_txt(request):
+    return HttpResponse("User-agent: *\nDisallow: /\n", content_type='text/plain')
+
+
 def handler404(request):
     response = render_to_response('404.html', {},
                                   context_instance=RequestContext(request))

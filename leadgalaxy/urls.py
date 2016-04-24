@@ -51,4 +51,5 @@ urlpatterns = patterns('',
     url(r'^accounts/password_change/done/$', 'django.contrib.auth.views.password_change_done',
         {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header':'Shopified App'}}),
 
+    url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
 )
