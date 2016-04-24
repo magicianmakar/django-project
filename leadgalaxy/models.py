@@ -393,15 +393,20 @@ class ShopifyProduct(models.Model):
             return u'<ShopifyProduct: %d>' % self.id
 
     def shopify_link(self):
-        if self.shopify_export and self.shopify_export.shopify_id:
-            return self.store.get_link('/admin/products/{}'.format(self.shopify_export.shopify_id))
+        shopif_id = self.get_shopify_id()
+
+        if shopif_id:
+            return self.store.get_link('/admin/products/{}'.format(shopif_id))
         else:
             return None
 
     def get_shopify_id(self):
-        if self.shopify_export and self.shopify_export.shopify_id:
-            return self.shopify_export.shopify_id
-        else:
+        try:
+            if self.shopify_export and self.shopify_export.shopify_id:
+                return self.shopify_export.shopify_id
+            else:
+                return None
+        except:
             return None
 
     def get_source_id(self):

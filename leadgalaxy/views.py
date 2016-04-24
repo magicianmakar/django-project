@@ -1243,6 +1243,20 @@ def proccess_api(request, user, method, target, data):
             'hash': reg.register_hash
         })
 
+    if method == 'POST' and target == 'alert-archive':
+        try:
+            alert = AliexpressProductChange.objects.get(id=data.get('alert'))
+            user.can_edit(alert)
+
+            alert.hidden = 1
+            alert.save()
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+        return JsonResponse({
+            'status': 'ok'
+        })
+
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
@@ -2859,7 +2873,9 @@ def products_update(request):
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
 
-    changes = AliexpressProductChange.objects.filter(user=request.user.models_user)
+    changes = AliexpressProductChange.objects.select_related('product') \
+                                     .select_related('product__shopify_export') \
+                                     .filter(user=request.user.models_user)
 
     if product:
         changes = changes.filter(product=product)
@@ -2879,6 +2895,9 @@ def products_update(request):
         change['id'] = i.id
         change['data'] = json.loads(i.data)
         change['changes'] = utils.product_changes_remap(change['data'])
+        change['product'] = i.product
+        change['shopify_link'] = i.product.shopify_link()
+        change['original_link'] = i.product.get_original_info().get('url')
 
         product_changes.append(change)
 

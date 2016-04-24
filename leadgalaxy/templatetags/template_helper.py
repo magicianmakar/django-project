@@ -55,3 +55,19 @@ def remove_link_query(context, link):
 
     parsed = urlparse(link)
     return parsed.scheme + "://" + parsed.netloc + parsed.path
+
+
+@register.simple_tag(takes_context=True)
+def price_diff(context, from_, to_, reverse_colors=False):
+    if from_ is not float:
+        from_ = float(from_)
+
+    if to_ is not float:
+        to_ = float(to_)
+
+    colors = ['red', 'green'] if reverse_colors else ['green', 'red']
+
+    if from_ > to_:
+        return '<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.2f%%</span>' % (colors[0], (((to_ - from_) * 100.) / from_))
+    else:
+        return '<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.2f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_))

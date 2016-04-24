@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load compress %}
 {% load template_helper %}
 
 {% block title %}Alerts{% endblock %}
@@ -28,7 +29,7 @@
                                     <th>Category</th>
                                     <th>Description</th>
                                     <th>Date</th>
-                                    <th>Details</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -44,23 +45,29 @@
                                 {% for item in product_changes %}
                                     {% for change in item.changes.product.offline %}
                                         {% if forloop.first %}
-                                        <tr class="header">
+                                        <tr class="header" alert-id="{{item.id}}">
                                             <td class="category">Vendor</td>
-                                            <td>A vendor store has gone <b>{% if change.new_value %}Online{% else %}Offline{% endif %}</b></td>
+                                            <td class="details-toggle">A vendor store has gone <b>{% if change.new_value %}Online{% else %}Offline{% endif %}</b></td>
                                             <td>{{item.qelem.updated_at|date}}</td>
-                                            <td><a class="view-details" href="#">View Details</a></td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn success-default btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
                                         </tr>
-                                        <tr class="details">
+                                        <tr class="details" alert-id="{{item.id}}">
                                             <td class="well" colspan="4">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
                                                     <div class="col-md-3"><b>Old Price</b></div>
                                                     <div class="col-md-3"><b>New Price</b></div>
                                                 </div>
 
                                         {% endif %}
                                                 <div class="row">
-                                                    <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.variant_desc}}</div>
+                                                    <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
                                                     <div class="col-md-3">{{change.old_value}}</div>
                                                     <div class="col-md-3">{{change.new_value}}</div>
                                                 </div>
@@ -72,23 +79,29 @@
 
                                     {% for change in item.changes.variants.price %}
                                         {% if forloop.first %}
-                                        <tr class="header">
+                                        <tr class="header" alert-id="{{item.id}}" >
                                             <td class="category">Price</td>
-                                            <td>The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td class="details-toggle">The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
                                             <td>{{item.qelem.updated_at|date}}</td>
-                                            <td><a class="view-details" href="#">View Details</a></td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
                                         </tr>
-                                        <tr class="details">
+                                        <tr class="details" alert-id="{{item.id}}">
                                             <td class="well" colspan="4">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
                                                     <div class="col-md-3"><b>Old Price</b></div>
                                                     <div class="col-md-3"><b>New Price</b></div>
                                                 </div>
 
                                         {% endif %}
                                                 <div class="row">
-                                                    <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.variant_desc}}</div>
+                                                    <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
                                                     <div class="col-md-3">{{change.old_value}}</div>
                                                     <div class="col-md-3">{{change.new_value}}</div>
                                                 </div>
@@ -100,23 +113,29 @@
 
                                     {% for change in item.changes.variants.quantity %}
                                         {% if forloop.first %}
-                                        <tr class="header">
+                                        <tr class="header" alert-id="{{item.id}}" >
                                             <td class="category">Availability</td>
-                                            <td>The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td class="details-toggle">The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
                                             <td>{{item.qelem.updated_at|date}}</td>
-                                            <td><a class="view-details" href="#">View Details</a></td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
                                         </tr>
-                                        <tr class="details">
+                                        <tr class="details" alert-id="{{item.id}}">
                                             <td class="well" colspan="4">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
                                                     <div class="col-md-3"><b>Old Quantity</b></div>
                                                     <div class="col-md-3"><b>New Quantity</b></div>
                                                 </div>
 
                                         {% endif %}
                                                 <div class="row">
-                                                    <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.variant_desc}}</div>
+                                                    <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
                                                     <div class="col-md-3">{{change.old_value}}</div>
                                                     <div class="col-md-3">{{change.new_value}}</div>
                                                 </div>
@@ -162,15 +181,21 @@
     .details {
         display: none;
     }
+
+    .var-name {
+        text-align: right;
+    }
+
+    {% if request.GET.hidden %}
+    .archive-alert {
+        display:none;
+    }
+    {% endif %}
 </style>
 {% endblock %}
 
 {% block extrajs %}
-<script type="text/javascript">
-    $('.view-details').click(function (e) {
-        e.preventDefault();
-
-        $(this).parents('tr').next('.details').toggle('slide');
-    });
-</script>
+{% compress js %}
+<script type="text/javascript" src="{% static 'shopified/js/products_update.js' %}"></script>
+{% endcompress %}
 {% endblock %}
