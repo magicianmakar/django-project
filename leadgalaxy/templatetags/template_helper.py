@@ -68,6 +68,13 @@ def price_diff(context, from_, to_, reverse_colors=False):
     colors = ['red', 'green'] if reverse_colors else ['green', 'red']
 
     if from_ > to_:
-        return '<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.2f%%</span>' % (colors[0], (((to_ - from_) * 100.) / from_))
+        if from_ > 0:
+            return '<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (colors[0], (((to_ - from_) * 100.) / from_))
+        else:
+            return '<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0])
+
     else:
-        return '<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.2f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_))
+        if from_ > 0:
+            return '<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_))
+        else:
+            return '<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0])
