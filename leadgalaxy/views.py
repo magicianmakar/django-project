@@ -2196,6 +2196,9 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
+    if request.GET.get('cache') == '0':
+        cache.delete_pattern('template.cache.acp_users.*')
+
     users = User.objects.select_related('profile', 'profile__plan')
 
     if request.GET.get('plan', None):
