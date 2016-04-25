@@ -606,6 +606,7 @@ class ShopifyBoard(models.Model):
 class ShopifyWebhook(models.Model):
     class Meta:
         ordering = ['-created_at']
+        unique_together = ('store', 'topic')
 
     store = models.ForeignKey(ShopifyStore)
     topic = models.CharField(max_length=64)
