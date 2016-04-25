@@ -192,7 +192,7 @@ if not DEBUG:
 
     STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
     DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
-    STATIC_URL = "http://%s.s3.amazonaws.com/%s/" % (AWS_STORAGE_BUCKET_NAME, STATICFILES_LOCATION)
+    STATIC_URL = "//%s.s3.amazonaws.com/%s/" % (AWS_STORAGE_BUCKET_NAME, STATICFILES_LOCATION)
 
     COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
 
