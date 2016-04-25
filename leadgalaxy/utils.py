@@ -280,16 +280,16 @@ def format_shopify_error(data):
     msg = []
     for k, v in errors.items():
         if type(v) is list:
-            error = ','.join(v)
+            error = u','.join(v)
         else:
             error = v
 
         if k == 'base':
             msg.append(error)
         else:
-            msg.append('{}: {}'.format(k, error))
+            msg.append(u'{}: {}'.format(k, error))
 
-    return ' | '.join(msg)
+    return u' | '.join(msg)
 
 
 def verify_shopify_webhook(store, request):
