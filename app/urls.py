@@ -13,3 +13,4 @@ urlpatterns = patterns('',
 
 
 admin.site.site_header = 'Shopified App'
+admin.site.login_template = 'registration/login.html'
