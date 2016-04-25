@@ -141,7 +141,7 @@
         }
 
 
-{% cache 600 acp_users user.id %}
+{% cache 600 acp_users user.id users_count request.GET.plan %}
 
         var profiles = {
 {% for profile in profiles  %}
