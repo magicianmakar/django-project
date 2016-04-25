@@ -51,7 +51,7 @@
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
-                                                <a class="btn success-default btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+                                                <a class="btn success-default btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
                                                 <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
                                             </td>
                                         </tr>
