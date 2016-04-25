@@ -587,21 +587,29 @@ def create_shopify_webhook(store, topic):
         }
     }
 
-    rep = requests.post(endpoint, json=data)
-
-    webhook_id = 0
     try:
-        webhook_id = rep.json()['webhook']['id']
+        rep = requests.post(endpoint, json=data).json()
+        webhook_id = rep['webhook']['id']
+
+        webhook = ShopifyWebhook(store=store, token=token, topic=topic, shopify_id=webhook_id)
+        webhook.save()
+
+        return webhook
     except:
         raven_client.captureException()
-
-    if not webhook_id:
         return None
 
-    webhook = ShopifyWebhook(store=store, token=token, topic=topic, shopify_id=webhook_id)
-    webhook.save()
 
-    return webhook
+def get_shopify_webhook(store, topic):
+    try:
+        return ShopifyWebhook.objects.get(store=store, topic=topic)
+    except ShopifyWebhook.DoesNotExist:
+        return None
+    except ShopifyWebhook.MultipleObjectsReturned:
+        raven_client.captureException()
+        return ShopifyWebhook.objects.filter(store=store, topic=topic).first()
+    except:
+        raven_client.captureException()
 
 
 def attach_webhooks(store):
@@ -609,7 +617,11 @@ def attach_webhooks(store):
 
     webhooks = []
     for topic in default_topics:
-        webhook = create_shopify_webhook(store, topic)
+        webhook = get_shopify_webhook(store, topic)
+
+        if not webhook:
+            webhook = create_shopify_webhook(store, topic)
+
         if webhook:
             webhooks.append(webhook)
 

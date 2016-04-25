@@ -12,6 +12,8 @@ class Command(BaseCommand):
 
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
+        parser.add_argument('--delete_on_detach', dest='delete_on_detach',
+                            action='store_true', help='Delete Saved Webhook on detach')
 
     def handle(self, *args, **options):
         action = options['action'][0]
@@ -34,7 +36,7 @@ class Command(BaseCommand):
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
             for store in stores:
-                self.handle_store(store, action)
+                self.handle_store(store, action, options['delete_on_detach'])
 
         for store_id in options['store_id']:
             try:
@@ -45,17 +47,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.MIGRATE_SUCCESS(
                 '{} webhooks for store: {}'.format(action.title(), store.title)))
 
-            self.handle_store(store, action)
+            self.handle_store(store, action, options['delete_on_detach'])
 
-    def handle_store(self, store, action):
+    def handle_store(self, store, action, delete_on_detach):
         if action == 'attach':
             webhooks = utils.attach_webhooks(store)
+            self.stdout.write(self.style.MIGRATE_SUCCESS('    + {}: {}'.format(store.title, len(webhooks))))
         else:
-            webhooks = utils.detach_webhooks(store, True)
-
-        if action != 'attach':
-            self.stdout.write(self.style.MIGRATE_SUCCESS('    * {}'.format(store.title)))
-        elif len(webhooks) == 3:
-            self.stdout.write(self.style.MIGRATE_SUCCESS('    * {}: {}'.format(store.title, len(webhooks))))
-        else:
-            self.stdout.write(self.style.ERROR('    * {}: {}'.format(store.title, len(webhooks))))
+            webhooks = utils.detach_webhooks(store, delete_on_detach)
+            self.stdout.write(self.style.MIGRATE_SUCCESS('    - {}'.format(store.title)))
