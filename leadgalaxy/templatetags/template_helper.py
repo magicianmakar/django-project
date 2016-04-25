@@ -77,4 +77,4 @@ def price_diff(context, from_, to_, reverse_colors=False):
         if from_ > 0:
             return '<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_))
         else:
-            return '<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0])
+            return '<span style="color:%s"><i class="fa fa-sort-asc"></i></span>' % (colors[1])
