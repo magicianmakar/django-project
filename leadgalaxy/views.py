@@ -1568,13 +1568,14 @@ def webhook(request, provider, option):
     elif provider == 'shopify' and request.method == 'POST':
         try:
             token = request.GET['t']
+            topic = option.replace('-', '/')
             store = ShopifyStore.objects.get(id=request.GET['store'])
 
             if token != utils.webhook_token(store.id):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
-            if 'products' in option:
+            if 'products' in topic:
                 # Shopify send a JSON POST request
                 shopify_product = json.loads(request.body)
                 product = None
@@ -1586,12 +1587,15 @@ def webhook(request, provider, option):
                     return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
                 product_data = json.loads(product.data)
-            elif 'orders' in option:
+            elif 'orders' in topic:
                 shopify_order = json.loads(request.body)
             else:
-                return JsonResponse({'status': 'ok', 'warning': 'Unhandled Option'})
+                raven_client.captureMessage('Non-handled Shopify Topic',
+                                            extra={'topic': topic, 'store': store})
 
-            if option == 'products-update':  # / is converted to - in utils.create_shopify_webhook
+                return JsonResponse({'status': 'ok', 'warning': 'Non-handled Topic'})
+
+            if topic == 'products/update':
                 product_data['title'] = shopify_product['title']
                 product_data['type'] = shopify_product['product_type']
                 product_data['tags'] = shopify_product['tags']
@@ -1609,8 +1613,8 @@ def webhook(request, provider, option):
                 product.data = json.dumps(product_data)
                 product.save()
 
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
-                    call_count=F('call_count')+1)
+                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
+                                      .update(call_count=F('call_count')+1)
 
                 # Delete Product images cache
                 ShopifyProductImage.objects.filter(store=store,
@@ -1618,22 +1622,22 @@ def webhook(request, provider, option):
 
                 return JsonResponse({'status': 'ok'})
 
-            elif option == 'products-delete':  # / is converted to - in utils.create_shopify_webhook
+            elif topic == 'products/delete':
                 try:
                     if product.shopify_export:
                         product.shopify_export.delete()
                 except ShopifyProductExport.DoesNotExist:
                     pass
 
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
-                    call_count=F('call_count')+1)
+                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
+                                      .update(call_count=F('call_count')+1)
 
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
 
                 return JsonResponse({'status': 'ok'})
 
-            elif option == 'orders-updated':
+            elif topic == 'orders/updated':
                 for line in shopify_order['line_items']:
                     fulfillment_status = line['fulfillment_status']
                     if not fulfillment_status:
@@ -1642,12 +1646,12 @@ def webhook(request, provider, option):
                     ShopifyOrder.objects.filter(order_id=shopify_order['id'], line_id=line['id']) \
                                         .update(shopify_status=fulfillment_status)
 
-                    ShopifyWebhook.objects.filter(token=token, store=store, topic=option.replace('-', '/')).update(
-                                                  call_count=F('call_count')+1)
+                    ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
+                                          .update(call_count=F('call_count')+1)
 
                 return JsonResponse({'status': 'ok'})
             else:
-                raise Exception('WEBHOOK: options not found: {}'.format(option))
+                raise Exception('WEBHOOK: options not found: {}'.format(topic))
         except:
             raven_client.captureException()
 
