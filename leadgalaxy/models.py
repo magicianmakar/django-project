@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 from django.core.exceptions import PermissionDenied
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 import re
 import json
@@ -928,3 +930,11 @@ User.add_to_class("can_add", user_can_add)
 User.add_to_class("can_view", user_can_view)
 User.add_to_class("can_edit", user_can_edit)
 User.add_to_class("can_delete", user_can_delete)
+
+
+# Signals Handling
+
+@receiver(post_save, sender=UserProfile)
+def invalidate_side_bar(sender, instance, created, **kwargs):
+    from django.core.cache import cache
+    cache.delete_pattern('template.cache.acp_users.*')
