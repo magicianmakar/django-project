@@ -176,6 +176,7 @@ if not DEBUG:
 
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
+    AWS_S3_URL_PROTOCOL = ''
 
     AWS_IS_GZIPPED = True
     AWS_HEADERS = {
