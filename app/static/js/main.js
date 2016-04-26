@@ -233,6 +233,45 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
     });
 }
 
+function productsEditModal(products) {
+    if (!products || !products.length) {
+        toastr.warning('No product is selected');
+        return;
+    }
+
+    var modal = $('#modal-products-edit-form');
+    if (isNaN(parseInt(modal.attr('store-id')))) {
+        modal.modal('show');
+    } else {
+        $.ajax({
+            url: '/api/product-shopify-id',
+            type: 'GET',
+            data: {product: products.join(',')},
+            success: function (data) {
+                if (!data.ids.length) {
+                    toastr.warning('Selected products are not found in Shopify');
+                    return;
+                }
+                window.open(modal.attr('store-url') + '/admin/bulk?' + $.param({
+                    "resource_name": "Product",
+                    "return_toh": "/admin/products",
+                    "routing_method": "shop_from_host",
+                    "protocol": "https://",
+                    "edit": "variants.price,variants.compare_at_price,product_type,variants.weight,title",
+                    "show": "",
+                    "ids": data.ids.join(','),
+                    "metafield_titles": "",
+                    "metafield_options": "",
+                }));
+            },
+            error: function (data) {
+                displayAjaxError('Edit Products');
+            }
+        });
+
+    }
+}
+
 function waitForTask(task_id, product, data, callback, callback_data) {
     taskIntervals[task_id] = setInterval(function () {
         $.ajax({

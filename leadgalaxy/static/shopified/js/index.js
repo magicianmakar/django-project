@@ -12,7 +12,7 @@ $('.add-store-btn').click(function (e) {
     $('#store-name').val('');
     $('#store-url').val('');
 
-    $('#modal-form').modal('show');
+    $('#modal-add-store-form').modal('show');
 });
 
 $('#add-store').click(function(e) {
@@ -160,7 +160,7 @@ $('.edit-store').click(function (e) {
     $('#add-store').hide();
     $('#update-store').show();
 
-    $('#modal-form').modal('show');
+    $('#modal-add-store-form').modal('show');
 
 });
 
@@ -192,7 +192,7 @@ $('#update-store').click(function (e) {
         context: {btn: btn},
         success: function (data) {
             if (data.status == 'ok') {
-                $('#modal-form').modal('hide');
+                $('#modal-add-store-form').modal('hide');
                 toastr.success('Store information updated', 'Store update');
             } else {
                 displayAjaxError('Store update', data);

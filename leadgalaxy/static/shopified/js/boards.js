@@ -81,7 +81,7 @@ $('.apply-btn').click(function(e) {
             }
         });
     } else if (action == 'edit') {
-        $('#modal-form').modal('show');
+        $('#modal-products-edit-form').modal('show');
         return;
     } else if (action == 'shopify-send') {
         currentBoardBox = boardBox;
@@ -107,7 +107,7 @@ $('.apply-btn').click(function(e) {
     boardBox.find('.selected-actions').val('');
 });
 
-$('#save-changes').click(function(e) {
+$('#modal-products-edit-form #save-changes').click(function(e) {
     var btn = $(this);
     var products = [];
 

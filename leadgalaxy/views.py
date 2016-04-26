@@ -405,6 +405,20 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'GET' and target == 'product-shopify-id':
+        ids = []
+        products = data.get('product').split(',')
+        for p in products:
+            product = ShopifyProduct.objects.get(id=p)
+            shopify_id = product.get_shopify_id()
+            if shopify_id and shopify_id not in ids:
+                ids.append(shopify_id)
+
+        return JsonResponse({
+            'status': 'ok',
+            'ids': ids
+        })
+
     if method == 'POST' and target == 'product-edit':
         products = []
         for p in data.getlist('products[]'):
@@ -1845,12 +1859,14 @@ def sorted_products(products, sort):
 
 @login_required
 def products_list(request, tpl='grid'):
+    store = request.GET.get('store', 'n')
+
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
         'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
         'sort': request.GET.get('sort'),
-        'store': request.GET.get('store', 'n'),
+        'store': store,
         'load_boards': (tpl is None or tpl == 'grid'),
     }
 
@@ -1864,11 +1880,17 @@ def products_list(request, tpl='grid'):
     else:
         tpl = 'product_table.html'
 
+    try:
+        store = ShopifyStore.objects.get(id=utils.safeInt(store))
+    except:
+        store = None
+
     return render(request, tpl, {
         'paginator': paginator,
         'current_page': page,
         'filter_products': args['filter_products'],
         'products': products,
+        'store': store,
         'page': 'product',
         'breadcrumbs': ['Products']
     })

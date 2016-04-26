@@ -45,7 +45,7 @@ $('#apply-btn').click(function(e) {
             return;
         }
     } else if (action == 'edit') {
-        $('#modal-form').modal('show');
+        productsEditModal(getSelectProduct());
         return;
     } else if (action == 'board') {
         $('#modal-board-product').modal('show');
@@ -80,8 +80,7 @@ $('#apply-btn').click(function(e) {
     });
 });
 
-$('#save-changes').click(function(e) {
-    var btn = $(this);
+function getSelectProduct() {
     var products = [];
 
     $('input.item-select[type=checkbox]').each(function(i, el) {
@@ -91,6 +90,12 @@ $('#save-changes').click(function(e) {
         }
     });
 
+    return products;
+}
+
+$('#modal-products-edit-form #save-changes').click(function(e) {
+    var btn = $(this);
+    var products = getSelectProduct();
 
     var data = {
         'products': products
