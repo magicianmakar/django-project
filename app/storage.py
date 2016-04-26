@@ -6,11 +6,7 @@ from django.conf import settings
 
 def mainfest_https_fix(content):
     data = content.file.read()
-    print 'Before:', data
-    data = data.replace('http://', '//')
-    print 'After:', data
-
-    return ContentFile(data)
+    return ContentFile(data.replace('http://', '//'))
 
 
 class CachedS3BotoStorage(S3BotoStorage):
