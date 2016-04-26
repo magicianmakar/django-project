@@ -177,6 +177,7 @@ if not DEBUG:
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_URL_PROTOCOL = ''
+    AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 
     AWS_IS_GZIPPED = True
     AWS_HEADERS = {
@@ -194,7 +195,7 @@ if not DEBUG:
 
     STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
     DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
-    STATIC_URL = "//%s.s3.amazonaws.com/%s/" % (AWS_STORAGE_BUCKET_NAME, STATICFILES_LOCATION)
+    STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
 
     COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
 
