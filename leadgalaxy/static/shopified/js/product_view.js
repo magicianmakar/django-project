@@ -534,7 +534,7 @@ $('#save-metadata').click(function (e) {
         url: '/api/product-metadata',
         context: btn,
         data: {
-            'original-link': $('#product-original-link').val(),
+            'original-link': cleanUrlPatch($('#product-original-link').val()),
             'shopify-link': $('#product-shopify-link').val(),
             'product': config.product_id,
         },
