@@ -353,7 +353,7 @@ def proccess_api(request, user, method, target, data):
                                         extra={'task': data.get('id')},
                                         level='warning')
 
-            task.revoke()
+            task.revoke(terminate=True)
             return JsonResponse({'error': 'Export Error'}, status=500)
 
         if not task.ready():
