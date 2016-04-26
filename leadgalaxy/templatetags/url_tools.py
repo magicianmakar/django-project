@@ -67,6 +67,15 @@ def url_replace(context, field, value):
     query = query_dict.urlencode()
     return urlunparse((scheme, netloc, path, params, query, fragment))
 
+
+@register.simple_tag(takes_context=True)
+def url_path(context, new_path):
+    ''' Change url path'''
+    url = context['request'].get_full_path()
+    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    return urlunparse((scheme, netloc, new_path, params, query, fragment))
+
+
 @register.simple_tag(takes_context = True)
 def page_full_url(context):
     url = context['request'].build_absolute_uri()
