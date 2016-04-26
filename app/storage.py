@@ -1,6 +1,12 @@
 from django.core.files.storage import get_storage_class
 from storages.backends.s3boto import S3BotoStorage
+from django.core.files.base import ContentFile
 from django.conf import settings
+
+
+def mainfest_https_fix(content):
+    data = content.file.read()
+    return ContentFile(data.replace('http://', '//'))
 
 
 class CachedS3BotoStorage(S3BotoStorage):
@@ -14,6 +20,10 @@ class CachedS3BotoStorage(S3BotoStorage):
             "compressor.storage.CompressorFileStorage")()
 
     def save(self, name, content):
+        if name == '%s/manifest.json' % settings.COMPRESS_OUTPUT_DIR:
+            print '\nFix manifest.json'
+            content = mainfest_https_fix(content)
+
         non_gzipped_file_content = content.file
         name = super(CachedS3BotoStorage, self).save(name, content)
         content.file = non_gzipped_file_content
