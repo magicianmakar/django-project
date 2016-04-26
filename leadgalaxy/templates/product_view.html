@@ -610,7 +610,11 @@
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 
 <!-- Load Feather code -->
-<script type="text/javascript" src="//feather.aviary.com/imaging/v2/editor.js"></script>
+{% if request.is_secure %}
+<script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/js/feather.js"></script>
+{% else %}
+<script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
+{% endif %}
 
 <script type="text/javascript">
 
