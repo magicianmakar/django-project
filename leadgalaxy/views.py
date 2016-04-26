@@ -348,6 +348,13 @@ def proccess_api(request, user, method, target, data):
         if count == 60:
             raven_client.context.merge(raven_client.get_data_from_request(request))
             raven_client.captureMessage('Celery Task is taking too long.', level='warning')
+        if count > 120:
+            raven_client.captureMessage('Terminate Celery Task.',
+                                        extra={'task': data.get('id')},
+                                        level='warning')
+
+            task.revoke()
+            return JsonResponse({'error': 'Export Error'}, status=500)
 
         if not task.ready():
             return JsonResponse({
