@@ -610,6 +610,7 @@ def get_shopify_webhook(store, topic):
         return ShopifyWebhook.objects.filter(store=store, topic=topic).first()
     except:
         raven_client.captureException()
+        return None
 
 
 def attach_webhooks(store):
