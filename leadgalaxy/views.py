@@ -1671,6 +1671,10 @@ def webhook(request, provider, option):
                                           .update(call_count=F('call_count')+1)
 
                 return JsonResponse({'status': 'ok'})
+
+            elif topic == 'orders/delete':
+                return JsonResponse({'status': 'ok'})
+
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(topic))
         except:
