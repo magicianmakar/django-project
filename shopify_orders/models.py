@@ -48,8 +48,8 @@ class ShopifyOrder(models.Model):
     zip_code = models.CharField(max_length=32, blank=True, default='')
     country_code = models.CharField(max_length=32, blank=True, default='')
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
 
     def __unicode__(self):
         return u'#{}'.format(self.order_number)
