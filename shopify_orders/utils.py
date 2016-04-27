@@ -1,6 +1,7 @@
 from django.core.cache import cache
 
 # from raven.contrib.django.raven_compat.models import client as raven_client
+import arrow
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 
@@ -46,6 +47,9 @@ def update_shopify_order(store, data):
             'city': address.get('city'),
             'zip_code': address.get('zip'),
             'country_code': address.get('country_code'),
+            'created_at': arrow.get(data['created_at']).datetime,
+            'updated_at': arrow.get(data['updated_at']).datetime
+
         }
     )
 
