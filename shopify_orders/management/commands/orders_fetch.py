@@ -22,7 +22,6 @@ class Command(BaseCommand):
         try:
             self.start_command(*args, **options)
         except:
-            import traceback; traceback.print_exc();
             raven_client.captureException()
 
     def start_command(self, *args, **options):
@@ -40,7 +39,6 @@ class Command(BaseCommand):
                 order_sync.sync_status = 2
 
             except:
-                import traceback; traceback.print_exc();
                 order_sync.sync_status = 4
                 raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
