@@ -6,6 +6,12 @@ import arrow
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 
 
+def get_customer_name(customer):
+    return u'{} {}'.format(
+        customer.get('first_name', ''),
+        customer.get('last_name', '')).strip()
+
+
 def update_shopify_order(store, data):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
@@ -37,7 +43,7 @@ def update_shopify_order(store, data):
             'store': store,
             'order_number': data['number'],
             'customer_id': customer.get('id', 0),
-            'customer_name': u'{} {}'.format(customer.get('first_name'), customer.get('last_name')),
+            'customer_name': get_customer_name(customer),
             'customer_email': customer.get('email'),
             'financial_status': data['financial_status'],
             'fulfillment_status': data['fulfillment_status'],

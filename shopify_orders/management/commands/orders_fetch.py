@@ -7,6 +7,7 @@ import requests
 import arrow
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+from shopify_orders.utils import get_customer_name
 
 
 class Command(BaseCommand):
@@ -93,7 +94,7 @@ class Command(BaseCommand):
             order_id=data['id'],
             order_number=data['number'],
             customer_id=customer.get('id', 0),
-            customer_name=u'{} {}'.format(customer.get('first_name'), customer.get('last_name')),
+            customer_name=get_customer_name(customer),
             customer_email=customer.get('email'),
             financial_status=data['financial_status'],
             fulfillment_status=data['fulfillment_status'],
