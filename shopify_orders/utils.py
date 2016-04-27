@@ -48,7 +48,7 @@ def update_shopify_order(store, data):
     )
 
     for line in data.get('line_items', []):
-        l, created = ShopifyOrderLine.update_or_create(
+        l, created = ShopifyOrderLine.objects.update_or_create(
             order=order,
             line_id=line['id'],
             default={
