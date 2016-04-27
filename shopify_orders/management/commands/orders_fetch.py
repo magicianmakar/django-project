@@ -105,7 +105,8 @@ class Command(BaseCommand):
             zip_code=address.get('zip'),
             country_code=address.get('country_code'),
             created_at=arrow.get(data['created_at']).datetime,
-            updated_at=arrow.get(data['updated_at']).datetime
+            updated_at=arrow.get(data['updated_at']).datetime,
+            closed_at=arrow.get(data['closed_at']).datetime,
         )
 
         order.save()
