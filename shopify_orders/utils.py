@@ -57,7 +57,7 @@ def update_shopify_order(store, data):
         l, created = ShopifyOrderLine.objects.update_or_create(
             order=order,
             line_id=line['id'],
-            default={
+            defaults={
                 'shopify_product': line['product_id'],
                 'title': line['title'],
                 'price': line['price'],
