@@ -15,7 +15,7 @@ def get_customer_name(customer):
 def update_shopify_order(store, data):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
-        if sync_status.sync_status != 1:
+        if sync_status.sync_status != 2:
             print 'SHOPIFY ORDERS: Store: {} Not Synced (Status: {})'.format(store.title, sync_status.sync_status)
             return
 
