@@ -1,0 +1,64 @@
+from django.core.cache import cache
+
+# from raven.contrib.django.raven_compat.models import client as raven_client
+
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+
+
+def update_shopify_order(store, data):
+    try:
+        sync_status = ShopifySyncStatus.objects.get(store=store)
+        if sync_status.sync_status != 1:
+            print 'SHOPIFY ORDERS: Store: {} Not Synced (Status: {})'.format(store.title, sync_status.sync_status)
+            return
+
+    except ShopifySyncStatus.DoesNotExist:
+        print 'SHOPIFY ORDERS: Store: {} Not In Synced'.format(store.title)
+        return
+
+    customer = data.get('customer', {})
+    address = data.get('shipping_address', {})
+
+    products_map = cache.get('product_shopify_map_%d' % store.id)
+    if products_map is None:
+        products_map = store.user.shopifyproduct_set.values_list('id', 'shopify_export__shopify_id')
+        products_map = dict(map(lambda a: (a[1], a[0]), products_map))
+
+        # TODO: clear cache on Product connection change
+        cache.set('product_shopify_map_%d' % store.id, products_map, timeout=1600)
+
+    order, created = ShopifyOrder.objects.update_or_create(
+        order_id=data['id'],
+        defaults={
+            'user': store.user,
+            'store': store,
+            'order_number': data['number'],
+            'customer_id': customer.get('id', 0),
+            'customer_name': u'{} {}'.format(customer.get('first_name'), customer.get('last_name')),
+            'customer_email': customer.get('email'),
+            'financial_status': data['financial_status'],
+            'fulfillment_status': data['fulfillment_status'],
+            'total_price': data['total_price'],
+            'note': data.get('note'),
+            'tags': data['tags'],
+            'city': address.get('city'),
+            'zip_code': address.get('zip'),
+            'country_code': address.get('country_code'),
+        }
+    )
+
+    for line in data.get('line_items', []):
+        l, created = ShopifyOrderLine.update_or_create(
+            order=order,
+            line_id=line['id'],
+            default={
+                'shopify_product': line['product_id'],
+                'title': line['title'],
+                'price': line['price'],
+                'quantity': line['quantity'],
+                'variant_id': line['variant_id'],
+                'variant_title': line['variant_title']
+            })
+
+        l.product_id = products_map.get(int(order.order_id))
+        l.save()

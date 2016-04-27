@@ -53,7 +53,8 @@ INSTALLED_APPS = (
     'debug_toolbar',
 
     'article',
-    'leadgalaxy'
+    'leadgalaxy',
+    'shopify_orders',
 )
 
 MIDDLEWARE_CLASSES = (

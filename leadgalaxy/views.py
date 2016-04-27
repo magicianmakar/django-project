@@ -33,6 +33,8 @@ import traceback
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
+from shopify_orders import utils as shopify_orders_utils
+
 from province_helper import load_uk_provincess
 
 
@@ -1669,6 +1671,8 @@ def webhook(request, provider, option):
 
                     ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                           .update(call_count=F('call_count')+1)
+
+                shopify_orders_utils.update_shopify_order(store, shopify_order)
 
                 return JsonResponse({'status': 'ok'})
 
