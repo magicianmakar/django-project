@@ -20,10 +20,7 @@ def update_shopify_order(store, data):
             return
 
     except ShopifySyncStatus.DoesNotExist:
-        print 'SHOPIFY ORDERS: Store: {} Not In Synced'.format(store.title)
         return
-
-    print 'SHOPIFY ORDERS: Update Order {}'.format(store.title)
 
     customer = data.get('customer', {})
     address = data.get('shipping_address', {})
