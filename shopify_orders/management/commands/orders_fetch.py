@@ -20,6 +20,9 @@ class Command(BaseCommand):
         parser.add_argument('--status', dest='sync_status', action='append',
                             type=int, help='Sync Store with the given status')
 
+        parser.add_argument('--reset', dest='reset',
+                            action='store_true', help='Delete All Imported Orders and queue stores for re-import')
+
     def handle(self, *args, **options):
         try:
             self.start_command(*args, **options)
@@ -27,6 +30,13 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
+        if options['reset']:
+            ShopifyOrder.objects.all().delete()
+            ShopifySyncStatus.objects.all().update(sync_status=0)
+
+            self.write_success('Done')
+            return
+
         if not options['sync_status']:
             options['sync_status'] = [0]
 
