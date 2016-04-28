@@ -4,10 +4,9 @@ from django.db import transaction
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 import requests
-import arrow
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopify_orders.utils import get_customer_name
+from shopify_orders.utils import get_customer_name, get_datetime
 
 
 class Command(BaseCommand):
@@ -104,9 +103,9 @@ class Command(BaseCommand):
             city=address.get('city'),
             zip_code=address.get('zip'),
             country_code=address.get('country_code'),
-            created_at=arrow.get(data['created_at']).datetime,
-            updated_at=arrow.get(data['updated_at']).datetime,
-            closed_at=arrow.get(data['closed_at']).datetime,
+            created_at=get_datetime(data['created_at']),
+            updated_at=get_datetime(data['updated_at']),
+            closed_at=get_datetime(data['closed_at']),
         )
 
         order.save()

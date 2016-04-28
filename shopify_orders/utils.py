@@ -12,6 +12,10 @@ def get_customer_name(customer):
         customer.get('last_name', '')).strip()
 
 
+def get_datetime(isodate, default=None):
+    return arrow.get(isodate).datetime if isodate else default
+
+
 def update_shopify_order(store, data):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
@@ -50,9 +54,9 @@ def update_shopify_order(store, data):
             'city': address.get('city'),
             'zip_code': address.get('zip'),
             'country_code': address.get('country_code'),
-            'created_at': arrow.get(data['created_at']).datetime,
-            'updated_at': arrow.get(data['updated_at']).datetime,
-            'closed_at': arrow.get(data['closed_at']).datetime,
+            'created_at': get_datetime(data['created_at']),
+            'updated_at': get_datetime(data['updated_at']),
+            'closed_at': get_datetime(data['closed_at']),
         }
     )
 
