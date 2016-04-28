@@ -39,9 +39,9 @@ def update_shopify_order(store, data):
 
     order, created = ShopifyOrder.objects.update_or_create(
         order_id=data['id'],
+        store=store,
         defaults={
             'user': store.user,
-            'store': store,
             'order_number': data['number'],
             'customer_id': customer.get('id', 0),
             'customer_name': get_customer_name(customer),

@@ -26,12 +26,12 @@ class ShopifySyncStatus(models.Model):
 
 class ShopifyOrder(models.Model):
     class Meta:
-        ordering = ['-created_at']
+        unique_together = ('store', 'order_id')
 
     user = models.ForeignKey(User, related_name='user')
     store = models.ForeignKey(ShopifyStore, related_name='store')
 
-    order_id = models.BigIntegerField(unique=True)
+    order_id = models.BigIntegerField()
     order_number = models.IntegerField()
     total_price = models.FloatField()
 
