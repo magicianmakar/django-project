@@ -3,6 +3,7 @@ from django.db import transaction
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+import time
 import requests
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
@@ -50,8 +51,6 @@ class Command(BaseCommand):
                 break
 
     def fetch_orders(self, store):
-        self.write_success('Fetching order for: {}'.format(store.title))
-
         from math import ceil
 
         limit = 240
@@ -60,6 +59,8 @@ class Command(BaseCommand):
         self.write_success('Import {} Order for: {}'.format(count, store.title))
         if not count:
             return
+
+        start = time.time()
 
         session = requests.session()
         pages = int(ceil(count/float(limit)))
@@ -79,6 +80,8 @@ class Command(BaseCommand):
 
             for order in rep['orders']:
                 self.import_order(order, store)
+
+        self.write_success('Orders imported in {} ms'.format(time.time() - start))
 
 
     def import_order(self, data, store):
