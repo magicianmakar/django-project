@@ -2732,6 +2732,8 @@ def orders_view(request):
 
             if product:
                 original_info = product.get_original_info()
+                if not original_info:
+                    original_info = {}
 
                 order['line_items'][i]['product'] = product
                 order['line_items'][i]['domain'] = original_info.get('domain')
