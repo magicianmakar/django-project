@@ -102,7 +102,7 @@ class Command(BaseCommand):
             for order in rep['orders']:
                 self.import_order(order, store)
 
-        self.write_success('Orders imported in {} ms'.format(time.time() - start))
+        self.write_success('Orders imported in {:.02f} ms'.format(time.time() - start))
 
 
     def import_order(self, data, store):
