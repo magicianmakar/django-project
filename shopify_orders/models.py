@@ -36,17 +36,17 @@ class ShopifyOrder(models.Model):
     total_price = models.FloatField()
 
     customer_id = models.BigIntegerField()
-    customer_name = models.CharField(max_length=256, blank=True, null=True, default='')
-    customer_email = models.CharField(max_length=256, blank=True, null=True, default='')
+    customer_name = models.CharField(max_length=256, blank=True, null=True, default='', db_index=True)
+    customer_email = models.CharField(max_length=256, blank=True, null=True, default='', db_index=True)
 
     financial_status = models.CharField(max_length=32, blank=True, default='')
     fulfillment_status = models.CharField(max_length=32, blank=True, null=True, default='')
 
     note = models.TextField(blank=True, null=True,  default='')
-    tags = models.CharField(max_length=256, blank=True, null=True, default='')
+    tags = models.CharField(max_length=256, blank=True, null=True, default='', db_index=True)
     city = models.CharField(max_length=64, blank=True, default='')
     zip_code = models.CharField(max_length=32, blank=True, default='')
-    country_code = models.CharField(max_length=32, blank=True, default='')
+    country_code = models.CharField(max_length=32, blank=True, default='', db_index=True)
 
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
@@ -65,7 +65,7 @@ class ShopifyOrderLine(models.Model):
 
     line_id = models.BigIntegerField()
     shopify_product = models.BigIntegerField()
-    title = models.CharField(max_length=256, blank=True, default='')
+    title = models.CharField(max_length=256, blank=True, default='', db_index=True)
     price = models.FloatField()
     quantity = models.IntegerField()
 
