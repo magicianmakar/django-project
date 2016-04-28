@@ -31,9 +31,12 @@ class Command(BaseCommand):
             options['sync_status'] = [0]
 
         while True:
-            order_sync = ShopifySyncStatus.objects.filter(sync_type=self.sync_type, sync_status__in=options['sync_status']).first()
+            try:
+                order_sync = ShopifySyncStatus.objects.filter(sync_type=self.sync_type, sync_status__in=options['sync_status']).latest('updated_at')
 
-            if not order_sync:
+                if not order_sync:
+                    break
+            except ShopifySyncStatus.DoesNotExist:
                 break
 
             order_sync.sync_status = 1
