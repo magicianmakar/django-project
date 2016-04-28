@@ -34,6 +34,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
 from shopify_orders import utils as shopify_orders_utils
+from shopify_orders.models import ShopifyOrder as ShopifyOrderSaved
 
 from province_helper import load_uk_provincess
 
@@ -2607,18 +2608,62 @@ def orders_view(request):
     financial = request.GET.get('financial', 'any')
     query = request.GET.get('query')
 
-    open_orders = store.get_orders_count(status, fulfillment, financial)
-    orders = xrange(0, open_orders)
+    if not shopify_orders_utils.is_store_synced(store):
+        open_orders = store.get_orders_count(status, fulfillment, financial)
+        orders = xrange(0, open_orders)
 
-    paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
-    paginator.set_store(store)
-    paginator.set_order_limit(post_per_page)
-    paginator.set_filter(status, fulfillment, financial)
-    paginator.set_reverse_order(sort == 'desc')
-    paginator.set_query(utils.safeInt(query, query))
+        paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
+        paginator.set_store(store)
+        paginator.set_order_limit(post_per_page)
+        paginator.set_filter(status, fulfillment, financial)
+        paginator.set_reverse_order(sort == 'desc')
+        paginator.set_query(utils.safeInt(query, query))
 
-    page = min(max(1, page), paginator.num_pages)
-    page = paginator.page(page)
+        page = min(max(1, page), paginator.num_pages)
+        current_page = paginator.page(page)
+        page = current_page
+    else:
+        orders = ShopifyOrderSaved.objects.filter(user=request.user.models_user, store=store)
+
+        if query:
+            pass
+
+        if status == 'open':
+            orders = orders.filter(closed_at=None)
+        elif status == 'closed':
+            orders = orders.exclude(closed_at=None)
+
+        if fulfillment == 'unshipped':
+            orders = orders.filter(fulfillment_status=None)
+        elif fulfillment == 'shipped':
+            orders = orders.filter(fulfillment_status='fulfilled')
+        elif fulfillment == 'partial':
+            orders = orders.filter(fulfillment_status='partial')
+
+        if financial != 'any':
+            orders = orders.filter(financial_status=financial)
+
+        paginator = utils.SimplePaginator(orders, post_per_page)
+        page = min(max(1, page), paginator.num_pages)
+        current_page = paginator.page(page)
+        page = current_page
+
+        open_orders = paginator.count
+
+        if open_orders:
+            rep = requests.get(
+                url=store.get_link('/admin/orders.json', api=True),
+                params={
+                    'ids': ','.join([str(i.order_id) for i in page]),
+                    'status': 'any',
+                    'fulfillment_status': 'any',
+                    'financial_status': 'any',
+                }
+            )
+
+            page = rep.json()['orders']
+        else:
+            page = []
 
     products_cache = {}
     auto_orders = request.user.can('auto_order.use')
@@ -2675,8 +2720,10 @@ def orders_view(request):
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
-                product = ShopifyProduct.objects.filter(user=models_user, shopify_export__shopify_id=el['product_id']).first()
-
+                try:
+                    product = ShopifyProduct.objects.get(user=models_user, shopify_export__shopify_id=el['product_id'])
+                except:
+                    product = None
             if product:
                 original_info = product.get_original_info()
 
@@ -2768,7 +2815,7 @@ def orders_view(request):
         'orders': all_orders,
         'store': store,
         'paginator': paginator,
-        'current_page': page,
+        'current_page': current_page,
         'open_orders': open_orders,
         'sort': sort,
         'status': status,

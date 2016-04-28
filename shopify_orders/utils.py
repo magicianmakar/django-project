@@ -75,3 +75,11 @@ def update_shopify_order(store, data):
 
         l.product_id = products_map.get(int(order.order_id))
         l.save()
+
+
+def is_store_synced(store, sync_type='orders'):
+    try:
+        sync_status = ShopifySyncStatus.objects.get(store=store)
+        return sync_status.sync_status == 2
+    except ShopifySyncStatus.DoesNotExist:
+        return False

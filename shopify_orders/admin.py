@@ -14,7 +14,7 @@ class ShopifySyncStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ShopifyOrder)
 class ShopifyOrderApiAdmin(admin.ModelAdmin):
-    list_display = ('order_id', 'financial_status', 'fulfillment_status', 'created_at', 'updated_at')
+    list_display = ('order_id', 'financial_status', 'fulfillment_status', 'created_at', 'updated_at', 'closed_at')
     raw_id_fields = ('user', 'store')
 
 
