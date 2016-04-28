@@ -46,7 +46,7 @@ class Command(BaseCommand):
             finally:
                 order_sync.save()
 
-            if self.total_order_fetch < 10000:
+            if self.total_order_fetch > 10000:
                 break
 
     def fetch_orders(self, store):
@@ -75,10 +75,11 @@ class Command(BaseCommand):
                 }
             ).json()
 
-        self.total_order_fetch += len(rep['orders'])
+            self.total_order_fetch += len(rep['orders'])
 
-        for order in rep['orders']:
-            self.import_order(order, store)
+            for order in rep['orders']:
+                self.import_order(order, store)
+
 
     def import_order(self, data, store):
         customer = data.get('customer', {})
