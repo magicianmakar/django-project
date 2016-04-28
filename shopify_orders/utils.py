@@ -31,7 +31,10 @@ def update_shopify_order(store, data):
 
     products_map = cache.get('product_shopify_map_%d' % store.id)
     if products_map is None:
-        products_map = store.shopifyproduct_set.exclude(shopify_export=None).values_list('id', 'shopify_export__shopify_id')
+        products_map = store.shopifyproduct_set.exclude(shopify_export=None) \
+                            .values_list('id', 'shopify_export__shopify_id') \
+                            .order_by('created_at')
+
         products_map = dict(map(lambda a: (a[1], a[0]), products_map))
 
         # TODO: clear cache on Product connection change
