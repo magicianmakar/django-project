@@ -2657,7 +2657,6 @@ def orders_view(request):
         page = current_page
 
         open_orders = paginator.count
-        print [str(i.order_id) for i in page]
 
         if open_orders:
             rep = requests.get(
