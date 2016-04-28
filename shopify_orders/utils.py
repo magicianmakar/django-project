@@ -16,6 +16,21 @@ def get_datetime(isodate, default=None):
     return arrow.get(isodate).datetime if isodate else default
 
 
+def sort_orders(orders, page):
+    orders_map = {}
+    resorted = []
+
+    for i in orders:
+        orders_map[i['id']] = i
+
+    for i in page:
+        order = orders_map[i.order_id]
+        if order:
+            resorted.append(order)
+
+    return resorted
+
+
 def update_shopify_order(store, data):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)

@@ -38,6 +38,29 @@
                             <input name="query" value="{{query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order name or ID">
                         </div>
                     </div>
+                    {% if store_order_synced %}
+                        <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Sort[{{sort}}]:</label>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="sort" class="form-control" style="padding: 6px 0px">
+                                <option {% if sort == 'created_at' %}selected="selected"{% endif %} value="created_at">Creation Date</option>
+                                <option {% if sort == 'updated_at' %}selected="selected"{% endif %} value="updated_at">Last Update</option>
+                                <option {% if sort == 'total_price' %}selected="selected"{% endif %} value="total_price">Total Price</option>
+                                <option {% if sort == 'country_code' %}selected="selected"{% endif %} value="country_code">Shipping Country</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sort-desc" class="control-label">
+                                <input type="checkbox" id="sort-desc" name="desc"value="true" class="icheck"
+                                       {% if request.GET.desc == 'true' %}checked{% endif %}>
+                                Descending
+                            </label>
+                        </div>
+                    </div>
+
+                    {% else %}
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Sort:</label>
@@ -49,6 +72,7 @@
                             </select>
                         </div>
                     </div>
+                    {% endif %}
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Status:</label>

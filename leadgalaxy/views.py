@@ -2647,12 +2647,17 @@ def orders_view(request):
         if request.GET.get('connected') == 'true':
             orders = orders.exclude(shopifyorderline__product=None)
 
+        if sort in ['created_at', 'updated_at', 'total_price', 'country_code']:
+            sort_desc = '-' if request.GET.get('desc') == 'true' else ''
+            orders = orders.order_by(sort_desc + sort)
+
         paginator = utils.SimplePaginator(orders, post_per_page)
         page = min(max(1, page), paginator.num_pages)
         current_page = paginator.page(page)
         page = current_page
 
         open_orders = paginator.count
+        print [str(i.order_id) for i in page]
 
         if open_orders:
             rep = requests.get(
@@ -2665,7 +2670,7 @@ def orders_view(request):
                 }
             )
 
-            page = rep.json()['orders']
+            page = shopify_orders_utils.sort_orders(rep.json()['orders'], page)
         else:
             page = []
 
