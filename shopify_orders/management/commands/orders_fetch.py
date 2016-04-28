@@ -78,6 +78,9 @@ class Command(BaseCommand):
         if not count:
             return
 
+        self.products_map = store.shopifyproduct_set.exclude(shopify_export=None).values_list('id', 'shopify_export__shopify_id')
+        self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
+
         start = time.time()
 
         session = requests.session()
@@ -105,9 +108,6 @@ class Command(BaseCommand):
     def import_order(self, data, store):
         customer = data.get('customer', {})
         address = data.get('shipping_address', {})
-
-        products_map = store.user.shopifyproduct_set.values_list('id', 'shopify_export__shopify_id')
-        products_map = dict(map(lambda a: (a[1], a[0]), products_map))
 
         order = ShopifyOrder(
             store=store,
@@ -143,7 +143,7 @@ class Command(BaseCommand):
                 variant_id=line['variant_id'],
                 variant_title=line['variant_title'])
 
-            l.product_id = products_map.get(int(order.order_id))
+            l.product_id = self.products_map.get(int(line['product_id']))
             l.save()
 
     def write_success(self, message):
