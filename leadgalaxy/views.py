@@ -2608,7 +2608,8 @@ def orders_view(request):
     financial = request.GET.get('financial', 'any')
     query = request.GET.get('query')
 
-    if not shopify_orders_utils.is_store_synced(store):
+    store_order_synced = shopify_orders_utils.is_store_synced(store)
+    if not store_order_synced:
         open_orders = store.get_orders_count(status, fulfillment, financial)
         orders = xrange(0, open_orders)
 
@@ -2642,6 +2643,9 @@ def orders_view(request):
 
         if financial != 'any':
             orders = orders.filter(financial_status=financial)
+
+        if request.GET.get('connected') == 'true':
+            orders = orders.exclude(shopifyorderline__product=None)
 
         paginator = utils.SimplePaginator(orders, post_per_page)
         page = min(max(1, page), paginator.num_pages)
@@ -2823,6 +2827,7 @@ def orders_view(request):
         'fulfillment': fulfillment,
         'query': query,
         'aliexpress_affiliate': (api_key and tracking_id),
+        'store_order_synced': store_order_synced,
         'page': 'orders',
         'breadcrumbs': ['Orders']
     })

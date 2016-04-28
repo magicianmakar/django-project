@@ -103,6 +103,20 @@
                         </div>
                     </div>
 
+                    {% if store_order_synced %}
+                    <div class="row m-t-xs">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="connected-orders" class="control-label">
+                                <input type="checkbox" id="connected-orders" name="connected"value="true" class="icheck"
+                                       {% if request.GET.connected == 'true' %}checked{% endif %}>
+                                Only Orders with Connected Products
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             {% if request.GET.store %}
@@ -442,6 +456,11 @@
     .gray-panel {
         background-color: #f3f3f4 !important;
     }
+
+    .icheckbox_square-blue {
+        position: relative !important;
+    }
+
 </style>
 {% endblock %}
 
