@@ -30,7 +30,12 @@ class Command(BaseCommand):
         if not options['sync_status']:
             options['sync_status'] = [0]
 
-        for order_sync in ShopifySyncStatus.objects.filter(sync_type=self.sync_type, sync_status__in=options['sync_status']):
+        while True:
+            order_sync = ShopifySyncStatus.objects.filter(sync_type=self.sync_type, sync_status__in=options['sync_status']).first()
+
+            if not order_sync:
+                break
+
             order_sync.sync_status = 1
             order_sync.save()
 
