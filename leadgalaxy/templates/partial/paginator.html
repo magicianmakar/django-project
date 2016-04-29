@@ -19,7 +19,7 @@
             {% if pa == current_page.number %}
             <li class="active"><span>{{pa}}</span></li>
             {% elif pa == None %}
-            <li class="active"><span>...</span></li>
+            <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
             {% else %}
             <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
             {% endif %}

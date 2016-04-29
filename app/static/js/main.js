@@ -463,6 +463,30 @@ $(function() {
         document.body.focus();
     });
 
+    $('.paginator-goto').click(function (e) {
+        e.preventDefault();
+
+        var url = $(this).attr('data-href');
+        if ($(this).prop('input-mode')) {
+            return;
+        }
+
+        $('span', this).text('').append($('<input>', {
+            'style': 'height:25px;width:40px;text-align:center'
+        }).keypress(function(e) {
+            if (e.which == 13) {
+                var inputValue = parseInt($(this).val().trim());
+                if (inputValue) {
+                    window.location.href = url.replace('paginator-goto', inputValue);
+                }
+
+                return false;
+            }
+        }));
+
+        $(this).prop('input-mode', true);
+    });
+
     $('.unveil').unveil();
 
     toastr.options.timeOut = 3000;
