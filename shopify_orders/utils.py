@@ -89,15 +89,15 @@ def update_shopify_order(store, data):
             order=order,
             line_id=line['id'],
             defaults={
-                'shopify_product': line['product_id'],
+                'shopify_product': safeInt(line['product_id']),
                 'title': line['title'],
                 'price': line['price'],
                 'quantity': line['quantity'],
-                'variant_id': line['variant_id'],
+                'variant_id': safeInt(line['variant_id']),
                 'variant_title': line['variant_title']
             })
 
-        l.product_id = products_map.get(int(order.order_id))
+        l.product_id = products_map.get(safeInt(order.order_id))
         l.save()
 
 
