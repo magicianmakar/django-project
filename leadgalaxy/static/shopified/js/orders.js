@@ -125,6 +125,13 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
+console.log('msg');
+    if($('.filter-form').is(':visible')) {
+        localStorage.orders_filter = 'false';
+    } else {
+        localStorage.orders_filter = 'true';
+    }
+
     $('.filter-form').toggle('fade');
 });
 
@@ -624,6 +631,10 @@ $(function () {
 
         $(el).trigger('change');
     });
+
+    if (localStorage.orders_filter == 'true') {
+        $('.filter-form').show();
+    }
 
     findMarkedLines();
     loadVriantImages('.orders .line');
