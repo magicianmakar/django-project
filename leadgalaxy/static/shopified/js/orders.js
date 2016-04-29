@@ -125,7 +125,6 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-console.log('msg');
     if($('.filter-form').is(':visible')) {
         localStorage.orders_filter = 'false';
     } else {
