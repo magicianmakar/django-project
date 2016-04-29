@@ -2626,8 +2626,32 @@ def orders_view(request):
     else:
         orders = ShopifyOrderSaved.objects.filter(user=request.user.models_user, store=store)
 
+        query = request.GET.get('query_order')
         if query:
-            pass
+            try:
+                order_number = re.findall('[0-9]+', query)
+                order_number = int(order_number[0])
+            except:
+                order_number = 0
+
+            if order_number:
+                orders = orders.filter(Q(order_number=order_number) |
+                                       Q(order_number=(order_number-1000)) |
+                                       Q(order_id=order_number))
+            else:
+                orders = orders.filter(Q(order_id=utils.safeInt(query)))
+
+        query = request.GET.get('query_customer')
+        if query:
+            orders = orders.filter(Q(customer_id=utils.safeInt(query, -1)) |
+                                   Q(customer_name__icontains=query) |
+                                   Q(customer_email__iexact=query))
+
+        query = request.GET.get('query_address')
+        if query:
+            orders = orders.filter(Q(country_code__iexact=query))
+
+        query = None
 
         if status == 'open':
             orders = orders.filter(closed_at=None)
@@ -2815,6 +2839,9 @@ def orders_view(request):
 
         all_orders.append(order)
 
+    if store_order_synced:
+        countries = utils.get_countries()
+
     tpl = 'orders_new.html'
     if request.GET.get('table'):
         tpl = 'orders.html'
@@ -2832,6 +2859,7 @@ def orders_view(request):
         'query': query,
         'aliexpress_affiliate': (api_key and tracking_id),
         'store_order_synced': store_order_synced,
+        'countries': countries,
         'page': 'orders',
         'breadcrumbs': ['Orders']
     })

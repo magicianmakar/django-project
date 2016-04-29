@@ -29,6 +29,44 @@
                         </div>
                     </div>
                     <form method="get" action="/orders" class="filter-form m-t-sm" style="display:none;">
+                    {% if store_order_synced %}
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Order:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control"
+                                   style="xpadding: 6px 0px" placeholder="Order name or ID">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Customer:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
+                                   style="xpadding: 6px 0px" placeholder="ID, Name or Email">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Country:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="query_address"  class="form-control" id="country-filter" placeholder="Shipping Country">
+                               <option value=""></option>
+                                {% for item in countries %}
+                                <option value="{{item.0}}"
+                                    {% if request.GET.query_address == item.0 %}selected="selected"{% endif %}
+                                    >{{item.1}}</option>
+                                {% endfor %}
+                                </select>
+                        </div>
+                    </div>
+
+                    {% else %}
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Query:</label>
@@ -37,6 +75,7 @@
                             <input name="query" value="{{query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order name or ID">
                         </div>
                     </div>
+                    {% endif %}
                     {% if store_order_synced %}
                         <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
@@ -489,10 +528,14 @@
     }
 
 </style>
+
+<link href="{% static 'css/plugins/chosen/chosen.css' %}" rel="stylesheet">
+
 {% endblock %}
 
 {% block extrajs %}
 {% compress js %}
+    <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'shopified/js/orders.js' %}"></script>
 {% endcompress %}
 {% endblock %}

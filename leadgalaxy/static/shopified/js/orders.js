@@ -137,10 +137,11 @@ $('.filter-btn').click(function (e) {
 $(".filter-form").submit(function() {
     $(this).find(":input").filter(function(){
         return ((this.name == 'sort' && this.value == 'desc') ||
+            (this.name == 'sort' && this.value == 'created_at') ||
             (this.name == 'status' && this.value == 'open') ||
             (this.name == 'fulfillment' && this.value == 'unshipped') ||
             (this.name == 'financial' && this.value == 'any') ||
-            (this.name == 'query' && this.value.trim().length === 0));
+            (this.name.match(/^query/) && this.value.trim().length === 0));
     }).attr("disabled", "disabled");
     return true; // ensure form still submits
 });
@@ -649,6 +650,10 @@ $(function () {
     if (window.location.hash.length) {
         window.location.hash = '';
     }
+
+    $('#country-filter').chosen({
+        width: '239px'
+    });
 
     setTimeout(function() {
         window.location.reload();
