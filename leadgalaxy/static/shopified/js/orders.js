@@ -613,6 +613,11 @@ $('.auto-shipping-btn').click(function (e) {
 
 });
 
+$('.chosen-reset-selection').click(function (e) {
+    e.preventDefault();
+    $("#country-filter").val('').trigger("chosen:updated");
+});
+
 $(function () {
     $('.help-select').each(function (i, el) {
         $('option', el).each(function (index, option) {

@@ -76,7 +76,7 @@
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Country:</label>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <select name="query_address"  class="form-control" id="country-filter" data-placeholder="Shipping Country">
                                <option value=""></option>
                                 {% for item in countries %}
@@ -85,6 +85,9 @@
                                     >{{item.1}}</option>
                                 {% endfor %}
                                 </select>
+                        </div>
+                        <div class="col-md-2" style="padding: 5px 0">
+                            <a href="#" class="chosen-reset-selection">Reset</a>
                         </div>
                     </div>
 
