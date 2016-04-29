@@ -91,6 +91,9 @@ class Command(BaseCommand):
         session = requests.session()
         pages = int(ceil(count/float(limit)))
         for page in xrange(1, pages+1):
+            if count > 1000:
+                print 'Page %d ({:0.0f}%)'.format(page, limit*page/float(count) * 100.0)
+
             rep = session.get(
                 url=store.get_link('/admin/orders.json', api=True),
                 params={
