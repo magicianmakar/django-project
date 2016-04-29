@@ -55,6 +55,11 @@ def random_hash():
 def hash_text(text):
     return hashlib.md5(text).hexdigest()
 
+
+def hash_list(data):
+    return hash_text(''.join(data))
+
+
 def create_new_profile(user):
     plan = GroupPlan.objects.filter(default_plan=1).first()
     profile = UserProfile(user=user, plan=plan)
