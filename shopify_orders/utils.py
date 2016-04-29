@@ -107,3 +107,12 @@ def is_store_synced(store, sync_type='orders'):
         return sync_status.sync_status == 2
     except ShopifySyncStatus.DoesNotExist:
         return False
+
+
+def disable_store_sync(store):
+    try:
+        sync = ShopifySyncStatus.objects.get(store=store)
+        sync.sync_status = 3
+        sync.save()
+    except:
+        pass

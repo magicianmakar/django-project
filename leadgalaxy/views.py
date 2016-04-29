@@ -2608,6 +2608,9 @@ def orders_view(request):
     financial = request.GET.get('financial', 'any')
     query = request.GET.get('query')
 
+    if request.GET.get('old') == '1':
+        shopify_orders_utils.disable_store_sync(store)
+
     store_order_synced = shopify_orders_utils.is_store_synced(store)
     if not store_order_synced:
         open_orders = store.get_orders_count(status, fulfillment, financial)
