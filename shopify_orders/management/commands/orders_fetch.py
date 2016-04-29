@@ -10,6 +10,12 @@ from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderL
 from shopify_orders.utils import get_customer_name, get_datetime
 
 
+def safeInt(v, default=0):
+    try:
+        return int(v)
+    except:
+        return default
+
 class Command(BaseCommand):
     help = 'Fetch Orders from Shopify API and store them in the database'
 
@@ -53,12 +59,13 @@ class Command(BaseCommand):
             order_sync.save()
 
             try:
-                with transaction.atomic():
-                    self.fetch_orders(order_sync.store)
+                self.fetch_orders(order_sync.store)
 
                 order_sync.sync_status = 2
 
             except:
+                ShopifyOrder.objects.filter(store=order_sync.store).delete()
+
                 order_sync.sync_status = 4
                 raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
@@ -83,6 +90,7 @@ class Command(BaseCommand):
                                  .order_by('created_at')
 
         self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
+        self.imported_orders = []
 
         start = time.time()
 
@@ -102,11 +110,15 @@ class Command(BaseCommand):
 
             self.total_order_fetch += len(rep['orders'])
 
-            for order in rep['orders']:
-                self.import_order(order, store)
+            with transaction.atomic():
+                for order in rep['orders']:
+                    if order['id'] not in self.imported_orders:
+                        self.import_order(order, store)
+                        self.imported_orders.append(order['id'])
+                    else:
+                        print 'Already Imported', order['id']
 
         self.write_success('Orders imported in {:.02f} ms'.format(time.time() - start))
-
 
     def import_order(self, data, store):
         customer = data.get('customer', {})
@@ -139,14 +151,14 @@ class Command(BaseCommand):
             l = ShopifyOrderLine(
                 order=order,
                 line_id=line['id'],
-                shopify_product=line['product_id'],
+                shopify_product=safeInt(line['product_id']),
                 title=line['title'],
                 price=line['price'],
                 quantity=line['quantity'],
-                variant_id=line['variant_id'],
+                variant_id=safeInt(line.get('variant_id')),
                 variant_title=line['variant_title'])
 
-            l.product_id = self.products_map.get(int(line['product_id']))
+            l.product_id = self.products_map.get(safeInt(line['product_id']))
             l.save()
 
     def write_success(self, message):
