@@ -5,6 +5,12 @@ import arrow
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 
+def safeInt(v, default=0):
+    try:
+        return int(v)
+    except:
+        return default
+
 
 def get_customer_name(customer):
     return u'{} {}'.format(

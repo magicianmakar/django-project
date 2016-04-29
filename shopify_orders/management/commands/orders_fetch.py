@@ -7,14 +7,8 @@ import time
 import requests
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopify_orders.utils import get_customer_name, get_datetime
+from shopify_orders.utils import get_customer_name, get_datetime, safeInt
 
-
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
 
 class Command(BaseCommand):
     help = 'Fetch Orders from Shopify API and store them in the database'
