@@ -2847,6 +2847,8 @@ def orders_view(request):
 
     if store_order_synced:
         countries = utils.get_countries()
+    else:
+        countries = []
 
     tpl = 'orders_new.html'
     if request.GET.get('table'):
