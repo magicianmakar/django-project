@@ -2611,7 +2611,7 @@ def orders_view(request):
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
 
-    store_order_synced = shopify_orders_utils.is_store_synced(store)
+    store_order_synced = shopify_orders_utils.is_store_synced(store) and request.GET.get('live') != '1'
     if not store_order_synced:
         open_orders = store.get_orders_count(status, fulfillment, financial)
         orders = xrange(0, open_orders)
