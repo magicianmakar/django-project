@@ -92,7 +92,7 @@ class Command(BaseCommand):
         pages = int(ceil(count/float(limit)))
         for page in xrange(1, pages+1):
             if count > 1000:
-                print 'Page %d ({:0.0f}%)'.format(page, limit*page/float(count) * 100.0)
+                print 'Page {} ({:0.0f}%)'.format(page, limit*page/float(count) * 100.0)
 
             rep = session.get(
                 url=store.get_link('/admin/orders.json', api=True),
@@ -115,7 +115,7 @@ class Command(BaseCommand):
                     else:
                         print 'Already Imported', order['id']
 
-        self.write_success('Orders imported in {:.02f} ms'.format(time.time() - start))
+        self.write_success('Orders imported in %d:%d' % divmod(time.time() - start, 60))
 
     def import_order(self, data, store):
         customer = data.get('customer', {})
