@@ -25,7 +25,7 @@ import tasks
 
 import os
 import re
-import json
+import simplejson as json
 import time
 import requests
 import arrow

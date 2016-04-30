@@ -1,6 +1,6 @@
 from django import template
 from django.template import Context, Template
-import json
+import simplejson as json
 from urlparse import urlparse
 
 register = template.Library()

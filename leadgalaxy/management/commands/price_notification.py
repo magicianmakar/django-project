@@ -4,7 +4,7 @@ from django.db.models import Q
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
-import json
+import simplejson as json
 import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client

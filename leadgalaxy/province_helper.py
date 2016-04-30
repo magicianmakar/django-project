@@ -1,5 +1,5 @@
 import os
-import json
+import simplejson as json
 from app import settings
 
 def load_uk_provincess():

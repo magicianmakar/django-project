@@ -8,7 +8,7 @@ from django.db.models import Q
 from article.models import *
 from article.forms import ArticleForm, CommentForm
 
-import json
+import simplejson as json
 
 def index(request, tag=None):
     if tag:

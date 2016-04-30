@@ -1,5 +1,5 @@
 import os
-import json
+import simplejson as json
 import requests
 import uuid
 import hashlib
