@@ -2686,23 +2686,17 @@ def orders_view(request):
         open_orders = paginator.count
 
         if open_orders:
-            cache_key = utils.hash_list(['{i.order_id}-{i.updated_at}'.format(i=i) for i in page])
-            shopify_orders = cache.get(cache_key)
-            if shopify_orders is None:
-                rep = requests.get(
-                    url=store.get_link('/admin/orders.json', api=True),
-                    params={
-                        'ids': ','.join([str(i.order_id) for i in page]),
-                        'status': 'any',
-                        'fulfillment_status': 'any',
-                        'financial_status': 'any',
-                    }
-                )
+            rep = requests.get(
+                url=store.get_link('/admin/orders.json', api=True),
+                params={
+                    'ids': ','.join([str(i.order_id) for i in page]),
+                    'status': 'any',
+                    'fulfillment_status': 'any',
+                    'financial_status': 'any',
+                }
+            )
 
-                shopify_orders = rep.json()['orders']
-                cache.set(cache_key, shopify_orders, timeout=600)
-
-            page = shopify_orders_utils.sort_orders(shopify_orders, page)
+            page = shopify_orders_utils.sort_orders(rep.json()['orders'], page)
         else:
             page = []
 
