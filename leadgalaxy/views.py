@@ -2657,9 +2657,11 @@ def orders_view(request):
         query = None
 
         if status == 'open':
-            orders = orders.filter(closed_at=None)
+            orders = orders.filter(closed_at=None, cancelled_at=None)
         elif status == 'closed':
             orders = orders.exclude(closed_at=None)
+        elif status == 'cancelled':
+            orders = orders.exclude(cancelled_at=None)
 
         if fulfillment == 'unshipped':
             orders = orders.filter(fulfillment_status=None)

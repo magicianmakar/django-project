@@ -51,6 +51,7 @@ class ShopifyOrder(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     closed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
         return u'#{}'.format(self.order_number)

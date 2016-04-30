@@ -140,6 +140,7 @@ class Command(BaseCommand):
             created_at=get_datetime(data['created_at']),
             updated_at=get_datetime(data['updated_at']),
             closed_at=get_datetime(data['closed_at']),
+            cancelled_at=get_datetime(data['cancelled_at']),
         )
 
         order.save()
