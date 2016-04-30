@@ -2674,6 +2674,7 @@ def orders_view(request):
         if request.GET.get('connected') == 'true':
             orders = orders.exclude(shopifyorderline__product=None)
 
+        sort = request.GET.get('sort', 'created_at')
         if sort in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if request.GET.get('desc') == 'true' else ''
             orders = orders.order_by(sort_desc + sort)
