@@ -100,7 +100,7 @@ def update_shopify_order(store, data):
                 'variant_title': line['variant_title']
             })
 
-        l.product_id = products_map.get(safeInt(order.order_id))
+        l.product = store.shopifyproduct_set.filter(shopify_export__shopify_id=safeInt(line['product_id'])).first()
         l.save()
 
 
