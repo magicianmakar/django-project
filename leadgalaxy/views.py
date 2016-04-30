@@ -1673,7 +1673,11 @@ def webhook(request, provider, option):
                     ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                           .update(call_count=F('call_count')+1)
 
-                shopify_orders_utils.update_shopify_order(store, shopify_order)
+                try:
+                    shopify_orders_utils.update_shopify_order(store, shopify_order)
+                except AssertionError:
+                    raven_client.captureMessage('Store is being imported', extra={'store': store})
+                    return JsonResponse({'error': 'Store Still in Process'}, status=500)
 
                 return JsonResponse({'status': 'ok'})
 

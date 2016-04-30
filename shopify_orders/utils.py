@@ -47,6 +47,8 @@ def update_shopify_order(store, data):
     except ShopifySyncStatus.DoesNotExist:
         return
 
+    assert sync_status.sync_status != 1, 'Store is being imported'
+
     customer = data.get('customer', {})
     address = data.get('shipping_address', {})
 
