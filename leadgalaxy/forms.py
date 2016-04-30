@@ -198,7 +198,7 @@ class SubUserStoresForm(forms.ModelForm):
 
         self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_stores"].help_text = ""
-        self.fields["subuser_stores"].queryset = parent_user.shopifystore_set.all()
+        self.fields["subuser_stores"].queryset = parent_user.get_active_stores()
 
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)
