@@ -279,7 +279,7 @@
                                                     "></i>
                                                 </div>
                                                 <div class="edit-note">
-                                                    <textarea class="note" style="width: 99%;height: 250px; margin-bottom: 40px;">{{order.note}}</textarea>
+                                                    <textarea class="note">{{order.note|default:''}}</textarea>
                                                     <button class="btn btn-primary btn-sm note-edit-save"
                                                             style="position: absolute; bottom: 5px; right: 5px; "
                                                             order-id="{{order.id}}" store-id="{{store.id}}">
@@ -523,6 +523,12 @@
     .note-panel .edit-note{
         display: none;
     }
+    .note-panel .edit-note .note {
+        width: 99%;
+        height: 250px;
+        margin-bottom: 40px;
+    }
+
     .order {
         background-color: white !important;
     }
