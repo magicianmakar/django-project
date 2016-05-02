@@ -210,7 +210,7 @@
                                         <span class="itooltip" title="{{order.date_tooltip}}">{{order.date_str}}</span>
                                     </div>
                                     <div class="col-md-2">
-                                        <span class="badge badge-{% if order.financial_status == 'Paid' %}warning{% else %}primary{% endif %}">
+                                        <span class="badge badge-{% if order.financial_status != 'paid' %}warning{% else %}primary{% endif %}">
                                             {{order.financial_status|title}}
                                         </span>
                                     </div>
