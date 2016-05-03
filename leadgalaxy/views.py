@@ -567,8 +567,17 @@ def proccess_api(request, user, method, target, data):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        url = store.get_link(data.get('url'), api=True)
-        requests.put(url, json=json.loads(data.get('data')))
+        api_url = '/admin/variants/{}.json'.format(data.get('variant'))
+        api_url = store.get_link(api_url, api=True)
+
+        api_data = {
+            "variant": {
+                "id": data.get('variant'),
+                "image_id": data.get('image'),
+            }
+        }
+
+        requests.put(api_url, json=api_data)
 
         return JsonResponse({
             'status': 'ok'

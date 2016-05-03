@@ -11,6 +11,12 @@ $('#btn-variants-img').click(function(e) {
 function updateSelectButton() {
     var current = parseInt($('.current-var').val());
     var total = $('.current-var').prop('total');
+    var variant_id = product.variants[current].id;
+    var image_id = product.variants[current].image_id;
+    var img = $('img[image-id='+image_id+']');
+
+    $('.link-success').hide();
+    $('.link-success', img.parent()).show();
 
     $('.var-btn-prev').prop('disabled', current <= 0);
     $('.var-btn-next').prop('disabled', current + 1 >= total);
@@ -49,7 +55,7 @@ function imageClicked(e) {
     var img = $(this);
     var current = $('.current-var').val();
     var variant_id = product.variants[current].id;
-    var image_id = $(this).attr('image-id');
+    var image_id = img.attr('image-id');
 
     $('.var-btn-prev').prop('disabled', true);
     $('.var-btn-next').prop('disabled', true);
@@ -68,27 +74,25 @@ function imageClicked(e) {
         type: 'POST',
         data: {
             'store': store_id,
-            'url': '/admin/variants/' + variant_id + '.json',
-            'data': JSON.stringify(api_data)
+            'variant': variant_id,
+            'image': image_id
         },
         context: {
-            image: this
+            image: img,
+            current: current,
+            image_id: image_id,
         },
         success: function(data) {
-            if (data.status == 'ok') {
-                img.parent().find('.link-success').fadeIn();
-                setTimeout(function() {
-                    img.parent().find('.link-success').fadeOut();
-                }, 1500);
-            } else {
-                displayAjaxError('Image linking error', data);
-            }
+            product.variants[this.current].image_id = this.image_id;
+
+            $('.link-success').hide();
+            this.image.parent().find('.link-success').fadeIn();
         },
         error: function(data) {
             displayAjaxError('Image linking error', data);
         },
         complete: function() {
-            img.parent().loader('hide');
+            this.image.parent().loader('hide');
         }
     });
 
