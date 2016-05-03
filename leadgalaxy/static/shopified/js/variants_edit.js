@@ -114,8 +114,12 @@ function setupVariantsLinking() {
         });
 
         $.each(product.images, function(i, el) {
+            if (i !== 0 && i % 4 === 0) {
+                $('#var-images').append($('<div class="col-md-12"></div>'));
+            }
+
             var d = $('<div>', {
-                'class': 'col-xs-3 var-image-block'
+                'class': 'col-md-3 var-image-block'
             });
 
             var img = $('<img>', {

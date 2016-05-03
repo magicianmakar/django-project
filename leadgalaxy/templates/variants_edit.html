@@ -7,25 +7,18 @@
 {% block main-container %}
 
 <div class="row">
-    <div class="col-md-8 col-md-offset-2">
+    <div class="col-md-12">
         <div class="ibox float-e-margins">
             <div class="ibox-title">
-                <h5>Shopify Stores<small></small></h5>
+                <h5 class="product-title"></h5>
                 <div class="ibox-tools">
                     <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                 </div>
             </div>
             <div class="ibox-content">
                 <div class="container-fluid hide-no-produce">
-                    <div class=" row">
-                        <div class="form-group col-xs-12 text-center">
-                            <h3 class="product-title"></h3>
-                            <h5>Number of variants: <span class="product-variants"></span></h5>
-                        </div>
-                    </div>
-
                     <div class="row" style="margin-bottom:10px">
-                        <div class="col-xs-12 alert alert-info">
+                        <div class="col-md-12 alert alert-info">
                             <p style="margin:0">Please follow this steps to link product's variants to the corresponding images:</p>
                             <p style="margin:0;margin-left:10px">Step 1: Select a variant of the product.</p>
                             <p style="margin:0;margin-left:10px">Step 2: Select images for your variants.</p>
@@ -33,7 +26,7 @@
                     </div>
 
                     <div class=" row">
-                        <div class="form-group col-xs-12 text-center">
+                        <div class="form-group col-md-12 text-center">
                             <button class="btn btn-default btn-sm btn-outline var-btn-prev"><span>&lt;</span></button>
                             <select class="form-control current-var" style="margin:0 10px;width:200px;display:inline"></select>
                             <button class="btn btn-default btn-sm btn-outline var-btn-next"><span>&gt;</span></button>
@@ -43,11 +36,11 @@
                     <div class="row  text-center" id="var-images">
                     </div>
                     <div class="row">
-                        <div class="col-xs-4">
+                        <div class="col-md-4">
                             <button id="view-btn" type="button" class="btn btn-info" style="margin-top:20px">View in Shopify</button>
                         </div>
                         <!--
-                        <div class="col-xs-4 col-xs-offset-4 text-right">
+                        <div class="col-md-4 col-md-offset-4 text-right">
                             <button id="skip-btn" type="button" class="btn btn-primary" style="margin-top:20px">Close</button>
                         </div>
                         -->
@@ -91,7 +84,7 @@
 .var-image {
     border: 1px solid #ccc;
     padding: 5px;
-    width: 100px;
+    width: 99%;
     cursor: pointer;
 }
 
