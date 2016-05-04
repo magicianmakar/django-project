@@ -2738,6 +2738,7 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
+    disable_affiliate = models_user.get_config('_disable_affiliate', False)
     api_key, tracking_id = utils.get_user_affiliate(models_user)
 
     for index, order in enumerate(page):
@@ -2878,7 +2879,7 @@ def orders_view(request):
         'financial': financial,
         'fulfillment': fulfillment,
         'query': query,
-        'aliexpress_affiliate': (api_key and tracking_id),
+        'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
         'countries': countries,
         'page': 'orders',
