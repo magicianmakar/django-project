@@ -35,7 +35,7 @@ urlpatterns = patterns('',
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', leadgalaxy.views.subusers_perms, name='subusers_perms'),
 
     url(r'^marketing/feeds$', leadgalaxy.views.product_feeds, name='product_feeds'),
-    url(r'^marketing/feeds/(?P<store_id>[0-9a-z]+)$', leadgalaxy.views.get_product_feed, name='get_product_feed'),
+    url(r'^marketing/feeds/(?P<store_id>[0-9a-z]+)(/(?P<revision>[0-9]+))?$', leadgalaxy.views.get_product_feed, name='get_product_feed'),
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),

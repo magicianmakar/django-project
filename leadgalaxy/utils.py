@@ -976,12 +976,14 @@ class ProductFeed():
     domain = 'uncommonnow.com'
     currency = 'USD'
 
-    def __init__(self, store):
+    def __init__(self, store, revision=1):
         self.store = store
         self.info = store.get_info
 
         self.currency = self.info['currency']
         self.domain = self.info['domain']
+
+        self.revision = safeInt(revision, 1)
 
     def _add_element(self, parent, tag, text):
         element = ET.SubElement(parent, tag)
@@ -1002,8 +1004,11 @@ class ProductFeed():
 
     def add_product(self, product):
         if len(product['variants']):
-            for variant in product['variants']:
-                self._add_variant(product, variant)
+            if self.revision == 1:
+                for variant in product['variants']:
+                    self._add_variant(product, variant)
+            else:
+                self._add_variant(product, product['variants'][0])
 
     def _add_variant(self, product, variant):
         image = product.get('image')
@@ -1014,7 +1019,11 @@ class ProductFeed():
 
         item = ET.SubElement(self.channel, 'item')
 
-        self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        if self.revision == 1:
+            self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        else:
+            self._add_element(item, 'g:id', '{}'.format(product['id']))
+
         self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element(item, 'g:title', product.get('title'))
         self._add_element(item, 'g:description', self._clean_description(product))

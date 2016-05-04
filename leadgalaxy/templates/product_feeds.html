@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load url_tools %}
 
 {% block main-container %}
 <div class="row">
@@ -11,18 +12,67 @@
             </div>
             <div class="ibox-content" style="display:block">
                 <p>
+                    Use the Feeds below to create your Facebook Products Catalogs for use with Facebook Dynamic Products Ads.
+                </p>
+                <p>
                     <span>Learn how to setup Facebook Dynamic Product Ads</span>
                     <a class="btn btn-default btn-outline btn-xs" href="/pages/view/setting-up-facebook-dynamic-product-ads-with-shopify" target="_blank">READ MORE</a>
                 </p>
-                <ul class="list-group">
-                {% for item in user.profile.get_active_stores %}
-                    <li class="list-group-item">
-                        <a href="{% url 'get_product_feed' store_id=item.get_short_hash %}">{{item.title}}</a>
-                    </li>
-                {% endfor %}
-                </ul>
+
+                <table class="table table-bordered m-t-lg">
+                    <thead>
+                        <tr>
+                            <th style="width:25%">Store</th>
+                            <th>Feed URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in user.profile.get_active_stores %}
+                        <tr id="{{item.id}}">
+                            <td>{{item.title}}</td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="text" class="form-control"
+                                           value="">
+
+                                    <span class="input-group-addon copy-feed-url" style="cursor:pointer" data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.get_short_hash %}/2">
+                                        <i class="fa fa-files-o"></i>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="row">
+                    <div class="col-sm-3 col-sm-offset-9 text-right">
+                        <a class="itooltip" title="If you are using the old feed format, it will continue to work but we are now recommending to use the updated format" href="#">Using Old Feeds?</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script type="text/javascript">
+    $(function () {
+        $('.copy-feed-url').each(function (i, el) {
+            $(el).parent().find('input').val($(el).attr('data-clipboard-text'));
+        });
+
+        new Clipboard('.copy-feed-url', {
+            target: function(trigger) {
+                return trigger;
+            }
+        })
+        .on('success', function(e) {
+            toastr.success('Copied!');
+        });
+    });
+</script>
+
 {% endblock %}

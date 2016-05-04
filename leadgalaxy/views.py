@@ -3228,14 +3228,14 @@ def acp_users_emails(request):
     return HttpResponse(o)
 
 
-def get_product_feed(request, store_id):
+def get_product_feed(request, store_id, revision=1):
     try:
         assert len(store_id) == 8
         store = ShopifyStore.objects.get(store_hash__startswith=store_id)
     except (AssertionError, ShopifyStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    feed = utils.ProductFeed(store)
+    feed = utils.ProductFeed(store, revision)
     feed.init()
 
     for p in utils.get_shopify_products(store, all_products=True):
