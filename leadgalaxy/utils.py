@@ -1004,11 +1004,8 @@ class ProductFeed():
 
     def add_product(self, product):
         if len(product['variants']):
-            if self.revision == 1:
-                for variant in product['variants']:
-                    self._add_variant(product, variant)
-            else:
-                self._add_variant(product, product['variants'][0])
+            for variant in product['variants']:
+                self._add_variant(product, variant)
 
     def _add_variant(self, product, variant):
         image = product.get('image')
@@ -1022,7 +1019,7 @@ class ProductFeed():
         if self.revision == 1:
             self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         else:
-            self._add_element(item, 'g:id', '{}'.format(product['id']))
+            self._add_element(item, 'g:id', '{}'.format(variant['id']))
 
         self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element(item, 'g:title', product.get('title'))
