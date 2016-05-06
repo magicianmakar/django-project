@@ -345,7 +345,10 @@ class ShopifyStore(models.Model):
         rep = requests.get(url=self.get_link('/admin/shop.json', api=True))
         rep = rep.json()
 
-        return rep['shop']
+        if 'shop' in rep:
+            return rep['shop']
+        else:
+            raise Exception(rep['errors'])
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
