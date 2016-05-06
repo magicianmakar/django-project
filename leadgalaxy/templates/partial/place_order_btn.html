@@ -24,6 +24,13 @@
                         href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    {% endif %}
                    >Step By Step Order</a></li>
+               <li><a class="place-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
+                   {% if aliexpress_affiliate %}
+                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
+                   {% else %}
+                        href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
+                   {% endif %}
+                   >Add To Cart</a></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}
                         href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"

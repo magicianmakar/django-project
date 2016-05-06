@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load template_helper %}
+{% load perms_helper %}
 {% load compress %}
 
 {% block main-container %}
@@ -219,7 +220,7 @@
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
-                                    <div class="col-md-3 col-md-offset-1">
+                                    <div class="col-md-3">
                                         {% if order.placed_orders == 0 %}
                                             <span class="badge badge-danger primary" style="width:15px;height:15px">&nbsp;</span>
                                             No Products Ordered
@@ -229,6 +230,11 @@
                                         {% else %}
                                             <span class="badge badge-primary completed-order" style="width:15px;height:15px">&nbsp;</span>
                                             Order Complete
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-1 text-right">
+                                        {% if user|can:'combined_order.use' %}
+                                        <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}">Order All</button>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -300,7 +306,8 @@
                                     {% for item in order.line_items %}
                                     {% with image=item.image original=item.product.get_original_info %}
 
-                                    <div class="line container-fluid" line-id="{{item.id}}">
+                                    <div class="line container-fluid" line-id="{{item.id}}"
+                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}">
                                         <div class="row source-order">
                                             <div class="col-md-3">
                                                 <span>Supplier:</span>
