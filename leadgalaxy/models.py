@@ -382,6 +382,11 @@ class ShopifyProduct(models.Model):
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
+    title = models.CharField(max_length=512, blank=True, default='', db_index=True)
+    price = models.FloatField(default=0.0)
+    product_type = models.CharField(max_length=255, blank=True, default='', db_index=True)
+    tag = models.CharField(max_length=255, blank=True, default='', db_index=True)
+
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
     price_notification_id = models.IntegerField(default=0)
@@ -398,6 +403,20 @@ class ShopifyProduct(models.Model):
                 return u'{}'.format(title)
         except:
             return u'<ShopifyProduct: %d>' % self.id
+
+    def save(self, *args, **kwargs):
+        data = json.loads(self.data)
+
+        self.title = data['title']
+        self.product_type = data['type']
+        self.tag = data['tags']
+
+        try:
+            self.price = '$%.02f' % float(data['price'])
+        except:
+            self.price = 0.0
+
+        super(ShopifyProduct, self).save(*args, **kwargs)
 
     def shopify_link(self):
         shopif_id = self.get_shopify_id()
