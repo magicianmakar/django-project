@@ -2792,15 +2792,18 @@ def orders_view(request):
                 order['connected_lines'] += 1
 
                 original_url = original_info.get('url')
-                try:
-                    original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
-                    order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
-                        original_id)
+                if utils.get_domain(original_url) == 'aliexpress':
+                    try:
+                        original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
+                        order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
+                            original_id)
 
-                    order['line_items'][i]['original_id'] = original_id
-                except:
+                        order['line_items'][i]['original_id'] = original_id
+                    except:
+                        order['line_items'][i]['original_url'] = original_url
+                        print 'WARNING: ID not found for:', original_url
+                else:
                     order['line_items'][i]['original_url'] = original_url
-                    print 'WARNING: ID not found for:', original_url
 
             products_cache[el['product_id']] = product
 
