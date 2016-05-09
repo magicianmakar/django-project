@@ -1740,9 +1740,8 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     models_user = request.user.models_user
     user = request.user
     user_stores = request.user.profile.get_active_stores(flat=True)
-
     res = ShopifyProduct.objects.select_related('store', 'shopify_export') \
-                                .filter(user=models_user).filter(store__in=user_stores)
+                                .filter(user=models_user).filter(Q(store__in=user_stores) | Q(store=None))
     if store:
         if store == 'c':  # connected
             res = res.exclude(shopify_export__isnull=True)

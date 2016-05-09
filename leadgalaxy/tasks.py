@@ -28,7 +28,7 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 def export_product(req_data, target, user_id):
     start = time.time()
 
-    store = req_data['store']
+    store = req_data.get('store')
     data = req_data['data']
     original_data = req_data.get('original', '')
 
@@ -47,26 +47,21 @@ def export_product(req_data, target, user_id):
         'from_extension': ('access_token' in req_data)
     })
 
-    try:
+    if store or target != 'save-for-later':
         try:
             store = ShopifyStore.objects.get(id=store)
-        except ValueError:
+            user.can_view(store)
+
+        except (ShopifyStore.DoesNotExist, ValueError):
             raven_client.captureException()
 
-            store = ShopifyStore.objects.get(title=store)
-
-        user.can_view(store)
-
-    except (ShopifyStore.DoesNotExist, ValueError):
-        raven_client.captureException()
-
-        return {
-            'error': 'Selected store (%s) not found' % (store)
-        }
-    except PermissionDenied as e:
-        return {
-            'error': "Store: {}".format(e.message)
-        }
+            return {
+                'error': 'Selected store (%s) not found' % (store)
+            }
+        except PermissionDenied as e:
+            return {
+                'error': "Store: {}".format(e.message)
+            }
 
     original_url = json.loads(data).get('original_url')
     if not original_url:
@@ -105,8 +100,6 @@ def export_product(req_data, target, user_id):
             'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
         }
 
-    endpoint = store.get_link('/admin/products.json', api=True)
-
     if target == 'shopify' or target == 'shopify-update':
         try:
             if target == 'shopify-update':
@@ -119,6 +112,7 @@ def export_product(req_data, target, user_id):
                 update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
                 r = requests.put(update_endpoint, json=api_data)
             else:
+                endpoint = store.get_link('/admin/products.json', api=True)
                 r = requests.post(endpoint, json=json.loads(data))
 
                 if 'product' in r.json():

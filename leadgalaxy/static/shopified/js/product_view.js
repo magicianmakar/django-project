@@ -141,14 +141,13 @@ $('#export-btn').click(function () {
         return;
     }
 
-    btn.bootstrapBtn('loading');
-
     var store_id = $('#store-select').val();
-
     if (!store_id || store_id.length === 0) {
         swal('Product Export', 'Please choose a Shopify store first!', 'error');
         return;
     }
+
+    btn.bootstrapBtn('loading');
 
     var api_data = {
       "product": {
@@ -344,11 +343,6 @@ $('#save-for-later-btn').click(function (e) {
     btn.bootstrapBtn('loading');
 
     var store_id = $('#store-select').val();
-
-    if (!store_id || store_id.length === 0) {
-        swal('Save for later', 'Please choose a Shopify store first!', 'error');
-        return;
-    }
 
     var api_data = {
         'title': $('#product-title').val(),

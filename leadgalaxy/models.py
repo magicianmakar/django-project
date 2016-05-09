@@ -372,7 +372,7 @@ class ShopifyProduct(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, blank=True, null=True)
     user = models.ForeignKey(User)
 
     data = models.TextField()
