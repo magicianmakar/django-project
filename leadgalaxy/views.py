@@ -2822,6 +2822,8 @@ def orders_view(request):
                             shipping_address_asci[u'province'] = province
                         else:
                             shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
+                    elif shipping_address_asci[u'province'] == 'Washington DC':
+                        shipping_address_asci[u'province'] = u'Washington'
 
                     phone = shipping_address_asci.get('phone')
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
