@@ -393,7 +393,10 @@ class ShopifyProduct(models.Model):
     def __unicode__(self):
         try:
             title = json.loads(self.data)['title']
-            return u'{}...'.format(textwrap.wrap(title, width=79)[0])
+            if len(title) > 79:
+                return u'{}...'.format(textwrap.wrap(title, width=79)[0])
+            else:
+                return u'{}'.format(title)
         except:
             return u'<ShopifyProduct: %d>' % self.id
 
