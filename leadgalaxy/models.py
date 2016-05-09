@@ -379,7 +379,6 @@ class ShopifyProduct(models.Model):
     original_data = models.TextField(default='', blank=True)
     variants_map = models.TextField(default='', blank=True)
     notes = models.TextField(default='', blank=True)
-    stat = models.IntegerField(default=0, verbose_name='Publish stat')  # 0: not send yet, 1: Sent to Shopify
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 

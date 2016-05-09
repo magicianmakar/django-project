@@ -727,7 +727,6 @@ def proccess_api(request, user, method, target, data):
         duplicate_product.pk = None
         duplicate_product.parent_product = product
         duplicate_product.shopify_export = None
-        duplicate_product.stat = 0
 
         user.can_add(duplicate_product)
 
@@ -1732,8 +1731,6 @@ def webhook(request, provider, option):
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
-    # TODO: Optimize product's first board getting (don't use prefetch_related)
-
     products = []
     paginator = None
     page = request.GET.get('page', 1)
@@ -1769,7 +1766,6 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             'qelem': i,
             'id': i.id,
             'store': i.store,
-            'stat': i.stat,
             'shopify_url': i.shopify_link(),
             'created_at': i.created_at,
             'updated_at': i.updated_at,

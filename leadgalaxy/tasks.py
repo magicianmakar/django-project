@@ -179,7 +179,6 @@ def export_product(req_data, target, user_id):
                     }
 
                 product.shopify_id = pid
-                product.stat = 1
                 product.save()
             else:
                 product = None
@@ -216,7 +215,6 @@ def export_product(req_data, target, user_id):
             product.update_data(data)
 
             product.store = store
-            product.stat = 0
 
         else:  # New product to save
 
@@ -231,7 +229,7 @@ def export_product(req_data, target, user_id):
 
             try:
                 product = ShopifyProduct(store=store, user=user.models_user, data=data,
-                                         original_data=original_data, stat=0, is_active=is_active)
+                                         original_data=original_data, is_active=is_active)
                 product.notes = req_data.get('notes', '')
 
                 user.can_add(product)
