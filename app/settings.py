@@ -46,7 +46,6 @@ INSTALLED_APPS = (
     'widget_tweaks',    # For forms
     'hijack',
     'compat',
-    'multiselectfield',
     'compressor',
     'storages',
     'django_extensions',
