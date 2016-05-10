@@ -51,7 +51,7 @@
                 <label for="selected-actions">Selected Items:</label>
                 <select class="form-control" name="selected-actions" id="selected-actions" style="padding-top: 2px;display: inline-block; width: 191px; ">
                     <option value=""></option>
-                    {% if request.GET.store != 'c' %}
+                    {% if request.GET.store != 'c' and user|can:'myshopify_integration.use' %}
                     <option value="edit">Edit...</option>
                     {% endif %}
                     <option value="board">Add to Board...</option>

@@ -262,6 +262,7 @@ function productsEditModal(products) {
                     "ids": data.ids.join(','),
                     "metafield_titles": "",
                     "metafield_options": "",
+                    "SA": "true",
                 }), '_blank');
             },
             error: function (data) {
