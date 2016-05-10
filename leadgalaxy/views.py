@@ -1694,7 +1694,7 @@ def webhook(request, provider, option):
                     order_key = utils.random_hash()
                     cache.set(order_key, shopify_order, timeout=259200)
 
-                    raven_client.captureException('Order Update Exception', extra={
+                    raven_client.captureException(extra={
                         'store': store,
                         'order_id': shopify_order.get('id'),
                         'order_key': order_key

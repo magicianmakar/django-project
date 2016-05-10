@@ -412,7 +412,7 @@ class ShopifyProduct(models.Model):
         self.tag = data['tags']
 
         try:
-            self.price = '$%.02f' % float(data['price'])
+            self.price = '%.02f' % float(data['price'])
         except:
             self.price = 0.0
 
