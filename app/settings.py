@@ -142,6 +142,7 @@ SECURE_SSL_REDIRECT = not DEBUG
 SECURE_REDIRECT_EXEMPT = [
     '^webhook/',
     '^marketing/feeds/',
+    '^orders',
 ]
 
 # Static files (CSS, JavaScript, Images)
