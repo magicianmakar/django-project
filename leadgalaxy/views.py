@@ -2258,7 +2258,7 @@ def acp_users_list(request):
     if request.GET.get('cache') == '0':
         cache.delete_pattern('template.cache.acp_users.*')
 
-    users = User.objects.select_related('profile', 'profile__plan')
+    users = User.objects.select_related('profile', 'profile__plan').order_by('-date_joined')
 
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
