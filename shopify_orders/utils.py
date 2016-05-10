@@ -32,7 +32,7 @@ def sort_orders(orders, page):
         orders_map[i['id']] = i
 
     for i in page:
-        order = orders_map[i.order_id]
+        order = orders_map.get(i.order_id)
         if order:
             resorted.append(order)
 
