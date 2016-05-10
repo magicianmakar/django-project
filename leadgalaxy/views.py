@@ -1127,7 +1127,7 @@ def proccess_api(request, user, method, target, data):
 
             return JsonResponse({
                 'status': 'ok',
-                'url': 'http://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
+                'url': 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
             })
         except:
             return JsonResponse({'error': 'Product not found'}, status=404)
