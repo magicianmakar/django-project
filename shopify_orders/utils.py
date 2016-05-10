@@ -1,9 +1,11 @@
-from django.core.cache import cache
+from django.db.models import Q
 
 # from raven.contrib.django.raven_compat.models import client as raven_client
+import re
 import arrow
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+
 
 def safeInt(v, default=0):
     try:
@@ -108,3 +110,24 @@ def disable_store_sync(store):
         sync.save()
     except:
         pass
+
+
+def order_id_from_number(store, order_number):
+    ''' Get Order ID from Order Number '''
+
+    orders = ShopifyOrder.objects.filter(store=store)
+
+    try:
+        order_number = re.findall('[0-9]+', str(order_number))
+        order_number = int(order_number[0])
+    except:
+        return None
+
+    if order_number:
+        orders = orders.filter(Q(order_number=order_number) |
+                               Q(order_number=(order_number-1000)))
+
+        for i in orders:
+            return i.order_id
+
+    return None
