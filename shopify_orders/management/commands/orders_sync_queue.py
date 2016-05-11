@@ -22,7 +22,6 @@ class Command(BaseCommand):
         try:
             self.start_command(*args, **options)
         except:
-            import traceback; traceback.print_exc();
             raven_client.captureException()
 
     def start_command(self, *args, **options):
@@ -72,7 +71,7 @@ class Command(BaseCommand):
                         self.handle_store(profile.user.shopifystore_set.all())
 
     def handle_store(self, store):
-        if store.id in self.synced_store:
+        if store.id in self.synced_store or not store.is_active:
             return
 
         webhooks = utils.attach_webhooks(store)
@@ -85,7 +84,6 @@ class Command(BaseCommand):
 
             sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
             sync.save()
-
 
         self.synced_store.append(store.id)
 
