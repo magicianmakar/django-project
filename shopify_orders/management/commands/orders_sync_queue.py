@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from leadgalaxy.models import ShopifyStore, GroupPlan, AppPermission
+from leadgalaxy.models import ShopifyStore, GroupPlan, AppPermission, UserProfile
 from leadgalaxy import utils
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -15,6 +15,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
+        parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
 
@@ -25,14 +26,9 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
-        if not options['plan_id']:
-            options['plan_id'] = []
-
-        if not options['store_id']:
-            options['store_id'] = []
-
-        if not options['permission']:
-            options['permission'] = []
+        for i in ['plan_id', 'user_id', 'store_id', 'permission']:
+            if not options[i]:
+                options[i] = []
 
         for plan_id in options['plan_id']:
             try:
@@ -45,6 +41,10 @@ class Command(BaseCommand):
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
             for store in stores:
+                self.handle_store(store)
+
+        for user_id in options['user_id']:
+            for store in UserProfile.objects.get(user_id=user_id).get_active_stores():
                 self.handle_store(store)
 
         for store_id in options['store_id']:
