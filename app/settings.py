@@ -28,7 +28,6 @@ DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
 ALLOWED_HOSTS = [
     '.shopifiedapp.com',
-    'shopifytools.herokuapp.com',
 ]
 
 # Application definition
