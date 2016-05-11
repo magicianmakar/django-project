@@ -104,7 +104,7 @@ class Command(BaseCommand):
             note = "Auto Fulfilled by Shopified App (Line Item #{})".format(order.line_id)
             try:
                 utils.add_shopify_order_note(store, order.order_id, note)
-            except Exception as e:
-                print '- Add Note Exception:', e
+            except Exception:
+                raven_client.captureException()
 
         return fulfilled
