@@ -545,7 +545,10 @@ var ravenOptions = {
     /webappstoolbarba\.texthelp\.com\//i,
     /metrics\.itunes\.apple\.com\.edgesuite\.net\//i,
     // AViary Image Editor
-    /feather\.aviary\.com/i
+    /feather\.aviary\.com/i,
+    // CDNJS
+    /cdn\/js\//,
+    /ajax\/libs\//,
   ]
 };
 
