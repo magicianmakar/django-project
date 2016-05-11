@@ -23,6 +23,8 @@ class Command(BaseCommand):
         parser.add_argument('--reset', dest='reset',
                             action='store_true', help='Delete All Imported Orders and queue stores for re-import')
 
+        parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
+
     def handle(self, *args, **options):
         try:
             self.start_command(*args, **options)
@@ -31,8 +33,17 @@ class Command(BaseCommand):
 
     def start_command(self, *args, **options):
         if options['reset']:
-            ShopifyOrder.objects.all().delete()
-            ShopifySyncStatus.objects.all().update(sync_status=0)
+            if not options['store_id']:
+                self.write_success('Reset All Stores')
+
+                ShopifyOrder.objects.all().delete()
+                ShopifySyncStatus.objects.all().update(sync_status=0)
+            else:
+                for store in options['store_id']:
+                    self.write_success('Reset Store: {}'.format(store))
+
+                    ShopifyOrder.objects.filter(store_id=store).delete()
+                    ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0)
 
             self.write_success('Done')
             return
