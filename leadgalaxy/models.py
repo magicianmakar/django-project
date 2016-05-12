@@ -876,13 +876,13 @@ def user_can_add(self, obj):
 
         if can:
             if hasattr(obj, 'store'):
-                store = obj.store.id
+                store = obj.store
             else:
                 store = None
 
             if store:
                 stores = self.profile.get_active_stores(flat=True)
-                if store not in stores:
+                if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to edit this store.")
 
     if not can:
@@ -896,15 +896,15 @@ def user_can_view(self, obj):
         can = obj.user == self.profile.subuser_parent
         if can:
             if isinstance(obj, ShopifyStore):
-                store = obj.id
+                store = obj
             elif hasattr(obj, 'store'):
-                store = obj.store.id
+                store = obj.store
             else:
                 store = None
 
             if store:
                 stores = self.profile.get_active_stores(flat=True)
-                if store not in stores:
+                if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
     if not can:
@@ -921,13 +921,13 @@ def user_can_edit(self, obj):
         can = obj.user == self.profile.subuser_parent
         if can:
             if hasattr(obj, 'store'):
-                store = obj.store.id
+                store = obj.store
             else:
                 store = None
 
             if store:
                 stores = self.profile.get_active_stores(flat=True)
-                if store not in stores:
+                if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
     if not can:
