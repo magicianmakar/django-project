@@ -550,7 +550,7 @@ class ShopifyProductImage(models.Model):
         return '{} | {}'.format(self.product, self.variant)
 
 
-class ShopifyOrder(models.Model):
+class ShopifyOrderTrack(models.Model):
     class Meta:
         ordering = ['-created_at']
 

@@ -15,7 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.HTTP_INFO('* Get Orders Fulfillment Status'))
 
-        orders = ShopifyOrder.objects.filter(shopify_status='').exclude(store=None).order_by('store', 'order_id')
+        orders = ShopifyOrderTrack.objects.filter(shopify_status='').exclude(store=None).order_by('store', 'order_id')
 
         total_count = orders.count()
         self.stdout.write(self.style.HTTP_INFO('* Found %d Orders' % total_count))

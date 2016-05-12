@@ -60,8 +60,8 @@ class ShopifyProductExportAdmin(admin.ModelAdmin):
     search_fields = ['original_url', 'shopify_id']
 
 
-@admin.register(ShopifyOrder)
-class ShopifyOrderAdmin(admin.ModelAdmin):
+@admin.register(ShopifyOrderTrack)
+class ShopifyOrderTrackAdmin(admin.ModelAdmin):
     list_display = ('order_id', 'line_id', 'shopify_status', 'store', 'source_id', 'get_source_status',
                     'status_updated_at', 'seen', 'hidden', 'check_count', 'source_tracking',
                     'created_at', 'updated_at')

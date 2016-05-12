@@ -40,7 +40,7 @@ class Command(BaseCommand):
 
         # Auto fulfill (Daily)
         time_threshold = timezone.now() - timezone.timedelta(days=1)
-        orders = ShopifyOrder.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
+        orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
                                      .filter(status_updated_at__lt=time_threshold) \
                                      .order_by('store', 'status_updated_at')
 

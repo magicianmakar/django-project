@@ -926,7 +926,7 @@ def proccess_api(request, user, method, target, data):
         from django.core import serializers
 
         orders = []
-        shopify_orders = ShopifyOrder.objects.filter(user=user.models_user, hidden=False) \
+        shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
                                              .filter(source_tracking='') \
                                              .exclude(source_status='FINISH') \
                                              .order_by('updated_at')
@@ -963,7 +963,7 @@ def proccess_api(request, user, method, target, data):
             orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):
-            ShopifyOrder.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
+            ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
                                 .update(check_count=F('check_count')+1, updated_at=timezone.now())
 
         return JsonResponse(orders, safe=False)
@@ -997,7 +997,7 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
 
         for line_id in order_lines.split(','):
-            order = ShopifyOrder(user=user.models_user,
+            order = ShopifyOrderTrack(user=user.models_user,
                                  store=store,
                                  order_id=order_id,
                                  line_id=line_id,
@@ -1028,7 +1028,7 @@ def proccess_api(request, user, method, target, data):
         order_id = data.get('order_id')
         line_id = data.get('line_id')
 
-        orders = ShopifyOrder.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
+        orders = ShopifyOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
 
         if orders.count():
             for order in orders:
@@ -1040,7 +1040,7 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Order not found.'}, status=404)
 
     if method == 'POST' and target == 'order-fulfill-update':
-        order = ShopifyOrder.objects.get(id=data.get('order'))
+        order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         user.can_edit(order)
 
         order.source_status = data.get('status')
@@ -1072,7 +1072,7 @@ def proccess_api(request, user, method, target, data):
         else:
             return JsonResponse({'error': 'Threshold is not properly set.'}, status=500)
 
-        orders = ShopifyOrder.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+        orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
 
         if user.is_superuser:
             if 'user' in data:
@@ -1112,7 +1112,7 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Shopify API Error'}, status=500)
 
     if method == 'POST' and target == 'order-fullfill-hide':
-        order = ShopifyOrder.objects.get(id=data.get('order'))
+        order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         user.can_edit(order)
 
         order.hidden = data.get('hide', False)
@@ -1679,7 +1679,7 @@ def webhook(request, provider, option):
                     if not fulfillment_status:
                         fulfillment_status = ''
 
-                    ShopifyOrder.objects.filter(order_id=shopify_order['id'], line_id=line['id']) \
+                    ShopifyOrderTrack.objects.filter(order_id=shopify_order['id'], line_id=line['id']) \
                                         .update(shopify_status=fulfillment_status)
 
                     ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
@@ -2738,7 +2738,7 @@ def orders_view(request):
             products_ids.append(line_id)
 
     orders_list = {}
-    res = ShopifyOrder.objects.filter(user=models_user, order_id__in=orders_ids)
+    res = ShopifyOrderTrack.objects.filter(user=models_user, order_id__in=orders_ids)
     for i in res:
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
@@ -2948,7 +2948,7 @@ def orders_track(request):
 
     request.user.can_view(store)
 
-    orders = ShopifyOrder.objects.select_related('store').filter(user=request.user.models_user, store=store)
+    orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store)
 
     if query:
         order_id = shopify_orders_utils.order_id_from_number(store, query)
@@ -2985,7 +2985,7 @@ def orders_track(request):
     if len(orders):
         orders = utils.get_tracking_orders(store, orders)
 
-    ShopifyOrder.objects.filter(user=request.user.models_user,
+    ShopifyOrderTrack.objects.filter(user=request.user.models_user,
                                 id__in=[i.id for i in orders]) \
                         .update(seen=True)
 
