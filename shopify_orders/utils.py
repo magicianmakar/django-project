@@ -95,6 +95,10 @@ def update_shopify_order(store, data):
         l.save()
 
 
+def delete_shopify_order(store, data):
+    ShopifyOrder.objects.filter(store=store, order_id=data['id']).delete()
+
+
 def is_store_synced(store, sync_type='orders'):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)

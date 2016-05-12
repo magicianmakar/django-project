@@ -1703,6 +1703,7 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/delete':
+                shopify_orders_utils.delete_shopify_order(store, shopify_order)
                 return JsonResponse({'status': 'ok'})
 
             else:
