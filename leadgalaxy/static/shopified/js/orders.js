@@ -274,10 +274,18 @@ $('.mark-as-ordered').click(function (e) {
                 'aliexpress_order_id': inputValue,
                 'aliexpress_order_trade': ''
             },
-            context: {orderData: orderData},
+            context: {orderData: orderData, aliexpress_id: inputValue},
             success: function (data) {
                 if (data.status == 'ok') {
-                    this.orderData.btn.parents('tr').first().addClass('success');
+                    this.orderData.btn.text('#' + this.aliexpress_id);
+
+                    var line = this.orderData.btn.parents('.line');
+                    line.find('.line-ordered .badge').removeClass('badge-danger')
+                                                     .addClass('badge-primary');
+
+                    line.find('.line-ordered .ordered-status').text('Order Placed');
+                    line.find('.line-tracking').text('Tracked');
+
                     findMarkedLines();
                     swal('Marked as Ordered.', 'Item was marked as ordered in Shopified App', 'success');
                 } else {
