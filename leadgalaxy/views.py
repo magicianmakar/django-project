@@ -2884,11 +2884,7 @@ def orders_view(request):
     else:
         countries = []
 
-    tpl = 'orders_new.html'
-    if request.GET.get('table'):
-        tpl = 'orders.html'
-
-    return render(request, tpl, {
+    return render(request, 'orders_new.html', {
         'orders': all_orders,
         'store': store,
         'paginator': paginator,
