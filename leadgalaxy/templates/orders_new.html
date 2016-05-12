@@ -3,6 +3,7 @@
 {% load static %}
 {% load template_helper %}
 {% load perms_helper %}
+{% load url_tools %}
 {% load compress %}
 
 {% block main-container %}
@@ -25,15 +26,29 @@
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
                             <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
                         </div>
-                        <div class="col-md-4 col-md-offset-4 text-right">
-                            {% if not store_order_synced %}
+                        <div class="col-md-8 text-right">
+
+                            {% if store_order_synced %}
+                                {% if store_sync_enabled %}
+                                    <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
+                                        title="Switch to the Old Order page"
+                                        href="{% url_replace 'old' 1 %}">Switch Orders Page</a>
+                                {% else %}
+                                    <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
+                                        title="Switch to the New Order page"
+                                        href="{% url_replace 'old' 0 %}">Switch Orders Page</a>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if not store_sync_enabled %}
                             <button class="btn btn-primary btn-rounded btn-sm hide-non-connected-btn">Hide Non Connected</button>
                             {% endif %}
+
                             <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
                         </div>
                     </div>
                     <form method="get" action="/orders" class="filter-form m-b-sm m-t-sm" style="display:none;">
-                    {% if store_order_synced %}
+                    {% if store_sync_enabled %}
                         <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Sort:</label>
@@ -55,7 +70,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    {% if store_order_synced %}
+                    {% if store_sync_enabled %}
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Order:</label>
@@ -106,7 +121,7 @@
                     </div>
                     {% endif %}
 
-                    {% if not store_order_synced %}
+                    {% if not store_sync_enabled %}
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Sort:</label>
@@ -173,7 +188,7 @@
                         </div>
                     </div>
 
-                    {% if store_order_synced %}
+                    {% if store_sync_enabled %}
                     <div class="row m-t-xs">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                         </div>

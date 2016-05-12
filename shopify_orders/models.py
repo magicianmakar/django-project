@@ -9,6 +9,7 @@ SYNC_STATUS = (
     (2, 'Completed'),
     (3, 'Unauthorized'),
     (4, 'Error'),
+    (5, 'Disabled'),
 )
 
 

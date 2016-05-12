@@ -2632,9 +2632,13 @@ def orders_view(request):
 
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
+    elif request.GET.get('old') == '0':
+        shopify_orders_utils.enable_store_sync(store)
 
-    store_order_synced = shopify_orders_utils.is_store_synced(store) and request.GET.get('live') != '1'
-    if not store_order_synced:
+    store_order_synced = shopify_orders_utils.is_store_synced(store)
+    store_sync_enabled = store_order_synced and shopify_orders_utils.is_store_sync_enabled(store)
+
+    if not store_sync_enabled:
         open_orders = store.get_orders_count(status, fulfillment, financial)
         orders = xrange(0, open_orders)
 
@@ -2897,6 +2901,7 @@ def orders_view(request):
         'query': query,
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
+        'store_sync_enabled': store_sync_enabled,
         'countries': countries,
         'page': 'orders',
         'breadcrumbs': ['Orders']

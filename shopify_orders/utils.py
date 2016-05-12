@@ -42,14 +42,16 @@ def sort_orders(orders, page):
 def update_shopify_order(store, data):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
-        if sync_status.sync_status != 2:
+
+        if sync_status.sync_status == 1:
+            raise AssertionError('Store is being imported')
+
+        elif sync_status.sync_status not in [2, 5]:  # Completed or Disabled
             print 'SHOPIFY ORDERS: Store: {} Not Synced (Status: {})'.format(store.title, sync_status.sync_status)
             return
 
     except ShopifySyncStatus.DoesNotExist:
         return
-
-    assert sync_status.sync_status != 1, 'Store is being imported'
 
     customer = data.get('customer', {})
     address = data.get('shipping_address', {})
@@ -100,6 +102,17 @@ def delete_shopify_order(store, data):
 
 
 def is_store_synced(store, sync_type='orders'):
+    ''' Return True if store orders have been synced '''
+    try:
+        sync_status = ShopifySyncStatus.objects.get(store=store)
+        return sync_status.sync_status in [2, 5]
+    except ShopifySyncStatus.DoesNotExist:
+        return False
+
+
+def is_store_sync_enabled(store, sync_type='orders'):
+    ''' Return True if store orders are in sync and not disabled '''
+
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
         return sync_status.sync_status == 2
@@ -110,8 +123,24 @@ def is_store_synced(store, sync_type='orders'):
 def disable_store_sync(store):
     try:
         sync = ShopifySyncStatus.objects.get(store=store)
-        sync.sync_status = 3
-        sync.save()
+
+        # Disable only if import is Completed
+        if sync.sync_status == 2:
+            sync.sync_status = 5
+            sync.save()
+
+    except:
+        pass
+
+
+def enable_store_sync(store):
+    try:
+        sync = ShopifySyncStatus.objects.get(store=store)
+
+        if sync.sync_status == 5:
+            sync.sync_status = 2
+            sync.save()
+
     except:
         pass
 
