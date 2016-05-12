@@ -1758,7 +1758,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     if not filter_products and not sort:
         paginator = utils.SimplePaginator(res, post_per_page)
 
-        page = min(max(1, int(page)), paginator.num_pages)
+        page = min(max(1, utils.safeInt(page)), paginator.num_pages)
         page = paginator.page(page)
         res = page
 
