@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-echo ' * Run python manage.py migrate'
-python manage.py migrate
+echo ' * Run python manage.py migrate --noinput'
+python manage.py migrate --noinput
 
 echo ' * Run python manage.py compress'
 python manage.py compress
