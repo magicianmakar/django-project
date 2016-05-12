@@ -411,6 +411,9 @@ class ShopifyProduct(models.Model):
         self.product_type = data['type']
         self.tag = data['tags']
 
+        if len(self.tag) > 254:
+            self.tag = u'{}'.format(textwrap.wrap(self.tag, width=254)[0])
+
         try:
             self.price = '%.02f' % float(data['price'])
         except:
