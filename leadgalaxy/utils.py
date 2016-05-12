@@ -22,7 +22,7 @@ from leadgalaxy.models import *
 from app import settings
 
 
-def safeInt(v, default=0.0):
+def safeInt(v, default=0):
     try:
         return int(v)
     except:
