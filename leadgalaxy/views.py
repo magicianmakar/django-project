@@ -34,7 +34,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.models import ShopifyOrder as ShopifyOrderSaved
+from shopify_orders.models import ShopifyOrder
 
 from province_helper import load_uk_provincess
 
@@ -2649,7 +2649,7 @@ def orders_view(request):
         current_page = paginator.page(page)
         page = current_page
     else:
-        orders = ShopifyOrderSaved.objects.filter(user=request.user.models_user, store=store)
+        orders = ShopifyOrder.objects.filter(user=request.user.models_user, store=store)
 
         query = request.GET.get('query_order')
         if query:
