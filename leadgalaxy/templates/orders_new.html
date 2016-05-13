@@ -249,7 +249,8 @@
                                     </div>
                                     <div class="col-md-1 text-right">
                                         {% if user|can:'combined_order.use' %}
-                                        <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}">Order All</button>
+                                        <button class="btn btn-success btn-xs order-all"
+                                                order-id="{{order.id}}" style="display:none">Order All</button>
                                         {% endif %}
                                     </div>
                                 </div>
