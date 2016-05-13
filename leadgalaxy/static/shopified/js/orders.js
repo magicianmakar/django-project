@@ -134,6 +134,7 @@ $('.filter-btn').click(function (e) {
     $('.filter-form').toggle('fade');
 });
 
+/*
 $(".filter-form").submit(function() {
     $(this).find(":input").filter(function(){
         return ((this.name == 'sort' && this.value == 'desc') ||
@@ -145,6 +146,7 @@ $(".filter-form").submit(function() {
     }).attr("disabled", "disabled");
     return true; // ensure form still submits
 });
+*/
 
 function toTitleCase(str) {
     return str.replace('_', ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
