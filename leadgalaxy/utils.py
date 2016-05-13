@@ -955,6 +955,17 @@ def clean_query_id(qid):
         return 0
 
 
+def get_orders_filter(request, name, default=None):
+    key = '_orders_filter_{}'.format(name)
+    val = request.GET.get(name)
+    if val:
+        request.user.set_config(key, val)
+    else:
+        val = request.user.get_config(key, default)
+
+    return val
+
+
 # Helper Classes
 
 class TimezoneMiddleware(object):

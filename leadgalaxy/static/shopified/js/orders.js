@@ -140,7 +140,7 @@ $(".filter-form").submit(function() {
             (this.name == 'sort' && this.value == 'created_at') ||
             (this.name == 'status' && this.value == 'open') ||
             (this.name == 'fulfillment' && this.value == 'unshipped') ||
-            (this.name == 'financial' && this.value == 'any') ||
+            (this.name == 'financial' && this.value == 'paid') ||
             (this.name.match(/^query/) && this.value.trim().length === 0));
     }).attr("disabled", "disabled");
     return true; // ensure form still submits

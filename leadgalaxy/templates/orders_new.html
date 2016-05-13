@@ -64,7 +64,7 @@
                         <div class="col-md-4">
                             <label for="sort-desc" class="control-label">
                                 <input type="checkbox" id="sort-desc" name="desc" value="true" class="icheck"
-                                       {% if request.GET.desc == 'true' %}checked{% endif %}>
+                                       {% if sort_type == 'true' %}checked{% endif %}>
                                 Descending
                             </label>
                         </div>

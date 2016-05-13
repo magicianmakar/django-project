@@ -2624,11 +2624,17 @@ def orders_view(request):
 
     models_user = request.user.models_user
 
-    sort = request.GET.get('sort', 'desc')
-    status = request.GET.get('status', 'open')
-    fulfillment = request.GET.get('fulfillment', 'unshipped')
-    financial = request.GET.get('financial', 'any')
+    sort = utils.get_orders_filter(request, 'sort', 'desc')
+    status = utils.get_orders_filter(request, 'status', 'open')
+    fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
+    financial = utils.get_orders_filter(request, 'financial', 'paid')
+    sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
+    sort_type = utils.get_orders_filter(request, 'desc')
+
     query = request.GET.get('query')
+    query_order = request.GET.get('query_order')
+    query_customer = request.GET.get('query_customer')
+    query_address = request.GET.get('query_address')
 
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
@@ -2655,10 +2661,9 @@ def orders_view(request):
     else:
         orders = ShopifyOrder.objects.filter(user=request.user.models_user, store=store)
 
-        query = request.GET.get('query_order')
-        if query:
+        if query_order:
             try:
-                order_number = re.findall('[0-9]+', query)
+                order_number = re.findall('[0-9]+', query_order)
                 order_number = int(order_number[0])
             except:
                 order_number = 0
@@ -2668,17 +2673,15 @@ def orders_view(request):
                                        Q(order_number=(order_number-1000)) |
                                        Q(order_id=order_number))
             else:
-                orders = orders.filter(Q(order_id=utils.safeInt(query)))
+                orders = orders.filter(Q(order_id=utils.safeInt(query_order)))
 
-        query = request.GET.get('query_customer')
-        if query:
-            orders = orders.filter(Q(customer_id=utils.safeInt(query, -1)) |
-                                   Q(customer_name__icontains=query) |
-                                   Q(customer_email__iexact=query))
+        if query_customer:
+            orders = orders.filter(Q(customer_id=utils.safeInt(query_customer, -1)) |
+                                   Q(customer_name__icontains=query_customer) |
+                                   Q(customer_email__iexact=query_customer))
 
-        query = request.GET.get('query_address')
-        if query:
-            orders = orders.filter(Q(country_code__iexact=query))
+        if query_address:
+            orders = orders.filter(Q(country_code__iexact=query_address))
 
         query = None
 
@@ -2702,10 +2705,9 @@ def orders_view(request):
         if request.GET.get('connected') == 'true':
             orders = orders.exclude(shopifyorderline__product=None)
 
-        sort = request.GET.get('sort', 'created_at')
-        if sort in ['created_at', 'updated_at', 'total_price', 'country_code']:
-            sort_desc = '-' if request.GET.get('desc') == 'true' else ''
-            orders = orders.order_by(sort_desc + sort)
+        if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
+            sort_desc = '-' if sort_type == 'true' else ''
+            orders = orders.order_by(sort_desc + sort_field)
 
         paginator = utils.SimplePaginator(orders, post_per_page)
         page = min(max(1, page), paginator.num_pages)
@@ -2890,7 +2892,8 @@ def orders_view(request):
         'paginator': paginator,
         'current_page': current_page,
         'open_orders': open_orders,
-        'sort': sort,
+        'sort': sort_field,
+        'sort_type': sort_type,
         'status': status,
         'financial': financial,
         'fulfillment': fulfillment,
