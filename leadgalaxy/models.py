@@ -793,7 +793,8 @@ class PlanRegistration(models.Model):
             data = json.loads(self.data)
             return {
                 'allowed': data['allowed_count'],
-                'used': data['used_count']
+                'used': data['used_count'],
+                'expire_in_days': data.get('expire_in_days')
             }
         except:
             return None

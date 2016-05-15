@@ -181,6 +181,12 @@ def apply_shared_registration(user, registration):
                                                                               profile.plan.title,
                                                                               registration.plan.title)
 
+        if usage['expire_in_days']:
+            expire_date = timezone.now() + timezone.timedelta(days=usage['expire_in_days'])
+
+            profile.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
+            profile.plan_expire_at = expire_date
+
         profile.plan = registration.plan
         profile.save()
 
