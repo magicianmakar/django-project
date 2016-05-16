@@ -37,6 +37,9 @@ def safeFloat(v, default=0.0):
 
 
 def get_domain(url):
+    if not url:
+        return None
+
     hostname = urlparse(url).hostname
     if hostname is None:
         return hostname
