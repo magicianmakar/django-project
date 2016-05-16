@@ -1293,6 +1293,10 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
+    if method == 'POST' and target == 'save-orders-filter':
+        utils.set_orders_filter(user, data)
+        return JsonResponse({'status': 'ok'})
+
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
@@ -2624,12 +2628,16 @@ def orders_view(request):
 
     models_user = request.user.models_user
 
+    if request.GET.get('reset') == '1':
+        request.user.profile.del_config_values('_orders_filter_', True)
+
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
     financial = utils.get_orders_filter(request, 'financial', 'paid')
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
-    sort_type = utils.get_orders_filter(request, 'desc')
+    sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
+    connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
 
     query = request.GET.get('query')
     query_order = request.GET.get('query_order')
@@ -2702,7 +2710,7 @@ def orders_view(request):
         if financial != 'any':
             orders = orders.filter(financial_status=financial)
 
-        if request.GET.get('connected') == 'true':
+        if connected_only == 'true':
             orders = orders.exclude(shopifyorderline__product=None)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
@@ -2898,6 +2906,8 @@ def orders_view(request):
         'financial': financial,
         'fulfillment': fulfillment,
         'query': query,
+        'connected_only': connected_only,
+        'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,

@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-md-4">
                             <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control"
-                                   style="xpadding: 6px 0px" placeholder="Order name or ID">
+                                   style="xpadding: 6px 0px" placeholder="Order Number or ID">
                         </div>
                     </div>
 
@@ -195,7 +195,7 @@
                         <div class="col-md-8">
                             <label for="connected-orders" class="control-label">
                                 <input type="checkbox" id="connected-orders" name="connected"value="true" class="icheck"
-                                       {% if request.GET.connected == 'true' %}checked{% endif %}>
+                                       {% if connected_only == 'true' %}checked{% endif %}>
                                 Only Orders with Connected Products
                             </label>
                         </div>
@@ -207,8 +207,17 @@
                             {% if request.GET.store %}
                             <input type="hidden" name="store" value="{{ request.GET.store }}">
                             {% endif %}
-                        <button class="btn btn-primary">Apply</button>
-                        <a href="/orders?store={{store.id}}" class="btn btn-default">Reset</a>
+                            <input type="hidden" name="f" value="1">
+                        <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
+                        </div>
+                        <div class="col-md-6 col-md-offset-4 text-right">
+                            <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
+                                <i class="fa fa-save"></i> Save Filter
+                            </a>
+
+                            <a href="/orders?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                                <i class="fa fa-eraser"></i> Reset Filter
+                            </a>
                         </div>
                     </div>
                     <hr >
@@ -570,9 +579,20 @@
 {% endblock %}
 
 {% block extrajs %}
+<script type="text/javascript">
+    var user_filter = {
+        sort: '{{ user_filter.sort }}',
+        status: '{{ user_filter.status }}',
+        fulfillment: '{{ user_filter.fulfillment }}',
+        financial: '{{ user_filter.financial }}',
+        sort_type: "{{ user_filter.sort_type|default:'false'}}",
+        connected: "{{ user_filter.connected_only|default:'false' }}",
+    };
+</script>
+
 {% compress js %}
     <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/orders.js' %}"></script>
+    <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
 {% endblock %}
 

@@ -173,6 +173,15 @@ class UserProfile(models.Model):
         self.config = json.dumps(data)
         self.save()
 
+    def del_config_values(self, key, startswith=False):
+        data = self.get_config()
+        for name, val in data.items():
+            if key == name or (startswith and name.startswith(key)):
+                del data[name]
+
+        self.config = json.dumps(data)
+        self.save()
+
     def add_email(self, email):
         try:
             emails = json.loads(self.emails)

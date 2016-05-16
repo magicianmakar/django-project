@@ -964,15 +964,32 @@ def clean_query_id(qid):
         return 0
 
 
-def get_orders_filter(request, name, default=None):
-    key = '_orders_filter_{}'.format(name)
-    val = request.GET.get(name)
-    if val:
-        request.user.set_config(key, val)
-    else:
-        val = request.user.get_config(key, default)
+def get_orders_filter(request, name=None, default=None, checkbox=False):
+    if name:
+        key = '_orders_filter_{}'.format(name)
+        val = request.GET.get(name)
 
-    return val
+        if not val:
+            val = request.user.get_config(key, default)
+
+        return val
+    else:
+        filters = {}
+        for name, val in request.user.profile.get_config().items():
+            if name.startswith('_orders_filter_'):
+                filters[name.replace('_orders_filter_', '')] = val
+
+        return filters
+
+
+def set_orders_filter(user, filters, default=None):
+    fields = ['sort', 'status', 'fulfillment', 'financial',
+              'desc', 'connected']
+
+    for name, val in filters.items():
+        if name in fields:
+            key = '_orders_filter_{}'.format(name)
+            user.set_config(key, val)
 
 
 # Helper Classes

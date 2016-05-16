@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function() {
+(function(user_filter) {
 'use strict';
 
 var image_cache = {};
@@ -134,19 +134,55 @@ $('.filter-btn').click(function (e) {
     $('.filter-form').toggle('fade');
 });
 
-/*
 $(".filter-form").submit(function() {
-    $(this).find(":input").filter(function(){
-        return ((this.name == 'sort' && this.value == 'desc') ||
-            (this.name == 'sort' && this.value == 'created_at') ||
-            (this.name == 'status' && this.value == 'open') ||
-            (this.name == 'fulfillment' && this.value == 'unshipped') ||
-            (this.name == 'financial' && this.value == 'paid') ||
-            (this.name.match(/^query/) && this.value.trim().length === 0));
+    $(this).find(":input").filter(function(i, el) {
+        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred'))  {
+            el.value = JSON.stringify(el.checked);
+            el.checked = true;
+            $(el).prop('filtred', true);
+        }
+
+        var ret = (((!el.value || el.value.trim().length === 0) &&
+                (el.type == 'text' || el.type.match(/select/) )) ||
+            (el.name == 'sort' && el.value == user_filter.sort) ||
+            (el.name == 'sort' && el.value == user_filter.sort) ||
+            (el.name == 'desc' && el.value == user_filter.sort_type) ||
+            (el.name == 'connected' && el.value == user_filter.connected) ||
+            (el.name == 'status' && el.value == user_filter.status) ||
+            (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
+            (el.name == 'financial' && el.value == user_filter.financial));
+
+        return ret;
     }).attr("disabled", "disabled");
     return true; // ensure form still submits
 });
-*/
+
+$('.save-filter-btn').click(function (e) {
+    e.preventDefault();
+
+    $(".filter-form").find(":input").filter(function(i, el) {
+        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred')) {
+            el.value = JSON.stringify(el.checked);
+            el.checked = true;
+            $(el).prop('filtred', true);
+        }
+    });
+
+    $.ajax({
+        url: '/api/save-orders-filter',
+        type: 'POST',
+        data: $('.filter-form').serialize(),
+        success: function (data) {
+            toastr.success('Orders Filter', 'Saved');
+            setTimeout(function() {
+                $(".filter-form").trigger('submit');
+            }, 1000);
+        },
+        error: function (data) {
+            displayAjaxError('Orders Filter', data);
+        }
+    });
+});
 
 function toTitleCase(str) {
     return str.replace('_', ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -674,4 +710,4 @@ $(function () {
         window.location.reload();
     }, 3500 * 1000);
 });
-})();
+})(user_filter);
