@@ -586,8 +586,8 @@
         status: '{{ user_filter.status }}',
         fulfillment: '{{ user_filter.fulfillment }}',
         financial: '{{ user_filter.financial }}',
-        sort_type: "{{ user_filter.sort_type|default:'false'}}",
-        connected: "{{ user_filter.connected_only|default:'false' }}",
+        sort_type: "{{ user_filter.desc|default:'false'}}",
+        connected: "{{ user_filter.connected|default:'false' }}",
     };
 </script>
 
