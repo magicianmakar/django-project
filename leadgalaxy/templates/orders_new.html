@@ -575,6 +575,7 @@
 </style>
 
 <link href="{% static 'css/plugins/chosen/chosen.css' %}" rel="stylesheet">
+<link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
 
 {% endblock %}
 
@@ -591,8 +592,41 @@
 </script>
 
 {% compress js %}
+    <script src="{% static 'js/bootstrap-tour.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
+
+<script type="text/javascript">
+    $(function() {
+        if (localStorage['orders-filter-save_end'] !== 'yes') {
+            $('.filter-form').show('fast');
+                setTimeout(function() {
+                    var tour = new Tour({
+                        name: 'orders-filter-save',
+                        steps: [{
+                            element: '.save-filter-btn',
+                            title: 'Save you filter!',
+                            content: 'You can now save your default filter using this button.',
+                            placement: 'top',
+                        }, {
+                            element: '.reset-filter-btn',
+                            title: 'Reset filter',
+                            content: 'Reset Orders page filters to the default settings',
+                            placement: 'top',
+                        }],
+                        onEnd: function () {
+                            $('.filter-form').hide('slide', function() {
+                                window.scroll(0,0);
+                            });
+                        }
+                });
+                tour.init();
+                tour.start(true);
+            }, 1000);
+        }
+    });
+</script>
+
 {% endblock %}
 
