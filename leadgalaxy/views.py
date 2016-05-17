@@ -2569,10 +2569,11 @@ def save_image_s3(request):
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    img_url = request.POST.get('url')
+    img_url = request.POST.get('url', request.GET.get('image'))
+    product_id = request.POST.get('product', request.GET.get('product'))
     img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
 
-    product = ShopifyProduct.objects.get(user=request.user, id=request.POST.get('product'))
+    product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
     conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
     bucket = conn.get_bucket(S3_BUCKET)

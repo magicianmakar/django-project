@@ -609,6 +609,8 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 
+<script src="{% static 'js/pixlr.js' %}"></script>
+
 <!-- Load Feather code -->
 {% if request.is_secure %}
 <script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/js/feather.js"></script>
@@ -634,6 +636,7 @@ var config = {
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
     photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
+    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
     feather_editor: null,
     shopify_variants: {
     {% for variant in shopify_product.variants %}

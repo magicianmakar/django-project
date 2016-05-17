@@ -687,6 +687,10 @@ function renderImages() {
             d.append($('<button class="btn btn-primary btn-xs edit-photo" style="display:none;position: absolute;cursor: pointer;right: 50px;top: 5px;background-color: rgb(226, 255, 228);color: rgb(0, 105, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
         }
 
+        if (config.advanced_photo_editor) {
+            d.append($('<button class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
+        }
+
         d.find('.image-delete').click(imageClicked);
 
         d.find('.edit-photo').click(function (e) {
@@ -721,6 +725,21 @@ function launchEditor(id, src) {
     } else {
         swal('Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
+}
+
+if (config.advanced_photo_editor) {
+    $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
+        e.preventDefault();
+        var image = $(this).siblings('img');
+        pixlr.overlay.show({image: image.attr('src'), title:'Example image 1', 
+            service:'editor', exit: window.location.href, locktarget: true, 
+            target: window.location.origin+'/upload/save_image_s3?product='+config.product_id});
+    });
+
+    $('body').on('click', '#pixlr-background', function(e) {
+        e.preventDefault();
+        pixlr.overlay.hide();
+    });
 }
 
 document.renderImages = renderImages;
