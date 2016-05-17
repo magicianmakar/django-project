@@ -583,6 +583,14 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
+    if method == 'DELETE' and target == 'product-image':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
+
+        ShopifyProductImage.objects.filter(store=store, product=data.get('product')).delete()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'GET' and target == 'board-config':
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)

@@ -397,11 +397,11 @@
                                                 <thead>
                                                     <tr>
                                                         <td>
-                                                            <img
+                                                            <img store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
                                                                 {% if not item.image_src %}
                                                                     class="lazyload" store="{{image.store}}"
-                                                                    product="{{image.product}}" variant="{{image.variant}}"
                                                                 {% else %}
+                                                                    class="cached-img"
                                                                     src="{{item.image_src}}"
                                                                 {% endif %}
                                                                     style="width:64px" />

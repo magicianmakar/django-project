@@ -663,6 +663,17 @@ $('.chosen-reset-selection').click(function (e) {
     $("#country-filter").val('').trigger("chosen:updated");
 });
 
+$('.cached-img').error(function() {
+    $.ajax({
+        url: '/api/product-image?' + $.param({
+            'store': $(this).attr('store'),
+            'product': $(this).attr('product')
+        }),
+        type: 'DELETE',
+        success: function(data) {}
+    });
+});
+
 $(function () {
     $('.help-select').each(function (i, el) {
         $('option', el).each(function (index, option) {
