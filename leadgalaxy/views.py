@@ -2569,8 +2569,17 @@ def save_image_s3(request):
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    img_url = request.POST.get('url', request.GET.get('image'))
-    product_id = request.POST.get('product', request.GET.get('product'))
+    if request.method == 'POST':
+        # Aviary
+        product_id = request.POST.get('product')
+        img_url = request.POST.get('url')
+        json_response = True
+    else:
+        # Pixlr
+        product_id = request.GET.get('product')
+        img_url = request.GET.get('image')
+        json_response = False
+
     img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
 
     product = ShopifyProduct.objects.get(user=request.user, id=product_id)
@@ -2589,10 +2598,17 @@ def save_image_s3(request):
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
-    return JsonResponse({
-        'status': 'ok',
-        'url': upload_url
-    })
+    if json_response:
+        return JsonResponse({
+            'status': 'ok',
+            'url': upload_url
+        })
+    else:
+        return render(request, 'pixlr.html', {
+            'status': 'ok',
+            'url': upload_url,
+            'image_id': request.GET.get('image_id')
+        })
 
 
 @login_required

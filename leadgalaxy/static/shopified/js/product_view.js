@@ -688,7 +688,7 @@ function renderImages() {
         }
 
         if (config.advanced_photo_editor) {
-            d.append($('<button class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
+            d.append($('<button class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-picture-o"></i></button>'));
         }
 
         d.find('.image-delete').click(imageClicked);
@@ -727,20 +727,23 @@ function launchEditor(id, src) {
     }
 }
 
-if (config.advanced_photo_editor) {
-    $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
-        e.preventDefault();
+$('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
+    e.preventDefault();
+    if (config.advanced_photo_editor) {
         var image = $(this).siblings('img');
+        console.log(image.attr('image-id'));
         pixlr.overlay.show({image: image.attr('src'), title:'Example image 1', 
             service:'editor', exit: window.location.href, locktarget: true, 
-            target: window.location.origin+'/upload/save_image_s3?product='+config.product_id});
-    });
+            target: window.location.origin+'/upload/save_image_s3?product='+config.product_id+'&image_id='+image.attr('id')});
+    } else {
+        swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
+    }
+});
 
-    $('body').on('click', '#pixlr-background', function(e) {
-        e.preventDefault();
-        pixlr.overlay.hide();
-    });
-}
+$('body').on('click', '#pixlr-background', function(e) {
+    e.preventDefault();
+    pixlr.overlay.hide();
+});
 
 document.renderImages = renderImages;
 
