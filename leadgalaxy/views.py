@@ -3142,6 +3142,10 @@ def bundles_bonus(request, bundle_id):
 
 @login_required
 def product_feeds(request):
+    if not request.user.can('product_feeds.use'):
+        return render(request, 'upgrade.html')
+
+
     return render(request, 'product_feeds.html', {
         'page': 'product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
@@ -3263,6 +3267,9 @@ def get_product_feed(request, store_id, revision=1):
         store = ShopifyStore.objects.get(store_hash__startswith=store_id)
     except (AssertionError, ShopifyStore.DoesNotExist):
         raise Http404('Feed not found')
+
+    if not store.user.can('product_feeds.use'):
+        raise PermissionDenied('Product Feeds')
 
     feed = utils.ProductFeed(store, revision)
     feed.init()
