@@ -310,7 +310,6 @@ $('.mark-as-ordered').click(function (e) {
                 'order_id': orderData.order_id,
                 'line_id': orderData.line_id,
                 'aliexpress_order_id': inputValue,
-                'aliexpress_order_trade': ''
             },
             context: {orderData: orderData, aliexpress_id: inputValue},
             success: function (data) {

@@ -982,12 +982,6 @@ def proccess_api(request, user, method, target, data):
 
             return JsonResponse({'error': e.message}, status=501)
 
-        order_data = {
-            'aliexpress': {
-                'order_trade': data.get('aliexpress_order_trade')
-            }
-        }
-
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
             user.can_view(store)
@@ -998,11 +992,10 @@ def proccess_api(request, user, method, target, data):
 
         for line_id in order_lines.split(','):
             order = ShopifyOrderTrack(user=user.models_user,
-                                 store=store,
-                                 order_id=order_id,
-                                 line_id=line_id,
-                                 source_id=source_id,
-                                 data=json.dumps(order_data))
+                                      store=store,
+                                      order_id=order_id,
+                                      line_id=line_id,
+                                      source_id=source_id)
 
             user.can_add(order)
             order.save()
