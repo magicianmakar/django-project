@@ -686,7 +686,7 @@ def proccess_api(request, user, method, target, data):
 
         original_link = data.get('original-link')
         if 'click.aliexpress.com' in original_link.lower():
-            return JsonResponse({'error': 'The submitted Aliexpress will not work properly with order fulfillment'})
+            return JsonResponse({'error': 'The submitted Aliexpress link will not work properly with order fulfillment'})
 
         product.set_original_url(original_link)
 
