@@ -23,6 +23,12 @@ def extra_bundles(request):
 
             cache.set(extra_cache_key, extra_bundle, timeout=900)
 
+        elif profile.plan.register_hash == 'c0dee42b84c736bb62c61ad0f20b9f53':  # Free Plan for Promote Labs
+            extra_bundle = {
+                'url': 'http://www.shopifiedapp.com/unlimited',
+                'title': 'Upgrade To All Drop Shipping Features'
+            }
+
     return {
         'extra_bundle': extra_bundle
     }
