@@ -38,7 +38,7 @@
                         href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    {% endif %}
                    >Auto Place Order</a></li>
-            <li><a class="auto-shipping-btn" target="_blank"
+            <li><a class="place-order-btn auto-shipping-btn" target="_blank"
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.original_id}}" country-code="{{order.shipping_address.country_code}}"
                     href="#"
