@@ -1003,14 +1003,15 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
 
         for line_id in order_lines.split(','):
-            order = ShopifyOrderTrack(user=user.models_user,
-                                      store=store,
-                                      order_id=order_id,
-                                      line_id=line_id,
-                                      source_id=source_id)
-
-            user.can_add(order)
-            order.save()
+            ShopifyOrderTrack.objects.update_or_create(
+                user=user.models_user,
+                store=store,
+                order_id=order_id,
+                line_id=line_id,
+                defaults={
+                    'source_id': source_id
+                }
+            )
 
             try:
                 order_line = utils.get_shopify_order_line(store, order_id, line_id)
