@@ -684,7 +684,11 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
-        product.set_original_url(data.get('original-link'))
+        original_link = data.get('original-link')
+        if 'click.aliexpress.com' in original_link.lower():
+            return JsonResponse({'error': 'The submitted Aliexpress will not work properly with order fulfillment'})
+
+        product.set_original_url(original_link)
 
         shopify_link = data.get('shopify-link')
 
@@ -701,7 +705,7 @@ def proccess_api(request, user, method, target, data):
             if not shopify_id:
                 return JsonResponse({'error': 'Invalid Shopify link.'})
 
-            product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id,
+            product_export = ShopifyProductExport(original_url=original_link, shopify_id=shopify_id,
                                                   store=product.store)
             product_export.save()
 
