@@ -1013,20 +1013,7 @@ def proccess_api(request, user, method, target, data):
                 }
             )
 
-            try:
-                order_line = utils.get_shopify_order_line(store, order_id, line_id)
-                if order_line:
-                    note = u'Aliexpress Order ID: {0}\n' \
-                           'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n' \
-                           'Shopify Product: {1} / {2}'.format(source_id, order_line.get('name'),
-                                                               order_line.get('variant_title'))
-                else:
-                    note = 'Aliexpress Order ID: {0}\n' \
-                           'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n'.format(source_id)
-
-                utils.add_shopify_order_note(store, order_id, note)
-            except:
-                raven_client.captureException(level='warning')
+            tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
 
         return JsonResponse({'status': 'ok'})
 

@@ -13,8 +13,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from .models import *
-import utils
+from leadgalaxy.models import *
+from leadgalaxy import utils
 
 app = Celery('shopified')
 
@@ -277,6 +277,36 @@ def smartmemeber_webhook_call(subdomain, data):
         raw_rep = rep.text  # variable will be accessible in Sentry
         assert len(raw_rep) and 'email' in rep.json()
 
+    except:
+        raven_client.captureException()
+
+
+@app.task
+def mark_as_ordered_note(store_id, order_id, line_id, source_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+        order_line, current_note = utils.get_shopify_order_line(store, order_id, line_id, note=True)
+        if order_line:
+            note = u'Aliexpress Order ID: {0}\n' \
+                   'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n' \
+                   'Shopify Product: {1} / {2}'.format(source_id, order_line.get('name'),
+                                                       order_line.get('variant_title'))
+        else:
+            note = 'Aliexpress Order ID: {0}\n' \
+                   'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n'.format(source_id)
+
+        utils.add_shopify_order_note(store, order_id, note, current_note=current_note)
+
+    except:
+        raven_client.captureException()
+
+
+@app.task
+def add_ordered_note(store_id, order_id, note):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+
+        utils.add_shopify_order_note(store, order_id, note)
     except:
         raven_client.captureException()
 

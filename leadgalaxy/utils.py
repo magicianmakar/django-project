@@ -490,13 +490,19 @@ def get_shopify_order(store, order_id):
     return rep['order']
 
 
-def get_shopify_order_line(store, order_id, line_id):
+def get_shopify_order_line(store, order_id, line_id, note=False):
     order = get_shopify_order(store, order_id)
     for line in order['line_items']:
         if int(line['id']) == int(line_id):
-            return line
+            if note:
+                line, order['note']
+            else:
+                return line
 
-    return False
+    if note:
+        return None, None
+    else:
+        return None
 
 
 def get_shopify_order_note(store, order_id):
@@ -518,8 +524,11 @@ def set_shopify_order_note(store, order_id, note):
     return rep['order']['id']
 
 
-def add_shopify_order_note(store, order_id, new_note):
-    note = get_shopify_order_note(store, order_id)
+def add_shopify_order_note(store, order_id, new_note, current_note=False):
+    if current_note is False:
+        note = get_shopify_order_note(store, order_id)
+    else:
+        note = current_note
 
     if note:
         note = '{}\n{}'.format(note.encode('utf-8'), new_note.encode('utf-8'))

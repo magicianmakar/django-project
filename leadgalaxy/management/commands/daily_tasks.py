@@ -117,9 +117,6 @@ class Command(BaseCommand):
         fulfilled = 'fulfillment' in rep.json()
         if fulfilled:
             note = "Auto Fulfilled by Shopified App (Line Item #{})".format(order.line_id)
-            try:
-                utils.add_shopify_order_note(store, order.order_id, note)
-            except Exception:
-                raven_client.captureException()
+            tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=30)
 
         return fulfilled
