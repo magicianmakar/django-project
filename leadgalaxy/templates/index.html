@@ -312,7 +312,7 @@
                         {% endwith %}
                         {% endif %}
 
-                        {% if user|can:'aliexpress_affiliate.use' %}
+                        {% if user|can:'aliexpress_affiliate.use' and not user.is_superuser %}
                         <div class="col-sm-offset-2"><hr /></div>
 
                         <div class="col-sm-offset-2">
