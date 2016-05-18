@@ -599,6 +599,8 @@
 <script type="text/javascript">
     var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
     $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+    var bootstrapTooltip = $.fn.tooltip.noConflict();
+    $.fn.bootstrapTooltip = bootstrapTooltip;
 </script>
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
@@ -608,6 +610,8 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+
+<script src="{% static 'js/pixlr.js' %}"></script>
 
 <!-- Load Feather code -->
 {% if request.is_secure %}
@@ -634,6 +638,7 @@ var config = {
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
     photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
+    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
     feather_editor: null,
     shopify_variants: {
     {% for variant in shopify_product.variants %}
@@ -742,6 +747,19 @@ $(function() {
 
     $('.original-description').css('overflow', 'auto');
 });
+
+{% if request.user|can:'advanced_photo_editor.use' %}
+function pixlrDone(status, url, imageID) {
+    if (status == 'ok') {
+        var image = $('#'+imageID);
+        image.attr('src', url);
+        product.images[parseInt(image.attr('image-id'))] = url;
+        pixlr.overlay.hide();
+    } else {
+        swal('Advanced Image Editor', 'Error occured when saving the image', 'error');
+    }
+}
+{% endif %}
 
 </script>
 
