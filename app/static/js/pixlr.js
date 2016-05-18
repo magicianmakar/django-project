@@ -87,6 +87,7 @@ var pixlr = (function () {
                     document.body.appendChild(div);
                     document.body.appendChild(idiv);
 
+                    iframe.setAttribute("id", "pixlr-iframe");
                     iframe.style.width = (div.offsetWidth - 70) + 'px';
                     iframe.style.height = (div.offsetHeight - 50) + 'px';
                     iframe.style.border = '1px solid #b1b1b1';

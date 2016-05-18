@@ -684,11 +684,11 @@ function renderImages() {
         d.append($('<button class="btn btn-danger btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
 
         if (config.photo_editor) {
-            d.append($('<button class="btn btn-primary btn-xs edit-photo" style="display:none;position: absolute;cursor: pointer;right: 50px;top: 5px;background-color: rgb(226, 255, 228);color: rgb(0, 105, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
+            d.append($('<button data-toggle="tooltip" data-placement="left" title="Simple Image Editor" class="btn btn-primary btn-xs edit-photo" style="display:none;position: absolute;cursor: pointer;right: 50px;top: 5px;background-color: rgb(226, 255, 228);color: rgb(0, 105, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
         }
 
         if (config.advanced_photo_editor) {
-            d.append($('<button class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-picture-o"></i></button>'));
+            d.append($('<button data-toggle="tooltip" data-placement="left" title="Advanced Image Editor" class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-picture-o"></i></button>'));
         }
 
         d.find('.image-delete').click(imageClicked);
@@ -713,6 +713,7 @@ function renderImages() {
     });
 
     matchImagesWithExtra();
+    $('[data-toggle="tooltip"]').bootstrapTooltip();
 }
 
 function launchEditor(id, src) {
@@ -731,10 +732,19 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
     e.preventDefault();
     if (config.advanced_photo_editor) {
         var image = $(this).siblings('img');
-        console.log(image.attr('image-id'));
-        pixlr.overlay.show({image: image.attr('src'), title:'Example image 1', 
+        pixlr.overlay.show({image: image.attr('src'), title: '', 
             service:'editor', exit: window.location.href, locktarget: true, 
             target: window.location.origin+'/upload/save_image_s3?product='+config.product_id+'&image_id='+image.attr('id')});
+
+
+        var iframeWindow = $('#pixlr-iframe').get(0).contentWindow,
+            eventListeners = getEventListeners(iframeWindow).beforeunload;
+
+        for (var i = 0, iLength = eventListeners.length; i < iLength; i++) {
+            var eventListener = eventListeners[i];
+            console.log('listener:', eventListener.listener);
+            iframeWindow.removeEventListener('beforeunload', eventListener.listener);
+        }
     } else {
         swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }

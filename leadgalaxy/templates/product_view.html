@@ -599,6 +599,8 @@
 <script type="text/javascript">
     var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
     $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+    var bootstrapTooltip = $.fn.tooltip.noConflict();
+    $.fn.bootstrapTooltip = bootstrapTooltip;
 </script>
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
