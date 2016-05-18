@@ -735,16 +735,6 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
         pixlr.overlay.show({image: image.attr('src'), title: '', 
             service:'editor', exit: window.location.href, locktarget: true, 
             target: window.location.origin+'/upload/save_image_s3?product='+config.product_id+'&image_id='+image.attr('id')});
-
-
-        var iframeWindow = $('#pixlr-iframe').get(0).contentWindow,
-            eventListeners = getEventListeners(iframeWindow).beforeunload;
-
-        for (var i = 0, iLength = eventListeners.length; i < iLength; i++) {
-            var eventListener = eventListeners[i];
-            console.log('listener:', eventListener.listener);
-            iframeWindow.removeEventListener('beforeunload', eventListener.listener);
-        }
     } else {
         swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
