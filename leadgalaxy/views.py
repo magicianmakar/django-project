@@ -1697,6 +1697,8 @@ def webhook(request, provider, option):
                         'order_key': order_key
                     })
 
+                    tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id']], countdown=30)
+
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/delete':

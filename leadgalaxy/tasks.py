@@ -264,6 +264,18 @@ def export_product(req_data, target, user_id):
 
 
 @app.task
+def update_shopify_order(store_id, order_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+        order = utils.get_shopify_order(store, order_id)
+
+        from shopify_orders import utils as order_utils
+        order_utils.update_shopify_order(store, order)
+    except:
+        raven_client.captureException()
+
+
+@app.task
 def smartmemeber_webhook_call(subdomain, data):
     try:
         data['cprodtitle'] = 'Shopified App Success Club OTO3'
