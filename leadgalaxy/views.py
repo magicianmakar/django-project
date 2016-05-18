@@ -891,7 +891,7 @@ def proccess_api(request, user, method, target, data):
         if order:
             return JsonResponse(order, safe=False)
         else:
-            return JsonResponse({'error': 'Not found'}, status=404)
+            return JsonResponse({'error': 'Not found: {}'.format(order_key)}, status=404)
 
     if method == 'GET' and target == 'product-variant-image':
         try:
