@@ -164,7 +164,6 @@
             },
             function(isConfirmed) {
                 if (isConfirmed) {
-                    console.log('Delete', subuser_id);
                     $.ajax({
                         url: '/api/subuser-delete',
                         type: 'POST',
