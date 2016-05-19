@@ -7,6 +7,7 @@ from simplejson import JSONDecodeError
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
+from leadgalaxy import tasks
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
