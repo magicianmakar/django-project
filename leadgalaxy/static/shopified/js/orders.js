@@ -198,7 +198,6 @@ $('.placed-order-details').click(function (e) {
     var order_id = $(this).attr('order-id');
     var source_id = $(this).attr('source-order-id');
     var line_id = $(this).attr('line-id');
-    var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
     var html = '<ul>';
     html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" '+
             'href="http://trade.aliexpress.com/order_detail.htm?orderId='+source_id+'">'+source_id+'</a></li>';
