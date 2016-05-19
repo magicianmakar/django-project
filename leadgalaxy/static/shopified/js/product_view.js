@@ -729,11 +729,17 @@ function launchEditor(id, src) {
 
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
     e.preventDefault();
+
     if (config.advanced_photo_editor) {
         var image = $(this).siblings('img');
-        pixlr.overlay.show({image: image.attr('src'), title: '', 
-            service:'editor', exit: window.location.href, locktarget: true, 
-            target: window.location.origin+'/upload/save_image_s3?product='+config.product_id+'&image_id='+image.attr('id')});
+        pixlr.overlay.show({
+            image: image.attr('src'),
+            title: '',
+            service: 'editor',
+            exit: window.location.href,
+            locktarget: true,
+            target: window.location.origin + '/upload/save_image_s3?product=' + config.product_id + '&image_id=' + image.attr('id')
+        });
     } else {
         swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
