@@ -558,39 +558,6 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
-    if method == 'POST' and target == 'variant-image':
-        # TODO: Move to after boards endpoints
-        try:
-            store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
-
-        except ShopifyStore.DoesNotExist:
-            return JsonResponse({'error': 'Store not found'}, status=404)
-
-        api_url = '/admin/variants/{}.json'.format(data.get('variant'))
-        api_url = store.get_link(api_url, api=True)
-
-        api_data = {
-            "variant": {
-                "id": data.get('variant'),
-                "image_id": data.get('image'),
-            }
-        }
-
-        requests.put(api_url, json=api_data)
-
-        return JsonResponse({
-            'status': 'ok'
-        })
-
-    if method == 'DELETE' and target == 'product-image':
-        store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_view(store)
-
-        ShopifyProductImage.objects.filter(store=store, product=data.get('product')).delete()
-
-        return JsonResponse({'status': 'ok'})
-
     if method == 'GET' and target == 'board-config':
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -631,6 +598,38 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({
             'status': 'ok'
         })
+
+    if method == 'POST' and target == 'variant-image':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        api_url = '/admin/variants/{}.json'.format(data.get('variant'))
+        api_url = store.get_link(api_url, api=True)
+
+        api_data = {
+            "variant": {
+                "id": data.get('variant'),
+                "image_id": data.get('image'),
+            }
+        }
+
+        requests.put(api_url, json=api_data)
+
+        return JsonResponse({
+            'status': 'ok'
+        })
+
+    if method == 'DELETE' and target == 'product-image':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
+
+        ShopifyProductImage.objects.filter(store=store, product=data.get('product')).delete()
+
+        return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'change-plan':
         if not user.is_superuser:
@@ -2441,6 +2440,27 @@ def acp_groups_install(request):
     return HttpResponse('Done, changed: %d' % count)
 
 
+@login_required
+def acp_users_emails(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
+    users = []
+    filtred = []
+    for row in res:
+        if row.user not in users and row.user not in filtred and 'VIP' not in row.user.profile.plan.title:
+            users.append(row.user)
+        else:
+            filtred.append(row.user)
+
+    o = ''
+    for i in users:
+        o = '{}{}<br>\n'.format(o, i.email)
+
+    return HttpResponse(o)
+
+
 def autocomplete(request, target):
     if not request.user.is_authenticated():
         return JsonResponse({'error': 'User login required'})
@@ -3164,7 +3184,6 @@ def product_feeds(request):
     if not request.user.can('product_feeds.use'):
         return render(request, 'upgrade.html')
 
-
     return render(request, 'product_feeds.html', {
         'page': 'product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
@@ -3257,27 +3276,6 @@ def subusers_perms(request, user_id):
         'page': 'subusers',
         'breadcrumbs': ['Account', 'Sub Users']
     })
-
-@login_required
-def acp_users_emails(request):
-    # TODO: Move to top
-    if not request.user.is_superuser:
-        return HttpResponseRedirect('/')
-
-    res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
-    users = []
-    filtred = []
-    for row in res:
-        if row.user not in users and row.user not in filtred and 'VIP' not in row.user.profile.plan.title:
-            users.append(row.user)
-        else:
-            filtred.append(row.user)
-
-    o = ''
-    for i in users:
-        o = '{}{}<br>\n'.format(o, i.email)
-
-    return HttpResponse(o)
 
 
 def get_product_feed(request, store_id, revision=1):
