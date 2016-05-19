@@ -19,6 +19,8 @@ from django.core.cache import cache
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
+
 from app import settings
 
 
@@ -689,6 +691,47 @@ def get_tracking_orders(store, tracker_orders):
 
     return new_tracker_orders
 
+
+def is_valide_tracking_number(tarcking_number):
+    return re.match('^[0-9]+$', tarcking_number) is None
+
+
+def is_chinese_carrier(tarcking_number):
+    return re.search('(CN|SG|HK)$', tarcking_number) is not None
+
+
+def order_track_fulfillment(order_track):
+    ''' Get Tracking Carrier and Url for Shopify Order Fulfillment '''
+
+    is_usps = False
+
+    try:
+        assert order_track.source_tracking, 'Tracking Code is empty'
+
+        line = ShopifyOrderLine.objects.get(line_id=order_track.line_id, order__order_id=order_track.order_id)
+        is_usps = is_chinese_carrier(order_track.source_tracking) and line.order.country_code == 'US'
+
+    except ShopifyOrderLine.DoesNotExist:
+        pass
+    except:
+        raven_client.captureException()
+
+    data = {
+        "fulfillment": {
+            "tracking_number": order_track.source_tracking,
+            "line_items": [{
+                "id": order_track.line_id,
+            }]
+        }
+    }
+
+    if is_usps:
+        data['fulfillment']['tracking_company'] = "USPS"
+    else:
+        data['fulfillment']['tracking_company'] = "Other"
+        data['fulfillment']['tracking_url'] = "https://track.aftership.com/{}".format(order_track.source_tracking)
+
+    return data
 
 def product_change_notify(user):
 

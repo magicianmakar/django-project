@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 import requests
-from simplejson import JSONDecodeError
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -45,7 +44,6 @@ class Command(BaseCommand):
             if not user or user.get_config('auto_shopify_fulfill') != 'hourly':
                 users[order.store_id] = False
                 continue
-                pass
             else:
                 users[order.store_id] = user
 
@@ -58,6 +56,7 @@ class Command(BaseCommand):
                     count += 1
                     if count % 50 == 0:
                         print 'Fulfill Progress: %d' % count
+
             except:
                 raven_client.captureException()
 
@@ -75,21 +74,10 @@ class Command(BaseCommand):
                                        nl2br=False)
 
     def fulfill_order(self, order, store, user):
-        tracking = order.source_tracking
+        api_data = utils.order_track_fulfillment(order)
 
-        api_data = {
-            "fulfillment": {
-                "tracking_number": tracking,
-                "tracking_company": "Other",
-                "tracking_url": "https://track.aftership.com/{}".format(tracking),
-                "line_items": [{
-                    "id": order.line_id,
-                    # "quantity": int(data.get('fulfill-quantity'))
-                }]
-            }
-        }
-
-        if user.get_config('validate_tracking_number', True) and re.match('^[0-9]+$', tracking):
+        if user.get_config('validate_tracking_number', True) and \
+                not utils.is_valide_tracking_number(order.source_tracking):
             notify_customer = 'no'
         else:
             notify_customer = user.get_config('send_shipping_confirmation', 'default')
