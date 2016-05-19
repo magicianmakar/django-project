@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'storages',
     'django_extensions',
     'debug_toolbar',
+    'test_without_migrations',
 
     'article',
     'leadgalaxy',
