@@ -48,6 +48,8 @@ class Command(BaseCommand):
 
         users = {}
         count = 0
+        self.store_countdown = {}
+
         for order in orders:
             if order.store_id in users:
                 user = users[order.store_id]
@@ -118,9 +120,9 @@ class Command(BaseCommand):
         if fulfilled:
             note = "Auto Fulfilled by Shopified App (Line Item #{})".format(order.line_id)
 
-            countdown = self.store_delay.get(store.id, 30)
+            countdown = self.store_countdown.get(store.id, 30)
             tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
 
-            self.store_delay[store.id] = countdown + 5
+            self.store_countdown[store.id] = countdown + 5
 
         return fulfilled
