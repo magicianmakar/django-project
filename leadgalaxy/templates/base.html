@@ -49,6 +49,14 @@
         'userPlan': '{{user.profile.plan}}',
         'pageCategory': 'webapp',
       }];
+
+      {% if user.is_authenticated %}
+      var currentUser = {
+        id: {{ user.id }},
+        username: '{{ user.username }}',
+        email: '{{ user.email }}'
+      };
+      {% endif %}
     </script>
 
     <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-TPLKSQ"
