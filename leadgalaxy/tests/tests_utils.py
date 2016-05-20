@@ -67,29 +67,55 @@ class UtilsTestCase(TestCase):
         self.assertTrue(utils.is_valide_tracking_number('7565915257226SG'))
         self.assertFalse(utils.is_valide_tracking_number('7565915257226'))
 
-
     def test_tracking_fulfillment(self):
         # Line not found
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK')
-        data = utils.order_track_fulfillment(track)
+        track1 = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK')
+        data = utils.order_track_fulfillment(track1, {})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track1.source_tracking))
         self.assertEqual(len(data['fulfillment']['line_items']), 1)
         self.assertEqual(data['fulfillment']['line_items'][0]['id'], '1654810')
 
         # ePacket Order
-        track = self.create_track('5415135175', '1654811', 'MA7565915257226HK', 'US')
-        data = utils.order_track_fulfillment(track)
+        track2 = self.create_track('5415135175', '1654811', 'MA7565915257226HK', 'US')
+        data = utils.order_track_fulfillment(track2, {})
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
         self.assertIsNone(data['fulfillment'].get('tracking_url'))
 
         # Unrecognized Carrier
-        track = self.create_track('5415135176', '1654812', 'YT1614016214415424', 'US')
-        data = utils.order_track_fulfillment(track)
+        track3 = self.create_track('5415135176', '1654812', 'YT1614016214415424', 'US')
+        data = utils.order_track_fulfillment(track3, {})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track3.source_tracking))
 
         # Non US address
-        track = self.create_track('5415135177', '1654813', 'MA7565915257226HK', 'MA')
-        data = utils.order_track_fulfillment(track)
+        track4 = self.create_track('5415135177', '1654813', 'MA7565915257226HK', 'MA')
+        data = utils.order_track_fulfillment(track4, {})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
+
+        # Default Confirmation email
+        data = utils.order_track_fulfillment(track1, {})
+        self.assertTrue('notify_customer' not in data['fulfillment'])
+
+        data = utils.order_track_fulfillment(track1, {'send_shipping_confirmation': 'default'})
+        self.assertTrue('notify_customer' not in data['fulfillment'])
+
+        # Don't send Confirmation email
+        data = utils.order_track_fulfillment(track1, {'send_shipping_confirmation': 'no'})
+        self.assertFalse(data['fulfillment']['notify_customer'])
+
+        # Always send Confirmation email
+        data = utils.order_track_fulfillment(track1, {'send_shipping_confirmation': 'yes'})
+        self.assertTrue(data['fulfillment']['notify_customer'])
+
+        # Always send Confirmation email if Tracking is valid
+        data = utils.order_track_fulfillment(track1, {'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
+        self.assertTrue(data['fulfillment']['notify_customer'])
+
+        track5 = self.create_track('5415135176', '1654814', '7565915257226', 'MA')
+        data = utils.order_track_fulfillment(track5, {'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
+        self.assertFalse(data['fulfillment']['notify_customer'])
+
+        # Custom Aftership domain
+        data = utils.order_track_fulfillment(track1, {'aftership_domain': 'uncommonnow'})
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(track1.source_tracking))

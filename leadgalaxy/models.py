@@ -156,7 +156,9 @@ class UserProfile(models.Model):
             return {}
 
     def get_config_value(self, name, default=None):
-        if type(name) is list:
+        if name is None:
+            return self.get_config()
+        elif type(name) is list:
             config = self.get_config()
             values = []
             for i in name:

@@ -89,16 +89,7 @@ class Command(BaseCommand):
                                        nl2br=False)
 
     def fulfill_order(self, order, store, user):
-        api_data = utils.order_track_fulfillment(order)
-
-        if user.get_config('validate_tracking_number', True) and \
-                not utils.is_valide_tracking_number(order.source_tracking):
-            notify_customer = 'no'
-        else:
-            notify_customer = user.get_config('send_shipping_confirmation', 'default')
-
-        if notify_customer and notify_customer != 'default':
-            api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+        api_data = utils.order_track_fulfillment(order, user.get_config())
 
         rep = requests.post(
             url=store.get_link('/admin/orders/{}/fulfillments.json'.format(order.order_id), api=True),

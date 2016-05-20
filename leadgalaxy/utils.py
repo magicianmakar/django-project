@@ -700,7 +700,7 @@ def is_chinese_carrier(tarcking_number):
     return re.search('(CN|SG|HK)$', tarcking_number) is not None
 
 
-def order_track_fulfillment(order_track):
+def order_track_fulfillment(order_track, user_config):
     ''' Get Tracking Carrier and Url for Shopify Order Fulfillment '''
 
     is_usps = False
@@ -729,9 +729,20 @@ def order_track_fulfillment(order_track):
         data['fulfillment']['tracking_company'] = "USPS"
     else:
         data['fulfillment']['tracking_company'] = "Other"
-        data['fulfillment']['tracking_url'] = "https://track.aftership.com/{}".format(order_track.source_tracking)
+        data['fulfillment']['tracking_url'] = "https://{}.aftership.com/{}".format(
+            user_config.get('aftership_domain', 'track'), order_track.source_tracking)
+
+    if user_config.get('validate_tracking_number', True) and \
+            not is_valide_tracking_number(order_track.source_tracking):
+        notify_customer = 'no'
+    else:
+        notify_customer = user_config.get('send_shipping_confirmation', 'default')
+
+    if notify_customer and notify_customer != 'default':
+        data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
 
     return data
+
 
 def product_change_notify(user):
 
