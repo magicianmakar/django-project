@@ -498,6 +498,21 @@ $(function() {
     };
 
     $('.itooltip').tooltip();
+
+    $('[qtip-tooltip]').each(function() {
+        $(this).qtip({
+            content: {
+                attr: 'qtip-tooltip',
+            },
+            position: {
+                my: $(this).attr('qtip-my') || "top center",
+                at: $(this).attr('qtip-at') ||  "bottom center"
+            },
+            style: {
+                classes: 'qtip-bootstrap'
+            }
+        });
+    });
 });
 
 var ravenOptions = {

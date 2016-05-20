@@ -700,16 +700,34 @@ def is_chinese_carrier(tarcking_number):
     return re.search('(CN|SG|HK)$', tarcking_number) is not None
 
 
-def order_track_fulfillment(order_track, user_config):
-    ''' Get Tracking Carrier and Url for Shopify Order Fulfillment '''
+def order_track_fulfillment(**kwargs):
+    ''' Get Tracking Carrier and Url for Shopify Order Fulfillment
+        order_id:        Shopify Order ID
+        line_id:         Shopify Order Line
+        source_tracking: Order Tracking Number
+        order_track:     ShopifyOrderTrack to get above args. from (optional)
+        user_config:     UserProfile config dict
+    '''
+
+    if kwargs.get('order_track'):
+        order_id = kwargs.get('order_track').order_id
+        line_id = kwargs.get('order_track').line_id
+        source_tracking = kwargs.get('order_track').source_tracking
+    else:
+        order_id = kwargs['order_id']
+        line_id = kwargs['line_id']
+        source_tracking = kwargs['source_tracking']
+
+        if not len(source_tracking):
+            source_tracking = None
+
+    user_config = kwargs['user_config']
 
     is_usps = False
 
     try:
-        assert order_track.source_tracking, 'Tracking Code is empty'
-
-        line = ShopifyOrderLine.objects.get(line_id=order_track.line_id, order__order_id=order_track.order_id)
-        is_usps = is_chinese_carrier(order_track.source_tracking) and line.order.country_code == 'US'
+        line = ShopifyOrderLine.objects.get(line_id=line_id, order__order_id=order_id)
+        is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
 
     except ShopifyOrderLine.DoesNotExist:
         pass
@@ -718,22 +736,23 @@ def order_track_fulfillment(order_track, user_config):
 
     data = {
         "fulfillment": {
-            "tracking_number": order_track.source_tracking,
+            "tracking_number": source_tracking,
             "line_items": [{
-                "id": order_track.line_id,
+                "id": line_id,
             }]
         }
     }
 
-    if is_usps:
-        data['fulfillment']['tracking_company'] = "USPS"
-    else:
-        data['fulfillment']['tracking_company'] = "Other"
-        data['fulfillment']['tracking_url'] = "https://{}.aftership.com/{}".format(
-            user_config.get('aftership_domain', 'track'), order_track.source_tracking)
+    if source_tracking:
+        if is_usps or kwargs.get('use_usps'):
+            data['fulfillment']['tracking_company'] = "USPS"
+        else:
+            data['fulfillment']['tracking_company'] = "Other"
+            data['fulfillment']['tracking_url'] = "https://{}.aftership.com/{}".format(
+                user_config.get('aftership_domain', 'track'), source_tracking)
 
     if user_config.get('validate_tracking_number', True) and \
-            not is_valide_tracking_number(order_track.source_tracking):
+            not is_valide_tracking_number(source_tracking):
         notify_customer = 'no'
     else:
         notify_customer = user_config.get('send_shipping_confirmation', 'default')

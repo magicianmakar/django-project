@@ -74,7 +74,6 @@ $(".more-info").click(function (e) {
 });
 
 $('.fulfill-btn').click(function (e) {
-    $('#modal-fulfillment #fulfill-quantity').val($(this).attr('quantity'));
     $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
     $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
     $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));

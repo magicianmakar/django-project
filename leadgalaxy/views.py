@@ -846,25 +846,19 @@ def proccess_api(request, user, method, target, data):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        tracking = data.get('fulfill-traking-number')
-        if not tracking:
-            tracking = None
-
-        api_data = {
-            "fulfillment": {
-                "tracking_number": tracking,
-                "tracking_company": "Other",
-                "tracking_url": "https://track.aftership.com/{}".format(tracking),
-                "line_items": [{
-                    "id": int(data.get('fulfill-line-id')),
-                    "quantity": int(data.get('fulfill-quantity'))
-                }]
+        fulfillment_data = {
+            'line_id': int(data.get('fulfill-line-id')),
+            'order_id': data.get('fulfill-order-id'),
+            'source_tracking': data.get('fulfill-traking-number'),
+            'use_usps': data.get('fulfill-tarcking-link') == 'usps',
+            'user_config': {
+                'send_shipping_confirmation': data.get('fulfill-notify-customer'),
+                'validate_tracking_number': False,
+                'aftership_domain': user_config.get('aftership_domain', 'track')
             }
         }
 
-        notify_customer = data.get('fulfill-notify-customer')
-        if notify_customer and notify_customer != 'default':
-            api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+        api_data = utils.order_track_fulfillment(**fulfillment_data)
 
         rep = requests.post(
             url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),

@@ -74,7 +74,7 @@ class Command(BaseCommand):
                                        nl2br=False)
 
     def fulfill_order(self, order, store, user):
-        api_data = utils.order_track_fulfillment(order, user.get_config())
+        api_data = utils.order_track_fulfillment(order_track=order, user_config=user.get_config())
 
         rep = requests.post(
             url=store.get_link('/admin/orders/{}/fulfillments.json'.format(order.order_id), api=True),
