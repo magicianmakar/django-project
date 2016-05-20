@@ -155,7 +155,7 @@ class UserProfile(models.Model):
         except:
             return {}
 
-    def get_config_value(self, name, default=None):
+    def get_config_value(self, name=None, default=None):
         if name is None:
             return self.get_config()
         elif type(name) is list:
@@ -261,7 +261,7 @@ def user_can(self, perms):
     return self.profile.can(perms)
 
 
-def user_get_config(self, name, default_value=None):
+def user_get_config(self, name=None, default_value=None):
     return self.profile.get_config_value(name, default_value)
 
 
