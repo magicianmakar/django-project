@@ -854,7 +854,7 @@ def proccess_api(request, user, method, target, data):
             'user_config': {
                 'send_shipping_confirmation': data.get('fulfill-notify-customer'),
                 'validate_tracking_number': False,
-                'aftership_domain': user_config.get('aftership_domain', 'track')
+                'aftership_domain': user.get_config('aftership_domain', 'track')
             }
         }
 
