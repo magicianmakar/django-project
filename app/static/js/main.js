@@ -510,7 +510,11 @@ $(function() {
             },
             style: {
                 classes: 'qtip-bootstrap'
-            }
+            },
+            hide: {
+                 event: 'unfocus',
+                 inactive: 3000
+             }
         });
     });
 });
