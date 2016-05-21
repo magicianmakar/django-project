@@ -2576,57 +2576,54 @@ def pixlr_serve_image(request):
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
-    try:
-        if 'advanced' in request.GET:
-            # Pixlr
-            if not request.user.can('advanced_photo_editor.use'):
-                return render(request, 'upgrade.html')
+    if 'advanced' in request.GET:
+        # Pixlr
+        if not request.user.can('advanced_photo_editor.use'):
+            return render(request, 'upgrade.html')
 
-            product_id = request.GET.get('product')
-            image_id = request.GET.get('image_id')
-            image = request.FILES.get('image')
-            img_url = image.name
-            
-            json_response = False
-            fp = StringIO.StringIO(image.read())
-        else:
-            # Aviary
-            import urllib2
-            if not request.user.can('aviary_photo_editor.use'):
-                return render(request, 'upgrade.html')
+        product_id = request.GET.get('product')
+        image_id = request.GET.get('image_id')
+        image = request.FILES.get('image')
+        img_url = image.name
+        
+        json_response = False
+        fp = StringIO.StringIO(image.read())
+    else:
+        # Aviary
+        import urllib2
+        if not request.user.can('aviary_photo_editor.use'):
+            return render(request, 'upgrade.html')
 
-            product_id = request.POST.get('product')
-            img_url = request.POST.get('url')
-            
-            json_response = True
-            fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
+        product_id = request.POST.get('product')
+        img_url = request.POST.get('url')
+        
+        json_response = True
+        fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
-        import boto
-        from boto.s3.key import Key
+    import boto
+    from boto.s3.key import Key
 
-        AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-        S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-        img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
+    img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
 
-        product = ShopifyProduct.objects.get(user=request.user, id=product_id)
+    product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
-        conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-        bucket = conn.get_bucket(S3_BUCKET)
-        k = Key(bucket)
-        k.key = img_name
-        mimetype = mimetypes.guess_type(img_url)[0]
-        k.set_metadata("Content-Type", mimetype)
-        k.set_contents_from_file(fp)
-        k.make_public()
+    conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+    bucket = conn.get_bucket(S3_BUCKET)
+    k = Key(bucket)
+    k.key = img_name
+    mimetype = mimetypes.guess_type(img_url)[0]
+    k.set_metadata("Content-Type", mimetype)
+    k.set_contents_from_file(fp)
+    k.make_public()
 
-        upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
+    upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
 
-        upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
-        upload.save()
-    except:
-        import traceback; traceback.print_exc();
+    upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
+    upload.save()
 
     if json_response:
         return JsonResponse({
