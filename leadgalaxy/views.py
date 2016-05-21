@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
@@ -30,6 +31,7 @@ import time
 import requests
 import arrow
 import traceback
+import mimetypes
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
@@ -2554,49 +2556,77 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
+def crossdomain(request):
+     return render(request, 'crossdomain.xml', {})
+
+
+def pixlr_serve_image(request):
+    import StringIO
+    img_url = request.GET.get('image')
+    fp = StringIO.StringIO(requests.get(img_url).content)
+    return HttpResponse(fp, content_type='image/jpeg')
+
+
+def pixlr_close(request):
+    return render(request, 'pixlr.html', {})
+
+
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
-    if not request.user.can('aviary_photo_editor.use'):
-        return render(request, 'upgrade.html')
-
-    import boto
-    import urllib2
     import StringIO
-    from boto.s3.key import Key
+    try:
+        if 'advanced' not in request.GET:
+            # Pixlr
+            if not request.user.can('advanced_photo_editor.use'):
+                return render(request, 'upgrade.html')
 
-    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+            product_id, image_id = request.POST.get('title').split(':')
+            # product_id = request.GET.get('product')
+            # image_id = request.GET.get('image_id')
+            image = request.FILES.get('image')
+            img_url = image.name
+            
+            json_response = False
+            fp = StringIO.StringIO(image.read())
+        else:
+            # Aviary
+            import urllib2
+            if not request.user.can('aviary_photo_editor.use'):
+                return render(request, 'upgrade.html')
 
-    if request.method == 'POST':
-        # Aviary
-        product_id = request.POST.get('product')
-        img_url = request.POST.get('url')
-        json_response = True
-    else:
-        # Pixlr
-        product_id = request.GET.get('product')
-        img_url = request.GET.get('image')
-        json_response = False
+            product_id = request.POST.get('product')
+            img_url = request.POST.get('url')
+            
+            json_response = True
+            fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
-    img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
+        import boto
+        from boto.s3.key import Key
 
-    product = ShopifyProduct.objects.get(user=request.user, id=product_id)
+        AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+        S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = img_name
-    fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
-    k.set_metadata("Content-Type", 'image/jpeg')
-    k.set_contents_from_file(fp)
-    k.make_public()
+        img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
 
-    upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
+        product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
-    upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
-    upload.save()
+        conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+        bucket = conn.get_bucket(S3_BUCKET)
+        k = Key(bucket)
+        k.key = img_name
+        mimetype = mimetypes.guess_type(img_url)[0]
+        k.set_metadata("Content-Type", mimetype)
+        k.set_contents_from_file(fp)
+        k.make_public()
+
+        upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
+
+        upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
+        upload.save()
+    except:
+        import traceback; traceback.print_exc();
 
     if json_response:
         return JsonResponse({
@@ -2607,7 +2637,7 @@ def save_image_s3(request):
         return render(request, 'pixlr.html', {
             'status': 'ok',
             'url': upload_url,
-            'image_id': request.GET.get('image_id')
+            'image_id': image_id
         })
 
 
