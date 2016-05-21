@@ -32,6 +32,7 @@ import requests
 import arrow
 import traceback
 import mimetypes
+import StringIO
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
@@ -2557,16 +2558,24 @@ def upgrade_required(request):
 
 
 def pixlr_serve_image(request):
-    import StringIO
     img_url = request.GET.get('image')
-    fp = StringIO.StringIO(requests.get(img_url).content)
-    return HttpResponse(fp, content_type='image/jpeg')
+    allowed_domains = ['alicdn', 'amazonaws']
+
+    if utils.get_domain(img_url) in allowed_domains:
+        mimetype = mimetypes.guess_type(img_url)[0]
+        allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
+
+        if mimetype in allowed_mimetypes:
+            fp = StringIO.StringIO(requests.get(img_url).content)
+
+            return HttpResponse(fp, content_type=mimetype)
+
+    raise Http404("Image not found. %s" % img_url)
 
 
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
-    import StringIO
     try:
         if 'advanced' in request.GET:
             # Pixlr
