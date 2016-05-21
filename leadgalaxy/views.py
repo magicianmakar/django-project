@@ -2573,6 +2573,10 @@ def pixlr_serve_image(request):
     raise Http404("Image not found. %s" % img_url)
 
 
+def pixlr_close(request):
+    return render(request, 'partials/pixlr.html')!
+
+
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
@@ -2631,7 +2635,7 @@ def save_image_s3(request):
             'url': upload_url
         })
     else:
-        return render(request, 'pixlr.html', {
+        return render(request, 'partials/pixlr.html', {
             'status': 'ok',
             'url': upload_url,
             'image_id': image_id
@@ -3384,11 +3388,6 @@ def crossdomain(request):
             <allow-http-request-headers-from domain="*.pixlr.com" headers="*" secure="true"/>
         </cross-domain-policy>
     """
-    return HttpResponse(html, content_type='text/plain')
-
-
-def pixlr_close(request):
-    html = '<script type="text/javascript">window.parent.pixlr.overlay.hide()</script>'
     return HttpResponse(html, content_type='text/plain')
 
 
