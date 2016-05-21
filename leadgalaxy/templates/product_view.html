@@ -627,6 +627,7 @@ var config = {
     user_id: {{user.id}},
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
+    pixlr_image_url: "{% url 'pixlr_serve_image' %}",
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
