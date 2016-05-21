@@ -2556,10 +2556,6 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
-def crossdomain(request):
-     return render(request, 'crossdomain.xml', {})
-
-
 def pixlr_serve_image(request):
     import StringIO
     img_url = request.GET.get('image')
@@ -2567,23 +2563,18 @@ def pixlr_serve_image(request):
     return HttpResponse(fp, content_type='image/jpeg')
 
 
-def pixlr_close(request):
-    return render(request, 'pixlr.html', {})
-
-
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
     import StringIO
     try:
-        if 'advanced' not in request.GET:
+        if 'advanced' in request.GET:
             # Pixlr
             if not request.user.can('advanced_photo_editor.use'):
                 return render(request, 'upgrade.html')
 
-            product_id, image_id = request.POST.get('title').split(':')
-            # product_id = request.GET.get('product')
-            # image_id = request.GET.get('image_id')
+            product_id = request.GET.get('product')
+            image_id = request.GET.get('image_id')
             image = request.FILES.get('image')
             img_url = image.name
             
@@ -3377,6 +3368,22 @@ def register(request, registration=None):
         'form': form,
         'registration': registration
     })
+
+
+def crossdomain(request):
+    html = """
+        <cross-domain-policy>
+            <allow-access-from domain="*.pixlr.com"/>
+            <site-control permitted-cross-domain-policies="master-only"/>
+            <allow-http-request-headers-from domain="*.pixlr.com" headers="*" secure="true"/>
+        </cross-domain-policy>
+    """
+    return HttpResponse(html, content_type='text/plain')
+
+
+def pixlr_close(request):
+    html = '<script type="text/javascript">window.parent.pixlr.overlay.hide()</script>'
+    return HttpResponse(html, content_type='text/plain')
 
 
 def robots_txt(request):

@@ -39,7 +39,6 @@ urlpatterns = patterns('',
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
-    url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),
     url(r'^pixlr/serve$', leadgalaxy.views.pixlr_serve_image, name='pixlr_serve_image'),
     url(r'^pixlr/close$', leadgalaxy.views.pixlr_close, name='pixlr_close'),
 
@@ -55,4 +54,5 @@ urlpatterns = patterns('',
         {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header':'Shopified App'}}),
 
     url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
+    url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),
 )
