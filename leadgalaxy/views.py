@@ -3388,7 +3388,7 @@ def crossdomain(request):
             <allow-http-request-headers-from domain="*.pixlr.com" headers="*" secure="true"/>
         </cross-domain-policy>
     """
-    return HttpResponse(html, content_type='text/plain')
+    return HttpResponse(html, content_type='application/xml')
 
 
 def robots_txt(request):
