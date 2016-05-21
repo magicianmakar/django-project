@@ -2574,7 +2574,7 @@ def pixlr_serve_image(request):
 
 
 def pixlr_close(request):
-    return render(request, 'partials/pixlr.html')!
+    return render(request, 'partials/pixlr.html')
 
 
 @login_required
