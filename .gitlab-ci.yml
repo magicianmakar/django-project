@@ -9,8 +9,7 @@ services:
 
 test:
   script:
-  # this configures Django application to use attached postgres database that is run on `postgres` host
-  #- export DATABASE_URL=postgres://postgres:@postgres:5432/python-test-app
+  - export DATABASE_URL=postgres://postgres:@postgres:5432/python-test-app
   - export DEBUG_APP="TRUE"
   - export SENDGRID_PASSWORD=""
   - export SENDGRID_USERNAME=""
