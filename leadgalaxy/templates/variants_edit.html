@@ -31,6 +31,12 @@
                             <select class="form-control current-var" style="margin:0 10px;width:200px;display:inline"></select>
                             <button class="btn btn-default btn-sm btn-outline var-btn-next"><span>&gt;</span></button>
                         </div>
+                        <div class="form-group col-md-12 text-center">
+                            <input type="checkbox" class="icheck" name="auto-next" id="auto-next">
+                            <label class="control-label" for="auto-next">
+                                Automatically select next variant
+                            </label>
+                        </div>
                     </div>
 
                     <div class="row  text-center" id="var-images">
@@ -99,6 +105,13 @@
 .var-image-block {
     margin-top: 15px;
 }
+
+.icheckbox_square-blue {
+    position: inherit;
+    margin: 0 5px;
+    background-color: #fff;
+}
+
 </style>
 {% endblock %}
 

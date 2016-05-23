@@ -86,6 +86,10 @@ function imageClicked(e) {
 
             $('.link-success').hide();
             this.image.parent().find('.link-success').fadeIn();
+
+            if ($('#auto-next').prop('checked')) {
+                $('.var-btn-next').trigger('click');
+            }
         },
         error: function(data) {
             displayAjaxError('Image linking error', data);
