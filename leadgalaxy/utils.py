@@ -693,11 +693,11 @@ def get_tracking_orders(store, tracker_orders):
 
 
 def is_valide_tracking_number(tarcking_number):
-    return re.match('^[0-9]+$', tarcking_number) is None
+    return tarcking_number and re.match('^[0-9]+$', tarcking_number) is None
 
 
 def is_chinese_carrier(tarcking_number):
-    return re.search('(CN|SG|HK)$', tarcking_number) is not None
+    return tarcking_number and re.search('(CN|SG|HK)$', tarcking_number) is not None
 
 
 def order_track_fulfillment(**kwargs):
