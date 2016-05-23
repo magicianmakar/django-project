@@ -730,17 +730,30 @@ function launchEditor(id, src) {
 
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
     e.preventDefault();
-    var imageUrl = encodeURI(window.location.origin+$(this).attr('image-url')),
-        image = $(this).siblings('img');
-    if (config.advanced_photo_editor) {
-        pixlr.settings.exit = window.location.origin+'/pixlr/close';
-        pixlr.settings.method = 'POST';
-        pixlr.settings.referrer = 'Shopified App';
-        // setting to false saves the image but doesn't run the redirect script on pixlr.html
-        pixlr.settings.redirect = true;
+    var image = $(this).siblings('img'),
+        imageUrl = encodeURI(window.location.origin+config.pixlr_image_url+'?image='+htmlDecode(image.attr('src'))),
+        imageId = image.attr('id');
 
-        pixlr.overlay.show({image: imageUrl, title: image.attr('id'), 
-            target: window.location.origin+'/upload/save_image_s3?product='+config.product_id+'&advanced=true&image_id='+image.attr('id')});
+    if (config.advanced_photo_editor) {
+        $.ajax({
+            type: 'GET',
+            url: '/api/pixlr-hash',
+            data: {'new': imageId},
+            dataType: 'json',
+            success: function(result) {
+                if (result.status == 'new') {
+                    var pixlrKey = result.key;
+                    pixlr.overlay.show({image: imageUrl, title: image.attr('id'), 
+                        target: window.location.origin+'/upload/save_image_s3?key='+pixlrKey+'&product='+config.product_id+'&advanced=true&image_id='+imageId});
+                    pixlrCheck(pixlrKey);
+                } else {
+                    displayAjaxError('Advanced Image Editor', result.error);
+                }
+            },
+            error: function(result) {
+                displayAjaxError('Advanced Image Editor', result.responseJSON.error);
+            }
+        });
     } else {
         swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
@@ -749,6 +762,7 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
 $('body').on('click', '#pixlr-background', function(e) {
     e.preventDefault();
     pixlr.overlay.hide();
+    clearTimeout(pixlrInterval);
 });
 
 document.renderImages = renderImages;

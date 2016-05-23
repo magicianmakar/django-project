@@ -31,8 +31,6 @@ import time
 import requests
 import arrow
 import traceback
-import mimetypes
-import StringIO
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 import utils
@@ -379,6 +377,23 @@ def proccess_api(request, user, method, target, data):
                 }, safe=False)
             else:
                 return JsonResponse(data, safe=False, status=500)
+
+    if method == 'GET' and target == 'pixlr-hash':
+        if 'new' in data:
+            random_hash = utils.random_hash()
+            pixlr_data = {'status': 'new', 'url': '', 'image_id': data.get('new')}
+            cache.set('pixlr_%s' % random_hash, pixlr_data, timeout=21600) # 6 hours timeout
+            pixlr_data['key'] = random_hash
+
+        if 'check' in data:
+            pixlr_key = 'pixlr_%s' % data.get('check')
+
+            if pixlr_key not in cache:
+                return JsonResponse({'error': 'Pixlr key not found.'}, status=404)
+
+            pixlr_data = cache.get(pixlr_key)
+
+        return JsonResponse(pixlr_data)
 
     if method == 'POST' and target == 'product-delete':
         try:
@@ -2557,15 +2572,28 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
+def pixlr_check_save(request, key):
+    return JsonResponse(cache.get('pixlr_%s' % key))
+
+
+def pixlr_initialize(request):
+    image_url = request.GET.get('image_url')
+    random_hash = utils.random_hash()
+    cache.set('pixlr_%s' % random_hash, {'status': 'new', })
+    return JsonResponse({'ḱey': random_hash})
+
+
 def pixlr_serve_image(request):
     img_url = request.GET.get('image')
     allowed_domains = ['alicdn', 'amazonaws']
 
     if utils.get_domain(img_url) in allowed_domains:
+        import mimetypes
         mimetype = mimetypes.guess_type(img_url)[0]
         allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
 
         if mimetype in allowed_mimetypes:
+            import StringIO
             fp = StringIO.StringIO(requests.get(img_url).content)
 
             return HttpResponse(fp, content_type=mimetype)
@@ -2580,6 +2608,7 @@ def pixlr_close(request):
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
+    import StringIO
     if 'advanced' in request.GET:
         # Pixlr
         if not request.user.can('advanced_photo_editor.use'):
@@ -2619,6 +2648,8 @@ def save_image_s3(request):
     bucket = conn.get_bucket(S3_BUCKET)
     k = Key(bucket)
     k.key = img_name
+    
+    import mimetypes
     mimetype = mimetypes.guess_type(img_url)[0]
     k.set_metadata("Content-Type", mimetype)
     k.set_contents_from_file(fp)
@@ -2629,17 +2660,16 @@ def save_image_s3(request):
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
-    if json_response:
-        return JsonResponse({
-            'status': 'ok',
-            'url': upload_url
-        })
-    else:
-        return render(request, 'partials/pixlr.html', {
-            'status': 'ok',
-            'url': upload_url,
-            'image_id': image_id
-        })
+    pixlr_key = 'pixlr_%s' % request.GET.get('key')
+    pixlr_data = cache.get(pixlr_key)
+    pixlr_data['url'] = upload_url
+    pixlr_data['status'] = 'changed'
+    cache.set(pixlr_key, pixlr_data, timeout=600) # 10 minutes timeout
+
+    return JsonResponse({
+        'status': 'ok',
+        'url': upload_url
+    })
 
 
 @login_required
