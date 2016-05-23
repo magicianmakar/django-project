@@ -749,16 +749,7 @@ $(function() {
 });
 
 {% if request.user|can:'advanced_photo_editor.use' %}
-function pixlrDone(status, url, imageID) {
-    if (status == 'ok') {
-        var image = $('#'+imageID);
-        image.attr('src', url);
-        product.images[parseInt(image.attr('image-id'))] = url;
-        pixlr.overlay.hide();
-    } else {
-        swal('Advanced Image Editor', 'Error occured when saving the image', 'error');
-    }
-}
+
 {% endif %}
 
 </script>
