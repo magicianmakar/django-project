@@ -158,6 +158,7 @@ def proccess_api(request, user, method, target, data):
                 return JsonResponse({
                     'token': token,
                     'user': {
+                        'id': user.id,
                         'username': user.username,
                         'email': user.email
                     }
