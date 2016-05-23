@@ -847,6 +847,7 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Store not found'}, status=404)
 
         fulfillment_data = {
+            'store_id': store.id,
             'line_id': int(data.get('fulfill-line-id')),
             'order_id': data.get('fulfill-order-id'),
             'source_tracking': data.get('fulfill-traking-number'),
