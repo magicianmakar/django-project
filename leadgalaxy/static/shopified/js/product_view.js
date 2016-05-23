@@ -778,11 +778,12 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
 $('body').on('click', '#pixlr-background', function(e) {
     e.preventDefault();
     pixlr.overlay.hide();
-    clearTimeout(pixlrInterval);
+    clearInterval(document.pixlrInterval);
+    document.pixlrInterval = null;
 });
 
 function pixlrCheck(key) {
-    if (typeof document.pixlrInterval !== 'undefined') {
+    if (typeof document.pixlrInterval !== 'undefined' || document.pixlrInterval !== null) {
         clearInterval(document.pixlrInterval);
     }
 
