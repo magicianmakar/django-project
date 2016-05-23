@@ -2573,6 +2573,9 @@ def upgrade_required(request):
 
 
 def pixlr_serve_image(request):
+    if not request.user.can('advanced_photo_editor.use'):
+        raise PermissionDenied
+
     img_url = request.GET.get('image')
     allowed_domains = ['alicdn', 'amazonaws']
 
@@ -2594,11 +2597,11 @@ def pixlr_serve_image(request):
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
     import StringIO
+    if not request.user.can('advanced_photo_editor.use') or not request.user.can('aviary_photo_editor.use'):
+        return render(request, 'upgrade.html')
+
     if 'advanced' in request.GET:
         # Pixlr
-        if not request.user.can('advanced_photo_editor.use'):
-            return render(request, 'upgrade.html')
-
         product_id = request.GET.get('product')
         image_id = request.GET.get('image_id')
         image = request.FILES.get('image')
@@ -2609,9 +2612,6 @@ def save_image_s3(request):
     else:
         # Aviary
         import urllib2
-        if not request.user.can('aviary_photo_editor.use'):
-            return render(request, 'upgrade.html')
-
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
 
