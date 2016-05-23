@@ -2576,16 +2576,17 @@ def pixlr_serve_image(request):
     if not request.user.can('advanced_photo_editor.use'):
         raise PermissionDenied
 
+    import mimetypes
+    import StringIO
+
     img_url = request.GET.get('image')
     allowed_domains = ['alicdn', 'amazonaws']
 
     if utils.get_domain(img_url) in allowed_domains:
-        import mimetypes
         mimetype = mimetypes.guess_type(img_url)[0]
         allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
 
         if mimetype in allowed_mimetypes:
-            import StringIO
             fp = StringIO.StringIO(requests.get(img_url).content)
 
             return HttpResponse(fp, content_type=mimetype)
@@ -2596,7 +2597,14 @@ def pixlr_serve_image(request):
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
+
     import StringIO
+    import mimetypes
+    import urllib2
+
+    import boto
+    from boto.s3.key import Key
+
     if not request.user.can('advanced_photo_editor.use') or not request.user.can('aviary_photo_editor.use'):
         return render(request, 'upgrade.html')
 
@@ -2611,15 +2619,11 @@ def save_image_s3(request):
         fp = StringIO.StringIO(image.read())
     else:
         # Aviary
-        import urllib2
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
 
         json_response = True
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
-
-    import boto
-    from boto.s3.key import Key
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
@@ -2634,7 +2638,6 @@ def save_image_s3(request):
     k = Key(bucket)
     k.key = img_name
 
-    import mimetypes
     mimetype = mimetypes.guess_type(img_url)[0]
     k.set_metadata("Content-Type", mimetype)
     k.set_contents_from_file(fp)
