@@ -756,11 +756,11 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
 
                     pixlrCheck(pixlrKey);
                 } else {
-                    displayAjaxError('Advanced Image Editor', result.error);
+                    displayAjaxError('Advanced Image Editor', result);
                 }
             },
             error: function(result) {
-                displayAjaxError('Advanced Image Editor', result.responseJSON.error);
+                displayAjaxError('Advanced Image Editor', result);
             }
         });
     } else {
