@@ -791,11 +791,15 @@ function pixlrCheck(key) {
         clearInterval(document.pixlrInterval);
     }
 
+    document.pixlrIntervalCount = 0;
     document.pixlrInterval = setInterval(function() {
         $.ajax({
             type: 'GET',
             url: '/api/pixlr-hash',
-            data: {'check': key},
+            data: {
+                check: key,
+                count: document.pixlrIntervalCount
+            },
             dataType: 'json',
             success: function(result) {
                 if (result.status == 'changed') {
@@ -806,6 +810,8 @@ function pixlrCheck(key) {
 
                     clearInterval(document.pixlrInterval);
                     document.pixlrInterval = null;
+                } else {
+                    document.pixlrIntervalCount += 1;
                 }
             },
             error: function(result) {
