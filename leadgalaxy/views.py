@@ -381,17 +381,16 @@ def proccess_api(request, user, method, target, data):
     if method == 'GET' and target == 'pixlr-hash':
         if 'new' in data:
             random_hash = utils.random_hash()
-            pixlr_data = {'status': 'new', 'url': '', 'image_id': data.get('new')}
-            cache.set('pixlr_%s' % random_hash, pixlr_data, timeout=21600) # 6 hours timeout
-            pixlr_data['key'] = random_hash
+            pixlr_data = {'status': 'new', 'url': '', 'image_id': data.get('new'), 'key': random_hash}
+            cache.set('pixlr_{}'.format(random_hash), pixlr_data, timeout=21600)  # 6 hours timeout
 
-        if 'check' in data:
-            pixlr_key = 'pixlr_%s' % data.get('check')
-
-            if pixlr_key not in cache:
-                return JsonResponse({'error': 'Pixlr key not found.'}, status=404)
+        elif 'check' in data:
+            pixlr_key = 'pixlr_{}'.format(data.get('check'))
 
             pixlr_data = cache.get(pixlr_key)
+
+            if pixlr_key is None:
+                return JsonResponse({'error': 'Pixlr key not found.'}, status=404)
 
         return JsonResponse(pixlr_data)
 
@@ -2591,7 +2590,7 @@ def pixlr_serve_image(request):
 
             return HttpResponse(fp, content_type=mimetype)
 
-    raise Http404("Image not found. %s" % img_url)
+    raise Http404("Image not found.")
 
 
 @login_required
