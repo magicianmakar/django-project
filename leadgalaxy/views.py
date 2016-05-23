@@ -2608,27 +2608,23 @@ def save_image_s3(request):
         return render(request, 'upgrade.html')
 
     if 'advanced' in request.GET:
-        # Pixlr permission check.
+        # Pixlr
         if not request.user.can('advanced_photo_editor.use'):
             return render(request, 'upgrade.html')
 
         image = request.FILES.get('image')
-        # Product id and image url needed to save.
         product_id = request.GET.get('product')
         img_url = image.name
 
-        # File as string.
         fp = StringIO.StringIO(image.read())
     else:
-        # Aviary permission check.
+        # Aviary
         if not request.user.can('aviary_photo_editor.use'):
              return render(request, 'upgrade.html')
 
-        # Product id and image url needed to save.
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
 
-        # File as string.
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
@@ -2638,24 +2634,20 @@ def save_image_s3(request):
     # Randomize filename in order to not overwrite an existing file.
     img_name = utils.random_filename(img_url.split('/')[-1])
 
-    # Assemble file location string.
     img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
 
     product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
-    # Connecting to S3 bucket.
     conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
     bucket = conn.get_bucket(S3_BUCKET)
     k = Key(bucket)
 
-    # Uploading image to bucket and granting file permission.
     k.key = img_name
     mimetype = mimetypes.guess_type(img_url)[0]
     k.set_metadata("Content-Type", mimetype)
     k.set_contents_from_file(fp)
     k.make_public()
 
-    # Saving uploaded url to keep track of it.
     upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
