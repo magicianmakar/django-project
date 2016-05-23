@@ -2048,7 +2048,7 @@ def variants_edit(request, store_id, pid):
         'store': store,
         'product_id': pid,
         'product': product,
-        'api_url': store.get_api_url(True),
+        'api_url': store.get_link(),
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Variants']
     })

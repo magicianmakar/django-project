@@ -47,8 +47,7 @@ $('.var-btn-prev').click(function(e) {
 });
 
 $('#view-btn').click(function(e) {
-    var url = api_url.replace(/\/[^:]+:[^@]+@/, '/');
-    window.open(url + '/admin/products/' + product.id, '_blank');
+    window.open(api_url + '/admin/products/' + product.id, '_blank');
 });
 
 function imageClicked(e) {
