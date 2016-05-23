@@ -743,6 +743,7 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
                 if (result.status == 'new') {
                     var pixlrKey = result.key;
 
+                    // Pixlr Doesn't redirect to this page
                     pixlr.settings.exit = window.location.origin + '/pixlr/close';
                     pixlr.settings.method = 'POST';
                     pixlr.settings.referrer = 'Shopified App';
@@ -805,16 +806,6 @@ function pixlrCheck(key) {
         });
     }, 3000);
 }
-
-document.pixlrDone = function (status, url, imageID) {
-    var image = $('#'+imageID);
-    image.attr('src', url);
-    product.images[parseInt(image.attr('image-id'), 10)] = url;
-    pixlr.overlay.hide();
-
-    clearInterval(document.pixlrInterval);
-    document.pixlrInterval = null;
-};
 
 document.renderImages = renderImages;
 

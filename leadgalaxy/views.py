@@ -2572,17 +2572,6 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
-def pixlr_check_save(request, key):
-    return JsonResponse(cache.get('pixlr_%s' % key))
-
-
-def pixlr_initialize(request):
-    image_url = request.GET.get('image_url')
-    random_hash = utils.random_hash()
-    cache.set('pixlr_%s' % random_hash, {'status': 'new', })
-    return JsonResponse({'ḱey': random_hash})
-
-
 def pixlr_serve_image(request):
     img_url = request.GET.get('image')
     allowed_domains = ['alicdn', 'amazonaws']
@@ -2599,10 +2588,6 @@ def pixlr_serve_image(request):
             return HttpResponse(fp, content_type=mimetype)
 
     raise Http404("Image not found. %s" % img_url)
-
-
-def pixlr_close(request):
-    return render(request, 'partials/pixlr.html')
 
 
 @login_required
