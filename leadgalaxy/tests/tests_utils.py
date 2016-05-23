@@ -15,6 +15,16 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     user_id = 1
 
 
+class ShopifyStoreFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = utils.ShopifyStore
+        django_get_or_create = ['api_url']
+
+    title = 'uncommonnow'
+    api_url = 'https://https://d43e2fd73231e565c290a548c05f9c1f:c2fb34b864894a4f03e6a00205301de7@rank-engine.myshopify.com'
+    user_id = 1
+
+
 class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = utils.ShopifyOrder
@@ -189,3 +199,43 @@ class UtilsTestCase(TestCase):
         fulfillment_data['use_usps'] = True
         data = utils.order_track_fulfillment(**fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
+
+class OrdersTestCase(TestCase):
+    def setUp(self):
+        pass
+
+    def test_order_notes(self):
+        order_id = 2135735813
+        line_id = 3896443589
+
+        store = ShopifyStoreFactory()
+        order = utils.get_shopify_order(store, order_id)
+        self.assertEqual(order['id'], order_id)
+
+        note1 = 'Test Note #%s' % utils.random_hash()
+        utils.set_shopify_order_note(store, order_id, note1)
+
+        self.assertEqual(note1, utils.get_shopify_order_note(store, order_id))
+
+        note2 = 'An other Test Note #%s' % utils.random_hash()
+        utils.add_shopify_order_note(store, order_id, note2)
+
+        order_note = utils.get_shopify_order_note(store, order_id)
+        self.assertTrue(note1 in order_note)
+        self.assertTrue(note2 in order_note)
+
+        line = utils.get_shopify_order_line(store, order_id, line_id)
+        self.assertEqual(line['id'], line_id)
+
+        line, current_note = utils.get_shopify_order_line(store, order_id, line_id, note=True)
+        self.assertEqual(line['id'], line_id)
+        self.assertIsNotNone(current_note)
+
+        note3 = 'Yet An other Test Note #%s' % utils.random_hash()
+        utils.add_shopify_order_note(store, order_id, note3, current_note=current_note)
+
+        order_note = utils.get_shopify_order_note(store, order_id)
+
+        self.assertTrue(note1 in order_note)
+        self.assertTrue(note2 in order_note)
+        self.assertTrue(note3 in order_note)

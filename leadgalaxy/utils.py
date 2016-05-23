@@ -497,7 +497,7 @@ def get_shopify_order_line(store, order_id, line_id, note=False):
     for line in order['line_items']:
         if int(line['id']) == int(line_id):
             if note:
-                line, order['note']
+                return line, order['note']
             else:
                 return line
 
