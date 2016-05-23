@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function() {
+(function(user_filter) {
 'use strict';
 
 var image_cache = {};
@@ -74,7 +74,6 @@ $(".more-info").click(function (e) {
 });
 
 $('.fulfill-btn').click(function (e) {
-    $('#modal-fulfillment #fulfill-quantity').val($(this).attr('quantity'));
     $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
     $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
     $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
@@ -135,15 +134,53 @@ $('.filter-btn').click(function (e) {
 });
 
 $(".filter-form").submit(function() {
-    $(this).find(":input").filter(function(){
-        return ((this.name == 'sort' && this.value == 'desc') ||
-            (this.name == 'sort' && this.value == 'created_at') ||
-            (this.name == 'status' && this.value == 'open') ||
-            (this.name == 'fulfillment' && this.value == 'unshipped') ||
-            (this.name == 'financial' && this.value == 'paid') ||
-            (this.name.match(/^query/) && this.value.trim().length === 0));
+    $(this).find(":input").filter(function(i, el) {
+        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred'))  {
+            el.value = JSON.stringify(el.checked);
+            el.checked = true;
+            $(el).prop('filtred', true);
+        }
+
+        var ret = (((!el.value || el.value.trim().length === 0) &&
+                (el.type == 'text' || el.type.match(/select/) )) ||
+            (el.name == 'sort' && el.value == user_filter.sort) ||
+            (el.name == 'sort' && el.value == user_filter.sort) ||
+            (el.name == 'desc' && el.value == user_filter.sort_type) ||
+            (el.name == 'connected' && el.value == user_filter.connected) ||
+            (el.name == 'status' && el.value == user_filter.status) ||
+            (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
+            (el.name == 'financial' && el.value == user_filter.financial));
+
+        return ret;
     }).attr("disabled", "disabled");
     return true; // ensure form still submits
+});
+
+$('.save-filter-btn').click(function (e) {
+    e.preventDefault();
+
+    $(".filter-form").find(":input").filter(function(i, el) {
+        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred')) {
+            el.value = JSON.stringify(el.checked);
+            el.checked = true;
+            $(el).prop('filtred', true);
+        }
+    });
+
+    $.ajax({
+        url: '/api/save-orders-filter',
+        type: 'POST',
+        data: $('.filter-form').serialize(),
+        success: function (data) {
+            toastr.success('Orders Filter', 'Saved');
+            setTimeout(function() {
+                $(".filter-form").trigger('submit');
+            }, 1000);
+        },
+        error: function (data) {
+            displayAjaxError('Orders Filter', data);
+        }
+    });
 });
 
 function toTitleCase(str) {
@@ -160,7 +197,6 @@ $('.placed-order-details').click(function (e) {
     var order_id = $(this).attr('order-id');
     var source_id = $(this).attr('source-order-id');
     var line_id = $(this).attr('line-id');
-    var data = JSON.parse(JSON.parse(atob($(this).attr('data'))));
     var html = '<ul>';
     html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" '+
             'href="http://trade.aliexpress.com/order_detail.htm?orderId='+source_id+'">'+source_id+'</a></li>';
@@ -272,7 +308,6 @@ $('.mark-as-ordered').click(function (e) {
                 'order_id': orderData.order_id,
                 'line_id': orderData.line_id,
                 'aliexpress_order_id': inputValue,
-                'aliexpress_order_trade': ''
             },
             context: {orderData: orderData, aliexpress_id: inputValue},
             success: function (data) {
@@ -626,6 +661,17 @@ $('.chosen-reset-selection').click(function (e) {
     $("#country-filter").val('').trigger("chosen:updated");
 });
 
+$('.cached-img').error(function() {
+    $.ajax({
+        url: '/api/product-image?' + $.param({
+            'store': $(this).attr('store'),
+            'product': $(this).attr('product')
+        }),
+        type: 'DELETE',
+        success: function(data) {}
+    });
+});
+
 $(function () {
     $('.help-select').each(function (i, el) {
         $('option', el).each(function (index, option) {
@@ -672,4 +718,4 @@ $(function () {
         window.location.reload();
     }, 3500 * 1000);
 });
-})();
+})(user_filter);

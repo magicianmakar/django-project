@@ -155,8 +155,10 @@ class UserProfile(models.Model):
         except:
             return {}
 
-    def get_config_value(self, name, default=None):
-        if type(name) is list:
+    def get_config_value(self, name=None, default=None):
+        if name is None:
+            return self.get_config()
+        elif type(name) is list:
             config = self.get_config()
             values = []
             for i in name:
@@ -169,6 +171,15 @@ class UserProfile(models.Model):
     def set_config_value(self, name, value):
         data = self.get_config()
         data[name] = value
+
+        self.config = json.dumps(data)
+        self.save()
+
+    def del_config_values(self, key, startswith=False):
+        data = self.get_config()
+        for name, val in data.items():
+            if key == name or (startswith and name.startswith(key)):
+                del data[name]
 
         self.config = json.dumps(data)
         self.save()
@@ -250,7 +261,7 @@ def user_can(self, perms):
     return self.profile.can(perms)
 
 
-def user_get_config(self, name, default_value=None):
+def user_get_config(self, name=None, default_value=None):
     return self.profile.get_config_value(name, default_value)
 
 
@@ -793,7 +804,8 @@ class PlanRegistration(models.Model):
             data = json.loads(self.data)
             return {
                 'allowed': data['allowed_count'],
-                'used': data['used_count']
+                'used': data['used_count'],
+                'expire_in_days': data.get('expire_in_days')
             }
         except:
             return None

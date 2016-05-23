@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-md-4">
                             <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control"
-                                   style="xpadding: 6px 0px" placeholder="Order name or ID">
+                                   style="xpadding: 6px 0px" placeholder="Order Number or ID">
                         </div>
                     </div>
 
@@ -195,7 +195,7 @@
                         <div class="col-md-8">
                             <label for="connected-orders" class="control-label">
                                 <input type="checkbox" id="connected-orders" name="connected"value="true" class="icheck"
-                                       {% if request.GET.connected == 'true' %}checked{% endif %}>
+                                       {% if connected_only == 'true' %}checked{% endif %}>
                                 Only Orders with Connected Products
                             </label>
                         </div>
@@ -207,8 +207,16 @@
                             {% if request.GET.store %}
                             <input type="hidden" name="store" value="{{ request.GET.store }}">
                             {% endif %}
-                        <button class="btn btn-primary">Apply</button>
-                        <a href="/orders?store={{store.id}}" class="btn btn-default">Reset</a>
+                        <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
+                        </div>
+                        <div class="col-md-6 col-md-offset-4 text-right">
+                            <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
+                                <i class="fa fa-save"></i> Save Filter
+                            </a>
+
+                            <a href="/orders?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                                <i class="fa fa-eraser"></i> Reset Filter
+                            </a>
                         </div>
                     </div>
                     <hr >
@@ -341,7 +349,7 @@
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
                                                         source-order-id="{{item.shopify_order.source_id}}"
                                                         order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}"
-                                                        line-id="{{item.id}}" data="{{item.shopify_order.encoded}}"
+                                                        line-id="{{item.id}}"
                                                         title="View Order Details">#{{item.shopify_order.source_id}}</a>
                                                 {% else %}
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
@@ -388,11 +396,11 @@
                                                 <thead>
                                                     <tr>
                                                         <td>
-                                                            <img
+                                                            <img store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
                                                                 {% if not item.image_src %}
                                                                     class="lazyload" store="{{image.store}}"
-                                                                    product="{{image.product}}" variant="{{image.variant}}"
                                                                 {% else %}
+                                                                    class="cached-img"
                                                                     src="{{item.image_src}}"
                                                                 {% endif %}
                                                                     style="width:64px" />
@@ -566,13 +574,58 @@
 </style>
 
 <link href="{% static 'css/plugins/chosen/chosen.css' %}" rel="stylesheet">
+<link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
 
 {% endblock %}
 
 {% block extrajs %}
+<script type="text/javascript">
+    var user_filter = {
+        sort: '{{ user_filter.sort }}',
+        status: '{{ user_filter.status }}',
+        fulfillment: '{{ user_filter.fulfillment }}',
+        financial: '{{ user_filter.financial }}',
+        sort_type: "{{ user_filter.desc|default:'false'}}",
+        connected: "{{ user_filter.connected|default:'false' }}",
+    };
+</script>
+
 {% compress js %}
+    <script src="{% static 'js/bootstrap-tour.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/orders.js' %}"></script>
+    <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
+
+<script type="text/javascript">
+    $(function() {
+        if (localStorage['orders-filter-save_end'] !== 'yes') {
+            $('.filter-form').show('fast');
+                setTimeout(function() {
+                    var tour = new Tour({
+                        name: 'orders-filter-save',
+                        steps: [{
+                            element: '.save-filter-btn',
+                            title: 'Save you filter!',
+                            content: 'You can now save your default filter using this button.',
+                            placement: 'top',
+                        }, {
+                            element: '.reset-filter-btn',
+                            title: 'Reset filter',
+                            content: 'Reset Orders page filters to the default settings',
+                            placement: 'top',
+                        }],
+                        onEnd: function () {
+                            $('.filter-form').hide('slide', function() {
+                                window.scroll(0,0);
+                            });
+                        }
+                });
+                tour.init();
+                tour.start(true);
+            }, 1000);
+        }
+    });
+</script>
+
 {% endblock %}
 

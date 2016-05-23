@@ -8,7 +8,7 @@
 
         <ul class="dropdown-menu">
             {% if item.shopify_order %}
-            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}" data="{{item.shopify_order.encoded}}">Order Details</a></li>
+            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
             {% else %}
             <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
             {% endif %}
@@ -38,7 +38,7 @@
                         href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    {% endif %}
                    >Auto Place Order</a></li>
-            <li><a class="auto-shipping-btn" target="_blank"
+            <li><a class="place-order-btn auto-shipping-btn" target="_blank"
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.original_id}}" country-code="{{order.shipping_address.country_code}}"
                     href="#"

@@ -575,31 +575,6 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
-    if method == 'POST' and target == 'variant-image':
-        # TODO: Move to after boards endpoints
-        try:
-            store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
-
-        except ShopifyStore.DoesNotExist:
-            return JsonResponse({'error': 'Store not found'}, status=404)
-
-        api_url = '/admin/variants/{}.json'.format(data.get('variant'))
-        api_url = store.get_link(api_url, api=True)
-
-        api_data = {
-            "variant": {
-                "id": data.get('variant'),
-                "image_id": data.get('image'),
-            }
-        }
-
-        requests.put(api_url, json=api_data)
-
-        return JsonResponse({
-            'status': 'ok'
-        })
-
     if method == 'GET' and target == 'board-config':
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -640,6 +615,38 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({
             'status': 'ok'
         })
+
+    if method == 'POST' and target == 'variant-image':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        api_url = '/admin/variants/{}.json'.format(data.get('variant'))
+        api_url = store.get_link(api_url, api=True)
+
+        api_data = {
+            "variant": {
+                "id": data.get('variant'),
+                "image_id": data.get('image'),
+            }
+        }
+
+        requests.put(api_url, json=api_data)
+
+        return JsonResponse({
+            'status': 'ok'
+        })
+
+    if method == 'DELETE' and target == 'product-image':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
+
+        ShopifyProductImage.objects.filter(store=store, product=data.get('product')).delete()
+
+        return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'change-plan':
         if not user.is_superuser:
@@ -693,7 +700,11 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
-        product.set_original_url(data.get('original-link'))
+        original_link = data.get('original-link')
+        if 'click.aliexpress.com' in original_link.lower():
+            return JsonResponse({'error': 'The submitted Aliexpress link will not work properly with order fulfillment'})
+
+        product.set_original_url(original_link)
 
         shopify_link = data.get('shopify-link')
 
@@ -710,7 +721,7 @@ def proccess_api(request, user, method, target, data):
             if not shopify_id:
                 return JsonResponse({'error': 'Invalid Shopify link.'})
 
-            product_export = ShopifyProductExport(original_url=data.get('original-link'), shopify_id=shopify_id,
+            product_export = ShopifyProductExport(original_url=original_link, shopify_id=shopify_id,
                                                   store=product.store)
             product_export.save()
 
@@ -852,25 +863,20 @@ def proccess_api(request, user, method, target, data):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        tracking = data.get('fulfill-traking-number')
-        if not tracking:
-            tracking = None
-
-        api_data = {
-            "fulfillment": {
-                "tracking_number": tracking,
-                "tracking_company": "Other",
-                "tracking_url": "https://track.aftership.com/{}".format(tracking),
-                "line_items": [{
-                    "id": int(data.get('fulfill-line-id')),
-                    "quantity": int(data.get('fulfill-quantity'))
-                }]
+        fulfillment_data = {
+            'store_id': store.id,
+            'line_id': int(data.get('fulfill-line-id')),
+            'order_id': data.get('fulfill-order-id'),
+            'source_tracking': data.get('fulfill-traking-number'),
+            'use_usps': data.get('fulfill-tarcking-link') == 'usps',
+            'user_config': {
+                'send_shipping_confirmation': data.get('fulfill-notify-customer'),
+                'validate_tracking_number': False,
+                'aftership_domain': user.get_config('aftership_domain', 'track')
             }
         }
 
-        notify_customer = data.get('fulfill-notify-customer')
-        if notify_customer and notify_customer != 'default':
-            api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+        api_data = utils.order_track_fulfillment(**fulfillment_data)
 
         rep = requests.post(
             url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
@@ -896,7 +902,7 @@ def proccess_api(request, user, method, target, data):
         if order:
             return JsonResponse(order, safe=False)
         else:
-            return JsonResponse({'error': 'Not found'}, status=404)
+            return JsonResponse({'error': 'Not found: {}'.format(order_key)}, status=404)
 
     if method == 'GET' and target == 'product-variant-image':
         try:
@@ -999,12 +1005,6 @@ def proccess_api(request, user, method, target, data):
 
             return JsonResponse({'error': e.message}, status=501)
 
-        order_data = {
-            'aliexpress': {
-                'order_trade': data.get('aliexpress_order_trade')
-            }
-        }
-
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
             user.can_view(store)
@@ -1014,30 +1014,17 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
 
         for line_id in order_lines.split(','):
-            order = ShopifyOrderTrack(user=user.models_user,
-                                 store=store,
-                                 order_id=order_id,
-                                 line_id=line_id,
-                                 source_id=source_id,
-                                 data=json.dumps(order_data))
+            ShopifyOrderTrack.objects.update_or_create(
+                user=user.models_user,
+                store=store,
+                order_id=order_id,
+                line_id=line_id,
+                defaults={
+                    'source_id': source_id
+                }
+            )
 
-            user.can_add(order)
-            order.save()
-
-            try:
-                order_line = utils.get_shopify_order_line(store, order_id, line_id)
-                if order_line:
-                    note = u'Aliexpress Order ID: {0}\n' \
-                           'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n' \
-                           'Shopify Product: {1} / {2}'.format(source_id, order_line.get('name'),
-                                                               order_line.get('variant_title'))
-                else:
-                    note = 'Aliexpress Order ID: {0}\n' \
-                           'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n'.format(source_id)
-
-                utils.add_shopify_order_note(store, order_id, note)
-            except:
-                raven_client.captureException(level='warning')
+            tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
 
         return JsonResponse({'status': 'ok'})
 
@@ -1309,6 +1296,10 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({
             'status': 'ok'
         })
+
+    if method == 'POST' and target == 'save-orders-filter':
+        utils.set_orders_filter(user, data)
+        return JsonResponse({'status': 'ok'})
 
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
@@ -1717,6 +1708,8 @@ def webhook(request, provider, option):
                         'order_key': order_key
                     })
 
+                    tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id']], countdown=30)
+
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/delete':
@@ -2073,7 +2066,7 @@ def variants_edit(request, store_id, pid):
         'store': store,
         'product_id': pid,
         'product': product,
-        'api_url': store.get_api_url(True),
+        'api_url': store.get_link(),
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Variants']
     })
@@ -2459,6 +2452,27 @@ def acp_groups_install(request):
     return HttpResponse('Done, changed: %d' % count)
 
 
+@login_required
+def acp_users_emails(request):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/')
+
+    res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
+    users = []
+    filtred = []
+    for row in res:
+        if row.user not in users and row.user not in filtred and 'VIP' not in row.user.profile.plan.title:
+            users.append(row.user)
+        else:
+            filtred.append(row.user)
+
+    o = ''
+    for i in users:
+        o = '{}{}<br>\n'.format(o, i.email)
+
+    return HttpResponse(o)
+
+
 def autocomplete(request, target):
     if not request.user.is_authenticated():
         return JsonResponse({'error': 'User login required'})
@@ -2702,12 +2716,16 @@ def orders_view(request):
 
     models_user = request.user.models_user
 
+    if request.GET.get('reset') == '1':
+        request.user.profile.del_config_values('_orders_filter_', True)
+
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
     financial = utils.get_orders_filter(request, 'financial', 'paid')
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
-    sort_type = utils.get_orders_filter(request, 'desc')
+    sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
+    connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
 
     query = request.GET.get('query')
     query_order = request.GET.get('query_order')
@@ -2780,7 +2798,7 @@ def orders_view(request):
         if financial != 'any':
             orders = orders.filter(financial_status=financial)
 
-        if request.GET.get('connected') == 'true':
+        if connected_only == 'true':
             orders = orders.exclude(shopifyorderline__product=None)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
@@ -2976,6 +2994,8 @@ def orders_view(request):
         'financial': financial,
         'fulfillment': fulfillment,
         'query': query,
+        'connected_only': connected_only,
+        'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
@@ -3217,6 +3237,9 @@ def bundles_bonus(request, bundle_id):
 
 @login_required
 def product_feeds(request):
+    if not request.user.can('product_feeds.use'):
+        return render(request, 'upgrade.html')
+
     return render(request, 'product_feeds.html', {
         'page': 'product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
@@ -3310,27 +3333,6 @@ def subusers_perms(request, user_id):
         'breadcrumbs': ['Account', 'Sub Users']
     })
 
-@login_required
-def acp_users_emails(request):
-    # TODO: Move to top
-    if not request.user.is_superuser:
-        return HttpResponseRedirect('/')
-
-    res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
-    users = []
-    filtred = []
-    for row in res:
-        if row.user not in users and row.user not in filtred and 'VIP' not in row.user.profile.plan.title:
-            users.append(row.user)
-        else:
-            filtred.append(row.user)
-
-    o = ''
-    for i in users:
-        o = '{}{}<br>\n'.format(o, i.email)
-
-    return HttpResponse(o)
-
 
 def get_product_feed(request, store_id, revision=1):
     try:
@@ -3338,6 +3340,9 @@ def get_product_feed(request, store_id, revision=1):
         store = ShopifyStore.objects.get(store_hash__startswith=store_id)
     except (AssertionError, ShopifyStore.DoesNotExist):
         raise Http404('Feed not found')
+
+    if not store.user.can('product_feeds.use'):
+        raise PermissionDenied('Product Feeds')
 
     feed = utils.ProductFeed(store, revision)
     feed.init()

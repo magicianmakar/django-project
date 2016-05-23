@@ -19,6 +19,8 @@ from django.core.cache import cache
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
+
 from app import settings
 
 
@@ -37,6 +39,9 @@ def safeFloat(v, default=0.0):
 
 
 def get_domain(url):
+    if not url:
+        return None
+
     hostname = urlparse(url).hostname
     if hostname is None:
         return hostname
@@ -186,6 +191,12 @@ def apply_shared_registration(user, registration):
         print "REGISTRATIONS SHARED: Change user {} from '{}' to '{}'".format(user.email,
                                                                               profile.plan.title,
                                                                               registration.plan.title)
+
+        if usage['expire_in_days']:
+            expire_date = timezone.now() + timezone.timedelta(days=usage['expire_in_days'])
+
+            profile.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
+            profile.plan_expire_at = expire_date
 
         profile.plan = registration.plan
         profile.save()
@@ -487,13 +498,19 @@ def get_shopify_order(store, order_id):
     return rep['order']
 
 
-def get_shopify_order_line(store, order_id, line_id):
+def get_shopify_order_line(store, order_id, line_id, note=False):
     order = get_shopify_order(store, order_id)
     for line in order['line_items']:
         if int(line['id']) == int(line_id):
-            return line
+            if note:
+                line, order['note']
+            else:
+                return line
 
-    return False
+    if note:
+        return None, None
+    else:
+        return None
 
 
 def get_shopify_order_note(store, order_id):
@@ -515,8 +532,11 @@ def set_shopify_order_note(store, order_id, note):
     return rep['order']['id']
 
 
-def add_shopify_order_note(store, order_id, new_note):
-    note = get_shopify_order_note(store, order_id)
+def add_shopify_order_note(store, order_id, new_note, current_note=False):
+    if current_note is False:
+        note = get_shopify_order_note(store, order_id)
+    else:
+        note = current_note
 
     if note:
         note = '{}\n{}'.format(note.encode('utf-8'), new_note.encode('utf-8'))
@@ -676,6 +696,84 @@ def get_tracking_orders(store, tracker_orders):
         new_tracker_orders.append(tracked)
 
     return new_tracker_orders
+
+
+def is_valide_tracking_number(tarcking_number):
+    return re.match('^[0-9]+$', tarcking_number) is None
+
+
+def is_chinese_carrier(tarcking_number):
+    return re.search('(CN|SG|HK)$', tarcking_number) is not None
+
+
+def order_track_fulfillment(**kwargs):
+    ''' Get Tracking Carrier and Url for Shopify Order Fulfillment
+        order_id:        Shopify Order ID
+        line_id:         Shopify Order Line
+        source_tracking: Order Tracking Number
+        order_track:     ShopifyOrderTrack to get above args. from (optional)
+        user_config:     UserProfile config dict
+    '''
+
+    if kwargs.get('order_track'):
+        order_id = kwargs.get('order_track').order_id
+        line_id = kwargs.get('order_track').line_id
+        source_tracking = kwargs.get('order_track').source_tracking
+        store_id = kwargs.get('order_track').store_id
+    else:
+        order_id = kwargs['order_id']
+        line_id = kwargs['line_id']
+        source_tracking = kwargs['source_tracking']
+        store_id = safeInt(kwargs.get('store_id'))
+
+        if not len(source_tracking):
+            source_tracking = None
+
+    user_config = kwargs['user_config']
+
+    is_usps = False
+
+    try:
+        line = ShopifyOrderLine.objects.get(line_id=line_id, order__order_id=order_id)
+        is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
+
+    except ShopifyOrderLine.DoesNotExist:
+        pass
+    except:
+        raven_client.captureException()
+
+    data = {
+        "fulfillment": {
+            "tracking_number": source_tracking,
+            "line_items": [{
+                "id": line_id,
+            }]
+        }
+    }
+
+    if source_tracking:
+        if is_usps or kwargs.get('use_usps'):
+            data['fulfillment']['tracking_company'] = "USPS"
+        else:
+            aftership_domain = 'track'
+
+            if store_id and type(user_config.get('aftership_domain')) is dict:
+                aftership_domain = user_config.get('aftership_domain').get(str(store_id), aftership_domain)
+
+            data['fulfillment']['tracking_company'] = "Other"
+            data['fulfillment']['tracking_url'] = "https://{}.aftership.com/{}".format(aftership_domain,
+                                                                                       source_tracking)
+
+    if user_config.get('validate_tracking_number', True) and \
+            not is_valide_tracking_number(source_tracking):
+        notify_customer = 'no'
+    else:
+        notify_customer = user_config.get('send_shipping_confirmation', 'default')
+
+    if notify_customer and notify_customer != 'default':
+        data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+
+    return data
 
 
 def product_change_notify(user):
@@ -961,15 +1059,32 @@ def clean_query_id(qid):
         return 0
 
 
-def get_orders_filter(request, name, default=None):
-    key = '_orders_filter_{}'.format(name)
-    val = request.GET.get(name)
-    if val:
-        request.user.set_config(key, val)
-    else:
-        val = request.user.get_config(key, default)
+def get_orders_filter(request, name=None, default=None, checkbox=False):
+    if name:
+        key = '_orders_filter_{}'.format(name)
+        val = request.GET.get(name)
 
-    return val
+        if not val:
+            val = request.user.get_config(key, default)
+
+        return val
+    else:
+        filters = {}
+        for name, val in request.user.profile.get_config().items():
+            if name.startswith('_orders_filter_'):
+                filters[name.replace('_orders_filter_', '')] = val
+
+        return filters
+
+
+def set_orders_filter(user, filters, default=None):
+    fields = ['sort', 'status', 'fulfillment', 'financial',
+              'desc', 'connected']
+
+    for name, val in filters.items():
+        if name in fields:
+            key = '_orders_filter_{}'.format(name)
+            user.set_config(key, val)
 
 
 # Helper Classes

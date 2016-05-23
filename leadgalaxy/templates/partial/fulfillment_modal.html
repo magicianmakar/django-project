@@ -3,23 +3,23 @@
         <div class="modal-content">
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Change Fulfillment Status</h3>
-
+                    {% with pos_my='top center' pos_at='bottom center' %}
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Fulfill Order</h3>
+                        <span title="Testing QTip2" class="qtip"> <i class="fa fa-question-circle"></i> TEsting </span>
                         <form role="form">
                             <div class="form-group">
-                                <label>Quantity</label>
-                                <input type="text" id="fulfill-quantity" name="fulfill-quantity" class="form-control" style="width:100px">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Tracking Number</label>
-                                <input type="text" id="fulfill-traking-number" name="fulfill-traking-number" class="form-control">
+                                <label for="fulfill-traking-number">Tracking Number
+                                {% include 'partial/help_tooltip.html' with help="If you don't have a Tracking Number, leave this field blank" %}
+                                </label>
+                                <input type="text" id="fulfill-traking-number" name="fulfill-traking-number" class="form-control" style="width:200px">
                             </div>
 
                             {% if notify %}
                             <div class="form-group">
                                 <label for="fulfill-notify-customer">
-                                    Send shipping confirmation email to the customer:
+                                    Send shipping confirmation email to the customer
+                                    {% include 'partial/help_tooltip.html' with help="Select <b>Default</b> in confirmation email to notify the customer If All items from this order have been shipped." %}
                                 </label>
                                 <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:100px">
                                     <option value="no">No</option>
@@ -28,6 +28,17 @@
                                 </select>
                             </div>
                             {% endif %}
+
+                            <div class="form-group">
+                                <label for="fulfill-notify-customer">
+                                    Order Tracking Link
+                                    {% include 'partial/help_tooltip.html' with help="Which tracking link would you like to send to the customer?<br><b>AfterShip:</b> Track the Order with <a href='aftership.com'>aftership.com</a><br><b>USPS:</b> Track Order in USPS website, Select this option for ePacket (US customers only)" %}
+                                </label>
+                                <select class="form-control" name="fulfill-tarcking-link" id="fulfill-notify-customer" style="width:120px">
+                                    <option value="aftership">AfterShip</option>
+                                    <option value="usps">USPS</option>
+                                </select>
+                            </div>
 
                             <div>
                                 <input type="hidden" id="fulfill-order-id" name="fulfill-order-id" class="form-control">
@@ -38,20 +49,7 @@
                             </div>
                         </form>
                     </div>
-                    <div class="col-sm-6">
-                        <h4>Fulfill order</h4>
-                        <p class="">
-                            Partially fulfill a single line item by explicitly specifying the line item and quantity to be fulfilled.
-                        </p>
-                        <p>If you don't have a Tracking Number, leave that field blank.</p>
-
-                        {% if notify %}
-                        <p style="margin-top:45px">
-                            Select <b>Default</b> in confirmation email to notify the customer
-                            If All items from this order have been shipped.
-                        </p>
-                        {% endif %}
-                    </div>
+                    {% endwith %}
                 </div>
             </div>
         </div>

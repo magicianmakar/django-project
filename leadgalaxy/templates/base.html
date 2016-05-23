@@ -30,6 +30,7 @@
     <link href="{% static 'libs/iCheck/skins/square/blue.css' %}" rel="stylesheet">
     <link href="{% static 'libs/sweetalert/sweetalert.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/jquery-contextmenu/jquery.contextMenu.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/qtip2/jquery.qtip.min.css' %}" rel="stylesheet">
     {% endcompress %}
 
     <style type="text/css">
@@ -49,6 +50,14 @@
         'userPlan': '{{user.profile.plan}}',
         'pageCategory': 'webapp',
       }];
+
+      {% if user.is_authenticated %}
+      var currentUser = {
+        id: {{ user.id }},
+        username: '{{ user.username }}',
+        email: '{{ user.email }}'
+      };
+      {% endif %}
     </script>
 
     <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-TPLKSQ"
@@ -352,7 +361,7 @@
 
     {# Mainly scripts #}
     <script src="{% static 'js/jquery-2.1.1.js' %}"></script>
-    <script src="//cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+    <script src="//cdn.ravenjs.com/3.0.4/raven.min.js"></script>
 
     {% block extrajs-before %}{% endblock %}
 
@@ -368,6 +377,7 @@
 
     <script src="{% static 'libs/sweetalert/sweetalert.min.js' %}"></script>
     <script src="{% static 'libs/jquery-autocomplete/jquery.autocomplete.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/qtip2/jquery.qtip.min.js' %}"></script>
 
     <script src="{% static 'js/inspinia.js' %}"></script>
     <script src="{% static 'js/plugins/pace/pace.min.js' %}"></script>

@@ -280,7 +280,6 @@ $('#export-btn').click(function () {
             });
 
             api_data.product.variants.push(variant_data);
-            console.dir(variant_data);
         });
 
         api_data.product.options = config.shopify_options;

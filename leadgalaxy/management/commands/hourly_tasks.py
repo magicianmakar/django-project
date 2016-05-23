@@ -3,10 +3,10 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 import requests
-from simplejson import JSONDecodeError
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
+from leadgalaxy import tasks
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -33,6 +33,8 @@ class Command(BaseCommand):
 
         users = {}
         count = 0
+        self.store_countdown = {}
+
         for order in orders:
             if order.store_id in users:
                 user = users[order.store_id]
@@ -42,7 +44,6 @@ class Command(BaseCommand):
             if not user or user.get_config('auto_shopify_fulfill') != 'hourly':
                 users[order.store_id] = False
                 continue
-                pass
             else:
                 users[order.store_id] = user
 
@@ -55,6 +56,7 @@ class Command(BaseCommand):
                     count += 1
                     if count % 50 == 0:
                         print 'Fulfill Progress: %d' % count
+
             except:
                 raven_client.captureException()
 
@@ -72,27 +74,7 @@ class Command(BaseCommand):
                                        nl2br=False)
 
     def fulfill_order(self, order, store, user):
-        tracking = order.source_tracking
-
-        api_data = {
-            "fulfillment": {
-                "tracking_number": tracking,
-                "tracking_company": "Other",
-                "tracking_url": "https://track.aftership.com/{}".format(tracking),
-                "line_items": [{
-                    "id": order.line_id,
-                    # "quantity": int(data.get('fulfill-quantity'))
-                }]
-            }
-        }
-
-        if user.get_config('validate_tracking_number', True) and re.match('^[0-9]+$', tracking):
-            notify_customer = 'no'
-        else:
-            notify_customer = user.get_config('send_shipping_confirmation', 'default')
-
-        if notify_customer and notify_customer != 'default':
-            api_data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
+        api_data = utils.order_track_fulfillment(order_track=order, user_config=user.get_config())
 
         rep = requests.post(
             url=store.get_link('/admin/orders/{}/fulfillments.json'.format(order.order_id), api=True),
@@ -102,9 +84,10 @@ class Command(BaseCommand):
         fulfilled = 'fulfillment' in rep.json()
         if fulfilled:
             note = "Auto Fulfilled by Shopified App (Line Item #{})".format(order.line_id)
-            try:
-                utils.add_shopify_order_note(store, order.order_id, note)
-            except Exception:
-                raven_client.captureException()
+
+            countdown = self.store_countdown.get(store.id, 30)
+            tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
+
+            self.store_countdown[store.id] = countdown + 5
 
         return fulfilled

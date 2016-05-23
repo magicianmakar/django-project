@@ -498,6 +498,25 @@ $(function() {
     };
 
     $('.itooltip').tooltip();
+
+    $('[qtip-tooltip]').each(function() {
+        $(this).qtip({
+            content: {
+                attr: 'qtip-tooltip',
+            },
+            position: {
+                my: $(this).attr('qtip-my') || "top center",
+                at: $(this).attr('qtip-at') ||  "bottom center"
+            },
+            style: {
+                classes: 'qtip-bootstrap'
+            },
+            hide: {
+                 event: 'unfocus',
+                 inactive: 3000
+             }
+        });
+    });
 });
 
 var ravenOptions = {
@@ -552,4 +571,9 @@ var ravenOptions = {
   ]
 };
 
-Raven.config('//9449f975eb984492bc9205e5acd0f36a@app.getsentry.com/73544', ravenOptions).install();
+var raven = Raven.config('//9449f975eb984492bc9205e5acd0f36a@app.getsentry.com/73544', ravenOptions);
+raven.install();
+
+if (typeof currentUser !== 'undefined') {
+    raven.setUserContext(currentUser);
+}

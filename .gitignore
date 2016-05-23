@@ -6,3 +6,4 @@ db.sqlite3
 *.sublime-*
 docs
 node_modules
+app/static/libs/bower_components
