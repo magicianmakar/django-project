@@ -746,7 +746,7 @@ def order_track_fulfillment(**kwargs):
     }
 
     if source_tracking:
-        if is_usps or kwargs.get('use_usps'):
+        if (kwargs.get('use_usps') is None and is_usps) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = "USPS"
         else:
             aftership_domain = 'track'

@@ -157,3 +157,35 @@ class UtilsTestCase(TestCase):
         fulfillment_data['store_id'] = 2
         data = utils.order_track_fulfillment(**fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(fulfillment_data['source_tracking']))
+
+        # Empty Tracking with ShopifyOrder
+        self.create_track('456789321', '789456', '', 'US')
+
+        fulfillment_data['source_tracking'] = ''
+        fulfillment_data['order_id'] = '456789321'
+        fulfillment_data['line_id'] = '789456'
+        data = utils.order_track_fulfillment(**fulfillment_data)
+        self.assertIsNone(data['fulfillment']['tracking_number'])
+
+        # Assert to not use USPS for Tracking with ShopifyOrder
+        self.create_track('456789321', '789456', 'MA7565915257226HK', 'US')
+
+        fulfillment_data['source_tracking'] = 'MA7565915257226HK'
+        fulfillment_data['order_id'] = '456789321'
+        fulfillment_data['line_id'] = '789456'
+        fulfillment_data['use_usps'] = False
+        data = utils.order_track_fulfillment(**fulfillment_data)
+        self.assertEqual(data['fulfillment']['tracking_company'], "Other")
+
+        # Force USPS use
+        fulfillment_data['use_usps'] = True
+        data = utils.order_track_fulfillment(**fulfillment_data)
+        self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
+
+        # Force USPS use for non valide tracking
+        self.create_track('4567893477', '78945611', '7565915257226', 'MA')
+        fulfillment_data['order_id'] = '4567893477'
+        fulfillment_data['line_id'] = '78945611'
+        fulfillment_data['use_usps'] = True
+        data = utils.order_track_fulfillment(**fulfillment_data)
+        self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
