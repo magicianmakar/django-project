@@ -2571,6 +2571,10 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
+def pixlr_close(request):
+    return render(request, 'partial/pixlr_close.html')
+
+
 def pixlr_serve_image(request):
     if not request.user.can('advanced_photo_editor.use'):
         raise PermissionDenied
