@@ -2648,11 +2648,13 @@ def save_image_s3(request):
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
-    pixlr_key = 'pixlr_%s' % request.GET.get('key')
-    pixlr_data = cache.get(pixlr_key)
-    pixlr_data['url'] = upload_url
-    pixlr_data['status'] = 'changed'
-    cache.set(pixlr_key, pixlr_data, timeout=600) # 10 minutes timeout
+    if request.GET.get('key'):
+        pixlr_key = 'pixlr_{}'.format(request.GET.get('key'))
+        pixlr_data = cache.get(pixlr_key)
+        if pixlr_data is not None:
+            pixlr_data['url'] = upload_url
+            pixlr_data['status'] = 'changed'
+            cache.set(pixlr_key, pixlr_data, timeout=600)  # 10 minutes timeout
 
     return JsonResponse({
         'status': 'ok',
