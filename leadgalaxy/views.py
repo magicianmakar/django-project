@@ -2603,7 +2603,7 @@ def save_image_s3(request):
         image_id = request.GET.get('image_id')
         image = request.FILES.get('image')
         img_url = image.name
-        
+
         json_response = False
         fp = StringIO.StringIO(image.read())
     else:
@@ -2614,7 +2614,7 @@ def save_image_s3(request):
 
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
-        
+
         json_response = True
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
@@ -2633,7 +2633,7 @@ def save_image_s3(request):
     bucket = conn.get_bucket(S3_BUCKET)
     k = Key(bucket)
     k.key = img_name
-    
+
     import mimetypes
     mimetype = mimetypes.guess_type(img_url)[0]
     k.set_metadata("Content-Type", mimetype)
