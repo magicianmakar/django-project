@@ -807,6 +807,10 @@ function pixlrCheck(key) {
                     clearInterval(document.pixlrInterval);
                     document.pixlrInterval = null;
                 }
+            },
+            error: function(result) {
+                clearInterval(document.pixlrInterval);
+                document.pixlrInterval = null;
             }
         });
     }, 3000);
