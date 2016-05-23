@@ -1265,19 +1265,12 @@ def proccess_api(request, user, method, target, data):
             'reg_hash': reg.register_hash
         }
 
-        template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'subuser_invite.html')
-        template = Template(open(template_file).read())
-
-        ctx = Context(data)
-
-        email_html = template.render(ctx)
-        email_html = email_html.replace('\n', '<br />')
-
-        send_mail(subject='Invitation to join Shopified App',
-                  recipient_list=[data['email']],
-                  from_email='support@shopifiedapp.com',
-                  message=email_html,
-                  html_message=email_html)
+        utils.send_email_from_template(
+            tpl='subuser_invite.html',
+            subject='Invitation to join Shopified App',
+            recipient=data['email'],
+            data=data,
+        )
 
         return JsonResponse({
             'status': 'ok',
@@ -1355,19 +1348,12 @@ def webhook(request, provider, option):
             data['reg_hash'] = reg.register_hash
             data['plan_title'] = plan.title
 
-            template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'webhook_register.html')
-            template = Template(open(template_file).read())
-
-            ctx = Context(data)
-
-            email_html = template.render(ctx)
-            email_html = email_html.replace('\n', '<br />')
-
-            send_mail(subject='Your Shopified App Access',
-                      recipient_list=[data['email']],
-                      from_email='support@shopifiedapp.com',
-                      message=email_html,
-                      html_message=email_html)
+            utils.send_email_from_template(
+                tpl='webhook_register.html',
+                subject='Your Shopified App Access',
+                recipient=data['email'],
+                data=data,
+            )
 
             utils.slack_invite(data)
 
