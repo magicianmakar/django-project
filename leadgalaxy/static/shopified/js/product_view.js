@@ -731,8 +731,12 @@ function launchEditor(id, src) {
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
     e.preventDefault();
     var image = $(this).siblings('img');
-    var imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
+    var imageUrl = image.attr('src');
     var imageId = image.attr('id');
+
+    if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
+        imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
+    }
 
     if (config.advanced_photo_editor) {
         $.ajax({
