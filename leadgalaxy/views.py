@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
@@ -376,6 +377,22 @@ def proccess_api(request, user, method, target, data):
                 }, safe=False)
             else:
                 return JsonResponse(data, safe=False, status=500)
+
+    if method == 'GET' and target == 'pixlr-hash':
+        if 'new' in data:
+            random_hash = utils.random_hash()
+            pixlr_data = {'status': 'new', 'url': '', 'image_id': data.get('new'), 'key': random_hash}
+            cache.set('pixlr_{}'.format(random_hash), pixlr_data, timeout=21600)  # 6 hours timeout
+
+        elif 'check' in data:
+            pixlr_key = 'pixlr_{}'.format(data.get('check'))
+
+            pixlr_data = cache.get(pixlr_key)
+
+            if pixlr_key is None:
+                return JsonResponse({'error': 'Pixlr key not found.'}, status=404)
+
+        return JsonResponse(pixlr_data)
 
     if method == 'POST' and target == 'product-delete':
         try:
@@ -2568,61 +2585,105 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
+def pixlr_close(request):
+    return render(request, 'partial/pixlr_close.html')
+
+
+def pixlr_serve_image(request):
+    if not request.user.can('advanced_photo_editor.use'):
+        raise PermissionDenied
+
+    import mimetypes
+    import StringIO
+
+    img_url = request.GET.get('image')
+    allowed_domains = ['alicdn', 'amazonaws']
+
+    if utils.get_domain(img_url) in allowed_domains:
+        mimetype = mimetypes.guess_type(img_url)[0]
+        allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
+
+        if mimetype in allowed_mimetypes:
+            fp = StringIO.StringIO(requests.get(img_url).content)
+
+            return HttpResponse(fp, content_type=mimetype)
+
+    raise Http404("Image not found.")
+
+
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
-    if not request.user.can('aviary_photo_editor.use'):
-        return render(request, 'upgrade.html')
+
+    import StringIO
+    import mimetypes
+    import urllib2
 
     import boto
-    import urllib2
-    import StringIO
     from boto.s3.key import Key
+
+    if not request.user.can('advanced_photo_editor.use') or not request.user.can('aviary_photo_editor.use'):
+        return render(request, 'upgrade.html')
+
+    if 'advanced' in request.GET:
+        # Pixlr
+        if not request.user.can('advanced_photo_editor.use'):
+            return render(request, 'upgrade.html')
+
+        image = request.FILES.get('image')
+        product_id = request.GET.get('product')
+        img_url = image.name
+
+        fp = StringIO.StringIO(image.read())
+    else:
+        # Aviary
+        if not request.user.can('aviary_photo_editor.use'):
+             return render(request, 'upgrade.html')
+
+        product_id = request.POST.get('product')
+        img_url = request.POST.get('url')
+
+        fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    if request.method == 'POST':
-        # Aviary
-        product_id = request.POST.get('product')
-        img_url = request.POST.get('url')
-        json_response = True
-    else:
-        # Pixlr
-        product_id = request.GET.get('product')
-        img_url = request.GET.get('image')
-        json_response = False
+    # Randomize filename in order to not overwrite an existing file
+    img_name = utils.random_filename(img_url.split('/')[-1])
 
-    img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
+    img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
 
     product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
     conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
     bucket = conn.get_bucket(S3_BUCKET)
     k = Key(bucket)
+
     k.key = img_name
-    fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
-    k.set_metadata("Content-Type", 'image/jpeg')
+    mimetype = mimetypes.guess_type(img_url)[0]
+    k.set_metadata("Content-Type", mimetype)
     k.set_contents_from_file(fp)
     k.make_public()
 
     upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
-
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
-    if json_response:
-        return JsonResponse({
-            'status': 'ok',
-            'url': upload_url
-        })
-    else:
-        return render(request, 'pixlr.html', {
-            'status': 'ok',
-            'url': upload_url,
-            'image_id': request.GET.get('image_id')
-        })
+    # For Pixlr upload, updates cache key so editor can be closed on the template
+    if request.GET.get('key'):
+        pixlr_key = 'pixlr_{}'.format(request.GET.get('key'))
+        pixlr_data = cache.get(pixlr_key)
+        if pixlr_data is not None:
+            pixlr_data['url'] = upload_url
+            pixlr_data['status'] = 'changed'
+            # 10 minute timeout needed in case of a disconnect while editing images
+            cache.set(pixlr_key, pixlr_data, timeout=600)
+
+    return JsonResponse({
+        'status': 'ok',
+        'url': upload_url
+    })
 
 
 @login_required
@@ -3352,6 +3413,17 @@ def register(request, registration=None):
         'form': form,
         'registration': registration
     })
+
+
+def crossdomain(request):
+    html = """
+        <cross-domain-policy>
+            <allow-access-from domain="*.pixlr.com"/>
+            <site-control permitted-cross-domain-policies="master-only"/>
+            <allow-http-request-headers-from domain="*.pixlr.com" headers="*" secure="true"/>
+        </cross-domain-policy>
+    """
+    return HttpResponse(html, content_type='application/xml')
 
 
 def robots_txt(request):
