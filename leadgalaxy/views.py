@@ -2667,8 +2667,8 @@ def save_image_s3(request):
         if pixlr_data is not None:
             pixlr_data['url'] = upload_url
             pixlr_data['status'] = 'changed'
-            # Only 1 minute timeout needed to JS function to update template.
-            cache.set(pixlr_key, pixlr_data, timeout=60)
+            # 10 minute timeout needed in case of a disconnect while editing images.
+            cache.set(pixlr_key, pixlr_data, timeout=600)
 
     return JsonResponse({
         'status': 'ok',
