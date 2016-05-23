@@ -764,14 +764,6 @@ function pixlrDone(status, url, imageID) {
     pixlr.overlay.hide();
 }
 
-function htmlDecode(input){
-    var e = document.createElement('div');
-    e.innerHTML = input;
-    var value = e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
-    e.remove();
-    return value;
-}
-
 function pixlrCheck(key) {
     pixlrInterval = setInterval(function() {
         $.ajax({

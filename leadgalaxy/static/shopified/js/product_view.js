@@ -730,9 +730,9 @@ function launchEditor(id, src) {
 
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
     e.preventDefault();
-    var image = $(this).siblings('img'),
-        imageUrl = encodeURI(window.location.origin+config.pixlr_image_url+'?image='+htmlDecode(image.attr('src'))),
-        imageId = image.attr('id');
+    var image = $(this).siblings('img');
+    var imageUrl = window.location.origin + config.pixlr_image_url +'?'+$.param({image: image.attr('src')});
+    var imageId = image.attr('id');
 
     if (config.advanced_photo_editor) {
         $.ajax({
@@ -743,8 +743,17 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
             success: function(result) {
                 if (result.status == 'new') {
                     var pixlrKey = result.key;
-                    pixlr.overlay.show({image: imageUrl, title: image.attr('id'), 
-                        target: window.location.origin+'/upload/save_image_s3?key='+pixlrKey+'&product='+config.product_id+'&advanced=true&image_id='+imageId});
+                    pixlr.overlay.show({
+                        image: imageUrl,
+                        title: image.attr('id'),
+                        target: window.location.origin + '/upload/save_image_s3?' + $.param({
+                            key: pixlrKey,
+                            product: config.product_id,
+                            advanced: true,
+                            image_id:imageId
+                        })
+                    });
+
                     pixlrCheck(pixlrKey);
                 } else {
                     displayAjaxError('Advanced Image Editor', result.error);
