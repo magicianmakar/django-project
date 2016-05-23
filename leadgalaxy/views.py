@@ -2611,18 +2611,15 @@ def save_image_s3(request):
     if 'advanced' in request.GET:
         # Pixlr
         product_id = request.GET.get('product')
-        image_id = request.GET.get('image_id')
         image = request.FILES.get('image')
         img_url = image.name
 
-        json_response = False
         fp = StringIO.StringIO(image.read())
     else:
         # Aviary
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
 
-        json_response = True
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
