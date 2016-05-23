@@ -55,6 +55,12 @@ def random_hash():
 def hash_text(text):
     return hashlib.md5(text).hexdigest()
 
+
+def random_filename(filename):
+    ext = filename.split('.')[1:]
+    return '{}.{}'.format(random_hash(), '.'.join(ext))
+
+
 def create_new_profile(user):
     plan = GroupPlan.objects.filter(default_plan=1).first()
     profile = UserProfile(user=user, plan=plan)

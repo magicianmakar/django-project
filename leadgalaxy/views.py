@@ -2625,7 +2625,10 @@ def save_image_s3(request):
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    img_name = 'uploads/u%d/%s' % (request.user.id, img_url.split('/')[-1])
+    # Randomize filename in order to not overwrite an existing file
+    img_name = utils.random_filename(img_url.split('/')[-1])
+
+    img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
 
     product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
