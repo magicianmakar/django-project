@@ -739,7 +739,6 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
             type: 'GET',
             url: '/api/pixlr-hash',
             data: {'new': imageId},
-            dataType: 'json',
             success: function(result) {
                 if (result.status == 'new') {
                     var pixlrKey = result.key;

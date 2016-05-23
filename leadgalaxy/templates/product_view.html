@@ -755,17 +755,23 @@ pixlr.settings.method = 'POST';
 pixlr.settings.referrer = 'Shopified App';
 // setting to false saves the image but doesn't run the redirect script on pixlr.html
 pixlr.settings.redirect = false;
-var pixlrInterval = null;
 
 function pixlrDone(status, url, imageID) {
     var image = $('#'+imageID);
     image.attr('src', url);
     product.images[parseInt(image.attr('image-id'))] = url;
     pixlr.overlay.hide();
+
+    clearInterval(document.pixlrInterval);
+    document.pixlrInterval = null;
 }
 
 function pixlrCheck(key) {
-    pixlrInterval = setInterval(function() {
+    if (typeof document.pixlrInterval !== 'undefined') {
+        clearInterval(document.pixlrInterval);
+    }
+
+    document.pixlrInterval = setInterval(function() {
         $.ajax({
             type: 'GET',
             url: '/api/pixlr-hash',
@@ -777,7 +783,9 @@ function pixlrCheck(key) {
                     image.attr('src', result.url + '?' + new Date().getTime());
                     product.images[parseInt(image.attr('image-id'))] = result.url;
                     pixlr.overlay.hide();
-                    clearInterval(pixlrInterval);
+
+                    clearInterval(document.pixlrInterval);
+                    document.pixlrInterval = null;
                 }
             }
         });
