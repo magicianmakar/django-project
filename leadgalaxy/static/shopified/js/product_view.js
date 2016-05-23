@@ -731,7 +731,7 @@ function launchEditor(id, src) {
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
     e.preventDefault();
     var image = $(this).siblings('img');
-    var imageUrl = window.location.origin + config.pixlr_image_url +'?'+$.param({image: image.attr('src')});
+    var imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
     var imageId = image.attr('id');
 
     if (config.advanced_photo_editor) {
@@ -742,6 +742,13 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
             success: function(result) {
                 if (result.status == 'new') {
                     var pixlrKey = result.key;
+
+                    pixlr.settings.exit = window.location.origin + '/pixlr/close';
+                    pixlr.settings.method = 'POST';
+                    pixlr.settings.referrer = 'Shopified App';
+                    // setting to false saves the image but doesn't run the redirect script on pixlr.html
+                    pixlr.settings.redirect = false;
+
                     pixlr.overlay.show({
                         image: imageUrl,
                         title: image.attr('id'),
@@ -772,6 +779,42 @@ $('body').on('click', '#pixlr-background', function(e) {
     pixlr.overlay.hide();
     clearTimeout(pixlrInterval);
 });
+
+function pixlrCheck(key) {
+    if (typeof document.pixlrInterval !== 'undefined') {
+        clearInterval(document.pixlrInterval);
+    }
+
+    document.pixlrInterval = setInterval(function() {
+        $.ajax({
+            type: 'GET',
+            url: '/api/pixlr-hash',
+            data: {'check': key},
+            dataType: 'json',
+            success: function(result) {
+                if (result.status == 'changed') {
+                    var image = $('#'+result.image_id);
+                    image.attr('src', result.url);
+                    product.images[parseInt(image.attr('image-id'), 10)] = result.url;
+                    pixlr.overlay.hide();
+
+                    clearInterval(document.pixlrInterval);
+                    document.pixlrInterval = null;
+                }
+            }
+        });
+    }, 3000);
+}
+
+document.pixlrDone = function (status, url, imageID) {
+    var image = $('#'+imageID);
+    image.attr('src', url);
+    product.images[parseInt(image.attr('image-id'), 10)] = url;
+    pixlr.overlay.hide();
+
+    clearInterval(document.pixlrInterval);
+    document.pixlrInterval = null;
+};
 
 document.renderImages = renderImages;
 

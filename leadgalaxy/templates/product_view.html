@@ -627,7 +627,6 @@ var config = {
     user_id: {{user.id}},
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
-    pixlr_image_url: "{% url 'pixlr_serve_image' %}",
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
@@ -750,47 +749,7 @@ $(function() {
 });
 
 {% if request.user|can:'advanced_photo_editor.use' %}
-pixlr.settings.exit = window.location.origin+'/pixlr/close';
-pixlr.settings.method = 'POST';
-pixlr.settings.referrer = 'Shopified App';
-// setting to false saves the image but doesn't run the redirect script on pixlr.html
-pixlr.settings.redirect = false;
 
-function pixlrDone(status, url, imageID) {
-    var image = $('#'+imageID);
-    image.attr('src', url);
-    product.images[parseInt(image.attr('image-id'))] = url;
-    pixlr.overlay.hide();
-
-    clearInterval(document.pixlrInterval);
-    document.pixlrInterval = null;
-}
-
-function pixlrCheck(key) {
-    if (typeof document.pixlrInterval !== 'undefined') {
-        clearInterval(document.pixlrInterval);
-    }
-
-    document.pixlrInterval = setInterval(function() {
-        $.ajax({
-            type: 'GET',
-            url: '/api/pixlr-hash',
-            data: {'check': key},
-            dataType: 'json',
-            success: function(result) {
-                if (result.status == 'changed') {
-                    var image = $('#'+result.image_id);
-                    image.attr('src', result.url + '?' + new Date().getTime());
-                    product.images[parseInt(image.attr('image-id'))] = result.url;
-                    pixlr.overlay.hide();
-
-                    clearInterval(document.pixlrInterval);
-                    document.pixlrInterval = null;
-                }
-            }
-        });
-    }, 3000);
-}
 {% endif %}
 
 </script>
