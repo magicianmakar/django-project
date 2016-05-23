@@ -2631,7 +2631,7 @@ def save_image_s3(request):
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    # Randomize filename in order to not overwrite an existing file.
+    # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
 
     img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
@@ -2652,14 +2652,14 @@ def save_image_s3(request):
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
-    # For Pixlr upload, updates cache key so editor can be closed on the template.
+    # For Pixlr upload, updates cache key so editor can be closed on the template
     if request.GET.get('key'):
         pixlr_key = 'pixlr_{}'.format(request.GET.get('key'))
         pixlr_data = cache.get(pixlr_key)
         if pixlr_data is not None:
             pixlr_data['url'] = upload_url
             pixlr_data['status'] = 'changed'
-            # 10 minute timeout needed in case of a disconnect while editing images.
+            # 10 minute timeout needed in case of a disconnect while editing images
             cache.set(pixlr_key, pixlr_data, timeout=600)
 
     return JsonResponse({
