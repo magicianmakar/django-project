@@ -688,7 +688,7 @@ function renderImages() {
         }
 
         if (config.advanced_photo_editor) {
-            d.append($('<button image-url="'+config.pixlr_image_url+'?image='+el+'" data-toggle="tooltip" data-placement="left" title="Advanced Image Editor" class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-picture-o"></i></button>'));
+            d.append($('<button data-toggle="tooltip" data-placement="left" title="Advanced Image Editor" class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-picture-o"></i></button>'));
         }
 
         d.find('.image-delete').click(imageClicked);
