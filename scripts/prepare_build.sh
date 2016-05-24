@@ -21,7 +21,7 @@ export REDIS_URL="redis://127.0.0.1:6379"
 export REDISCLOUD_URL="redis://127.0.0.1:6379"
 export REDISCLOUD_CACHE="redis://127.0.0.1:6379"
 
-#apt-get update -qy
+apt-get update -qy
 
 apt-get install -y python-dev python-pip libmysqld-dev libssl-dev libffi-dev libxml2-dev libxslt1-dev
 
