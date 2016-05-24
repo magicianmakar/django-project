@@ -21,7 +21,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ['api_url']
 
     title = 'uncommonnow'
-    api_url = 'https://https://d43e2fd73231e565c290a548c05f9c1f:c2fb34b864894a4f03e6a00205301de7@rank-engine.myshopify.com'
+    api_url = 'https://d43e2fd73231e565c290a548c05f9c1f:c2fb34b864894a4f03e6a00205301de7@rank-engine.myshopify.com'
     user_id = 1
 
 
