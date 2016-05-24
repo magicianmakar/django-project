@@ -2786,7 +2786,7 @@ def orders_view(request):
             orders = orders.filter(financial_status=financial)
 
         if connected_only == 'true':
-            orders = orders.exclude(shopifyorderline__product=None)
+            orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
