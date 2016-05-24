@@ -54,7 +54,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
-class UtilsTestCase(TestCase):
+class FulfillmentTestCase(TestCase):
     def setUp(self):
         pass
 
@@ -199,6 +199,7 @@ class UtilsTestCase(TestCase):
         fulfillment_data['use_usps'] = True
         data = utils.order_track_fulfillment(**fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
+
 
 class OrdersTestCase(TestCase):
     def setUp(self):
