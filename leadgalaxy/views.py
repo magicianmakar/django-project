@@ -4,11 +4,11 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as user_logout
 from django.shortcuts import redirect
-from django.template import Context, Template, RequestContext
+from django.template import RequestContext
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Max
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.core.urlresolvers import reverse
@@ -27,7 +27,6 @@ import tasks
 import os
 import re
 import simplejson as json
-import time
 import requests
 import arrow
 import traceback
