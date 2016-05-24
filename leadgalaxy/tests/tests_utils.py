@@ -240,3 +240,71 @@ class OrdersTestCase(TestCase):
         self.assertTrue(note1 in order_note)
         self.assertTrue(note2 in order_note)
         self.assertTrue(note3 in order_note)
+
+
+class UtilsTestCase(TestCase):
+    def setUp(self):
+        pass
+
+    def test_get_domain(self):
+        self.assertEqual(utils.get_domain('www.aliexpress.com'), 'aliexpress')
+        self.assertEqual(utils.get_domain('http://www.aliexpress.com'), 'aliexpress')
+        self.assertEqual(utils.get_domain('www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
+        self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
+        self.assertEqual(utils.get_domain('www.ebay.com/itm/131696353919'), 'ebay')
+        self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919'), 'ebay')
+
+        self.assertEqual(utils.get_domain('www.aliexpress.com', full=True), 'www.aliexpress.com')
+        self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')
+        self.assertEqual(utils.get_domain('http://aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'aliexpress.com')
+        self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919', full=True), 'www.ebay.com')
+
+    def test_remove_link_query(self):
+        self.assertEqual(
+            utils.remove_link_query('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'),
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg')
+
+        self.assertEqual(
+            utils.remove_link_query('http://www.ebay.com/itm/131696353919?v=1452639314'),
+            'http://www.ebay.com/itm/131696353919')
+
+        self.assertEqual(
+            utils.remove_link_query('http://www.ebay.com/itm/131696353919#hash:12'),
+            'http://www.ebay.com/itm/131696353919')
+
+        self.assertEqual(
+            utils.remove_link_query('https://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg?hash=1e56ace2'),
+            'https://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg')
+
+        self.assertEqual(
+            utils.remove_link_query('http://www.ebay.com/itm/131696353919?v=1452639314#hash:12'),
+            'http://www.ebay.com/itm/131696353919')
+
+    def test_upload_from_url(self):
+        aviary_url = ('://s3.amazonaws.com/feather-files-aviary-prod-us-east-1',
+                      '/220489e3e16f4691bc88d1ef81e05a8b/2016-05-24/00b4838ae29840d1bcfa6d2fa570ab02.png')
+
+        self.assertTrue(utils.upload_from_url('http' + ''.join(aviary_url)))
+        self.assertTrue(utils.upload_from_url('https' + ''.join(aviary_url)))
+
+        self.assertTrue(utils.upload_from_url('http://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg'))
+        self.assertTrue(utils.upload_from_url('http://shopifiedapp.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png'))
+        self.assertTrue(utils.upload_from_url('https://betaimages.sunfrogshirts.com/m_1349black.jpg'))
+        self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg'))
+        self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'))
+
+        self.assertTrue(utils.upload_from_url('http://gloimg.sammydress.com/S/pdm-product-pic/Clothing/'
+                                              '2016/04/08/source-img/20160408155854_48756.jpg',
+                                              stores=['sammydress']))
+
+        self.assertFalse(utils.upload_from_url('http://gloimg.sammydress.com/S/pdm-product-pic/Clothing/'
+                                               '2016/04/08/source-img/20160408155854_48756.jpg',
+                                               stores=[]))
+
+        self.assertFalse(utils.upload_from_url('http://attaker.s3.amazonaws.com/uploads/9400627bb3e695bf96eda56a3172e1bf.png'))
+
+        # Mimetype checks
+        self.assertFalse(utils.upload_from_url('http://i.ebayimg.com/files/g/RHIAAOSwQaJXRBkE/test.zip'))
+        self.assertFalse(utils.upload_from_url('http://i.ebayimg.com/files/g/RHIAAOSwQaJXRBkE/test.zip?test.png'))
+        self.assertFalse(utils.upload_from_url('http://attaker.com/files/g/RHIAAOSwQaJXRBkE/test.png'))
+        self.assertFalse(utils.upload_from_url('http://attaker.com/files/g/RHIAAOSwQaJXRBkE/http%s/test.png' % aviary_url[0]))

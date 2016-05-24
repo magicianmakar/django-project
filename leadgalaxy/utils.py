@@ -38,18 +38,57 @@ def safeFloat(v, default=0.0):
         return default
 
 
-def get_domain(url):
+def get_domain(url, full=False):
     if not url:
         return None
 
+    if not url.startswith('http'):
+        url = u'http://{}'.format(url)
+
     hostname = urlparse(url).hostname
     if hostname is None:
+        return hostname
+
+    if full:
         return hostname
 
     for i in ['com', 'co.uk', 'org', 'net']:
         hostname = hostname.replace('.%s' % i, '')
 
     return hostname.split('.')[-1]
+
+
+def upload_from_url(url, stores=[]):
+    import mimetypes
+
+    # Domains are taken from allowed stores plus store's CDN
+    allowed_stores = stores + ['alicdn', 'ebayimg', 'sunfrogshirts']
+    allowed_paths = [r'^https?://s3.amazonaws.com/feather-files-aviary-prod-us-east-1/']  # Aviary
+    allowed_domains = ['cdn.shopify.com', 'shopifiedapp.s3.amazonaws.com']
+
+    allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
+
+    can_pull = any([get_domain(url) in allowed_stores,
+                   get_domain(url, full=True) in allowed_domains,
+                   any([re.search(i, url) for i in allowed_paths])])
+
+    mimetype = mimetypes.guess_type(remove_link_query(url))[0]
+
+    return can_pull and mimetype in allowed_mimetypes
+
+
+def remove_link_query(link):
+    if not link:
+        return ''
+
+    parsed = urlparse(link)
+    return parsed.scheme + "://" + parsed.netloc + parsed.path
+
+
+def get_mimetype(url):
+    import mimetypes
+
+    return mimetypes.guess_type(remove_link_query(url))[0]
 
 
 def random_hash():

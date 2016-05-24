@@ -793,12 +793,7 @@ def proccess_api(request, user, method, target, data):
         if not config.get('description_mode'):
             config['description_mode'] = 'empty'
 
-        config['import'] = []
-        perms = profile.get_perms
-        for i in perms:
-            if i.endswith('_import.use'):
-                name = i.split('_')[0]
-                config['import'].append(name)
+        config['import'] = profile.import_stores()
 
         # Base64 encode the store import list
         config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
@@ -2579,22 +2574,18 @@ def pixlr_serve_image(request):
     if not request.user.can('advanced_photo_editor.use'):
         raise PermissionDenied
 
-    import mimetypes
     import StringIO
 
     img_url = request.GET.get('image')
-    allowed_domains = ['alicdn', 'amazonaws']
+    if not img_url:
+        raise Http404
 
-    if utils.get_domain(img_url) in allowed_domains:
-        mimetype = mimetypes.guess_type(img_url)[0]
-        allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
+    if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
+        raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
+        raise PermissionDenied
 
-        if mimetype in allowed_mimetypes:
-            fp = StringIO.StringIO(requests.get(img_url).content)
-
-            return HttpResponse(fp, content_type=mimetype)
-
-    raise Http404("Image not found.")
+    fp = StringIO.StringIO(requests.get(img_url).content)
+    return HttpResponse(fp, content_type=utils.get_mimetype(img_url))
 
 
 @login_required
@@ -2616,6 +2607,7 @@ def save_image_s3(request):
         if not request.user.can('advanced_photo_editor.use'):
             return render(request, 'upgrade.html')
 
+        # TODO: File size limit
         image = request.FILES.get('image')
         product_id = request.GET.get('product')
         img_url = image.name
@@ -2624,10 +2616,14 @@ def save_image_s3(request):
     else:
         # Aviary
         if not request.user.can('aviary_photo_editor.use'):
-             return render(request, 'upgrade.html')
+            return render(request, 'upgrade.html')
 
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
+
+        if not utils.upload_from_url(img_url, user.profile.import_stores()):
+            raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
+            raise PermissionDenied
 
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 

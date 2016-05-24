@@ -131,6 +131,20 @@ class UserProfile(models.Model):
 
         return perms
 
+    def import_stores(self):
+        ''' Return Stores the User can import products from '''
+
+        if self.subuser_parent is not None:
+            return self.subuser_parent.profile.import_stores()
+
+        stores = []
+        for i in self.get_perms:
+            if i.endswith('_import.use'):
+                name = i.split('_')[0]
+                stores.append(name)
+
+        return stores
+
     def can(self, perm_name):
         if self.subuser_parent is not None:
             return self.subuser_parent.profile.can(perm_name)
