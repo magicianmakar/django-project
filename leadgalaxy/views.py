@@ -1625,6 +1625,8 @@ def webhook(request, provider, option):
                 product_data['type'] = shopify_product['product_type']
                 product_data['tags'] = shopify_product['tags']
                 product_data['images'] = [i['src'] for i in shopify_product['images']]
+                product_data['description'] = shopify_product['body_html']
+                product_data['published'] = shopify_product.get('published_at') is not None
 
                 prices = [i['price'] for i in shopify_product['variants']]
                 compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
@@ -1971,7 +1973,6 @@ def product_view(request, pid):
         'user': product.user,
         'created_at': product.created_at,
         'updated_at': product.updated_at,
-        'data': product.data,
         'product': json.loads(product.data),
         'notes': product.notes,
     }
@@ -2010,6 +2011,9 @@ def product_view(request, pid):
 
         if shopify_product:
             shopify_product = utils.link_product_images(shopify_product)
+
+            p['product']['description'] = shopify_product['body_html']
+            p['product']['published'] = shopify_product['published_at'] is not None
 
     return render(request, 'product_view.html', {
         'product': p,

@@ -622,7 +622,8 @@
 
 <script type="text/javascript">
 
-var product = {{product.data|safe}};
+var product = {% json_dumps product.product %};
+
 var config = {
     user_id: {{user.id}},
     product_id: {{product.id}},
