@@ -44,7 +44,7 @@ class ShopifyOrder(models.Model):
     fulfillment_status = models.CharField(max_length=32, blank=True, null=True, default='')
 
     note = models.TextField(blank=True, null=True,  default='')
-    tags = models.CharField(max_length=256, blank=True, null=True, default='', db_index=True)
+    tags = models.TextField(blank=True, null=True, default='', db_index=True)
     city = models.CharField(max_length=64, blank=True, null=True, default='')
     zip_code = models.CharField(max_length=32, blank=True, null=True, default='')
     country_code = models.CharField(max_length=32, blank=True, null=True, default='', db_index=True)
@@ -67,12 +67,12 @@ class ShopifyOrderLine(models.Model):
 
     line_id = models.BigIntegerField()
     shopify_product = models.BigIntegerField()
-    title = models.CharField(max_length=256, blank=True, null=True, default='', db_index=True)
+    title = models.TextField(blank=True, null=True, default='', db_index=True)
     price = models.FloatField()
     quantity = models.IntegerField()
 
     variant_id = models.BigIntegerField()
-    variant_title = models.CharField(max_length=64, blank=True, null=True, default='')
+    variant_title = models.TextField(blank=True, null=True, default='')
 
     def __unicode__(self):
         return u'{}'.format(self.variant_title)
