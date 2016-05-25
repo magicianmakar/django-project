@@ -60,6 +60,8 @@ class Command(BaseCommand):
             except:
                 raven_client.captureException()
 
+        self.sync_product_fields()
+
     def profile_changed(self, profile, expired_plan, new_plan):
         data = {
             'profile': profile,
@@ -91,3 +93,20 @@ class Command(BaseCommand):
             self.store_countdown[store.id] = countdown + 5
 
         return fulfilled
+
+    def sync_product_fields(self):
+        def change_auto_now(ModelClass, field_name, enable):
+            field = ModelClass._meta.get_field_by_name(field_name)[0]
+            field.auto_now = enable
+
+        change_auto_now(ShopifyProduct, "updated_at", False)
+
+        count = 0
+        for product in ShopifyProduct.objects.filter(title='').order_by('updated_at')[:2000]:
+            product.save()
+            count += 1
+
+            if count % 200 == 0:
+                print 'Sync Progress: %d (product: %d)' % (count, product.id)
+
+        change_auto_now(ShopifyProduct, "updated_at", True)
