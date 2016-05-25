@@ -2622,7 +2622,7 @@ def save_image_s3(request):
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
 
-        if not utils.upload_from_url(img_url, user.profile.import_stores()):
+        if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
             raise PermissionDenied
 
