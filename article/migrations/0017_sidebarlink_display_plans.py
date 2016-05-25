@@ -8,9 +8,6 @@ def merge_plans(apps, schema_editor):
     GroupPlan = apps.get_model("leadgalaxy", "GroupPlan")
     SidebarLink = apps.get_model("article", "SidebarLink")
 
-    print
-    print '* Begin Merginf of {} links'.format(SidebarLink.objects.count())
-
     for link in SidebarLink.objects.all():
         for i in link.plans:
             try:
