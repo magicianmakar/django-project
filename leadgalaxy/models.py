@@ -407,10 +407,10 @@ class ShopifyProduct(models.Model):
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
-    title = models.CharField(max_length=512, blank=True, default='', db_index=True)
+    title = models.TextField(blank=True, default='', db_index=True)
     price = models.FloatField(default=0.0)
     product_type = models.CharField(max_length=255, blank=True, default='', db_index=True)
-    tag = models.CharField(max_length=255, blank=True, default='', db_index=True)
+    tag = models.TextField(blank=True, default='', db_index=True)
 
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
@@ -432,12 +432,9 @@ class ShopifyProduct(models.Model):
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
 
-        self.title = data['title']
-        self.product_type = data['type']
-        self.tag = data['tags']
-
-        if len(self.tag) > 254:
-            self.tag = u'{}'.format(textwrap.wrap(self.tag, width=254)[0])
+        self.title = data.get('title', '')
+        self.tag = data.get('tags', '')
+        self.product_type = data.get('type', '')[:254]
 
         try:
             self.price = '%.02f' % float(data['price'])
