@@ -128,26 +128,17 @@
                 {% endif %}
 
                 {% if request.user|can:'orders.view' %}
-                <li {% if page == 'orders' or page == 'orders_track' %}class="active"{% endif %}>
-                    <a href="#">
-                        <i class="fa fa-check-square-o"></i>
+                <li {% if page == 'orders' %}class="active"{% endif %}>
+                    <a href="{% url 'orders' %}" class="">
+                        <i class="fa fa-calendar-check-o"></i>
                         <span class="nav-label">Orders</span>
-                        <span class="fa arrow"></span>
                     </a>
-                    <ul class="nav nav-second-level collapse out">
-                        <li {% if page == 'orders' %}class="active"{% endif %}>
-                            <a href="{% url 'orders' %}" class="">
-                                {# <span class="fa fa-plus"></span> #}
-                                <span class="nav-label">Shopify Orders</span>
-                            </a>
-                        </li>
-                        <li {% if page == 'orders_track' %}class="active"{% endif %}>
-                            <a href="{% url 'orders_track' %}" class="">
-                                {# <span class="fa fa-plus"></span> #}
-                                <span class="nav-label">Tracking</span>
-                            </a>
-                        </li>
-                    </ul>
+                </li>
+                <li {% if page == 'orders_track' %}class="active"{% endif %}>
+                    <a href="{% url 'orders_track' %}" class="">
+                        <i class="fa fa-truck"></i>
+                        <span class="nav-label">Tracking</span>
+                    </a>
                 </li>
                 {% endif %}
 
