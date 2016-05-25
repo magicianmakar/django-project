@@ -9,9 +9,6 @@ import uuid
 def add_store_hash(apps, schema_editor):
     ShopifyStore = apps.get_model("leadgalaxy", "ShopifyStore")
 
-    print
-    print '* Begin Hash generation for {} Stores'.format(ShopifyStore.objects.count()),
-
     for store in ShopifyStore.objects.all():
 
         if not store.store_hash:

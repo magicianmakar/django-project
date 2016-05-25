@@ -44,9 +44,6 @@ def combine_names(apps, schema_editor):
     ShopifyProduct = apps.get_model("leadgalaxy", "ShopifyProduct")
     ShopifyProductExport = apps.get_model("leadgalaxy", "ShopifyProductExport")
 
-    print
-    print '* Begin Product merging for {} products'.format(ShopifyProduct.objects.count())
-
     merged_products = 0
     problematic_products = 0
     unexported_products = 0
@@ -77,9 +74,11 @@ def combine_names(apps, schema_editor):
         else:
             unexported_products += 1
 
-    print '* Merged Products:', merged_products
-    print '* Unexported Products:', unexported_products
-    print '* Problematic Products:', problematic_products
+    if any([merged_products, unexported_products, problematic_products]):
+        print '* Merged Products:', merged_products
+        print '* Unexported Products:', unexported_products
+        print '* Problematic Products:', problematic_products
+
 
 class Migration(migrations.Migration):
 

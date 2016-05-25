@@ -6,9 +6,6 @@ from django.db import models, migrations
 def convert_base64_to_zlib(apps, schema_editor):
     ShopifyProduct = apps.get_model("leadgalaxy", "ShopifyProduct")
 
-    print '* Begin Product merging for {} products'.format(ShopifyProduct.objects.count())
-    print
-
     merged_products = 0
 
     for product in ShopifyProduct.objects.all():
@@ -17,7 +14,8 @@ def convert_base64_to_zlib(apps, schema_editor):
 
         merged_products += 1
 
-    print '* Merged Products:', merged_products
+    if merged_products:
+        print '* Merged Products:', merged_products
 
 
 class Migration(migrations.Migration):

@@ -15,9 +15,6 @@ def safe_int(val, default=0):
 def order_source_id(apps, schema_editor):
     ShopifyOrder = apps.get_model("leadgalaxy", "ShopifyOrder")
 
-    print
-    print '* Begin Shopify Order merging for {} Orders'.format(ShopifyOrder.objects.count())
-
     for order in ShopifyOrder.objects.all():
         if not order.source_id:
             order.source_id = safe_int(json.loads(order.data)['aliexpress']['order']['id'])

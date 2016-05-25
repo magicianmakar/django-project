@@ -8,9 +8,6 @@ import zlib
 def convert_zlib_to_plain(apps, schema_editor):
     ShopifyProduct = apps.get_model("leadgalaxy", "ShopifyProduct")
 
-    print '* Begin Product merging for {} products'.format(ShopifyProduct.objects.count())
-    print
-
     merged_products = 0
     empty_products = 0
 
@@ -23,9 +20,10 @@ def convert_zlib_to_plain(apps, schema_editor):
             empty_products += 1
         product.save()
 
+    if any([merged_products, empty_products]):
+        print '* Merged Products:', merged_products
+        print '* Empty Products:', empty_products
 
-    print '* Merged Products:', merged_products
-    print '* Empty Products:', empty_products
 
 class Migration(migrations.Migration):
 

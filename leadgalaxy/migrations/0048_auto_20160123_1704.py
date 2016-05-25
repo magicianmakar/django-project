@@ -14,9 +14,6 @@ def random_hash():
 def plans_reg_hash(apps, schema_editor):
     GroupPlan = apps.get_model("leadgalaxy", "GroupPlan")
 
-    print
-    print '* Begin Registration Hash merging for {} plans'.format(GroupPlan.objects.count())
-
     for plan in GroupPlan.objects.all():
         if not plan.register_hash:
             plan.register_hash = random_hash()
