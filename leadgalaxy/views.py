@@ -2575,7 +2575,7 @@ def pixlr_close(request):
 
 
 def pixlr_serve_image(request):
-    if not request.user.can('advanced_photo_editor.use'):
+    if not request.user.can('pixlr_photo_editor.use'):
         raise PermissionDenied
 
     import StringIO
@@ -2603,12 +2603,12 @@ def save_image_s3(request):
     import boto
     from boto.s3.key import Key
 
-    if not request.user.can('advanced_photo_editor.use') or not request.user.can('aviary_photo_editor.use'):
+    if not request.user.can('pixlr_photo_editor.use') or not request.user.can('aviary_photo_editor.use'):
         return render(request, 'upgrade.html')
 
     if 'advanced' in request.GET:
         # Pixlr
-        if not request.user.can('advanced_photo_editor.use'):
+        if not request.user.can('pixlr_photo_editor.use'):
             return render(request, 'upgrade.html')
 
         # TODO: File size limit
