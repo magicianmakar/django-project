@@ -749,10 +749,6 @@ $(function() {
     $('.original-description').css('overflow', 'auto');
 });
 
-{% if request.user|can:'pixlr_photo_editor.use' %}
-
-{% endif %}
-
 </script>
 
     {% compress js %}
