@@ -2603,9 +2603,6 @@ def save_image_s3(request):
     import boto
     from boto.s3.key import Key
 
-    if not request.user.can('pixlr_photo_editor.use') or not request.user.can('aviary_photo_editor.use'):
-        return render(request, 'upgrade.html')
-
     if 'advanced' in request.GET:
         # Pixlr
         if not request.user.can('pixlr_photo_editor.use'):
