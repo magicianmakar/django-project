@@ -3121,7 +3121,7 @@ def orders_place(request):
 
 
 @login_required
-def products_update(request):
+def product_alerts(request):
     if not request.user.can('price_changes.use'):
         return render(request, 'upgrade.html')
 
@@ -3171,7 +3171,7 @@ def products_update(request):
     # Allow sending notification for new changes
     request.user.set_config('_product_change_notify', False)
 
-    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
+    tpl = 'product_alerts_tab.html' if product else 'products_update.html'
 
     # Delete sidebar alert info cache
     from django.core.cache.utils import make_template_fragment_key
@@ -3183,7 +3183,7 @@ def products_update(request):
         'product': product,
         'paginator': paginator,
         'current_page': page,
-        'page': 'products_update',
+        'page': 'product_alerts',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
     })
 

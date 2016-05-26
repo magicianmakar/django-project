@@ -112,8 +112,8 @@
                 {% endif %}
 
                 {% if request.user|can:'price_changes.use' %}
-                <li {% if page == 'products_update' %}class="active"{% endif %}>
-                    <a href="{% url 'products_update' %}">
+                <li {% if page == 'product_alerts' %}class="active"{% endif %}>
+                    <a href="{% url 'product_alerts' %}">
                         <i class="fa fa-line-chart"></i>
                         <span class="nav-label">Alerts</span>
                         {% cache 1800 alert_info user.id %}

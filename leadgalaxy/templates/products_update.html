@@ -14,9 +14,9 @@
             <ul class="nav nav-tabs">
                 {% if not show_hidden %}
                 <li class="active"><a data-toggle="tab" href="#tab-1"> New Alerts</a></li>
-                <li class=""><a href="{% url 'products_update' %}?hidden=1"> Archived</a></li>
+                <li class=""><a href="{% url 'product_alerts' %}?hidden=1"> Archived</a></li>
                 {% else %}
-                <li class=""><a href="{% url 'products_update' %}"> New Alerts</a></li>
+                <li class=""><a href="{% url 'product_alerts' %}"> New Alerts</a></li>
                 <li class="active"><a data-toggle="tab" href="#tab-1"> Archived</a></li>
                 {% endif %}
             </ul>
