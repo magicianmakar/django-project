@@ -144,6 +144,80 @@
                                         </tr>
                                         {% endif %}
                                     {% endfor %}
+
+                                    {# New Variants #}
+                                    {% for change in item.changes.variants.new %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}" >
+                                            <td class="category">New Variant</td>
+                                            <td class="details-toggle">A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">2016 Fashion Metal Half Frame Glasses...</a></td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                            <td class="well" colspan="4">
+                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
+                                                    <div class="col-md-3"><b>Price</b></div>
+                                                    <div class="col-md-3"><b>Quantity</b></div>
+                                                </div>
+
+                                        {% endif %}
+                                                <div class="row">
+                                                    <div class="col-md-offset-1 col-md-3 var-name" style="color:green">
+                                                        {{change.variant_desc}}
+                                                    </div>
+                                                    <div class="col-md-2"></div>
+                                                    <div class="col-md-3">${{change.price}}</div>
+                                                    <div class="col-md-3">{{change.quantity}}</div>
+                                                </div>
+                                        {% if forloop.last %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {# Removed Product Variants #}
+                                    {% for change in item.changes.variants.new %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}" >
+                                            <td class="category">Removed Variant</td>
+                                            <td class="details-toggle">A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">2016 Fashion Metal Half Frame Glasses...</a></td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                            <td class="well" colspan="4">
+                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
+                                                    <div class="col-md-3"><b>Price</b></div>
+                                                    <div class="col-md-3"><b>Quantity</b></div>
+                                                </div>
+
+                                        {% endif %}
+                                                <div class="row">
+                                                    <div class="col-md-offset-1 col-md-3 var-name" style="color:red">
+                                                        {{change.variant_desc}}
+                                                    </div>
+                                                    <div class="col-md-2"></div>
+                                                    <div class="col-md-3">${{change.price}}</div>
+                                                    <div class="col-md-3">{{change.quantity}}</div>
+                                                </div>
+                                        {% if forloop.last %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
                                 {% empty %}
                                     <tr>
                                         <td class="text-center" colspan="4">
