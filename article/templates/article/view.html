@@ -15,7 +15,7 @@
                     {% endfor %}
                 </div>
                 <div class="text-center article-title">
-                <span class="text-muted"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
+                <span class="text-muted itooltip" title="Last Update"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
                     <h1>
                         {{ article.title }}
                     </h1>
@@ -39,7 +39,6 @@
                     <div class="col-md-6">
                         <div class="small text-right">
                             {% if user.is_superuser %}
-                            <h5>Options:</h5>
                                 <a class="btn btn-xs btn-success" href="{% url 'edit' article.id %}"><i class="fa fa-edit"></i> Edit</a>
                                 <a class="btn btn-xs btn-danger" href="{% url 'admin:article_article_delete' article.id %}"><i class="fa fa-remove"></i> Delete</a>
                             {% endif %}

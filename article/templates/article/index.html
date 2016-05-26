@@ -36,7 +36,7 @@
                 <a href="{% url 'article.views.view' article.slug %}" class="forum-item-title">{{ article.title }}</a>
                 <div class="forum-sub-title">
                     By <a herf="#">{{ article.author.username }}</a>,
-                    Last update: <span class="date">{{ article.updated_at|date:"m/Y/d" }}</span></div>
+                    Last update: <span class="date">{{ article.updated_at|date:"d/m/Y" }}</span></div>
             </div>
         </div>
     </div>
