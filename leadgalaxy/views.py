@@ -3171,7 +3171,7 @@ def product_alerts(request):
     # Allow sending notification for new changes
     request.user.set_config('_product_change_notify', False)
 
-    tpl = 'product_alerts_tab.html' if product else 'products_update.html'
+    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
 
     # Delete sidebar alert info cache
     from django.core.cache.utils import make_template_fragment_key
