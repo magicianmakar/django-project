@@ -46,8 +46,19 @@
                                     {% for change in item.changes.product.offline %}
                                         {% if forloop.first %}
                                         <tr class="header" alert-id="{{item.id}}">
-                                            <td class="category">Vendor</td>
-                                            <td class="details-toggle">A vendor store has gone <b>{% if change.new_value %}Online{% else %}Offline{% endif %}</b></td>
+                                            <td class="category">Availability</td>
+                                            <td class="details-toggle">
+                                                {% if change.new_value %}
+                                                    Product
+                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a>
+                                                    Is now <b style="color:green">Online</b>
+                                                {% else %}
+                                                    Product
+                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a>
+                                                    Is now <b style="color:red">Offline</b>
+                                                {% endif %}
+
+                                            </b></td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
@@ -56,23 +67,8 @@
                                             </td>
                                         </tr>
                                         <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="4">
-                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
-                                                    <div class="col-md-2"></div>
-                                                    <div class="col-md-3"><b>Old Price</b></div>
-                                                    <div class="col-md-3"><b>New Price</b></div>
-                                                </div>
-
                                         {% endif %}
-                                                <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.variant_desc}}</div>
-                                                    <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
-                                                    <div class="col-md-3">${{change.old_value}}</div>
-                                                    <div class="col-md-3">${{change.new_value}}</div>
-                                                </div>
                                         {% if forloop.last %}
-                                            </td>
                                         </tr>
                                         {% endif %}
                                     {% endfor %}
