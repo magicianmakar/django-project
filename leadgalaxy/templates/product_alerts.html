@@ -68,8 +68,8 @@
                                                 <div class="row">
                                                     <div class="col-md-offset-1 col-md-3 var-name">{{change.variant_desc}}</div>
                                                     <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
-                                                    <div class="col-md-3">{{change.old_value}}</div>
-                                                    <div class="col-md-3">{{change.new_value}}</div>
+                                                    <div class="col-md-3">${{change.old_value}}</div>
+                                                    <div class="col-md-3">${{change.new_value}}</div>
                                                 </div>
                                         {% if forloop.last %}
                                             </td>
@@ -102,8 +102,8 @@
                                                 <div class="row">
                                                     <div class="col-md-offset-1 col-md-3 var-name">{{change.variant_desc}}</div>
                                                     <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
-                                                    <div class="col-md-3">{{change.old_value}}</div>
-                                                    <div class="col-md-3">{{change.new_value}}</div>
+                                                    <div class="col-md-3">${{change.old_value}}</div>
+                                                    <div class="col-md-3">${{change.new_value}}</div>
                                                 </div>
                                         {% if forloop.last %}
                                             </td>
