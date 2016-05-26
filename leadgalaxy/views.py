@@ -87,7 +87,10 @@ def api(request, target):
             user = None
 
     if target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress'] and not user:
-        return JsonResponse({'error': 'Unauthenticated API call.'}, status=401)
+        return JsonResponse({'error': (
+            'Unauthenticated API call. \nMake sure you are logged-in '
+            'before using Chrome Extension'
+        )}, status=401)
 
     if user:
         raven_client.user_context({
@@ -325,7 +328,10 @@ def proccess_api(request, user, method, target, data):
             user = utils.get_user_from_token(token)
 
             if not user:
-                return JsonResponse({'error': 'Unvalide access token: %s' % (token)}, status=401)
+                return JsonResponse({'error': (
+                    'Unvalide Access Token.\nMake sure you are logged-in '
+                    'before using Chrome Extension'
+                )}, status=401)
         else:
             if request.user.is_authenticated():
                 user = request.user
