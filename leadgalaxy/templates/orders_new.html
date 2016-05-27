@@ -596,6 +596,7 @@
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
+{% if store_order_synced and store_sync_enabled %}
 <script type="text/javascript">
     $(function() {
         if (localStorage['orders-new-implementation'] !== 'yes') {
@@ -636,6 +637,7 @@
         }
     });
 </script>
+{% endif %}
 
 {% endblock %}
 
