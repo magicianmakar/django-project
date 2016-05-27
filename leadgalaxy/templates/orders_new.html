@@ -30,7 +30,7 @@
 
                             {% if store_order_synced %}
                                 {% if store_sync_enabled %}
-                                    <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
+                                    <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
                                         title="Switch to the Old Order page"
                                         href="{% url_replace 'old' 1 %}">Switch Orders Page</a>
                                 {% else %}
@@ -598,21 +598,31 @@
 
 <script type="text/javascript">
     $(function() {
-        if (localStorage['orders-filter-save_end'] !== 'yes') {
+        if (localStorage['orders-new-implementation'] !== 'yes') {
             $('.filter-form').show('fast');
                 setTimeout(function() {
                     var tour = new Tour({
-                        name: 'orders-filter-save',
+                        name: 'orders-new-implementation',
                         steps: [{
-                            element: '.save-filter-btn',
-                            title: 'Save you filter!',
-                            content: 'You can now save your default filter using this button.',
-                            placement: 'top',
+                            element: 'select[name="sort"]',
+                            title: 'More Sorting options!',
+                            content: 'Sort Orders by Creation date, Last update, Total price or Country.',
+                            placement: 'right',
                         }, {
-                            element: '.reset-filter-btn',
-                            title: 'Reset filter',
-                            content: 'Reset Orders page filters to the default settings',
-                            placement: 'top',
+                            element: 'input[name="query_customer"]',
+                            title: 'New filters!',
+                            content: 'You can filter orders by Customer name, email or country.',
+                            placement: 'right',
+                        }, {
+                            element: 'label[for="connected-orders"]',
+                            title: 'Connected Only!',
+                            content: 'This option will allow you to show only orders with one or more connected products.',
+                            placement: 'right',
+                        }, {
+                            element: '.swith-implemenation',
+                            title: 'Switch to Old Implementation!',
+                            content: 'You can switch between the new and old implementation using this button.',
+                            placement: 'bottom',
                         }],
                         onEnd: function () {
                             $('.filter-form').hide('slide', function() {
@@ -621,7 +631,7 @@
                         }
                 });
                 tour.init();
-                tour.start(true);
+                tour.start();
             }, 1000);
         }
     });
