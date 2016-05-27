@@ -224,24 +224,22 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'delete-store':
         store_id = data.get('store')
-        move_to = data.get('move-to')
 
-        store = ShopifyStore.objects.get(id=store_id)
+        store = ShopifyStore.objects.get(id=store_id, user=user)
         user.can_delete(store)
 
         # Sub users can't reach here
-        move_to_store = ShopifyStore.objects.get(id=move_to, user=user)
-        ShopifyStore.objects.filter(id=store_id, user=user).update(is_active=False)
 
-        target_store = ShopifyStore.objects.get(id=store_id, user=user)
-        target_store.is_active = False
-        target_store.save()
+        store.is_active = False
+        store.save()
 
-        target_store.shopifyproduct_set.update(store=move_to_store)
-        target_store.shopifyproductexport_set.update(store=move_to_store)
-        target_store.shopifyproductimage_set.update(store=move_to_store)
+        # Make all products related to this store non-connected
+        store.shopifyproduct_set.update(store=None)
 
-        utils.detach_webhooks(target_store)
+        # Delete products connection with this store
+        ShopifyProductExport.objects.filter(store=store).delete()
+
+        utils.detach_webhooks(store)
 
         stores = []
         for i in user.profile.get_active_stores():

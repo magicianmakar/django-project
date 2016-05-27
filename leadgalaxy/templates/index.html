@@ -379,29 +379,6 @@
     </div>
 </div>
 
-<div id="modal-store-move" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">Delete Store</h3>
-                        <p>Where to move the linked products in this store?</p>
-
-                        <label for="">Select Store:</label>
-                        <select class="form-control" name="" id="move-select-store" style="display: inline-block; width: 191px; ">
-                            {% for item in stores %}
-                            <option value="{{item.id}}">{{item.title}}</option>
-                            {% endfor %}
-                        </select>
-
-                        <button id="store-move-btn" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Save</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extracss %}

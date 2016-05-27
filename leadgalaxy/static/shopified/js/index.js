@@ -53,47 +53,39 @@ $('#add-store').click(function(e) {
 
 
 $('.delete-store').click(function (e) {
-    document.current_store = $(this).attr('store-id');
-    $('#modal-store-move').modal('show');
-});
+    var store = $(this).attr('store-id');
 
-$('#store-move-btn').click(function (e) {
-    var btn = $(this);
-    var store = parseInt(document.current_store);
-    var move_to = parseInt($('#move-select-store').val());
-
-    if (move_to <= 0) {
-        swal('Delete Store', 'Please select a store', 'warning');
-        return;
-    }
-    if (move_to == store && $('#move-select-store option').length > 1) {
-        swal('Delete Store', 'Please choose an other store ', 'warning');
-        return;
-    }
-
-    btn.button('loading');
-
-    $.ajax({
-        url: '/api/delete-store',
-        type: 'POST',
-        data: {
-            'store': store,
-            'move-to': move_to
-        },
-        success: function(data) {
-            if ('error' in data) {
-                displayAjaxError('Delet Store', data);
-            } else {
-                $('tr[store-id="'+store+'"]').remove();
-            }
-        },
-        error: function(data) {
-            displayAjaxError('Delet Store', data);
-        },
-        complete: function () {
-            $('#modal-store-move').modal('hide');
-            btn.button('reset');
+    swal({
+        title: "Delete Store",
+        text: "Are you sure that you want to delete this store?",
+        type: "warning",
+        showCancelButton: true,
+        closeOnCancel: true,
+        closeOnConfirm: false,
+        animation: false,
+        showLoaderOnConfirm: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Delete",
+        cancelButtonText: "Cancel"
+    }, function(isConfirmed) {
+        if (!isConfirmed) {
+            return;
         }
+
+        $.ajax({
+            url: '/api/delete-store',
+            type: 'POST',
+            data: {
+                'store': store,
+            },
+            success: function(data) {
+                $('tr[store-id="'+store+'"]').remove();
+                swal('Delete Store', 'Store has been deleted', 'success');
+            },
+            error: function(data) {
+                displayAjaxError('Delete Store', data);
+            }
+        });
     });
 });
 
