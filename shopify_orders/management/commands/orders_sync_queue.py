@@ -79,12 +79,12 @@ class Command(BaseCommand):
             return
 
         webhooks = utils.attach_webhooks(store)
-        self.write_success('    + {} webhooks for {}'.format(len(webhooks), store.title))
+        self.write_success(u'    + {} webhooks for {}'.format(len(webhooks), store.title))
 
         try:
             ShopifySyncStatus.objects.get(store=store, sync_type=self.sync_type)
         except ShopifySyncStatus.DoesNotExist:
-            self.write_success('Sync Store: {}'.format(store.title))
+            self.write_success(u'Sync Store: {}'.format(store.title))
 
             sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
             sync.save()
