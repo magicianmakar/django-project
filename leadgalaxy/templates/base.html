@@ -103,29 +103,55 @@
                 </li>
                 {% endif %}
 
-                <li {% if page == 'index' %}class="active"{% endif %}><a href="{% url 'index' %}"> <i class="fa fa-th-large"></i> <span class="nav-label">Stores</span></a></li>
-
-                <li {% if page == 'product' %}class="active"{% endif %}><a href="{% url 'product' %}"> <i class="fa fa-shopping-cart"></i> <span class="nav-label">Products</span></a></li>
-
-                {% if request.user|can:'bulk_editing.view' %}
-                <li {% if page == 'bulk' %}class="active"{% endif %}><a href="{% url 'bulk_edit' %}"> <i class="fa fa-table"></i> <span class="nav-label">Bulk edit</span></a> </li>
-                {% endif %}
-
-                {% if request.user|can:'price_changes.use' %}
-                <li {% if page == 'product_alerts' %}class="active"{% endif %}>
-                    <a href="{% url 'product_alerts' %}">
-                        <i class="fa fa-line-chart"></i>
-                        <span class="nav-label">Alerts</span>
-                        {% cache 1800 alert_info user.id %}
-                        {% with user.profile.get_new_alerts as alerts %}
-                            {% if alerts %}
-                            <span class="label label-info pull-right">{{alerts}}</span>
-                            {% endif %}
-                        {% endwith %}
-                        {% endcache %}
+                <li {% if page == 'index' %}class="active"{% endif %}>
+                    <a href="{% url 'index' %}">
+                        <i class="fa fa-th-large"></i>
+                        <span class="nav-label">Stores</span>
                     </a>
                 </li>
-                {% endif %}
+
+                {#  #}
+                <li {% if page == 'product' or page == 'bulk' or page == 'boards' %}class="active"{% endif %}>
+                    <a href="{% url 'product' %}">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span class="nav-label">Products</span>
+                        <span class="fa arrow"></span>
+                    </a>
+
+                    <ul class="nav nav-second-level {% if page != 'product' and page != 'bulk' and page != 'boards' %}collapse{% endif %}">
+                        <li {% if page == 'product' %}class="active"{% endif %}>
+                            <a href="{% url 'product' %}">
+                                <i class="fa fa-list"></i>
+                                <span class="nav-label">All Products</span>
+                            </a>
+                        </li>
+
+                        <li {% if page == 'boards' %}class="active"{% endif %}>
+                            <a href="{% url 'boards_list' %}">
+                                <i class="fa fa-edit"></i>
+                                <span class="nav-label">Boards</span>
+                            </a>
+                        </li>
+
+                        {% if request.user|can:'bulk_editing.view' %}
+                        <li {% if page == 'bulk' %}class="active"{% endif %}>
+                            <a href="{% url 'bulk_edit' %}">
+                                <i class="fa fa-table"></i>
+                                <span class="nav-label">Bulk edit</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </li>
+                {# {% else %} #}
+                {# <li> #}
+                    {# <a href="{% url 'product' %}"> #}
+                        {# <i class="fa fa-shopping-cart"></i> #}
+                        {# <span class="nav-label">Products</span> #}
+                        {# <span class="fa arrow"></span> #}
+                    {# </a> #}
+                {# </li> #}
+                {# {% endif %} #}
 
                 {% if request.user|can:'orders.view' %}
                 <li {% if page == 'orders' %}class="active"{% endif %}>
@@ -138,6 +164,22 @@
                     <a href="{% url 'orders_track' %}" class="">
                         <i class="fa fa-truck"></i>
                         <span class="nav-label">Tracking</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if request.user|can:'price_changes.use' %}
+                <li {% if page == 'product_alerts' %}class="active"{% endif %}>
+                    <a href="{% url 'product_alerts' %}">
+                        <i class="fa fa-bell"></i>
+                        <span class="nav-label">Alerts</span>
+                        {% cache 1800 alert_info user.id %}
+                        {% with user.profile.get_new_alerts as alerts %}
+                            {% if alerts %}
+                            <span class="label label-info pull-right">{{alerts}}</span>
+                            {% endif %}
+                        {% endwith %}
+                        {% endcache %}
                     </a>
                 </li>
                 {% endif %}
@@ -156,13 +198,6 @@
                     </ul>
                 </li>
                 {% endif %}
-
-                <li {% if page == 'boards' %}class="active"{% endif %}>
-                    <a href="{% url 'boards_list' %}">
-                        <i class="fa fa-edit"></i>
-                        <span class="nav-label">Boards</span>
-                    </a>
-                </li>
 
                 {% if request.user.is_superuser %}
                 <li {% if 'acp' in page %}class="active"{% endif %}>
