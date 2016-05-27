@@ -78,13 +78,13 @@ class Command(BaseCommand):
         if store.id in self.synced_store or not store.is_active:
             return
 
-        webhooks = utils.attach_webhooks(store)
-        self.write_success(u'    + {} webhooks for {}'.format(len(webhooks), store.title))
-
         try:
             ShopifySyncStatus.objects.get(store=store, sync_type=self.sync_type)
         except ShopifySyncStatus.DoesNotExist:
             self.write_success(u'Sync Store: {}'.format(store.title))
+
+            webhooks = utils.attach_webhooks(store)
+            self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
 
             sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
             sync.save()
