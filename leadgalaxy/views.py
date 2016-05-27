@@ -1683,7 +1683,12 @@ def webhook(request, provider, option):
                 try:
                     shopify_orders_utils.update_shopify_order(store, shopify_order)
                 except AssertionError:
-                    raven_client.captureMessage('Store is being imported', extra={'store': store})
+                    if cache.get('being_imported_{}'.format(store.id)) is None:
+                        raven_client.captureMessage('Store is being imported', extra={'store': store})
+
+                        # Don't send too much events to Sentry
+                        cache.set('being_imported_{}'.format(store.id), True, timeout=1800)
+
                     return JsonResponse({'error': 'Store Still in Process'}, status=500)
                 except:
                     order_key = utils.random_hash()
