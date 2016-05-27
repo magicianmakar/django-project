@@ -75,7 +75,15 @@ class Command(BaseCommand):
                 raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
             finally:
-                order_sync.save()
+                try:
+                    order_sync.save()
+                except:
+                    transaction.rollback()
+
+                    order_sync.sync_status = 4
+                    order_sync.save()
+
+                    raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
             if self.total_order_fetch > 10000:
                 break
