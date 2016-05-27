@@ -63,13 +63,13 @@ class Command(BaseCommand):
                     self.write_success('Sync Orders for Plan: {}'.format(plan.title))
 
                     for profile in plan.userprofile_set.select_related('user').all():
-                        for store in profile.user.shopifystore_set.all():
+                        for store in profile.get_active_stores():
                             self.handle_store(store)
 
                 for bundle in p.featurebundle_set.all():
                     self.write_success('Sync Orders for Bundle: {}'.format(bundle.title))
                     for profile in bundle.userprofile_set.select_related('user').all():
-                        for store in profile.user.shopifystore_set.all():
+                        for store in profile.get_active_stores():
                             self.handle_store(store)
 
         self.write_success('Total Queued Store: {}'.format(len(self.synced_store)))
