@@ -47,7 +47,6 @@ def update_shopify_order(store, data):
             raise AssertionError('Store is being imported')
 
         elif sync_status.sync_status not in [2, 5]:  # Completed or Disabled
-            print 'SHOPIFY ORDERS: Store: {} Not Synced (Status: {})'.format(store.title, sync_status.sync_status)
             return
 
     except ShopifySyncStatus.DoesNotExist:
