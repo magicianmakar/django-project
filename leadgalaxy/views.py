@@ -3366,7 +3366,7 @@ def register(request, registration=None):
         registration = get_object_or_404(PlanRegistration, register_hash=registration)
 
         if registration.expired:
-            raise Http404('Registration link expired')
+            return HttpResponseRedirect('/')
 
     if request.method == 'POST':
         form = RegisterForm(request.POST)
