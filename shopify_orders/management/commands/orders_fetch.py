@@ -92,7 +92,7 @@ class Command(BaseCommand):
         limit = 240
         count = store.get_orders_count(status='any', fulfillment='any', financial='any')
 
-        self.write_success('Import {} Order for: {}'.format(count, store.title))
+        self.write_success(u'Import {} Order for: {}'.format(count, store.title))
         if not count:
             return
 

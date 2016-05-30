@@ -56,7 +56,7 @@ class Command(BaseCommand):
             except GroupPlan.DoesNotExist:
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
-            self.write_success('Sync Orders for plan: {}'.format(plan.title))
+            self.write_success(u'Sync Orders for plan: {}'.format(plan.title))
 
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
@@ -73,21 +73,21 @@ class Command(BaseCommand):
             except ShopifyStore.DoesNotExist:
                 raise CommandError('Store "%s" does not exist' % store_id)
 
-            self.write_success('Sync Orders for store: {}'.format(store.title))
+            self.write_success(u'Sync Orders for store: {}'.format(store.title))
 
             self.handle_store(store)
 
         for permission in options['permission']:
             for p in AppPermission.objects.filter(name=permission):
                 for plan in p.groupplan_set.all():
-                    self.write_success('Sync Orders for Plan: {}'.format(plan.title))
+                    self.write_success(u'Sync Orders for Plan: {}'.format(plan.title))
 
                     for profile in plan.userprofile_set.select_related('user').all():
                         for store in profile.get_active_stores():
                             self.handle_store(store)
 
                 for bundle in p.featurebundle_set.all():
-                    self.write_success('Sync Orders for Bundle: {}'.format(bundle.title))
+                    self.write_success(u'Sync Orders for Bundle: {}'.format(bundle.title))
                     for profile in bundle.userprofile_set.select_related('user').all():
                         for store in profile.get_active_stores():
                             self.handle_store(store)
