@@ -32,14 +32,21 @@ class Command(BaseCommand):
                 options[i] = []
 
         if options.get('count'):
+            total_orders = 0
             for sync in ShopifySyncStatus.objects.all():
                 store = sync.store
+
+                self.write_success(u'Orders count for: {}'.format(store.title))
+
                 try:
                     sync.orders_count = store.get_orders_count(all_orders=True)
+                    total_orders += sync.orders_count
                 except:
                     sync.orders_count = -1
 
                 sync.save()
+
+            self.write_success(u'Total Orders: {}'.format(total_orders))
 
             return
 
