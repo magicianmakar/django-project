@@ -24,6 +24,7 @@ class Command(BaseCommand):
                             action='store_true', help='Delete All Imported Orders and queue stores for re-import')
 
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
+        parser.add_argument('--max_orders', dest='max_orders', type=int, help='Sync Stores with Maximum Orders count')
 
     def handle(self, *args, **options):
         try:
@@ -53,10 +54,15 @@ class Command(BaseCommand):
 
         while True:
             try:
-                order_sync = ShopifySyncStatus.objects.filter(sync_type=self.sync_type, sync_status__in=options['sync_status']).latest('updated_at')
+                order_sync = ShopifySyncStatus.objects.filter(sync_type=self.sync_type, sync_status__in=options['sync_status'])
+                if options.get('max_orders'):
+                    order_sync = order_sync.filter(orders_count__lte=options.get('max_orders'))
+
+                order_sync = order_sync.latest('updated_at')
 
                 if not order_sync:
                     break
+
             except ShopifySyncStatus.DoesNotExist:
                 break
 
