@@ -319,7 +319,7 @@ class ShopifyStore(models.Model):
 
         super(ShopifyStore, self).save(*args, **kwargs)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.title
 
     def get_link(self, page=None, api=False):
@@ -563,8 +563,8 @@ class ShopifyProductExport(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
 
-    def __str__(self):
-        return '{}'.format(self.shopify_id)
+    def __unicode__(self):
+        return u'{}'.format(self.shopify_id)
 
 
 class ShopifyProductImage(models.Model):
@@ -575,7 +575,7 @@ class ShopifyProductImage(models.Model):
     image = models.CharField(max_length=512, blank=True, default='')
 
     def __unicode__(self):
-        return '{} | {}'.format(self.product, self.variant)
+        return u'{} | {}'.format(self.product, self.variant)
 
 
 class ShopifyOrderTrack(models.Model):
@@ -642,8 +642,8 @@ class ShopifyOrderTrack(models.Model):
         else:
             return None
 
-    def __str__(self):
-        return '{} | {}'.format(self.order_id, self.line_id)
+    def __unicode__(self):
+        return u'{} | {}'.format(self.order_id, self.line_id)
 
 
 class ShopifyBoard(models.Model):
@@ -658,6 +658,9 @@ class ShopifyBoard(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.title
 
 
 class ShopifyWebhook(models.Model):
@@ -674,7 +677,7 @@ class ShopifyWebhook(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.token
 
     def detach(self):
@@ -696,7 +699,7 @@ class AppPermission(models.Model):
     name = models.CharField(max_length=512, verbose_name="Permission")
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
-    def __str__(self):
+    def __unicode__(self):
         return self.description
 
 
@@ -729,7 +732,7 @@ class GroupPlan(models.Model):
     def permissions_count(self):
         return self.permissions.count()
 
-    def __str__(self):
+    def __unicode__(self):
         return self.title
 
 
@@ -754,7 +757,7 @@ class FeatureBundle(models.Model):
     def permissions_count(self):
         return self.permissions.count()
 
-    def __str__(self):
+    def __unicode__(self):
         return self.title
 
 
@@ -769,7 +772,7 @@ class UserUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __str__(self):
+    def __unicode__(self):
         return self.url.replace('%2F', '/').split('/')[-1]
 
 
@@ -842,13 +845,13 @@ class PlanRegistration(models.Model):
 
         self.data = json.dumps(data)
 
-    def __str__(self):
+    def __unicode__(self):
         if self.plan:
-            return 'Plan: {}'.format(self.plan.title)
+            return u'Plan: {}'.format(self.plan.title)
         elif self.bundle:
-            return 'Bundle: {}'.format(self.bundle.title)
+            return u'Bundle: {}'.format(self.bundle.title)
         else:
-            return '<PlanRegistration: {}>'.format(self.id)
+            return u'<PlanRegistration: {}>'.format(self.id)
 
 
 class AliexpressProductChange(models.Model):
@@ -864,8 +867,8 @@ class AliexpressProductChange(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __str__(self):
-        return '{}'.format(self.id)
+    def __unicode__(self):
+        return u'{}'.format(self.id)
 
 
 class PlanPayment(models.Model):
@@ -882,8 +885,8 @@ class PlanPayment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return '{} | {}'.format(self.provider, self.payment_id)
+    def __unicode__(self):
+        return u'{} | {}'.format(self.provider, self.payment_id)
 
 
 def user_is_subsuser(self):
