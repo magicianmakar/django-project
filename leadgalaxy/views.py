@@ -194,8 +194,10 @@ def proccess_api(request, user, method, target, data):
 
         if not can_add:
             return JsonResponse({
-                'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.'
-                         % (total_allowed, user_count)
+                'error': (
+                    'Your plan does not support connecting another Shopify store. '
+                    'Please contact support@shopifiedapp.com to learn how to connect more stores.'
+                )
             })
 
         store = ShopifyStore(title=name, api_url=url, user=user.models_user)
