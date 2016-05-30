@@ -354,7 +354,13 @@ class ShopifyStore(models.Model):
             'api_secret': api_secret
         }
 
-    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query=''):
+    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query='', all_orders=False):
+        if all_orders:
+            fulfillment = 'any'
+            financial = 'any'
+            status = 'any'
+            query = ''
+
         return requests.get(
             url=self.get_link('/admin/orders/count.json', api=True),
             params={

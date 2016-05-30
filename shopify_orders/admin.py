@@ -7,7 +7,7 @@ from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderL
 
 @admin.register(ShopifySyncStatus)
 class ShopifySyncStatusAdmin(admin.ModelAdmin):
-    list_display = ('store', 'sync_type', 'sync_status', 'created_at', 'updated_at')
+    list_display = ('store', 'sync_type', 'sync_status', 'orders_count', 'created_at', 'updated_at')
     list_filter = ('sync_type', 'sync_status')
     raw_id_fields = ('store',)
 

@@ -17,6 +17,7 @@ class ShopifySyncStatus(models.Model):
     store = models.ForeignKey(ShopifyStore)
     sync_type = models.CharField(max_length=32)
     sync_status = models.IntegerField(default=0, choices=SYNC_STATUS)
+    orders_count = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

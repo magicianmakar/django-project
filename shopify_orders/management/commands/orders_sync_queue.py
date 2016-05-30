@@ -18,6 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
+        parser.add_argument('--count', dest='count', action='store_true', help='Update Orders count')
 
     def handle(self, *args, **options):
         try:
@@ -29,6 +30,18 @@ class Command(BaseCommand):
         for i in ['plan_id', 'user_id', 'store_id', 'permission']:
             if not options[i]:
                 options[i] = []
+
+        if options.get('count'):
+            for sync in ShopifySyncStatus.objects.all():
+                store = sync.store
+                try:
+                    sync.orders_count = store.get_orders_count(all_orders=True)
+                except:
+                    sync.orders_count = -1
+
+                sync.save()
+
+            return
 
         for plan_id in options['plan_id']:
             try:
