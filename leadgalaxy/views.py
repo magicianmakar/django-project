@@ -187,6 +187,9 @@ def proccess_api(request, user, method, target, data):
         name = data.get('name').strip()
         url = data.get('url')
 
+        if user.is_subuser:
+            return JsonResponse({'error': 'Sub-Users can not add new stores.'})
+
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
@@ -194,9 +197,6 @@ def proccess_api(request, user, method, target, data):
                 'error': 'Your current plan allow up to %d linked stores, currently you have %d linked stores.'
                          % (total_allowed, user_count)
             })
-
-        if user.is_subuser:
-            return JsonResponse({'error': 'Sub-Users can not add new stores.'})
 
         store = ShopifyStore(title=name, api_url=url, user=user.models_user)
         user.can_add(store)
