@@ -184,7 +184,7 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse(stores, safe=False)
 
     if method == 'POST' and target == 'add-store':
-        name = data.get('name')
+        name = data.get('name').strip()
         url = data.get('url')
 
         can_add, total_allowed, user_count = user.profile.can_add_store()
