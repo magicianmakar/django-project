@@ -13,6 +13,7 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     order_id = '5415135175'
     source_tracking = 'MA7565915257226HK'
     user_id = 1
+    store_id = 1
 
 
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):

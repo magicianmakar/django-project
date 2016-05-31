@@ -773,7 +773,10 @@ def order_track_fulfillment(**kwargs):
     is_usps = False
 
     try:
-        line = ShopifyOrderLine.objects.get(line_id=line_id, order__order_id=order_id)
+        line = ShopifyOrderLine.objects.get(line_id=line_id,
+                                            order__order_id=order_id,
+                                            order__store_id=store_id)
+
         is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
 
     except ShopifyOrderLine.DoesNotExist:
