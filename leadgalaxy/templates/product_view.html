@@ -104,7 +104,10 @@
                 <label for="product-type">Tags</label>
                 <input type="text" class="form-control tag-it" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
             </div>
-
+            <div class="form-group col-xs-3">
+                <label for="product-vendor">Vendor</label>
+                <input type="text" class="form-control" value="" id="product-vendor" placeholder="Product Vendor">
+            </div>
         </div>
 
         <div class="row">
