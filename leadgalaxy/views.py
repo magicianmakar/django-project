@@ -344,7 +344,7 @@ def proccess_api(request, user, method, target, data):
 
             return JsonResponse(result, safe=False)
         else:
-            task = tasks.export_product.delay(req_data, target, user.id)
+            task = tasks.export_product.apply_async(args=[req_data, target, user.id], expires=60)
 
             return JsonResponse({
                 'status': 'ok',
