@@ -25,6 +25,7 @@ class Command(BaseCommand):
 
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--max_orders', dest='max_orders', type=int, help='Sync Stores with Maximum Orders count')
+        parser.add_argument('--max_import', dest='max_import', type=int, help='Maximum number of orders to import')
 
     def handle(self, *args, **options):
         try:
@@ -83,7 +84,7 @@ class Command(BaseCommand):
             finally:
                 order_sync.save()
 
-            if self.total_order_fetch > 10000:
+            if options.get('max_import') and self.total_order_fetch > options.get('max_import'):
                 break
 
     def fetch_orders(self, store):
