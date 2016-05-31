@@ -3332,7 +3332,9 @@ def get_product_feed(request, store_id, revision=1):
     try:
         assert len(store_id) == 8
         store = ShopifyStore.objects.get(store_hash__startswith=store_id)
-    except (AssertionError, ShopifyStore.DoesNotExist):
+
+        assert store.get_info
+    except (Exception, AssertionError, ShopifyStore.DoesNotExist):
         raise Http404('Feed not found')
 
     if not store.user.can('product_feeds.use'):
