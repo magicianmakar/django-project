@@ -1020,10 +1020,15 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
 
 
 def get_user_affiliate(user):
-    api_key, tracking_id = user.get_config(['aliexpress_affiliate_key',
-                                            'aliexpress_affiliate_tracking'])
+    if user.can('aliexpress_affiliate.use'):
+        api_key, tracking_id = user.get_config([
+            'aliexpress_affiliate_key',
+            'aliexpress_affiliate_tracking'
+        ])
+    else:
+        api_key, tracking_id = (None, None)
 
-    if not user.can('aliexpress_affiliate.use') or not api_key or not tracking_id:
+    if not api_key or not tracking_id:
         api_key, tracking_id = ['37954', 'shopifiedapp']
 
     return api_key, tracking_id
