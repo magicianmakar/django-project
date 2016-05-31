@@ -78,58 +78,62 @@ class FulfillmentTestCase(TestCase):
         self.assertTrue(utils.is_valide_tracking_number('7565915257226SG'))
         self.assertFalse(utils.is_valide_tracking_number('7565915257226'))
 
-    def test_auto_fulfillment(self):
-        # Line not found
-        track1 = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
-        data = utils.order_track_fulfillment(order_track=track1, user_config={})
+    def test_fulfill_without_saved_line(self):
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track1.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track.source_tracking))
         self.assertEqual(len(data['fulfillment']['line_items']), 1)
         self.assertEqual(data['fulfillment']['line_items'][0]['id'], '1654810')
 
-        # ePacket Order
-        track2 = self.create_track('5415135175', '1654811', 'MA7565915257226HK', 'US')
-        data = utils.order_track_fulfillment(order_track=track2, user_config={})
+    def test_normal_epacket_order(self):
+        track = self.create_track('5415135175', '1654811', 'MA7565915257226HK', 'US')
+        data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
         self.assertIsNone(data['fulfillment'].get('tracking_url'))
 
-        # Unrecognized Carrier
-        track3 = self.create_track('5415135176', '1654812', 'YT1614016214415424', 'US')
-        data = utils.order_track_fulfillment(order_track=track3, user_config={})
+    def test_unrecognized_carrier(self):
+        track = self.create_track('5415135176', '1654812', 'YT1614016214415424', 'US')
+        data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track3.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track.source_tracking))
 
-        # Non US address
-        track4 = self.create_track('5415135177', '1654813', 'MA7565915257226HK', 'MA')
-        data = utils.order_track_fulfillment(order_track=track4, user_config={})
+    def test_non_us_address(self):
+        track = self.create_track('5415135177', '1654813', 'MA7565915257226HK', 'MA')
+        data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
 
-        # Default Confirmation email
-        data = utils.order_track_fulfillment(order_track=track1, user_config={})
-        self.assertTrue('notify_customer' not in data['fulfillment'])
+    def test_default_confirmation_email(self):
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        data = utils.order_track_fulfillment(order_track=track, user_config={})
+        self.assertNotIn('notify_customer', data['fulfillment'])
 
-        data = utils.order_track_fulfillment(order_track=track1, user_config={'send_shipping_confirmation': 'default'})
-        self.assertTrue('notify_customer' not in data['fulfillment'])
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
+        self.assertNotIn('notify_customer', data['fulfillment'])
 
-        # Don't send Confirmation email
-        data = utils.order_track_fulfillment(order_track=track1, user_config={'send_shipping_confirmation': 'no'})
+    def test_dont_send_confirmation_email(self):
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'no'})
         self.assertFalse(data['fulfillment']['notify_customer'])
 
-        # Always send Confirmation email
-        data = utils.order_track_fulfillment(order_track=track1, user_config={'send_shipping_confirmation': 'yes'})
+    def test_always_send_confirmation_email(self):
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'yes'})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
-        # Always send Confirmation email if Tracking is valid
-        data = utils.order_track_fulfillment(order_track=track1, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
+    def test_always_send_confirmation_email_if_tracking_is_valid(self):
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
-        track5 = self.create_track('5415135176', '1654814', '7565915257226', 'MA')
-        data = utils.order_track_fulfillment(order_track=track5, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
+        track2 = self.create_track('5415135176', '1654814', '7565915257226', 'MA')
+        data = utils.order_track_fulfillment(order_track=track2, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
         self.assertFalse(data['fulfillment']['notify_customer'])
 
-        # Custom Aftership domain
-        data = utils.order_track_fulfillment(order_track=track1, user_config={'aftership_domain': {"2": 'uncommonnow'}})
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(track1.source_tracking))
+    def test_custom_aftership_domain(self):
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(track.source_tracking))
 
     def test_manual_fulfilement(self):
         fulfillment_data = {
@@ -153,8 +157,8 @@ class FulfillmentTestCase(TestCase):
         fulfillment_data['source_tracking'] = ''
         data = utils.order_track_fulfillment(**fulfillment_data)
         self.assertIsNone(data['fulfillment']['tracking_number'])
-        self.assertTrue('tracking_url' not in data['fulfillment'])
-        self.assertTrue('tracking_company' not in data['fulfillment'])
+        self.assertNotIn('tracking_url', data['fulfillment'])
+        self.assertNotIn('tracking_company', data['fulfillment'])
 
         # Aftership tracking
         fulfillment_data['source_tracking'] = 'MA7565915257226HK'
@@ -223,8 +227,8 @@ class OrdersTestCase(TestCase):
         utils.add_shopify_order_note(store, order_id, note2)
 
         order_note = utils.get_shopify_order_note(store, order_id)
-        self.assertTrue(note1 in order_note)
-        self.assertTrue(note2 in order_note)
+        self.assertIn(note1, order_note)
+        self.assertIn(note2, order_note)
 
         line = utils.get_shopify_order_line(store, order_id, line_id)
         self.assertEqual(line['id'], line_id)
@@ -238,9 +242,9 @@ class OrdersTestCase(TestCase):
 
         order_note = utils.get_shopify_order_note(store, order_id)
 
-        self.assertTrue(note1 in order_note)
-        self.assertTrue(note2 in order_note)
-        self.assertTrue(note3 in order_note)
+        self.assertIn(note1, order_note)
+        self.assertIn(note2, order_note)
+        self.assertIn(note3, order_note)
 
 
 class UtilsTestCase(TestCase):
