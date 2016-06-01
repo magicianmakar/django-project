@@ -6,6 +6,19 @@
 $('.add-store-btn').click(function (e) {
     e.preventDefault();
 
+    if($(this).data('plan') == 'Free Plan') {
+        return swal({
+            title: 'Add Store',
+            text: 'You are currently using the Free Plan from Shopified App. <br/>' +
+                  'This plan does not support connecting Shopify stores. <br/>' +
+                  'Please upgrade to a paid plan. <br/>For more information, ' +
+                  'contact <a href="mailto:support@shopifiedapp.com">support@shopifiedapp.com</a>',
+            type: 'warning',
+            animation: false,
+            html: true
+        });
+    }
+
     $('#add-store').show();
     $('#update-store').hide();
 
