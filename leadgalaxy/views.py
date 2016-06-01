@@ -1690,7 +1690,9 @@ def webhook(request, provider, option):
                                           .update(call_count=F('call_count')+1)
 
                 try:
-                    shopify_orders_utils.update_shopify_order(store, shopify_order)
+                    with cache.lock('update_shopify_order_{}_{}'.format(store.id, shopify_order['id']), timeout=10):
+                        shopify_orders_utils.update_shopify_order(store, shopify_order)
+
                 except AssertionError:
                     if cache.get('being_imported_{}'.format(store.id)) is None:
                         raven_client.captureMessage('Store is being imported', extra={'store': store})
