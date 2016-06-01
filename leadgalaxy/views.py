@@ -808,6 +808,13 @@ def proccess_api(request, user, method, target, data):
             if k.startswith('_'):
                 del config[k]
 
+        extension_release = cache.get('extension_release')
+        if extension_release is not None:
+            config['release'] = {
+                'min_version': extension_release,
+                'force_update': cache.get('extension_force_update', False)
+            }
+
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
