@@ -424,17 +424,16 @@
         <div id="tab-5" class="tab-pane">
             <div class="panel-body"  style="min-height:300px">
                 <div class="row">
-                    <div class="form-group col-xs-12">
-                        <label>Original Product link:</label>
-                        <input id="product-original-link" type="text" class="form-control" value="{{product.qelem.get_original_info.url|default:''}}">
+                    <div id="export-container" class="col-xs-10 col-xs-offset-1">
                     </div>
-                    <div class="form-group col-xs-12">
-                        <label>Product link in Shopify:</label>
-                        <input id="product-shopify-link" type="text" class="form-control" value="{{product.qelem.shopify_link|default:''}}">
+
+                    <div class="col-xs-5 col-xs-offset-1" style="padding: 0">
+                        <a class="btn btn-success export-add-btn" href="#" target="_blank">
+                            <i class="fa fa-plus"></i>
+                            Add Supplier
+                        </a>
                     </div>
-                    <div class="form-group col-xs-6">
-                        <button id="save-metadata" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
-                    </div>
+
                     {% if product.qelem.get_shopify_id %}
                         <div class="col-xs-6 text-right">
                         <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
@@ -442,10 +441,8 @@
                             <i class="fa fa-external-link"></i>
                         </a>
                         </div>
-                {% endif %}
-
+                    {% endif %}
                 </div>
-
             </div>
         </div>
 
@@ -513,6 +510,53 @@
         </div>
     </div>
 </div>
+
+{% verbatim %}
+<script id="product-export-template" type="text/x-handlebars-template">
+    <div class="row well export" style="padding: 10px 0">
+        <form class="product-export-form" method="post" data-export-id="{{id}}" data-product-id="{{product}}">
+            <div class="form-group col-xs-12">
+                <label>Product link in Shopify:</label>
+                <input type="text" class="form-control product-shopify-link" value="{{shopify.url}}">
+            </div>
+            <div class="form-group col-xs-12">
+                <label>Original Product link:</label>
+                <input type="text" class="form-control product-original-link" value="{{original.url}}">
+            </div>
+            <div class="form-group col-xs-12">
+                <label>Supplier Name:</label>
+                <input type="text" class="form-control product-supplier-name" value="{{supplier.name}}" style="width:250px">
+            </div>
+            <div class="form-group col-xs-12">
+                <label>Supplier Link:</label>
+                <input type="text" class="form-control product-supplier-link" value="{{supplier.url}}" style="width:350px">
+            </div>
+            <div class="form-group col-xs-12 text-right">
+                <button class="btn btn-success btn-xs export-save-btn">
+                    <i class="fa fa-save"></i> Save Changes
+                </button>
+
+                {{#if id}}
+                    {{#if is_default}}
+                    <a class="btn btn-default btn-xs" href="#">
+                        <i class="fa fa-check"></i> Default
+                    </a>
+                    {{else}}
+                    <button class="btn btn-primary btn-xs export-default-btn">
+                        <i class="fa fa-check"></i> Make Default
+                    </button>
+                    {{/if}}
+                {{/if}}
+
+                <button class="btn btn-danger btn-xs export-delete-btn">
+                    <i class="fa fa-times"></i> Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</script>
+{% endverbatim %}
+
 {% endif %}
 
 {% endblock %}
@@ -602,6 +646,7 @@
 <script type="text/javascript">
     var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
     $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+
     var bootstrapTooltip = $.fn.tooltip.noConflict();
     $.fn.bootstrapTooltip = bootstrapTooltip;
 </script>
@@ -613,6 +658,7 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 
 <script src="{% static 'js/pixlr.js' %}"></script>
 
@@ -751,6 +797,27 @@ $(function() {
 
     $('.original-description').css('overflow', 'auto');
 });
+
+var exports = [
+{% for item in product.qelem.get_shopify_exports %}
+    {
+        id: {{item.id}},
+        product: config.product_id,
+        is_default: {% if item.id == product.qelem.shopify_export.id %}true{% else %}false{% endif %},
+        original: {
+            url: '{{item.original_url|escapejs}}'
+        },
+        shopify: {
+            id: {{item.shopify_id}},
+            url: '{{item.shopify_url|escapejs}}',
+        },
+        supplier: {
+            name: '{{item.supplier_name|escapejs}}',
+            url: '{{item.supplier_url|escapejs}}',
+        },
+    },
+{% endfor %}
+];
 
 </script>
 

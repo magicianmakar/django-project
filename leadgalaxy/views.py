@@ -706,33 +706,89 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
-        original_link = data.get('original-link')
+        original_link = utils.remove_link_query(data.get('original-link'))
+        shopify_link = data.get('shopify-link')
+
         if 'click.aliexpress.com' in original_link.lower():
             return JsonResponse({'error': 'The submitted Aliexpress link will not work properly with order fulfillment'})
 
-        product.set_original_url(original_link)
-
-        shopify_link = data.get('shopify-link')
+        if not original_link:
+            return JsonResponse({'error': 'Original Link is not set'})
 
         if not shopify_link:
-            if product.shopify_export:
-                product.shopify_export = None
+            return JsonResponse({'error': 'Shopify Link is not set'})
+
+        product.set_original_url(original_link)
+
+        if 'myshopify' not in shopify_link.lower():
+            shopify_link = utils.get_myshopify_link(user, product.store, shopify_link)
+            if not shopify_link:
+                return JsonResponse({'error': 'Invalid Custom domain link.'})
+
+        shopify_id = utils.get_shopify_id(shopify_link)
+        if not shopify_id:
+            return JsonResponse({'error': 'Invalid Shopify link.'})
+
+        if data.get('export'):
+            product_export, created = ShopifyProductExport.objects.update_or_create(
+                id=utils.safeInt(data.get('export')),
+                store=product.store,
+                defaults={
+                    'original_url': original_link,
+                    'shopify_id': shopify_id,
+                    'supplier_name': data.get('supplier-name'),
+                    'supplier_url': utils.remove_link_query(data.get('supplier-link')),
+                }
+            )
         else:
-            if 'myshopify' not in shopify_link.lower():
-                shopify_link = utils.get_myshopify_link(user, product.store, shopify_link)
-                if not shopify_link:
-                    return JsonResponse({'error': 'Invalid Custom domain link.'})
+            product_export = ShopifyProductExport.objects.create(
+                store=product.store,
+                original_url=original_link,
+                shopify_id=shopify_id,
+                supplier_name=data.get('supplier-name'),
+                supplier_url=data.get('supplier-link'),
+            )
 
-            shopify_id = product.set_shopify_id_from_url(shopify_link)
-            if not shopify_id:
-                return JsonResponse({'error': 'Invalid Shopify link.'})
-
-            product_export = ShopifyProductExport(original_url=original_link, shopify_id=shopify_id,
-                                                  store=product.store)
-            product_export.save()
-
+        if not product.shopify_export_id or not data.get('export'):
             product.shopify_export = product_export
 
+        product.save()
+
+        return JsonResponse({
+            'status': 'ok',
+            'reload': not data.get('export')
+        })
+    if method == 'DELETE' and target == 'product-metadata':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
+        product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
+        need_update = product.shopify_export == product_export
+
+        product_export.delete()
+
+        if need_update:
+            other_export = product.get_shopify_exports().first()
+            if other_export:
+                product.set_original_url(product_export.original_url)
+                product.shopify_export = other_export
+                product.save()
+
+        return JsonResponse({
+            'status': 'ok',
+        })
+
+    if method == 'POST' and target == 'product-metadata-default':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
+        product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
+        # Must recent export is the used one
+        product_export.created_at = timezone.now()
+        product_export.save()
+
+        product.set_original_url(product_export.original_url)
+        product.shopify_export = product_export
         product.save()
 
         return JsonResponse({

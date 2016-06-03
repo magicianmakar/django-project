@@ -1,7 +1,7 @@
 /* global $, config, toastr, swal, product:true, renderImages, allPossibleCases */
 /* global setup_full_editor, cleanImageLink */
 
-(function(config, product) {
+(function(config, product, exports) {
 'use strict';
 
 var image_cache = {};
@@ -518,35 +518,142 @@ $('#save-product-notes').click(function (e) {
     });
 });
 
-$('#save-metadata').click(function (e) {
-    var btn = $(this);
+$('.export-add-btn').click(function (e) {
+    e.preventDefault();
 
-    btn.bootstrapBtn('loading');
+    var el = $(export_template({product: config.product_id}));
 
-    $.ajax({
-        type: 'POST',
-        url: '/api/product-metadata',
-        context: btn,
-        data: {
-            'original-link': cleanUrlPatch($('#product-original-link').val()),
-            'shopify-link': $('#product-shopify-link').val(),
-            'product': config.product_id,
-        },
-        success: function(data) {
-            if (data.status == 'ok') {
-                toastr.success('Modification saved.','Product Metadata');
-            } else {
-                displayAjaxError('Product Metadata', data);
-            }
-        },
-        error: function(data) {
-            displayAjaxError('Product Metadata', data);
-        },
-        complete: function() {
-            btn.bootstrapBtn('reset');
-        }
-    });
+    $('#export-container').append(el);
+
+    bindExportEvents(el);
 });
+
+function bindExportEvents(target) {
+    target = typeof(target) === 'undefined' ? document : target;
+
+    $('.export-save-btn', target).click(function (e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        var form = $(this).parents('.product-export-form');
+
+        btn.bootstrapBtn('loading');
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/product-metadata',
+            context: btn,
+            data: {
+                'original-link': $('.product-original-link', form).val(),
+                'shopify-link': $('.product-shopify-link', form).val(),
+                'supplier-name': $('.product-supplier-name', form).val(),
+                'supplier-link': $('.product-supplier-link', form).val(),
+                'product': form.data('product-id'),
+                'export': form.data('export-id'),
+            },
+            success: function(data) {
+                toastr.success('Modification saved.','Product Connections');
+
+                if (data.reload) {
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 200);
+                }
+            },
+            error: function(data) {
+                displayAjaxError('Product Connections', data);
+            },
+            complete: function() {
+                btn.bootstrapBtn('reset');
+            }
+        });
+    });
+
+    $('.export-default-btn', target).click(function (e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        var form = $(this).parents('.product-export-form');
+
+        btn.bootstrapBtn('loading');
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/product-metadata-default',
+            context: btn,
+            data: {
+                'product': form.data('product-id'),
+                'export': form.data('export-id'),
+            },
+            success: function(data) {
+                toastr.success('Default Supplier Changed.','Product Connections');
+
+                setTimeout(function() {
+                    window.location.reload();
+                }, 200);
+            },
+            error: function(data) {
+                displayAjaxError('Product Connections', data);
+            },
+            complete: function() {
+                btn.bootstrapBtn('reset');
+            }
+        });
+    });
+
+    $('.export-delete-btn', target).click(function (e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        var form = $(this).parents('.product-export-form');
+
+        if (!form.data('export-id')) {
+            $(this).parents('.export').remove();
+            return;
+        }
+        swal({
+            title: 'Delete Supplier',
+            text: 'Are you sure you want to delete this Supplier?',
+            type: "warning",
+            showCancelButton: true,
+            animation: false,
+            cancelButtonText: "Cancel",
+            confirmButtonText: 'Yes',
+            confirmButtonColor: "#DD6B55",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirm) {
+            if (isConfirm) {
+                btn.bootstrapBtn('loading');
+
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/product-metadata?' + $.param({
+                        'product': form.data('product-id'),
+                        'export': form.data('export-id'),
+                    }),
+                    context: btn,
+                    success: function(data) {
+                        toastr.success('Supplier Deleted.','Product Connections');
+                        swal.close();
+
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 200);
+                    },
+                    error: function(data) {
+                        displayAjaxError('Product Connections', data);
+                    },
+                    complete: function() {
+                        btn.bootstrapBtn('reset');
+                    }
+                });
+            }
+        });
+    });
+}
 
 $('#modal-add-image').on('show.bs.modal', function (e) {
     $('#modal-add-image .description-images-add').empty();
@@ -823,6 +930,7 @@ function pixlrCheck(key) {
 }
 
 document.renderImages = renderImages;
+var export_template = Handlebars.compile($("#product-export-template").html());
 
 $(function() {
     setup_full_editor('product-description');
@@ -874,5 +982,12 @@ $(function() {
             });
         }
     });
+
+    $.each(exports, function () {
+        $('#export-container').append(export_template(this));
+    });
+
+    bindExportEvents();
+
 });
-})(config, product);
+})(config, product, exports);

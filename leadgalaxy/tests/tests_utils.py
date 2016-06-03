@@ -313,3 +313,9 @@ class UtilsTestCase(TestCase):
         self.assertFalse(utils.upload_from_url('http://i.ebayimg.com/files/g/RHIAAOSwQaJXRBkE/test.zip?test.png'))
         self.assertFalse(utils.upload_from_url('http://attaker.com/files/g/RHIAAOSwQaJXRBkE/test.png'))
         self.assertFalse(utils.upload_from_url('http://attaker.com/files/g/RHIAAOSwQaJXRBkE/http%s/test.png' % aviary_url[0]))
+
+    def test_get_shopify_id(self):
+        self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/5321947333'), 5321947333)
+        self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/5321947333/variants/16557264133'), 5321947333)
+        self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/'), 0)
+        self.assertEqual(utils.get_shopify_id(None), 0)

@@ -435,6 +435,20 @@ def get_myshopify_link(user, default_store, link):
     return None
 
 
+def get_shopify_id(url):
+    ''' Get Shopify Product ID from a url '''
+    if url and url.strip():
+        try:
+            if '/variants/' in url:
+                return safeInt(re.findall('products/([0-9]+)/variants', url)[0])
+            else:
+                return safeInt(re.findall('products/([0-9]+)$', url)[0])
+        except:
+            return 0
+    else:
+        return 0
+
+
 def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
 

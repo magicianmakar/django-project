@@ -2,7 +2,8 @@
   "name": "shopified-app",
   "version": "0.0.0",
   "dependencies": {
-    "qtip2": "^2.2.1"
+    "qtip2": "^2.2.1",
+    "handlebars": "^4.0.5"
   },
   "devDependencies": {}
 }

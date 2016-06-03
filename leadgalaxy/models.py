@@ -515,16 +515,13 @@ class ShopifyProduct(models.Model):
         data = json.loads(self.data)
         return data.get('store')
 
-    def set_original_url(self, url):
+    def set_original_url(self, url, commit=False):
         data = json.loads(self.data)
-        if url != data.get('original_url'):
-            data['original_url'] = url
-            self.data = json.dumps(data)
+        data['original_url'] = url
+        self.data = json.dumps(data)
+
+        if commit:
             self.save()
-
-            return True
-
-        return False
 
     def set_shopify_id_from_url(self, url):
         if url and url.strip():
@@ -541,6 +538,15 @@ class ShopifyProduct(models.Model):
 
         return pid
 
+    def get_shopify_exports(self):
+        shopify_id = self.get_shopify_id()
+        if shopify_id:
+            return ShopifyProductExport.objects.filter(
+                shopify_id=self.shopify_export.shopify_id,
+                store__user=self.user)
+        else:
+            return None
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -556,15 +562,21 @@ class ShopifyProductExport(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    original_url = models.CharField(max_length=512, blank=True, default='')
-    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopify Product ID')
-
     store = models.ForeignKey(ShopifyStore)
+
+    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopify Product ID')
+    original_url = models.CharField(max_length=512, blank=True, default='')
+    supplier_name = models.CharField(max_length=512, null=True, blank=True, default='')
+    supplier_url = models.CharField(max_length=512, null=True, blank=True, default='')
+    is_active = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
 
     def __unicode__(self):
         return u'{}'.format(self.shopify_id)
+
+    def shopify_url(self):
+        return self.store.get_link('/admin/products/{}'.format(self.shopify_id))
 
 
 class ShopifyProductImage(models.Model):
