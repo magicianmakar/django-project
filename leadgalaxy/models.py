@@ -450,10 +450,10 @@ class ShopifyProduct(models.Model):
         super(ShopifyProduct, self).save(*args, **kwargs)
 
     def shopify_link(self):
-        shopif_id = self.get_shopify_id()
+        shopify_id = self.get_shopify_id()
 
-        if self.store and shopif_id:
-            return self.store.get_link('/admin/products/{}'.format(shopif_id))
+        if self.store and shopify_id:
+            return self.store.get_link('/admin/products/{}'.format(shopify_id))
         else:
             return None
 
