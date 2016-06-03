@@ -333,16 +333,23 @@
                                     <div class="line container-fluid" line-id="{{item.id}}"
                                          line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}">
                                         <div class="row source-order">
+
+                                            {% with supplier=item.product.get_supplier_info %}
                                             <div class="col-md-3">
                                                 <span>Supplier:</span>
-                                                {% if item.product.get_supplier_info %}
-                                                    <a href="{{item.product.get_supplier_info.url}}" target="_blank">
-                                                        {{item.product.get_supplier_info.name|truncatechars:25}}
-                                                    </a>
+                                                {% if supplier %}
+                                                    <a {% if supplier.url %}
+                                                        href="{{supplier.url|default:'#'}}" target="_blank"
+                                                    {% else %}
+                                                        href="#"
+                                                    {% endif %}
+                                                    >{{supplier.name|truncatechars:25}}</a>
                                                 {% else %}
                                                     N/A
                                                 {% endif %}
                                             </div>
+                                            {% endwith %}
+
                                             <div class="col-md-3 line-order-id">
                                                 Order ID:
                                                 {% if item.shopify_order %}

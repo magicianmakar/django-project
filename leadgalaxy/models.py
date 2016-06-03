@@ -512,6 +512,16 @@ class ShopifyProduct(models.Model):
         return {}
 
     def get_supplier_info(self):
+        export = self.get_shopify_exports()
+        if export:
+            export = export.first()
+
+            if export:
+                return {
+                    'name': export.supplier_name,
+                    'url': export.supplier_url
+                }
+
         data = json.loads(self.data)
         return data.get('store')
 
