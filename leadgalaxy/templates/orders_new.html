@@ -606,7 +606,7 @@
 {% if store_order_synced and store_sync_enabled %}
 <script type="text/javascript">
     $(function() {
-        if (localStorage['orders-new-implementation'] !== 'yes') {
+        if (localStorage['orders-new-implementation_end'] !== 'yes') {
                 setTimeout(function() {
                     var tour = new Tour({
                         name: 'orders-new-implementation',
