@@ -14,6 +14,13 @@ def safeInt(v, default=0):
         return default
 
 
+def str_max(text, max_len):
+    if not text:
+        return ''
+    else:
+        return text[:max_len]
+
+
 def get_customer_name(customer):
     return u'{} {}'.format(
         customer.get('first_name', ''),
@@ -62,16 +69,16 @@ def update_shopify_order(store, data):
             'user': store.user,
             'order_number': data['number'],
             'customer_id': customer.get('id', 0),
-            'customer_name': get_customer_name(customer),
-            'customer_email': customer.get('email'),
+            'customer_name': str_max(get_customer_name(customer), 255),
+            'customer_email': str_max(customer.get('email'), 255),
             'financial_status': data['financial_status'],
             'fulfillment_status': data['fulfillment_status'],
             'total_price': data['total_price'],
             'note': data.get('note'),
             'tags': data['tags'],
-            'city': address.get('city'),
-            'zip_code': address.get('zip'),
-            'country_code': address.get('country_code'),
+            'city': str_max(address.get('city'), 63),
+            'zip_code': str_max(address.get('zip'), 31),
+            'country_code': str_max(address.get('country_code'), 31),
             'created_at': get_datetime(data['created_at']),
             'updated_at': get_datetime(data['updated_at']),
             'closed_at': get_datetime(data['closed_at']),
