@@ -81,6 +81,9 @@ def remove_link_query(link):
     if not link:
         return ''
 
+    if not link.startswith('http'):
+        link = u'http://{}'.format(link)
+
     parsed = urlparse(link)
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
