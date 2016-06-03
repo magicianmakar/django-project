@@ -74,14 +74,14 @@ class Command(BaseCommand):
                 self.fetch_orders(order_sync.store)
 
                 order_sync.sync_status = 2
+                order_sync.save()
 
             except:
+                raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
+
                 ShopifyOrder.objects.filter(store=order_sync.store).delete()
 
                 order_sync.sync_status = 4
-                raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
-
-            finally:
                 order_sync.save()
 
             if options.get('max_import') and self.total_order_fetch > options.get('max_import'):
@@ -126,12 +126,16 @@ class Command(BaseCommand):
             self.total_order_fetch += len(rep['orders'])
 
             with transaction.atomic():
-                for order in rep['orders']:
-                    if order['id'] not in self.imported_orders:
-                        self.import_order(order, store)
-                        self.imported_orders.append(order['id'])
-                    else:
-                        print 'Already Imported', order['id']
+                try:
+                    for order in rep['orders']:
+                        if order['id'] not in self.imported_orders:
+                            self.import_order(order, store)
+                            self.imported_orders.append(order['id'])
+                        else:
+                            print 'Already Imported', order['id']
+                except Exception as e:
+                    raven_client.captureException(e)
+                    raise e
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - start, 60))
 
