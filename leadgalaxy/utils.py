@@ -486,8 +486,11 @@ def get_shopify_products(store, page=1, limit=50, all_products=False, session=re
 
 
 def get_shopify_product(store, product_id):
-    rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
-    return rep.get('product')
+    if store:
+        rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
+        return rep.get('product')
+    else:
+        return None
 
 
 def get_product_images_dict(store, product):
