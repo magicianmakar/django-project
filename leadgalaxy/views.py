@@ -2642,14 +2642,17 @@ def user_profile(request):
     })
 
 
+@login_required
 def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
+@login_required
 def pixlr_close(request):
     return render(request, 'partial/pixlr_close.html')
 
 
+@login_required
 def pixlr_serve_image(request):
     if not request.user.can('pixlr_photo_editor.use'):
         raise PermissionDenied
