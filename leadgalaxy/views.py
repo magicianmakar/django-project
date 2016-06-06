@@ -701,7 +701,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-metadata':
         if not user.can('product_metadata.use'):
-            return JsonResponse({'error': 'Your current plan doesn\'t have this feature.'})
+            return JsonResponse({'error': 'Your current plan doesn\'t have this feature.'}, status=500)
 
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
@@ -710,24 +710,26 @@ def proccess_api(request, user, method, target, data):
         shopify_link = data.get('shopify-link')
 
         if 'click.aliexpress.com' in original_link.lower():
-            return JsonResponse({'error': 'The submitted Aliexpress link will not work properly with order fulfillment'})
+            return JsonResponse({
+                'error': 'The submitted Aliexpress link will not work properly with order fulfillment'
+            }, status=500)
 
         if not original_link:
-            return JsonResponse({'error': 'Original Link is not set'})
+            return JsonResponse({'error': 'Original Link is not set'}, status=500)
 
         if not shopify_link:
-            return JsonResponse({'error': 'Shopify Link is not set'})
+            return JsonResponse({'error': 'Shopify Link is not set'}, status=500)
 
         product.set_original_url(original_link)
 
         if 'myshopify' not in shopify_link.lower():
             shopify_link = utils.get_myshopify_link(user, product.store, shopify_link)
             if not shopify_link:
-                return JsonResponse({'error': 'Invalid Custom domain link.'})
+                return JsonResponse({'error': 'Invalid Custom domain link.'}, status=500)
 
         shopify_id = utils.get_shopify_id(shopify_link)
         if not shopify_id:
-            return JsonResponse({'error': 'Invalid Shopify link.'})
+            return JsonResponse({'error': 'Invalid Shopify link.'}, status=500)
 
         if data.get('export'):
             product_export, created = ShopifyProductExport.objects.update_or_create(
