@@ -551,11 +551,12 @@ class ShopifyProduct(models.Model):
     def get_shopify_exports(self):
         shopify_id = self.get_shopify_id()
         if shopify_id:
+            from django.db.models import Q
             return ShopifyProductExport.objects.filter(
-                shopify_id=self.shopify_export.shopify_id,
-                store__user=self.user)
+                Q(shopify_id=self.shopify_export.shopify_id, store__user=self.user) |
+                Q(product=self))
         else:
-            return None
+            return ShopifyProductExport.objects.filter(product=self)
 
     def update_data(self, data):
         if type(data) is not dict:
@@ -573,6 +574,7 @@ class ShopifyProductExport(models.Model):
         ordering = ['-created_at']
 
     store = models.ForeignKey(ShopifyStore)
+    product = models.ForeignKey(ShopifyProduct, null=True)
 
     shopify_id = models.BigIntegerField(default=0, verbose_name='Shopify Product ID')
     original_url = models.CharField(max_length=512, blank=True, default='')

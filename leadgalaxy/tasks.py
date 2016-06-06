@@ -187,8 +187,15 @@ def export_product(req_data, target, user_id):
             product_export.save()
 
             if product:
+                supplier = product.get_supplier_info()
+                if supplier:
+                    product_export.supplier_name = supplier.get('name')
+                    product_export.supplier_url = supplier.get('url')
+                    product_export.save()
+
                 product.shopify_export = product_export
                 product.save()
+
         else:
             # messages.success(request, 'Product updated in Shopify.')
             pass

@@ -702,6 +702,37 @@ var config = {
         '{% remove_link_query item %}',
     {% endfor %}
     ],
+
+    default_export: {
+        product: {{product.id}},
+        supplier: {
+            name: product.store && product.store.name ? product.store.name : '',
+            url: product.store && product.store.url ? product.store.url : '',
+        },
+        original: {
+            url: product.original_url
+        }
+    },
+    exports: [
+    {% for item in product.qelem.get_shopify_exports %}
+        {
+            id: {{item.id}},
+            product: {{product.id}},
+            is_default: {% if item.id == product.qelem.shopify_export.id %}true{% else %}false{% endif %},
+            original: {
+                url: '{{item.original_url|escapejs}}'
+            },
+            shopify: {
+                id: {{item.shopify_id}},
+                url: '{{item.shopify_url|escapejs}}',
+            },
+            supplier: {
+                name: '{{item.supplier_name|escapejs}}',
+                url: '{{item.supplier_url|escapejs}}',
+            },
+        },
+    {% endfor %}
+    ],
 };
 
 $(function() {
@@ -799,29 +830,8 @@ $(function() {
     $('.original-description').css('overflow', 'auto');
 });
 
-var exports = [
-{% for item in product.qelem.get_shopify_exports %}
-    {
-        id: {{item.id}},
-        product: config.product_id,
-        is_default: {% if item.id == product.qelem.shopify_export.id %}true{% else %}false{% endif %},
-        original: {
-            url: '{{item.original_url|escapejs}}'
-        },
-        shopify: {
-            id: {{item.shopify_id}},
-            url: '{{item.shopify_url|escapejs}}',
-        },
-        supplier: {
-            name: '{{item.supplier_name|escapejs}}',
-            url: '{{item.supplier_url|escapejs}}',
-        },
-    },
-{% endfor %}
-];
-
 $(function() {
-    if (exports.length && localStorage['new-connection-supplier_end'] !== 'yes') {
+    if (config.exports.length && localStorage['new-connection-supplier_end'] !== 'yes') {
             setTimeout(function() {
                 var tour = new Tour({
                     name: 'new-connection-supplier',

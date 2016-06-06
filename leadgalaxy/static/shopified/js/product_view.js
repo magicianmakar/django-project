@@ -1,7 +1,7 @@
 /* global $, config, toastr, swal, product:true, renderImages, allPossibleCases */
 /* global setup_full_editor, cleanImageLink */
 
-(function(config, product, exports) {
+(function(config, product) {
 'use strict';
 
 var image_cache = {};
@@ -521,7 +521,15 @@ $('#save-product-notes').click(function (e) {
 $('.export-add-btn').click(function (e) {
     e.preventDefault();
 
-    var el = $(export_template({product: config.product_id}));
+    var default_export = config.exports.length ? {
+        product: config.product_id
+    } : config.default_export;
+
+    if (config.exports.length) {
+        default_export.shopify = config.exports[0].shopify;
+    }
+
+    var el = $(export_template(default_export));
 
     $('#export-container').append(el);
 
@@ -983,11 +991,11 @@ $(function() {
         }
     });
 
-    $.each(exports, function () {
+    $.each(config.exports, function () {
         $('#export-container').append(export_template(this));
     });
 
     bindExportEvents();
 
 });
-})(config, product, exports);
+})(config, product);

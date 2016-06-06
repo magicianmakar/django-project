@@ -734,6 +734,7 @@ def proccess_api(request, user, method, target, data):
                 id=utils.safeInt(data.get('export')),
                 store=product.store,
                 defaults={
+                    'product': product,
                     'original_url': original_link,
                     'shopify_id': shopify_id,
                     'supplier_name': data.get('supplier-name'),
@@ -743,6 +744,7 @@ def proccess_api(request, user, method, target, data):
         else:
             product_export = ShopifyProductExport.objects.create(
                 store=product.store,
+                product=product,
                 original_url=original_link,
                 shopify_id=shopify_id,
                 supplier_name=data.get('supplier-name'),
