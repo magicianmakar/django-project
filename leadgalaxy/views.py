@@ -1021,7 +1021,7 @@ def proccess_api(request, user, method, target, data):
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
 
         if not data.get('order_id') and not data.get('line_id'):
-            limit_key = 'order_fulfill_limit_%d' % user.id
+            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
             limit = cache.get(limit_key)
 
             if limit is None:
