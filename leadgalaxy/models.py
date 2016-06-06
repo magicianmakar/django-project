@@ -533,21 +533,6 @@ class ShopifyProduct(models.Model):
         if commit:
             self.save()
 
-    def set_shopify_id_from_url(self, url):
-        if url and url.strip():
-            try:
-                pid = re.findall('/([0-9]+)$', url)[0]
-            except:
-                return False
-        else:
-            pid = 0
-
-        if self.shopify_export:
-            self.shopify_export.shopify_id = pid
-            self.shopify_export.save()
-
-        return pid
-
     def get_shopify_exports(self):
         shopify_id = self.get_shopify_id()
         if shopify_id:
