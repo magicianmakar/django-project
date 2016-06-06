@@ -1031,6 +1031,9 @@ def proccess_api(request, user, method, target, data):
                     cache.set(limit_key, limit, timeout=3600)
                     print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
 
+            if request.GET.get('forced') == 'true':
+                limit = limit * 2
+
             shopify_orders = shopify_orders[:limit]
 
         if data.get('order_id'):
