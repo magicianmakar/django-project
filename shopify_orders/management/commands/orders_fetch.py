@@ -35,12 +35,7 @@ class Command(BaseCommand):
 
     def start_command(self, *args, **options):
         if options['reset']:
-            if not options['store_id']:
-                self.write_success('Reset All Stores')
-
-                ShopifyOrder.objects.all().delete()
-                ShopifySyncStatus.objects.all().update(sync_status=0)
-            else:
+            if options['store_id']:
                 for store in options['store_id']:
                     self.write_success('Reset Store: {}'.format(store))
 
