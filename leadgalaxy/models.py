@@ -452,14 +452,14 @@ class ShopifyProduct(models.Model):
     def shopify_link(self):
         shopify_id = self.get_shopify_id()
 
-        if self.store and shopify_id:
+        if shopify_id:
             return self.store.get_link('/admin/products/{}'.format(shopify_id))
         else:
             return None
 
     def get_shopify_id(self):
         try:
-            if self.shopify_export and self.shopify_export.shopify_id:
+            if self.store and self.shopify_export and self.shopify_export.shopify_id:
                 return self.shopify_export.shopify_id
             else:
                 return None
