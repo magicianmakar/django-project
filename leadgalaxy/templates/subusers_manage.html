@@ -171,7 +171,8 @@
                             subuser: subuser_id,
                         },
                         success: function(data) {
-                            swal("Delete Sub User", "User has been deleted", "success");
+                            swal.close();
+                            toastr.success("Delete Sub User", "User has been deleted.");
 
                             setTimeout(function() {
                                 window.location.reload();

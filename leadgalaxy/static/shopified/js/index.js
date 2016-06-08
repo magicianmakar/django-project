@@ -93,7 +93,9 @@ $('.delete-store').click(function (e) {
             },
             success: function(data) {
                 $('tr[store-id="'+store+'"]').remove();
-                swal('Delete Store', 'Store has been deleted', 'success');
+
+                swal.close();
+                toastr.success('Store has been deleted.', 'Delete Store');
             },
             error: function(data) {
                 displayAjaxError('Delete Store', data);

@@ -28,7 +28,9 @@ $('.delete-product-btn').click(function(e) {
                     },
                     success: function(data) {
                         btn.parents('tr').remove();
-                        swal("Deleted!", "The product has been deleted.", "success");
+
+                        swal.close();
+                        toastr.success("The product has been deleted.", "Deleted!");
                     },
                     error: function(data) {
                         displayAjaxError('Delete Product', data);

@@ -193,7 +193,8 @@ $('.board-empty').click(function(e) {
             },
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {
-                    swal('Empty Board', 'The board is now empty', 'success');
+                    swal.close();
+                    toastr.success("The board is now empty.", "Empty Board");
 
                     $(btn.parents('.board-box').find('.ibox-content')[0]).html(
                         '<h3 class="text-center">No product in this board.</h3>'
@@ -239,7 +240,8 @@ $('.board-delete').click(function(e) {
                 success: function(data) {
                     if ('status' in data && data.status == 'ok') {
                         btn.parents('.board-box').remove();
-                        swal('Delete Board', 'Board has been deleted', 'success');
+                        swal.close();
+                        toastr.success('Board has been deleted.', 'Delete Board');
                     } else {
                         displayAjaxError('Delete Board', data);
                     }

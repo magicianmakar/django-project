@@ -214,9 +214,11 @@
             success: function (data) {
                 if (data.status == 'ok') {
                     $('#modal-fulfillment').modal('hide');
-                    swal('Fulfillment Status', 'Fulfillment Status changed to Fulfilled', 'success');
                     this.line.prop('fulfilled', true);
                     this.line.parents('tr').first().addClass('success');
+
+                    swal.close();
+                    toastr.success('Fulfillment Status changed to Fulfilled.', 'Fulfillment Status');
                 } else {
                     displayAjaxError('Fulfill Order', data);
                 }
@@ -255,9 +257,9 @@
                     {% if request.GET.hidden != '1' %}
                     $('tr[id="'+this.order_id+'"]').hide();
 
-                    swal('Archive Order', 'Order has been Archived.', 'success');
+                    toastr.success('Order has been Archived.', 'Archive Order');
                     {% else %}
-                    swal('Un-Archive Order', 'Order has been Un-Archived.', 'success');
+                    toastr.success('Order has been Un-Archived.', 'Un-Archive Order');
                     {% endif %}
                 } else {
                     displayAjaxError('Hide Order', data);

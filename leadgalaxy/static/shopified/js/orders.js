@@ -99,8 +99,10 @@ $('#fullfill-order-btn').click(function (e) {
         success: function (data) {
             if (data.status == 'ok') {
                 $('#modal-fulfillment').modal('hide');
-                swal('Fulfillment Status', 'Fulfillment Status changed to Fulfilled', 'success');
                 this.line.prop('fulfilled', true);
+
+                swal.close();
+                toastr.success('Fulfillment Status changed to Fulfilled.', 'Fulfillment Status');
             } else {
                 displayAjaxError('Fulfill Order', data);
             }
@@ -322,7 +324,9 @@ $('.mark-as-ordered').click(function (e) {
                     line.find('.line-tracking').text('Tracked');
 
                     findMarkedLines();
-                    swal('Marked as Ordered.', 'Item was marked as ordered in Shopified App', 'success');
+
+                    swal.close();
+                    toastr.success('Item was marked as ordered in Shopified App.', 'Marked as Ordered');
                 } else {
                     displayAjaxError('Mark as Ordered', data);
                 }
@@ -368,7 +372,8 @@ $('.add-order-note').click(function (e) {
             },
             success: function (data) {
                 if (data.status == 'ok') {
-                    swal('Add Note', 'Note added to the order in Shopify.', 'success');
+                    swal.close();
+                    toastr.success('Note added to the order in Shopify.', 'Add Note');
                 } else {
                     displayAjaxError('Add Note', data);
                 }
