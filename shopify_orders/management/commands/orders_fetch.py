@@ -98,6 +98,7 @@ class Command(BaseCommand):
 
         self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
         self.imported_orders = []
+        self.saved_orders = {}
 
         start = time.time()
 
@@ -122,19 +123,47 @@ class Command(BaseCommand):
 
             with transaction.atomic():
                 try:
+                    # Bulk import orders
+                    orders = []
                     for order in rep['orders']:
                         if order['id'] not in self.imported_orders:
-                            self.import_order(order, store)
+                            orders.append(self.prepare_order(order, store))
+
                             self.imported_orders.append(order['id'])
                         else:
                             print 'Already Imported', order['id']
+
+                    if len(orders):
+                        ShopifyOrder.objects.bulk_create(orders)
+                    else:
+                        print 'Empty Orders'
+
+                    self.load_saved_orders(store)
+
+                    #bulk import order lines
+                    lines = []
+                    for order in rep['orders']:
+                        saved_order = self.saved_orders[order['id']]
+                        for line in self.prepare_lines(order, saved_order):
+                            lines.append(line)
+
+                    if len(lines):
+                        ShopifyOrderLine.objects.bulk_create(lines)
+                    else:
+                        print 'Empty lines'
+
                 except Exception as e:
                     raven_client.captureException(e)
                     raise e
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - start, 60))
 
-    def import_order(self, data, store):
+    def load_saved_orders(self, store):
+        for order in ShopifyOrder.objects.filter(store=store, user=store.user):
+            if order.order_id not in self.saved_orders:
+                self.saved_orders[order.order_id] = order
+
+    def prepare_order(self, data, store):
         customer = data.get('customer', {})
         address = data.get('shipping_address', {})
 
@@ -160,10 +189,12 @@ class Command(BaseCommand):
             cancelled_at=get_datetime(data['cancelled_at']),
         )
 
-        order.save()
+        return order
 
+    def prepare_lines(self, data, order):
+        lines = []
         for line in data.get('line_items', []):
-            l = ShopifyOrderLine(
+            lines.append(ShopifyOrderLine(
                 order=order,
                 line_id=line['id'],
                 shopify_product=safeInt(line['product_id']),
@@ -171,10 +202,12 @@ class Command(BaseCommand):
                 price=line['price'],
                 quantity=line['quantity'],
                 variant_id=safeInt(line.get('variant_id')),
-                variant_title=line['variant_title'])
+                variant_title=line['variant_title'],
+                product_id=self.products_map.get(safeInt(line['product_id']))
+            ))
 
-            l.product_id = self.products_map.get(safeInt(line['product_id']))
-            l.save()
+        return lines
+
 
     def write_success(self, message):
         self.stdout.write(self.style.MIGRATE_SUCCESS(message))
