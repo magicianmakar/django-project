@@ -99,6 +99,7 @@ class Command(BaseCommand):
         self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
         self.imported_orders = []
         self.saved_orders = {}
+        self.saved_orders_last = 0
 
         start = time.time()
 
@@ -143,7 +144,8 @@ class Command(BaseCommand):
                     #bulk import order lines
                     lines = []
                     for order in rep['orders']:
-                        saved_order = self.saved_orders[order['id']]
+                        saved_order = self.get_saved_order(store, order['id'])
+
                         for line in self.prepare_lines(order, saved_order):
                             lines.append(line)
 
@@ -159,9 +161,19 @@ class Command(BaseCommand):
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - start, 60))
 
     def load_saved_orders(self, store):
-        for order in ShopifyOrder.objects.filter(store=store, user=store.user):
+        self.saved_orders = {}
+        for order in ShopifyOrder.objects.filter(store=store, user=store.user).filter(id__gte=self.saved_orders_last):
             if order.order_id not in self.saved_orders:
                 self.saved_orders[order.order_id] = order
+                self.saved_orders_last = max(self.saved_orders_last, order.id)
+
+    def get_saved_order(self, store, order_id):
+        saved_order = self.saved_orders.get(order_id)
+        if saved_order is None:
+            print 'Get Order from database:', order_id
+            saved_order = ShopifyOrder.objects.get(store=store, order_id=order_id)
+
+        return saved_order
 
     def prepare_order(self, data, store):
         customer = data.get('customer', {})
