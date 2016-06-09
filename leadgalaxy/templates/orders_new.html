@@ -343,6 +343,12 @@
                                                     {% else %}
                                                         href="#"
                                                     {% endif %}
+
+                                                    {% if item.shopify_order %}
+                                                        class="order-supplier-store"
+                                                        source-order-id="{{item.shopify_order.source_id}}"
+                                                    {% endif %}
+
                                                     >{{supplier.name|truncatechars:25}}</a>
                                                 {% else %}
                                                     N/A
