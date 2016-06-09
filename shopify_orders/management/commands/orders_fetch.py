@@ -102,18 +102,21 @@ class Command(BaseCommand):
         self.rate_limit = ''
         self.req_time = 0
 
+        import_start = time.time()
+
         pages = int(math.ceil(count/float(limit)))
         for page in xrange(1, pages+1):
             if count > 1000:
-                print 'Page {} ({:0.0f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
+                imported_count = len(self.imported_orders)
+                print 'Page {} ({:0.2f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
                     page,
-                    limit * page / float(count) * 100.0,
+                    imported_count / float(count) * 100.0,
                     self.rate_limit,
                     self.req_time,
-                    len(self.imported_orders)
+                    imported_count
                 )
 
-            start = time.time()
+            req_start = time.time()
             rep = requests.get(
                 url=store.get_link('/admin/orders.json', api=True),
                 params={
@@ -126,7 +129,7 @@ class Command(BaseCommand):
             )
 
             self.rate_limit = rep.headers.get('X-Shopify-Shop-Api-Call-Limit')
-            self.req_time = time.time() - start
+            self.req_time = time.time() - req_start
 
             rep = rep.json()
             self.total_order_fetch += len(rep['orders'])
@@ -166,7 +169,7 @@ class Command(BaseCommand):
             else:
                 print 'Empty lines'
 
-        self.write_success('Orders imported in %d:%d' % divmod(time.time() - start, 60))
+        self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
 
     def load_saved_orders(self, store):
         self.saved_orders = {}
