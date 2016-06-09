@@ -48,7 +48,7 @@
                                         <tr class="header" alert-id="{{item.id}}">
                                             <td class="category">Availability</td>
                                             <td class="details-toggle">
-                                                {% if change.new_value %}
+                                                {% if not change.new_value %}
                                                     Product
                                                     <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a>
                                                     Is now <b style="color:green">Online</b>
