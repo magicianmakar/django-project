@@ -4,6 +4,7 @@ from django.db import transaction
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 import time
+import math
 import requests
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
@@ -83,9 +84,6 @@ class Command(BaseCommand):
                 break
 
     def fetch_orders(self, store):
-        from math import ceil
-        import time
-
         limit = 240
         count = store.get_orders_count(status='any', fulfillment='any', financial='any')
 
@@ -105,7 +103,7 @@ class Command(BaseCommand):
         self.req_time = 0
 
         session = requests.session()
-        pages = int(ceil(count/float(limit)))
+        pages = int(math.ceil(count/float(limit)))
         for page in xrange(1, pages+1):
             if count > 1000:
                 print 'Page {} ({:0.0f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
@@ -230,7 +228,6 @@ class Command(BaseCommand):
             ))
 
         return lines
-
 
     def write_success(self, message):
         self.stdout.write(self.style.MIGRATE_SUCCESS(message))
