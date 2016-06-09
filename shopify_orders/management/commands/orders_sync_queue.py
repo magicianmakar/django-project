@@ -106,7 +106,7 @@ class Command(BaseCommand):
             webhooks = utils.attach_webhooks(store)
             self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
 
-            sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
+            sync = ShopifySyncStatus(store=store, sync_type=self.sync_type, orders_count=store.get_orders_count(all_orders=True))
             sync.save()
 
         self.synced_store.append(store.id)
