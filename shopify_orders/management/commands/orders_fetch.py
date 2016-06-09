@@ -102,7 +102,6 @@ class Command(BaseCommand):
         self.rate_limit = ''
         self.req_time = 0
 
-        session = requests.session()
         pages = int(math.ceil(count/float(limit)))
         for page in xrange(1, pages+1):
             if count > 1000:
@@ -115,7 +114,7 @@ class Command(BaseCommand):
                 )
 
             start = time.time()
-            rep = session.get(
+            rep = requests.get(
                 url=store.get_link('/admin/orders.json', api=True),
                 params={
                     'page': page,
