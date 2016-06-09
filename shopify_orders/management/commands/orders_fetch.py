@@ -126,12 +126,14 @@ class Command(BaseCommand):
                 try:
                     # Bulk import orders
                     orders = []
+                    already_imported = []
                     for order in rep['orders']:
                         if order['id'] not in self.imported_orders:
                             orders.append(self.prepare_order(order, store))
 
                             self.imported_orders.append(order['id'])
                         else:
+                            already_imported.append(order['id'])
                             print 'Already Imported', order['id']
 
                     if len(orders):
@@ -144,10 +146,13 @@ class Command(BaseCommand):
                     #bulk import order lines
                     lines = []
                     for order in rep['orders']:
-                        saved_order = self.get_saved_order(store, order['id'])
+                        if order['id'] not in already_imported:
+                            saved_order = self.get_saved_order(store, order['id'])
 
-                        for line in self.prepare_lines(order, saved_order):
-                            lines.append(line)
+                            for line in self.prepare_lines(order, saved_order):
+                                lines.append(line)
+                        else:
+                            print 'Already Imported (line)', order['id']
 
                     if len(lines):
                         ShopifyOrderLine.objects.bulk_create(lines)
