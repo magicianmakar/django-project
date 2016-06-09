@@ -1717,7 +1717,7 @@ def webhook(request, provider, option):
                 product.save()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1)
+                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
                 # Delete Product images cache
                 ShopifyProductImage.objects.filter(store=store,
@@ -1733,7 +1733,7 @@ def webhook(request, provider, option):
                     pass
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1)
+                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
@@ -1750,7 +1750,7 @@ def webhook(request, provider, option):
                                         .update(shopify_status=fulfillment_status)
 
                     ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                          .update(call_count=F('call_count')+1)
+                                          .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
                 try:
                     with cache.lock('update_shopify_order_{}_{}'.format(store.id, shopify_order['id']), timeout=10):
