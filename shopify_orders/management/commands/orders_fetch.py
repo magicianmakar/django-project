@@ -84,6 +84,7 @@ class Command(BaseCommand):
 
     def fetch_orders(self, store):
         from math import ceil
+        import time
 
         limit = 240
         count = store.get_orders_count(status='any', fulfillment='any', financial='any')
@@ -100,15 +101,22 @@ class Command(BaseCommand):
         self.imported_orders = []
         self.saved_orders = {}
         self.saved_orders_last = 0
-
-        start = time.time()
+        self.rate_limit = ''
+        self.req_time = 0
 
         session = requests.session()
         pages = int(ceil(count/float(limit)))
         for page in xrange(1, pages+1):
             if count > 1000:
-                print 'Page {} ({:0.0f}%)'.format(page, limit*page/float(count) * 100.0)
+                print 'Page {} ({:0.0f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
+                    page,
+                    limit * page / float(count) * 100.0,
+                    self.rate_limit,
+                    self.req_time,
+                    len(self.imported_orders)
+                )
 
+            start = time.time()
             rep = session.get(
                 url=store.get_link('/admin/orders.json', api=True),
                 params={
@@ -118,8 +126,12 @@ class Command(BaseCommand):
                     'fulfillment': 'any',
                     'financial': 'any'
                 }
-            ).json()
+            )
 
+            self.rate_limit = rep.headers.get('X-Shopify-Shop-Api-Call-Limit')
+            self.req_time = time.time() - start
+
+            rep = rep.json()
             self.total_order_fetch += len(rep['orders'])
 
             with transaction.atomic():
