@@ -134,46 +134,40 @@ class Command(BaseCommand):
             rep = rep.json()
             self.total_order_fetch += len(rep['orders'])
 
-            with transaction.atomic():
-                try:
-                    # Bulk import orders
-                    orders = []
-                    already_imported = []
-                    for order in rep['orders']:
-                        if order['id'] not in self.imported_orders:
-                            orders.append(self.prepare_order(order, store))
+            # Bulk import orders
+            orders = []
+            already_imported = []
+            for order in rep['orders']:
+                if order['id'] not in self.imported_orders:
+                    orders.append(self.prepare_order(order, store))
 
-                            self.imported_orders.append(order['id'])
-                        else:
-                            already_imported.append(order['id'])
-                            print 'Already Imported', order['id']
+                    self.imported_orders.append(order['id'])
+                else:
+                    already_imported.append(order['id'])
+                    print 'Already Imported', order['id']
 
-                    if len(orders):
-                        ShopifyOrder.objects.bulk_create(orders)
-                    else:
-                        print 'Empty Orders'
+            if len(orders):
+                ShopifyOrder.objects.bulk_create(orders)
+            else:
+                print 'Empty Orders'
 
-                    self.load_saved_orders(store)
+            self.load_saved_orders(store)
 
-                    #bulk import order lines
-                    lines = []
-                    for order in rep['orders']:
-                        if order['id'] not in already_imported:
-                            saved_order = self.get_saved_order(store, order['id'])
+            #bulk import order lines
+            lines = []
+            for order in rep['orders']:
+                if order['id'] not in already_imported:
+                    saved_order = self.get_saved_order(store, order['id'])
 
-                            for line in self.prepare_lines(order, saved_order):
-                                lines.append(line)
-                        else:
-                            print 'Already Imported (line)', order['id']
+                    for line in self.prepare_lines(order, saved_order):
+                        lines.append(line)
+                else:
+                    print 'Already Imported (line)', order['id']
 
-                    if len(lines):
-                        ShopifyOrderLine.objects.bulk_create(lines)
-                    else:
-                        print 'Empty lines'
-
-                except Exception as e:
-                    raven_client.captureException(e)
-                    raise e
+            if len(lines):
+                ShopifyOrderLine.objects.bulk_create(lines)
+            else:
+                print 'Empty lines'
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - start, 60))
 
