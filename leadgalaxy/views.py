@@ -3404,6 +3404,8 @@ def subusers_perms(request, user_id):
 
 
 def get_product_feed(request, store_id, revision=1):
+    import time
+
     try:
         assert len(store_id) == 8
         store = ShopifyStore.objects.get(store_hash__startswith=store_id)
@@ -3415,18 +3417,38 @@ def get_product_feed(request, store_id, revision=1):
     if not store.user.can('product_feeds.use'):
         raise PermissionDenied('Product Feeds')
 
-    feed = utils.ProductFeed(store, revision)
-    feed.init()
+    feed_start = time.time()
 
-    for p in utils.get_shopify_products(store, all_products=True):
-        feed.add_product(p)
+    feed_key = 'product_feed_{}'.format(store.id)
+    feed_xml = cache.get(feed_key)
+    if feed_xml is None or request.GET.get('nocache') == '1':
+        feed = utils.ProductFeed(store, revision)
+        feed.init()
+
+        for p in utils.get_shopify_products(store, all_products=True):
+            feed.add_product(p)
+
+        feed_xml = feed.get_feed()
+
+        feed_time = time.time() - feed_start
+        if feed_time > 5:
+            # Cache the feed for 1 day if the generation take more than 5 seconds
+            cache.set(feed_key, feed_xml, timeout=86400)
+
+            raven_client.captureMessage('Cache Product Feed',
+                                        level='warning',
+                                        tags={'store_feed': store.title},
+                                        extra={'username': store.user.username,
+                                               'store': store.title,
+                                               'feed_time': '{:0.2f} seconds'.format(feed_time),
+                                               'feed_size': len(feed_xml)})
 
     if request.GET.get('stream') == '1':
         from django.http import StreamingHttpResponse
 
-        return StreamingHttpResponse(feed.get_feed(), content_type='application/xml')
+        return StreamingHttpResponse(feed_xml, content_type='application/xml')
     else:
-        return HttpResponse(feed.get_feed(), content_type='application/xml')
+        return HttpResponse(feed_xml, content_type='application/xml')
 
 
 @login_required
