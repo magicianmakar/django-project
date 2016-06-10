@@ -107,14 +107,6 @@ def random_filename(filename):
     return '{}.{}'.format(random_hash(), '.'.join(ext))
 
 
-def create_new_profile(user):
-    plan = GroupPlan.objects.filter(default_plan=1).first()
-    profile = UserProfile(user=user, plan=plan)
-    profile.save()
-
-    return profile
-
-
 def get_access_token(user):
     try:
         access_token = AccessToken.objects.filter(user=user).latest('created_at')

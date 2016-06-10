@@ -1006,3 +1006,13 @@ User.add_to_class("can_delete", user_can_delete)
 def invalidate_side_bar(sender, instance, created, **kwargs):
     from django.core.cache import cache
     cache.delete_pattern('template.cache.acp_users.*')
+
+
+@receiver(post_save, sender=User)
+def userprofile_creation(sender, instance, created, **kwargs):
+    if created:
+        plan = GroupPlan.objects.filter(default_plan=1).first()
+        if not plan:
+            plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
+
+        UserProfile.objects.create(user=instance, plan=plan)

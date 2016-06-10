@@ -3470,7 +3470,6 @@ def register(request, registration=None):
 
         if form.is_valid():
             new_user = form.save()
-            utils.create_new_profile(new_user)
 
             if registration is None or registration.get_usage_count() is None:
                 utils.apply_plan_registrations(form.cleaned_data['email'])
