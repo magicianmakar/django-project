@@ -3429,18 +3429,11 @@ def get_product_feed(request, store_id, revision=1):
             feed.add_product(p)
 
         feed_xml = feed.get_feed()
-        feed_size = [len(feed_xml)]
-
-        del feed
 
         feed_time = time.time() - feed_start
         if feed_time > 5:
             # Cache the feed for 1 day if the generation take more than 5 seconds
-            feed_xml_compressed = feed_xml.encode('utf8').encode('zlib')
-            feed_size.append(len(feed_xml_compressed))
-
-            cache.set(feed_key, feed_xml_compressed, timeout=86400)
-            del feed_xml_compressed
+            cache.set(feed_key, feed_xml, timeout=86400)
 
             raven_client.captureMessage('Cache Product Feed',
                                         level='warning',
@@ -3448,10 +3441,7 @@ def get_product_feed(request, store_id, revision=1):
                                         extra={'username': store.user.username,
                                                'store': store.title,
                                                'feed_time': '{:0.2f} seconds'.format(feed_time),
-                                               'feed_size': ' / '.join([str(i) for i in feed_size]),
-                                               'compress_ratio': '{:0.2f}%'.format((1-(float(feed_size[1])/float(feed_size[0]))) * 100.0)})
-    else:
-        feed_xml = feed_xml.decode('zlib').decode('utf8')
+                                               'feed_size': len(feed_xml)})
 
     if request.GET.get('stream') == '1':
         from django.http import StreamingHttpResponse
