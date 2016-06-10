@@ -184,9 +184,13 @@ class Command(BaseCommand):
                 break
 
             print '> Update pending order:', order_id
+            time.sleep(1)
 
-            order = get_shopify_order(store, order_id)
-            update_shopify_order(store, order, sync_check=False)
+            try:
+                order = get_shopify_order(store, order_id)
+                update_shopify_order(store, order, sync_check=False)
+            except:
+                raven_client.captureException()
 
     def load_saved_orders(self, store):
         self.saved_orders = {}
