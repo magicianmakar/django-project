@@ -286,8 +286,20 @@ class UtilsTestCase(TestCase):
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
+            utils.remove_link_query('http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg'),
+            'http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg')
+
+        self.assertEqual(
             utils.remove_link_query('www.aliexpress.com/store/1185416?spm=2114.10010108.0.627.LN13ZN'),
             'http://www.aliexpress.com/store/1185416')
+
+        self.assertEqual(
+            utils.remove_link_query('http://www.ebay.com/itm/131696353919?'),
+            'http://www.ebay.com/itm/131696353919')
+
+        self.assertEqual(
+            utils.remove_link_query('http://www.ebay.com/itm/131696353919'),
+            'http://www.ebay.com/itm/131696353919')
 
     def test_upload_from_url(self):
         aviary_url = ('://s3.amazonaws.com/feather-files-aviary-prod-us-east-1',

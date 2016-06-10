@@ -1,7 +1,7 @@
 from django import template
 from django.template import Context, Template
 import simplejson as json
-from urlparse import urlparse
+import re
 
 register = template.Library()
 
@@ -53,8 +53,10 @@ def remove_link_query(context, link):
     if not link:
         return ''
 
-    parsed = urlparse(link)
-    return parsed.scheme + "://" + parsed.netloc + parsed.path
+    if not link.startswith('http'):
+        link = u'http://{}'.format(link)
+
+    return re.sub('([?#].*)$', r'', link)
 
 
 @register.simple_tag(takes_context=True)
