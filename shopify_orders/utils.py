@@ -46,18 +46,21 @@ def sort_orders(orders, page):
     return resorted
 
 
-def update_shopify_order(store, data):
-    try:
-        sync_status = ShopifySyncStatus.objects.get(store=store)
+def update_shopify_order(store, data, sync_check=True):
+    if sync_check:
+        try:
+            sync_status = ShopifySyncStatus.objects.get(store=store)
 
-        if sync_status.sync_status == 1:
-            raise AssertionError('Store is being imported')
+            if sync_status.sync_status == 1:
+                sync_status.add_pending_order(data['id'])
+                return
 
-        elif sync_status.sync_status not in [2, 5]:  # Completed or Disabled
+            elif sync_status.sync_status not in [2, 5]:
+                # Retrn if not Completed or Disabled
+                return
+
+        except ShopifySyncStatus.DoesNotExist:
             return
-
-    except ShopifySyncStatus.DoesNotExist:
-        return
 
     customer = data.get('customer', {})
     address = data.get('shipping_address', {})

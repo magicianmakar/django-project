@@ -18,12 +18,44 @@ class ShopifySyncStatus(models.Model):
     sync_type = models.CharField(max_length=32)
     sync_status = models.IntegerField(default=0, choices=SYNC_STATUS)
     orders_count = models.IntegerField(default=0)
+    pending_orders = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
         return u'{} / {}'.format(self.sync_type, self.store)
+
+    def add_pending_order(self, order_id, commit=True):
+        try:
+            pending_orders = self.pending_orders.split(',')
+        except:
+            pending_orders = []
+
+        order_id = str(order_id)
+        if order_id not in pending_orders:
+            pending_orders.append(order_id)
+            self.pending_orders = ','.join(pending_orders)
+
+            if commit:
+                self.save()
+
+    def pop_pending_orders(self, commit=True):
+        try:
+            pending_orders = self.pending_orders.split(',')
+        except:
+            pending_orders = []
+
+        if len(pending_orders):
+            order = pending_orders.pop()
+            self.pending_orders = ','.join(pending_orders)
+        else:
+            order = None
+
+        if commit:
+            self.save()
+
+        return order
 
 
 class ShopifyOrder(models.Model):

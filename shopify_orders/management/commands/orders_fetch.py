@@ -8,7 +8,8 @@ import math
 import requests
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopify_orders.utils import get_customer_name, get_datetime, safeInt, str_max
+from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max
+from leadgalaxy.utils import get_shopify_order
 
 
 class Command(BaseCommand):
@@ -41,7 +42,7 @@ class Command(BaseCommand):
                     self.write_success('Reset Store: {}'.format(store))
 
                     ShopifyOrder.objects.filter(store_id=store).delete()
-                    ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0)
+                    ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0, pending_orders=None)
 
             self.write_success('Done')
             return
@@ -68,6 +69,7 @@ class Command(BaseCommand):
 
             try:
                 self.fetch_orders(order_sync.store)
+                self.update_pending_orders(order_sync)
 
                 order_sync.sync_status = 2
                 order_sync.save()
@@ -170,6 +172,21 @@ class Command(BaseCommand):
                 print 'Empty lines'
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
+
+    def update_pending_orders(self, order_sync):
+        store = order_sync.store
+
+        while True:
+            order_sync.refresh_from_db()
+            order_id = order_sync.pop_pending_orders()
+
+            if not order_id:
+                break
+
+            print '> Update pending order:', order_id
+
+            order = get_shopify_order(store, order_id)
+            update_shopify_order(store, order, sync_check=False)
 
     def load_saved_orders(self, store):
         self.saved_orders = {}
