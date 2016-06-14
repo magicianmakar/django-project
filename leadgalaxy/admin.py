@@ -5,23 +5,27 @@ from django import forms
 from django.core.urlresolvers import reverse
 
 
+USER_SEARCH_FIELDS = ['user__id', 'user__username', 'user__email']
+
+
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
-    list_display = ('title', 'montly_price', 'description', 'stores', 'products',
-                    'boards', 'slug', 'register_hash', 'permissions_count')
+    list_display = ('title', 'slug', 'description', 'permissions_count')
 
     exclude = ('default_plan',)
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('register_hash',)
+    search_fields = ['title', 'slug', 'description', 'register_hash']
 
 
 @admin.register(FeatureBundle)
 class FeatureBundleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'register_hash', 'permissions_count')
+    list_display = ('title', 'slug', 'permissions_count')
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('register_hash',)
+    search_fields = ['title', 'slug', 'register_hash']
 
 
 @admin.register(UserUpload)
@@ -76,9 +80,10 @@ class ShopifyOrderTrackAdmin(admin.ModelAdmin):
 @admin.register(ShopifyStore)
 class ShopifyStoreAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_active', 'created_at', 'updated_at')
-    search_fields = ['title', 'api_url', 'store_hash']
+    search_fields = ['title', 'api_url', 'store_hash'] + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
     readonly_fields = ('store_hash',)
+    list_filter = ('is_active',)
 
 
 @admin.register(ShopifyWebhook)
@@ -90,7 +95,7 @@ class ShopifyWebhookAdmin(admin.ModelAdmin):
 @admin.register(AccessToken)
 class AccessTokenAdmin(admin.ModelAdmin):
     list_display = ('token', 'user', 'created_at', 'updated_at')
-    search_fields = ['token']
+    search_fields = ['token'] + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
 
 
@@ -98,7 +103,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'country', 'timezone', 'status')
     list_filter = ('plan', 'status', 'bundles')
-    search_fields = ['emails', 'country', 'timezone']
+    search_fields = ['emails', 'country', 'timezone'] + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'subuser_parent')
 
     fieldsets = (
@@ -157,9 +162,9 @@ class AppPermissionAdmin(admin.ModelAdmin):
 
 @admin.register(PlanRegistration)
 class PlanRegistrationAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'user', 'email', 'register_hash', 'sender', 'expired', 'created_at', 'updated_at')
-    list_filter = ('expired',)
-    search_fields = ['data', 'email', 'register_hash']
+    list_display = ('__str__', 'user', 'email', 'sender', 'expired', 'created_at', 'updated_at')
+    list_filter = ('expired', 'plan', 'bundle')
+    search_fields = ['data', 'email', 'register_hash', 'sender__username', 'sender__email'] + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'sender')
     readonly_fields = ('register_hash',)
 
@@ -187,5 +192,5 @@ class PlanPaymentAdmin(admin.ModelAdmin):
     list_display = ('provider', 'payment_id', 'transaction_type', 'fullname',
                     'email', 'user', 'created_at')
     list_filter = ('provider', 'transaction_type',)
-    search_fields = ['fullname', 'email', 'payment_id', 'data']
+    search_fields = ['fullname', 'email', 'payment_id', 'data'] + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
