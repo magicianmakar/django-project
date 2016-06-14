@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load widget_tweaks %}
+{% load compress %}
 
 {% block main-container %}
 
@@ -55,6 +56,63 @@
     </div>
 </div>
 
+{% if invitation.exists %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Sent Invitations<small></small></h5>
+            </div>
+
+            <div class="ibox-content">
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Registration Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invitation %}
+                        {% if item.expired or not item.user.subuser_stores.exists %}
+                        <tr>
+                            <td>{{item.email|urlize}}</td>
+                            <td>{{item.created_at|date}}</td>
+                            <td>
+                                {% if not item.expired %}
+                                     Awaiting User Registration
+                                 {% else %}
+                                     User Doesn't have access to any store
+                                 {% endif %}
+                             </td>
+                            <td>
+                                {% if not item.expired %}
+                                    {% with reg_link="https://app.shopifiedapp.com/accounts/register/" %}
+                                    <a class="btn btn-success btn-xs" href="{{reg_link}}{{item.register_hash}}" target="_blank">
+                                        <i class="fa fa-external-link"></i> Link</a>
+
+                                    <a class="btn btn-primary btn-xs email-link-btn"
+                                        href="mailto:{{item.email}}?subject=Invitation to join Shopified App&body=Hello%2C%0D%0AYou%20can%20register%20at%20Shopified%20App%20using%20this%20link%3A%0D%0A{{reg_link}}{{item.register_hash}}"><i class="fa fa-envelope-o"></i> Email Link</a>
+                                    {% endwith %}
+                                {% else %}
+                                    <a class="btn btn-primary btn-xs edit-user-prems" user-id="{{item.user.id}}" href="#">
+                                        <i class="fa fa-unlock-alt"></i> Change Permissions</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div id="modal-subuser-prems" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -107,6 +165,8 @@
     <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
     <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
 
+
+    {% compress js %}
     <script type="text/javascript">
 
         $(document).ready(function() {
@@ -242,5 +302,6 @@
             });
         });
     </script>
+    {% endcompress %}
 {% endblock %}
 

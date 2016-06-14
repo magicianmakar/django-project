@@ -3356,9 +3356,11 @@ def subusers(request):
         raise PermissionDenied()
 
     sub_users = User.objects.filter(profile__subuser_parent=request.user)
+    invitation = PlanRegistration.objects.filter(sender=request.user)
 
     return render(request, 'subusers_manage.html', {
         'sub_users': sub_users,
+        'invitation': invitation,
         'page': 'subusers',
         'breadcrumbs': ['Account', 'Sub Users']
     })
