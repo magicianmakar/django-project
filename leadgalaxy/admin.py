@@ -5,7 +5,7 @@ from django import forms
 from django.core.urlresolvers import reverse
 
 
-USER_SEARCH_FIELDS = ['user__id', 'user__username', 'user__email']
+USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 
 @admin.register(GroupPlan)
@@ -16,7 +16,7 @@ class GroupPlanAdmin(admin.ModelAdmin):
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('register_hash',)
-    search_fields = ['title', 'slug', 'description', 'register_hash']
+    search_fields = ('title', 'slug', 'description', 'register_hash')
 
 
 @admin.register(FeatureBundle)
@@ -25,14 +25,14 @@ class FeatureBundleAdmin(admin.ModelAdmin):
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('register_hash',)
-    search_fields = ['title', 'slug', 'register_hash']
+    search_fields = ('title', 'slug', 'register_hash')
 
 
 @admin.register(UserUpload)
 class UserUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
-    search_fields = ['url']
+    search_fields = ('url',)
 
     def view_on_site(self, obj):
         return obj.url
@@ -42,7 +42,7 @@ class UserUploadAdmin(admin.ModelAdmin):
 class ShopifyBoardAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('products', 'user')
-    search_fields = ['title']
+    search_fields = ('title',)
 
 
 @admin.register(ShopifyProduct)
@@ -50,7 +50,7 @@ class ShopifyProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('parent_product', 'shopify_export', 'store', 'user')
     ordering = ('-updated_at',)
-    search_fields = ['data', 'notes', 'price_notification_id']
+    search_fields = ('data', 'notes', 'price_notification_id')
 
     def store_(self, obj):
         return obj.store.title
@@ -62,7 +62,7 @@ class ShopifyProductAdmin(admin.ModelAdmin):
 @admin.register(ShopifyProductExport)
 class ShopifyProductExportAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'created_at')
-    search_fields = ['original_url', 'shopify_id']
+    search_fields = ('original_url', 'shopify_id')
     raw_id_fields = ('store', 'product')
 
 
@@ -73,14 +73,14 @@ class ShopifyOrderTrackAdmin(admin.ModelAdmin):
                     'created_at', 'updated_at')
 
     list_filter = ('shopify_status', 'source_status', 'seen', 'hidden',)
-    search_fields = ['order_id', 'line_id', 'source_id', 'source_tracking', 'data']
+    search_fields = ('order_id', 'line_id', 'source_id', 'source_tracking', 'data')
     raw_id_fields = ('store', 'user')
 
 
 @admin.register(ShopifyStore)
 class ShopifyStoreAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_active', 'created_at', 'updated_at')
-    search_fields = ['title', 'api_url', 'store_hash'] + USER_SEARCH_FIELDS
+    search_fields = ('title', 'api_url', 'store_hash') + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
     readonly_fields = ('store_hash',)
     list_filter = ('is_active',)
@@ -95,7 +95,7 @@ class ShopifyWebhookAdmin(admin.ModelAdmin):
 @admin.register(AccessToken)
 class AccessTokenAdmin(admin.ModelAdmin):
     list_display = ('token', 'user', 'created_at', 'updated_at')
-    search_fields = ['token'] + USER_SEARCH_FIELDS
+    search_fields = ('token',) + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
 
 
@@ -103,7 +103,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'country', 'timezone', 'status')
     list_filter = ('plan', 'status', 'bundles')
-    search_fields = ['emails', 'country', 'timezone'] + USER_SEARCH_FIELDS
+    search_fields = ('emails', 'country', 'timezone') + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'subuser_parent')
 
     fieldsets = (
@@ -157,14 +157,14 @@ class UserProfileAdmin(admin.ModelAdmin):
 @admin.register(AppPermission)
 class AppPermissionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
-    search_fields = ['name', 'description']
+    search_fields = ('name', 'description')
 
 
 @admin.register(PlanRegistration)
 class PlanRegistrationAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'email', 'sender', 'expired', 'created_at', 'updated_at')
     list_filter = ('expired', 'plan', 'bundle')
-    search_fields = ['data', 'email', 'register_hash', 'sender__username', 'sender__email'] + USER_SEARCH_FIELDS
+    search_fields = ('data', 'email', 'register_hash', 'sender__username', 'sender__email') + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'sender')
     readonly_fields = ('register_hash',)
 
@@ -175,7 +175,7 @@ class PlanRegistrationAdmin(admin.ModelAdmin):
 @admin.register(ShopifyProductImage)
 class ShopifyProductImageAdmin(admin.ModelAdmin):
     list_display = ('product', 'variant', 'store')
-    search_fields = ['image']
+    search_fields = ('image',)
     raw_id_fields = ('store',)
 
 
@@ -184,7 +184,7 @@ class AliexpressProductChangeAdmin(admin.ModelAdmin):
     list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
     list_filter = ('seen', 'hidden',)
-    search_fields = ['data']
+    search_fields = ('data',)
 
 
 @admin.register(PlanPayment)
@@ -192,5 +192,5 @@ class PlanPaymentAdmin(admin.ModelAdmin):
     list_display = ('provider', 'payment_id', 'transaction_type', 'fullname',
                     'email', 'user', 'created_at')
     list_filter = ('provider', 'transaction_type',)
-    search_fields = ['fullname', 'email', 'payment_id', 'data'] + USER_SEARCH_FIELDS
+    search_fields = ('fullname', 'email', 'payment_id', 'data') + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
