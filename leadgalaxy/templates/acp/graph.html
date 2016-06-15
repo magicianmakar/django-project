@@ -41,7 +41,14 @@
 
             <div class="ibox-content">
                 <div id="users_graph" style="height:300px"></div>
-                <!-- <p>Products count: <b>{{products_count}}</b> in <b>{{stores_count}}</b> Stores</p> -->
+            </div>
+
+            <div class="ibox-content">
+                <div id="tracking_graph" style="height:300px"></div>
+                <p>Auto Fulfilled Orders: <b>{{tracking_count.auto}}</b><br>
+                <p>Orders awaiting to be fulfilled: <b>{{tracking_count.enabled_awaiting}}</b>
+                    ({{tracking_count.disabled}} Orders are disabled out of {{tracking_count.awaiting}})<br>
+                <p>Fulfilled Orders: <b>{{tracking_count.fulfilled}}</b><br>
             </div>
         </div>
     </div>
@@ -92,6 +99,27 @@
                 {% endfor %}
             ];
 
+            // Orders awaiting to be fulfilled
+            var tracking_awaiting = [
+                {% for item in tracking_awaiting %}
+                    [gd({{item.updated|date:"Y, m, d"}}), {{item.updated_count}}],
+                {% endfor %}
+            ];
+
+            // Fulfilled Order
+            var tracking_fulfilled = [
+                {% for item in tracking_fulfilled %}
+                    [gd({{item.updated|date:"Y, m, d"}}), {{item.updated_count}}],
+                {% endfor %}
+            ];
+
+            // Auto Fulfilled Order
+            var tracking_auto = [
+                {% for item in tracking_auto %}
+                    [gd({{item.updated|date:"Y, m, d"}}), {{item.updated_count}}],
+                {% endfor %}
+            ];
+
             var options = {
                 series: {
                     lines: {
@@ -99,16 +127,17 @@
                         lineWidth: 3,
                     },
                     points: {
-                        show: true
+                        show: false
                     }
                 },
                 shadowSize: 0,
+                grid: { hoverable: true, clickable: true },
                 xaxis: {
                     mode: "time",
                     timeformat: "%Y/%m/%d",
                     minTickSize: [1, "day"]
                 },
-                colors: ['#357EBD']
+                colors: ['#357EBD', '#0000ff', '#00FF00']
             };
 
             $.plot("#products_graph",
@@ -129,6 +158,49 @@
                 ],
                 options
             );
+
+            $.plot("#tracking_graph",
+                [
+                    {
+                        label: "Orders awaiting to be fulfilled",
+                        data: tracking_awaiting
+                    },{
+                        label: "All Fulfilled Orders",
+                        data: tracking_fulfilled
+                    },{
+                        label: "Auto Fulfilled Orders",
+                        data: tracking_auto
+                    },
+                ],
+                options
+            );
+
+            $("#tracking_graph, #products_graph, #users_graph").bind("plothover", function (event, pos, item) {
+                if (item) {
+                    var x = new Date(item.datapoint[0]).toISOString().slice(0, 10).replace(/-/g, '/'),
+                        y = item.datapoint[1].toFixed(0);
+
+                    $("#tooltip").html(/*item.series.label + ": " +*/ y + ' in ' + x)
+                        .css({top: item.pageY+15, left: item.pageX-$("#tooltip").width()-15})
+                        .fadeIn(200);
+                } else {
+                    $("#tooltip").hide();
+                }
+            });
+
+            $("<div id='tooltip'></div>").css({
+                position: 'absolute',
+                border: '1px solid rgb(173, 172, 172)',
+                padding: '2px',
+                opacity: 1,
+                color: 'rgb(0, 0, 0)',
+                display: 'none',
+                backgroundColor: 'rgb(255, 255, 255)',
+                fontWeight: 'bolder',
+                boxShadow: '0 0 5px 1px #555',
+                borderRadius: '5px',
+            }).appendTo("body");
+
         });
 
     </script>

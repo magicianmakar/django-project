@@ -2357,26 +2357,161 @@ def acp_graph(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
+    if request.GET.get('days'):
+        time_threshold = timezone.now() - timezone.timedelta(days=int(request.GET.get('days')))
+    else:
+        time_threshold = None
+
     products = ShopifyProduct.objects.all() \
-        .extra({'created': 'date(%s.created_at)' % ShopifyProduct._meta.db_table}) \
+        .extra({'created': 'date(created_at)'}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
         .order_by('-created')
 
     users = User.objects.all() \
-        .extra({'created': 'date(%s.date_joined)' % User._meta.db_table}) \
+        .extra({'created': 'date(date_joined)'}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
         .order_by('-created')
 
+    tracking_awaiting = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
+        .extra({'updated': 'date(updated_at)'}) \
+        .values('updated') \
+        .annotate(updated_count=Count('id')) \
+        .order_by('-updated')
+
+    tracking_fulfilled = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled') \
+        .extra({'updated': 'date(updated_at)'}) \
+        .values('updated') \
+        .annotate(updated_count=Count('id')) \
+        .order_by('-updated')
+
+    tracking_auto = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True) \
+        .extra({'updated': 'date(updated_at)'}) \
+        .values('updated') \
+        .annotate(updated_count=Count('id')) \
+        .order_by('-updated')
+
+    if time_threshold:
+        products = products.filter(created_at__gt=time_threshold)
+        users = users.filter(date_joined__gt=time_threshold)
+        tracking_awaiting = tracking_awaiting.filter(updated_at__gt=time_threshold)
+        tracking_fulfilled = tracking_fulfilled.filter(updated_at__gt=time_threshold)
+        tracking_auto = tracking_auto.filter(updated_at__gt=time_threshold)
+
     stores_count = ShopifyStore.objects.count()
     products_count = ShopifyProduct.objects.count()
+
+    if time_threshold:
+        tracking_count = {
+            'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+                                                 .filter(updated_at__gt=time_threshold).count(),
+            'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled')
+                                                  .filter(updated_at__gt=time_threshold).count(),
+            'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True)
+                                             .filter(updated_at__gt=time_threshold).count(),
+            'disabled': 0
+        }
+    else:
+        tracking_count = {
+            'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='').count(),
+            'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled').count(),
+            'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True).count(),
+            'disabled': 0
+        }
+
+    if not request.GET.get('cum'):
+        total_count = products_count
+        products_cum = []
+        for i in products:
+            total_count -= i['created_count']
+            products_cum.append({
+                'created_count': total_count,
+                'created': i['created']
+                })
+        products = products_cum
+
+        total_count = User.objects.all().count()
+        users_cum = []
+        for i in users:
+            total_count -= i['created_count']
+            users_cum.append({
+                'created_count': total_count,
+                'created': i['created']
+                })
+        users = users_cum
+
+        total_count = tracking_count['awaiting']
+        tracking_awaiting_cum = []
+        for i in tracking_awaiting:
+            total_count -= i['updated_count']
+            tracking_awaiting_cum.append({
+                'updated_count': total_count,
+                'updated': i['updated']
+                })
+        tracking_awaiting = tracking_awaiting_cum
+
+        total_count = tracking_count['fulfilled']
+        tracking_fulfilled_cum = []
+        for i in tracking_fulfilled:
+            total_count -= i['updated_count']
+            tracking_fulfilled_cum.append({
+                'updated_count': total_count,
+                'updated': i['updated']
+                })
+        tracking_fulfilled = tracking_fulfilled_cum
+
+        total_count = tracking_count['auto']
+        tracking_auto_cum = []
+        for i in tracking_auto:
+            total_count -= i['updated_count']
+            tracking_auto_cum.append({
+                'updated_count': total_count,
+                'updated': i['updated']
+                })
+        tracking_auto = tracking_auto_cum
+
+    # Count disabled auto fulfill orders
+    count_time_threshold = timezone.now() - timezone.timedelta(hours=1)
+    orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
+                                      .filter(status_updated_at__lt=count_time_threshold) \
+                                      .order_by('store', 'status_updated_at')
+    if time_threshold:
+        orders = orders.filter(updated_at__gt=time_threshold)
+
+    cache_key = 'disabled_autofulfill_count'
+    if request.GET.get('days'):
+        cache_key = '{}_{}'.format(cache_key, request.GET.get('days'))
+
+    if cache.get(cache_key) is None:
+        saved_users = {}
+        for order in orders:
+            if order.store_id in saved_users:
+                user = saved_users[order.store_id]
+            else:
+                user = order.store.user
+
+            if not user or user.get_config('auto_shopify_fulfill') != 'hourly':
+                saved_users[order.store_id] = False
+                tracking_count['disabled'] += 1
+            else:
+                saved_users[order.store_id] = user
+
+        cache.set(cache_key, tracking_count['disabled'], timeout=3600)
+    else:
+        tracking_count['disabled'] = cache.get(cache_key)
+
+    tracking_count['enabled_awaiting'] = tracking_count['awaiting'] - tracking_count['disabled']
 
     return render(request, 'acp/graph.html', {
         'products': products,
         'products_count': products_count,
         'users': users,
         'stores_count': stores_count,
+        'tracking_awaiting': tracking_awaiting,
+        'tracking_fulfilled': tracking_fulfilled,
+        'tracking_auto': tracking_auto,
+        'tracking_count': tracking_count,
         'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
