@@ -1,6 +1,7 @@
 from django import template
 from urlparse import urlparse, urlunparse
 from django.http import QueryDict
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -33,9 +34,9 @@ def sort_icon(context, field, value):
     if field in dict_:
         if value in dict_[field]:
             if dict_[field][0] == '-':
-                return '<i class="fa fa-sort-desc"></i>'
+                return mark_safe('<i class="fa fa-sort-desc"></i>')
             else:
-                return '<i class="fa fa-sort-asc"></i>'
+                return mark_safe('<i class="fa fa-sort-asc"></i>')
 
     return ''
 
