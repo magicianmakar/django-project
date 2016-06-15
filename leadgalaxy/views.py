@@ -2427,7 +2427,7 @@ def acp_graph(request):
             'disabled': 0
         }
 
-    if not request.GET.get('cum'):
+    if request.GET.get('cum'):
         total_count = products_count
         products_cum = []
         for i in products:
@@ -2482,7 +2482,7 @@ def acp_graph(request):
         shopify_orders_cum = []
         for i in shopify_orders:
             total_count -= i['created_count']
-            shopify_orders_cum.append.append({
+            shopify_orders_cum.append({
                 'created_count': total_count,
                 'created': i['created']
                 })
