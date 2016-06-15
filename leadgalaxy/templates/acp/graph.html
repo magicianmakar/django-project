@@ -50,6 +50,10 @@
                     ({{tracking_count.disabled}} Orders are disabled out of {{tracking_count.awaiting}})<br>
                 <p>Fulfilled Orders: <b>{{tracking_count.fulfilled}}</b><br>
             </div>
+
+            <div class="ibox-content">
+                <div id="shopify_orders" style="height:300px"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -120,6 +124,12 @@
                 {% endfor %}
             ];
 
+            var shopify_orders = [
+                {% for item in shopify_orders %}
+                    [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
+                {% endfor %}
+            ];
+
             var options = {
                 series: {
                     lines: {
@@ -162,6 +172,26 @@
             $.plot("#tracking_graph",
                 [
                     {
+                        label: "Auto Fulfilled",
+                        data: d2
+                    },
+                ],
+                options
+            );
+
+            $.plot("#shopify_orders",
+                [
+                    {
+                        label: "Shopify Orders",
+                        data: shopify_orders
+                    },
+                ],
+                options
+            );
+
+            $.plot("#tracking_graph",
+                [
+                    {
                         label: "Orders awaiting to be fulfilled",
                         data: tracking_awaiting
                     },{
@@ -175,7 +205,7 @@
                 options
             );
 
-            $("#tracking_graph, #products_graph, #users_graph").bind("plothover", function (event, pos, item) {
+            $("#tracking_graph, #products_graph, #users_graph, #shopify_orders").bind("plothover", function (event, pos, item) {
                 if (item) {
                     var x = new Date(item.datapoint[0]).toISOString().slice(0, 10).replace(/-/g, '/'),
                         y = item.datapoint[1].toFixed(0);
