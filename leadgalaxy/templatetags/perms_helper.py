@@ -1,8 +1,7 @@
 from django import template
-from urlparse import urlparse, urlunparse
-from django.http import QueryDict
 
 register = template.Library()
+
 
 @register.filter(name='can')
 def can(user, perm_name):

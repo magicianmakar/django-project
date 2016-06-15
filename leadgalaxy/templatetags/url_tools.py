@@ -5,13 +5,15 @@ from django.utils.safestring import mark_safe
 
 register = template.Library()
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def query_replace(context, field, value):
     dict_ = context['request'].GET.copy()
     dict_[field] = value
     return dict_.urlencode()
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def query_toggle(context, field, values):
     dict_ = context['request'].GET.copy()
 
@@ -21,11 +23,11 @@ def query_toggle(context, field, values):
     except:
         index = -1
 
-    index = (index+1)%len(values)
+    index = (index+1) % len(values)
 
     dict_[field] = values[index]
 
-    return ('%s=%s'%(field, dict_[field]))
+    return ('%s=%s' % (field, dict_[field]))
 
 
 @register.simple_tag(takes_context=True)
@@ -40,7 +42,8 @@ def sort_icon(context, field, value):
 
     return ''
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def url_toggle(context, field, values):
     url = context['request'].get_full_path()
     (scheme, netloc, path, params, query, fragment) = urlparse(url)
@@ -52,14 +55,15 @@ def url_toggle(context, field, values):
     except:
         index = -1
 
-    index = (index+1)%len(values)
+    index = (index+1) % len(values)
 
     query_dict[field] = values[index]
 
     query = query_dict.urlencode()
     return urlunparse((scheme, netloc, path, params, query, fragment))
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def url_replace(context, field, value):
     url = context['request'].get_full_path()
     (scheme, netloc, path, params, query, fragment) = urlparse(url)
@@ -77,12 +81,13 @@ def url_path(context, new_path):
     return urlunparse((scheme, netloc, new_path, params, query, fragment))
 
 
-@register.simple_tag(takes_context = True)
+@register.simple_tag(takes_context=True)
 def page_full_url(context):
     url = context['request'].build_absolute_uri()
     return url
 
-@register.simple_tag(takes_context = True)
+
+@register.simple_tag(takes_context=True)
 def query_active(context, field, value, selector):
     dict_ = context['request'].GET.copy()
 
@@ -90,6 +95,7 @@ def query_active(context, field, value, selector):
         return selector
     else:
         return ''
+
 
 @register.simple_tag(takes_context=True)
 def build_absolute_uri(context, path, reverse_url=False, **kwargs):
