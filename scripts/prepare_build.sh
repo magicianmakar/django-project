@@ -8,8 +8,8 @@ export S3_BUCKET_NAME='shopifiedapp'
 export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
 export JVZOO_SECRET=""
-export REDISCLOUD_URL="redis://127.0.0.1:6379"
-export REDISCLOUD_CACHE="redis://127.0.0.1:6379"
+export REDISCLOUD_URL="redis://172.17.0.33:6379"
+export REDISCLOUD_CACHE="redis://172.17.0.33:6379"
 
 apt-get update -qy
 
