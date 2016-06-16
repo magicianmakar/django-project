@@ -744,6 +744,16 @@ def get_tracking_orders(store, tracker_orders):
     for tracked in tracker_orders:
         tracked.order = orders.get(tracked.order_id)
         tracked.line = lines.get('{}-{}'.format(tracked.order_id, tracked.line_id))
+
+        if tracked.line:
+            fulfillment_status = tracked.line['fulfillment_status']
+            if not fulfillment_status:
+                fulfillment_status = ''
+
+            if tracked.shopify_status != fulfillment_status:
+                tracked.shopify_status = fulfillment_status
+                tracked.save()
+
         new_tracker_orders.append(tracked)
 
     return new_tracker_orders
