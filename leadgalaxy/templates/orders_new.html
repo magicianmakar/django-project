@@ -344,7 +344,7 @@
                                                         href="#"
                                                     {% endif %}
 
-                                                    {% if item.shopify_order %}
+                                                    {% if user.id == 883 and item.shopify_order %}
                                                         class="order-supplier-store"
                                                         source-order-id="{{item.shopify_order.source_id}}"
                                                     {% endif %}
