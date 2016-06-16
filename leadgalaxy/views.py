@@ -2854,17 +2854,18 @@ def save_image_s3(request):
 
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
-
     img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
+
+    mimetype = mimetypes.guess_type(img_url)[0]
 
     product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
+    # TODO: Use utils.aws_s3_upload to upload file
     conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
     bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
     k = Key(bucket)
 
     k.key = img_name
-    mimetype = mimetypes.guess_type(img_url)[0]
     k.set_metadata("Content-Type", mimetype)
     k.set_contents_from_file(fp)
     k.make_public()
@@ -3571,7 +3572,7 @@ def get_product_feed(request, store_id, revision=1):
             # Cache the feed for 1 day if the generation take more than 5 seconds
 
             feed_s3_url, upload_time = utils.aws_s3_upload(
-                'product-feeds/u{}/{}.xml'.format(store.user.id, store_id),
+                filename='product-feeds/u{}/{}.xml'.format(store.user.id, store_id),
                 content=feed_xml,
                 mimetype='application/xml',
                 upload_time=True
