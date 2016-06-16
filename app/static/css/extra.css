@@ -99,3 +99,8 @@
     line-height: 0.9;
 }
 
+.icheckbox_square-blue {
+    position: absolute;
+    margin: 5px;
+    background-color: #fff;
+}
