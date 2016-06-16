@@ -741,13 +741,13 @@ $(function() {
     $("#uploader").plupload({
         runtimes : 'html5,flash',
         flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/Moxie.swf',
-        url : "https://{{aws_bucket}}.s3.amazonaws.com:443/",
+        url : "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
         file_name_name: false,
         multipart: true,
         multipart_params : {
           filename: 'filename',
           utf8: true,
-          AWSAccessKeyId: "{{aws_key}}",
+          AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
           acl: "public-read",
           policy: "{{aws_policy|escapejs}}",
           signature: "{{aws_signature|escapejs}}",
@@ -772,7 +772,7 @@ $(function() {
                 up.settings.multipart_params['Content-Type'] = file.type;
             },
             FileUploaded: function(up, file, info) {
-                var url = 'http://{{aws_bucket}}.s3.amazonaws.com/uploads/u{{user.id}}/'+file.name;
+                var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/uploads/u{{user.id}}/"+file.name;
                 document.file_uploaded(url);
             },
             UploadComplete: function(up, files){

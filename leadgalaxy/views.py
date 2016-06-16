@@ -18,7 +18,7 @@ from django.core.cache import cache
 
 from unidecode import unidecode
 
-from app import settings
+from django.conf import settings
 
 from .models import *
 from .forms import *
@@ -2005,11 +2005,7 @@ def product_view(request, pid):
     import hmac
     from hashlib import sha1
 
-    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID', '')
-    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
-    S3_BUCKET = os.environ.get('S3_BUCKET_NAME', '')
-
-    aws_available = (AWS_ACCESS_KEY and AWS_SECRET_KEY and S3_BUCKET)
+    aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
 
     conditions = [
         ["starts-with", "$utf8", ""],
@@ -2018,7 +2014,7 @@ def product_view(request, pid):
         ["starts-with", "$name", ""],
         ["starts-with", "$Content-Type", "image/"],
         ["starts-with", "$filename", ""],
-        {"bucket": S3_BUCKET},
+        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
         {"acl": "public-read"}
     ]
 
@@ -2032,7 +2028,7 @@ def product_view(request, pid):
     string_to_sign = base64.encodestring(policy_str).replace('\n', '')
 
     signature = base64.encodestring(
-        hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
+        hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
 
     #  /AWS
     if request.user.is_superuser:
@@ -2100,8 +2096,6 @@ def product_view(request, pid):
         'aws_available': aws_available or True,
         'aws_policy': string_to_sign,
         'aws_signature': signature,
-        'aws_key': AWS_ACCESS_KEY,
-        'aws_bucket': S3_BUCKET,
         'page': 'product',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
     })
@@ -2738,10 +2732,6 @@ def upload_file_sign(request):
     if not request.user.can('image_uploader.use'):
         return JsonResponse({'error': 'You don\'t have access to this feature.'})
 
-    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
-
     object_name = urllib.quote_plus(request.GET.get('file_name'))
     mime_type = request.GET.get('file_type')
 
@@ -2751,15 +2741,15 @@ def upload_file_sign(request):
     expires = int(time.time() + 60 * 60 * 24)
     amz_headers = "x-amz-acl:public-read"
 
-    string_to_sign = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, S3_BUCKET, object_name)
+    string_to_sign = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, settings.AWS_STORAGE_BUCKET_NAME, object_name)
 
-    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest())
+    signature = base64.encodestring(hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest())
     signature = urllib.quote_plus(signature.strip())
 
-    url = 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, object_name)
+    url = 'https://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, object_name)
 
     content = {
-        'signed_request': '%s?AWSAccessKeyId=%s&Expires=%s&Signature=%s' % (url, AWS_ACCESS_KEY, expires, signature),
+        'signed_request': '%s?AWSAccessKeyId=%s&Expires=%s&Signature=%s' % (url, settings.AWS_ACCESS_KEY_ID, expires, signature),
         'url': url,
     }
 
@@ -2862,10 +2852,6 @@ def save_image_s3(request):
 
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
-    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
-
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
 
@@ -2873,8 +2859,8 @@ def save_image_s3(request):
 
     product = ShopifyProduct.objects.get(user=request.user, id=product_id)
 
-    conn = boto.connect_s3(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
+    conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+    bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
     k = Key(bucket)
 
     k.key = img_name
@@ -2883,7 +2869,7 @@ def save_image_s3(request):
     k.set_contents_from_file(fp)
     k.make_public()
 
-    upload_url = 'http://%s.s3.amazonaws.com/%s' % (S3_BUCKET, img_name)
+    upload_url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, img_name)
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
