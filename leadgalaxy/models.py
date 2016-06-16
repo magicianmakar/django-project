@@ -1003,9 +1003,9 @@ User.add_to_class("can_delete", user_can_delete)
 # Signals Handling
 
 @receiver(post_save, sender=UserProfile)
-def invalidate_side_bar(sender, instance, created, **kwargs):
+def invalidate_acp_users(sender, instance, created, **kwargs):
     from django.core.cache import cache
-    cache.delete_pattern('template.cache.acp_users.*')
+    cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
 
 
 @receiver(post_save, sender=User)

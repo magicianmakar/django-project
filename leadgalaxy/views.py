@@ -2329,7 +2329,7 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
-    if request.GET.get('cache') == '0':
+    if cache.get('template.cache.acp_users.invalidate'):
         cache.delete_pattern('template.cache.acp_users.*')
 
     users = User.objects.select_related('profile', 'profile__plan').order_by('-date_joined')
