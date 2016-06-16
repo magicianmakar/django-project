@@ -1,11 +1,17 @@
 from django import template
 from django.template import Context, Template
 from django.utils.safestring import mark_safe
+from django.conf import settings
 
 import simplejson as json
 import re
 
 register = template.Library()
+
+
+@register.simple_tag
+def app_setting(name):
+    return getattr(settings, name, None)
 
 
 @register.simple_tag(takes_context=True)
