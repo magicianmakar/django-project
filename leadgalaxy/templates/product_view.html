@@ -809,11 +809,11 @@ $(function() {
                         this.img.src = data.url;
                         product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
                     } else {
-                        swal('Image Editor', 'Error occured when saving the image', 'error');
+                        displayAjaxError('Image Editor', data);
                     }
                 },
                 error: function(data) {
-                    swal('Image Editor', 'Error occured when saving the image', 'error');
+                    displayAjaxError('Image Editor', data);
                 },
                 complete: function() {
                     config.feather_editor.enableControls();
