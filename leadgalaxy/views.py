@@ -1746,11 +1746,11 @@ def webhook(request, provider, option):
                     if not fulfillment_status:
                         fulfillment_status = ''
 
-                    ShopifyOrderTrack.objects.filter(order_id=shopify_order['id'], line_id=line['id']) \
-                                        .update(shopify_status=fulfillment_status)
+                    ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
+                                             .update(shopify_status=fulfillment_status)
 
-                    ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                          .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
+                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
                 try:
                     with cache.lock('update_shopify_order_{}_{}'.format(store.id, shopify_order['id']), timeout=10):
