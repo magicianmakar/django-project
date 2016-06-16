@@ -1146,6 +1146,34 @@ def set_orders_filter(user, filters, default=None):
             user.set_config(key, val)
 
 
+def aws_s3_upload(filename, content, mimetype=None, upload_time=False):
+    import time
+    import boto
+    from boto.s3.key import Key
+
+    if upload_time:
+        upload_start = time.time()
+
+    conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+    bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+    k = Key(bucket)
+
+    if not mimetype:
+        mimetype = mimetypes.guess_type(filename)[0]
+
+    k.key = filename
+    k.set_metadata("Content-Type", mimetype)
+    k.set_contents_from_string(content)
+    k.make_public()
+
+    upload_url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, filename)
+
+    if upload_time:
+        return upload_url, time.time() - upload_start
+    else:
+        return upload_url
+
+
 # Helper Classes
 
 class TimezoneMiddleware(object):

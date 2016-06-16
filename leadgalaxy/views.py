@@ -3555,9 +3555,9 @@ def get_product_feed(request, store_id, revision=1):
 
     feed_start = time.time()
 
-    feed_key = 'product_feed_{}'.format(store.id)
-    feed_xml = cache.get(feed_key)
-    if feed_xml is None or request.GET.get('nocache') == '1':
+    feed_key = 'product_feed_url_{}'.format(store.id)
+    feed_s3_url = cache.get(feed_key)
+    if feed_s3_url is None or request.GET.get('nocache') == '1':
         feed = utils.ProductFeed(store, revision)
         feed.init()
 
@@ -3569,15 +3569,28 @@ def get_product_feed(request, store_id, revision=1):
         feed_time = time.time() - feed_start
         if feed_time > 5:
             # Cache the feed for 1 day if the generation take more than 5 seconds
-            cache.set(feed_key, feed_xml, timeout=86400)
+
+            feed_s3_url, upload_time = utils.aws_s3_upload(
+                'product-feeds/u{}/{}.xml'.format(store.user.id, store_id),
+                content=feed_xml,
+                mimetype='application/xml',
+                upload_time=True
+            )
+
+            cache.set(feed_key, feed_s3_url, timeout=86400)
 
             raven_client.captureMessage('Cache Product Feed',
                                         level='warning',
                                         tags={'store_feed': store.title},
                                         extra={'username': store.user.username,
                                                'store': store.title,
+                                               'feed_s3_url': feed_s3_url,
+                                               'upload_time': '{:0.2f} seconds'.format(upload_time),
                                                'feed_time': '{:0.2f} seconds'.format(feed_time),
                                                'feed_size': len(feed_xml)})
+
+    if feed_s3_url:
+        return HttpResponseRedirect(feed_s3_url)
 
     if request.GET.get('stream') == '1':
         from django.http import StreamingHttpResponse
