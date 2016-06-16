@@ -21,7 +21,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 
-from app import settings
+from django.conf import settings
 
 
 def safeInt(v, default=0):

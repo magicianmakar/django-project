@@ -1,6 +1,7 @@
 import os
 import simplejson as json
-from app import settings
+from django.conf import settings
+
 
 def load_uk_provincess():
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'uk_provinces.csv')
