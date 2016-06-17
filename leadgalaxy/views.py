@@ -2859,7 +2859,8 @@ def save_image_s3(request):
 
     mimetype = mimetypes.guess_type(img_url)[0]
 
-    product = ShopifyProduct.objects.get(user=request.user, id=product_id)
+    product = ShopifyProduct.objects.get(id=product_id)
+    request.user.can_edit(product)
 
     # TODO: Use utils.aws_s3_upload to upload file
     conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
