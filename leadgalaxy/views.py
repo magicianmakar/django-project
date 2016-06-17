@@ -3282,8 +3282,8 @@ def orders_track(request):
         orders = utils.get_tracking_orders(store, orders)
 
     ShopifyOrderTrack.objects.filter(user=request.user.models_user,
-                                id__in=[i.id for i in orders]) \
-                        .update(seen=True)
+                                     id__in=[i.id for i in orders]) \
+                             .update(seen=True)
 
     return render(request, 'orders_track.html', {
         'store': store,
