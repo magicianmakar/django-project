@@ -1156,7 +1156,13 @@ def set_orders_filter(user, filters, default=None):
             user.set_config(key, val)
 
 
-def aws_s3_upload(filename, content, mimetype=None, upload_time=False):
+def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=False):
+    """
+    Store an object in S3 using the 'filename' as the key in S3 and the
+    contents of the file pointed to by either 'fp' or 'content' as the
+    contents.
+    """
+
     import time
     import boto
     from boto.s3.key import Key
@@ -1173,7 +1179,14 @@ def aws_s3_upload(filename, content, mimetype=None, upload_time=False):
 
     k.key = filename
     k.set_metadata("Content-Type", mimetype)
-    k.set_contents_from_string(content)
+
+    if content:
+        k.set_contents_from_string(content)
+    elif fp:
+        k.set_contents_from_file(fp)
+    else:
+        raise Exception('content or fp parameters are both empty')
+
     k.make_public()
 
     upload_url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, filename)

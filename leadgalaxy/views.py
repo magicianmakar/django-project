@@ -2825,9 +2825,6 @@ def save_image_s3(request):
     import mimetypes
     import urllib2
 
-    import boto
-    from boto.s3.key import Key
-
     if 'advanced' in request.GET:
         # Pixlr
         if not request.user.can('pixlr_photo_editor.use'):
@@ -2862,17 +2859,8 @@ def save_image_s3(request):
     product = ShopifyProduct.objects.get(id=product_id)
     request.user.can_edit(product)
 
-    # TODO: Use utils.aws_s3_upload to upload file
-    conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-    bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
-    k = Key(bucket)
+    upload_url = utils.aws_s3_upload(filename=img_name, fp=fp, mimetype=mimetype)
 
-    k.key = img_name
-    k.set_metadata("Content-Type", mimetype)
-    k.set_contents_from_file(fp)
-    k.make_public()
-
-    upload_url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, img_name)
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
 
