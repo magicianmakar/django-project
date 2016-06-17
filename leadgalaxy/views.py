@@ -2838,7 +2838,7 @@ def save_image_s3(request):
         product_id = request.GET.get('product')
         img_url = image.name
 
-        fp = StringIO.StringIO(image.read())
+        fp = image
     else:
         # Aviary
         if not request.user.can('aviary_photo_editor.use'):
