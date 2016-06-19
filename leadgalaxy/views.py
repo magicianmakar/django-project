@@ -720,10 +720,23 @@ def proccess_api(request, user, method, target, data):
         if not shopify_link:
             return JsonResponse({'error': 'Shopify Link is not set'}, status=500)
 
+        try:
+            store = product.store
+        except:
+            store = None
+        if not store:
+            store = utils.get_store_from_url(user, shopify_link)
+
+            if not store:
+                return JsonResponse({'error': 'Shopify store not found'}, status=500)
+
+            product.store = store
+            product.save()
+
         product.set_original_url(original_link)
 
         if 'myshopify' not in shopify_link.lower():
-            shopify_link = utils.get_myshopify_link(user, product.store, shopify_link)
+            shopify_link = utils.get_myshopify_link(user, store, shopify_link)
             if not shopify_link:
                 return JsonResponse({'error': 'Invalid Custom domain link.'}, status=500)
 
@@ -734,7 +747,7 @@ def proccess_api(request, user, method, target, data):
         if data.get('export'):
             product_export, created = ShopifyProductExport.objects.update_or_create(
                 id=utils.safeInt(data.get('export')),
-                store=product.store,
+                store=store,
                 defaults={
                     'product': product,
                     'original_url': original_link,
@@ -745,7 +758,7 @@ def proccess_api(request, user, method, target, data):
             )
         else:
             product_export = ShopifyProductExport.objects.create(
-                store=product.store,
+                store=store,
                 product=product,
                 original_url=original_link,
                 shopify_id=shopify_id,

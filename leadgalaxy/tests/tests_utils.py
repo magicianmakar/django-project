@@ -263,6 +263,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')
         self.assertEqual(utils.get_domain('http://aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'aliexpress.com')
         self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919', full=True), 'www.ebay.com')
+        self.assertEqual(utils.get_domain('http://rank-engine.myshopify.com/admin/products/1234', full=True), 'rank-engine.myshopify.com')
 
     def test_remove_link_query(self):
         self.assertEqual(
@@ -339,3 +340,14 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/5321947333/variants/16557264133'), 5321947333)
         self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/'), 0)
         self.assertEqual(utils.get_shopify_id(None), 0)
+
+    def test_get_shopify_store_by_url(self):
+        user = utils.User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        store = ShopifyStoreFactory(user_id=user.id)
+
+        url = 'http://rank-engine.myshopify.com/admin/products/1234'
+
+        self.assertEqual(utils.get_store_from_url(user, url), store)
+
+        url = 'http://notfound.myshopify.com/admin/products/1234'
+        self.assertIsNone(utils.get_store_from_url(user, url))

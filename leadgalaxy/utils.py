@@ -444,6 +444,11 @@ def get_shopify_id(url):
         return 0
 
 
+def get_store_from_url(user, url):
+    domain = get_domain(url, full=True)
+    return ShopifyStore.objects.filter(api_url__icontains=domain, user=user).first()
+
+
 def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
 
