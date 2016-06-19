@@ -1747,8 +1747,7 @@ def webhook(request, provider, option):
                         fulfillment_status = ''
 
                     ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
-                                             .update(shopify_status=fulfillment_status,
-                                                     hidden=shopify_order.get('closed_at') is None)
+                                             .update(shopify_status=fulfillment_status)
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
