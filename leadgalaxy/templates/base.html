@@ -78,7 +78,7 @@
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.get_full_name|default:user.username}}</strong>
                              </span> <span class="text-muted text-xs block profile-options">Options <b class="caret"></b></span> </span> </a>
-                            <ul class="dropdown-menu animated fadeInUp m-t-xs">
+                            <ul class="dropdown-menu m-t-xs">
                                 {% if user.is_superuser %}
                                 <li><a href="{% url 'admin:index' %}">Admin Panel</a></li>
                                 <li class="divider"></li>
