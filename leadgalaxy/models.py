@@ -311,11 +311,10 @@ class ShopifyStore(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def save(self, *args, **kwargs):
-        from hashlib import md5
-        import uuid
+        from django.utils.crypto import get_random_string
 
         if not self.store_hash:
-            self.store_hash = md5(str(uuid.uuid4())).hexdigest()
+            self.store_hash = get_random_string(32, 'abcdef0123456789')
 
         super(ShopifyStore, self).save(*args, **kwargs)
 
@@ -730,11 +729,10 @@ class GroupPlan(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     def save(self, *args, **kwargs):
-        from hashlib import md5
-        import uuid
+        from django.utils.crypto import get_random_string
 
         if not self.register_hash:
-            self.register_hash = md5(str(uuid.uuid4())).hexdigest()
+            self.register_hash = get_random_string(32, 'abcdef0123456789')
 
         super(GroupPlan, self).save(*args, **kwargs)
 
@@ -755,11 +753,10 @@ class FeatureBundle(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     def save(self, *args, **kwargs):
-        from hashlib import md5
-        import uuid
+        from django.utils.crypto import get_random_string
 
         if not self.register_hash:
-            self.register_hash = md5(str(uuid.uuid4())).hexdigest()
+            self.register_hash = get_random_string(32, 'abcdef0123456789')
 
         super(FeatureBundle, self).save(*args, **kwargs)
 
@@ -803,11 +800,10 @@ class PlanRegistration(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def save(self, *args, **kwargs):
-        from hashlib import md5
-        import uuid
+        from django.utils.crypto import get_random_string
 
         if not self.register_hash:
-            self.register_hash = md5(str(uuid.uuid4())).hexdigest()
+            self.register_hash = get_random_string(32, 'abcdef0123456789')
 
         super(PlanRegistration, self).save(*args, **kwargs)
 

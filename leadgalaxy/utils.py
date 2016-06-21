@@ -1,7 +1,6 @@
 import os
 import simplejson as json
 import requests
-import uuid
 import hashlib
 import pytz
 import collections
@@ -15,6 +14,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django.core.paginator import Paginator
 from django.core.cache import cache
+from django.utils.crypto import get_random_string
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -95,7 +95,7 @@ def get_mimetype(url):
 
 
 def random_hash():
-    token = str(uuid.uuid4())
+    token = get_random_string(32)
     return hashlib.md5(token).hexdigest()
 
 
@@ -112,8 +112,7 @@ def get_access_token(user):
     try:
         access_token = AccessToken.objects.filter(user=user).latest('created_at')
     except:
-        token = str(uuid.uuid4())
-        token = hashlib.md5(token).hexdigest()
+        token = random_hash()
 
         access_token = AccessToken(user=user, token=token)
         access_token.save()
