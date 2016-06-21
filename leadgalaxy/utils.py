@@ -138,6 +138,39 @@ def get_user_from_token(token):
     return None
 
 
+class ApiLoginException(Exception):
+    pass
+
+
+def get_api_user(request, data, assert_login=False):
+    user = None
+
+    if 'access_token' in data:
+        token = data.get('access_token')
+        user = get_user_from_token(token)
+
+        if not user:
+            raise ApiLoginException('unvalid_access_token')
+
+    if request.user.is_authenticated():
+        if user is None:
+            user = request.user
+        else:
+            if user != request.user:
+                raven_client.captureMessage(
+                    'Different account login',
+                    extra={'Request User': request.user, 'API User': user},
+                    level='warning'
+                    )
+
+                raise ApiLoginException('different_account_login')
+
+    if assert_login and not user:
+        raise ApiLoginException('login_required')
+
+    return user
+
+
 def login_attempts_exceeded(username):
     from django.core.cache import cache
 

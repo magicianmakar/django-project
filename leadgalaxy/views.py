@@ -77,20 +77,10 @@ def api(request, target):
         raven_client.captureMessage('Unsupported Request Method', extra={'method': method})
         return JsonResponse({'error': 'Unsupported Request Method'}, status=501)
 
-    if 'access_token' in data:
-        token = data.get('access_token')
-        user = utils.get_user_from_token(token)
-    else:
-        if request.user.is_authenticated():
-            user = request.user
-        else:
-            user = None
+    # Methods that doesn't require login or perform login differently (from json data)
+    assert_login = target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress']
 
-    if target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress'] and not user:
-        return JsonResponse({'error': (
-            'Unauthenticated API call. \nMake sure you are logged-in '
-            'before using Chrome Extension'
-        )}, status=401)
+    user = utils.get_api_user(request, data, assert_login=assert_login)
 
     if user:
         raven_client.user_context({
@@ -119,6 +109,34 @@ def api(request, target):
     except requests.Timeout:
         raven_client.captureException()
         res = JsonResponse({'error': 'API Request Timeout'}, status=501)
+
+    except utils.ApiLoginException as e:
+        raven_client.captureException()
+
+        if e.message == 'unvalid_access_token':
+            res = JsonResponse({'error': (
+                'Unvalide Access Token.\nMake sure you are logged-in '
+                'before using Chrome Extension'
+            )}, status=401)
+
+        elif e.message == 'different_account_login':
+            res = JsonResponse({'error': (
+                'You are logged in with different accounts, '
+                'please use the same account in the Extension and Shopified Web app'
+            )}, status=409)
+
+        elif e.message == 'login_required':
+            res = JsonResponse({'error': (
+                'Unauthenticated API call. \nMake sure you are logged-in '
+                'before using Chrome Extension'
+            )}, status=401)
+
+        else:
+            raven_client.captureMessage('Unknown Login Error', extra={'message': e.message})
+
+            res = JsonResponse({'error': (
+                'Login Required'
+            )}, status=401)
 
     except:
         raven_client.captureException()
@@ -323,20 +341,7 @@ def proccess_api(request, user, method, target, data):
         req_data = json.loads(request.body)
         delayed = req_data.get('b')
 
-        if 'access_token' in req_data:
-            token = req_data['access_token']
-            user = utils.get_user_from_token(token)
-
-            if not user:
-                return JsonResponse({'error': (
-                    'Unvalide Access Token.\nMake sure you are logged-in '
-                    'before using Chrome Extension'
-                )}, status=401)
-        else:
-            if request.user.is_authenticated():
-                user = request.user
-            else:
-                return JsonResponse({'error': 'Unauthenticated user'}, status=401)
+        user = utils.get_api_user(request, req_data, assert_login=True)
 
         if not delayed or target == 'save-for-later':
             result = tasks.export_product(req_data, target, user.id)
