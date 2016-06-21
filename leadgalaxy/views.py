@@ -139,7 +139,11 @@ def api(request, target):
             )}, status=401)
 
     except:
+        if settings.DEBUG:
+            traceback.print_exc()
+
         raven_client.captureException()
+
         res = JsonResponse({'error': 'Internal Server Error'}, status=500)
 
     raven_client.context.clear()
