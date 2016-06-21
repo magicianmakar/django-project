@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as user_logout
+from django.contrib.auth import login as user_login
 from django.shortcuts import redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
@@ -172,6 +173,13 @@ def proccess_api(request, user, method, target, data):
         user = authenticate(username=username, password=password)
         if user is not None:
             if user.is_active:
+                if request.user.is_authenticated():
+                    if user != request.user:
+                        user_logout(request)
+                        user_login(request, user)
+                else:
+                    user_login(request, user)
+
                 token = utils.get_access_token(user)
 
                 return JsonResponse({
