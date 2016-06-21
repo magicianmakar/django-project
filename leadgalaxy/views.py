@@ -119,7 +119,7 @@ def api(request, target):
             res = JsonResponse({'error': (
                 'You are logged in with different accounts, '
                 'please use the same account in the Extension and Shopified Web app'
-            )}, status=409)
+            )}, status=401)
 
         elif e.message == 'login_required':
             res = JsonResponse({'error': (
