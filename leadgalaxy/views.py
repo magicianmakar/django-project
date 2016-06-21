@@ -80,24 +80,19 @@ def api(request, target):
     # Methods that doesn't require login or perform login differently (from json data)
     assert_login = target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress']
 
-    user = utils.get_api_user(request, data, assert_login=assert_login)
-
-    if user:
-        raven_client.user_context({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email
-        })
-    else:
-        raven_client.user_context({
-            'id': 0,
-            'username': 'Anonymous',
-        })
-
     raven_client.context.merge(raven_client.get_data_from_request(request))
 
     try:
+        user = utils.get_api_user(request, data, assert_login=assert_login)
+        if user:
+            raven_client.user_context({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            })
+
         res = proccess_api(request, user, method, target, data)
+
         if res is None:
             raven_client.captureMessage('API Response is empty')
             res = JsonResponse({'error': 'Internal Server Error'}, status=500)
