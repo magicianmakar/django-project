@@ -107,8 +107,6 @@ def api(request, target):
         res = JsonResponse({'error': 'API Request Timeout'}, status=501)
 
     except utils.ApiLoginException as e:
-        raven_client.captureException()
-
         if e.message == 'unvalid_access_token':
             res = JsonResponse({'error': (
                 'Unvalide Access Token.\nMake sure you are logged-in '
