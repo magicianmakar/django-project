@@ -473,6 +473,16 @@
                         </div>
                         {% empty %}
                         <h3 class="text-center">No orders found.</h3>
+                        <p class="text-center">
+                            <a href="{% url_multi_replace status='any' fulfillment='any' financial='any' connected='false' %}">
+                                {% if request.GET.query or request.GET.query_order or request.GET.query_customer or request.GET.query_address %}
+                                    Search in
+                                {% else %}
+                                    View
+                                {% endif %}
+                                all Orders
+                            </a>
+                        </p>
                         {% endfor %}
                     </div>
 

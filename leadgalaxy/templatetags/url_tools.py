@@ -74,6 +74,19 @@ def url_replace(context, field, value):
 
 
 @register.simple_tag(takes_context=True)
+def url_multi_replace(context, **kwargs):
+    url = context['request'].get_full_path()
+    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    query_dict = QueryDict(query).copy()
+
+    for k, v in kwargs.iteritems():
+        query_dict[k] = v
+
+    query = query_dict.urlencode()
+    return urlunparse((scheme, netloc, path, params, query, fragment))
+
+
+@register.simple_tag(takes_context=True)
 def url_path(context, new_path):
     ''' Change url path'''
     url = context['request'].get_full_path()
