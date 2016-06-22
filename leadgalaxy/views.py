@@ -989,11 +989,19 @@ def proccess_api(request, user, method, target, data):
         if not order_key.startswith('order_'):
             order_key = 'order_{}'.format(order_key)
 
+        prefix, store, order, line = order_key.split('_')
+
+        try:
+            store = ShopifyStore.objects.get(id=store)
+            user.can_view(store)
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
         order = cache.get(order_key)
         if order:
             return JsonResponse(order, safe=False)
         else:
-            return JsonResponse({'error': 'Not found: {}'.format(order_key)}, status=404)
+            return JsonResponse({'error': 'Not found: {}'.format(data.get('order'))}, status=404)
 
     if method == 'GET' and target == 'product-variant-image':
         try:
