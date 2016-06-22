@@ -156,7 +156,7 @@ def get_api_user(request, data, assert_login=False):
         if user is None:
             user = request.user
         else:
-            if user != request.user:
+            if user != request.user and not user.is_superuser:
                 raven_client.captureMessage(
                     'Different account login',
                     extra={'Request User': request.user, 'API User': user},
