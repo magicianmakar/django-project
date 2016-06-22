@@ -105,7 +105,7 @@
                                 {% endfor %}
                                 </select>
                         </div>
-                        <div class="col-md-2" style="padding: 5px 0">
+                        <div class="col-md-2" style="padding: 5px 0; {% if not request.GET.query_address %}display:none{% endif %}">
                             <a href="#" class="chosen-reset-selection">Reset</a>
                         </div>
                     </div>
