@@ -3154,9 +3154,9 @@ def orders_view(request):
 
                     elif shipping_address_asci['province'] == 'Puerto Rico':
                         # Puerto Rico is a country in Aliexpress
-                        shipping_address_asci['province'] == 'PR'
-                        shipping_address_asci['country_code'] == 'PR'
-                        shipping_address_asci['country'] == 'Puerto Rico'
+                        shipping_address_asci['province'] = 'PR'
+                        shipping_address_asci['country_code'] = 'PR'
+                        shipping_address_asci['country'] = 'Puerto Rico'
 
                     phone = shipping_address_asci.get('phone')
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
