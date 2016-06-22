@@ -693,7 +693,7 @@ var config = {
     feather_editor: null,
     shopify_variants: {
     {% for variant in shopify_product.variants %}
-        '{{variant.title}}': {{variant.id}},
+        '{{variant.title|escapejs}}': {{variant.id}},
     {% endfor %}
     },
 
