@@ -266,7 +266,7 @@
 
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}<br>
                                         {{order.shipping_address.address1}}<br>
                                         {{order.shipping_address.address2}}
@@ -291,7 +291,7 @@
 
                                         <a href="mailto:{{order.customer.email}}" class="itooltip" title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>
                                     </div>
-                                    <div class="col-md-offset-1 col-md-2">
+                                    <div class="col-md-2">
                                         $<b>{{order.total_price}}</b>
                                     </div>
                                     <div class="col-md-3 col-md-offset-3">
