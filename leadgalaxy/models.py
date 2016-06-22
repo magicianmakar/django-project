@@ -930,7 +930,9 @@ def user_can_add(self, obj):
 
 
 def user_can_view(self, obj):
-    if not self.is_subuser:
+    if self.is_superuser:
+        return True
+    elif not self.is_subuser:
         can = obj.user == self
     else:
         can = obj.user == self.profile.subuser_parent
