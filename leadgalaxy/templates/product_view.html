@@ -266,19 +266,27 @@
 
                         <ul class="dropdown-menu">
                         {% if product.shopify_url %}
-                            <li><a href="{{product.shopify_url}}" target="_blank" >View in Shopify</a></li>
+                            <li><a href="{{product.shopify_url}}" target="_blank" >
+                                <i class="fa fa-file-o"></i> View in Shopify</a>
+                            </li>
                             {% if request.user|can:'product_variant_setup.view' %}
-                            <li><a href="{{product.variant_edit}}" target="_blank">Setup Variants Images</a></li>
+                            <li><a href="{{product.variant_edit}}" target="_blank">
+                                <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
+                            </li>
                             {% endif %}
                         {% else %}
                             <li><a id="view-btn" type="button" style="display:none">View in Shopify</a></li>
                             {% if request.user|can:'product_variant_setup.view' %}
-                            <li><a id="btn-variants-img" type="button" style="display:none">Setup Variants Images</a></li>
+                            <li><a id="btn-variants-img" type="button" style="display:none">
+                                <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
+                            </li>
                             {% endif %}
                         {% endif %}
 
                         {% if product.qelem.get_shopify_id %}
-                        <li><a href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank"> <i class="fa fa-chain"></i> Variants Mapping</a></li>
+                        <li><a href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
+                            <i class="fa fa-chain"></i> Variants Mapping</a>
+                        </li>
                         {% endif %}
 
                         <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
