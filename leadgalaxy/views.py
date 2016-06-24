@@ -2124,7 +2124,7 @@ def product_view(request, pid):
         'product': p,
         'original': original,
         'shopify_product': shopify_product,
-        'aws_available': aws_available or True,
+        'aws_available': aws_available,
         'aws_policy': string_to_sign,
         'aws_signature': signature,
         'page': 'product',
