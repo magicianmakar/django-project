@@ -281,9 +281,7 @@
                         <li><a href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank"> <i class="fa fa-chain"></i> Variants Mapping</a></li>
                         {% endif %}
 
-                        {% if product.shopify_url %}
-                            <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
-                        {% endif %}
+                        <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
 
                         {% if product.product.original_url %}
                             <li><a href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source.source}}</a></li>
