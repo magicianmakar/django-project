@@ -47,7 +47,7 @@ def sort_icon(context, field, value):
 def url_toggle(context, field, values):
     url = context['request'].get_full_path()
     (scheme, netloc, path, params, query, fragment) = urlparse(url)
-    query_dict = QueryDict(query).copy()
+    query_dict = QueryDict(query.encode('utf8')).copy()
 
     values = values.split(',')
     try:
@@ -67,7 +67,7 @@ def url_toggle(context, field, values):
 def url_replace(context, field, value):
     url = context['request'].get_full_path()
     (scheme, netloc, path, params, query, fragment) = urlparse(url)
-    query_dict = QueryDict(query).copy()
+    query_dict = QueryDict(query.encode('utf8')).copy()
     query_dict[field] = value
     query = query_dict.urlencode()
     return urlunparse((scheme, netloc, path, params, query, fragment))
@@ -77,7 +77,7 @@ def url_replace(context, field, value):
 def url_multi_replace(context, **kwargs):
     url = context['request'].get_full_path()
     (scheme, netloc, path, params, query, fragment) = urlparse(url)
-    query_dict = QueryDict(query).copy()
+    query_dict = QueryDict(query.encode('utf8')).copy()
 
     for k, v in kwargs.iteritems():
         query_dict[k] = v
