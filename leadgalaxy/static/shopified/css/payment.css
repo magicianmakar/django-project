@@ -1,6 +1,6 @@
 .usage {
-  border: 1px solid #e1e2e3;
-  color: #465262;
+  border: 1px solid #e1e2e3 !important;
+  color: #465262 !important;
 }
 
 .usage th {
@@ -34,8 +34,8 @@
 
 .usage strong {
   font-weight: 500 !important;
-  font-size: 125%;
-  color: #465262;
+  font-size: 125% !important;
+  color: #465262 !important;
 }
 
 .usage strong.over {
@@ -47,11 +47,7 @@
 }
 
 .no-show {
-  display: none;
-}
-
-p {
-  margin: 20px 0;
+  display: none !important;
 }
 
 .trial-days-remaining {
@@ -74,15 +70,9 @@ p {
   position: absolute;
   left: 0px;
 }
-.plan-interval-select label.active {
-  border-bottom: 3px solid #2eb0f7;
-}
 
-.well {
-  background: #fff;
-  box-shadow: none;
-  padding: 0;
-  border: 0;
+.plan-interval-select label.active {
+  border-bottom: 3px solid #2eb0f7 !important;
 }
 
 table.plan-table {
@@ -97,24 +87,24 @@ table.plan-table thead + tbody tr:first-child td {
 }
 
 .plan-table td, .plan-table th {
-  text-align: center;
+  text-align: center !important;
 }
 
 .plan-table td.small {
-  font-size: inherit;
+  font-size: inherit !important;
 }
 
 .plan-table thead th {
   padding-top: 25px !important;
   padding-bottom: 25px !important;
-  overflow: hidden;
+  overflow: hidden !important;
   border-left: 1px solid #e0e9ee !important;
   border-right: 1px solid #e0e9ee !important;
 }
 
 .plan-table thead th input {
-  position: absolute;
-  left: -9999em;
+  position: absolute !important;
+  left: -9999em !important;
 }
 
 .plan-table tbody td {
@@ -134,7 +124,7 @@ table.plan-table thead + tbody tr:first-child td {
 }
 
 .plan-table .selected {
-  background: #F9FBFD;
+  background: #F9FBFD !important;
 }
 
 .plan-table thead tr th:first-child.selected,
@@ -148,62 +138,62 @@ table.plan-table thead + tbody tr:first-child td {
 }
 
 .plan-table thead h3 {
-  margin-bottom: 10px;
+  margin-bottom: 10px !important;
 }
 
 .plan-table thead .cta {
-  margin: 0;
+  margin: 0 !important;
 }
 
 .plan-table thead .cta .btn {
-  padding: 5px 12px;
-  min-width: 102px;
+  padding: 5px 12px !important;
+  min-width: 102px !important;
 }
 
 .plan-table thead .cta .btn.disabled {
-  color: inherit;
-  opacity: 1;
-  border-color: #C1C9CE;
-  background: #f1f2f3;
+  color: inherit !important;
+  opacity: 1 !important;
+  border-color: #C1C9CE !important;
+  background: #f1f2f3 !important;
 }
 
 .plan-table thead .price {
-  font-size: 30px;
-  font-weight: 400;
-  margin: 10px 0;
-  color: #727D8E;
+  font-size: 30px !important;
+  font-weight: 400 !important;
+  margin: 10px 0 !important;
+  color: #727D8E !important;
 }
 
 .plan-table thead .price span {
-  font-size: 20px;
-  color: #A1ACBB;
+  font-size: 20px !important;
+  color: #A1ACBB !important;
 }
 
 .plan-table h3 {
-    font-size: 25px;
+    font-size: 25px !important;
 }
 
 .plan-table .retail-price {
-    margin: 0;
-    padding: 0;
-    min-height: 30px;
-    color: #D2A8A8;
-    text-decoration: line-through;
-    font-style: normal;
-    font-size: 17px
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 30px !important;
+    color: #D2A8A8 !important;
+    text-decoration: line-through !important;
+    font-style: normal !important;
+    font-size: 17px !important;
 }
 
 .plan-table .retail-price .mo {
-    font-size: 10px
+    font-size: 10px !important;
 }
 
 .plan-feature-list {
-    margin-top: 15px;
-    border-top: 1px solid #E8E8E8;
+    margin-top: 15px !important;
+    border-top: 1px solid #E8E8E8 !important;
 }
 
 .plan-more-features {
-    padding-top: 20px;
-    border-top: 1px solid #F1F1F1;
-    margin-top: 20px;
+    padding-top: 20px !important;
+    border-top: 1px solid #F1F1F1 !important;
+    margin-top: 20px !important;
 }
