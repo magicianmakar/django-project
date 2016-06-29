@@ -1,0 +1,68 @@
+<div id="billing-form-div">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="form-group">
+                <!-- <label>Street Address 1:</label> -->
+                <input id="address_line1" name="address_line1" type="text" class="form-control"
+                       value="{{source.address_line1|default:''}}" placeholder="Street Address 1">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="form-group">
+                <!-- <label>Street Address 2:</label> -->
+                <input id="address_line2" name="address_line2" type="text" class="form-control"
+                       value="{{source.address_line2|default:''}}" placeholder="Street Address 2">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-5 col-md-5">
+            <div class="form-group">
+                <!-- <label>City:</label> -->
+                <input id="address_city" name="address_city" type="tel" class="form-control "
+                       value="{{source.address_city|default:''}}" placeholder="City" required="">
+            </div>
+        </div>
+        <div class="col-xs-7 col-md-7">
+            <div class="form-group">
+                <!-- <label>State/Province:</label> -->
+                <input id="address_state" name="address_state" type="tel" class="form-control "
+                       value="{{source.address_state|default:''}}" placeholder="State/Province" required="">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-5 col-md-5">
+            <div class="form-group">
+                <!-- <label>ZIP/Postal Code:</label> -->
+                <input id="address_zip" name="address_zip" type="tel" class="form-control "
+                       value="{{source.address_zip|default:''}}" placeholder="ZIP/Postal Code" required="">
+            </div>
+        </div>
+        <div class="col-xs-7 col-md-7">
+            <div class="form-group">
+                <!-- <label>Country:</label> -->
+
+                <select id="address_country" name="address_country" class="form-control" style="width:70%" data-placeholder="Country">
+                    <option value=""></option>
+                    {% for item in countries %}
+                    <option value="{{item.0}}" {% if source.address_country == item.0 %}selected{% endif %}>{{item.1}}</option>
+                    {% endfor %}
+                </select>
+
+            </div>
+        </div>
+    </div>
+
+<!--     <div class="row">
+    <div class="col-xs-12">
+        <button class="btn btn-primary" type="submit">Make a payment!</button>
+    </div>
+</div> -->
+
+</div>

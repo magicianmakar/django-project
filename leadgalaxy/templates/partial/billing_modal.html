@@ -1,0 +1,49 @@
+<div id="modal-billing" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Enter your payment information</h4>
+            </div>
+            <div class="modal-body" style="padding:10px">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="validation alert alert-danger" style="display:none">
+                        </div>
+                    </div>
+
+                    {% with source=user.stripe_customer.source %}
+                    <form role="form" id="billing-details-form" method="POST">
+                        <div class="col-xs-12 col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Credit Card</div>
+                                <div class="panel-body">
+                                    {% include 'payments/credit_card_form.html' %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Billing Address</div>
+                                <div class="panel-body">
+                                    {% include 'payments/billing_address_form.html' %}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    {% endwith %}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <img src="https://stripe.com/img/about/logos/badge/small/dark.png" alt="Powered by Stripe" class="pull-left">
+                <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancel</button>
+
+                <button class="btn btn-primary save-details" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving">
+                    <i class="fa fa-save"></i> Save Details</button>
+              </div>
+        </div>
+    </div>
+</div>

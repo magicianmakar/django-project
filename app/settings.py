@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'article',
     'leadgalaxy',
     'shopify_orders',
+    'stripe_subscription',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -243,3 +244,10 @@ if not DEBUG:
     RAVEN_CONFIG = {
         'dsn': 'https://30d5c32fb8974ed4852091787c978228:0bfa090f08724fa1a811c92f9faf45b6@app.getsentry.com/73543',
     }
+
+# Stripe
+
+STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
+STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
+STRIP_TRIAL_DISCOUNT_DAYS = 10
+STRIP_TRIAL_DISCOUNT_COUPON = 'TRIAL-1MONTH'

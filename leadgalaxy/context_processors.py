@@ -29,6 +29,43 @@ def extra_bundles(request):
                 'title': 'Upgrade To All Drop Shipping Features'
             }
 
+        elif profile.plan.is_stripe() and request.user.is_stripe_customer():
+            from stripe_subscription.utils import eligible_for_trial_coupon
+
+            customer = request.user.stripe_customer
+            if not customer.have_source() and eligible_for_trial_coupon(customer.get_data()):
+                from stripe_subscription.stripe_api import stripe
+                from stripe_subscription.utils import format_coupon
+                from django.conf import settings
+
+                coupon_key = 'stripe_coupon_{}'.format(settings.STRIP_TRIAL_DISCOUNT_COUPON)
+                coupon = cache.get(coupon_key)
+                if coupon is None:
+                    coupon = stripe.Coupon.retrieve(settings.STRIP_TRIAL_DISCOUNT_COUPON).to_dict()
+                    cache.set(coupon_key, coupon, timeout=3600)
+
+                msg = ('Enter your credit card information today and get <b>{}</b><br/>'
+                       'You will not be charged until your 14 days Free Trial has ended.').format(format_coupon(coupon))
+
+                extra_bundle = {
+                    'url': '/user/profile#billing',
+                    'title': 'Get {}'.format(format_coupon(coupon)),
+                    'attrs': 'qtip-tooltip="{}" xqtip-my="" xqtip-at=""'.format(msg),
+                    'message': msg,
+                    'sametab': True
+                }
+
+                cache.set(extra_cache_key, extra_bundle, timeout=3600)
+
+        elif profile.plan.is_free and (not request.user.is_stripe_customer() or request.user.stripe_customer.can_trial):
+            extra_bundle = {
+                'url': '/user/profile#plan',
+                'title': 'Start Your 14 Days Free Trial!',
+                'sametab': True
+            }
+
+            cache.set(extra_cache_key, extra_bundle, timeout=3600)
+
     return {
         'extra_bundle': extra_bundle
     }

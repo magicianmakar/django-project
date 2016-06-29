@@ -67,3 +67,41 @@ def price_diff(context, from_, to_, reverse_colors=False):
             return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_)))
         else:
             return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i></span>' % (colors[1]))
+
+
+@register.simple_tag
+def plan_limit(plan, name):
+    limit = getattr(plan, name)
+
+    if limit == -1:
+        limit = 'Unlimited'
+    elif limit < 2:
+        name = name[:-1]
+
+    return '{} {}'.format(limit, name.title())
+
+
+@register.simple_tag
+def plan_features(plan):
+    if not plan.features:
+        return ''
+
+    def help_replace(m):
+        help = m.group(1)
+
+        if '"' in help:
+            help = help.replace('"', '\'')
+
+        return ('<i class="fa fa-fw fa-question-circle" qtip-tooltip="{}" qtip-my="bottom center"'
+                'qtip-at="top center" style="font-size:16px;color:#BBB"></i>').format(help)
+
+    import markdown
+
+    features = markdown.markdown(plan.features, extensions=['markdown.extensions.nl2br'])
+    features = re.sub(
+        r'\|\|([^\|]+)\|\|',
+        help_replace,
+        features,
+    )
+
+    return mark_safe(features)

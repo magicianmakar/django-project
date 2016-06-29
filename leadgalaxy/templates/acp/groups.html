@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load url_tools %}
 
 {% block main-container %}
 
@@ -40,7 +41,7 @@
                     <thead>
                         <tr>
                             <th>Plan</th>
-                            <th>Price Per Month</th>
+                            <th>Payment Gateway</th>
                             <th>Stores</th>
                             <th>Products</th>
                             <th>Boards</th>
@@ -52,12 +53,25 @@
                     {% for item in plans %}
                         <tr plans-id="{{item.id}}">
                             <td><b><a target="_blank" href="/admin/leadgalaxy/groupplan/{{item.id}}/">{{item.title}}</a></b></td>
-                            <td>${{item.montly_price}}</td>
+                            <td>{{item.payment_gateway}}</td>
                             <td>{% if item.stores == -1 %}Unlimited{% else %}{{item.stores}}{% endif %}</td>
                             <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
                             <td>{% if item.boards == -1 %}Unlimited{% else %}{{item.boards}}{% endif %}</td>
                             <td><a href="{% url 'acp_users_list' %}?plan={{item.id}}">{{item.userprofile_set.count}}</a></td>
-                            <td><button class="btn btn-outline btn-success btn-xs gen-link" plan-title="{{item.title}}" plan-id="{{item.id}}">Generate Link</button></td>
+                            <td>
+                                {% if not item.is_stripe %}
+                                    <button class="btn btn-outline btn-success btn-xs gen-link" plan-title="{{item.title}}" plan-id="{{item.id}}">
+                                        Generate Link
+                                    </button>
+                                {% else %}
+                                    <a class="btn btn-outline btn-primary btn-xs"
+                                       href="/accounts/register/{{item.slug}}-subscribe"
+                                       target="_blank">
+                                        Subscribe link
+                                    </a>
+                                {% endif %}
+                            </td>
+
                         </tr>
                     {% empty %}
                         <tr>

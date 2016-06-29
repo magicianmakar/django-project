@@ -23,6 +23,7 @@
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/toastr/toastr.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/chosen/chosen.css' %}" rel="stylesheet">
     <link href="{% static 'css/animate.css' %}" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <link href="{% static 'css/trix.css' %}" rel="stylesheet">
@@ -270,15 +271,16 @@
                         <span class="m-r-sm text-muted welcome-message">
                             {% if request.user.is_authenticated %}
                                 {% if request.user.profile.plan.description %}
-                                    <a href="/user/profile?plan=1" class="current-plan itooltip" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="View Your Plans &amp; Bundles" style="font-size: 13px">
+                                    <a href="/user/profile#plan" class="current-plan itooltip" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="View Your Plans &amp; Bundles" style="font-size: 13px">
                                         {{request.user.profile.plan.description}}
                                     </a>
                                 {% endif %}
 
                                 {% if extra_bundle %}
                                     <a class="btn btn-default btn-outline btn-xs" href="{{extra_bundle.url}}"
-                                       style="min-height:0;padding: 0 5px;font-size:13px;background-color:#B95F29;color:#fff;border-color:#AA6B41"
-                                       target="_blank">{{extra_bundle.title}}</a>
+                                       style="min-height:0;padding:2px 5px;font-size:13px;background-color:rgb(140, 212, 245);color:#FFFFFF;border-color:skyblue;font-weight:bold"
+                                       {% if not extra_bundle.sametab %}target="_blank"{% endif %}
+                                       {{extra_bundle.attrs|default:''|safe}}>{{extra_bundle.title}}</a>
                                 {% endif %}
 
                                 {% if request.user.profile.plan.badge_image %}
@@ -397,10 +399,12 @@
     <script src="{% static 'libs/sweetalert/sweetalert.min.js' %}"></script>
     <script src="{% static 'libs/jquery-autocomplete/jquery.autocomplete.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/qtip2/jquery.qtip.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/js-cookie/src/js.cookie.js' %}"></script>
 
     <script src="{% static 'js/inspinia.js' %}"></script>
     <script src="{% static 'js/plugins/pace/pace.min.js' %}"></script>
     <script src="{% static 'js/plugins/toastr/toastr.min.js' %}"></script>
+    <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/trix.js' %}"></script>
     <script src="{% static 'js/main.js' %}?v=6"></script>
     {% endcompress %}

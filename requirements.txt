@@ -39,6 +39,7 @@ Jinja2==2.8
 kombu==3.0.35
 lockfile==0.10.2
 lxml==3.4.4
+Markdown==2.6.6
 MarkupSafe==0.23
 MySQL-python==1.2.5
 ndg-httpsclient==0.4.1
@@ -64,6 +65,7 @@ six==1.10.0
 slimit==0.8.1
 SQLAlchemy==1.0.12
 sqlparse==0.1.18
+stripe==1.35.0
 Twisted==15.4.0
 Unidecode==0.4.19
 uritemplate==0.6

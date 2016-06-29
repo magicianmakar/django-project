@@ -10,13 +10,18 @@ USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'description', 'permissions_count')
+    list_display = ('title', 'slug', 'payment_gateway', 'description', 'permissions_count')
 
     exclude = ('default_plan',)
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
+    list_filter = ('payment_gateway',)
     readonly_fields = ('register_hash',)
     search_fields = ('title', 'slug', 'description', 'register_hash')
+
+    def view_on_site(self, obj):
+        if obj.payment_gateway == 'stripe':
+            return '/accounts/register/{}-subscribe'.format(obj.slug)
 
 
 @admin.register(FeatureBundle)

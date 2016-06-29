@@ -1,0 +1,48 @@
+<div class="cc-form-div">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="form-group">
+                <label>Name: <span class="small" style="color:#999;font-weight:normal">(as it appears on the credit card)</span></label>
+                <input id="cc-name" name="cc-name" type="text" class="form-control cc-name" value="{{source.name|default:''}}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="form-group">
+                <label>Card Number:</label>
+                <div class="input-group">
+                    <input id="cc-number" name="cc-number" type="tel" class="form-control cc-number" autocomplete="cc-number" placeholder="•••• •••• •••• ••••" required="">
+                    <span class="input-group-addon cc-brand"><i class="fa fa-credit-card"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-7 col-md-7">
+            <div class="form-group">
+                <label>Expiration Date:</label>
+                <input id="cc-exp" name="cc-exp" type="tel" class="form-control cc-exp"
+                       {% if source.exp_month and source.exp_year %}
+                          value="{{source.exp_month}} / {{source.exp_year}}"
+                       {% endif %}
+                       autocomplete="cc-exp" placeholder="•• / ••" required="">
+            </div>
+        </div>
+        <div class="col-xs-5 col-md-5">
+            <div class="form-group">
+                <label>CVV:</label>
+                <input id="cc-cvc" name="cc-cvc" type="tel" class="form-control cc-cvc"  value="" autocomplete="off" placeholder="•••" required="">
+            </div>
+        </div>
+    </div>
+
+<!--     <div class="row">
+    <div class="col-xs-12">
+        <button class="btn btn-primary" type="submit">Make a payment!</button>
+    </div>
+</div> -->
+
+</div>

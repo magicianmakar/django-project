@@ -2,27 +2,40 @@
 
 {% load static %}
 {% load compress %}
+{% load template_helper %}
 
 {% block main-container %}
-{% with plan_tab=request.GET.plan %}
 <div class="row">
     <div class="col-md-10 col-md-offset-1">
         <div class="tabs-container">
             <ul class="nav nav-tabs">
-                <li class="{% if not plan_tab %}active{% endif %}">
-                    <a data-toggle="tab" href="#tab-1" aria-expanded="true">Profile</a>
+                <li class="active">
+                    <a data-toggle="tab" href="#tab-1" data-auto-hash="" aria-expanded="true">Profile</a>
                 </li>
-                <li class="">
-                    <a data-toggle="tab" href="#tab-2" aria-expanded="false">Email &amp; Password</a>
+                <li class="email-tab">
+                    <a data-toggle="tab" href="#tab-2" data-auto-hash="email" data-auto-click="true" aria-expanded="false">Email &amp; Password</a>
                 </li>
                 {% if not user.is_subuser %}
-                <li class="{% if plan_tab %}active{% endif %}">
-                    <a data-toggle="tab" href="#tab-3" aria-expanded="false">Plan &amp; Bundles</a>
+                <li class="plan-tab">
+                    <a data-toggle="tab" href="#tab-3" data-auto-hash="plan" data-auto-click="true" aria-expanded="false">
+                        Plan &amp;
+                        {% if stripe_customer %}
+                            Subscriptions
+                        {% else %}
+                            Bundles
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if stripe_customer %}
+                <li class="billing-tab">
+                    <a data-toggle="tab" href="#tab-4" data-auto-hash="billing" data-auto-click="true" aria-expanded="false">Billing</a>
                 </li>
                 {% endif %}
             </ul>
             <div class="tab-content">
-                <div id="tab-1" class="tab-pane {% if not plan_tab %}active{% endif %}">
+                <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
                         <div class="row">
                             <div class=" col-md-12 col-md-offset-0 ">
@@ -128,25 +141,81 @@
                     </div>
                 </div>
                 {% if not user.is_subuser %}
-                <div id="tab-3" class="tab-pane {% if plan_tab %}active{% endif %}">
+                <div id="tab-3" class="tab-pane">
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        Plan
-                                    </div>
-                                    <div class="panel-body">
-                                        <p>Your current Plan:</p>
-                                        <ul class="list-group">
-                                            <li class="list-group-item" style="border:0 none"><b>
-                                                {{ user.profile.plan.description|default:user.profile.plan.title }}
-                                            </b></li>
-                                        </ul>
-                                    </div>
+                                {% if user.stripesubscription_set.exists %}
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            Plan
+                                        </div>
+                                        <div class="panel-body">
+                                            <p style="margin:0">Your Subscribed to:</p>
+                                            <ul class="list-group">
+                                                {% for item in user.stripesubscription_set.all %}
+                                                    {% with status=item.get_status %}
 
-                                </div>
+                                                    <li class="list-group-item" style="border:0 none">
+                                                        <b>
+                                                        {{ item.plan.get_description }}
+                                                            {% if item.is_active %}
+                                                                <span class="badge badge-primary">
+                                                                    {{status.status_str}}
+                                                                </span>
+
+                                                                {% with coupon=user.stripe_customer.get_coupon %}
+                                                                    {% if coupon %}
+                                                                        <span class="badge badge-success">{{coupon}}</span>
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            {% else %}
+                                                                <span class="badge badge-warning">
+                                                                    {{status.status_str}}
+                                                                </span>
+                                                            {% endif %}
+                                                        </b>
+
+                                                        {% if status.status == 'active' %}
+                                                        <button class="btn btn-danger btn-outline btn-xs pull-right cancel-sub-btn itooltip"
+                                                                title="Cancel You Subscription"
+                                                                data-subscription="{{item.id}}"
+                                                                data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
+                                                                data-plan="{{item.plan.get_description}}">
+                                                            {# <i class="fa fa-times"></i>  #}
+                                                            Cancel
+                                                        </button>
+                                                        {% endif %}
+                                                    </li>
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            Plan
+                                        </div>
+                                        <div class="panel-body">
+                                            <p style="margin:0">Your current Plan:</p>
+                                            <ul class="list-group">
+                                                <li class="list-group-item" style="border:0 none">
+                                                    <b>
+                                                        {{ user.profile.plan.get_description }}
+                                                        {% if user.profile.plan.is_free %}
+                                                        ($0/month) <span class="badge badge-primary">Free</span>
+                                                        {% endif %}
+                                                    </b>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                {% endif %}
                             </div>
+
+                            {% if bundles %}
                             <div class="col-md-12">
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
@@ -182,7 +251,70 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
+
+                            {% if stripe_customer %}
+                            <div class="col-md-12">
+                                {% include "payments/monthly_plans.html" with current_plan=user.profile.plan %}
+                            </div>
+                            {% endif %}
+
                         </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if stripe_customer %}
+                <div id="tab-4" class="tab-pane">
+                    <div class="panel-body">
+                        {% with source=user.stripe_customer.source %}
+                            {% if source %}
+                            <div class="row">
+                                <div class="col-md-8 col-md-offset-2">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">Credit Card</div>
+                                        <div class="panel-body">
+                                            <p>This account is billed to:
+                                                <i class="fa fa-lg fa-cc-{{source.brand|lower}}"></i>
+                                                <b>{{source.brand}}</b> ending in <b>{{source.last4}}</b></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8 col-md-offset-2">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">Billing Address</div>
+                                        <div class="panel-body">
+                                            {{source.name}}<br>
+                                            {{source.address_line1}}<br>
+                                            {% if source.address_line2 %}
+                                                {{source.address_line2}}<br>
+                                            {% endif %}
+                                            {{source.address_zip}},
+                                            {{source.address_state}},
+                                            {{source.address_country}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8 col-md-offset-2">
+                                    <button class="btn btn-primary add-cc-btn"><i class="fa fa-edit"></i> Update Credit Card</button>
+                                </div>
+
+                                {# <div class="col-md-8 col-md-offset-2"> #}
+                                    {# {% include "payments/invoice_table.html" with invoices=user.stripe_customer.invoices %} #}
+                                {# </div> #}
+
+                            </div>
+                            {% else %}
+                                <p>This account does not have a credit card.</p>
+                                {% if extra_bundle.message %}
+                                <p>{{extra_bundle.message|safe}}</p>
+                                {% endif %}
+
+                                <button class="btn btn-primary add-cc-btn"><i class="fa fa-plus"></i> Add Credit Card</button>
+                            {% endif %}
+                        {% endwith %}
                     </div>
                 </div>
                 {% endif %}
@@ -191,18 +323,40 @@
     </div>
 </div>
 
-{% endwith %}
-{% endblock %}
+{% if stripe_customer %}
+    {% include 'payments/billing_modal.html' %}
+    {% include 'payments/subscription_cancel.html' %}
+{% endif %}
 
+{% endblock %}
 
 {% block extracss %}
-    <link href="{% static 'css/plugins/chosen/chosen.css' %}" rel="stylesheet">
-{% endblock %}
-
-{% block extrajs %}
 {% compress js %}
-    <script src="{% static 'js/plugins/chosen/chosen.jquery.js' %}" type="text/javascript"></script>
-    <script src="{% static 'shopified/js/profile.js' %}" type="text/javascript"></script>
+    <link href="{% static 'shopified/css/payment.css' %}" rel="stylesheet">
 {% endcompress %}
 {% endblock %}
 
+{% block extrajs %}
+    <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+
+<script type="text/javascript">
+{% if stripe_customer %}
+    var config = {
+        'customer_source': '{% url "stripe_subscription.views.customer_source" %}',
+        'subscription_trial': '{% url "stripe_subscription.views.subscription_trial" %}',
+        'subscription_plan': '{% url "stripe_subscription.views.subscription_plan" %}',
+
+        'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
+    };
+{% else %}
+    var config = {};
+{% endif %}
+</script>
+
+{% compress js %}
+    <script src="{% static 'libs/bower_components/jquery.payment/lib/jquery.payment.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'shopified/js/profile.js' %}" type="text/javascript"></script>
+    <script src="{% static 'shopified/js/payment.js' %}" type="text/javascript"></script>
+{% endcompress %}
+
+{% endblock %}

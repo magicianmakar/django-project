@@ -107,6 +107,11 @@ function getQueryVariable(variable, url) {
     return null;
 }
 
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
 function sendProductToShopify (product, store_id, product_id, callback, callback_data) {
     if (!store_id || store_id.length === 0) {
         alert('Please choose a Shopify store first!');
@@ -525,6 +530,17 @@ $(function() {
              }
         });
     });
+
+    $('a[data-auto-hash]').click(function (e) {
+        window.location.hash = $(this).data('auto-hash');
+    });
+
+});
+
+$('a[data-auto-click]').each(function () {
+    if($(this).data('auto-click') && window.location.hash == '#' + $(this).data('auto-hash')) {
+        $(this).trigger('click');
+    }
 });
 
 var ravenOptions = {

@@ -1,0 +1,209 @@
+.usage {
+  border: 1px solid #e1e2e3;
+  color: #465262;
+}
+
+.usage th {
+  border-left: 1px solid #f1f2f3 !important;
+  border-bottom: 1px solid #f1f2f3 !important;
+  text-align: center !important;
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+}
+
+.usage td {
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  border-left: 1px solid #f1f2f3 !important;
+  padding: 15px 20px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  width: 18%;
+  line-height: 1.3 !important;
+}
+
+.usage td:first-child, .usage th:first-child {
+  border-left: 0 !important;
+  text-align: left !important;
+  width: 25%;
+}
+
+.usage td.align-left {
+  text-align: left !important;
+}
+
+.usage strong {
+  font-weight: 500 !important;
+  font-size: 125%;
+  color: #465262;
+}
+
+.usage strong.over {
+  color: #ff2e46;
+}
+
+.usage small {
+  font-size: 85% !important;
+}
+
+.no-show {
+  display: none;
+}
+
+p {
+  margin: 20px 0;
+}
+
+.trial-days-remaining {
+  font-weight: 300;
+  margin-top: 0 !important;
+}
+
+.plan-interval-select {
+  border-bottom: 1px solid #dce2e6;
+}
+.plan-interval-select label {
+  position: relative;
+  border-bottom: 3px solid transparent;
+  padding: 0 2px 10px 20px;
+  display: block;
+  cursor: pointer;
+  margin: 0;
+}
+.plan-interval-select input {
+  position: absolute;
+  left: 0px;
+}
+.plan-interval-select label.active {
+  border-bottom: 3px solid #2eb0f7;
+}
+
+.well {
+  background: #fff;
+  box-shadow: none;
+  padding: 0;
+  border: 0;
+}
+
+table.plan-table {
+  position: relative;
+  z-index: 1;
+  border-collapse: collapse !important;
+  margin-bottom: 0px !important;
+}
+
+table.plan-table thead + tbody tr:first-child td {
+    border: 1px solid #e0e9ee !important;
+}
+
+.plan-table td, .plan-table th {
+  text-align: center;
+}
+
+.plan-table td.small {
+  font-size: inherit;
+}
+
+.plan-table thead th {
+  padding-top: 25px !important;
+  padding-bottom: 25px !important;
+  overflow: hidden;
+  border-left: 1px solid #e0e9ee !important;
+  border-right: 1px solid #e0e9ee !important;
+}
+
+.plan-table thead th input {
+  position: absolute;
+  left: -9999em;
+}
+
+.plan-table tbody td {
+  padding-top: 15px !important;
+  padding-bottom: 15px !important;
+  border-left: 1px solid #e0e9ee !important;
+  border-right: 1px solid #e0e9ee !important;
+}
+
+.plan-table tbody p {
+    margin: 0 !important;
+    padding: 0 !important;
+
+    padding-top: 15px !important;
+    list-style: none !important;
+    font-size: 14px !important;
+}
+
+.plan-table .selected {
+  background: #F9FBFD;
+}
+
+.plan-table thead tr th:first-child.selected,
+.plan-table tbody tr td:first-child.selected {
+  border-left: 0 !important;
+}
+
+.plan-table thead tr th:last-child.selected,
+.plan-table tbody tr td:last-child.selected {
+  border-right: 0 !important;
+}
+
+.plan-table thead h3 {
+  margin-bottom: 10px;
+}
+
+.plan-table thead .cta {
+  margin: 0;
+}
+
+.plan-table thead .cta .btn {
+  padding: 5px 12px;
+  min-width: 102px;
+}
+
+.plan-table thead .cta .btn.disabled {
+  color: inherit;
+  opacity: 1;
+  border-color: #C1C9CE;
+  background: #f1f2f3;
+}
+
+.plan-table thead .price {
+  font-size: 30px;
+  font-weight: 400;
+  margin: 10px 0;
+  color: #727D8E;
+}
+
+.plan-table thead .price span {
+  font-size: 20px;
+  color: #A1ACBB;
+}
+
+.plan-table h3 {
+    font-size: 25px;
+}
+
+.plan-table .retail-price {
+    margin: 0;
+    padding: 0;
+    min-height: 30px;
+    color: #D2A8A8;
+    text-decoration: line-through;
+    font-style: normal;
+    font-size: 17px
+}
+
+.plan-table .retail-price .mo {
+    font-size: 10px
+}
+
+.plan-feature-list {
+    margin-top: 15px;
+    border-top: 1px solid #E8E8E8;
+}
+
+.plan-more-features {
+    padding-top: 20px;
+    border-top: 1px solid #F1F1F1;
+    margin-top: 20px;
+}

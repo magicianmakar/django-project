@@ -16,28 +16,31 @@ from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.core.cache import cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from unidecode import unidecode
 
 from django.conf import settings
 
-from .models import *
-from .forms import *
-import tasks
-
-import os
 import re
 import simplejson as json
 import requests
 import arrow
 import traceback
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from .models import *
+from .forms import *
+from .province_helper import load_uk_provincess
+
+import tasks
 import utils
+
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder
 
-from province_helper import load_uk_provincess
+from stripe_subscription.utils import process_webhook_event, sync_subscription
 
 
 @login_required
@@ -1396,6 +1399,38 @@ def proccess_api(request, user, method, target, data):
         utils.set_orders_filter(user, data)
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'customer-source':
+        # Update Stripe Customer Card
+
+        from stripe_subscription.utils import eligible_for_trial_coupon
+
+        token = data.get('stripeToken')
+
+        cus = user.stripe_customer.retrieve()
+        cus.source = token
+
+        try:
+            user.stripe_customer.stripe_save(cus)
+        except stripe.CardError as e:
+            raven_client.captureException()
+
+            return JsonResponse({
+                'error': 'Credit Card Error: {}'.format(e.message)
+            }, status=500)
+
+        except:
+            raven_client.captureException()
+
+            return JsonResponse({
+                'error': 'Credit Card Error, Please try again'
+            }, status=500)
+
+        if eligible_for_trial_coupon(cus):
+            cus.coupon = settings.STRIP_TRIAL_DISCOUNT_COUPON
+            user.stripe_customer.stripe_save(cus)
+
+        return JsonResponse({'status': 'ok'})
+
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
@@ -1829,6 +1864,17 @@ def webhook(request, provider, option):
 
         return JsonResponse({'status': 'ok'})
 
+    elif provider == 'stripe' and request.method == 'POST':
+        assert option == 'subs'
+
+        event = json.loads(request.body)
+
+        try:
+            return process_webhook_event(request, event['id'])
+        except:
+            traceback.print_exc()
+            raven_client.captureException()
+            return HttpResponse('Server Error', status=500)
     else:
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'})
 
@@ -2788,6 +2834,7 @@ def upload_file_sign(request):
 
 
 @login_required
+@ensure_csrf_cookie
 def user_profile(request):
     profile = request.user.profile
     bundles = profile.bundles.all().values_list('register_hash', flat=True)
@@ -2807,12 +2854,19 @@ def user_profile(request):
             })
 
     bundles = profile.bundles.filter(hidden_from_user=False)
+    stripe_plans = GroupPlan.objects.exclude(stripe_plan=None)
+    stripe_customer = request.user.is_stripe_customer() or request.user.profile.plan.is_free
+
+    if not request.user.is_subuser and stripe_customer:
+        sync_subscription(request.user)
 
     return render(request, 'user/profile.html', {
         'countries': utils.get_countries(),
         'now': timezone.now(),
         'extra_bundles': extra_bundles,
         'bundles': bundles,
+        'stripe_plans': stripe_plans,
+        'stripe_customer': stripe_customer,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
@@ -3634,16 +3688,27 @@ def logout(request):
     return redirect('/')
 
 
-def register(request, registration=None):
-    if request.user.is_authenticated():
+def register(request, registration=None, subscribe_plan=None):
+    if request.user.is_authenticated() and not request.user.is_superuser:
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
+
+    if registration and registration.endswith('-subscribe'):
+        slug = registration.replace('-subscribe', '')
+        subscribe_plan = get_object_or_404(GroupPlan, slug=slug, payment_gateway='stripe')
+        if not subscribe_plan.is_stripe():
+            raise Http404('Not a Stripe Plan')
+
+        registration = None
 
     if registration:
         # Convert the hash to a PlanRegistration model
         registration = get_object_or_404(PlanRegistration, register_hash=registration)
 
         if registration.expired:
+            if request.user.is_superuser:
+                messages.error(request, 'Registration link <i>{}</i> is expired'.format(registration.register_hash))
+
             return HttpResponseRedirect('/')
 
     if request.method == 'POST':
@@ -3653,7 +3718,13 @@ def register(request, registration=None):
         if form.is_valid():
             new_user = form.save()
 
-            if registration is None or registration.get_usage_count() is None:
+            if subscribe_plan:
+                try:
+                    new_user.profile.apply_subscription(subscribe_plan)
+                except:
+                    raven_client.captureException()
+
+            elif registration is None or registration.get_usage_count() is None:
                 utils.apply_plan_registrations(form.cleaned_data['email'])
             else:
                 utils.apply_shared_registration(new_user, registration)
@@ -3680,7 +3751,8 @@ def register(request, registration=None):
 
     return render(request, "registration/register.html", {
         'form': form,
-        'registration': registration
+        'registration': registration,
+        'subscribe_plan': subscribe_plan
     })
 
 

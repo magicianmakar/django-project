@@ -4,6 +4,12 @@ $(function () {
     });
 
     $('#country').trigger('change');
+
+    if (getQueryVariable('plan')) {
+        $('.plan-tab a').trigger('click');
+    } else if (getQueryVariable('billing')) {
+        $('.billing-tab a').trigger('click');
+    }
 });
 
 $('#country').change(function (e) {

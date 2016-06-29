@@ -12,6 +12,8 @@ import requests
 import textwrap
 from urlparse import urlparse
 
+from stripe_subscription.stripe_api import stripe
+
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
     (1, 'Active'),
@@ -23,6 +25,17 @@ YES_NO_CHOICES = (
     (0, 'No'),
     (1, 'Yes'),
 )
+
+PLAN_PAYMENT_GATEWAY = (
+    ('jvzoo', 'JVZoo'),
+    ('stripe', 'Stripe'),
+)
+
+
+def add_to_class(cls, name):
+    def _decorator(*args, **kwargs):
+        cls.add_to_class(name, args[0])
+    return _decorator
 
 
 class UserProfile(models.Model):
@@ -106,6 +119,54 @@ class UserProfile(models.Model):
         reg.user = self.user
         reg.expired = True
         reg.save()
+
+    def apply_subscription(self, plan, verbose=False):
+        from stripe_subscription.utils import update_subscription
+
+        assert plan.is_stripe(), 'Not a Stripe Plan'
+
+        # Assert we have a stripe customer
+        self.create_stripe_customer()
+
+        sub = stripe.Subscription.create(
+            customer=self.user.stripe_customer.customer_id,
+            plan=plan.stripe_plan.stripe_id,
+            metadata={'plan_id': plan.id, 'user_id': self.user.id}
+        )
+
+        update_subscription(self.user, plan, sub)
+
+        self.plan = plan
+        self.save()
+
+    def create_stripe_customer(self):
+        ''' Create a Stripe Customer for this a profile '''
+
+        from stripe_subscription.utils import update_customer
+
+        try:
+            customer = self.user.stripe_customer
+        except:
+            customer = None
+
+        if not customer:
+            customer = stripe.Customer.create(
+                description="Username: {}".format(self.user.username),
+                email=self.user.email,
+                metadata={'user_id': self.user.id}
+            )
+
+            update_customer(self.user, customer)
+
+    def change_plan(self, plan):
+        if self.plan != plan:
+            self.plan = plan
+            self.save()
+
+            return True
+
+        else:
+            return False
 
     def get_active_stores(self, flat=False):
         if self.user.is_subuser:
@@ -271,18 +332,27 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
 
+@add_to_class(User, 'get_first_name')
+def user_first_name(self):
+    return self.first_name.title() if self.first_name else self.username
+
+
+@add_to_class(User, 'can')
 def user_can(self, perms):
     return self.profile.can(perms)
 
 
+@add_to_class(User, 'get_config')
 def user_get_config(self, name=None, default_value=None):
     return self.profile.get_config_value(name, default_value)
 
 
+@add_to_class(User, 'set_config')
 def user_set_config(self, name, value):
     return self.profile.set_config_value(name, value)
 
 
+@add_to_class(User, 'get_boards')
 def user_get_boards(self):
     if self.is_subuser:
         return self.profile.subuser_parent.get_boards()
@@ -290,10 +360,12 @@ def user_get_boards(self):
         return self.shopifyboard_set.all().order_by('title')
 
 
-User.add_to_class("can", user_can)
-User.add_to_class("get_config", user_get_config)
-User.add_to_class("set_config", user_set_config)
-User.add_to_class("get_boards", user_get_boards)
+@add_to_class(User, 'is_stripe_customer')
+def user_stripe_customer(self):
+    try:
+        return self.stripe_customer and self.stripe_customer.customer_id
+    except:
+        return False
 
 
 class ShopifyStore(models.Model):
@@ -715,18 +787,21 @@ class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
 
-    montly_price = models.FloatField(default=0.0, verbose_name="Price Per Month")
     stores = models.IntegerField(default=0)
     products = models.IntegerField(default=0)
     boards = models.IntegerField(default=0)
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
-    description = models.CharField(max_length=512, blank=True, default='')
+    description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
+    notes = models.TextField(null=True, blank=True, verbose_name='Admin Notes')
+    features = models.TextField(null=True, blank=True, verbose_name='Features List')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+
+    payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
 
     def save(self, *args, **kwargs):
         from django.utils.crypto import get_random_string
@@ -738,6 +813,34 @@ class GroupPlan(models.Model):
 
     def permissions_count(self):
         return self.permissions.count()
+
+    def get_description(self):
+        desc = self.description if self.description else self.title
+        if self.is_stripe():
+            desc = '{} (${}/month)'.format(desc, self.stripe_plan.amount, self.stripe_plan.interval)
+
+        return desc
+
+    def import_stores(self):
+        ''' Return Stores this allow importing products from '''
+
+        stores = []
+        for i in self.permissions.all():
+            if i.name.endswith('_import.use'):
+                name = i.name.split('_')[0]
+                stores.append(name)
+
+        return stores
+
+    def is_stripe(self):
+        try:
+            return self.payment_gateway == 'stripe' and bool(self.stripe_plan.stripe_id)
+        except:
+            return False
+
+    @property
+    def is_free(self):
+        return self.slug in ['free-plan', 'jvzoo-free-gift', 'promote-labs-free-gift']
 
     def __unicode__(self):
         return self.title
@@ -762,6 +865,9 @@ class FeatureBundle(models.Model):
 
     def permissions_count(self):
         return self.permissions.count()
+
+    def get_description(self):
+        return self.description if self.description else self.title
 
     def __unicode__(self):
         return self.title
@@ -849,6 +955,14 @@ class PlanRegistration(models.Model):
         data['users'] = users
 
         self.data = json.dumps(data)
+
+    def get_description(self):
+        if self.plan:
+            return self.plan.get_description()
+        elif self.bundle:
+            return self.bundle.get_description()
+        else:
+            return None
 
     def __unicode__(self):
         if self.plan:
@@ -1014,3 +1128,17 @@ def userprofile_creation(sender, instance, created, **kwargs):
             plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
 
         UserProfile.objects.create(user=instance, plan=plan)
+
+    if not created and instance.is_stripe_customer():
+        try:
+            customer = instance.stripe_customer
+            email = json.loads(customer.data).get('email')
+
+            if email != instance.email:
+                cus = stripe.Customer.retrieve(customer.customer_id)
+                cus.email = instance.email
+
+                customer.stripe_save(cus)
+        except:
+            from raven.contrib.django.raven_compat.models import client as raven_client
+            raven_client.captureException()
