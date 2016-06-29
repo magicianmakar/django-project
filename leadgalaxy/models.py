@@ -840,7 +840,7 @@ class GroupPlan(models.Model):
 
     @property
     def is_free(self):
-        return self.slug in ['free-plan', 'jvzoo-free-gift', 'promote-labs-free-gift']
+        return self.slug in ['free-stripe-plan']
 
     def __unicode__(self):
         return self.title
