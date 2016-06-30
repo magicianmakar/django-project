@@ -571,7 +571,6 @@
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
-<link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
 
 <style type="text/css">
 .buttons {
@@ -666,7 +665,6 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.8/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/bootstrap-tour.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/pixlr.js' %}"></script>
 
 <!-- Load Feather code -->
@@ -836,45 +834,6 @@ $(function() {
     $('.original-description').css('overflow', 'auto');
 });
 
-$(function() {
-    if (config.exports.length && localStorage['new-connection-supplier_end'] !== 'yes') {
-            setTimeout(function() {
-                var tour = new Tour({
-                    name: 'new-connection-supplier',
-                    steps: [{
-                        element: '#export-container .export:first-child .product-supplier-name',
-                        title: 'Change Supplier Name & Link!',
-                        content: 'You can change the Supplier Name and URL in Orders Page from here.',
-                        placement: 'right',
-                    }, {
-                        element: '#export-container .export:first-child .is-default-btn',
-                        title: 'Default Supplier',
-                        content: 'This is the Default Supplier for any future order fulfillment.',
-                        placement: 'top',
-                    }, {
-                        element: $('#export-container .export .export-default-btn').first(),
-                        title: 'Change The Default Supplier',
-                        content: 'Change the supplier using this button.',
-                        placement: 'top',
-                    }, {
-                        element: '.export-add-btn',
-                        title: 'Add More Suppliers',
-                        content: 'Each Product can have multiple suppliers (In case a supplier goes out-of-stock or rise prices)',
-                        placement: 'top',
-                    }, ],
-                    onStart: function () {
-                        $('.connections-tab a').trigger('click');
-                    },
-                    onEnd: function () {
-                        $('.connections-tab').parent().find('li a').first().trigger('click');
-                        window.scroll(0, 0);
-                    }
-            });
-            tour.init();
-            tour.start();
-        }, 1000);
-    }
-});
 </script>
 
     {% compress js %}
