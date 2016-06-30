@@ -425,7 +425,13 @@ def slack_invite(data, team='users'):
 
 
 def aliexpress_shipping_info(aliexpress_id, country_code):
-    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm?",
+    shippement_key = 'shipping_info_{}'.format(aliexpress_id)
+    shippement_data = cache.get(shippement_key)
+
+    if shippement_data is not None:
+        return shippement_data
+
+    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm",
                      timeout=10,
                      params={
                          'f': 'd',
@@ -441,6 +447,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
 
     try:
         shippement_data = json.loads(r.text[1:-1])
+        cache.set(shippement_key, shippement_data, timeout=43200)
     except:
         shippement_data = {}
 
@@ -1049,6 +1056,13 @@ def jvzoo_parse_post(params):
 
 
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
+
+    promotion_key = 'promotion_links_{}'.format(hash_text(urls))
+    promotion_url = cache.get(promotion_key)
+
+    if promotion_url is not None:
+        return promotion_url
+
     try:
         r = requests.get(
             url='http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/{}'.format(appkey),
@@ -1069,8 +1083,12 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             return None
 
         if len(r['result']['promotionUrls']):
-            return r['result']['promotionUrls'][0]['promotionUrl']
+            promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
+            cache.set(promotion_key, promotion_url, timeout=43200)
+
+            return promotion_url
         else:
+            cache.set(promotion_key, False, timeout=3600)
             return None
 
     except:
