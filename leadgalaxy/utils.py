@@ -157,11 +157,12 @@ def get_api_user(request, data, assert_login=False):
             user = request.user
         else:
             if user != request.user and not user.is_superuser:
-                raven_client.captureMessage(
-                    'Different account login',
-                    extra={'Request User': request.user, 'API User': user},
-                    level='warning'
-                    )
+                if request.method != 'GET':
+                    raven_client.captureMessage(
+                        'Different account login',
+                        extra={'Request User': request.user, 'API User': user},
+                        level='warning'
+                        )
 
                 raise ApiLoginException('different_account_login')
 
