@@ -11,7 +11,7 @@
     <div class="tabs-container">
         <ul class="nav nav-tabs">
         {% if not request.GET.store %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Not Connected</a></li>
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
             <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
 
             {% for item in user.profile.get_active_stores %}
@@ -20,7 +20,7 @@
 
         {% else %}
             {% if request.GET.store == 'n' %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Not Connected</a></li>
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
             {% else %}
             <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
             {% endif %}
