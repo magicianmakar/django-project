@@ -597,8 +597,6 @@
 
 </style>
 
-<link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
-
 {% endblock %}
 
 {% block extrajs %}
@@ -614,51 +612,8 @@
 </script>
 
 {% compress js %}
-    <script src="{% static 'js/bootstrap-tour.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
-
-{% if store_order_synced and store_sync_enabled %}
-<script type="text/javascript">
-    $(function() {
-        if (localStorage['orders-new-implementation_end'] !== 'yes') {
-                setTimeout(function() {
-                    var tour = new Tour({
-                        name: 'orders-new-implementation',
-                        steps: [{
-                            element: 'select[name="sort"]',
-                            title: 'More Sorting options!',
-                            content: 'Sort Orders by Creation date, Last update, Total price or Country.',
-                            placement: 'right',
-                        }, {
-                            element: 'input[name="query_customer"]',
-                            title: 'New filters!',
-                            content: 'You can filter orders by Customer name, email or country.',
-                            placement: 'right',
-                        }, {
-                            element: 'label[for="connected-orders"]',
-                            title: 'Connected Only!',
-                            content: 'This option will allow you to show only orders with one or more connected products.',
-                            placement: 'right',
-                        }, {
-                            element: '.swith-implemenation',
-                            title: 'Switch to Old Implementation!',
-                            content: 'You can switch between the new and old implementation using this button.',
-                            placement: 'bottom',
-                        }],
-                        onEnd: function () {
-                            $('.filter-form').hide('slide', function() {
-                                window.scroll(0,0);
-                            });
-                        }
-                });
-                tour.init();
-                tour.start();
-            }, 1000);
-        }
-    });
-</script>
-{% endif %}
 
 {% endblock %}
 
