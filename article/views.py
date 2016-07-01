@@ -10,6 +10,7 @@ from article.forms import ArticleForm, CommentForm
 
 import simplejson as json
 
+
 def index(request, tag=None):
     if tag:
         tags = ArticleTag.objects.filter(Q(title__iexact=tag) | Q(title__iexact=tag.replace('-', ' ')))
@@ -28,6 +29,7 @@ def index(request, tag=None):
 
     })
 
+
 def view(request, id_article=None, slug_article=None):
     try:
         article = Article.objects.get(pk=id_article)
@@ -38,15 +40,16 @@ def view(request, id_article=None, slug_article=None):
 
     return render(request, 'article/view.html', {
         'article': article,
-        'comments': _sort_comments(comments) ,
+        'comments': _sort_comments(comments),
     })
+
 
 @login_required
 def submit(request):
     if(request.method == 'POST'):
         form = ArticleForm(request.POST)
 
-        article = _save_submittion(request,form)
+        article = _save_submittion(request, form)
         if(article):
             messages.success(request, 'Page successful saved.')
             return redirect('article.views.view', slug_article=article.slug)
@@ -63,6 +66,7 @@ def submit(request):
         'tags': json.dumps(tags),
         'form': form,
     })
+
 
 @login_required
 def edit(request, article_id):
@@ -92,26 +96,26 @@ def edit(request, article_id):
         'form': form,
     })
 
+
 @login_required
 def comment_vote(request, action, article_id, comment_id):
     try:
-        value = (1 if action.lower()=='up' else -1)
+        value = (1 if action.lower() == 'up' else -1)
 
         article = Article.objects.get(pk=article_id)
         comment = Comment.objects.get(pk=comment_id)
 
         try:
             vote = CommentVote.objects.get(user=request.user,
-                                            article=article,
-                                            comment=comment)
+                                           article=article,
+                                           comment=comment)
             if(vote.vote_value != value):
                 vote.vote_value = value
         except:
             vote = CommentVote(user=request.user,
-                                article=article,
-                                comment=comment,
-                                vote_value=value)
-
+                               article=article,
+                               comment=comment,
+                               vote_value=value)
 
         vote.save()
 
@@ -124,8 +128,8 @@ def comment_vote(request, action, article_id, comment_id):
 
         return json_response({'new_count': total_vote_value})
 
-    except Exception as e :
-        return json_response({'error':unicode(e)})
+    except Exception as e:
+        return json_response({'error': unicode(e)})
         pass
 
 
@@ -137,14 +141,13 @@ def comment_add(request, article_id):
     # comment_body = xss_clean(request.POST.get('body'))
     # comment_parent = int(request.POST.get('parent'))
 
-
     form = CommentForm(request.POST)
     if(form.is_valid()):
         comment = Comment(title=form.cleaned_data['title'],
-                            body=xss_clean(form.cleaned_data['body']),
-                            parent=form.cleaned_data['parent'],
-                            author=request.user,
-                            article=Article.objects.get(pk=article_id))
+                          body=xss_clean(form.cleaned_data['body']),
+                          parent=form.cleaned_data['parent'],
+                          author=request.user,
+                          article=Article.objects.get(pk=article_id))
         comment.save()
 
         messages.success(request, 'Thank you, your comment will be published after review')
@@ -152,6 +155,7 @@ def comment_add(request, article_id):
     else:
         return json_response({'status': 'error',
                               'message': dict(form.errors.items())})
+
 
 @login_required
 def _save_submittion(request, form, article=None):
@@ -190,6 +194,7 @@ def _save_submittion(request, form, article=None):
     else:
         return False
 
+
 def _sort_comments(comments):
     index = 0
     parent_map = {}
@@ -211,6 +216,7 @@ def _sort_comments(comments):
             new_comments.append(c)
 
     return new_comments
+
 
 def json_response(data):
     return HttpResponse(json.dumps(data, sort_keys=True, indent=2),
