@@ -17,8 +17,8 @@ def index(request, tag=None):
         articles = Article.objects.filter(Q(tags__in=tags)).filter(stat=0).order_by('-created_at')
     else:
         if not request.user.is_superuser:
-            messages.error(request, 'You don\'t have permissions to access that page')
-            return HttpResponseRedirect('/')
+            raise PermissionDenied()
+
         articles = Article.objects.filter(stat=0).order_by('-created_at')
 
     return render(request, 'article/index.html', {
@@ -46,7 +46,10 @@ def view(request, id_article=None, slug_article=None):
 
 @login_required
 def submit(request):
-    if(request.method == 'POST'):
+    if not user.is_superuser:
+        raise PermissionDenied()
+
+    if request.method == 'POST':
         form = ArticleForm(request.POST)
 
         article = _save_submittion(request, form)
@@ -70,6 +73,9 @@ def submit(request):
 
 @login_required
 def edit(request, article_id):
+    if not user.is_superuser:
+        raise PermissionDenied()
+
     article = Article.objects.get(pk=article_id)
 
     if(request.method == 'POST'):
