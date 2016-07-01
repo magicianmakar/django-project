@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -33,8 +33,14 @@ def index(request, tag=None):
 def view(request, id_article=None, slug_article=None):
     try:
         article = Article.objects.get(pk=id_article)
-    except:
+    except Article.DoesNotExist:
         article = get_object_or_404(Article, slug=slug_article)
+
+    if article.stat != 0 and not request.user.is_superuser:
+        raise Http404('Not published')
+
+    # Update this way so we don't change updated_at
+    Article.objects.filter(id=article.id).update(views=article.views+1)
 
     comments = Comment.objects.filter(article=article)
 

@@ -15,7 +15,12 @@
                     {% endfor %}
                 </div>
                 <div class="text-center article-title">
-                <span class="text-muted itooltip" title="Last Update"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
+                    <span class="text-muted itooltip" title="Last Update"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
+
+                    {% if user.is_superuser %}
+                        <p class="text-muted itooltip" title="Visible to admin only"><i class="fa fa-eye"></i> Page Views: {{ article.views }}</p>
+                    {% endif %}
+
                     <h1>
                         {{ article.title }}
                     </h1>

@@ -27,6 +27,7 @@ class Article(models.Model):
     author = models.ForeignKey(User)
     stat = models.IntegerField(choices=PUBLISH_STAT, default=0, verbose_name='Publish stat')
     tags = models.ManyToManyField('ArticleTag', blank=True)
+    views = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

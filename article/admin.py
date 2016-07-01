@@ -5,8 +5,8 @@ from article.models import *
 
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'stat', 'created_at', 'updated_at',)
-    list_filter = ('stat', 'author')
+    list_display = ('title', 'author', 'stat', 'views', 'created_at', 'updated_at',)
+    list_filter = ('stat',)
     date_hierarchy = 'created_at'
     ordering = ('created_at', 'updated_at', 'stat')
     search_fields = ('title', 'body')
@@ -55,6 +55,6 @@ class SidebarLinkAdmin(admin.ModelAdmin):
     filter_horizontal = ('display_plans',)
 
 
-admin.site.register(Article)
+admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticleTag)
 admin.site.register(SidebarLink, SidebarLinkAdmin)
