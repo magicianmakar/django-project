@@ -267,7 +267,7 @@ def proccess_api(request, user, method, target, data):
         # Delete products connection with this store
         ShopifyProductExport.objects.filter(store=store).delete()
 
-        utils.detach_webhooks(store)
+        utils.detach_webhooks(store, delete_too=True)
 
         stores = []
         for i in user.profile.get_active_stores():
@@ -296,7 +296,7 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
         if api_url_changes:
-            utils.detach_webhooks(store)
+            utils.detach_webhooks(store, delete_too=True)
 
         store.title = store_title
         store.api_url = store_api_url
