@@ -2689,7 +2689,7 @@ def acp_groups(request):
         return JsonResponse(data, safe=False)
 
     if request.user.is_superuser:
-        plans = GroupPlan.objects.all()
+        plans = GroupPlan.objects.all().order_by('-payment_gateway', 'id')
         tpl = 'acp/groups.html'
     else:
         plans = GroupPlan.objects.filter(id=8)
