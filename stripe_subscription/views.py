@@ -113,8 +113,6 @@ def subscription_plan(request):
     user = request.user
     user.profile.create_stripe_customer()
 
-    # import pdb; pdb.set_trace()
-
     try:
         plan = GroupPlan.objects.get(id=request.POST.get('plan'))
     except GroupPlan.DoesNotExist:
