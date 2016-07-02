@@ -2611,82 +2611,84 @@ def acp_groups(request):
     if not request.user.is_superuser and not request.user.has_perm('leadgalaxy.add_planregistration'):
         raise PermissionDenied()
 
-    if request.method == 'POST':
-        if request.POST.get('import'):
-            data = json.loads(request.POST.get('import'))
-            new_permissions = []
-            info = ''
-            for i in data:
-                try:
-                    AppPermission.objects.get(name=i['name'])
-                except:
-                    perm = AppPermission(name=i['name'], description=i['description'])
-                    perm.save()
+    if request.user.is_superuser:
+        if request.method == 'POST':
+            if request.POST.get('import'):
+                data = json.loads(request.POST.get('import'))
+                new_permissions = []
+                info = ''
+                for i in data:
+                    try:
+                        AppPermission.objects.get(name=i['name'])
+                    except:
+                        perm = AppPermission(name=i['name'], description=i['description'])
+                        perm.save()
 
-                    new_permissions.append(perm)
-                    info = info + '%s: ' % perm.name
+                        new_permissions.append(perm)
+                        info = info + '%s: ' % perm.name
 
-                    for p in i['plans']:
-                        try:
-                            plan = GroupPlan.objects.get(title=p['title'])
-                        except:
-                            continue
-                        plan.permissions.add(perm)
+                        for p in i['plans']:
+                            try:
+                                plan = GroupPlan.objects.get(title=p['title'])
+                            except:
+                                continue
+                            plan.permissions.add(perm)
 
-                        info = info + '%s, ' % plan.title
+                            info = info + '%s, ' % plan.title
 
-                    info = info + '<br> '
+                        info = info + '<br> '
 
-            messages.success(request,
-                             'Permission import success<br> new permissions: %d<br>%s' % (len(new_permissions), info))
-        else:
-            plan = GroupPlan.objects.get(id=request.POST['default-plan'])
-            GroupPlan.objects.all().update(default_plan=0)
-            plan.default_plan = 1
-            plan.save()
-    elif request.GET.get('perm-name'):
-        name = request.GET.get('perm-name').strip()
-        description = request.GET.get('perm-description').strip()
-        perms = []
+                messages.success(request,
+                                 'Permission import success<br> new permissions: %d<br>%s' % (len(new_permissions), info))
+            else:
+                plan = GroupPlan.objects.get(id=request.POST['default-plan'])
+                GroupPlan.objects.all().update(default_plan=0)
+                plan.default_plan = 1
+                plan.save()
 
-        if request.GET.get('perm-view'):
-            perm = AppPermission(name='%s.view' % name, description='%s | View' % description)
-            perm.save()
+        elif request.GET.get('perm-name'):
+            name = request.GET.get('perm-name').strip()
+            description = request.GET.get('perm-description').strip()
+            perms = []
 
-            perms.append(perm)
+            if request.GET.get('perm-view'):
+                perm = AppPermission(name='%s.view' % name, description='%s | View' % description)
+                perm.save()
 
-        if request.GET.get('perm-use'):
-            perm = AppPermission(name='%s.use' % name, description='%s | Use' % description)
-            perm.save()
+                perms.append(perm)
 
-            perms.append(perm)
+            if request.GET.get('perm-use'):
+                perm = AppPermission(name='%s.use' % name, description='%s | Use' % description)
+                perm.save()
 
-        for i in request.GET.getlist('perm-grant-to'):
-            plan = GroupPlan.objects.get(id=i)
-            for p in perms:
-                plan.permissions.add(p)
+                perms.append(perm)
 
-        messages.success(request, 'New permission added.')
-        return HttpResponseRedirect('/acp/groups?add=1')
+            for i in request.GET.getlist('perm-grant-to'):
+                plan = GroupPlan.objects.get(id=i)
+                for p in perms:
+                    plan.permissions.add(p)
 
-    elif request.GET.get('export'):
-        data = []
-        for i in AppPermission.objects.all():
-            perm = {
-                'name': i.name,
-                'description': i.description,
-                'plans': []
-            }
+            messages.success(request, 'New permission added.')
+            return HttpResponseRedirect('/acp/groups?add=1')
 
-            for p in i.groupplan_set.all():
-                perm['plans'].append({
-                    'id': p.id,
-                    'title': p.title
-                })
+        elif request.GET.get('export'):
+            data = []
+            for i in AppPermission.objects.all():
+                perm = {
+                    'name': i.name,
+                    'description': i.description,
+                    'plans': []
+                }
 
-            data.append(perm)
+                for p in i.groupplan_set.all():
+                    perm['plans'].append({
+                        'id': p.id,
+                        'title': p.title
+                    })
 
-        return JsonResponse(data, safe=False)
+                data.append(perm)
+
+            return JsonResponse(data, safe=False)
 
     if request.user.is_superuser:
         plans = GroupPlan.objects.all().order_by('-payment_gateway', 'id')
