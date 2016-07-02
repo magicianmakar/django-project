@@ -674,6 +674,12 @@ def proccess_api(request, user, method, target, data):
         target_user = User.objects.get(id=data.get('user'))
         plan = GroupPlan.objects.get(id=data.get('plan'))
 
+        if target_user.is_stripe_customer():
+            return JsonResponse({
+                'error': ('Plan should be changed from Stripe Dashboard:\n'
+                          'https://dashboard.stripe.com/customers/{}').format(
+                    target_user.stripe_customer.customer_id)
+                }, status=422)
         try:
             profile = target_user.profile
             target_user.profile.plan = plan
