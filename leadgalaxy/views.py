@@ -3706,13 +3706,16 @@ def register(request, registration=None, subscribe_plan=None):
             else:
                 utils.apply_shared_registration(new_user, registration)
 
-            messages.info(request, "Thanks for registering. You are now logged in.")
             new_user = authenticate(username=form.cleaned_data['username'],
                                     password=form.cleaned_data['password1'])
 
             login(request, new_user)
 
-            return HttpResponseRedirect("/")
+            if new_user.profile.plan.is_free:
+                return HttpResponseRedirect("/user/profile?w=1#plan")
+            else:
+                return HttpResponseRedirect("/")
+
     else:
         try:
             initial = {

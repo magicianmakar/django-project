@@ -10,6 +10,16 @@ $(function () {
     } else if (getQueryVariable('billing')) {
         $('.billing-tab a').trigger('click');
     }
+
+    if(getQueryVariable('w') == '1' && Cookies.get('welcome') != '1') {
+        setTimeout(function() {
+            Cookies.set('welcome', '1', { expires: 1 });
+
+            swal('Congrats!', 'You are now registered. Your next step is to choose ' +
+                'the plan that you would like to use for your 14 day free trial. \n'+
+                'No credit card is required.', 'success');
+        }, 500);
+    }
 });
 
 $('#country').change(function (e) {
