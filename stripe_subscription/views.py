@@ -52,7 +52,17 @@ def customer_source(request):
             'error': 'Credit Card Error, Please try again'
         }, status=500)
 
-    if not user.stripe_customer.can_trial:
+    still_in_trial = False
+
+    subscription = user.stripesubscription_set.latest('created_at')
+    if subscription:
+        sub = subscription.refresh()
+
+        if sub.status == 'trialing':
+            trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()
+            still_in_trial = sub.trial_end and trial_delta.days > 0
+
+    if not user.stripe_customer.can_trial and not still_in_trial:
         try:
             subscription_end_trial(user, raven_client, delete_on_error=True)
 
