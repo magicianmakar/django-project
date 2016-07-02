@@ -232,10 +232,12 @@
 
             var table = $('.dataTables').dataTable({
                 responsive: true,
+                autoWidth: false,
                 data: data,
                 dom: 'T<"clear">lfrtip',
                 bLengthChange: false,
                 iDisplayLength: 50,
+                order: [[ 3, "desc"]],
                 tableTools: {
                     sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }

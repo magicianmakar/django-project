@@ -2409,11 +2409,10 @@ def acp_users_list(request):
     if cache.get('template.cache.acp_users.invalidate'):
         cache.delete_pattern('template.cache.acp_users.*')
 
-    users = User.objects.select_related('profile', 'profile__plan').order_by('-date_joined')
+    users = User.objects.select_related('profile', 'profile__plan')
 
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
-
 
     plans = GroupPlan.objects.all()
     profiles = UserProfile.objects.all()
