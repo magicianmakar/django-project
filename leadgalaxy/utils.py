@@ -6,12 +6,10 @@ import pytz
 import collections
 import time
 from urlparse import urlparse
-import xml.etree.ElementTree as ET
 
 from django.core.mail import send_mail
 from django.template import Context, Template
 from django.utils import timezone
-from django.utils.html import strip_tags
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.utils.crypto import get_random_string
@@ -1212,7 +1210,7 @@ def set_orders_filter(user, filters, default=None):
             user.set_config(key, val)
 
 
-def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=False):
+def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=False, compress=False):
     """
     Store an object in S3 using the 'filename' as the key in S3 and the
     contents of the file pointed to by either 'fp' or 'content' as the
@@ -1220,6 +1218,10 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=Fa
     """
 
     import time
+    import tempfile
+    import gzip
+    import shutil
+
     import boto
     from boto.s3.key import Key
 
@@ -1236,12 +1238,31 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=Fa
     k.key = filename
     k.set_metadata("Content-Type", mimetype)
 
-    if content:
-        k.set_contents_from_string(content)
-    elif fp:
-        k.set_contents_from_file(fp)
-    else:
+    if not fp and not content:
         raise Exception('content or fp parameters are both empty')
+
+    if not compress:
+        if content:
+            k.set_contents_from_string(content)
+        elif fp:
+            k.set_contents_from_file(fp)
+    else:
+        tmp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".gz", delete=False)
+
+        if fp:
+            with open(fp.name, 'rb') as f_in:
+                with gzip.open(tmp_file.name, 'wb') as gz_out:
+                    shutil.copyfileobj(f_in, gz_out)
+
+        elif content:
+            with gzip.open(tmp_file.name, 'wb') as gz_out:
+                gz_out.write(content.encode('utf-8'))
+
+        k.set_metadata('Content-Encoding', 'gzip')
+        k.set_contents_from_filename(tmp_file.name)
+
+        #clean up the temp file
+        os.unlink(tmp_file.name)
 
     k.make_public()
 
@@ -1267,106 +1288,6 @@ class TimezoneMiddleware(object):
             timezone.activate(pytz.timezone(tzname))
         else:
             timezone.deactivate()
-
-
-class ProductFeed():
-    feed = None
-    domain = 'uncommonnow.com'
-    currency = 'USD'
-
-    def __init__(self, store, revision=1):
-        self.store = store
-        self.info = store.get_info
-
-        self.currency = self.info['currency']
-        self.domain = self.info['domain']
-
-        self.revision = safeInt(revision, 1)
-
-    def _add_element(self, parent, tag, text):
-        element = ET.SubElement(parent, tag)
-        element.text = text
-
-        return element
-
-    def init(self):
-        self.root = ET.Element("rss")
-        self.root.attrib['xmlns:g'] = 'http://base.google.com/ns/1.0'
-        self.root.attrib['version'] = '2.0'
-
-        self.channel = ET.SubElement(self.root, 'channel')
-
-        self._add_element(self.channel, 'title', self.info['name'])
-        self._add_element(self.channel, 'link', 'https://{}'.format(self.info['domain']))
-        self._add_element(self.channel, 'description', '{} Products Feed'.format(self.info['name']))
-
-    def add_product(self, product):
-        if len(product['variants']):
-            for variant in product['variants']:
-                self._add_variant(product, variant)
-
-    def _add_variant(self, product, variant):
-        image = product.get('image')
-        if image:
-            image = image.get('src')
-        else:
-            return None
-
-        item = ET.SubElement(self.channel, 'item')
-
-        if self.revision == 1:
-            self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
-        else:
-            self._add_element(item, 'g:id', '{}'.format(variant['id']))
-
-        self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
-        self._add_element(item, 'g:title', product.get('title'))
-        self._add_element(item, 'g:description', self._clean_description(product))
-        self._add_element(item, 'g:image_link', image)
-        self._add_element(item, 'g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
-        self._add_element(item, 'g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
-        self._add_element(item, 'g:brand', product.get('vendor'))
-        self._add_element(item, 'g:google_product_category', product.get('product_type'))
-        self._add_element(item, 'g:availability', 'in stock')
-        self._add_element(item, 'g:condition', 'new')
-
-        return item
-
-    def _clean_description(self, product):
-        text = product.get('body_html', '')
-        text = re.sub('<br */?>', '\n', text)
-        text = strip_tags(text).strip()
-
-        if len(text) == 0:
-            text = product.get('title', '')
-
-        return text
-
-    def get_feed_stream(self):
-        yield u'<?xml version="1.0" encoding="utf-8"?>'
-
-        for i in ET.tostringlist(self.root, encoding='utf-8', method="xml"):
-            yield i
-
-    def get_feed(self, formated=False):
-        xml = ET.tostring(self.root, encoding='utf-8', method="xml")
-
-        if formated:
-            return self.prettify(xml)
-        else:
-            return u'{}\n{}'.format(u'<?xml version="1.0" encoding="utf-8"?>', xml.decode('utf-8'))
-
-    def prettify(self, xml_str):
-        """Return a pretty-printed XML string for the Element.
-        """
-        from xml.dom import minidom
-
-        reparsed = minidom.parseString(xml_str)
-        return reparsed.toprettyxml(indent="  ")
-
-    def save(self, filename):
-        tree = ET.ElementTree(self.root)
-        tree.write(filename, encoding='utf-8', xml_declaration=True)
 
 
 class SimplePaginator(Paginator):

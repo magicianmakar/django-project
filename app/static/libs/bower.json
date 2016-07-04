@@ -5,6 +5,8 @@
     "qtip2": "^2.2.1",
     "handlebars": "^4.0.5",
     "jquery.payment": "^1.4.2",
+    "switchery": "^0.8.1",
+    "clipboard": "^1.5.12",
     "js-cookie": "^2.1.2"
   },
   "devDependencies": {}

@@ -335,3 +335,22 @@ def invite_user_to_slack(slack_teams, data):
     for team in slack_teams.split(','):
         print 'Invite to %s' % team
         utils.slack_invite(data, team=team)
+
+
+@app.task
+def generate_feed(feed_id, nocache=False, by_fb=False):
+    from product_feed.feed import generate_product_feed
+    from product_feed.models import FeedStatus
+
+    try:
+        feed = FeedStatus.objects.get(id=feed_id)
+        generate_product_feed(feed, nocache=nocache)
+
+        if by_fb:
+            raven_client.captureMessage(
+                'Feed Generated from delay',
+                extra={'feed': feed_id, 'store': feed.store.title},
+                level='warning'
+            )
+    except:
+        raven_client.captureException()

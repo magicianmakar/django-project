@@ -14,6 +14,13 @@ def app_setting(name):
     return getattr(settings, name, None)
 
 
+@register.simple_tag
+def date_humanize(date):
+    import arrow
+
+    return arrow.get(date).humanize() if date else None
+
+
 @register.simple_tag(takes_context=True)
 def encode_order(context, data, auto):
     data['auto'] = (auto == 'True')

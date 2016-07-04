@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox collapsed border-bottom">
+            <div class="ibox-title">
+                <h5>Product Feeds</h5>
+            </div>
+            <div class="ibox-content" style="display:block">
+                <p>
+                    Use the Feeds below to create your Facebook Products Catalogs for use with Facebook Dynamic Products Ads.
+                </p>
+                <p>
+                    <span>Learn how to setup Facebook Dynamic Product Ads</span>
+                    <a class="btn btn-default btn-outline btn-xs" href="/pages/view/setting-up-facebook-dynamic-product-ads" target="_blank">READ MORE</a>
+                </p>
+
+                <p>
+                </p>
+
+                <table class="table table-bordered m-t-lg">
+                    <thead>
+                        <tr>
+                            <th style="width:15%">Store</th>
+                            <th>Feed URL</th>
+                            <th style="width:12%">All Variants</th>
+                            <th style="width:15%">Last Update</th>
+                            <th style="width:15%">Facebook Access</th>
+                            <th style="">Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in feeds %}
+                        <tr data-store="{{item.store.id}}" data-feed="{{item.id}}">
+                            <td>{{item.store.title}}</td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="text" class="form-control"
+                                           value="">
+
+                                    <span class="input-group-addon copy-feed-url" style="cursor:pointer" data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/2">
+                                        <i class="fa fa-files-o itooltip" title="Copy link"></i>
+                                    </span>
+                                </div>
+                            </td>
+                            <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
+                            <td>
+                                {% if item.status == 2 %}
+                                    Updating...
+                                {% elif item.updated_at %}
+                                    {% date_humanize item.updated_at %}
+                                {% else %}
+                                    Pending
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.fb_access_at %}
+                                    {% date_humanize item.fb_access_at %}
+                                {% else %}
+                                    Pending
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip update-feed-btn" data-loading-text="<i class='fa fa-refresh fa-spin'></i>">
+                                    <i class="fa fa-refresh"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="row">
+                    <div class="col-sm-3 col-sm-offset-9 text-right">
+                        <a class="itooltip" title="If you are using the old feed format, it will continue to work but we are now recommending to use the updated format" href="#">Using Old Feeds?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+    <style type="text/css">
+        table td {
+            vertical-align: middle !important;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script src="{% static 'libs/bower_components/clipboard/dist/clipboard.min.js' %}"></script>
+<script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+
+<script type="text/javascript">
+    $(function () {
+        $('.copy-feed-url').each(function (i, el) {
+            $(el).parent().find('input').val($(el).attr('data-clipboard-text'));
+        });
+
+        new Clipboard('.copy-feed-url', {
+            target: function(trigger) {
+                return trigger;
+            }
+        })
+        .on('success', function(e) {
+            toastr.success('Copied!');
+        });
+
+        var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
+        elems.forEach(function(html) {
+            var elem = document.querySelector('.js-switch');
+            var switchery = new Switchery(elem, {
+                color: '#1AB394',
+                size: 'small'
+            });
+        });
+
+
+        $('.all-variants-switch').on('change', function (e) {
+            $.ajax({
+                type: 'POST',
+                data: {feed: $(this).parents('tr').data('feed'), all_variants: this.checked},
+                context: {el: $(this)},
+                success: function (data) {
+                    toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
+                },
+                error: function (data) {
+                    displayAjaxError('Feed Settings', data);
+                }
+            });
+        });
+
+        $('.update-feed-btn').on('click', function (e) {
+            $(this).button('loading');
+
+            $.ajax({
+                type: 'POST',
+                data: {feed: $(this).parents('tr').data('feed'), update_feed: true},
+                context: {el: $(this)},
+                success: function (data) {
+                    toastr.success('Feed Update Started, reload the page to see the progress', 'Update Feed', 'success');
+                },
+                error: function (data) {
+                    displayAjaxError('Update Feed', data);
+                },
+                complete: function() {
+                    this.el.button('reset');
+                }
+            });
+        });
+
+    });
+</script>
+{% endcompress %}
+
+{% endblock %}

@@ -55,6 +55,7 @@ INSTALLED_APPS = (
     'leadgalaxy',
     'shopify_orders',
     'stripe_subscription',
+    'product_feed',
 )
 
 MIDDLEWARE_CLASSES = (
