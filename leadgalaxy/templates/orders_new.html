@@ -95,18 +95,15 @@
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Country:</label>
                         </div>
-                        <div class="col-md-3">
-                            <select name="query_address"  class="form-control" id="country-filter" data-placeholder="Shipping Country">
+                        <div class="col-md-4">
+                            <select name="query_address"  class="form-control" id="country-filter" multiple data-placeholder="Shipping Country">
                                <option value=""></option>
                                 {% for item in countries %}
                                 <option value="{{item.0}}"
-                                    {% if request.GET.query_address == item.0 %}selected="selected"{% endif %}
+                                    {% query_active 'query_address' item.0 'selected="selected"' True %}
                                     >{{item.1}}</option>
                                 {% endfor %}
                                 </select>
-                        </div>
-                        <div class="col-md-2" style="padding: 5px 0; {% if not request.GET.query_address %}display:none{% endif %}">
-                            <a href="#" class="chosen-reset-selection">Reset</a>
                         </div>
                     </div>
 
@@ -594,7 +591,11 @@
     .icheckbox_square-blue {
         position: relative !important;
     }
-
+    .chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+        width: 125px !important;
+        font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        color: #989898 !important;
+    }
 </style>
 
 {% endblock %}

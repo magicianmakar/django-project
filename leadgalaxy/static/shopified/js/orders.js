@@ -661,11 +661,6 @@ $('.auto-shipping-btn').click(function (e) {
 
 });
 
-$('.chosen-reset-selection').click(function (e) {
-    e.preventDefault();
-    $("#country-filter").val('').trigger("chosen:updated");
-});
-
 $('.cached-img').error(function() {
     $.ajax({
         url: '/api/product-image?' + $.param({
@@ -716,7 +711,7 @@ $(function () {
     }
 
     $('#country-filter').chosen({
-        width: '239px'
+        width: '325px'
     });
 
     setTimeout(function() {

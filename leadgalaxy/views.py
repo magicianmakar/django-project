@@ -2985,7 +2985,7 @@ def orders_view(request):
     query = request.GET.get('query')
     query_order = request.GET.get('query_order')
     query_customer = request.GET.get('query_customer')
-    query_address = request.GET.get('query_address')
+    query_address = request.GET.getlist('query_address')
 
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
@@ -3031,8 +3031,8 @@ def orders_view(request):
                                    Q(customer_name__icontains=query_customer) |
                                    Q(customer_email__iexact=query_customer))
 
-        if query_address:
-            orders = orders.filter(Q(country_code__iexact=query_address))
+        if query_address and len(query_address):
+            orders = orders.filter(Q(country_code__in=query_address))
 
         query = None
 

@@ -101,10 +101,12 @@ def page_full_url(context):
 
 
 @register.simple_tag(takes_context=True)
-def query_active(context, field, value, selector):
+def query_active(context, field, value, selector, islist=False):
     dict_ = context['request'].GET.copy()
 
-    if dict_.get(field) == value:
+    if islist and value in dict_.getlist(field):
+        return selector
+    elif dict_.get(field) == value:
         return selector
     else:
         return ''
