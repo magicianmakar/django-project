@@ -1,7 +1,8 @@
 {
   "name": "shopified-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "dependencies": {
+  	"jquery": "^2.2.4",
     "qtip2": "^2.2.1",
     "handlebars": "^4.0.5",
     "jquery.payment": "^1.4.2",

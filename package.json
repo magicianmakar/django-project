@@ -1,11 +1,15 @@
 {
   "name": "shopifiedapp",
   "version": "0.1.0",
+  "private": true,
   "dependencies": {
     "bower": "^1.7.9",
     "yuglify": "^0.1.4"
   },
   "devDependencies": {},
+  "scripts": {
+    "postinstall": "bower install"
+  },
   "cacheDirectories": [
     "node_modules",
     "bower_components",
