@@ -171,6 +171,7 @@ class FulfillmentTestCase(TestCase):
         # Custom Aftership domain
         self.fulfillment_data['source_tracking'] = 'MA7565915257226HK'
         self.fulfillment_data['use_usps'] = False
+        self.fulfillment_data['store_id'] = 2
         self.fulfillment_data['user_config']['aftership_domain'] = {"2": "uncommonnow"}
         data = utils.order_track_fulfillment(**self.fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
