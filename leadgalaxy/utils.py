@@ -1210,7 +1210,8 @@ def set_orders_filter(user, filters, default=None):
             user.set_config(key, val)
 
 
-def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=False, compress=False):
+def aws_s3_upload(filename, content=None, fp=None, mimetype=None,
+                  upload_time=False, compress=False, bucket_name=None):
     """
     Store an object in S3 using the 'filename' as the key in S3 and the
     contents of the file pointed to by either 'fp' or 'content' as the
@@ -1228,8 +1229,11 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=Fa
     if upload_time:
         upload_start = time.time()
 
+    if bucket_name is None:
+        bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+
     conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-    bucket = conn.get_bucket(settings.AWS_STORAGE_BUCKET_NAME)
+    bucket = conn.get_bucket(bucket_name)
     k = Key(bucket)
 
     if not mimetype:
@@ -1266,7 +1270,7 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=Fa
 
     k.make_public()
 
-    upload_url = 'https://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, filename)
+    upload_url = 'https://%s.s3.amazonaws.com/%s' % (bucket_name, filename)
 
     if upload_time:
         return upload_url, time.time() - upload_start

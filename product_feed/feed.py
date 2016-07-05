@@ -1,7 +1,9 @@
 from django.utils.html import strip_tags
+from django.conf import settings
 
 import xml.etree.ElementTree as ET
 import re
+import hashlib
 
 from .models import FeedStatus
 
@@ -160,13 +162,16 @@ def generate_product_feed(feed_status, nocache=False):
         feed_status.generation_time = time.time() - feed_start
         feed_status.updated_at = timezone.now()
 
+        s3_key = hashlib.md5('u{}/{}'.format(store.user.id, store.id)).hexdigest()
+
         # Cache the feed for 1 day if the generation take more than 5 seconds
         feed_s3_url, upload_time = aws_s3_upload(
-            filename='product-feeds/u{}/{}.xml'.format(store.user.id, store.id),
+            filename='feeds/{}.xml'.format(s3_key),
             content=feed_xml,
             mimetype='application/xml',
             upload_time=True,
-            compress=True
+            compress=True,
+            bucket_name=settings.S3_PRODUCT_FEED_BUCKET
         )
 
         cache.set(feed_key, feed_s3_url, timeout=86400)
