@@ -26,14 +26,25 @@
 
                 <table class="table table-bordered m-t-lg">
                     <thead>
+                        {% with pos_at='top center' pos_my='bottom center' %}
                         <tr>
                             <th style="width:15%">Store</th>
                             <th>Feed URL</th>
-                            <th style="width:12%">All Variants</th>
-                            <th style="width:15%">Last Update</th>
-                            <th style="width:15%">Facebook Access</th>
+                            <th style="width:12%">
+                                All Variants
+                                {% include 'partial/help_tooltip.html' with help="Turn this off to remove variants from showing in the product feed." %}
+                            </th>
+                            <th style="width:15%">
+                                Last Update
+                                {% include 'partial/help_tooltip.html' with help="This shows the date & time when the product feed was last updated." %}
+                            </th>
+                            <th style="width:15%">
+                                FB Access Date
+                                {% include 'partial/help_tooltip.html' with help="This shows the date when the product feed was last accessed by Facebook." %}
+                            </th>
                             <th style="">Options</th>
                         </tr>
+                        {% endwith %}
                     </thead>
                     <tbody>
                         {% for item in feeds %}
