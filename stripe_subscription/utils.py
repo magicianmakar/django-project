@@ -247,6 +247,19 @@ def process_webhook_event(request, event_id):
 
         return HttpResponse('Customer Refreshed')
 
+    elif event.type == 'customer.created':
+        from leadgalaxy.tasks import invite_user_to_slack
+
+        cus = event.data.object
+
+        invite_user_to_slack.delay('users', {
+            'email': cus.email,
+            'firstname': '',
+            'lastname': '',
+        })
+
+        return HttpResponse('Invited To Slack')
+
     elif event.type == 'invoice.updated':
         pass
     elif event.type == 'customer.subscription.trial_will_end':
