@@ -499,7 +499,9 @@ def get_shopify_products(store, page=1, limit=50, all_products=False, session=re
                 'page': page,
                 'limit': limit
             }
-        ).json()
+        )
+
+        rep = rep.json()
 
         for p in rep['products']:
             yield p
@@ -522,8 +524,8 @@ def get_shopify_products(store, page=1, limit=50, all_products=False, session=re
 
 def get_shopify_product(store, product_id):
     if store:
-        rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True)).json()
-        return rep.get('product')
+        rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True))
+        return rep.json().get('product')
     else:
         return None
 
@@ -588,8 +590,8 @@ def get_shopify_variant_image(store, product_id, variant_id):
 
 
 def get_shopify_order(store, order_id):
-    rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True)).json()
-    return rep['order']
+    rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True))
+    return rep.json()['order']
 
 
 def get_shopify_order_line(store, order_id, line_id, note=False):
@@ -621,9 +623,9 @@ def set_shopify_order_note(store, order_id, note):
                     'note': note
                 }
             }
-    ).json()
+    )
 
-    return rep['order']['id']
+    return rep.json()['order']['id']
 
 
 def add_shopify_order_note(store, order_id, new_note, current_note=False):
@@ -708,8 +710,8 @@ def create_shopify_webhook(store, topic):
     }
 
     try:
-        rep = requests.post(endpoint, json=data).json()
-        webhook_id = rep['webhook']['id']
+        rep = requests.post(endpoint, json=data)
+        webhook_id = rep.json()['webhook']['id']
 
         webhook = ShopifyWebhook(store=store, token=token, topic=topic, shopify_id=webhook_id)
         webhook.save()
