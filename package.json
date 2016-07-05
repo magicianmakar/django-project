@@ -2,9 +2,15 @@
   "name": "shopifiedapp",
   "version": "0.1.0",
   "dependencies": {
+    "bower": "^1.7.9",
     "yuglify": "^0.1.4"
   },
   "devDependencies": {},
+  "cacheDirectories": [
+    "node_modules",
+    "bower_components",
+    "app/static/libs/bower_components"
+  ],
   "engines": {
     "node": "4.4.7"
   }
