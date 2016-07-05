@@ -98,7 +98,7 @@ def get_product_feed(request, store_id, revision=1):
         feed_s3_url = generate_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
-        return HttpResponse(feed_s3_url)
+        return HttpResponseRedirect(feed_s3_url)
     else:
         raven_client.captureMessage('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
