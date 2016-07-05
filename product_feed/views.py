@@ -64,7 +64,7 @@ def product_feeds(request):
     })
 
 
-def get_product_feed(request, store_id, revision=1):
+def get_product_feed(request, store_id, revision=None):
     try:
         assert len(store_id) == 8
         store = ShopifyStore.objects.get(store_hash__startswith=store_id)
@@ -77,6 +77,9 @@ def get_product_feed(request, store_id, revision=1):
         raise PermissionDenied('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
+
+    if revision is None:
+        revision = 1
 
     feed = get_store_feed(store)  # Get feed or create it if doesn't exists
     feed.revision = revision
