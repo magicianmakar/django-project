@@ -1,0 +1,22 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+
+    root /usr/share/nginx/html;
+    index index.html index.htm;
+
+    # Make site accessible from http://localhost/
+    server_name localhost;
+
+    server_tokens off;
+
+    location / {
+        deny all;
+        #try_files $uri $uri/ =404;
+    }
+
+    # Forbid hidden files access
+    location ~ /\. {
+       deny all;
+    }
+}
