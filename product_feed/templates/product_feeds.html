@@ -117,8 +117,7 @@
 
         var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
         elems.forEach(function(html) {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, {
+            var switchery = new Switchery(html, {
                 color: '#1AB394',
                 size: 'small'
             });
