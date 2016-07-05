@@ -23,6 +23,7 @@ server {
     server_name app.shopifiedapp.com;
 
     server_tokens off;
+    client_max_body_size 10m;
 
     access_log            /var/log/nginx/shopified.access.log;
     error_log            /var/log/nginx/shopified.error.log;
@@ -59,6 +60,7 @@ server {
     ssl_prefer_server_ciphers on;
 
     server_tokens off;
+    client_max_body_size 10m;
 
     access_log            /var/log/nginx/shopified.access.log;
     error_log            /var/log/nginx/shopified.error.log;
