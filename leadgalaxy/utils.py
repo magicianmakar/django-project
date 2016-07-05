@@ -1266,7 +1266,7 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None, upload_time=Fa
 
     k.make_public()
 
-    upload_url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, filename)
+    upload_url = 'https://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, filename)
 
     if upload_time:
         return upload_url, time.time() - upload_start
