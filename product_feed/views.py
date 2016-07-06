@@ -100,11 +100,7 @@ def get_product_feed(request, store_id, revision=None):
 
     feed.save()
 
-    feed_key = 'product_feed_url_{}'.format(store.id)
-    feed_s3_url = cache.get(feed_key)
-
-    if feed_s3_url is None or nocache:
-        feed_s3_url = generate_product_feed(feed, nocache=nocache)
+    feed_s3_url = generate_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
         return HttpResponseRedirect(feed_s3_url)

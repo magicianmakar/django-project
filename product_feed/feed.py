@@ -134,7 +134,6 @@ def get_store_feed(store):
 
 def generate_product_feed(feed_status, nocache=False):
     import time
-    from django.core.cache import cache
     from django.utils import timezone
     from leadgalaxy.utils import get_shopify_products, aws_s3_upload
 
@@ -145,9 +144,7 @@ def generate_product_feed(feed_status, nocache=False):
 
     feed_start = time.time()
 
-    feed_key = 'product_feed_url_{}'.format(store.id)
-    feed_s3_url = cache.get(feed_key)
-    if feed_s3_url is None or nocache:
+    if not feed_status.feed_exists() or nocache:
         feed = ProductFeed(store, feed_status.revision, feed_status.all_variants)
         feed.init()
 
@@ -157,24 +154,19 @@ def generate_product_feed(feed_status, nocache=False):
         for p in get_shopify_products(store, all_products=True):
             feed.add_product(p)
 
-        feed_xml = feed.get_feed()
-
         feed_status.generation_time = time.time() - feed_start
         feed_status.updated_at = timezone.now()
 
-        s3_key = hashlib.md5('u{}/{}'.format(store.user.id, store.id)).hexdigest()
-
-        # Cache the feed for 1 day if the generation take more than 5 seconds
         feed_s3_url, upload_time = aws_s3_upload(
-            filename='feeds/{}.xml'.format(s3_key),
-            content=feed_xml,
+            filename=feed_status.get_filename(),
+            content=feed.get_feed(),
             mimetype='application/xml',
             upload_time=True,
             compress=True,
             bucket_name=settings.S3_PRODUCT_FEED_BUCKET
         )
-
-        cache.set(feed_key, feed_s3_url, timeout=86400)
+    else:
+        feed_s3_url = feed_status.get_url()
 
     feed_status.status = 1
     feed_status.save()

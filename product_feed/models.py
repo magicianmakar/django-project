@@ -23,3 +23,23 @@ class FeedStatus(models.Model):
 
     def __unicode__(self):
         return '{}'.format(self.store.title)
+
+    def get_filename(self):
+        import hashlib
+
+        feed_hash = hashlib.md5('u{}/{}'.format(self.store.user.id, self.store.id)).hexdigest()
+        return 'feeds/{}.xml'.format(feed_hash)
+
+    def get_url(self):
+        from django.conf import settings
+
+        return 'https://{}.s3.amazonaws.com/{}'.format(
+            settings.S3_PRODUCT_FEED_BUCKET,
+            self.get_filename()
+        )
+
+    def feed_exists(self):
+        from django.conf import settings
+        from leadgalaxy.utils import aws_s3_get_key
+
+        return aws_s3_get_key(self.get_filename(), settings.S3_PRODUCT_FEED_BUCKET) is not None
