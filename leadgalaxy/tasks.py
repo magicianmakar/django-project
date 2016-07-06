@@ -353,4 +353,8 @@ def generate_feed(feed_id, nocache=False, by_fb=False):
                 level='warning'
             )
     except:
+        feed.status = 0
+        feed.generation_time = -1
+        feed.save()
+
         raven_client.captureException()
