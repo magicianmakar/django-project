@@ -346,8 +346,12 @@
 
         <div class="footer">
             <div class="pull-right">
-                 <strong></strong>
+                 <span class="extension-version" data-version="{{extension_release}}" {% if extension_required %}data-required="true"{% endif %} style="color:#008c06">
+                    New Extension Version Available!
+                    <a class="btn btn-outline btn-xs btn-success" href="/view/how-to-update-the-extension-to-the-latest-version">Update</a>
+                </span>
             </div>
+
             <div>
                 <strong>Copyright</strong> Shopified App &copy; 2016
             </div>
@@ -410,6 +414,20 @@
     {% endcompress %}
 
     {% block extrajs %}{% endblock %}
+
+    <script type="text/javascript">
+    $(function () {
+        setTimeout(function() {
+            if($('.extension-version').attr('action') !== 'true') {
+                $('#page-wrapper .footer').addClass('fixed');
+
+                if ($('.extension-version').data('required')) {
+                    $('.extension-version').css('color', 'red');
+                }
+            }
+        }, 1000);
+    });
+    </script>
 
   </body>
 </html>

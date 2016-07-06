@@ -69,3 +69,10 @@ def extra_bundles(request):
     return {
         'extra_bundle': extra_bundle
     }
+
+
+def extension_release(request):
+    return {
+        'extension_release': cache.get('extension_release'),
+        'extension_required': cache.get('extension_required')
+    }

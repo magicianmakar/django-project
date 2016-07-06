@@ -904,7 +904,7 @@ def proccess_api(request, user, method, target, data):
         if extension_release is not None:
             config['release'] = {
                 'min_version': extension_release,
-                'force_update': cache.get('extension_force_update', False)
+                'force_update': cache.get('extension_required', False)
             }
 
         return JsonResponse(config)
