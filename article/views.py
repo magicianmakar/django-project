@@ -52,7 +52,7 @@ def view(request, id_article=None, slug_article=None):
 
 @login_required
 def submit(request):
-    if not user.is_superuser:
+    if not request.user.is_superuser:
         raise PermissionDenied()
 
     if request.method == 'POST':
@@ -79,7 +79,7 @@ def submit(request):
 
 @login_required
 def edit(request, article_id):
-    if not user.is_superuser:
+    if not request.user.is_superuser:
         raise PermissionDenied()
 
     article = Article.objects.get(pk=article_id)
