@@ -139,3 +139,7 @@
 .chosen-container-single .chosen-single div {
     top: 5px;
 }
+
+#page-wrapper .footer {
+    padding-right: 50px !important;
+}
