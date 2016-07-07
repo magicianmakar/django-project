@@ -131,7 +131,6 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-SESSION_COOKIE_AGE = 6048000
 
 # Parse database configuration from $DATABASE_URL
 if os.environ.get('DATABASE_URL'):
