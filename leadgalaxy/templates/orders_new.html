@@ -299,16 +299,11 @@
                                             <div class="panel-body">
                                                 <div class="note-preview">
                                                     <span class="note-text">{{order.note|default:''|truncatewords:10 }}</span>
-                                                    <i class="fa fa-edit" style="
-                                                        position: absolute;
-                                                        bottom: 0px;
-                                                        right: 2px;
-                                                    "></i>
                                                 </div>
                                                 <div class="edit-note">
                                                     <textarea class="note">{{order.note|default:''}}</textarea>
                                                     <button class="btn btn-primary btn-sm note-edit-save"
-                                                            style="position: absolute; bottom: 5px; right: 5px; "
+                                                            style="position: absolute; bottom: 5px; right: 5px; z-index:1300"
                                                             order-id="{{order.id}}" store-id="{{store.id}}">
                                                         <i class="fa fa-save"></i> Save
                                                     </button>
@@ -319,6 +314,7 @@
                                                 </div>
                                             </div>
 
+                                            <i class="fa fa-edit" style="position:absolute;bottom:0px;right:5px;z-index:1200"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -565,12 +561,21 @@
         padding: 0px 0px 0px 5px;
     }
     .note-panel {
-        cursor: pointer;
-        position: absolute;
-        top: 0px;
-        right: 0px;
-        width: 300px;
-        z-index: 999;
+        cursor: pointer !important;
+        position: absolute !important;
+        top: 0px !important;
+        right: 0px !important;
+        width: 300px !important;
+        z-index: 999 !important;
+        padding: 0 !important;
+        margin-top: -11px !important;
+        margin-right: -11px !important;
+        border-bottom: 0px solid #ccc !important;
+        border-radius: 0 !important;
+        border-color: #ccc !important;
+    }
+    .note-panel .panel-body {
+        border: 0px solid #ccc !important;
     }
     .note-panel .edit-note{
         display: none;

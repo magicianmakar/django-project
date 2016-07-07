@@ -405,12 +405,15 @@ $('.note-panel').click(function (e) {
         $(this).prop('editing-mode', true);
         $(this).prop('init-width', $(this).css('width'));
         $(this).prop('init-height', $(this).css('height'));
+        $(this).prop('init-overflow', $(this).css('overflow'));
     }
 
     $(this).animate({
         width: '500px',
         height: '300px',
-    }, 300);
+    }, 300, function() {
+        $(this).css('overflow', 'initial');
+    });
 
     $('.edit-note', this).toggle();
     $('.note-preview', this).toggle();
@@ -422,6 +425,7 @@ $('.note-panel .note-edit-cancel').click(function (e) {
         width: $(parent).prop('init-width'),
         height: $(parent).prop('init-height'),
     }, 300, function() {
+        $(parent).css('overflow', $(parent).prop('init-overflow'));
         $(parent).prop('editing-mode', false);
     });
 
@@ -712,6 +716,11 @@ $(function () {
 
     $('#country-filter').chosen({
         width: '325px'
+    });
+
+    $('.note-panel').css({
+        height: $('.shipping-info').first().outerHeight() + 'px',
+        overflow: 'hidden'
     });
 
     setTimeout(function() {
