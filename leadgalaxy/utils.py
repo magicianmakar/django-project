@@ -143,12 +143,31 @@ class ApiLoginException(Exception):
 def get_api_user(request, data, assert_login=False):
     user = None
 
+    authorization = request.META.get('HTTP_AUTHORIZATION')
+    if authorization:
+        authorization = authorization.split(' ')
+        if len(authorization) == 2:
+            authorization = authorization[1]
+        else:
+            authorization = None
+
     if 'access_token' in data:
         token = data.get('access_token')
         user = get_user_from_token(token)
 
         if not user:
             raise ApiLoginException('unvalid_access_token')
+
+        if authorization and token != authorization:
+            raven_client.captureMessage(
+                'Authorization Different From Access Token',
+                extra={
+                    'aut': authorization,
+                    'tok': token,
+                    'vers': request.META.get('HTTP_X_EXTENSION_VERSION')
+                },
+                level='warning'
+            )
 
     if request.user.is_authenticated():
         if user is None:
