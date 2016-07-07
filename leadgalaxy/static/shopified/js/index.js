@@ -107,26 +107,28 @@ $('.delete-store').click(function (e) {
 $('form#config-form').submit(function (e) {
     e.preventDefault();
 
-    var config = $(this).serialize();
+    if ($('#phone-invalid').hasClass('hidden')) {
+        var config = $(this).serialize();
 
-    $.ajax({
-        url: '/api/user-config',
-        type: 'POST',
-        data: config,
-        context: {form: $(this)},
-        success: function (data) {
-            if (data.status == 'ok') {
-                toastr.success('Saved.','User Config');
-            } else {
+        $.ajax({
+            url: '/api/user-config',
+            type: 'POST',
+            data: config,
+            context: {form: $(this)},
+            success: function (data) {
+                if (data.status == 'ok') {
+                    toastr.success('Saved.','User Config');
+                } else {
+                    displayAjaxError('User Config', data);
+                }
+            },
+            error: function (data) {
                 displayAjaxError('User Config', data);
+            },
+            complete: function () {
             }
-        },
-        error: function (data) {
-            displayAjaxError('User Config', data);
-        },
-        complete: function () {
-        }
-    });
+        });
+    }
 
     return false;
 });
@@ -252,6 +254,21 @@ $('.verify-api-url').click(function (e) {
         }
     });
 });
+
+$('input[name="order_phone_number"]').on('keyup', function() {
+    var value = $(this).val(),
+        phone = value.match(/[\d-]+/);
+
+    if (value.length > 0) {
+        if (phone == null || (phone && phone[0] != value)) {
+            $('#phone-invalid').removeClass('hidden');
+        } else {
+            $('#phone-invalid').addClass('hidden');
+        }
+    }
+});
+
+$('input[name="order_phone_number"]').trigger('keyup');
 
 $(function () {
     showDescriptionHelp();
