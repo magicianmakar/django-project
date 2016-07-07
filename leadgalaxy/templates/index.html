@@ -221,6 +221,9 @@
                                 <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_phone_number" name="order_phone_number" value="{{config.order_phone_number}}"{% endif %}>
                             </div>
                             <span class="help-block">The phone number to be used with Auto Order from Aliexpress</span>
+                            <div id="phone-invalid" class="pull-left col-sm-offset-2 col-sm-4 has-error hidden" style="clear: left; padding-bottom: 15px;">
+                                <span class="help-block m-b-none">Phone number invalid. Use only numbers and hyphens.</span>
+                            </div>
                             <div class="row">
                                 <div class="col-sm-offset-2 col-sm-10">
                                 <label for="" class="control-label">
