@@ -3068,7 +3068,9 @@ def orders_view(request):
         open_orders = paginator.count
 
         if open_orders:
-            cache_key = utils.hash_list(['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
+            import zlib
+
+            cache_key = utils.hash_list(['_{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
             shopify_orders = cache.get(cache_key)
             if shopify_orders is None:
                 rep = requests.get(
@@ -3082,7 +3084,9 @@ def orders_view(request):
                 )
 
                 shopify_orders = rep.json()['orders']
-                cache.set(cache_key, shopify_orders, timeout=600)
+                cache.set(cache_key, zlib.compress(json.dumps(shopify_orders)), timeout=600)
+            else:
+                shopify_orders = json.loads(zlib.decompress(shopify_orders))
 
             page = shopify_orders_utils.sort_orders(shopify_orders, page)
         else:
