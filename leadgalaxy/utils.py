@@ -101,6 +101,10 @@ def hash_text(text):
     return hashlib.md5(text).hexdigest()
 
 
+def hash_list(data):
+    return hash_text(''.join(data))
+
+
 def random_filename(filename):
     ext = filename.split('.')[1:]
     return '{}.{}'.format(random_hash(), '.'.join(ext))
