@@ -3084,7 +3084,7 @@ def orders_view(request):
                 )
 
                 shopify_orders = rep.json()['orders']
-                cache.set(cache_key, zlib.compress(json.dumps(shopify_orders)), timeout=600)
+                cache.set(cache_key, zlib.compress(json.dumps(shopify_orders)), timeout=300)
             else:
                 shopify_orders = json.loads(zlib.decompress(shopify_orders))
 
