@@ -3068,7 +3068,7 @@ def orders_view(request):
         open_orders = paginator.count
 
         if open_orders:
-            cache_key = utils.hash_list(['{i.order_id}-{i.updated_at}'.format(i=i) for i in page])
+            cache_key = utils.hash_list(['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
             shopify_orders = cache.get(cache_key)
             if shopify_orders is None:
                 rep = requests.get(
