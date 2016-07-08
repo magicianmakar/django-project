@@ -894,6 +894,16 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
     }
 });
 
+$('.add-images-btn').click(function (e) {
+    e.preventDefault();
+
+    $('#modal-add-image').modal('show');
+});
+
+$('#modal-add-image').on('shown.bs.modal', function() {
+    $('#modal-add-image img').trigger("unveil");
+});
+
 $('#pixlr-background').click(function(e) {
     e.preventDefault();
 
