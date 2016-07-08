@@ -162,8 +162,8 @@ def get_api_user(request, data, assert_login=False):
         else:
             authorization = None
 
-    if 'access_token' in data:
-        token = data.get('access_token')
+    if authorization or 'access_token' in data:
+        token = authorization if authorization else data.get('access_token')
         user = get_user_from_token(token)
 
         if not user:
