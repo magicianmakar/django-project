@@ -2343,9 +2343,7 @@ def get_shipping_info(request):
     try:
         shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
     except requests.Timeout:
-        raven_client.context.merge(raven_client.get_data_from_request(request))
         raven_client.captureException()
-        raven_client.context.clear()
 
         if request.GET.get('type') == 'json':
             return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)
