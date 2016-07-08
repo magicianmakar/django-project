@@ -1139,7 +1139,10 @@ def proccess_api(request, user, method, target, data):
                 order_id=order_id,
                 line_id=line_id,
                 defaults={
-                    'source_id': source_id
+                    'source_id': source_id,
+                    'created_at': timezone.now(),
+                    'updated_at': timezone.now(),
+                    'status_updated_at': timezone.now()
                 }
             )
 
