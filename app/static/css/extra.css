@@ -143,3 +143,13 @@
 #page-wrapper .footer {
     padding-right: 50px !important;
 }
+
+@media only screen and (max-width: 760px) {
+    .extension-version {
+        display: none;
+    }
+
+    .footer.fixed {
+        position: absolute !important;
+    }
+}
