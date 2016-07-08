@@ -110,6 +110,13 @@ def random_filename(filename):
     return '{}.{}'.format(random_hash(), '.'.join(ext))
 
 
+def version_compare(left, right):
+    def normalize(v):
+        return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
+
+    return cmp(normalize(left), normalize(right))
+
+
 def get_access_token(user):
     try:
         access_token = AccessToken.objects.filter(user=user).latest('created_at')
