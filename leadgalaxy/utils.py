@@ -469,6 +469,10 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
     try:
         shippement_data = json.loads(r.text[1:-1])
         cache.set(shippement_key, shippement_data, timeout=43200)
+    except requests.exceptions.ConnectTimeout:
+        raven_client.captureException(level='warning')
+        cache.set(shippement_key, shippement_data, timeout=120)
+        shippement_data = {}
     except:
         shippement_data = {}
 
@@ -1094,7 +1098,8 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
                 'trackingId': trackingID,
                 'urls': urls
 
-            }
+            },
+            timeout=5
         )
 
         r = r.json()
