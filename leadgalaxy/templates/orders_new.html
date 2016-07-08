@@ -368,7 +368,11 @@
                                                     {% if item.shopify_order.source_id %}
                                                         title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}"
                                                     {% endif %}
-                                                        >Order Placed</span>
+                                                        >Order Placed
+                                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #ccc;border-radius: 3px;">
+                                                            {% date_humanize item.shopify_order.created_at %}
+                                                        </span>
+                                                    </span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
