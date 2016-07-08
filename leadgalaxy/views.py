@@ -408,7 +408,7 @@ def proccess_api(request, user, method, target, data):
 
             pixlr_data = cache.get(pixlr_key)
 
-            if pixlr_key is None:
+            if pixlr_data is None:
                 return JsonResponse({'error': 'Pixlr key not found.'}, status=404)
 
         return JsonResponse(pixlr_data)
