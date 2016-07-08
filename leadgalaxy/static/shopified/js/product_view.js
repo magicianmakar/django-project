@@ -894,9 +894,11 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
     }
 });
 
-$('body').on('click', '#pixlr-background', function(e) {
+$('#pixlr-background').click(function(e) {
     e.preventDefault();
+
     pixlr.overlay.hide();
+
     clearInterval(document.pixlrInterval);
     document.pixlrInterval = null;
 });
