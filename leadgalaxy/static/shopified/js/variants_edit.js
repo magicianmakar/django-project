@@ -132,7 +132,7 @@ function setupVariantsLinking() {
             });
 
             d.append(img);
-            d.append($('<img class="link-success" src="//dzm0q3y9398tl.cloudfront.net/static/img/checked-checkbox-24.png" ' +
+            d.append($('<img class="link-success" src="//d2kadg5e284yn4.cloudfront.net/static/img/checked-checkbox-24.png" ' +
                 'style="display:none;position: absolute;left: 25px;' +
                 'top: 5px;background-color: #fff;border-radius: 5px;">'
             ));

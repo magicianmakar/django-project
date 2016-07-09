@@ -322,7 +322,7 @@ class UtilsTestCase(TestCase):
         self.assertTrue(utils.upload_from_url('http://shopifiedapp.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png'))
         self.assertTrue(utils.upload_from_url('http://%s.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png' % settings.S3_UPLOADS_BUCKET))
         self.assertTrue(utils.upload_from_url('http://%s.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png' % settings.S3_STATIC_BUCKET))
-        self.assertTrue(utils.upload_from_url('http://dzm0q3y9398tl.cloudfront.net/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png'))
+        self.assertTrue(utils.upload_from_url('http://d2kadg5e284yn4.cloudfront.net/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png'))
         self.assertTrue(utils.upload_from_url('https://betaimages.sunfrogshirts.com/m_1349black.jpg'))
         self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg'))
         self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'))
