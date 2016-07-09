@@ -189,7 +189,7 @@ if not DEBUG:
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_URL_PROTOCOL = ''
-    AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+    AWS_S3_CUSTOM_DOMAIN = 'dzm0q3y9398tl.cloudfront.net'
 
     AWS_IS_GZIPPED = True
     AWS_HEADERS = {
