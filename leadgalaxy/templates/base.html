@@ -18,12 +18,7 @@
     <title>{% block title %}Shopified App{% endblock %}</title>
 
     <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
-
-    {% if request.GET.facdn == '1' %}
-        <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-    {% else %}
-        <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
-    {% endif %}
+    <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
 
     {% compress css %}
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
