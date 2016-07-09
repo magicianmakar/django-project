@@ -383,13 +383,8 @@
 
 {% endblock %}
 
-{% block extracss %}
-<link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
-{% endblock %}
-
 {% block extrajs %}
 {% compress js %}
-    <script type="text/javascript" src="{% static 'js/bootstrap-tour.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
 
