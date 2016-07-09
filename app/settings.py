@@ -177,9 +177,12 @@ DEFAULT_FROM_EMAIL = "support@shopifiedapp.com"
 # AWS S3
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-AWS_STORAGE_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 
+S3_STATIC_BUCKET = 'shopifiedapp-assets'
 S3_PRODUCT_FEED_BUCKET = 'shopifiedapp-feeds'
+S3_UPLOADS_BUCKET = 'shopifiedapp-uploads'
+
+AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
 
 # Django Storage
 if not DEBUG:

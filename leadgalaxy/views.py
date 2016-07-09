@@ -2929,7 +2929,7 @@ def save_image_s3(request):
     product = ShopifyProduct.objects.get(id=product_id)
     request.user.can_edit(product)
 
-    upload_url = utils.aws_s3_upload(filename=img_name, fp=fp, mimetype=mimetype)
+    upload_url = utils.aws_s3_upload(filename=img_name, fp=fp, mimetype=mimetype, bucket_name=settings.S3_UPLOADS_BUCKET)
 
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
