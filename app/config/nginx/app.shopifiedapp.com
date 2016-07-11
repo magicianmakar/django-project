@@ -32,6 +32,15 @@ server {
     #   return 301 https://$server_name$request_uri;
     #}
 
+    location ~ ^/(robots\.txt|favicon\.png|favicon\.ico|crossdomain\.xml) {
+        root /usr/share/nginx/app.shopifiedapp.com;
+
+        access_log off;
+        error_log off;
+
+        try_files $uri $uri/ =404;
+    }
+
     location / {
 
         proxy_set_header Host app.shopifiedapp.com;
@@ -64,6 +73,15 @@ server {
 
     access_log            /var/log/nginx/shopified.access.log;
     error_log            /var/log/nginx/shopified.error.log;
+
+    location ~ ^/(robots\.txt|favicon\.png|favicon\.ico|crossdomain\.xml) {
+        root /usr/share/nginx/app.shopifiedapp.com;
+
+        access_log off;
+        error_log off;
+
+        try_files $uri $uri/ =404;
+    }
 
     location / {
 
