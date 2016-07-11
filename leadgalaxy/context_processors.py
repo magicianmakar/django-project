@@ -57,6 +57,25 @@ def extra_bundles(request):
 
                 cache.set(extra_cache_key, extra_bundle, timeout=3600)
 
+            elif not customer.have_source():
+                subscription = request.user.stripesubscription_set.first()
+                if subscription:
+                    status = subscription.get_status()
+                    if status.get('status') == 'trialing':
+                        msg = ('Hurry! Your <b>Free {}</b>. Enter your billing '
+                               'information to avoid being transported '
+                               'back to the Stone Age! :)').format(status.get('status_str'))
+
+                        extra_bundle = {
+                            'url': '/user/profile#billing',
+                            'title': 'Activate Shopified App Account',
+                            'attrs': 'qtip-tooltip="{}" xqtip-my="" xqtip-at=""'.format(msg),
+                            'message': msg,
+                            'sametab': True
+                        }
+
+                        cache.set(extra_cache_key, extra_bundle, timeout=3600)
+
         elif profile.plan.is_free and (not request.user.is_stripe_customer() or request.user.stripe_customer.can_trial):
             extra_bundle = {
                 'url': '/user/profile#plan',
