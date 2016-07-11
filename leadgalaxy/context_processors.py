@@ -30,8 +30,7 @@ def extra_bundles(request):
             }
 
         elif profile.plan.is_stripe() and request.user.is_stripe_customer():
-            from stripe_subscription.utils import eligible_for_trial_coupon
-
+            from stripe_subscription.utils import eligible_for_trial_coupon, trial_coupon_offer_end
             customer = request.user.stripe_customer
             if not customer.have_source() and eligible_for_trial_coupon(customer.get_data()):
                 from stripe_subscription.stripe_api import stripe
@@ -45,7 +44,9 @@ def extra_bundles(request):
                     cache.set(coupon_key, coupon, timeout=3600)
 
                 msg = ('Enter your credit card information today and get <b>{}</b><br/>'
-                       'You will not be charged until your 14 days Free Trial has ended.').format(format_coupon(coupon))
+                       'You will not be charged until your 14 days Free Trial has ended.<br/><br/>'
+                       'This offer will end in <b>{}</b>').format(
+                    format_coupon(coupon), trial_coupon_offer_end(customer.get_data()))
 
                 extra_bundle = {
                     'url': '/user/profile#billing',

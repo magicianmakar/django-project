@@ -64,6 +64,15 @@ def eligible_for_trial_coupon(cus):
             return trial_delta.days <= settings.STRIP_TRIAL_DISCOUNT_DAYS
 
 
+def trial_coupon_offer_end(cus):
+    import arrow
+
+    if len(cus['subscriptions']['data']):
+        sub = cus['subscriptions']['data'][0]
+        if sub['status'] == 'trialing':
+            return arrow.get(sub['trial_start']).replace(days=settings.STRIP_TRIAL_DISCOUNT_DAYS).humanize()
+
+
 def format_coupon(cou, duration=True):
     text = ''
 
