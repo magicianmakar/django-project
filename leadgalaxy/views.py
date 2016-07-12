@@ -1008,6 +1008,25 @@ def proccess_api(request, user, method, target, data):
 
         order = cache.get(order_key)
         if order:
+            order['ordered'] = False
+
+            try:
+                track = ShopifyOrderTrack.objects.get(
+                    store=store,
+                    order_id=order['order_id'],
+                    line_id=order['line_id']
+                )
+
+                order['ordered'] = {
+                    'time': arrow.get(track.created_at).humanize(),
+                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
+                }
+
+            except ShopifyOrderTrack.DoesNotExist:
+                pass
+            except:
+                raven_client.captureException()
+
             return JsonResponse(order, safe=False)
         else:
             return JsonResponse({'error': 'Not found: {}'.format(data.get('order'))}, status=404)
