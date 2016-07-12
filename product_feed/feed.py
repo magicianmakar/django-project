@@ -41,7 +41,7 @@ class ProductFeed():
 
         self._add_element(self.channel, 'title', self.info['name'])
         self._add_element(self.channel, 'link', 'https://{}'.format(self.info['domain']))
-        self._add_element(self.channel, 'description', '{} Products Feed'.format(self.info['name']))
+        self._add_element(self.channel, 'description', u'{} Products Feed'.format(self.info['name']))
 
     def add_product(self, product):
         if len(product['variants']):
