@@ -106,6 +106,18 @@ def update_shopify_order(store, data, sync_check=True):
         l.save()
 
 
+def update_line_export(store, product_id):
+    """
+    Update ShopifyOrderLine.product when a supplier is added or changed
+    :param product_id: Shopify Product ID
+    """
+
+    product = store.shopifyproduct_set.filter(shopify_export__shopify_id=product_id).first()
+
+    ShopifyOrderLine.objects.filter(order__store=store, shopify_product=product_id) \
+                            .update(product=product)
+
+
 def delete_shopify_order(store, data):
     ShopifyOrder.objects.filter(store=store, order_id=data['id']).delete()
 

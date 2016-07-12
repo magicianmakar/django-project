@@ -790,6 +790,8 @@ def proccess_api(request, user, method, target, data):
 
         product.save()
 
+        shopify_orders_utils.update_line_export(store, shopify_id)
+
         return JsonResponse({
             'status': 'ok',
             'reload': not data.get('export')
