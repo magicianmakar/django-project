@@ -59,7 +59,7 @@
                     <tr store-id="{{item.id}}">
                     {% if not user.is_subuser %}
                       <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
-                      <td>
+                      <td class="hidden-sm hidden-xs">
                         <span class="api-url" style="display:none">{{item.get_api_url}}</span>
                         <button class="show-api-url btn btn-default btn-outline btn-xs">Show</button>
                         <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
