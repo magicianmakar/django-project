@@ -219,12 +219,19 @@ def proccess_api(request, user, method, target, data):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
-            return JsonResponse({
-                'error': (
-                    'Your plan does not support connecting another Shopify store. '
-                    'Please contact support@shopifiedapp.com to learn how to connect more stores.'
-                )
-            })
+            if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
+                return JsonResponse({
+                    'error': (
+                        'Please Activate your account first by visiting:\n{}'
+                    ).format(request.build_absolute_uri('/user/profile#plan'))
+                })
+            else:
+                return JsonResponse({
+                    'error': (
+                        'Your plan does not support connecting another Shopify store. '
+                        'Please contact support@shopifiedapp.com to learn how to connect more stores.'
+                    )
+                })
 
         store = ShopifyStore(title=name, api_url=url, user=user.models_user)
         user.can_add(store)
