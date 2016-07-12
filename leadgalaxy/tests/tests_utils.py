@@ -328,6 +328,7 @@ class UtilsTestCase(TestCase):
         self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'))
         self.assertTrue(utils.upload_from_url('http://ecx.images-amazon.com/images/I/21iTIaYnSzL.jpg'))
         self.assertTrue(utils.upload_from_url('http://www.dhresource.com/0x0/f2/albu/g2/M00/DF/F1/rBVaGlUVIdWAIH4VAASbr7-6PiQ259.jpg'))
+        self.assertTrue(utils.upload_from_url('http://i00.i.aliimg.com/img/pb/848/720/003/1003720848_179.jpg'))
         self.assertTrue(utils.upload_from_url('https://s3.amazonaws.com/feather-client-files-aviary-prod-us-east-1/'
                                               '2016-06-16/567cc9301bc243ef91f763ce69c18f19.jpg'))
 
