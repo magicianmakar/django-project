@@ -936,7 +936,7 @@ def proccess_api(request, user, method, target, data):
 
             elif key in ['auto_margin_cents', 'auto_compare_at_cents']:
                 try:
-                    config[key] = int(data[key])
+                    config[key] = data[key].replace('.', '')
                 except:
                     config[key] = ''
 
@@ -945,7 +945,8 @@ def proccess_api(request, user, method, target, data):
                 bool_config.remove(key)
 
             else:
-                config[key] = data[key]
+                if key != 'access_token':
+                    config[key] = data[key]
 
         for key in bool_config:
             config[key] = (key in data)
