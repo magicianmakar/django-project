@@ -142,8 +142,8 @@ class Command(BaseCommand):
 
                 elif e.response.status_code == 404:
                     print 'Not found #{} in [{}]'.format(order.order_id, order.store.title)
-                    order.hidden = True
-                    order.save()
+                    order.delete()
+
                     return False
 
                 raven_client.captureException()
