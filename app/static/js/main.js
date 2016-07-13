@@ -123,7 +123,7 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
         "title": product.title,
         "body_html": product.description,
         "product_type": product.type,
-        "vendor": "",
+        "vendor": product.vendor,
         "published": false,
         "tags": product.tags,
         "variants": [],
