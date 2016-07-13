@@ -1836,7 +1836,7 @@ def webhook(request, provider, option):
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
                 try:
-                    with cache.lock('update_shopify_order_{}_{}'.format(store.id, shopify_order['id']), timeout=10):
+                    with cache.lock('update_shopify_order_{}_{}'.format(store.id, shopify_order['id']), timeout=1):
                         shopify_orders_utils.update_shopify_order(store, shopify_order)
 
                 except AssertionError:
