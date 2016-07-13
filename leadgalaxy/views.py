@@ -1843,13 +1843,9 @@ def webhook(request, provider, option):
                     raven_client.captureMessage('Store is being imported', extra={'store': store})
                     return JsonResponse({'error': 'Store Still in Process'}, status=500)
                 except:
-                    order_key = utils.random_hash()
-                    cache.set(order_key, shopify_order, timeout=259200)
-
                     raven_client.captureException(extra={
                         'store': store,
                         'order_id': shopify_order.get('id'),
-                        'order_key': order_key
                     })
 
                     tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id']], countdown=30)
