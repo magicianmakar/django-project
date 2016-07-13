@@ -96,7 +96,7 @@ class ShopifyOrderLine(models.Model):
         unique_together = ('order', 'line_id')
 
     order = models.ForeignKey(ShopifyOrder)
-    product = models.ForeignKey(ShopifyProduct, null=True)
+    product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.deletion.SET_NULL)
 
     line_id = models.BigIntegerField()
     shopify_product = models.BigIntegerField()
