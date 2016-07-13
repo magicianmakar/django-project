@@ -2,8 +2,8 @@ amqp==1.4.9
 anyjson==0.3.3
 arrow==0.7.0
 billiard==3.3.0.23
-bleach==1.4.2
-boto==2.40.0
+bleach==1.4.3
+boto==2.41.0
 celery==3.1.23
 cffi==1.7.0
 characteristic==14.3.0
@@ -11,7 +11,7 @@ contextlib2==0.5.3
 cryptography==1.4
 cssselect==0.9.1
 dj-database-url==0.3.0
-Django==1.8.12
+Django==1.8.13
 django-appconf==1.0.1
 django-compat==1.0.10
 django-compressor==1.6
@@ -29,7 +29,7 @@ docutils==0.12
 enum34==1.1.6
 factory-boy==2.7.0
 fake-factory==0.5.7
-gunicorn==19.4.5
+gunicorn==19.6.0
 html5lib==0.9999999
 httplib2==0.9.1
 idna==2.1
@@ -43,7 +43,7 @@ Markdown==2.6.6
 MarkupSafe==0.23
 MySQL-python==1.2.5
 ndg-httpsclient==0.4.1
-newrelic==2.60.0.46
+newrelic==2.66.0.49
 oauth2client==1.4.11
 Pillow==2.9.0
 ply==3.8
@@ -53,9 +53,9 @@ pyasn1-modules==0.0.5
 pycparser==2.14
 pyOpenSSL==16.0.0
 python-dateutil==2.5.3
-pytz==2016.4
+pytz==2016.6
 queuelib==1.4.2
-raven==5.21.0
+raven==5.22.0
 redis==2.10.5
 requests==2.10.0
 rsa==3.1.4
