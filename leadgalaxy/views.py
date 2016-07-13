@@ -797,6 +797,7 @@ def proccess_api(request, user, method, target, data):
 
         product.save()
 
+        cache.delete('export_product_{}_{}'.format(store.id, shopify_id))
         shopify_orders_utils.update_line_export(store, shopify_id)
 
         return JsonResponse({

@@ -1,6 +1,6 @@
 from django.db.models import Q
+from django.core.cache import cache
 
-# from raven.contrib.django.raven_compat.models import client as raven_client
 import re
 import arrow
 
@@ -90,7 +90,15 @@ def update_shopify_order(store, data, sync_check=True):
     )
 
     for line in data.get('line_items', []):
-        l, created = ShopifyOrderLine.objects.update_or_create(
+        cache_key = 'export_product_{}_{}'.format(store.id, line['product_id'])
+        product = cache.get(cache_key)
+        if product is None:
+            product = store.shopifyproduct_set.filter(shopify_export__shopify_id=safeInt(line['product_id'])).first()
+            cache.set(cache_key, product.id if product else 0, timeout=300)
+        else:
+            product = store.shopifyproduct_set.get(id=product) if product != 0 else None
+
+        ShopifyOrderLine.objects.update_or_create(
             order=order,
             line_id=line['id'],
             defaults={
@@ -99,11 +107,9 @@ def update_shopify_order(store, data, sync_check=True):
                 'price': line['price'],
                 'quantity': line['quantity'],
                 'variant_id': safeInt(line['variant_id']),
-                'variant_title': line['variant_title']
+                'variant_title': line['variant_title'],
+                'product': product
             })
-
-        l.product = store.shopifyproduct_set.filter(shopify_export__shopify_id=safeInt(line['product_id'])).first()
-        l.save()
 
 
 def update_line_export(store, product_id):
