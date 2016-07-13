@@ -2128,7 +2128,9 @@ def product_view(request, pid):
         product = get_object_or_404(ShopifyProduct, id=pid)
         if product.user != request.user:
             messages.warning(request, 'Preview Mode: Other features (like Variant Mapping,'
-                                      ' Product info Tab, etc) will not work.')
+                                      ' Product info Tab, etc) will not work. '
+                                      '<a href="/hijack/{u.id}?next=/product/{p.id}">'
+                                      'Login as {u.username}</a>'.format(u=product.user, p=product))
     else:
         product = get_object_or_404(ShopifyProduct, id=pid)
         request.user.can_view(product)
