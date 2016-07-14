@@ -91,7 +91,7 @@ def get_product_feed(request, store_id, revision=None):
 
         # Schedule an update only if it wasn't done before
         if cache.get(fb_update_key) is None:
-            next_eta = timezone.now() + timezone.timedelta(hours=12)
+            next_eta = timezone.now() + timezone.timedelta(seconds=2700)
             generate_feed.apply_async(args=[feed.id], kwargs={'nocache': True, 'by_fb': True}, eta=next_eta)
 
             cache.set(fb_update_key, True, timeout=36000)
