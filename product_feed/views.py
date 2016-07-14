@@ -85,21 +85,18 @@ def get_product_feed(request, store_id, revision=None):
     feed.revision = revision
 
     if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
-        with cache.lock('product_feed_update_lock_{}'.format(feed.id, timeout=10)):
-            from leadgalaxy.tasks import generate_feed
+        from leadgalaxy.tasks import generate_feed
 
-            fb_update_key = 'product_feed_update_{}'.format(feed.id)
+        fb_update_key = 'product_feed_update_{}'.format(feed.id)
 
-            # Schedule an update only if it wasn't done before
-            if cache.get(fb_update_key) is None:
-                next_eta = timezone.now() + timezone.timedelta(hours=12)
-                generate_feed.apply_async(args=[feed.id], kwargs={'nocache': True, 'by_fb': True}, eta=next_eta)
+        # Schedule an update only if it wasn't done before
+        if cache.get(fb_update_key) is None:
+            next_eta = timezone.now() + timezone.timedelta(hours=12)
+            generate_feed.apply_async(args=[feed.id], kwargs={'nocache': True, 'by_fb': True}, eta=next_eta)
 
-                cache.set(fb_update_key, True, timeout=36000)
+            cache.set(fb_update_key, True, timeout=36000)
 
-                print 'Generate Feed After 12 Hours for Feed {}'.format(feed.id)
-
-            feed.fb_access_at = timezone.now()
+        feed.fb_access_at = timezone.now()
 
     feed.save()
 
