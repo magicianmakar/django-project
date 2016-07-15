@@ -44,13 +44,13 @@
               <thead>
                 <tr>
                   {% if not user.is_subuser %}
-                  <th style="">Title</th>
-                  <th class="hidden-sm hidden-xs" style="width:55%">API URL</th>
+                  <th style="width:15%">Title</th>
+                  <th class="hidden-sm hidden-xs" style="width:40%">API URL</th>
                   {% else %}
-                  <th style="width:80%">Title</th>
+                  <th style="width:70%">Title</th>
                   {% endif %}
 
-                  <th style="width:90px">Products</th>
+                  <th style="width:200px">Products</th>
                   <th style="">Options</th>
                 </tr>
               </thead>
@@ -67,7 +67,21 @@
                             <i class="fa fa-check-circle-o"></i> Verify
                         </button>
                       </td>
-                      <td>{{item.shopifyproduct_set.count}}</td>
+                      <td>
+                        {% with connected=item.connected_count saved=item.saved_count %}
+                            {% if connected or saved %}
+                                {% if saved %}
+                                    <a href="/product?store=n&in={{item.id}}" class="btn btn-outline btn-xs btn-default">{{saved}} Saved</a>
+                                {% endif %}
+
+                                {% if connected %}
+                                    <a href="/product?store={{item.id}}" class="btn btn-outline btn-xs btn-default">{{connected}} Connected</a>
+                                {% endif %}
+                            {% else %}
+                                <a href="#" class="btn btn-outline btn-xs btn-default">Empty</a>
+                            {% endif %}
+                        {% endwith %}
+                      </td>
                       <td>
                         <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
                             <i class="fa fa-external-link"></i> Visit Store

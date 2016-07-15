@@ -1905,6 +1905,10 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             res = res.exclude(shopify_export__isnull=True)
         elif store == 'n':  # non-connected
             res = res.filter(shopify_export__isnull=True)
+
+            in_store = utils.safeInt(request.GET.get('in'))
+            if in_store:
+                res = res.filter(store=in_store)
         else:
             store = utils.safeInt(store)
             res = res.filter(shopify_export__store=store)

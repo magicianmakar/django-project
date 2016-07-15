@@ -455,6 +455,11 @@ class ShopifyStore(models.Model):
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
 
+    def connected_count(self):
+        return self.shopifyproduct_set.exclude(shopify_export=None).count()
+
+    def saved_count(self):
+        return self.shopifyproduct_set.filter(shopify_export=None).count()
 
 class AccessToken(models.Model):
     class Meta:
