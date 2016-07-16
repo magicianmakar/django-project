@@ -1051,7 +1051,9 @@ def proccess_api(request, user, method, target, data):
 
         image = utils.get_shopify_variant_image(store, data.get('product'), data.get('variant'))
 
-        if image:
+        if image and request.GET.get('redirect') == '1':
+            return HttpResponseRedirect(image)
+        elif image:
             return JsonResponse({
                 'status': 'ok',
                 'image': image
