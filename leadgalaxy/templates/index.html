@@ -350,6 +350,22 @@
 
                         {% endif %}
 
+                        {% if user|can:'aliexpress_captcha.use' %}
+                        <div class="col-sm-offset-1"><hr /></div>
+
+                        <div class="col-sm-offset-1">
+                            <h3>Aliexpress Captcha</h3>
+                        </div>
+                        <div class="col-sm-offset-2">
+                            <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox" class="js-switch all-variants-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
+                            <label for="aliexpress_captcha" class="col-sm-4 control-label" style="float:initial;text-align:left">
+                                Enable Auto Captcha Solving
+                            </label>
+                        </div>
+
+                        <div class="col-sm-offset-1"><hr /></div>
+                        {% endif %}
+
                         <div class="form-group">
                             <div class="col-sm-offset-2 col-sm-10">
                                 <button data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
@@ -397,8 +413,15 @@
 
 {% endblock %}
 
+{% block extracss %}
+{% compress css %}
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+{% endcompress %}
+{% endblock %}
+
 {% block extrajs %}
 {% compress js %}
+    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
 

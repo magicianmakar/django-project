@@ -930,9 +930,9 @@ def proccess_api(request, user, method, target, data):
         form_webapp = (data.get('from', False) == 'webapp')
 
         if form_webapp:
-            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'validate_tracking_number']
+            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha', 'validate_tracking_number']
         else:
-            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark']
+            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha']
 
         for key in data:
             if key == 'from':
@@ -1023,6 +1023,7 @@ def proccess_api(request, user, method, target, data):
                 order['shipping_address']['address2'] = ''
 
             order['ordered'] = False
+            order['solve'] = store.user.get_config('aliexpress_captcha', False)
 
             try:
                 track = ShopifyOrderTrack.objects.get(
