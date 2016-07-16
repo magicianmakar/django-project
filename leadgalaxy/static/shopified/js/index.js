@@ -107,28 +107,30 @@ $('.delete-store').click(function (e) {
 $('form#config-form').submit(function (e) {
     e.preventDefault();
 
-    if ($('#phone-invalid').hasClass('hidden')) {
-        var config = $(this).serialize();
-
-        $.ajax({
-            url: '/api/user-config',
-            type: 'POST',
-            data: config,
-            context: {form: $(this)},
-            success: function (data) {
-                if (data.status == 'ok') {
-                    toastr.success('Saved.','User Config');
-                } else {
-                    displayAjaxError('User Config', data);
-                }
-            },
-            error: function (data) {
-                displayAjaxError('User Config', data);
-            },
-            complete: function () {
-            }
-        });
+    if ($('#phone-invalid').is(':visible')) {
+        toastr.error('Phone Number is not valid');
     }
+
+    var config = $(this).serialize();
+
+    $.ajax({
+        url: '/api/user-config',
+        type: 'POST',
+        data: config,
+        context: {form: $(this)},
+        success: function (data) {
+            if (data.status == 'ok') {
+                toastr.success('Saved.','User Config');
+            } else {
+                displayAjaxError('User Config', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('User Config', data);
+        },
+        complete: function () {
+        }
+    });
 
     return false;
 });
@@ -256,16 +258,9 @@ $('.verify-api-url').click(function (e) {
 });
 
 $('input[name="order_phone_number"]').on('keyup', function() {
-    var value = $(this).val(),
-        phone = value.match(/[\d-]+/);
+    var value = $(this).val();
 
-    if (value.length > 0) {
-        if (phone == null || (phone && phone[0] != value)) {
-            $('#phone-invalid').removeClass('hidden');
-        } else {
-            $('#phone-invalid').addClass('hidden');
-        }
-    }
+    $('#phone-invalid').toggle(/[^\d-]/.test(value));
 });
 
 $('input[name="order_phone_number"]').trigger('keyup');
