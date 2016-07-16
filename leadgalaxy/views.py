@@ -1019,6 +1019,9 @@ def proccess_api(request, user, method, target, data):
 
         order = cache.get(order_key)
         if order:
+            if not order['shipping_address'].get('address2'):
+                order['shipping_address']['address2'] = ''
+
             order['ordered'] = False
 
             try:
