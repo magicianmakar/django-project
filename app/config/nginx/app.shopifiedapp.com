@@ -15,6 +15,10 @@ upstream https_backend  {
     server miyazaki-35268.herokussl.com:443;
 }
 
+upstream ali_node  {
+  server 127.0.0.1:9000;
+}
+
 server {
 
     listen 80;
@@ -39,6 +43,19 @@ server {
         error_log off;
 
         try_files $uri $uri/ =404;
+    }
+
+    location /api/ali {
+        access_log  /var/log/nginx/helperapp.access.log;
+        error_log   /var/log/nginx/helperapp.error.log;
+
+        proxy_set_header Host app.shopifiedapp.com;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Proxy-Protocol $scheme;
+
+        proxy_pass  http://ali_node;
     }
 
     location / {
@@ -81,6 +98,19 @@ server {
         error_log off;
 
         try_files $uri $uri/ =404;
+    }
+
+    location /api/ali {
+        access_log  /var/log/nginx/helperapp.access.log;
+        error_log   /var/log/nginx/helperapp.error.log;
+
+        proxy_set_header Host app.shopifiedapp.com;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Proxy-Protocol $scheme;
+
+        proxy_pass  http://ali_node;
     }
 
     location / {
