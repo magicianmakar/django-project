@@ -29,8 +29,7 @@ class Command(BaseCommand):
             except GroupPlan.DoesNotExist:
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
-            self.stdout.write(self.style.MIGRATE_SUCCESS(
-                '{} webhooks for plan: {}'.format(action.title(), plan.title)))
+            self.write_success(u'{} webhooks for plan: {}'.format(action.title(), plan.title))
 
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
@@ -58,18 +57,17 @@ class Command(BaseCommand):
             except ShopifyStore.DoesNotExist:
                 raise CommandError('Store "%s" does not exist' % store_id)
 
-            self.stdout.write(self.style.MIGRATE_SUCCESS(
-                '{} webhooks for store: {}'.format(action.title(), store.title)))
+            self.write_success(u'{} webhooks for store: {}'.format(action.title(), store.title))
 
             self.handle_store(store, action, options['delete_on_detach'])
 
     def handle_store(self, store, action, delete_on_detach):
         if action == 'attach':
             webhooks = utils.attach_webhooks(store)
-            self.stdout.write(self.style.MIGRATE_SUCCESS('    + {}: {}'.format(store.title, len(webhooks))))
+            self.write_success(u'    + {}: {}'.format(store.title, len(webhooks)))
         else:
             webhooks = utils.detach_webhooks(store, delete_on_detach)
-            self.stdout.write(self.style.MIGRATE_SUCCESS('    - {}'.format(store.title)))
+            self.write_success(u'    - {}'.format(store.title))
 
     def write_success(self, message):
         self.stdout.write(self.style.MIGRATE_SUCCESS(message))
