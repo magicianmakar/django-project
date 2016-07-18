@@ -718,9 +718,11 @@ $(function () {
         width: '325px'
     });
 
-    $('.note-panel').css({
-        height: $('.shipping-info').first().outerHeight() + 'px',
-        overflow: 'hidden'
+    $('.note-panel').each(function (i, el) {
+        $(el).css({
+            height: $(el).parents('.shipping-info').outerHeight() + 'px',
+            overflow: 'hidden'
+        });
     });
 
     setTimeout(function() {
