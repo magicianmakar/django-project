@@ -1829,7 +1829,7 @@ def webhook(request, provider, option):
 
                 return JsonResponse({'status': 'ok'})
 
-            elif topic == 'orders/updated':
+            elif topic == 'orders/create' or topic == 'orders/updated':
                 for line in shopify_order['line_items']:
                     fulfillment_status = line['fulfillment_status']
                     if not fulfillment_status:
