@@ -32,10 +32,36 @@
                             <th>Products</th>
                             {% endif %}
                             <th style="width:13%">Join Date</th>
-                            <th style="width:30%">Actions</th>
+                            <th style="width:25%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
+                    {% cache 600 acp_users_table user.id users_count request.GET.plan %}
+                    {% for item in users %}
+                        <tr>
+                            <td><a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
+                            <td>{{item.email}}</td>
+                            <td>{{item.profile.plan.title}}</td>
+                            <td>{{item.date_joined|date}}</td>
+                            <td>
+                                <a href="#" class="btn btn-primary btn-outline btn-xs user-profile-btn" user-id="{{item.id}}">Profile</a>
+                                <a href="/hijack/{{item.id}}/" class="btn btn-success btn-outline btn-xs m-r-xs">Login with</a>
+
+                                <div class="btn-group">
+                                        <a class="btn btn-default btn-outline btn-xs m-l-xs dropdown-toggle" data-toggle="dropdown" href="#">
+                                            More <span class="caret"></span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-user">
+                                            <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
+                                            <li><a href="/admin/leadgalaxy/planregistration/?q={{item.email|urlencode}}" target="_blank">Registration Links</a></li>
+                                            <li><a href="/admin/leadgalaxy/planpayment/?q={{item.email|urlencode}}" target="_blank">Payements</a></li>
+                                            <li><a href="#" class="clear-access-tokens" user-id="{{item.id}}" username="{{item.username}}">Clear Access Tokens</a></li>
+                                        </ul>
+                                    </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {% endcache %}
                     </tbody>
                 </table>
             </div>
@@ -140,8 +166,7 @@
             });
         }
 
-
-{% cache 600 acp_users user.id users_count request.GET.plan %}
+{% cache 600 acp_profiles_list user.id users_count request.GET.plan %}
 
         var profiles = {
 {% for profile in profiles  %}
@@ -149,99 +174,24 @@
 {% endfor %}
         };
 
-        var data = [
-{% for item in users %}
-['<span style="display:none">{{item.id}}|{{item.username}}|{{item.email|urlencode}}</span>',
-'{{item.email}}',
-'{{item.profile.plan.title}}',
-
-{% if show_products %}
-'{{item.shopifystore_set.count}}',
-'{{item.shopifyproduct_set.count}}',
-{% endif %}
-
-'{{item.date_joined|date}}', ''],
-{% endfor %}
-        ];
-
 {% endcache %}
 
         $(document).ready(function() {
-            $('.dataTables').on( 'draw.dt', function (e) {
-                $('.dataTables tr').each(function (i, el) {
-                    var info = $(el).find('td').first().find('span').text();
-                    info = info.split('|');
-                    $(el).find('td').find('a').remove()
-                    $(el).find('td').first().append($('<a>', {href: '/admin/auth/user/'+info[0]+'/', target: '_blank', text: info[1]}));
-
-                    $(el).find('td').last().empty();
-
-                    if (info.length != 3) {
-                         $(el).find('td').last().text('No user found.').addClass('text-center');
-                        return;
-                    }
-
-                    $(el).find('td').last()
-                    .append($('<a>', {
-                        'href': '/hijack/'+info[0]+'/',
-                        'class': 'btn btn-success btn-xs m-r-xs',
-                        'text': 'Login with'
-                    }))
-                    .append(
-                        $('<a>', {
-                            'href': '#',
-                            'class': 'btn btn-primary btn-xs change-plan-btn',
-                            'user-id': info[0],
-                            'text': 'Change Plan'
-                        }).click(changePlan)
-                    ).prepend(
-                        $('<a>', {
-                            'href': '#',
-                            'class': 'btn btn-default btn-outline btn-xs user-profile-btn',
-                            'user-id': info[0],
-                            'text': 'Profile'
-                        }).click(userProfile)
-                    ).append(
-                        $('<a>', {
-                            'href': '/admin/leadgalaxy/planregistration/?q=' + info[2],
-                            'class': 'btn btn-default btn-outline btn-xs m-l-xs',
-                            'target': '_blank',
-                            'title': 'Registration Links',
-                            'text': 'L'
-                        })
-                    ).append(
-                        $('<a>', {
-                            'href': '/admin/leadgalaxy/planpayment/?q=' + info[2],
-                            'class': 'btn btn-default btn-outline btn-xs m-l-xs',
-                            'target': '_blank',
-                            'title': 'Payements',
-                            'text': 'P'
-                        })
-                    ).append(
-                        $('<a>', {
-                            'href': '#',
-                            'class': 'btn btn-warning btn-outline btn-xs m-l-xs',
-                            'title': 'Clear Access Tokens',
-                            'user-id': info[0],
-                            'username': info[1],
-                            'text': 'C'
-                        }).click(clearAccessToken)
-                    );
-                });
-            });
-
             var table = $('.dataTables').dataTable({
                 responsive: true,
                 autoWidth: false,
-                data: data,
                 dom: 'T<"clear">lfrtip',
                 bLengthChange: false,
                 iDisplayLength: 50,
-                order: [[ 3, "desc"]],
+                order: [],
                 tableTools: {
                     sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }
             });
+
+            $('.change-plan-btn').click(changePlan);
+            $('.user-profile-btn').click(userProfile);
+            $('.clear-access-tokens').click(clearAccessToken);
 
             $('#change-plan-apply').click(function (e) {
                 var btn = $(this);
