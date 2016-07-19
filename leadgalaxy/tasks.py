@@ -129,8 +129,16 @@ def export_product(req_data, target, user_id):
             if 'product' not in r.json():
                 rep = r.json()
 
-                print u'SHOPIFY EXPORT: {}'.format(utils.format_shopify_error(rep))
-                return {'error': u'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
+                shopify_error = utils.format_shopify_error(rep)
+                print u'SHOPIFY EXPORT: {} - Store: {}'.format(shopify_error, store)
+
+                if 'requires write_products scope' in shopify_error:
+                    return {'error': (u'Shopify Error: {}\n\n'
+                                      'Please follow this instructions to resolve this issue:'
+                                      '\nhttps://app.shopifiedapp.com/pages/view/15'
+                                      ).format(utils.format_shopify_error(rep))}
+                else:
+                    return {'error': u'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
 
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
             raven_client.captureException()
