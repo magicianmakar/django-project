@@ -1169,6 +1169,23 @@ def proccess_api(request, user, method, target, data):
                 else:
                     return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
 
+            tracks = ShopifyOrderTrack.objects.filter(
+                user=user.models_user,
+                store=store,
+                order_id=order_id,
+                line_id=line_id
+            )
+
+            if tracks.count() > 1:
+                raven_client.captureMessage('More Than One Order Track', level='warning', extra={
+                    'store': store.title,
+                    'order_id': order_id,
+                    'line_id': line_id,
+                    'count': tracks.count()
+                })
+
+                tracks.delete()
+
             ShopifyOrderTrack.objects.update_or_create(
                 user=user.models_user,
                 store=store,
