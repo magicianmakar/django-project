@@ -14,12 +14,15 @@ import simplejson as json
 def index(request, tag=None):
     if tag:
         tags = ArticleTag.objects.filter(Q(title__iexact=tag) | Q(title__iexact=tag.replace('-', ' ')))
-        articles = Article.objects.filter(Q(tags__in=tags)).filter(stat=0).order_by('-created_at')
+        articles = Article.objects.filter(Q(tags__in=tags)).order_by('-created_at')
     else:
         if not request.user.is_superuser:
             raise PermissionDenied()
 
-        articles = Article.objects.filter(stat=0).order_by('-created_at')
+        articles = Article.objects.order_by('-created_at')
+
+    if not request.user.is_superuser:
+        articles = articles.filter(stat=0)
 
     return render(request, 'article/index.html', {
         'articles': articles,
@@ -175,12 +178,14 @@ def _save_submittion(request, form, article=None):
         article_title = form.cleaned_data['title']
         article_text = form.cleaned_data['body']
         tags = form.cleaned_data['tags']
+        stat = form.cleaned_data['stat']
 
         if not article:
-            article = Article(title=article_title, body=article_text, author=request.user)
+            article = Article(title=article_title, body=article_text, author=request.user, stat=stat)
         else:
             article.title = article_title
             article.body = article_text
+            article.stat = stat
 
             article.tags.clear()
 

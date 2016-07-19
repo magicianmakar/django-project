@@ -31,12 +31,25 @@
         <div class="row">
             <div class="col-md-9">
                 <div class="forum-icon">
-                    <i class="fa fa-shield"></i>
+                    <i class="fa fa-file-o"></i>
                 </div>
-                <a href="{% url 'article.views.view' article.slug %}" class="forum-item-title">{{ article.title }}</a>
+                <a href="{% url 'article.views.view' article.slug %}" class="forum-item-title">
+                    {% if article.stat != 0 %}
+                        <span class="badge badge-info">{{article.get_status|title}}</span>
+                    {% endif %}
+                    {{ article.title }}
+                </a>
                 <div class="forum-sub-title">
+                    {% if user.is_superuser %}
                     By <a herf="#">{{ article.author.username }}</a>,
-                    Last update: <span class="date">{{ article.updated_at|date:"d/m/Y" }}</span></div>
+                    {% endif %}
+
+                    Last update: <span class="date">{{ article.updated_at|date:"d/m/Y" }}</span>
+
+                    {% if user.is_superuser %}
+                    , Views: <b class="">{{ article.views }}</b>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

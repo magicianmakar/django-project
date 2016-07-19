@@ -2,10 +2,13 @@ from models import Comment
 from django import forms
 from django.contrib.auth.models import User
 
+from .models import PUBLISH_STAT
+
 class ArticleForm(forms.Form):
     title = forms.CharField()
     body = forms.CharField(widget=forms.Textarea)
     tags = forms.CharField(required=False)
+    stat = forms.ChoiceField(choices=PUBLISH_STAT[:2])
 
 class AnonymouseArticleForm(ArticleForm):
     name = forms.CharField(max_length=140)

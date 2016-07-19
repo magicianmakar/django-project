@@ -22,6 +22,9 @@
                     {% endif %}
 
                     <h1>
+                        {% if article.stat != 0 %}
+                            [{{article.get_status|title}}]
+                        {% endif %}
                         {{ article.title }}
                     </h1>
                 </div>

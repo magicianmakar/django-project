@@ -38,6 +38,9 @@ class Article(models.Model):
     def comments_count(self):
         return Comment.objects.filter(article=self).count()
 
+    def get_status(self):
+        return PUBLISH_STAT[int(self.stat)][1]
+
     def save(self, **kwargs):
         if not self.slug:
             slug = slugify(self.title)
