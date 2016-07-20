@@ -454,7 +454,7 @@ def slack_invite(data, team='users'):
 
 
 def aliexpress_shipping_info(aliexpress_id, country_code):
-    shippement_key = 'shipping_info_{}'.format(aliexpress_id)
+    shippement_key = 'shipping_info_{}_{}'.format(aliexpress_id, country_code)
     shippement_data = cache.get(shippement_key)
 
     if shippement_data is not None:
