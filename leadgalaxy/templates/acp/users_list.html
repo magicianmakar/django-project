@@ -177,6 +177,12 @@
 {% endcache %}
 
         $(document).ready(function() {
+            $('.dataTables').on('draw.dt', function (e) {
+                $('.change-plan-btn').unbind('click').click(changePlan);
+                $('.user-profile-btn').unbind('click').click(userProfile);
+                $('.clear-access-tokens').unbind('click').click(clearAccessToken);
+            });
+
             var table = $('.dataTables').dataTable({
                 responsive: true,
                 autoWidth: false,
@@ -188,10 +194,6 @@
                     sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }
             });
-
-            $('.change-plan-btn').click(changePlan);
-            $('.user-profile-btn').click(userProfile);
-            $('.clear-access-tokens').click(clearAccessToken);
 
             $('#change-plan-apply').click(function (e) {
                 var btn = $(this);
