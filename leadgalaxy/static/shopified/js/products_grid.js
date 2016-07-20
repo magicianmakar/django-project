@@ -76,7 +76,6 @@ function getSelectProduct() {
     $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             products.push($(el).parents('.product-box').attr('product-id'));
-            $(el).iCheck('uncheck');
         }
     });
 

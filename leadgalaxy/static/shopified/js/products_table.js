@@ -88,7 +88,6 @@ function getSelectProduct() {
     $('input.item-select[type=checkbox]').each(function(i, el) {
         if (el.checked) {
             products.push($(el).parents('tr').attr('product-id'));
-            $(el).iCheck('uncheck');
         }
     });
 
