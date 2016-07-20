@@ -152,37 +152,7 @@
     </div>
 </div>
 
-<div id="modal-shopify-send" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">Sending To Shopify</h3>
-
-                        <label for="send-select-store">Select Store:</label>
-                        <select class="form-control" name="send-select-store" id="send-select-store" style="display: inline-block; width: 191px; ">
-                            {% for item in user.profile.get_active_stores %}
-                            <option value="{{item.id}}">{{item.title}}</option>
-                            {% endfor %}
-                        </select>
-
-                        <button id="shopify-send-btn" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Send</button>
-
-                        <div class="progress progress-striped active" style="margin-top: 20px;display:none;">
-                            <div style="width: 0%" class="progress-bar progress-bar-danger">
-                                    <span class="sr-only">0% Complete (danger)</span>
-                                </div>
-                            <div style="width: 0%;" class="progress-bar progress-bar-success">
-                                <span class="sr-only">0% Complete (success)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'partial/shopify_send_modal.html' %}
 
 {% include 'partial/filter_modal.html' %}
 

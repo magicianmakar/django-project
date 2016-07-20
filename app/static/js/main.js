@@ -124,7 +124,7 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
         "body_html": product.description,
         "product_type": product.type,
         "vendor": product.vendor,
-        "published": false,
+        "published": $('#send-product-visible').prop('checked') || false,
         "tags": product.tags,
         "variants": [],
         "options": [],
