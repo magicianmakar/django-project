@@ -174,12 +174,20 @@
                                                                     {{status.status_str}}
                                                                 </span>
                                                             {% endif %}
+
+                                                            {% if status.cancel_at_period_end %}
+                                                                <span class="badge badge-warning">
+                                                                Canceleld
+                                                                {% include 'partial/help_tooltip.html' with help="You have canceled your subscription, but it will stay active until the end of the billing period.<br>You will not be billed at the period end." nostyle=True %}
+                                                                </span>
+                                                            {% endif %}
                                                         </b>
 
-                                                        {% if status.status == 'active' %}
+                                                        {% if status.status == 'active' or status.status == 'trialing' %}
                                                         <button class="btn btn-danger btn-outline btn-xs pull-right cancel-sub-btn itooltip"
                                                                 title="Cancel You Subscription"
                                                                 data-subscription="{{item.id}}"
+                                                                data-status="{{status.status}}"
                                                                 data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
                                                                 data-plan="{{item.plan.get_description}}">
                                                             {# <i class="fa fa-times"></i>  #}
@@ -345,6 +353,7 @@
         'customer_source': '{% url "stripe_subscription.views.customer_source" %}',
         'subscription_trial': '{% url "stripe_subscription.views.subscription_trial" %}',
         'subscription_plan': '{% url "stripe_subscription.views.subscription_plan" %}',
+        'subscription_cancel': '{% url "stripe_subscription.views.subscription_cancel" %}',
 
         'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
     };

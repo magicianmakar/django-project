@@ -238,11 +238,45 @@
         );
     });
 
+    $('#modal-subscription-cancel .confirm-cancel-btn').click(function(e) {
+        var parent = $(this).parents('.subsciption-plan');
+        var plan = parent.data('data-plan');
+
+        $(this).button('loading');
+
+        $.ajax({
+            url: config.subscription_cancel,
+            type: 'POST',
+            data: {
+                subscription: $('#modal-subscription-cancel').data('subscription'),
+                when: $('#modal-subscription-cancel input[name="when"]:checked').val()
+            },
+            success: function(data) {
+                toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
+                $('#modal-subscription-cancel').modal('hide');
+
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Cancel Subscription', data);
+            }
+        });
+    });
+
     $('.cancel-sub-btn').click(function() {
-        $('#modal-subscribtion-cancel').data('subscription', $(this).data('subscription'));
-        $('#modal-subscribtion-cancel .plan-name').text($(this).data('plan'));
-        $('#modal-subscribtion-cancel .billing-end').text($(this).data('period-end'));
-        $('#modal-subscribtion-cancel').modal('show');
+        $('#modal-subscription-cancel').data('subscription', $(this).data('subscription'));
+        $('#modal-subscription-cancel .plan-name').text($(this).data('plan'));
+        $('#modal-subscription-cancel .billing-end').text($(this).data('period-end'));
+
+        console.log('msg',$(this).data('status') );
+        if ($(this).data('status') != 'active') {
+            $('#modal-subscription-cancel .part-refund').hide();
+            $('#modal-subscription-cancel .period-name').text('trail');
+        }
+
+        $('#modal-subscription-cancel').modal('show');
     });
 
     $('.plan-more-features .more-feature-list-btn').click(function() {

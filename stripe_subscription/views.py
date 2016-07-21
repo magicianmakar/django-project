@@ -15,7 +15,8 @@ from .utils import (
     SubscriptionException,
     eligible_for_trial_coupon,
     subscription_end_trial,
-    update_subscription
+    update_subscription,
+    get_recent_invoice
 )
 
 
@@ -156,3 +157,61 @@ def subscription_plan(request):
         profile.save()
 
     return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@csrf_protect
+def subscription_cancel(request):
+    user = request.user
+    when = request.POST['when']
+
+    subscription = user.stripesubscription_set.get(id=request.POST['subscription'])
+    sub = subscription.refresh()
+
+    if when == 'period_end':
+        sub.delete(at_period_end=True)
+        return JsonResponse({'status': 'ok'})
+
+    elif when == 'immediately':
+        if sub.status == 'active':
+            invoice = get_recent_invoice(sub.customer)
+
+            if len(invoice.lines.data) == 1:
+                period = invoice.lines.data[0].period
+                invoiced_duration = period.end - period.start
+                usage_duration = arrow.utcnow().timestamp - period.start
+
+                if invoice.paid and invoice.closed and invoice.amount_due:
+                    refound_amount = invoice.amount_due - ((usage_duration * invoice.amount_due) / invoiced_duration)
+
+                    if 0 < refound_amount and refound_amount < invoice.amount_due:
+                        try:
+                            stripe.Refund.create(
+                                charge=invoice.charge,
+                                amount=refound_amount
+                            )
+                        except:
+                            raven_client.captureException()
+
+                        raven_client.captureMessage('Subscription Refund', level='info', extra={
+                            'amount': refound_amount,
+                            'invoice': invoice.id,
+                            'subscription': sub.id
+                            })
+                    else:
+                        raven_client.captureMessage('Subscription Refund More Than Due', extra={
+                            'amount': refound_amount,
+                            'invoice': invoice.id,
+                            'subscription': sub.id
+                        })
+            else:
+                raven_client.captureMessage('Subscription Refund More Than One Invoice Item', extra={
+                    'invoice': invoice.id,
+                    'subscription': sub.id
+                })
+
+        sub.delete()
+        return JsonResponse({'status': 'ok'})
+
+    else:
+        return JsonResponse({'error': 'Unknown "when" parameter'}, status=500)

@@ -1,4 +1,4 @@
-<div id="modal-subscribtion-cancel" class="modal fade" aria-hidden="true">
+<div id="modal-subscription-cancel" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -11,11 +11,13 @@
                         <p>
                             Are you sure you want to cancel your subscription to <b><span class="plan-name"></span></b>?<br>
                             <form action="">
-                                <label for="when"><input type="radio" name="when" value="period_end">
-                                    Yes, but keep the subscription active until the billing period ending in <span class="billing-end"></span>
+                                <label for="cancel-at-period-end">
+                                    <input type="radio" id="cancel-at-period-end" name="when" value="period_end" checked>
+                                    Yes, but keep the subscription active until the <span class="period-name">billing</span> period ending in <span class="billing-end"></span>
                                 </label>
-                                <label for="when"><input type="radio" name="when" value="immediately">
-                                    Yes immediately! and request a partial refund of the rest of the billing period</label><br>
+                                <label for="cancel-at-immediately">
+                                    <input type="radio" id="cancel-at-immediately" name="when" value="immediately">
+                                    Yes immediately! <span class="part-refund">and request a partial refund of the rest of the billing period</span></label><br>
                             </form>
                         </p>
                     </div>
@@ -25,7 +27,7 @@
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline btn-default btn-danger" data-dismiss="modal">
+                <button type="button" class="btn btn-outline btn-default btn-danger confirm-cancel-btn">
                     <i class="fa fa-times"></i> Cancel Subscription</button>
               </div>
         </div>

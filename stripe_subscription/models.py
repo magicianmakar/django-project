@@ -214,6 +214,7 @@ class StripeSubscription(models.Model):
         status = {
             'status': sub['status'],
             'status_str': sub['status'].replace('_', ' ').title(),
+            'cancel_at_period_end': sub['cancel_at_period_end']
         }
 
         if sub['status'] == 'trialing' and sub.get('trial_end'):
