@@ -305,8 +305,12 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-8 col-md-offset-2">
+                                <div class="col-md-3 col-md-offset-2">
                                     <button class="btn btn-primary add-cc-btn"><i class="fa fa-edit"></i> Update Credit Card</button>
+                                </div>
+
+                                <div class="col-md-3 col-md-offset-2 text-right">
+                                    <button class="btn btn-danger delete-cc-btn"><i class="fa fa-times"></i> Delete Credit Card</button>
                                 </div>
 
                                 {# <div class="col-md-8 col-md-offset-2"> #}
@@ -351,6 +355,7 @@
 {% if stripe_customer %}
     var config = {
         'customer_source': '{% url "stripe_subscription.views.customer_source" %}',
+        'customer_source_delete': '{% url "stripe_subscription.views.customer_source_delete" %}',
         'subscription_trial': '{% url "stripe_subscription.views.subscription_trial" %}',
         'subscription_plan': '{% url "stripe_subscription.views.subscription_plan" %}',
         'subscription_cancel': '{% url "stripe_subscription.views.subscription_cancel" %}',

@@ -62,6 +62,22 @@ def customer_source(request):
 
 @login_required
 @csrf_protect
+def customer_source_delete(request):
+    user = request.user
+    user.profile.create_stripe_customer()
+
+    cus = user.stripe_customer.retrieve()
+
+    if len(cus.sources.data):
+        cus.sources.retrieve(cus.sources.data[0].id).delete()
+
+        return JsonResponse({'status': 'ok'})
+    else:
+        return JsonResponse({'error': 'You don\'t have an attached Card'}, status=500)
+
+
+@login_required
+@csrf_protect
 def subscription_trial(request):
     user = request.user
 

@@ -265,6 +265,44 @@
         });
     });
 
+    $('.delete-cc-btn').click(function(e) {
+        var btn = $(this);
+        var parent = $(this).parents('th');
+
+        swal({
+                title: "Delete Credit Card",
+                text: "Are you sure you want to delete your Credit Card information?",
+                type: 'warning',
+                showCancelButton: true,
+                closeOnConfirm: false,
+                animation: false,
+                showLoaderOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Yes",
+                cancelButtonText: "No"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    $.ajax({
+                        url: config.customer_source_delete,
+                        type: 'POST',
+                        success: function(data) {
+                            toastr.success("Your Credit Card has been Deleted.", "Delete Credit Card");
+                            swal.close();
+
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1500);
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Credit Card', data);
+                        }
+                    });
+                }
+            }
+        );
+    });
+
     $('.cancel-sub-btn').click(function() {
         $('#modal-subscription-cancel').data('subscription', $(this).data('subscription'));
         $('#modal-subscription-cancel .plan-name').text($(this).data('plan'));
