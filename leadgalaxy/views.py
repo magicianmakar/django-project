@@ -808,7 +808,11 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
-        product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
+        try:
+            product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
+        except ShopifyProductExport.DoesNotExist:
+            return JsonResponse({'error': 'Supplier not found.\nPlease reload the page and try again.'})
+
         need_update = product.shopify_export == product_export
 
         product_export.delete()
@@ -828,7 +832,11 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
-        product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
+        try:
+            product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
+        except ShopifyProductExport.DoesNotExist:
+            return JsonResponse({'error': 'Supplier not found.\nPlease reload the page and try again.'})
+
         # Must recent export is the used one
         product_export.created_at = timezone.now()
         product_export.save()
