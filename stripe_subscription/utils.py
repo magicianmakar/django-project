@@ -166,7 +166,9 @@ def process_webhook_event(request, event_id):
 
     if event.type == 'invoice.payment_failed':
         invoice = event.data.object
-        if invoice.attempted and invoice.attempt_count == 1:
+        customer = StripeCustomer.objects.get(customer_id=invoice.customer)
+
+        if customer.have_source() and invoice.attempted and invoice.attempt_count == 1:
             from leadgalaxy.utils import send_email_from_template
 
             user = User.objects.get(stripe_customer__customer_id=invoice.customer)
@@ -184,6 +186,14 @@ def process_webhook_event(request, event_id):
             )
 
             return HttpResponse('Email Notification Sent')
+
+        elif not customer.have_source():
+            sub = customer.user.stripesubscription_set.first()
+            sub = sub.retrieve()
+            sub.delete()
+
+            return HttpResponse('Subscription Deleted')
+
         else:
             return HttpResponse('ok')
 
