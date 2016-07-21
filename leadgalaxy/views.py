@@ -2459,6 +2459,22 @@ def acp_users_list(request):
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
 
+    q = request.GET.get('q')
+    if q:
+        qid = utils.safeInt(q)
+        if qid:
+            users = users.filter(
+                Q(shopifystore__id=qid)
+            )
+        else:
+            users = users.filter(
+                Q(username__icontains=q) |
+                Q(email__iexact=q) |
+                Q(profile__emails__icontains=q) |
+                Q(shopifystore__title__icontains=q)
+            )
+        users = users.distinct()
+
     plans = GroupPlan.objects.all()
     profiles = UserProfile.objects.all()
 
