@@ -1194,15 +1194,22 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
         email_html = template.render(ctx)
 
         if nl2br:
+            email_plain = email_html
             email_html = email_html.replace('\n', '<br />')
+        else:
+            from bleach import clean
+
+            email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
+            email_plain = map(lambda l: l.strip(), email_plain)
+            email_plain = '\n'.join(email_plain)
 
         if type(recipient) is not list:
             recipient = [recipient]
 
         send_mail(subject=subject,
                   recipient_list=recipient,
-                  from_email='support@shopifiedapp.com',
-                  message=email_html,
+                  from_email='"Shopified App" <support@shopifiedapp.com>',
+                  message=email_plain,
                   html_message=email_html)
 
 
