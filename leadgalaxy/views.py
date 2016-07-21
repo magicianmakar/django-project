@@ -157,9 +157,11 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Username or password not set'}, status=403)
 
         if utils.login_attempts_exceeded(username):
+            unlock_email = utils.unlock_account_email(username)
+
             raven_client.context.merge(raven_client.get_data_from_request(request))
             raven_client.captureMessage('Maximum login attempts reached',
-                                        extra={'username': username, 'from': 'API'},
+                                        extra={'username': username, 'from': 'API', 'unlock_email': unlock_email},
                                         level='warning')
 
             return JsonResponse({'error': 'You have reached the maximum login attempts.\n'
@@ -2920,6 +2922,22 @@ def user_profile(request):
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
+
+
+def user_unlock(request, token):
+    data = cache.get('unlock_account_{}'.format(token))
+    if data is None:
+        raise Http404('Token Not Found')
+
+    username_hash = utils.hash_text(data['username'].lower())
+
+    cache.delete('login_attempts_{}'.format(username_hash))
+    cache.delete('unlock_email_{}'.format(username_hash))
+    cache.delete('unlock_account_{}'.format(token))
+
+    messages.success(request, 'Your account has been unlocked')
+
+    return HttpResponseRedirect('/')
 
 
 @login_required

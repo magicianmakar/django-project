@@ -223,6 +223,43 @@ def login_attempts_exceeded(username):
         return False
 
 
+def unlock_account_email(username):
+    from django.core.urlresolvers import reverse
+
+    try:
+        if '@' in username:
+            user = User.objects.get(email__iexact=username)
+        else:
+            user = User.objects.get(username__iexact=username)
+    except:
+        return False
+
+    unlock_token = random_hash()
+    if cache.get('unlock_email_{}'.format(hash_text(username.lower()))) is not None:
+        # Email already sent
+        return False
+
+    cache.set('unlock_account_{}'.format(unlock_token), {
+        'user': user.id,
+        'username': username
+    }, timeout=660)
+
+    send_email_from_template(
+        tpl='account_unlock_instructions.html',
+        subject='Unlock instructions',
+        recipient=user.email,
+        data={
+            'username': user.get_first_name(),
+            'unlock_link': reverse('user_unlock', kwargs={'token': unlock_token})
+        },
+        nl2br=False
+    )
+
+    cache.set('unlock_email_{}'.format(hash_text(username.lower())), True, timeout=660)
+
+    return True
+
+
 def generate_plan_registration(plan, data={}, bundle=None, sender=None):
     reg = PlanRegistration(plan=plan, bundle=bundle, sender=sender, email=data['email'], data=json.dumps(data))
     reg.register_hash = random_hash()
