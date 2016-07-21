@@ -106,8 +106,11 @@
                         {% for item in orders %}
                         <tr id="{{item.id}}">
                             <td>
-                                <img class="lazyload" store="{{item.store_id}}" product="{{item.line.product_id}}"
-                                     variant="{{item.line.variant_id}}" src="" style="width:64px;display:none" />
+                                <img class="unveil"
+                                    store="{{item.store_id}}" product="{{item.line.product_id}}" variant="{{item.line.variant_id}}"
+                                    src="{% static 'img/blank.gif' %}"
+                                    data-src="/api/product-variant-image?store={{item.store_id}}&product={{item.line.product_id}}&variant={{item.line.variant_id}}&redirect=1"
+                                    style="width:64px" />
                             </td>
                             <td>
                                 <a href="{{item.get_shopify_link}}" target="_blank">
@@ -184,8 +187,6 @@
 
 {% block extrajs %}
 <script type="text/javascript">
-
-    var image_cache = {};
 
     $('.fulfill-btn').click(function (e) {
         $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
@@ -315,45 +316,6 @@
         return true; // ensure form still submits
     });
 
-    $(function () {
-        $('.lazyload').each(function (i, el) {
-            setTimeout(function() {
-                if (!$(el).prop('image-loaded')) {
-                    var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
-
-                    if (cache_name in image_cache) {
-                        $(el).attr('src', image_cache[cache_name]);
-                        $(el).show('fast');
-                        return;
-                    }
-
-                    $.ajax({
-                        url: '/api/product-variant-image',
-                        type: 'GET',
-                        data: {
-                            store: $(el).attr('store'),
-                            product: $(el).attr('product'),
-                            variant: $(el).attr('variant'),
-                        },
-                        context: {img: $(el), cache_name: cache_name},
-                        success: function (data) {
-                            if (data.status == 'ok') {
-                                this.img.attr('src', data.image);
-                                this.img.show('fast');
-
-                                image_cache[cache_name] = data.image;
-                            }
-                        },
-                        error: function (data) {
-                        },
-                        complete: function () {
-                            this.img.prop('image-loaded', true);
-                        }
-                    });
-                }
-            }, ((i+1)*1000));
-        });
-    });
 </script>
 {% endblock %}
 
