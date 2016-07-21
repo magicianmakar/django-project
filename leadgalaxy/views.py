@@ -1907,7 +1907,9 @@ def webhook(request, provider, option):
         try:
             return process_webhook_event(request, event['id'])
         except:
-            traceback.print_exc()
+            if settings.DEBUG:
+                traceback.print_exc()
+
             raven_client.captureException()
             return HttpResponse('Server Error', status=500)
     else:
