@@ -17,8 +17,22 @@
 
     <title>{% block title %}Shopified App{% endblock %}</title>
 
+    <style name="FontAwesome">
+        @font-face {
+          font-family: 'FontAwesome';
+          src: url('{% static "fonts/fontawesome-webfont.eot?v=4.6.3" %}');
+          src: url('{% static "fonts/fontawesome-webfont.eot?#iefix&v=4.6.3" %}') format('embedded-opentype'),
+               url('{% static "fonts/fontawesome-webfont.woff2?v=4.6.3" %}') format('woff2'),
+               url('{% static "fonts/fontawesome-webfont.woff?v=4.6.3" %}') format('woff'),
+               url('{% static "fonts/fontawesome-webfont.ttf?v=4.6.3" %}') format('truetype'),
+               url('{% static "fonts/fontawesome-webfont.svg?v=4.6.3#fontawesomeregular" %}') format('svg');
+          font-weight: normal;
+          font-style: normal;
+        }
+    </style>
+
     <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
-    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
 
     {% compress css %}
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
