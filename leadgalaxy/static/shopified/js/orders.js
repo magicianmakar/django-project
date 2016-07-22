@@ -3,64 +3,17 @@
 (function(user_filter) {
 'use strict';
 
-var image_cache = {};
 var placed_order_interval = {};
 
 $(function () {
     $(".itooltip").tooltip();
 });
 
-function loadVriantImages(target) {
-    if (typeof(terget) === 'undefined') {
-        target = $('.lazyload');
-    } else {
-        target = $('.lazyload', target);
-    }
-
-    target.each(function (i, el) {
-        setTimeout(function() {
-            if (!$(el).prop('image-loaded')) {
-                var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
-
-                if (cache_name in image_cache) {
-                    $(el).attr('src', image_cache[cache_name]);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/api/product-variant-image',
-                    type: 'GET',
-                    data: {
-                        store: $(el).attr('store'),
-                        product: $(el).attr('product'),
-                        variant: $(el).attr('variant'),
-                    },
-                    context: {img: $(el), cache_name: cache_name},
-                    success: function (data) {
-                        if (data.status == 'ok') {
-                            this.img.attr('src', data.image);
-
-                            image_cache[cache_name] = data.image;
-                        }
-                    },
-                    error: function (data) {
-                    },
-                    complete: function () {
-                        this.img.prop('image-loaded', true);
-                    }
-                });
-            }
-        }, ((i+1)*500));
-    });
-}
-
 $(".more-info").click(function (e) {
     e.preventDefault();
 
     var element = $(this).find('i');
     var target = $(this).parents('tr').next();
-
-    loadVriantImages(target);
 
     target.toggle('fade', function() {
         if (target.is(":visible")) {
@@ -700,7 +653,6 @@ $(function () {
     }
 
     findMarkedLines();
-    loadVriantImages('.orders .line');
 
     if (window.location.hash.match(/hide-compete/)) {
         $('.hide-ordered-btn').trigger('click');

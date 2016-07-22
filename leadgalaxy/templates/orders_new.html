@@ -408,14 +408,17 @@
                                                 <thead>
                                                     <tr>
                                                         <td>
-                                                            <img store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
-                                                                {% if not item.image_src %}
-                                                                    class="lazyload" store="{{image.store}}"
+                                                            <img class="cached-img unveil"
+                                                                store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+                                                                src="{% static 'img/blank.gif' %}"
+
+                                                                {% if item.image_src %}
+                                                                    data-src="{{item.image_src}}"
                                                                 {% else %}
-                                                                    class="cached-img"
-                                                                    src="{{item.image_src}}"
+                                                                    data-src="/api/product-variant-image?store={{store.id}}&product={{image.product}}&variant={{image.variant}}&redirect=1"
                                                                 {% endif %}
-                                                                    style="width:64px" />
+
+                                                                style="width:64px" />
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
