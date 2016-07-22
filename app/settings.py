@@ -193,7 +193,7 @@ if not DEBUG:
 
     AWS_IS_GZIPPED = True
     AWS_HEADERS = {
-        'Cache-Control': 'max-age=86400',
+        'Cache-Control': 'max-age=604800',
     }
     GZIP_CONTENT_TYPES = (
         'text/css',
