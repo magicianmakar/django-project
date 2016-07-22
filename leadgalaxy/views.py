@@ -672,7 +672,11 @@ def proccess_api(request, user, method, target, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
         user.can_view(store)
 
-        ShopifyProductImage.objects.filter(store=store, product=data.get('product')).delete()
+        product = utils.safeInt(data.get('product'))
+        if not product:
+            return JsonResponse({'error': 'Product Not Found'}, status=404)
+
+        ShopifyProductImage.objects.filter(store=store, product=product).delete()
 
         return JsonResponse({'status': 'ok'})
 
