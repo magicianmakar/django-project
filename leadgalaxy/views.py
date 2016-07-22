@@ -1325,6 +1325,9 @@ def proccess_api(request, user, method, target, data):
     if method == 'GET' and target == 'timezones':
         return JsonResponse(utils.get_timezones(data.get('country')), safe=False)
 
+    if method == 'GET' and target == 'countries':
+        return JsonResponse(utils.get_countries(), safe=False)
+
     if method == 'POST' and target == 'user-profile':
         form = UserProfileForm(data)
         if form.is_valid():
