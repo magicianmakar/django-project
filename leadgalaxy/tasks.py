@@ -308,8 +308,8 @@ def smartmemeber_webhook_call(subdomain, data):
         raven_client.captureException()
 
 
-@app.task
-def mark_as_ordered_note(store_id, order_id, line_id, source_id):
+@app.task(bind=True)
+def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
     try:
         store = ShopifyStore.objects.get(id=store_id)
         order_line, current_note = utils.get_shopify_order_line(store, order_id, line_id, note=True)
@@ -327,11 +327,12 @@ def mark_as_ordered_note(store_id, order_id, line_id, source_id):
     except Exception as e:
         raven_client.captureException(level='warning', extra={'retries': self.request.retries})
 
-        raise self.retry(exc=e, countdown=10, max_retries=3)
+        if not self.request.called_directly:
+            raise self.retry(exc=e, countdown=10, max_retries=3)
 
 
-@app.task
-def add_ordered_note(store_id, order_id, note):
+@app.task(bind=True)
+def add_ordered_note(self, store_id, order_id, note):
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
@@ -340,7 +341,8 @@ def add_ordered_note(store_id, order_id, note):
     except Exception as e:
         raven_client.captureException(level='warning', extra={'retries': self.request.retries})
 
-        raise self.retry(exc=e, countdown=10, max_retries=3)
+        if not self.request.called_directly:
+            raise self.retry(exc=e, countdown=10, max_retries=3)
 
 
 @app.task
