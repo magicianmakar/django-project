@@ -1,5 +1,6 @@
 $(function () {
     $('#country, #timezone').chosen({
+        search_contains: true,
         width: '250px'
     });
 

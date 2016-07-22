@@ -667,6 +667,7 @@ $(function () {
     }
 
     $('#country-filter').chosen({
+        search_contains: true,
         width: '325px'
     });
 

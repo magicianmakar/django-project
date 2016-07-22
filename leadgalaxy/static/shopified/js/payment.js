@@ -80,6 +80,7 @@
         // $('.billing-tab a').trigger('click');
 
         $('#address_country').chosen({
+            search_contains: true,
             width: '99%'
         });
 
