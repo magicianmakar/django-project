@@ -2122,6 +2122,22 @@ def products_list(request, tpl='grid'):
     except:
         store = None
 
+    breadcrumbs = [{'title': 'Products', 'url': '/product'}]
+
+    if request.GET.get('store', 'n') == 'n':
+        breadcrumbs.append({'title': 'Non Connected', 'url': '/product?store=n'})
+    elif request.GET.get('store', 'n') == 'c':
+        breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
+
+    in_store = None
+    if request.GET.get('in'):
+        in_store = request.user.profile.get_active_stores().filter(id=request.GET.get('in')).first()
+    elif store:
+        in_store = store
+
+    if in_store:
+        breadcrumbs.append({'title': in_store.title, 'url': '/product?store={}'.format(in_store.id)})
+
     return render(request, tpl, {
         'paginator': paginator,
         'current_page': page,
@@ -2129,7 +2145,7 @@ def products_list(request, tpl='grid'):
         'products': products,
         'store': store,
         'page': 'product',
-        'breadcrumbs': ['Products']
+        'breadcrumbs': breadcrumbs
     })
 
 
@@ -2226,6 +2242,13 @@ def product_view(request, pid):
             p['product']['description'] = shopify_product['body_html']
             p['product']['published'] = shopify_product['published_at'] is not None
 
+    breadcrumbs = [{'title': 'Products', 'url': '/product'}]
+
+    if product.store_id:
+        breadcrumbs.append({'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)})
+
+    breadcrumbs.append(p['product']['title'])
+
     return render(request, 'product_view.html', {
         'product': p,
         'original': original,
@@ -2234,7 +2257,7 @@ def product_view(request, pid):
         'aws_policy': string_to_sign,
         'aws_signature': signature,
         'page': 'product',
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'View']
+        'breadcrumbs': breadcrumbs
     })
 
 

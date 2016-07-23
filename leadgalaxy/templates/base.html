@@ -326,9 +326,9 @@
                 <ol class="breadcrumb">
                     {% for item in breadcrumbs %}
                         {% if item.url %}
-                        <li><a href="{{item.url}}">{{item.title|safe}}</a></li>
+                        <li><a href="{{item.url}}">{{item.title|safe|truncatewords:10}}</a></li>
                         {% else %}
-                        <li class="active"><strong>{{item|safe}}</strong></li>
+                        <li class="active"><strong>{{item|safe|truncatewords:10}}</strong></li>
                         {% endif %}
                     {% endfor %}
                 </ol>
