@@ -442,6 +442,32 @@ def format_shopify_error(data):
     return u' | '.join(msg)
 
 
+def verify_shopify_permissions(store):
+    permissions = []
+
+    r = requests.post(store.get_link('/admin/products.json', api=True))
+    if r.status_code == 403:
+        permissions.append('Products')
+
+    r = requests.post(store.get_link('/admin/orders.json', api=True))
+    if r.status_code == 403:
+        permissions.append('Orders')
+
+    r = requests.post(store.get_link('/admin/customers.json', api=True))
+    if r.status_code == 403:
+        permissions.append('Customers')
+
+    r = requests.post(store.get_link('/admin/fulfillment_services.json', api=True))
+    if r.status_code == 403:
+        permissions.append('Fulfillment Service')
+
+    r = requests.post(store.get_link('/admin/carrier_services.json', api=True))
+    if r.status_code == 403:
+        permissions.append('Shipping Rates')
+
+    return len(permissions) == 0, permissions
+
+
 def verify_shopify_webhook(store, request):
     import hmac
     import base64

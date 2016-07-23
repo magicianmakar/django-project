@@ -242,6 +242,13 @@ def proccess_api(request, user, method, target, data):
             info = store.get_info
             if not store.title:
                 store.title = info['name']
+
+            ok, permissions = utils.verify_shopify_permissions(store)
+            if not ok:
+                return JsonResponse({
+                    'error': 'The following permissions are missing: \n{}'.format('\n'.join(permissions))
+                }, status=403)
+
         except:
             return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
@@ -326,6 +333,13 @@ def proccess_api(request, user, method, target, data):
 
         try:
             info = store.get_info
+
+            ok, permissions = utils.verify_shopify_permissions(store)
+            if not ok:
+                return JsonResponse({
+                    'error': 'The following permissions are missing: \n{}'.format('\n'.join(permissions))
+                }, status=403)
+
             return JsonResponse({'status': 'ok', 'store': info['name']})
 
         except:
