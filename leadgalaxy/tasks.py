@@ -333,8 +333,6 @@ def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
         utils.add_shopify_order_note(store, order_id, note, current_note=current_note)
 
     except Exception as e:
-        raven_client.captureException(level='warning', extra={'retries': self.request.retries})
-
         if not self.request.called_directly:
             raise self.retry(exc=e, countdown=10, max_retries=3)
 
@@ -347,8 +345,6 @@ def add_ordered_note(self, store_id, order_id, note):
         utils.add_shopify_order_note(store, order_id, note)
 
     except Exception as e:
-        raven_client.captureException(level='warning', extra={'retries': self.request.retries})
-
         if not self.request.called_directly:
             raise self.retry(exc=e, countdown=10, max_retries=3)
 
