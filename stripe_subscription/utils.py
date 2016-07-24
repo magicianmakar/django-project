@@ -292,11 +292,11 @@ def process_webhook_event(request, event_id, raven_client):
 
         return HttpResponse('Invited To Slack')
 
-    elif event.type == 'customer.delete':
+    elif event.type == 'customer.deleted':
         customer = StripeCustomer.objects.get(customer_id=event.data.object.id)
         customer.delete()
 
-        return HttpResponse('Customer Refreshed')
+        return HttpResponse('Customer Deleted')
 
     elif event.type == 'invoice.updated':
         pass
