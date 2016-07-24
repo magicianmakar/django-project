@@ -1936,7 +1936,7 @@ def webhook(request, provider, option):
         event = json.loads(request.body)
 
         try:
-            return process_webhook_event(request, event['id'])
+            return process_webhook_event(request, event['id'], raven_client)
         except:
             if settings.DEBUG:
                 traceback.print_exc()

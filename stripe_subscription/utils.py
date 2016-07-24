@@ -153,7 +153,7 @@ def resubscribe_customer(customer_id):
     return False
 
 
-def process_webhook_event(request, event_id):
+def process_webhook_event(request, event_id, raven_client):
     event = stripe.Event.retrieve(event_id)
 
     StripeEvent.objects.update_or_create(
@@ -247,9 +247,18 @@ def process_webhook_event(request, event_id):
 
         customer = StripeCustomer.objects.get(customer_id=sub.customer)
         profile = customer.user.profile
-        if not profile.plan.is_free:
+        current_plan = profile.plan
+        if not profile.plan.is_free and profile.plan.is_stripe():
             profile.plan = GroupPlan.objects.get(slug='free-plan')
             profile.save()
+        elif not profile.plan.is_stripe():
+            raven_client.captureMessage(
+                'Plan was not changed to Free plan',
+                extra={
+                    'email': customer.user.email,
+                    'plan': profile.plan.title,
+                },
+                level='warning')
 
         StripeSubscription.objects.filter(subscription_id=sub.id).delete()
 
@@ -257,7 +266,11 @@ def process_webhook_event(request, event_id):
         customer.can_trial = False
         customer.save()
 
-        return HttpResponse('Subscription Deleted')
+        if current_plan == profile.plan:
+            return HttpResponse('Subscription Deleted - Plan Unchanged')
+        else:
+            return HttpResponse('Subscription Deleted - Change plan From: {} To: {}'.format(
+                current_plan.title, profile.plan.title))
 
     elif event.type == 'customer.updated':
         cus = event.data.object
@@ -278,6 +291,12 @@ def process_webhook_event(request, event_id):
         })
 
         return HttpResponse('Invited To Slack')
+
+    elif event.type == 'customer.delete':
+        customer = StripeCustomer.objects.get(customer_id=event.data.object.id)
+        customer.delete()
+
+        return HttpResponse('Customer Refreshed')
 
     elif event.type == 'invoice.updated':
         pass
