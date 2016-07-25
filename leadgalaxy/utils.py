@@ -689,6 +689,8 @@ def get_shopify_variant_image(store, product_id, variant_id):
 
 def get_shopify_order(store, order_id):
     rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True))
+    rep.raise_for_status()
+
     return rep.json()['order']
 
 
@@ -722,6 +724,8 @@ def set_shopify_order_note(store, order_id, note):
                 }
             }
     )
+
+    rep.raise_for_status()
 
     return rep.json()['order']['id']
 
