@@ -246,7 +246,10 @@ def proccess_api(request, user, method, target, data):
             ok, permissions = utils.verify_shopify_permissions(store)
             if not ok:
                 return JsonResponse({
-                    'error': 'The following permissions are missing: \n{}'.format('\n'.join(permissions))
+                    'error': 'The following permissions are missing: \n{}\n\n'
+                             'You can find instructions to fix this issue here:\n'
+                             'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
+                             .format('\n'.join(permissions))
                 }, status=403)
 
         except:
@@ -337,7 +340,10 @@ def proccess_api(request, user, method, target, data):
             ok, permissions = utils.verify_shopify_permissions(store)
             if not ok:
                 return JsonResponse({
-                    'error': 'The following permissions are missing: \n{}'.format('\n'.join(permissions))
+                    'error': 'The following permissions are missing: \n{}\n\n'
+                             'You can find instructions to fix this issue here:\n'
+                             'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
+                             .format('\n'.join(permissions))
                 }, status=403)
 
             return JsonResponse({'status': 'ok', 'store': info['name']})
