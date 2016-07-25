@@ -60,7 +60,7 @@ def index(request):
     verify_shopify_webhook(request)
 
     try:
-        store = ShopifyStore.objects.get(shop=request.GET['shop'])
+        store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True)
     except ShopifyStore.DoesNotExist:
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
@@ -138,8 +138,8 @@ def callback(request):
         code=request.GET['code'])
 
     try:
-        store = ShopifyStore.objects.get(user=user, shop=shop, version=2)
-        print store.access_token, '=>', token['access_token']
+        store = ShopifyStore.objects.get(user=user, shop=shop, version=2, is_active=True)
+
         store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
         store.access_token = token['access_token']
         store.scope = token['access_token'][0]
