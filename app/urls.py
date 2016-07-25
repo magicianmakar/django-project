@@ -5,6 +5,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'', include('leadgalaxy.urls')),
+    url(r'^shopify/', include('shopify_oauth.urls')),
     url(r'^subscription/', include('stripe_subscription.urls')),
     url(r'^marketing/', include('product_feed.urls')),
     url(r'^pages/', include('article.urls')),

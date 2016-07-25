@@ -25,7 +25,21 @@ $('.add-store-btn').click(function (e) {
     $('#store-name').val('');
     $('#store-url').val('');
 
-    $('#modal-add-store-form').modal('show');
+    $('#modal-install-form').modal('show');
+});
+
+$('#install-store').click(function (e) {
+    var shop = $('#shop-url').val().trim().match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^/\.]+)(?:\.myshopify\.com)?/);
+    if (!shop || shop.length != 2) {
+        swal('Add Store', 'Store URL is not correct!', 'error');
+        return;
+    } else {
+        shop = shop.pop();
+    }
+
+    $(this).button('loading');
+
+    window.location.href = '/shopify/install/' + shop;
 });
 
 $('#add-store').click(function(e) {
@@ -67,6 +81,17 @@ $('#add-store').click(function(e) {
 
 $('.delete-store').click(function (e) {
     var store = $(this).attr('store-id');
+    var version = $(this).attr('store-version');
+
+    if (version == '2') {
+        swal({
+            title: 'Delete Store',
+            text: 'To delete this store, please uninstall Shopified App from your Shopify Store.',
+            type: 'info'
+        });
+
+        return;
+    }
 
     swal({
         title: "Delete Store",

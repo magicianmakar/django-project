@@ -44,14 +44,16 @@
               <thead>
                 <tr>
                   {% if not user.is_subuser %}
-                  <th style="width:15%">Title</th>
-                  <th class="hidden-sm hidden-xs" style="width:40%">API URL</th>
+                  <th style="">Title</th>
                   {% else %}
                   <th style="width:70%">Title</th>
                   {% endif %}
 
                   <th style="width:200px">Products</th>
-                  <th style="">Options</th>
+                  {% if not user.is_subuser %}
+                  <th class="hidden-sm hidden-xs" style="width:100px">Store Setup</th>
+                  {% endif %}
+                  <th style="width:300px">Options</th>
                 </tr>
               </thead>
               <tbody>
@@ -59,14 +61,6 @@
                     <tr store-id="{{item.id}}">
                     {% if not user.is_subuser %}
                       <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
-                      <td class="hidden-sm hidden-xs">
-                        <span class="api-url" style="display:none">{{item.get_api_url}}</span>
-                        <button class="show-api-url btn btn-default btn-outline btn-xs">Show</button>
-                        <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
-                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
-                            <i class="fa fa-check-circle-o"></i> Verify
-                        </button>
-                      </td>
                       <td>
                         {% with connected=item.connected_count saved=item.saved_count %}
                             {% if connected or saved %}
@@ -82,16 +76,26 @@
                             {% endif %}
                         {% endwith %}
                       </td>
+                      <td class="hidden-sm hidden-xs">
+                        <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
+                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                            <i class="fa fa-check-circle-o"></i> Verify
+                        </button>
+                      </td>
                       <td>
-                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
-                            <i class="fa fa-external-link"></i> Visit Store
+                        <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
+                            Visit Store
                         </a>
 
-                        <button class="edit-store btn btn-xs btn-primary" store-id="{{item.id}}" store-url="{{item.get_api_url}}" store-name="{{item.title}}">
+                        {% if item.version == 1 %}
+                        <button class="edit-store btn btn-outline btn-xs btn-primary" store-id="{{item.id}}"
+                                store-name="{{item.title}}" store-version="{{item.version}}"
+                                store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
                             <i class="fa fa-edit"></i> Edit
                         </button>
+                        {% endif %}
 
-                        <button class="delete-store btn btn-xs btn-danger" store-id="{{item.id}}" store-url="{{item.get_api_url}}">
+                        <button class="delete-store btn btn-outline btn-xs btn-danger" store-id="{{item.id}}" store-version="{{item.version}}">
                             <i class="fa fa-times"></i> Delete
                         </button>
                       </td>
@@ -99,7 +103,7 @@
                       <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
                       <td>{{item.shopifyproduct_set.count}}</td>
                       <td>
-                        <a class="visit-store btn btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank"> Visit Store</a>
+                        <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank"> Visit Store</a>
                       </td>
                     {% endif %}
                     </tr>
@@ -407,6 +411,36 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-install-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Add Shopify Store</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="shop-url">Enter your store's URL:</label>
+                                <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com" class="form-control">
+                            </div>
+                            <p><em>Note: You don't need to create a Private App any more!</em></p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button id="install-store" class="btn btn-primary" type="button"><strong>Add store</strong></button>
+            </div>
         </div>
     </div>
 </div>

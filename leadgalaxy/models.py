@@ -374,8 +374,15 @@ class ShopifyStore(models.Model):
 
     title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
+
+    # For OAuth App
+    shop = models.CharField(max_length=512, blank=True, null=True)
+    access_token = models.CharField(max_length=512, blank=True, null=True)
+    scope = models.CharField(max_length=512, blank=True, null=True)
+
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
+    version = models.IntegerField(default=1, choices=((1, 'Private App'), (2, 'Shopify App')), verbose_name='Store Version')
 
     user = models.ForeignKey(User)
 
@@ -413,7 +420,7 @@ class ShopifyStore(models.Model):
             url = 'https://%s' % url
 
         if hide_keys:
-            url = re.sub('[a-z0-9]+:[a-z0-9]+@', '*:*@', url)
+            url = re.sub('[a-z0-9]*:[a-z0-9]+@', '*:*@', url)
 
         return url
 

@@ -337,18 +337,22 @@ def proccess_api(request, user, method, target, data):
         try:
             info = store.get_info
 
-            ok, permissions = utils.verify_shopify_permissions(store)
-            if not ok:
-                return JsonResponse({
-                    'error': 'The following permissions are missing: \n{}\n\n'
-                             'You can find instructions to fix this issue here:\n'
-                             'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
-                             .format('\n'.join(permissions))
-                }, status=403)
+            if store.version == 1:
+                ok, permissions = utils.verify_shopify_permissions(store)
+                if not ok:
+                    return JsonResponse({
+                        'error': 'The following permissions are missing: \n{}\n\n'
+                                 'You can find instructions to fix this issue here:\n'
+                                 'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
+                                 .format('\n'.join(permissions))
+                    }, status=403)
 
             return JsonResponse({'status': 'ok', 'store': info['name']})
 
         except:
+            if settings.DEBUG:
+                traceback.print_exc()
+
             return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
     if method == 'GET' and target == 'product':
@@ -1833,6 +1837,8 @@ def webhook(request, provider, option):
                 product_data = json.loads(product.data)
             elif 'orders' in topic:
                 shopify_order = json.loads(request.body)
+            elif 'shop' in topic or 'app' in topic:
+                shop_data = json.loads(request.body)
             else:
                 raven_client.captureMessage('Non-handled Shopify Topic',
                                             extra={'topic': topic, 'store': store})
@@ -1915,6 +1921,26 @@ def webhook(request, provider, option):
                 shopify_orders_utils.delete_shopify_order(store, shopify_order)
                 return JsonResponse({'status': 'ok'})
 
+            elif topic == 'shop/update':
+                if shop_data.get('name'):
+                    store.title = shop_data.get('name')
+                    store.save()
+
+                    return JsonResponse({'status': 'ok'})
+
+            elif topic == 'app/uninstalled':
+                store.is_active = False
+                store.save()
+
+                # Make all products related to this store non-connected
+                store.shopifyproduct_set.update(store=None)
+
+                # Delete products connection with this store
+                ShopifyProductExport.objects.filter(store=store).delete()
+
+                utils.detach_webhooks(store, delete_too=True)
+
+                return JsonResponse({'status': 'ok'})
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(topic))
         except:

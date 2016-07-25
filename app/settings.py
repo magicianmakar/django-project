@@ -52,6 +52,7 @@ INSTALLED_APPS = (
 
     'article',
     'leadgalaxy',
+    'shopify_oauth',
     'shopify_orders',
     'stripe_subscription',
     'product_feed',
@@ -173,6 +174,14 @@ EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "support@shopifiedapp.com"
+
+# Shopify App
+SHOPIFY_API_KEY = os.environ['SHOPIFY_API_KEY']
+SHOPIFY_API_SECRET = os.environ['SHOPIFY_API_SECRET']
+SHOPIFY_API_SCOPE = u','.join([
+    'write_apps', 'write_content', 'write_products', 'write_customers',
+    'write_orders', 'write_fulfillments', 'write_shipping', 'read_analytics'
+])
 
 # AWS S3
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
