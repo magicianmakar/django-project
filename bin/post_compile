@@ -3,6 +3,10 @@
 echo ' * Run python manage.py migrate --noinput'
 python manage.py migrate --noinput
 
-echo ' * Run python manage.py compress'
-python manage.py compress
 
+if [ ! "$DISABLE_COLLECTSTATIC" ]; then
+    echo ' * Run python manage.py compress'
+    python manage.py compress
+else
+    echo ' *** NOTE *** Escape Running python manage.py compress'
+fi
