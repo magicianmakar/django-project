@@ -180,8 +180,11 @@ class StripeSubscription(models.Model):
 
         plan = GroupPlan.objects.filter(stripe_plan__stripe_id=sub.plan.id).first()
 
-        if plan and self.plan != plan:
+        if plan:
             self.user.profile.change_plan(plan)
+
+            if self.plan != plan:
+                self.plan = plan
 
         self.save()
 
