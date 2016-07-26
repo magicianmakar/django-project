@@ -65,8 +65,10 @@ def index(request):
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
         if request.user.is_authenticated():
-            if store.id not in request.user.profile.get_active_stores(flat=True):
+            if not request.user.profile.get_active_stores(flat=True).filter(shop=request.GET['shop']).exists():
                 messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
+
+            return HttpResponseRedirect('/')
         else:
             return HttpResponseRedirect('/accounts/login/')
 
