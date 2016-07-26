@@ -252,6 +252,9 @@ CELERY_TASK_RESULT_EXPIRES = 1800
 BROKER_TRANSPORT_OPTIONS = {'max_connections': 10}
 BROKER_POOL_LIMIT = 10
 CELERYD_CONCURRENCY = 4
+CELERY_ROUTES = {
+    "leadgalaxy.tasks.export_product": {"queue": "priority_high"}
+}
 
 if not DEBUG:
     RAVEN_CONFIG = {

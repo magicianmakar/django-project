@@ -1,6 +1,5 @@
 import os
 import requests
-import traceback
 import time
 from celery import Celery
 from celery import Task
@@ -16,6 +15,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
+from shopify_orders import utils as order_utils
 
 app = Celery('shopified')
 
@@ -167,7 +167,6 @@ def export_product(req_data, target, user_id):
         except:
             raven_client.captureException()
             print 'WARNING: SHOPIFY EXPORT EXCEPTION:'
-            traceback.print_exc()
 
             return {'error': 'Shopify API Error'}
 
@@ -286,16 +285,75 @@ def export_product(req_data, target, user_id):
     }
 
 
-@app.task(base=CaptureFailure)
-def update_shopify_order(store_id, order_id):
+@app.task(bind=True, base=CaptureFailure)
+def update_shopify_product(self, store_id, product_id):
     try:
         store = ShopifyStore.objects.get(id=store_id)
-        order = utils.get_shopify_order(store, order_id)
+        try:
+            product = ShopifyProduct.objects.get(
+                user=store.user,
+                shopify_export__shopify_id=product_id)
+        except:
+            raven_client.captureException()
+            return
 
-        from shopify_orders import utils as order_utils
-        order_utils.update_shopify_order(store, order)
-    except:
-        raven_client.captureException()
+        shopify_product = utils.get_shopify_product(store, product_id)
+
+        product_data = json.loads(product.data)
+        product_data['title'] = shopify_product['title']
+        product_data['type'] = shopify_product['product_type']
+        product_data['tags'] = shopify_product['tags']
+        product_data['images'] = [i['src'] for i in shopify_product['images']]
+        product_data['description'] = shopify_product['body_html']
+        product_data['published'] = shopify_product.get('published_at') is not None
+
+        prices = [i['price'] for i in shopify_product['variants']]
+        compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
+
+        if len(set(prices)) == 1:  # If all variants have the same price
+            product_data['price'] = utils.safeFloat(prices[0])
+
+        if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
+            product_data['compare_at_price'] = utils.safeFloat(compare_at_prices[0])
+
+        product.data = json.dumps(product_data)
+        product.save()
+
+        # Delete Product images cache
+        ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
+
+    except Exception as e:
+        if not self.request.called_directly:
+            raise self.retry(exc=e, countdown=10, max_retries=3)
+
+
+@app.task(bind=True, base=CaptureFailure)
+def update_shopify_order(self, store_id, order_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+        shopify_order = utils.get_shopify_order(store, order_id)
+
+        for line in shopify_order['line_items']:
+            fulfillment_status = line['fulfillment_status']
+            if not fulfillment_status:
+                fulfillment_status = ''
+
+            ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
+                                     .update(shopify_status=fulfillment_status)
+
+        order_utils.update_shopify_order(store, shopify_order)
+
+    except AssertionError:
+        raven_client.captureMessage('Store is being imported', extra={'store': store})
+
+    except Exception as e:
+        raven_client.captureException(extra={
+            'store': store.title,
+            'order_id': shopify_order.order_id,
+        })
+
+        if not self.request.called_directly:
+            raise self.retry(exc=e, countdown=10, max_retries=3)
 
 
 @app.task(base=CaptureFailure)
