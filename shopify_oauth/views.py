@@ -182,6 +182,6 @@ def callback(request):
 
         attach_webhooks(store)
 
-        messages.success(request, 'Your store <b>{}</b> have been added!'.format(store.title))
+        messages.success(request, 'Your store <b>{}</b> has been added!'.format(store.title))
 
     return HttpResponseRedirect('/')
