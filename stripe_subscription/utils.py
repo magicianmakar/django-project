@@ -249,7 +249,7 @@ def process_webhook_event(request, event_id, raven_client):
         profile = customer.user.profile
         current_plan = profile.plan
         if not profile.plan.is_free and profile.plan.is_stripe():
-            profile.plan = GroupPlan.objects.get(slug='free-plan')
+            profile.plan = GroupPlan.objects.get(default_plan=True)
             profile.save()
         elif not profile.plan.is_stripe():
             raven_client.captureMessage(
