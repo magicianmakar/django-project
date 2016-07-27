@@ -286,7 +286,7 @@ def export_product(req_data, target, user_id):
 
 
 @app.task(bind=True, base=CaptureFailure)
-def update_shopify_product(self, store_id, product_id):
+def update_shopify_product(self, store_id, product_id, shopify_product=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
         try:
@@ -296,7 +296,8 @@ def update_shopify_product(self, store_id, product_id):
         except:
             return
 
-        shopify_product = utils.get_shopify_product(store, product_id)
+        if shopify_product is None:
+            shopify_product = utils.get_shopify_product(store, product_id)
 
         product_data = json.loads(product.data)
         product_data['title'] = shopify_product['title']
@@ -323,14 +324,20 @@ def update_shopify_product(self, store_id, product_id):
 
     except Exception as e:
         if not self.request.called_directly:
-            raise self.retry(exc=e, countdown=10, max_retries=3)
+            retry_key = 'retry_product_{}'.format(store.id)
+            countdown = cache.get(retry_key, 10)
+            cache.set(retry_key, countdown+5, timeout=countdown+10)
+
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
 @app.task(bind=True, base=CaptureFailure)
-def update_shopify_order(self, store_id, order_id):
+def update_shopify_order(self, store_id, order_id, shopify_order=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
-        shopify_order = utils.get_shopify_order(store, order_id)
+
+        if shopify_order is None:
+            shopify_order = utils.get_shopify_order(store, order_id)
 
         for line in shopify_order['line_items']:
             fulfillment_status = line['fulfillment_status']
@@ -352,7 +359,11 @@ def update_shopify_order(self, store_id, order_id):
         })
 
         if not self.request.called_directly:
-            raise self.retry(exc=e, countdown=10, max_retries=3)
+            retry_key = 'retry_order_{}'.format(store.id)
+            countdown = cache.get(retry_key, 10)
+            cache.set(retry_key, countdown+5, timeout=countdown+10)
+
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
 @app.task(base=CaptureFailure)
