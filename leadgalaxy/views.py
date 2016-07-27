@@ -1832,9 +1832,9 @@ def webhook(request, provider, option):
                         user=store.user,
                         shopify_export__shopify_id=shopify_product['id'])
                 except:
+                    raven_client.captureException()
                     return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
-                product_data = json.loads(product.data)
             elif 'orders' in topic:
                 shopify_order = json.loads(request.body)
             elif 'shop' in topic or 'app' in topic:
@@ -1846,31 +1846,13 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok', 'warning': 'Non-handled Topic'})
 
             if topic == 'products/update':
-                product_data['title'] = shopify_product['title']
-                product_data['type'] = shopify_product['product_type']
-                product_data['tags'] = shopify_product['tags']
-                product_data['images'] = [i['src'] for i in shopify_product['images']]
-                product_data['description'] = shopify_product['body_html']
-                product_data['published'] = shopify_product.get('published_at') is not None
-
-                prices = [i['price'] for i in shopify_product['variants']]
-                compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
-
-                if len(set(prices)) == 1:  # If all variants have the same price
-                    product_data['price'] = utils.safeFloat(prices[0])
-
-                if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
-                    product_data['compare_at_price'] = utils.safeFloat(compare_at_prices[0])
-
-                product.data = json.dumps(product_data)
-                product.save()
+                countdown_key = 'eta_product_{}'.format(shopify_order['id'])
+                if cache.get(countdown_key) is None:
+                    cache.set(countdown_key, True, timeout=5)
+                    tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
-
-                # Delete Product images cache
-                ShopifyProductImage.objects.filter(store=store,
-                                                   product=shopify_product['id']).delete()
 
                 return JsonResponse({'status': 'ok'})
 
@@ -1880,6 +1862,8 @@ def webhook(request, provider, option):
                         product.shopify_export.delete()
                 except ShopifyProductExport.DoesNotExist:
                     pass
+                except:
+                    raven_client.captureException()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
@@ -1890,30 +1874,13 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/create' or topic == 'orders/updated':
-                for line in shopify_order['line_items']:
-                    fulfillment_status = line['fulfillment_status']
-                    if not fulfillment_status:
-                        fulfillment_status = ''
-
-                    ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
-                                             .update(shopify_status=fulfillment_status)
-
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
-                try:
-                    shopify_orders_utils.update_shopify_order(store, shopify_order)
-
-                except AssertionError:
-                    raven_client.captureMessage('Store is being imported', extra={'store': store})
-                    return JsonResponse({'error': 'Store Still in Process'}, status=500)
-                except:
-                    raven_client.captureException(extra={
-                        'store': store,
-                        'order_id': shopify_order.get('id'),
-                    })
-
-                    tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id']], countdown=30)
+                countdown_key = 'eta_order_{}'.format(shopify_order['id'])
+                if cache.get(countdown_key) is None:
+                    cache.set(countdown_key, True, timeout=5)
+                    tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id']], countdown=5)
 
                 return JsonResponse({'status': 'ok'})
 
