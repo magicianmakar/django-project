@@ -1845,7 +1845,7 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok', 'warning': 'Non-handled Topic'})
 
             if topic == 'products/update':
-                countdown_key = 'eta_product_{}'.format(shopify_order['id'])
+                countdown_key = 'eta_product_{}'.format(shopify_product['id'])
                 if cache.get(countdown_key) is None:
                     cache.set(countdown_key, True, timeout=5)
                     tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
