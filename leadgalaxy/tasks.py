@@ -294,7 +294,6 @@ def update_shopify_product(self, store_id, product_id):
                 user=store.user,
                 shopify_export__shopify_id=product_id)
         except:
-            raven_client.captureException()
             return
 
         shopify_product = utils.get_shopify_product(store, product_id)

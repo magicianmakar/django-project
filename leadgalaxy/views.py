@@ -1832,7 +1832,6 @@ def webhook(request, provider, option):
                         user=store.user,
                         shopify_export__shopify_id=shopify_product['id'])
                 except:
-                    raven_client.captureException()
                     return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
             elif 'orders' in topic:
