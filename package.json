@@ -12,7 +12,6 @@
   },
   "cacheDirectories": [
     "node_modules",
-    "bower_components",
     "app/static/libs/bower_components"
   ],
   "engines": {
