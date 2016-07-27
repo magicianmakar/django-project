@@ -348,7 +348,7 @@ def update_shopify_order(self, store_id, order_id):
     except Exception as e:
         raven_client.captureException(extra={
             'store': store.title,
-            'order_id': shopify_order.order_id,
+            'order_id': order_id,
         })
 
         if not self.request.called_directly:
