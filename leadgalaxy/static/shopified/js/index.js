@@ -6,7 +6,7 @@
 $('.add-store-btn').click(function (e) {
     e.preventDefault();
 
-    if($(this).data('plan') == 'Free Plan') {
+    if(/free plan/i.test($(this).data('plan'))) {
         return swal({
             title: 'Add Store',
             text: 'You are currently using the Free Plan from Shopified App. <br/>' +
