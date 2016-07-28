@@ -40,6 +40,10 @@ class Command(BaseCommand):
                 profile.plan_expire_at = None
                 profile.save()
 
+        # Invoice Extra Stores
+        from stripe_subscription.utils import invoice_extra_stores
+        invoice_extra_stores()
+
         # Auto fulfill (Daily)
         time_threshold = timezone.now() - timezone.timedelta(days=1)
         orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \

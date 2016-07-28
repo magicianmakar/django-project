@@ -6,7 +6,7 @@ from django.http import HttpResponse
 
 import arrow
 
-from .models import StripeCustomer, StripeSubscription, StripeEvent
+from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore
 from .stripe_api import stripe
 
 from leadgalaxy.models import GroupPlan
@@ -151,6 +151,54 @@ def resubscribe_customer(customer_id):
         return True
 
     return False
+
+
+def have_extra_stores(user):
+    return user.profile.get_active_stores().count() > user.profile.plan.stores
+
+
+def extra_store_invoice(store, extra=None):
+    if extra is None:
+        extra = ExtraStore.objects.get(store=store)
+
+    invoice_item = stripe.InvoiceItem.create(
+        customer=store.user.stripe_customer.customer_id,
+        amount=2700,
+        currency="usd",
+        description=u"Additional Store: {}".format(store.title)
+    )
+
+    extra.status = 'active'
+    extra.last_invoice = invoice_item.id
+
+    if extra.period_start and extra.period_end:
+        extra.period_start = extra.period_end
+        extra.period_end = arrow.get(extra.period_end).replace(days=30).datetime
+    else:
+        extra.period_start = arrow.utcnow().datetime
+        extra.period_end = arrow.utcnow().replace(days=30).datetime
+
+    extra.save()
+
+
+def invoice_extra_stores():
+    """
+    Find Extra Stores that need to be invoiced
+    """
+
+    from django.db.models import Q
+
+    extra_stores = ExtraStore.objects.filter(store__is_active=True) \
+                                     .filter(status__in=['pending', 'active']) \
+                                     .filter(Q(period_end__lte=arrow.utcnow().datetime) |
+                                             Q(period_end=None))
+
+    invoiced = 0
+    for extra in extra_stores:
+        extra_store_invoice(extra.store, extra=extra)
+        invoiced += 1
+
+    return invoiced
 
 
 def process_webhook_event(request, event_id, raven_client):

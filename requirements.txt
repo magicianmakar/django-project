@@ -29,6 +29,7 @@ docutils==0.12
 enum34==1.1.6
 factory-boy==2.7.0
 fake-factory==0.5.7
+funcsigs==1.0.2
 gunicorn==19.6.0
 html5lib==0.9999999
 httplib2==0.9.1
@@ -41,11 +42,14 @@ lockfile==0.10.2
 lxml==3.4.4
 Markdown==2.6.6
 MarkupSafe==0.23
+mock==2.0.0
+munch==2.0.4
 MySQL-python==1.2.5
 ndg-httpsclient==0.4.1
 newrelic==2.66.0.49
 oauth2client==1.4.11
 oauthlib==1.1.2
+pbr==1.10.0
 Pillow==2.9.0
 ply==3.8
 psycopg2==2.6.1

@@ -4,13 +4,14 @@ from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 import simplejson as json
 import arrow
 
 from .stripe_api import stripe
 
-from leadgalaxy.models import GroupPlan
+from leadgalaxy.models import GroupPlan, ShopifyStore
 
 PLAN_INTERVAL = (
     ('day', 'daily'),
@@ -241,9 +242,40 @@ class StripeEvent(models.Model):
         return u"{}".format(self.event_type)
 
 
+class ExtraStore(models.Model):
+    class Meta:
+        verbose_name = "Extra Store"
+        verbose_name_plural = "Extra Stores"
+
+    user = models.ForeignKey(User)
+    store = models.ForeignKey(ShopifyStore)
+
+    status = models.CharField(max_length=64, null=True, blank=True, default='pending')
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, default='Last Invoice Item')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return u"{}".format(self.store.title)
+
+
 # Signals Handling
 
 @receiver(post_save, sender=StripeCustomer)
 def stripe_customer_signal(sender, instance, created, **kwargs):
     from django.core.cache import cache
     cache.delete('extra_bundle_{}'.format(instance.user.id))
+
+
+@receiver(post_save, sender=ShopifyStore)
+def add_store_signal(sender, instance, created, **kwargs):
+    if created:
+        can_add, total_allowed, user_count = instance.user.profile.can_add_store()
+        if instance.user.profile.plan.is_stripe() and total_allowed < instance.user.shopifystore_set.count():
+            ExtraStore.objects.create(
+                user=instance.user,
+                store=instance,
+                period_start=timezone.now())

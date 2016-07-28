@@ -289,6 +289,9 @@ class UserProfile(models.Model):
             if not self.can('unlimited_stores.use'):
                 can_add = False
 
+        if not can_add and self.plan.is_stripe():
+            can_add = len(re.findall(r'\blite\b', self.plan.title, re.I)) == 0
+
         return can_add, total_allowed, user_count
 
     def can_add_product(self):
