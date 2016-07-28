@@ -245,7 +245,12 @@ def process_webhook_event(request, event_id, raven_client):
     elif event.type == 'customer.subscription.deleted':
         sub = event.data.object
 
-        customer = StripeCustomer.objects.get(customer_id=sub.customer)
+        try:
+            customer = StripeCustomer.objects.get(customer_id=sub.customer)
+        except StripeCustomer.DoesNotExist:
+            raven_client.captureException(level='warning')
+            return HttpResponse('Customer Not Found')
+
         profile = customer.user.profile
         current_plan = profile.plan
         if not profile.plan.is_free and profile.plan.is_stripe():
@@ -293,15 +298,23 @@ def process_webhook_event(request, event_id, raven_client):
         return HttpResponse('Invited To Slack')
 
     elif event.type == 'customer.deleted':
-        customer = StripeCustomer.objects.get(customer_id=event.data.object.id)
-        customer.delete()
+        try:
+            customer = StripeCustomer.objects.get(customer_id=event.data.object.id)
+            customer.delete()
+        except StripeCustomer.DoesNotExist:
+            raven_client.captureException(level='warning')
+            return HttpResponse('Customer Not Found')
 
         return HttpResponse('Customer Deleted')
 
     elif event.type == 'invoice.updated':
         pass
     elif event.type == 'customer.subscription.trial_will_end':
-        customer = StripeCustomer.objects.get(customer_id=event.data.object.customer)
+        try:
+            customer = StripeCustomer.objects.get(customer_id=event.data.object.customer)
+        except StripeCustomer.DoesNotExist:
+            raven_client.captureException(level='warning')
+            return HttpResponse('Customer Not Found')
 
         if event.data.object.status == 'trialing' and not customer.have_source():
             trial_delta = arrow.get(event.data.object.trial_end) - arrow.utcnow()
