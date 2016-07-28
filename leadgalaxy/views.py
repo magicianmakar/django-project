@@ -830,10 +830,13 @@ def proccess_api(request, user, method, target, data):
         cache.delete('export_product_{}_{}'.format(store.id, shopify_id))
         shopify_orders_utils.update_line_export(store, shopify_id)
 
+        tasks.update_shopify_product(store.id, shopify_id)
+
         return JsonResponse({
             'status': 'ok',
             'reload': not data.get('export')
         })
+
     if method == 'DELETE' and target == 'product-metadata':
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
