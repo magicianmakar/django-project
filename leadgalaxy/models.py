@@ -522,7 +522,7 @@ class ShopifyProduct(models.Model):
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
-        self.tag = data.get('tags', '')
+        self.tag = data.get('tags', '')[:1024]
         self.product_type = data.get('type', '')[:254]
 
         try:
