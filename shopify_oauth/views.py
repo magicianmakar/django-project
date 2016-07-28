@@ -53,6 +53,7 @@ def verify_shopify_webhook(request):
     message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), sha256).hexdigest()
 
     if message_hash != request.GET.get('hmac'):
+        raven_client.captureMessage('HMAC Verification failed', level='warning', request=request)
         raise PermissionDenied('HMAC Verification failed')
 
 
@@ -130,7 +131,12 @@ def install(request, store):
 @login_required
 def callback(request):
     verify_shopify_webhook(request)
-    if request.session.get('shopify_state') != request.GET['state']:
+    if request.session.get('shopify_state', True) != request.GET.get('state', False):
+        raven_client.captureMessage(
+            'HMAC Verification failed',
+            level='warning', request=request,
+            extra={'ShouldBe': request.session.get('shopify_state')})
+
         raise PermissionDenied('State not matching')
 
     shop = request.GET['shop']
