@@ -1845,10 +1845,12 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok', 'warning': 'Non-handled Topic'})
 
             if topic == 'products/update':
+                cache.set('webhook_product_{}_{}'.format(store.id, shopify_product['id']), shopify_product, timeout=120)
+
                 countdown_key = 'eta_product_{}_{}'.format(store.id, shopify_product['id'])
                 if cache.get(countdown_key) is None:
                     cache.set(countdown_key, True, timeout=5)
-                    tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id'], shopify_product], countdown=5)
+                    tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
@@ -1876,10 +1878,11 @@ def webhook(request, provider, option):
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
 
+                cache.set('webhook_order_{}_{}'.format(store.id, shopify_order['id']), shopify_order, timeout=120)
                 countdown_key = 'eta_order_{}_{}'.format(store.id, shopify_order['id'])
                 if cache.get(countdown_key) is None:
                     cache.set(countdown_key, True, timeout=5)
-                    tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id'], shopify_order], countdown=5)
+                    tasks.update_shopify_order.apply_async(args=[store.id, shopify_order['id']], countdown=5)
 
                 return JsonResponse({'status': 'ok'})
 

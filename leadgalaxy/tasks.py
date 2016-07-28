@@ -298,6 +298,9 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
             return
 
         if shopify_product is None:
+            shopify_product = cache.set('webhook_order_{}_{}'.format(store_id, product_id))
+
+        if shopify_product is None:
             shopify_product = utils.get_shopify_product(store, product_id)
 
         product_data = json.loads(product.data)
@@ -336,6 +339,9 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
 def update_shopify_order(self, store_id, order_id, shopify_order=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
+
+        if shopify_order is None:
+            shopify_order = cache.set('webhook_order_{}_{}'.format(store_id, order_id))
 
         if shopify_order is None:
             shopify_order = utils.get_shopify_order(store, order_id)
