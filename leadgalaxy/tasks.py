@@ -329,7 +329,7 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
     except Exception as e:
         if not self.request.called_directly:
             retry_key = 'retry_product_{}'.format(store.id)
-            countdown = cache.get(retry_key, 10)
+            countdown = cache.get(retry_key, 10) * self.request.retries
             cache.set(retry_key, countdown+5, timeout=countdown+10)
 
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
@@ -367,7 +367,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None):
 
         if not self.request.called_directly:
             retry_key = 'retry_order_{}'.format(store.id)
-            countdown = cache.get(retry_key, 10)
+            countdown = cache.get(retry_key, 10) * self.request.retries
             cache.set(retry_key, countdown+5, timeout=countdown+10)
 
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
