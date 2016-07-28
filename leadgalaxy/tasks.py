@@ -327,6 +327,12 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
         ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
     except Exception as e:
+        raven_client.captureException(level='warning', extra={
+            'Store': store.title,
+            'Product': product_id,
+            'Retries': self.request.retries
+        })
+
         if not self.request.called_directly:
             retry_key = 'retry_product_{}'.format(store.id)
             countdown = cache.get(retry_key, 10) * self.request.retries
@@ -360,9 +366,10 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None):
         raven_client.captureMessage('Store is being imported', extra={'store': store})
 
     except Exception as e:
-        raven_client.captureException(extra={
-            'store': store.title,
-            'order_id': order_id,
+        raven_client.captureException(level='warning', extra={
+            'Store': store.title,
+            'Order': order_id,
+            'Retries': self.request.retries
         })
 
         if not self.request.called_directly:
