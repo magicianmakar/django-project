@@ -12,7 +12,7 @@ from requests_oauthlib import OAuth2Session
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.models import ShopifyStore
+from leadgalaxy.models import ShopifyStore, UserProfile
 from leadgalaxy.utils import attach_webhooks
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
@@ -56,6 +56,10 @@ def verify_shopify_webhook(request):
         raise PermissionDenied('HMAC Verification failed')
 
 
+def have_subusers(user):
+    return UserProfile.objects.filter(subuser_parent=user).exists()
+
+
 def index(request):
     verify_shopify_webhook(request)
 
@@ -83,9 +87,9 @@ def index(request):
         return HttpResponseRedirect('/')
     else:
         user = store.user
-        user.backend = settings.AUTHENTICATION_BACKENDS[0]
-
-        user_login(request, user)
+        if not have_subusers(user):
+            user.backend = settings.AUTHENTICATION_BACKENDS[0]
+            user_login(request, user)
 
         return HttpResponseRedirect('/')
 
