@@ -37,9 +37,30 @@ $('#install-store').click(function (e) {
         shop = shop.pop();
     }
 
-    $(this).button('loading');
+    if($('.add-store-btn').data('extra')) {
+        swal({
+            title: "Additional Store",
+            text: "You are about to add an additional store to your plan for <b>$27/month</b>, Would you like to continue?",
+            type: "info",
+            html: true,
+            showCancelButton: true,
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            animation: false,
+            showLoaderOnConfirm: true,
+            confirmButtonText: "Yes, Add This Store",
+            cancelButtonText: "Cancel"
+        }, function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
+            }
 
-    window.location.href = '/shopify/install/' + shop;
+            window.location.href = '/shopify/install/' + shop;
+        });
+    } else {
+        $(this).button('loading');
+        window.location.href = '/shopify/install/' + shop;
+    }
 });
 
 $('#add-store').click(function(e) {

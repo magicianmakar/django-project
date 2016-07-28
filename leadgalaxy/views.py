@@ -61,11 +61,17 @@ def index_view(request):
         first_visit = False
         intro_video = True
 
+    can_add, total_allowed, user_count = request.user.profile.can_add_store()
+
+    extra_stores = can_add and request.user.profile.plan.is_stripe() and \
+        request.user.profile.get_active_stores().count() >= 1
+
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
         'intro_video': intro_video or request.GET.get('intro'),
+        'extra_stores': extra_stores,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
