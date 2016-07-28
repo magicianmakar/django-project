@@ -11,6 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
