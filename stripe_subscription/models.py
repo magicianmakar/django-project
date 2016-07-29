@@ -273,7 +273,11 @@ def stripe_customer_signal(sender, instance, created, **kwargs):
 @receiver(post_save, sender=ShopifyStore)
 def add_store_signal(sender, instance, created, **kwargs):
     if created:
-        can_add, total_allowed, user_count = instance.user.profile.can_add_store()
+        try:
+            can_add, total_allowed, user_count = instance.user.profile.can_add_store()
+        except User.DoesNotExist:
+            return
+
         if instance.user.profile.plan.is_stripe() and total_allowed < instance.user.shopifystore_set.count():
             ExtraStore.objects.create(
                 user=instance.user,
