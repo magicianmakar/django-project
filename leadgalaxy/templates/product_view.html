@@ -14,6 +14,7 @@
                 <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-edit"></i> Edit</a></li>
                 {% if original and request.user|can:'original_product.view' %}
                 <li class="original-tab"><a
+                    data-auto-click="#original"
                     {% if request.user|can:'original_product.use' %}
                     data-toggle="tab" href="#tab-2"
                     {% else %}
@@ -23,6 +24,7 @@
                 {% endif %}
                 {% if product.original_product_source and request.user|can:'shipping_methods.view' %}
                 <li class="shipping-tab"><a
+                    data-auto-click="#info"
                     {% if request.user|can:'shipping_methods.use' %}
                     data-toggle="tab" href="#tab-3"
                     {% else %}
@@ -32,6 +34,7 @@
                 {% endif %}
                 {% if request.user|can:'notes.view' %}
                 <li class=""><a
+                    data-auto-click="#notes"
                     {% if request.user|can:'notes.use' %}
                     data-toggle="tab" href="#tab-4"
                     {% else %}
@@ -41,6 +44,7 @@
                 {% endif %}
                 {% if request.user|can:'product_metadata.view' %}
                 <li class="connections-tab"><a
+                    data-auto-click="#connections"
                     {% if request.user|can:'product_metadata.use' %}
                     data-toggle="tab" href="#tab-5"
                     {% else %}
@@ -50,7 +54,9 @@
                 {% endif %}
                 {% if request.user|can:'price_changes.use' %}
                 <li class="product-alerts-tab" product-id="{{product.id}}">
-                    <a data-toggle="tab" href="#tab-6">
+                    <a data-toggle="tab" href="#tab-6"
+                       data-auto-click="#alerts"
+                    >
                         <i class="fa fa-line-chart"></i> Alerts
                     </a>
                 </li>

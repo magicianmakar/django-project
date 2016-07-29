@@ -564,6 +564,7 @@ function bindExportEvents(target) {
 
                 if (data.reload) {
                     setTimeout(function() {
+                        window.location.hash = 'connections';
                         window.location.reload();
                     }, 200);
                 }

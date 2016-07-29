@@ -554,7 +554,9 @@ $(function() {
 });
 
 $('a[data-auto-click]').each(function () {
-    if($(this).data('auto-click') && window.location.hash == '#' + $(this).data('auto-hash')) {
+    if($(this).data('auto-click') && (
+        window.location.hash == '#' + $(this).data('auto-hash') ||
+        window.location.hash == $(this).data('auto-click'))) {
         $(this).trigger('click');
     }
 });
