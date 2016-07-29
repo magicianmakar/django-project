@@ -34,13 +34,17 @@
         <div class="ibox-title">
             <h5>Shopify Stores<small></small></h5>
             <div class="ibox-tools">
-                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                {% if not user.is_subuser and stores.count > 1 %}
+                <a href="#" class="change-store-orders">
+                    <i class="fa fa-sort"></i> Change Order
+                </a>
+                {% endif %}
             </div>
         </div>
         <div class="ibox-content">
             <div class="row">
                 <div class="col-md-12">
-            <table class="table table-condensed table-hover table-bordered">
+            <table class="table table-condensed table-hover table-bordered store-tables">
               <thead>
                 <tr>
                   {% if not user.is_subuser %}
@@ -56,11 +60,14 @@
                   <th style="width:300px">Options</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="stores-table-body">
                     {% for item in stores %}
-                    <tr store-id="{{item.id}}">
+                    <tr class="store-item" store-id="{{item.id}}">
                     {% if not user.is_subuser %}
-                      <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
+                        <td class="drag-show">
+                            <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
+                            <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
+                        </td>
                       <td>
                         {% with connected=item.connected_count saved=item.saved_count %}
                             {% if connected or saved %}
@@ -451,12 +458,14 @@
 {% block extracss %}
 {% compress css %}
     <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/dragula.js/dist/dragula.min.css' %}" rel="stylesheet">
 {% endcompress %}
 {% endblock %}
 
 {% block extrajs %}
 {% compress js %}
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
 

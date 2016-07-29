@@ -312,6 +312,45 @@ $(function () {
             size: 'small'
         });
     });
+
+    dragula([document.getElementById('stores-table-body')], {
+            moves: function(el, container, handle) {
+                return (/order\-handle/).test(handle.className);
+            }
+        })
+        .on('drag', function(el) {
+            $(el).css('cursor', 'move').find('td').filter(function() {
+                return !$(this).hasClass('drag-show');
+            }).children().hide();
+        }).on('drop', function(el) {
+            $(el).css('cursor', 'inherit').find('td').filter(function() {
+                return !$(this).hasClass('drag-show');
+            }).children().show();
+
+            var data = {};
+            $('#stores-table-body .store-item').each(function(i, el) {
+                data[$(el).attr('store-id')] = i;
+            });
+
+            $.ajax({
+                url: '/api/store-order',
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function(data) {},
+                error: function(data) {},
+            });
+        }).on('over', function(el, container) {
+            $(el).css('cursor', 'move');
+        }).on('out', function(el, container) {
+            $(el).css('cursor', 'inherit');
+        });
+
+    $('.change-store-orders').click(function(e) {
+        e.preventDefault();
+
+        $('.order-handle').toggle();
+    });
 });
 
 })();

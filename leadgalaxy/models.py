@@ -373,7 +373,7 @@ def user_stripe_customer(self):
 
 class ShopifyStore(models.Model):
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['list_index', '-created_at']
 
     title = models.CharField(max_length=512, blank=True, default='')
     api_url = models.CharField(max_length=512)
@@ -386,6 +386,8 @@ class ShopifyStore(models.Model):
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
     version = models.IntegerField(default=1, choices=((1, 'Private App'), (2, 'Shopify App')), verbose_name='Store Version')
+
+    list_index = models.IntegerField(default=0)
 
     user = models.ForeignKey(User)
 

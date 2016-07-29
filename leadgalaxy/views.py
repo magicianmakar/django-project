@@ -346,6 +346,16 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'store-order':
+        for store, idx in data.iteritems():
+            store = ShopifyStore.objects.get(id=store)
+            user.can_edit(store)
+
+            store.list_index = utils.safeInt(idx, 0)
+            store.save()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'GET' and target == 'store-verify':
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
