@@ -830,26 +830,25 @@ def proccess_api(request, user, method, target, data):
         if not shopify_id:
             return JsonResponse({'error': 'Invalid Shopify link.'}, status=500)
 
-        if data.get('export'):
-            product_export, created = ShopifyProductExport.objects.update_or_create(
-                id=utils.safeInt(data.get('export')),
-                store=store,
-                defaults={
-                    'product': product,
-                    'original_url': original_link,
-                    'shopify_id': shopify_id,
-                    'supplier_name': data.get('supplier-name'),
-                    'supplier_url': utils.remove_link_query(data.get('supplier-link')),
-                }
-            )
-        else:
+        supplier_url = utils.remove_link_query(data.get('supplier-link'))
+
+        try:
+            product_export = ShopifyProductExport.objects.get(id=data.get('export'))
+            product_export.product = product
+            product_export.original_url = original_link
+            product_export.shopify_id = shopify_id
+            product_export.supplier_name = data.get('supplier-name')
+            product_export.supplier_url = supplier_url
+            product_export.save()
+
+        except ValueError, ShopifyProductExport.DoesNotExist:
             product_export = ShopifyProductExport.objects.create(
                 store=store,
                 product=product,
                 original_url=original_link,
                 shopify_id=shopify_id,
                 supplier_name=data.get('supplier-name'),
-                supplier_url=data.get('supplier-link'),
+                supplier_url=supplier_url,
             )
 
         if not product.shopify_export_id or not data.get('export'):
