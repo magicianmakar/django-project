@@ -512,4 +512,23 @@
 </script>
 {% endif %}
 
+{% if not user.is_subuser and stores.count > 1 %}
+<script type="text/javascript">
+    $(function() {
+        var tour = new Tour({
+            name: 'change-store-orders',
+            template: "<div class='popover tour'> <div class='arrow'></div> <h3 class='popover-title'></h3> <div class='popover-content'></div> <button class='btn btn-default btn-sm pull-right' data-role='end' style='margin:5px 10px 10px 0'>Got it!</button> </div>", steps: [ {
+                element: '.change-store-orders',
+                title: 'Stores List Order',
+                content: 'Click here to change your Stores order.',
+                placement: 'left',
+            }, ]
+        });
+        tour.init();
+        tour.start();
+    });
+
+</script>
+{% endif %}
+
 {% endblock %}
