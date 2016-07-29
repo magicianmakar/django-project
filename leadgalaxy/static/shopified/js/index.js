@@ -104,16 +104,6 @@ $('.delete-store').click(function (e) {
     var store = $(this).attr('store-id');
     var version = $(this).attr('store-version');
 
-    if (version == '2') {
-        swal({
-            title: 'Delete Store',
-            text: 'To delete this store, please uninstall Shopified App from your Shopify Store.',
-            type: 'info'
-        });
-
-        return;
-    }
-
     swal({
         title: "Delete Store",
         text: "Are you sure that you want to delete this store?",

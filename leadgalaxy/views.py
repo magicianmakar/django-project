@@ -292,7 +292,21 @@ def proccess_api(request, user, method, target, data):
         # Delete products connection with this store
         ShopifyProductExport.objects.filter(store=store).delete()
 
-        utils.detach_webhooks(store, delete_too=True)
+        if store.version == 2:
+            try:
+                utils.detach_webhooks(store, delete_too=True)
+            except:
+                pass
+
+            try:
+                requests.delete(store.get_link('/admin/api_permissions/current.json', api=True)) \
+                        .raise_for_status()
+
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code not in [401, 404]:
+                    raise
+        else:
+            utils.detach_webhooks(store, delete_too=True)
 
         stores = []
         for i in user.profile.get_active_stores():
