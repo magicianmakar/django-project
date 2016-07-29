@@ -843,6 +843,10 @@ def attach_webhooks(store):
         'products/delete', 'orders/create', 'orders/updated', 'orders/delete']
 
     webhooks = []
+
+    if settings.DEBUG:
+        return webhooks
+
     for topic in default_topics:
         webhook = get_shopify_webhook(store, topic)
 
@@ -856,6 +860,9 @@ def attach_webhooks(store):
 
 
 def detach_webhooks(store, delete_too=False):
+    if settings.DEBUG:
+        return
+
     for webhook in store.shopifywebhook_set.all():
         webhook.detach()
 
