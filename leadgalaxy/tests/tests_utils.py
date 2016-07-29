@@ -311,6 +311,14 @@ class UtilsTestCase(TestCase):
             utils.remove_link_query('http://www.ebay.com/itm/131696353919'),
             'http://www.ebay.com/itm/131696353919')
 
+        self.assertEqual(
+            utils.remove_link_query('//www.ebay.com/itm/131696353919'),
+            'http://www.ebay.com/itm/131696353919')
+
+        self.assertEqual(
+            utils.remove_link_query('://www.ebay.com/itm/131696353919'),
+            'http://www.ebay.com/itm/131696353919')
+
     def test_upload_from_url(self):
         aviary_url = ('://s3.amazonaws.com/feather-files-aviary-prod-us-east-1',
                       '/220489e3e16f4691bc88d1ef81e05a8b/2016-05-24/00b4838ae29840d1bcfa6d2fa570ab02.png')

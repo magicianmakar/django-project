@@ -82,7 +82,7 @@ def remove_link_query(link):
         return ''
 
     if not link.startswith('http'):
-        link = u'http://{}'.format(link)
+        link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
 
     return re.sub('([?#].*)$', r'', link)
 
