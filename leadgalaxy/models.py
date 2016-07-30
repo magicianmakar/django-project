@@ -1006,6 +1006,12 @@ class AliexpressProductChange(models.Model):
     def __unicode__(self):
         return u'{}'.format(self.id)
 
+    def orders_count(self, open=True):
+        return self.product.shopifyorderline_set \
+                           .exclude(order__fulfillment_status='fulfilled') \
+                           .filter(order__closed_at=None, order__cancelled_at=None) \
+                           .count()
+
 
 class PlanPayment(models.Model):
     class Meta:

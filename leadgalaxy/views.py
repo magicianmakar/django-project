@@ -1164,9 +1164,9 @@ def proccess_api(request, user, method, target, data):
 
         orders = []
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                             .filter(source_tracking='') \
-                                             .exclude(source_status='FINISH') \
-                                             .order_by('updated_at')
+                                                  .filter(source_tracking='') \
+                                                  .exclude(source_status='FINISH') \
+                                                  .order_by('updated_at')
         if user.is_subuser:
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
 
@@ -1204,7 +1204,7 @@ def proccess_api(request, user, method, target, data):
 
         if not data.get('order_id') and not data.get('line_id'):
             ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                .update(check_count=F('check_count')+1, updated_at=timezone.now())
+                                     .update(check_count=F('check_count')+1, updated_at=timezone.now())
 
         return JsonResponse(orders, safe=False)
 
@@ -1496,13 +1496,35 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'alert-archive':
         try:
-            alert = AliexpressProductChange.objects.get(id=data.get('alert'))
-            user.can_edit(alert)
+            if data.get('all') == '1':
+                store = ShopifyStore.objects.get(id=data.get('store'))
+                user.can_edit(store)
 
-            alert.hidden = 1
-            alert.save()
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+                AliexpressProductChange.objects.filter(product__store=store).update(hidden=1)
+
+            else:
+                alert = AliexpressProductChange.objects.get(id=data.get('alert'))
+                user.can_edit(alert)
+
+                alert.hidden = 1
+                alert.save()
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        return JsonResponse({
+            'status': 'ok'
+        })
+
+    if method == 'POST' and target == 'alert-delete':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_edit(store)
+
+            AliexpressProductChange.objects.filter(product__store=store).delete()
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
 
         return JsonResponse({
             'status': 'ok'
@@ -3240,6 +3262,9 @@ def orders_view(request):
         if connected_only == 'true':
             orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
 
+        if request.GET.get('product'):
+            orders = orders.filter(shopifyorderline__product_id=request.GET.get('product'))
+
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
             orders = orders.order_by(sort_desc + sort_field)
@@ -3602,9 +3627,28 @@ def product_alerts(request):
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
 
+    if request.GET.get('store'):
+        store = ShopifyStore.objects.get(id=request.GET.get('store'))
+    else:
+        if 'last_store' in request.session:
+            store = ShopifyStore.objects.get(id=request.session['last_store'])
+        else:
+            stores = request.user.profile.get_active_stores()
+            if len(stores):
+                store = stores[0]
+
+        if not store:
+            messages.warning(request, 'Please add at least one store before using the Alerts page.')
+            return HttpResponseRedirect('/')
+
+    request.user.can_view(store)
+    # if the user has rights to access this store we save the store on session.
+    request.session['last_store'] = store.id
+
     changes = AliexpressProductChange.objects.select_related('product') \
                                      .select_related('product__shopify_export') \
-                                     .filter(user=request.user.models_user)
+                                     .filter(user=request.user.models_user,
+                                             product__store=store)
 
     if product:
         changes = changes.filter(product=product)
@@ -3651,6 +3695,7 @@ def product_alerts(request):
         'paginator': paginator,
         'current_page': page,
         'page': 'product_alerts',
+        'store': store,
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
     })
 
@@ -3689,6 +3734,7 @@ def bundles_bonus(request, bundle_id):
         'form': form,
         'bundle': bundle
     })
+
 
 @login_required
 def products_collections(request, collection):

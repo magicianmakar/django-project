@@ -12,18 +12,47 @@
     <div class="col-md-12">
          <div class="tabs-container">
             <ul class="nav nav-tabs">
-                {% if not show_hidden %}
-                <li class="active"><a data-toggle="tab" href="#tab-1"> New Alerts</a></li>
-                <li class=""><a href="{% url 'product_alerts' %}?hidden=1"> Archived</a></li>
-                {% else %}
-                <li class=""><a href="{% url 'product_alerts' %}"> New Alerts</a></li>
-                <li class="active"><a data-toggle="tab" href="#tab-1"> Archived</a></li>
-                {% endif %}
+            {% if not request.GET.store %}
+                {% for item in user.profile.get_active_stores %}
+                    {% if forloop.first %}
+                        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                    {% else %}
+                        <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+            {% else %}
+                {% for item in user.profile.get_active_stores %}
+                    {% if item.id|stringformat:"i" == request.GET.store %}
+                        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                    {% else %}
+                        <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
-                        <table class="table">
+                        <div class="row">
+                            <div class="col-md-2 col-md-offset-10 text-right">
+                            {% if show_hidden %}
+                                <a href="{% url 'product_alerts' %}?store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default btn-reverse active">Archived Alerts</a>
+                            {% else %}
+                                <a href="{% url 'product_alerts' %}?hidden=1&store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default">Archived Alerts</a>
+                            {% endif %}
+                                <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn btn-circle btn-outline btn-sm expand-btn btn-default"><i class="fa fa-cog"></i></a>
+                                <ul class="dropdown-menu dropdown-user">
+                                    <li>
+                                        <a store-id="{{store.id}}" id="archive-all-alerts" href="#">Archive All Alerts</a>
+                                    </li>
+                                    <li>
+                                        <a store-id="{{store.id}}" id="delete-all-alerts" href="#">Delete All Alerts</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <table class="table alert-table">
                             <thead>
                                 <tr>
                                     <th>Category</th>
@@ -63,6 +92,19 @@
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
                                                 <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                {% with orders=item.qelem.orders_count %}
+                                                <a class="open-orders-btn btn btn-xs {% if orders %}btn-primary{% else %}btn-default btn-outline{% endif %}" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                                                    {% if orders == 1 %}
+                                                        {{ orders }} Order
+                                                    {% elif orders > 1 %}
+                                                        {{ orders }} Orders
+                                                    {% else %}
+                                                        Orders
+                                                    {% endif %}
+                                                </a>
+                                                {% endwith %}
+
                                                 <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
                                             </td>
                                         </tr>
@@ -82,6 +124,19 @@
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
                                                 <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                {% with orders=item.qelem.orders_count %}
+                                                <a class="open-orders-btn btn btn-xs {% if orders %}btn-primary{% else %}btn-default btn-outline{% endif %}" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                                                    {% if orders == 1 %}
+                                                        {{ orders }} Order
+                                                    {% elif orders > 1 %}
+                                                        {{ orders }} Orders
+                                                    {% else %}
+                                                        Orders
+                                                    {% endif %}
+                                                </a>
+                                                {% endwith %}
+
                                                 <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
                                             </td>
                                         </tr>
@@ -116,6 +171,19 @@
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
                                                 <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                {% with orders=item.qelem.orders_count %}
+                                                <a class="open-orders-btn btn btn-xs {% if orders %}btn-primary{% else %}btn-default btn-outline{% endif %}" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                                                    {% if orders == 1 %}
+                                                        {{ orders }} Order
+                                                    {% elif orders > 1 %}
+                                                        {{ orders }} Orders
+                                                    {% else %}
+                                                        Orders
+                                                    {% endif %}
+                                                </a>
+                                                {% endwith %}
+
                                                 <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
                                             </td>
                                         </tr>
@@ -151,6 +219,19 @@
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
                                                 <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                {% with orders=item.qelem.orders_count %}
+                                                <a class="open-orders-btn btn btn-xs {% if orders %}btn-primary{% else %}btn-default btn-outline{% endif %}" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                                                    {% if orders == 1 %}
+                                                        {{ orders }} Order
+                                                    {% elif orders > 1 %}
+                                                        {{ orders }} Orders
+                                                    {% else %}
+                                                        Orders
+                                                    {% endif %}
+                                                </a>
+                                                {% endwith %}
+
                                                 <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
                                             </td>
                                         </tr>
@@ -188,6 +269,19 @@
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
                                                 <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" shopify-link="{{item.shopify_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                {% with orders=item.qelem.orders_count %}
+                                                <a class="open-orders-btn btn btn-xs {% if orders %}btn-primary{% else %}btn-default btn-outline{% endif %}" href="{% url 'orders' %}" data-product="{{ item.qelem.product.pk }}" data-orders="{{orders}}">
+                                                    {% if orders == 1 %}
+                                                        {{ orders }} Order
+                                                    {% elif orders > 1 %}
+                                                        {{ orders }} Orders
+                                                    {% else %}
+                                                        Orders
+                                                    {% endif %}
+                                                </a>
+                                                {% endwith %}
+
                                                 <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
                                             </td>
                                         </tr>
