@@ -29,6 +29,9 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 class CaptureFailure(Task):
     abstract = True
 
+    def after_return(self, *args, **kwargs):
+        raven_client.context.clear()
+
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         raven_client.captureException(exc_info=einfo.exc_info)
 
