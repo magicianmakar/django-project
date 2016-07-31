@@ -215,8 +215,10 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-5">
                                 <div class="form-group">
-                                    <label for="default_weight_unit" class="col-sm-5 control-label">Default Weight Unit</label>
-                                    <div class="col-sm-5">
+                                    <label for="default_weight_unit" class="col-sm-4 control-label" style="padding-top:0">
+                                        Default Weight Unit
+                                    </label>
+                                    <div class="col-sm-3">
                                         <select id="default_weight_unit" name="default_weight_unit" class="form-control">
                                             <option value="g" {% if config.default_weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
                                             <option value="kg" {% if config.default_weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
@@ -227,11 +229,11 @@
                                     <span class="help-block "></span>
                                 </div>
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-6">
                                 <div class="form-group">
                                     <label for="default_weight_number" class="col-sm-4 control-label">Fixed Weight</label>
-                                    <div class="col-sm-6">
-                                        <input style="width:80px" type="text" class="form-control col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
+                                    <div class="col-sm-3">
+                                        <input type="text" class="form-control col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
                                     </div>
                                     <span class="help-block "></span>
                                 </div>

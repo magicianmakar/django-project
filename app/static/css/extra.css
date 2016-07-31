@@ -152,4 +152,8 @@
     .footer.fixed {
         position: absolute !important;
     }
+
+    .setting-section {
+        margin-left: 0 !important;
+    }
 }
