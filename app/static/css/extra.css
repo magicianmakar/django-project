@@ -153,6 +153,14 @@
         position: absolute !important;
     }
 
+    .navbar-default {
+        z-index: 1000 !important;
+    }
+
+    #page-wrapper {
+        z-index: 1100 !important;
+    }
+
     .setting-section {
         margin-left: 0 !important;
     }
