@@ -1251,7 +1251,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
                   message=email_plain,
                   html_message=email_html)
 
-        return html_message
+        return email_html
 
 def get_countries():
     country_names = pytz.country_names
