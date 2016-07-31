@@ -150,226 +150,309 @@
                 <div class="col-md-12">
                     <form id="config-form" class="form-horizontal" role="form">
                         <input type="hidden" name="from" value="webapp">
+                        <div class="setting-section">
+                            <h3 class="setting-title">Products Import</h3>
+                        </div>
+
                         {% if user|can:'auto_margin.use' %}
-                        <div class="form-group">
-                            <label for="auto_margin" class="col-sm-2 control-label">Price Markup</label>
-                            <div class="col-sm-1">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_margin" name="auto_margin" value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-5">
+                                <div class="form-group">
+                                    <label for="auto_margin" class="col-sm-4 control-label">
+                                        Price Markup
+                                        {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <input style="padding:5px 2px;text-align:center" type="text"
+                                               class="form-control col-sm-2" id="auto_margin" name="auto_margin"
+                                               value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
+                                    </div>
+                                </div>
                             </div>
-                            <span class="help-block ">(For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00)</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="auto_margin_cents" class="col-sm-2 control-label">Price Cents Value</label>
-                            <div class="col-sm-1">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_margin_cents" name="auto_margin_cents" value="{{config.auto_margin_cents}}">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="auto_margin_cents" class="col-sm-4 control-label">
+                                        Price Cents Value
+                                       {% include 'partial/help_tooltip.html' with help="For example: If you set Price Cents Value to <b>95</b>, product price will end always by .95" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <input style="padding:5px 2px;text-align:center" type="text"
+                                               class="form-control col-sm-2" id="auto_margin_cents" name="auto_margin_cents"
+                                               value="{{config.auto_margin_cents}}">
+                                    </div>
+                                </div>
                             </div>
-                            <span class="help-block ">(For example: If you set Price Cents Value to <b>95</b>, product price will end always by .95)</span>
                         </div>
-                        <div class="col-sm-offset-2"><hr /></div>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-5">
+                                <div class="form-group">
+                                    <label for="auto_compare_at" class="col-sm-4 control-label" style="padding-top:0">
+                                        Compare At Price Markup
+                                        {% include 'partial/help_tooltip.html' with help="For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <input style="padding:5px 2px;text-align:center" type="text"
+                                               class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at"
+                                               value="{% if config.auto_compare_at != '%' %}{{config.auto_compare_at}}{% endif %}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="auto_compare_at_cents" class="col-sm-4 control-label" style="padding-top:0">
+                                            Compare At Price Cents Value
+                                        {% include 'partial/help_tooltip.html' with help="For example: If you set Compare At Price Cents Value to <b>95</b>, product compare price will end always by .95" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at_cents" name="auto_compare_at_cents" value="{{config.auto_compare_at_cents}}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-
-                        <div class="form-group">
-                            <label for="auto_compare_at" class="col-sm-2 control-label">Compare At Price Markup</label>
-                            <div class="col-sm-1">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at" value="{% if config.auto_compare_at != '%' %}{{config.auto_compare_at}}{% endif %}">
-                            </div>
-                            <span class="help-block ">(For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00)</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="auto_compare_at_cents" class="col-sm-2 control-label">Compare At Price Cents Value</label>
-                            <div class="col-sm-1">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at_cents" name="auto_compare_at_cents" value="{{config.auto_compare_at_cents}}">
-                            </div>
-                            <span class="help-block ">(For example: If you set Compare At Price Cents Value to <b>95</b>, product compare price will end always by .95)</span>
-                        </div>
-
-                        <div class="col-sm-offset-2"><hr /></div>
                         {% endif %}
 
-                        <div class="form-group">
-                            <label for="default_weight_unit" class="col-sm-2 control-label">Default Weight Unit</label>
-                            <div class="col-sm-2">
-                                <select id="default_weight_unit" name="default_weight_unit" class="form-control">
-                                    <option value="g" {% if config.default_weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
-                                    <option value="kg" {% if config.default_weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
-                                    <option value="oz" {% if config.default_weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                                    <option value="lb" {% if config.default_weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                                </select>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-5">
+                                <div class="form-group">
+                                    <label for="default_weight_unit" class="col-sm-5 control-label">Default Weight Unit</label>
+                                    <div class="col-sm-5">
+                                        <select id="default_weight_unit" name="default_weight_unit" class="form-control">
+                                            <option value="g" {% if config.default_weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                                            <option value="kg" {% if config.default_weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                                            <option value="oz" {% if config.default_weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                                            <option value="lb" {% if config.default_weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                                        </select>
+                                    </div>
+                                    <span class="help-block "></span>
+                                </div>
                             </div>
-                            <span class="help-block "></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="default_weight_number" class="col-sm-2 control-label">Fixed Weight</label>
-                            <div class="col-sm-2">
-                                <input style="width:80px" type="text" class="form-control col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
-                            </div>
-                            <span class="help-block "></span>
-                        </div>
-
-                        <div class="col-sm-offset-2"><hr /></div>
-
-                        <div class="form-group">
-                            <label for="description_mode" class="col-sm-2 control-label">Default Product Description</label>
-                            <div class="col-sm-2">
-                                <select id="description_mode" name="description_mode" class="form-control">
-                                    <option value="empty" {% if config.description_mode == 'empty' %}selected="selected"{% endif %}>Empty</option>
-                                    <option value="original" {% if config.description_mode == 'original' %}selected="selected"{% endif %}>Original</option>
-                                    <option value="simplified" {% if config.description_mode == 'simplified' %}selected="selected"{% endif %}>Simplified</option>
-                                    <option value="custom" {% if config.description_mode == 'custom' %}selected="selected"{% endif %}>Custom</option>
-                                </select>
-                            </div>
-                            <span class="help-block desc-select-help"></span>
-                        </div>
-                        <div id="desc-div" class="form-group" {% if config.description_mode != 'custom' %} style="display:none" {% endif %}>
-                            <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
-                            <div class="col-sm-10">
-                                <textarea name="default_desc" id="default_desc" cols="30" rows="10" class="form-control">{{config.default_desc}}</textarea>
+                            <div class="col-sm-5">
+                                <div class="form-group">
+                                    <label for="default_weight_number" class="col-sm-4 control-label">Fixed Weight</label>
+                                    <div class="col-sm-6">
+                                        <input style="width:80px" type="text" class="form-control col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
+                                    </div>
+                                    <span class="help-block "></span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="make_visisble" class="col-sm-2 control-label">Make Products Visible</label>
-                            <div class="col-sm-10">
-                                <input type="checkbox" class="icheck" id="make_visisble" name="make_visisble"{% if config.make_visisble %}checked="checked"{% endif %}>
+                        <div class="col-sm-offset-1"><hr /></div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="description_mode" class="col-sm-2 control-label" style="padding-top:0">
+                                        Default Product Description
+                                        {% include 'partial/help_tooltip.html' with help="<p><b>Empty</b>: No description will be used.</p><p><b>Original</b>: The full AliExpress product description will be pre-populated.</p><p><b>Simplified</b>: The product specs portion of the AliExpress description will be pre-populated.</p><p><b>Custom</b>: The custom description entered below will be pre-populated.</p>" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <select id="description_mode" name="description_mode" class="form-control">
+                                            <option value="empty" {% if config.description_mode == 'empty' %}selected="selected"{% endif %}>Empty</option>
+                                            <option value="original" {% if config.description_mode == 'original' %}selected="selected"{% endif %}>Original</option>
+                                            <option value="simplified" {% if config.description_mode == 'simplified' %}selected="selected"{% endif %}>Simplified</option>
+                                            <option value="custom" {% if config.description_mode == 'custom' %}selected="selected"{% endif %}>Custom</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="desc-div" class="form-group" {% if config.description_mode != 'custom' %} style="display:none" {% endif %}>
+                                    <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
+                                    <div class="col-sm-10">
+                                        <textarea name="default_desc" id="default_desc" cols="30" rows="10" class="form-control">{{config.default_desc}}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="make_visisble" class="col-sm-4 col-xs-8 control-label">
+                                        Make Products Visible
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="make_visisble"
+                                               name="make_visisble"{% if config.make_visisble %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         {% if user|can:'auto_order.view' %}
                         {% with can_use=user|can:'auto_order.use' %}
-                        <div class="col-sm-offset-2"><hr /></div>
-                        <div class="col-sm-offset-2">
-                            <h3>1-Click Order</h3>
+                        <div class="setting-section">
+                            <h3 class="setting-title">Auto Fulfill</h3>
                         </div>
 
-                        <div class="form-group">
-                            <label for="order_phone_number" class="col-sm-2 control-label">Order Phone Number</label>
-                            <div class="col-sm-2">
-                                <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_phone_number" name="order_phone_number" value="{{config.order_phone_number}}"{% endif %}>
-                            </div>
-                            <span class="help-block">The phone number to be used with Auto Order from Aliexpress</span>
-                            <div id="phone-invalid" class="pull-left col-sm-offset-2 col-sm-6 has-error" style="clear:left;padding-bottom:15px;display:none">
-                                <span class="help-block m-b-none">Invalid Phone number, Aliexpress allow only numbers and hyphens.</span>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-offset-2 col-sm-10">
-                                <label for="" class="control-label">
-                                    <input type="radio" id="order_default_phone" name="order_default_phone"
-                                    value="seller" class="icheck"
-                                    {% if config.order_default_phone != 'customer' %}checked="checked"{% endif %}>
-                                    Override the customer’s phone number with the <b>Default Order Phone Number</b>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <label for="order_phone_number" class="col-sm-2 control-label" style="padding-top:0;padding-left:0;padding-right:25px;">
+                                    Order Phone Number
+                                    {% include 'partial/help_tooltip.html' with help="The phone number to be used with Auto Order from Aliexpress" qtipstyle="color:#BBB" %}
                                 </label>
+                                <div class="col-sm-3">
+                                    <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_phone_number" name="order_phone_number" value="{{config.order_phone_number}}"{% endif %}>
                                 </div>
-                                <div class="col-sm-offset-2 col-sm-10">
-                                <label for="" class="control-label" style="text-align:left">
-                                    <input type="radio" id="order_default_phone" name="order_default_phone"
-                                    value="customer" class="icheck"
-                                    {% if config.order_default_phone == 'customer' %}checked="checked"{% endif %} >
-                                    Use the Customer’s Phone Number if present. Only use the <b>Default Order Phone Number</b> if Customer Phone Number isn’t present.
-                                </label>
+                                <div id="phone-invalid" class="pull-left col-sm-offset-2 col-sm-6 has-error" style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid Phone number, Aliexpress allow only numbers and hyphens.</span>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-offset-2 col-sm-10 m-t-sm">
+                                    <label for="" class="control-label">
+                                        <input type="radio" id="order_default_phone" name="order_default_phone"
+                                        value="seller" class="icheck"
+                                        {% if config.order_default_phone != 'customer' %}checked="checked"{% endif %}>
+                                        Override customer’s phone number
+                                        {% include 'partial/help_tooltip.html' with help="Override the customer’s phone number with the given <b>Order Phone Number</b>" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    </div>
+                                    <div class="col-sm-offset-2 col-sm-10">
+                                    <label for="" class="control-label" style="text-align:left">
+                                        <input type="radio" id="order_default_phone" name="order_default_phone"
+                                        value="customer" class="icheck"
+                                        {% if config.order_default_phone == 'customer' %}checked="checked"{% endif %} >
+                                        Use the Customer’s Phone Number if present
+                                        {% include 'partial/help_tooltip.html' with help="Use the Customer’s Phone Number if present. Only use the <b>Order Phone Number</b> if Customer Phone Number isn’t present." qtipstyle="color:#BBB" %}
+                                    </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="order_custom_note" class="col-sm-2 control-label">Custom Note To The Supplier</label>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_custom_note" name="order_custom_note" value="{{config.order_custom_note}}"{% endif %}>
+                        <div class="row m-t-sm">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="order_custom_note" class="col-sm-2 control-label" style="padding-top:0">
+                                            Custom Note To The Supplier
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_custom_note" name="order_custom_note" value="{{config.order_custom_note}}"{% endif %}>
+                                    </div>
+                                    <span class="help-block"></span>
+                                </div>
                             </div>
-                            <span class="help-block"></span>
                         </div>
 
-                        <div class="form-group">
-                            <label for="epacket_shipping" class="col-sm-2 control-label">Select ePacket when available</label>
-                            <div class="col-sm-10">
-                                <input type="checkbox" class="icheck" id="epacket_shipping" name="epacket_shipping" {% if config.epacket_shipping %}checked="checked"{% endif %}>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="epacket_shipping" class="col-sm-4 col-xs-8 control-label">Select ePacket when available</label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="epacket_shipping"
+                                               name="epacket_shipping" {% if config.epacket_shipping %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="auto_ordered_mark" class="col-sm-2 control-label">Automatically Mark as Ordered</label>
-                            <div class="col-sm-10">
-                                <input type="checkbox" class="icheck" id="auto_ordered_mark" name="auto_ordered_mark" {% if config.auto_ordered_mark %}checked="checked"{% endif %}>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="auto_ordered_mark" class="col-sm-4 col-xs-8 control-label">
+                                        Automatically Mark as Ordered
+                                        {% include 'partial/help_tooltip.html' with help="After you click on <b>'Place Order'</b> button, the order will be marked as Ordered and linked with Aliexpress Order ID." qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="auto_ordered_mark"
+                                               name="auto_ordered_mark" {% if config.auto_ordered_mark %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="help-block col-sm-9" style="margin-left:50px">
-                                After you click on "Place Order" button, the order will be marked as Ordered and linked with Aliexpress Order ID.
-                            </span>
                         </div>
 
-                        <div class="form-group">
-                            <label for="auto_shopify_fulfill" class="col-sm-2 control-label">Automatically Fulfill (in Shopify)</label>
-                            <div class="col-sm-2">
-                                <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
-                                    <option value="disable" {% if not config.auto_shopify_fulfill or config.auto_shopify_fulfill == 'disable' %}selected="selected"{% endif %}>Disable</option>
-                                    <option value="hourly" {% if config.auto_shopify_fulfill == 'hourly' %}selected="selected"{% endif %}>Hourly</option>
-                                    <option value="daily" {% if config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Daily</option>
-                                </select>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="auto_shopify_fulfill" class="col-sm-4 control-label">
+                                        Automatically Fulfill
+                                        {% include 'partial/help_tooltip.html' with help="Tracked Orders will be fulfilled in Shopify if the Application detect a tracking number." qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
+                                            <option value="disable" {% if not config.auto_shopify_fulfill or config.auto_shopify_fulfill == 'disable' %}selected="selected"{% endif %}>Disable</option>
+                                            <option value="hourly" {% if config.auto_shopify_fulfill == 'hourly' %}selected="selected"{% endif %}>Hourly</option>
+                                            <option value="daily" {% if config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Daily</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-
-                            <span class="help-block col-sm-7" style="margin-top: 0px;">
-                                Tracked Orders will be fulfilled in Shopify if the Application detect a tracking number.
-                            </span>
                         </div>
 
-                        <div class="form-group shiping-confirmation">
-                            <label for="send_shipping_confirmation" class="col-sm-2 control-label">Send Shipping Confirmation</label>
-                            <div class="col-sm-2">
-                                <select id="send_shipping_confirmation" name="send_shipping_confirmation" class="form-control">
-                                    <option value="default" {% if not config.send_shipping_confirmation or config.send_shipping_confirmation == 'default' %}selected="selected"{% endif %}>Default</option>
-                                    <option value="yes" {% if config.send_shipping_confirmation == 'yes' %}selected="selected"{% endif %}>Always</option>
-                                    <option value="no" {% if config.send_shipping_confirmation == 'no' %}selected="selected"{% endif %}>Never</option>
-                                </select>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group shiping-confirmation">
+                                    <label for="send_shipping_confirmation" class="col-sm-4 control-label">
+                                        Send Shipping Confirmation
+                                        {% include 'partial/help_tooltip.html' with help="Select <b>Default</b> to notify the customer if all items in his order have been shipped." qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-3">
+                                        <select id="send_shipping_confirmation" name="send_shipping_confirmation" class="form-control">
+                                            <option value="default" {% if not config.send_shipping_confirmation or config.send_shipping_confirmation == 'default' %}selected="selected"{% endif %}>Default</option>
+                                            <option value="yes" {% if config.send_shipping_confirmation == 'yes' %}selected="selected"{% endif %}>Always</option>
+                                            <option value="no" {% if config.send_shipping_confirmation == 'no' %}selected="selected"{% endif %}>Never</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-
-                            <span class="help-block col-sm-7">
-                                Select "Default" to notify the customer if all items in his order have been shipped.
-                            </span>
                         </div>
 
-                        <div class="form-group shiping-confirmation">
-                            <div class="col-sm-1 col-sm-offset-2">
-                                <input type="checkbox" class="icheck" id="validate_tracking_number" name="validate_tracking_number"
-                                {% if config.validate_tracking_number or 'validate_tracking_number' not in config %}
-                                    checked="checked"
-                                {% endif %}>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="validate_tracking_number" class="col-sm-4 col-xs-8 control-label">
+                                        Only when Tracking Number is valid
+                                        {% include 'partial/help_tooltip.html' with help="Send Confirmation Email only if the tracking number is valid (can be tracked using AfterShip or USPS)" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="validate_tracking_number" name="validate_tracking_number"
+                                        {% if config.validate_tracking_number or 'validate_tracking_number' not in config %}
+                                            checked="checked"
+                                        {% endif %}>
+                                    </div>
+                                </div>
                             </div>
-                            <label for="validate_tracking_number" class="col-sm-4 control-label" style="text-align:left;padding-left:0;margin-left:-40px">
-                                Only send confirmation if Tracking Number is valid
-                            </label>
                         </div>
 
                         {% endwith %}
                         {% endif %}
 
                         {% if user|can:'aliexpress_affiliate.use' and not user.is_superuser %}
-                        <div class="col-sm-offset-2"><hr /></div>
 
-                        <div class="col-sm-offset-2">
-                            <h3>Aliexpress Affiliate Program</h3>
+                        <div class="setting-section">
+                            <h3 class="setting-title">Aliexpress Affiliate Program</h3>
                         </div>
-                        <div class="form-group">
-                            <label for="aliexpress_affiliate_key" class="col-sm-2 control-label">API Key</label>
-                            <div class="col-sm-4">
-                                <input type="text" class="form-control col-sm-2" id="aliexpress_affiliate_key" name="aliexpress_affiliate_key" value="{{config.aliexpress_affiliate_key}}">
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="aliexpress_affiliate_key" class="col-sm-2 control-label">API Key</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control col-sm-2" id="aliexpress_affiliate_key" name="aliexpress_affiliate_key" value="{{config.aliexpress_affiliate_key}}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="aliexpress_affiliate_tracking" class="col-sm-2 control-label">Tracking ID</label>
-                            <div class="col-sm-4">
-                                <input type="text" class="form-control col-sm-2" id="aliexpress_affiliate_tracking" name="aliexpress_affiliate_tracking" value="{{config.aliexpress_affiliate_tracking}}">
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="aliexpress_affiliate_tracking" class="col-sm-2 control-label">Tracking ID</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control col-sm-2" id="aliexpress_affiliate_tracking" name="aliexpress_affiliate_tracking" value="{{config.aliexpress_affiliate_tracking}}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         {% endif %}
 
                         {% if user|can:'price_change_options.use' %}
-                        <div class="col-sm-offset-2"><hr /></div>
-                        <div class="col-sm-offset-2">
-                            <h3>Alerts</h3>
+                        <div class="setting-section">
+                            <h3 class="setting-title">Alerts</h3>
                         </div>
 
                         <div class="row">
-                            <div class="col-sm-6">
+                            <div class="col-sm-offset-1 col-sm-5">
                                 <div class="form-group">
                                     <label for="alert_price_change" class="col-sm-6 control-label">When the price changes</label>
                                     <div class="col-sm-4">
@@ -381,7 +464,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <div class="form-group">
                                     <label for="alert_quantity_change" class="col-sm-6 control-label">When inventory changes</label>
                                     <div class="col-sm-4">
@@ -395,7 +478,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-sm-6">
+                            <div class="col-sm-offset-1 col-sm-5">
                                 <div class="form-group">
                                     <label for="alert_product_disappears" class="col-sm-6 control-label">When a product disappears</label>
                                     <div class="col-sm-4">
@@ -408,7 +491,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-6">
+                            <div class="col-sm-5">
                                 <div class="form-group">
                                     <label for="alert_variant_disappears" class="col-sm-6 control-label">When a variant disappears</label>
                                     <div class="col-sm-4">
@@ -425,23 +508,31 @@
                         {% endif %}
 
                         {% if user|can:'aliexpress_captcha.use' %}
-                        <div class="col-sm-offset-1"><hr /></div>
 
-                        <div class="col-sm-offset-1">
-                            <h3>Aliexpress Captcha</h3>
-                        </div>
-                        <div class="col-sm-offset-2">
-                            <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox" class="js-switch all-variants-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
-                            <label for="aliexpress_captcha" class="col-sm-4 control-label" style="float:initial;text-align:left">
-                                Enable Auto Captcha Solving
-                            </label>
+                        <div class="setting-section">
+                            <h3 class="setting-title">Aliexpress Captcha</h3>
                         </div>
 
-                        <div class="col-sm-offset-1"><hr /></div>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="aliexpress_captcha" class="col-sm-4 col-xs-8 control-label">
+                                        Enable Auto Captcha Solving
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox"
+                                               class="js-switch all-variants-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-12"><hr /></div>
                         {% endif %}
 
                         <div class="form-group">
-                            <div class="col-sm-offset-2 col-sm-10">
+                            <div class="col-sm-offset-1 col-sm-10">
                                 <button data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                             </div>
                         </div>
@@ -522,6 +613,26 @@
     <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/dragula.js/dist/dragula.min.css' %}" rel="stylesheet">
 {% endcompress %}
+
+<style type="text/css">
+    label {
+        text-align: left !important;
+    }
+    .setting-section {
+        margin-top: 15px;
+        border-left: 2px #eee solid;
+        padding-top: 5px;
+        margin-left: 20px;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        background-color: rgb(250, 250, 250);
+        padding-left: 15px;
+    }
+    h3.setting-title {
+        padding: 0;
+        margin: 5px 0;
+    }
+</style>
 {% endblock %}
 
 {% block extrajs %}
