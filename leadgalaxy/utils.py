@@ -1251,6 +1251,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
                   message=email_plain,
                   html_message=email_html)
 
+        return html_message
 
 def get_countries():
     country_names = pytz.country_names
@@ -1486,13 +1487,15 @@ class ProductChangeEvent():
             'events': self.notify_events,
         }
 
-        send_email_from_template(
+        html_message = send_email_from_template(
             'product_change_notify.html',
             '[Shopified App] AliExpress Product Alert',
             self.user.email,
             data,
             nl2br=False
         )
+
+        cache.set('last_product_change_email', html_message, timeout=3600)
 
     def notify(self):
         notify_key = 'product_change_%d' % self.user.id
