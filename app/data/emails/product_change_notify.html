@@ -1,6 +1,24 @@
-Hi {{username|title}},
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <p>Hi {{username}},</p>
 
-One or more products have changed in AliExpress.
-You can find more details by clicking the link below.
+    <p>One or more products have changed in AliExpress:<br>
+	{% autoescape off %}
+		{% for event in events %}
+			{% if not foorloop.first %}<br>{% endif %}
+			{{ event }}
+		{% endfor %}
+	{% endautoescape %}
+	<p/>
 
-<a href="https://app.shopifiedapp.com/products/update"> Click Here To View Product Updates</a>
+    <p>You can find more details by clicking the link below.<br/>
+    <a href="https://app.shopifiedapp.com/products/update">Click Here To View Product Updates</a></p>
+</body>
+</html>
+
+

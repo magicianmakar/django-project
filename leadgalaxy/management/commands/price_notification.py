@@ -84,7 +84,12 @@ class Command(BaseCommand):
         if options['new_products']:
             products = products.filter(price_notification_id=0)
 
+        products = products.exclude(shopify_export__isnull=True)
+
         products_count = products.count()
+
+        self.stdout.write(self.style.MIGRATE_SUCCESS('Products Count: %d' % products_count))
+
         if products_count:
             self.stdout.write(self.style.HTTP_INFO('{} webhooks to {} product for user: {}'
                 .format(action.title(), products_count, user.username)))

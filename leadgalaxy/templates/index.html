@@ -362,6 +362,55 @@
 
                         {% endif %}
 
+                        {% if user|can:'price_changes.use' %}
+                        <div class="col-sm-offset-2"><hr /></div>
+                        <div class="col-sm-offset-2">
+                            <h3>Alerts</h3>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert_product_disappears" class="col-sm-3 control-label">When a product disappears</label>
+                            <div class="col-sm-2">
+                                <select id="alert_product_disappears" name="alert_product_disappears" class="form-control">
+                                    <option value="notify"{% if config.alert_product_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                    <option value="unpublish"{% if config.alert_product_disappears == 'unpublish' %} selected="selected"{% endif %}>Unpublish product</option>
+                                    <option value="zero_quantity"{% if config.alert_product_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert_variant_disappears" class="col-sm-3 control-label">When a variant disappears</label>
+                            <div class="col-sm-2">
+                                <select id="alert_variant_disappears" name="alert_variant_disappears" class="form-control">
+                                    <option value="notify"{% if config.alert_variant_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                    <option value="remove"{% if config.alert_variant_disappears == 'remove' %} selected="selected"{% endif %}>Remove the variant</option>
+                                    <option value="zero_quantity"{% if config.alert_variant_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert_price_change" class="col-sm-3 control-label">When the price changes</label>
+                            <div class="col-sm-2">
+                                <select id="alert_price_change" name="alert_price_change" class="form-control">
+                                    <option value="notify" {% if config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                    <option value="update" {% if config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update with the same margin</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert_quantity_change" class="col-sm-3 control-label">When inventory changes</label>
+                            <div class="col-sm-2">
+                                <select id="alert_quantity_change" name="alert_quantity_change" class="form-control">
+                                    <option value="notify"{% if config.alert_quantity_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                    <option value="update"{% if config.alert_quantity_change == 'update' %} selected="selected"{% endif %}>Update automatically</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {% if user|can:'aliexpress_captcha.use' %}
                         <div class="col-sm-offset-1"><hr /></div>
 

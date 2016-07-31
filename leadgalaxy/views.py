@@ -1981,7 +1981,14 @@ def webhook(request, provider, option):
         product_change = AliexpressProductChange(product=product, user=product.user, data=request.body)
         product_change.save()
 
-        utils.product_change_notify(product.user)
+        if product.user.can('price_changes.use'):
+            # TODO: Remove from the ali-web server if user doesn't have permission
+            tasks.product_change_alert.delay(product_change.pk)
+        else:
+            product.price_notification_id = 0
+            product.save()
+
+            return JsonResponse({'error': 'User do not have Alerts permission'}, status=404)
 
         return JsonResponse({'status': 'ok'})
 

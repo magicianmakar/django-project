@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'leadgalaxy',
     'shopify_oauth',
     'shopify_orders',
+    'shopify_revision',
     'stripe_subscription',
     'product_feed',
 )

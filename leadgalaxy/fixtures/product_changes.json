@@ -1,0 +1,126 @@
+[
+    {
+        "fields": {
+            "username": "admin",
+            "first_name": "Guilherme",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": true,
+            "is_staff": true,
+            "last_login": "2016-06-15T20:58:22.298Z",
+            "groups": [],
+            "user_permissions": [],
+            "password": "pbkdf2_sha256$20000$Weadt6isGGYM$HM4tzHKP4LM7ZCyNaXeD6C3tkEFwG8jNBHw+2gf+6eY=",
+            "email": "guilherme.dcosta@gmail.com",
+            "date_joined": "2016-05-13T22:02:57.845Z"
+        },
+        "model": "auth.user",
+        "pk": 1
+    }, {
+        "fields": {
+            "api_url": "https://d43e2fd73231e565c290a548c05f9c1f:c2fb34b864894a4f03e6a00205301de7@rank-engine.myshopify.com",
+            "title": "Uncommon Now",
+            "created_at": "2016-05-13T22:11:41.685Z",
+            "is_active": true,
+            "updated_at": "2016-05-13T22:11:41.685Z",
+            "store_hash": "f19b10428f577771606fa71585d85abd",
+            "user": 1
+        },
+        "model": "leadgalaxy.shopifystore",
+        "pk": 1
+    }, {
+        "fields": {
+            "product": null,
+            "original_url": "http://www.aliexpress.com/store/product/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4/100077_32618617479.html",
+            "shopify_id": 5730897861,
+            "created_at": "2016-06-04T03:48:06.719Z",
+            "is_active": false,
+            "supplier_url": "",
+            "supplier_name": "",
+            "store": 1
+        },
+        "model": "leadgalaxy.shopifyproductexport",
+        "pk": 1
+    }, {
+        "fields": {
+            "created_at": "2016-05-21T18:01:26.806Z",
+            "shopify_export": 1,
+            "product_type": "",
+            "title": "Huawei Honor 4C Enhanced Edition Cellphone 5.0 inch 13.0MP 2G/3G/4G LTE Android4.4 Octa Core 2GB RAM 16GB ROM Mobile Phone",
+            "price_notification_id": 6,
+            "notes": "",
+            "is_active": true,
+            "updated_at": "2016-06-08T13:30:38.663Z",
+            "parent_product": null,
+            "tag": "",
+            "original_data": "{\"title\":\"Huawei Honor 4C Enhanced Edition Cellphone 5.0 inch 13.0MP 2G/3G/4G LTE Android4.4 Octa Core 2GB RAM 16GB ROM Mobile Phone\",\"price\":140.62,\"images\":[],\"type\":\"\",\"description\":\"\",\"original_url\":\"http://www.aliexpress.com/store/product/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4/100077_32618617479.html\",\"store\":{\"id\":\"100077\",\"name\":\"Super Egrow Group\",\"url\":\"http://www.aliexpress.com/store/100077\",\"contact\":\"http://message.aliexpress.com/message/new.htm?productId=vcxd6kvqbYsK3OqnhZ%2BALw%3D%3D&messageType=product&memberType=seller\"},\"extra_images\":[],\"variants_images\":{},\"variants\":[{\"title\":\"Bundle\",\"values\":[\"Rom 8GB Version\",\"Rom 16GB Version\"]},{\"title\":\"Color\",\"values\":[\"White\",\"Black\"]}],\"weight\":0.99,\"description_simplified\":\"",
+            "variants_map": "{\"18091807813\": \"Rom 8GB Version,Black\", \"18091807877\": \"Rom 16GB Version,Black\", \"18091807685\": \"Rom 8GB Version,White\", \"18091807749\": \"Rom 16GB Version,White\"}",
+            "data": "{\"description\": \"\", \"weight\": 0.99, \"tags\": \"\", \"price\": 140.62, \"compare_at_price\": null, \"images\": [\"http://g02.a.alicdn.com/kf/HTB19pG3JVXXXXXAXpXXq6xXFXXXf/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4.jpg\", \"http://g02.a.alicdn.com/kf/HTB1lJKWLVXXXXcaXVXXq6xXFXXXc/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4.jpg\", \"http://g01.a.alicdn.com/kf/HTB1u59mLVXXXXcPXXXXq6xXFXXXQ/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4.jpg\", \"http://g02.a.alicdn.com/kf/HTB13oLhLVXXXXXyXXXXq6xXFXXXX/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4.jpg\", \"http://g03.a.alicdn.com/kf/HTB1B1i1LVXXXXXGXVXXq6xXFXXXA/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4.jpg\", \"http://g01.a.alicdn.com/kf/HTB1eSyYLVXXXXa_XVXXq6xXFXXX5/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4.jpg\"], \"variants\": [{\"values\": [\"Rom 8GB Version\", \"Rom 16GB Version\"], \"title\": \"Bundle\"}, {\"values\": [\"White\", \"Black\"], \"title\": \"Color\"}], \"original_url\": \"http://www.aliexpress.com/store/product/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4/100077_32618617479.html\", \"type\": \"\", \"title\": \"Huawei Honor 4C Enhanced Edition Cellphone 5.0 inch 13.0MP 2G/3G/4G LTE Android4.4 Octa Core 2GB RAM 16GB ROM Mobile Phone\", \"weight_unit\": \"lb\", \"published\": false, \"variants_images\": {}, \"store\": {\"url\": \"http://www.aliexpress.com/store/100077\", \"contact\": \"http://message.aliexpress.com/message/new.htm?productId=vcxd6kvqbYsK3OqnhZ%2BALw%3D%3D&messageType=product&memberType=seller\", \"id\": \"100077\", \"name\": \"Super Egrow Group\"}}",
+            "price": 140.62,
+            "store": 1,
+            "user": 1
+        },
+        "model": "leadgalaxy.shopifyproduct",
+        "pk": 3
+    }, {
+        "fields": {
+            "product": 3,
+            "created_at": "2016-05-26T01:43:18.902Z",
+            "updated_at": "2016-06-16T01:40:54.234Z",
+            "user": 1,
+            "seen": true,
+            "hidden": false,
+            "data": "{\"changes\": {\"product\": [{\"category\": \"Vendor\", \"new_value\": true, \"old_value\": false}], \"variants\": [{\"changes\": [{\"category\": \"Price\", \"new_value\": 2.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003982#Rom 8GB Version;14:29#White\", \"variant_id\": \"200003982,29\"}, {\"changes\": [{\"category\": \"Availability\", \"new_value\": 3.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003983#Rom 16GB Version;14:193#Black\", \"variant_id\": \"200003983,193\"}, {\"changes\": [{\"category\": \"removed\", \"new_value\": 4.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003983#Rom 16GB Version;14:29#White\", \"variant_id\": \"200003983,29\"}]}, \"product_id\": 32618617479, \"store_id\": 100077}"
+        },
+        "model": "leadgalaxy.aliexpressproductchange",
+        "pk": 1
+    }, {
+        "fields": {
+            "product": 3,
+            "created_at": "2016-05-26T01:50:16.785Z",
+            "updated_at": "2016-05-26T01:50:16.785Z",
+            "user": 1,
+            "seen": true,
+            "hidden": false,
+            "data": "{\"changes\": {\"product\": [], \"variants\": [{\"changes\": [{\"category\": \"Price\", \"new_value\": 2.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003982#Rom 8GB Version;14:29#White\", \"variant_id\": \"200003982,29\"}, {\"changes\": [{\"category\": \"Price\", \"new_value\": 3.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003982#Rom 8GB Version;14:193#Black\", \"variant_id\": \"200003982,193\"}, {\"changes\": [{\"category\": \"Price\", \"new_value\": 3.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003983#Rom 16GB Version;14:193#Black\", \"variant_id\": \"200003983,193\"}, {\"changes\": [{\"category\": \"Price\", \"new_value\": 4.0, \"old_value\": 1.0}], \"variant_desc\": \"200000828:200003983#Rom 16GB Version;14:29#White\", \"variant_id\": \"200003983,29\"}]}, \"product_id\": 32618617479, \"store_id\": 100077}"
+        },
+        "model": "leadgalaxy.aliexpressproductchange",
+        "pk": 2
+    }, {
+        "fields": {
+            "product": 3,
+            "created_at": "2016-05-26T01:52:48.044Z",
+            "updated_at": "2016-06-16T01:46:03.168Z",
+            "user": 1,
+            "seen": true,
+            "hidden": false,
+            "data": "{\"changes\": {\"product\": [], \"variants\": [{\"changes\": [{\"category\": \"Availability\", \"new_value\": 100, \"old_value\": 0}], \"variant_desc\": \"200000828:200003982#Rom 8GB Version;14:29#White\", \"variant_id\": \"200003982,29\"}]}, \"product_id\": 32618617479, \"store_id\": 100077}"
+        },
+        "model": "leadgalaxy.aliexpressproductchange",
+        "pk": 3
+    }, {
+        "fields": {
+            "product": 3,
+            "created_at": "2016-05-26T20:54:54.324Z",
+            "updated_at": "2016-06-16T01:47:31.627Z",
+            "user": 1,
+            "seen": true,
+            "hidden": false,
+            "data": "{\"changes\": {\"product\": [], \"variants\": [{\"changes\": [{\"category\": \"removed\", \"price\": 138.74, \"quantity\": 5}], \"variant_desc\": \"200000828:200003982#Rom 8GB Version;14:29#White\", \"variant_id\": \"200003982,29\"}]}, \"product_id\": 32618617479, \"store_id\": 100077}"
+        },
+        "model": "leadgalaxy.aliexpressproductchange",
+        "pk": 4
+   }, {
+        "fields": {
+            "product": 3,
+            "created_at": "2016-05-26T01:43:18.902Z",
+            "updated_at": "2016-06-16T01:40:54.234Z",
+            "user": 1,
+            "seen": true,
+            "hidden": false,
+            "data": "{\"changes\": {\"product\": [{\"category\": \"Vendor\", \"new_value\": false, \"old_value\": true}]}}"
+        },
+        "model": "leadgalaxy.aliexpressproductchange",
+        "pk": 5
+     }
+]

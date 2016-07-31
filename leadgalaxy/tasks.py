@@ -459,3 +459,14 @@ def generate_feed(feed_id, nocache=False, by_fb=False):
         feed.save()
 
         raven_client.captureException()
+
+
+@app.task(base=CaptureFailure, ignore_result=True)
+def product_change_alert(change_id):
+    try:
+        product_change = AliexpressProductChange.objects.get(pk=change_id)
+        product_change_event = utils.ProductChangeEvent(product_change)
+        product_change_event.take_action()
+
+    except:
+        raven_client.captureException()
