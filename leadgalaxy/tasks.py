@@ -289,7 +289,7 @@ def export_product(req_data, target, user_id):
     }
 
 
-@app.task(bind=True, base=CaptureFailure)
+@app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_product(self, store_id, product_id, shopify_product=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -344,7 +344,7 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@app.task(bind=True, base=CaptureFailure)
+@app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_order(self, store_id, order_id, shopify_order=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -383,7 +383,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None):
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@app.task(base=CaptureFailure)
+@app.task(base=CaptureFailure, ignore_result=True)
 def smartmemeber_webhook_call(subdomain, data):
     try:
         data['cprodtitle'] = 'Shopified App Success Club OTO3'
@@ -401,7 +401,7 @@ def smartmemeber_webhook_call(subdomain, data):
         raven_client.captureException()
 
 
-@app.task(base=CaptureFailure, bind=True)
+@app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -434,14 +434,14 @@ def add_ordered_note(self, store_id, order_id, note):
             raise self.retry(exc=e, countdown=10, max_retries=3)
 
 
-@app.task(base=CaptureFailure)
+@app.task(base=CaptureFailure, ignore_result=True)
 def invite_user_to_slack(slack_teams, data):
     for team in slack_teams.split(','):
         print 'Invite to %s' % team
         utils.slack_invite(data, team=team)
 
 
-@app.task(base=CaptureFailure)
+@app.task(base=CaptureFailure, ignore_result=True)
 def generate_feed(feed_id, nocache=False, by_fb=False):
     from product_feed.feed import generate_product_feed
     from product_feed.models import FeedStatus
