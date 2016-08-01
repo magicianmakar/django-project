@@ -537,6 +537,9 @@ class ShopifyProduct(models.Model):
 
         super(ShopifyProduct, self).save(*args, **kwargs)
 
+    def is_connected(self):
+        return self.get_shopify_id() is not None
+
     def shopify_link(self):
         shopify_id = self.get_shopify_id()
 

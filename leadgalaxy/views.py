@@ -1981,7 +1981,7 @@ def webhook(request, provider, option):
         product_change = AliexpressProductChange(product=product, user=product.user, data=request.body)
         product_change.save()
 
-        if product.user.can('price_changes.use'):
+        if product.user.can('price_changes.use') and product.is_connected():
             # TODO: Remove from the ali-web server if user doesn't have permission
             tasks.product_change_alert.delay(product_change.pk)
         else:
