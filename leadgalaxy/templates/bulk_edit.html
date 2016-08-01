@@ -79,7 +79,7 @@
                                 <input style="margin: 0px;padding: 10px;width: 100%; height: 45px;border:0 none;" name="type[{{item.id}}]" value="{{item.product.type}}" />
                             </td>
                             <td style="padding: 0px;">
-                                <span style=""><input style="margin: 0px;padding: 10px 0px 0px 10px;width: 45px; height: 45px;border:0 none;" name="weight[{{item.id}}]" value="{{item.product.weight}}" />
+                                <span style=""><input style="margin: 0px;padding: 10px 0px 0px 10px;width: 45px; height: 45px;border:0 none;" name="weight[{{item.id}}]" value="{{item.product.weight|default:''}}" />
                                     <i>{{item.product.weight_unit}}</i></span>
                             </td>
                         </tr>
