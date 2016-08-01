@@ -216,7 +216,7 @@ def process_webhook_event(request, event_id, raven_client):
         invoice = event.data.object
         customer = StripeCustomer.objects.get(customer_id=invoice.customer)
 
-        if customer.have_source() and invoice.attempted and invoice.attempt_count == 1:
+        if customer.have_source() and invoice.attempted:
             from leadgalaxy.utils import send_email_from_template
 
             user = User.objects.get(stripe_customer__customer_id=invoice.customer)
