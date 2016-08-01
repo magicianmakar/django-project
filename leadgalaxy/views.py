@@ -841,7 +841,7 @@ def proccess_api(request, user, method, target, data):
             product_export.supplier_url = supplier_url
             product_export.save()
 
-        except ValueError, ShopifyProductExport.DoesNotExist:
+        except (ValueError, ShopifyProductExport.DoesNotExist):
             product_export = ShopifyProductExport.objects.create(
                 store=store,
                 product=product,
