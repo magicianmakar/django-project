@@ -1495,7 +1495,6 @@ class ProductChangeEvent():
     def take_action(self):
         if self.notify():
             self.send_email()
-            # product_change_notify(self.user)
 
         data = self.get_shopify_product()
         self.revision.data = data
@@ -1537,35 +1536,31 @@ class ProductChangeEvent():
         from django.template.defaultfilters import truncatewords
 
         product_name = truncatewords(self.product.get_product(), 5)
-        product_id = self.product.id
 
         for product_change in self.product_changes:
-            if product_change['category'] == 'Vendor' and self.config.get('product_disappears') == 'notify':
+            if product_change['category'] == 'Vendor' and self.config['product_disappears'] == 'notify':
                 availability = "Online" if not product_change['new_value'] else "Offline"
                 self.notify_events.append(
                     'Product <a href="{}/{}">{}</a> is {}.'.format(
-                        self.base_product_url, product_id, product_name, availability))
+                        self.base_product_url, self.product.id, product_name, availability))
 
         for variant in self.variants_changes:
             variant_name = get_variant_name(variant)
             for change in variant['changes']:
-                if change['category'] == 'removed':
-                    if self.config.get('variant_disappears') == 'notify':
-                        self.notify_events.append(
-                            'Variant <a href="{}/{}">{}</a> were removed.'.format(
-                                self.base_product_url, product_id, variant_name))
+                if self.config['variant_disappears'] == 'notify' and change['category'] == 'removed':
+                    self.notify_events.append(
+                        'Variant <a href="{}/{}">{}</a> were removed.'.format(
+                            self.base_product_url, self.product.id, variant_name))
 
-                elif change['category'] == 'Price':
-                    if self.config.get('price_change') == 'notify':
-                        self.notify_events.append(
-                            'Variants <a href="{}/{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
-                                self.base_product_url, product_id, variant_name, change['old_value'], change['new_value']))
+                elif self.config['price_change'] == 'notify' and change['category'] == 'Price':
+                    self.notify_events.append(
+                        'Variants <a href="{}/{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
+                            self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
 
-                elif change['category'] == 'Availability':
-                    if self.config.get('quantity_change') == 'notify':
-                        self.notify_events.append(
-                            'Variants <a href="{}/{}">{}</a> has its Availability changed from {} to {}.'.format(
-                                self.base_product_url, product_id, variant_name, change['old_value'], change['new_value']))
+                elif self.config['quantity_change'] == 'notify' and change['category'] == 'Availability':
+                    self.notify_events.append(
+                        'Variants <a href="{}/{}">{}</a> has its Availability changed from {} to {}.'.format(
+                            self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
 
         self.notify_events = list(set(self.notify_events))
 
@@ -1612,10 +1607,10 @@ class ProductChangeEvent():
     def product_actions(self, data):
         for product_change in self.product_changes:
             if product_change['category'] == 'Vendor':
-                if self.config.get('product_disappears') == 'unpublish':
+                if self.config['product_disappears'] == 'unpublish':
                     data['product']['published'] = not product_change['new_value']
 
-                elif self.config.get('product_disappears') == 'zero_quantity':
+                elif self.config['product_disappears'] == 'zero_quantity':
                     self.save_revision = True
                     if product_change['new_value'] is True:
                         for variant in data['product']['variants']:
@@ -1672,16 +1667,16 @@ class ProductChangeEvent():
                 if len(found_variants) > 0:
                     if change['category'] == 'removed':
                         # take proper action with the found variant
-                        if self.config.get('variant_disappears') == 'remove':
+                        if self.config['variant_disappears'] == 'remove':
                             for found in found_variants[::-1]:
                                 del data['product']['variants'][found]
-                        elif self.config.get('variant_disappears') == 'zero_quantity':
+                        elif self.config['variant_disappears'] == 'zero_quantity':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = 0
 
                     elif change['category'] == 'Price':
                         # take proper action with the found variant
-                        if self.config.get('price_change') == 'update':
+                        if self.config['price_change'] == 'update':
                             for found in found_variants:
                                 data['product']['variants'][found]['price'] = data['product']['variants'][found]['_original_price']
                                 selling_price = float(data['product']['variants'][found]['price'])
@@ -1689,7 +1684,7 @@ class ProductChangeEvent():
                                 data['product']['variants'][found]['price'] = change['new_value'] + (selling_price - old_price)
 
                     elif change['category'] == 'Availability':
-                        if self.config.get('quantity_change') == 'update':
+                        if self.config['quantity_change'] == 'update':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = change['new_value']
         return data
