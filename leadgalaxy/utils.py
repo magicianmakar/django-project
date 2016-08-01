@@ -551,6 +551,37 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
     return shippement_data
 
 
+def get_store_from_request(request):
+    """
+    Return ShopifyStore from based on `store` value or last saved store
+    """
+
+    from django.core.exceptions import PermissionDenied
+
+    store = None
+    stores = request.user.profile.get_active_stores()
+
+    if request.GET.get('store'):
+        store = stores.get(id=request.GET.get('store'))
+        request.user.can_view(store)
+
+        request.session['last_store'] = store.id
+
+    if not store:
+        try:
+            if 'last_store' in request.session:
+                store = stores.get(id=request.session['last_store'])
+                request.user.can_view(store)
+
+        except (PermissionDenied, ShopifyStore.DoesNotExist):
+            store = None
+
+    if not store:
+        store = stores.first()
+
+    return store
+
+
 def get_myshopify_link(user, default_store, link):
     stores = [default_store, ]
     for i in user.profile.get_active_stores():

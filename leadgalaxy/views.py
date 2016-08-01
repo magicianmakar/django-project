@@ -3159,28 +3159,15 @@ def orders_view(request):
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
 
-    stores = []
     all_orders = []
     store = None
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
 
-    if request.GET.get('store'):
-        store = ShopifyStore.objects.get(id=request.GET.get('store'))
-        request.session['last_store'] = store.id
-    else:
-        if 'last_store' in request.session:
-            store = ShopifyStore.objects.get(id=request.session['last_store'])
-        else:
-            stores = request.user.profile.get_active_stores()
-            if len(stores):
-                store = stores[0]
-
-        if not store:
-            messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return HttpResponseRedirect('/')
-
-    request.user.can_view(store)
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Orders page.')
+        return HttpResponseRedirect('/')
 
     models_user = request.user.models_user
 
@@ -3521,22 +3508,10 @@ def orders_track(request):
     fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
 
-    if request.GET.get('store'):
-        store = ShopifyStore.objects.get(id=request.GET.get('store'))
-        request.session['last_store'] = store.id
-    else:
-        if 'last_store' in request.session:
-            store = ShopifyStore.objects.get(id=request.session['last_store'])
-        else:
-            stores = request.user.profile.get_active_stores()
-            if len(stores):
-                store = stores[0]
-
-        if not store:
-            messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return HttpResponseRedirect('/')
-
-    request.user.can_view(store)
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Tracking page.')
+        return HttpResponseRedirect('/')
 
     orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store)
 
@@ -3634,23 +3609,10 @@ def product_alerts(request):
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)
 
-    if request.GET.get('store'):
-        store = ShopifyStore.objects.get(id=request.GET.get('store'))
-    else:
-        if 'last_store' in request.session:
-            store = ShopifyStore.objects.get(id=request.session['last_store'])
-        else:
-            stores = request.user.profile.get_active_stores()
-            if len(stores):
-                store = stores[0]
-
-        if not store:
-            messages.warning(request, 'Please add at least one store before using the Alerts page.')
-            return HttpResponseRedirect('/')
-
-    request.user.can_view(store)
-    # if the user has rights to access this store we save the store on session.
-    request.session['last_store'] = store.id
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Alerts page.')
+        return HttpResponseRedirect('/')
 
     changes = AliexpressProductChange.objects.select_related('product') \
                                      .select_related('product__shopify_export') \
