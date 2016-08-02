@@ -1,6 +1,7 @@
 import os
 import requests
 import time
+import random
 from celery import Celery
 from celery import Task
 from simplejson import JSONDecodeError
@@ -34,6 +35,14 @@ class CaptureFailure(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         raven_client.captureException(exc_info=einfo.exc_info)
+
+
+def retry_countdown(key, retries):
+    retries = max(1, retries)
+    countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries*60) + (60 * retries)
+    cache.set(key, countdown+random.randint(5, 30), timeout=countdown+60)
+
+    return countdown
 
 
 @app.task(base=CaptureFailure)
@@ -329,6 +338,9 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
         # Delete Product images cache
         ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
+    except ShopifyStore.DoesNotExist:
+        raven_client.captureException()
+
     except Exception as e:
         raven_client.captureException(level='warning', extra={
             'Store': store.title,
@@ -337,10 +349,7 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
         })
 
         if not self.request.called_directly:
-            retry_key = 'retry_product_{}'.format(store.id)
-            countdown = cache.get(retry_key, 10) * self.request.retries
-            cache.set(retry_key, countdown+5, timeout=countdown+10)
-
+            countdown = retry_countdown('retry_product_{}'.format(product_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
@@ -368,6 +377,9 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None):
     except AssertionError:
         raven_client.captureMessage('Store is being imported', extra={'store': store})
 
+    except ShopifyStore.DoesNotExist:
+        raven_client.captureException()
+
     except Exception as e:
         raven_client.captureException(level='warning', extra={
             'Store': store.title,
@@ -376,10 +388,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None):
         })
 
         if not self.request.called_directly:
-            retry_key = 'retry_order_{}'.format(store.id)
-            countdown = cache.get(retry_key, 10) * self.request.retries
-            cache.set(retry_key, countdown+5, timeout=countdown+10)
-
+            countdown = retry_countdown('retry_order_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
@@ -419,7 +428,8 @@ def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
 
     except Exception as e:
         if not self.request.called_directly:
-            raise self.retry(exc=e, countdown=10, max_retries=3)
+            countdown = retry_countdown('retry_mark_ordered_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
 @app.task(base=CaptureFailure, bind=True)
@@ -431,7 +441,8 @@ def add_ordered_note(self, store_id, order_id, note):
 
     except Exception as e:
         if not self.request.called_directly:
-            raise self.retry(exc=e, countdown=10, max_retries=3)
+            countdown = retry_countdown('retry_ordered_note_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
 @app.task(base=CaptureFailure, ignore_result=True)
