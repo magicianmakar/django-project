@@ -5,5 +5,5 @@ import shopify_revision.views
 urlpatterns = patterns(
     '',
     url(r'^last$', shopify_revision.views.last,
-        name='product_feeds'),
+        name='shopify_revision_last'),
 )
