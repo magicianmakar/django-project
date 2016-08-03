@@ -133,9 +133,10 @@ def callback(request):
     verify_shopify_webhook(request)
     if request.session.get('shopify_state', True) != request.GET.get('state', False):
         raven_client.captureMessage(
-            'HMAC Verification failed',
+            'State does not match',
             level='warning', request=request,
-            extra={'ShouldBe': request.session.get('shopify_state')})
+            extra={'Current': request.GET.get('state'),
+                   'ShouldBe': request.session.get('shopify_state')})
 
         raise PermissionDenied('State not matching')
 
