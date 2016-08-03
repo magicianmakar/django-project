@@ -1007,14 +1007,17 @@ def order_track_fulfillment(**kwargs):
         if (kwargs.get('use_usps') is None and is_usps) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = "USPS"
         else:
-            aftership_domain = 'track'
+            aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
 
             if store_id and type(user_config.get('aftership_domain')) is dict:
                 aftership_domain = user_config.get('aftership_domain').get(str(store_id), aftership_domain)
+                if '{{tracking_number}}' not in aftership_domain:
+                    aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
+                elif not aftership_domain.startswith('http'):
+                    aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
 
             data['fulfillment']['tracking_company'] = "Other"
-            data['fulfillment']['tracking_url'] = "http://{}.aftership.com/{}".format(aftership_domain,
-                                                                                      source_tracking)
+            data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
     if user_config.get('validate_tracking_number', True) and \
             not is_valide_tracking_number(source_tracking):
