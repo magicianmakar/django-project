@@ -157,9 +157,19 @@ def export_product(req_data, target, user_id):
                     return {'error': (u'Shopify Error: {}\n\n'
                                       'Please follow this instructions to resolve this issue:'
                                       '\nhttps://app.shopifiedapp.com/pages/view/15'
-                                      ).format(utils.format_shopify_error(rep))}
+                                      ).format(shopify_error)}
+                elif 'handle: has already been taken' in shopify_error:
+                    return {'error': (u'Shopify Error: {}\n\n'
+                                      'Please Change your product title by adding or removing one or more words'
+                                      ).format(shopify_error)}
+                elif 'Exceeded maximum number of variants allowed' in shopify_error:
+                    return {'error': (u'Shopify Error: {}\n\n'
+                                      'Shopify will only allow 100 variant combinations per product.\n'
+                                      'Please delete some of the Color, Size or an other '
+                                      'variant options to meet Shopify\'s requirements.'
+                                      ).format(shopify_error)}
                 else:
-                    return {'error': u'Shopify Error: {}'.format(utils.format_shopify_error(rep))}
+                    return {'error': u'Shopify Error: {}'.format(shopify_error)}
 
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
             raven_client.captureException()
