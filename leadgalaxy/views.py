@@ -3348,8 +3348,14 @@ def orders_view(request):
     api_key, tracking_id = utils.get_user_affiliate(models_user)
 
     for index, order in enumerate(page):
-        order['date_str'] = arrow.get(order['created_at']).format('MM/DD/YYYY')
-        order['date_tooltip'] = arrow.get(order['created_at']).format('YYYY-MM-DD HH:mm:ss ZZ')
+        created_at = arrow.get(order['created_at'])
+        try:
+            created_at = created_at.to(request.session['django_timezone'])
+        except:
+            raven_client.captureException(level='warning')
+
+        order['date_str'] = created_at.format('MM/DD/YYYY')
+        order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
         order['store'] = store
         order['placed_orders'] = 0
