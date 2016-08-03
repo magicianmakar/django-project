@@ -170,7 +170,7 @@ class UserProfile(models.Model):
 
     def get_active_stores(self, flat=False):
         if self.user.is_subuser:
-            stores = self.subuser_stores.all()
+            stores = self.subuser_stores.all(is_active=True)
         else:
             stores = self.user.shopifystore_set.filter(is_active=True)
 
