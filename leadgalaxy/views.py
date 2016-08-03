@@ -3299,6 +3299,26 @@ def orders_view(request):
                 shopify_orders = json.loads(zlib.decompress(shopify_orders))
 
             page = shopify_orders_utils.sort_orders(shopify_orders, page)
+
+            # Update outdated order data by comparing last update timestamp
+            countdown = 1
+            for order in page:
+                if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
+                    tasks.update_shopify_order.apply_async(
+                        args=[store.id, order['id']],
+                        kwarg={'shopify_order': order, 'from_webhook': False},
+                        countdown=countdown)
+
+                    countdown = countdown + 1
+
+                    try:
+                        print u'Outdated Order: {} > {} - Store: {}'.format(
+                            arrow.get(order['updated_at']).to('utc'),
+                            arrow.get(order['db_updated_at']).to('utc'),
+                            store)
+                    except:
+                        raven_client.captureException(level='warning')
+
         else:
             page = []
 

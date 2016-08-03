@@ -368,7 +368,7 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
 
 
 @app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def update_shopify_order(self, store_id, order_id, shopify_order=None):
+def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
@@ -398,6 +398,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None):
         raven_client.captureException(level='warning', extra={
             'Store': store.title,
             'Order': order_id,
+            'from_webhook': from_webhook,
             'Retries': self.request.retries
         })
 

@@ -41,6 +41,7 @@ def sort_orders(orders, page):
     for i in page:
         order = orders_map.get(i.order_id)
         if order:
+            order['db_updated_at'] = arrow.get(i.updated_at).timestamp
             resorted.append(order)
 
     return resorted
