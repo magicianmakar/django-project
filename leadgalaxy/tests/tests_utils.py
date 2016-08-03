@@ -99,7 +99,7 @@ class FulfillmentTestCase(TestCase):
         track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
         data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://track.aftership.com/{}".format(track.source_tracking))
         self.assertEqual(len(data['fulfillment']['line_items']), 1)
         self.assertEqual(data['fulfillment']['line_items'][0]['id'], '1654810')
 
@@ -113,7 +113,7 @@ class FulfillmentTestCase(TestCase):
         track = self.create_track('5415135176', '1654812', 'YT1614016214415424', 'US')
         data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(track.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://track.aftership.com/{}".format(track.source_tracking))
 
     def test_non_us_address(self):
         track = self.create_track('5415135177', '1654813', 'MA7565915257226HK', 'MA')
@@ -150,7 +150,7 @@ class FulfillmentTestCase(TestCase):
     def test_custom_aftership_domain(self):
         track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
         data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(track.source_tracking))
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(track.source_tracking))
 
     def test_manual_fulfilement(self):
         data = utils.order_track_fulfillment(**self.fulfillment_data)
@@ -172,7 +172,7 @@ class FulfillmentTestCase(TestCase):
         self.fulfillment_data['use_usps'] = False
         data = utils.order_track_fulfillment(**self.fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://track.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://track.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
 
     def test_manual_fulfilement_aftership_custom(self):
         # Custom Aftership domain
@@ -181,7 +181,7 @@ class FulfillmentTestCase(TestCase):
         self.fulfillment_data['store_id'] = 2
         self.fulfillment_data['user_config']['aftership_domain'] = {"2": "uncommonnow"}
         data = utils.order_track_fulfillment(**self.fulfillment_data)
-        self.assertEqual(data['fulfillment']['tracking_url'], "https://uncommonnow.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
 
     def test_manual_fulfilement_empty_track_with_shopifyorder(self):
         # Empty Tracking with ShopifyOrder

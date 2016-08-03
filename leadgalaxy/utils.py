@@ -1013,8 +1013,8 @@ def order_track_fulfillment(**kwargs):
                 aftership_domain = user_config.get('aftership_domain').get(str(store_id), aftership_domain)
 
             data['fulfillment']['tracking_company'] = "Other"
-            data['fulfillment']['tracking_url'] = "https://{}.aftership.com/{}".format(aftership_domain,
-                                                                                       source_tracking)
+            data['fulfillment']['tracking_url'] = "http://{}.aftership.com/{}".format(aftership_domain,
+                                                                                      source_tracking)
 
     if user_config.get('validate_tracking_number', True) and \
             not is_valide_tracking_number(source_tracking):
