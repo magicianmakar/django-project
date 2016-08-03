@@ -977,7 +977,7 @@ def proccess_api(request, user, method, target, data):
         config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
 
         for k in config.keys():
-            if k.startswith('_'):
+            if k.startswith('_') or k == 'access_token':
                 del config[k]
 
         extension_release = cache.get('extension_release')
