@@ -17,7 +17,7 @@ export SHOPIFY_API_SECRET=""
 
 apt-get update -qy
 
-apt-get install -y python-dev python-pip libmysqld-dev libssl-dev libffi-dev libxml2-dev libxslt1-dev
+apt-get install -y python-dev python-pip python-virtualenv libmysqld-dev libssl-dev libffi-dev libxml2-dev libxslt1-dev libpq-dev
 
 if [ ! -d "venv" ]; then
     virtualenv venv
