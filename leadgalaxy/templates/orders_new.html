@@ -227,7 +227,9 @@
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
                                     </div>
                                     <div class="col-xs-2">
-                                        <span class="itooltip" title="{{order.date_tooltip}}">{{order.date_str}}</span>
+                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #ccc;border-radius: 3px;">
+                                        {% date_humanize order.date %}
+                                        </span>
                                     </div>
                                     <div class="col-xs-2">
                                         <span class="badge badge-{% if order.financial_status != 'paid' %}warning{% else %}primary{% endif %}">
