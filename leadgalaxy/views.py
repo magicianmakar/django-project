@@ -3354,6 +3354,7 @@ def orders_view(request):
         except:
             raven_client.captureException(level='warning')
 
+        order['date'] = created_at
         order['date_str'] = created_at.format('MM/DD/YYYY')
         order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])

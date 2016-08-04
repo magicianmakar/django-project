@@ -88,7 +88,8 @@ class Command(BaseCommand):
 
         products_count = products.count()
 
-        self.stdout.write(self.style.MIGRATE_SUCCESS('Products Count: %d' % products_count))
+        if products_count:
+            self.stdout.write(self.style.MIGRATE_SUCCESS('Products Count: %d' % products_count))
 
         if products_count:
             self.stdout.write(self.style.HTTP_INFO('{} webhooks to {} product for user: {}'
