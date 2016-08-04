@@ -223,23 +223,23 @@
                         <div class="order" order-id="{{order.id}}" connected="{{order.connected_lines}}">
                             <div class="header">
                                 <div class="row">
-                                    <div class="col-md-2">
+                                    <div class="col-xs-2">
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-xs-2">
                                         <span class="itooltip" title="{{order.date_tooltip}}">{{order.date_str}}</span>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-xs-2">
                                         <span class="badge badge-{% if order.financial_status != 'paid' %}warning{% else %}primary{% endif %}">
                                             {{order.financial_status|title}}
                                         </span>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-xs-2">
                                         <span class="badge badge-{% if not order.fulfillment_status %}warning{% else %}primary{% endif %}">
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-xs-3">
                                         {% if order.placed_orders == 0 %}
                                             <span class="badge badge-danger primary" style="width:15px;height:15px">&nbsp;</span>
                                             No Products Ordered
@@ -251,7 +251,7 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-md-1 text-right">
+                                    <div class="col-xs-1 text-right">
                                         {% if user|can:'combined_order.use' %}
                                         <button class="btn btn-success btn-xs order-all"
                                                 order-id="{{order.id}}" style="display:none">Order All</button>
@@ -262,7 +262,7 @@
 
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
-                                    <div class="col-md-3">
+                                    <div class="col-md-3 col-xs-6">
                                         {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}<br>
                                         {{order.shipping_address.address1}}<br>
                                         {{order.shipping_address.address2}}
@@ -281,7 +281,7 @@
 
                                         <br> <b>{{order.shipping_address.country}}</b>
                                     </div>
-                                    <div class="col-md-1">
+                                    <div class="col-md-1 col-xs-1">
                                         {% if order.shipping_address.country_code %}
                                         <img class="itooltip" style="width: 16px" title="{{order.shipping_address.country}}" src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping_address.country_code|lower}}.svg">
                                         <br />
@@ -295,7 +295,7 @@
                                         $<b>{{order.total_price}}</b>
                                     </div>
                                     <div class="col-md-3 col-md-offset-3">
-                                        <div class="note-panel panel panel-default">
+                                        <div class="note-panel panel panel-default hidden-sm hidden-xs">
                                             <div class="panel-heading">
                                                 Order Notes
                                             </div>
@@ -331,7 +331,7 @@
                                         <div class="row source-order">
 
                                             {% with supplier=item.product.get_supplier_info %}
-                                            <div class="col-md-3">
+                                            <div class="col-xs-3">
                                                 <span>Supplier:</span>
                                                 {% if supplier %}
                                                     <a {% if supplier.url %}
@@ -352,7 +352,7 @@
                                             </div>
                                             {% endwith %}
 
-                                            <div class="col-md-3 line-order-id">
+                                            <div class="col-xs-3 line-order-id">
                                                 Order ID:
                                                 {% if item.shopify_order %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
@@ -364,7 +364,7 @@
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
                                                 {% endif %}
                                             </div>
-                                            <div class="col-md-3 line-ordered">
+                                            <div class="col-xs-3 line-ordered">
                                                 <span class="badge badge-{% if not item.shopify_order %}danger{% else %}primary{% endif %}" style="width:15px;height:15px">&nbsp;</span>
                                                 {% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}
                                                     <span class="ordered-status"
@@ -383,7 +383,7 @@
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
                                             </div>
-                                            <div class="col-md-3 line-tracking">
+                                            <div class="col-xs-3 line-tracking">
                                                 {% if item.shopify_order %}
                                                     <span class="badge badge-{{ item.shopify_order.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
                                                     {{item.shopify_order.get_source_status|default:'No Tracking Status'}}
