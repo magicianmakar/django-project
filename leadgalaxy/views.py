@@ -3315,7 +3315,7 @@ def orders_view(request):
                         print u'Outdated Order: {} > {} - Store: {}'.format(
                             arrow.get(order['updated_at']).to('utc'),
                             arrow.get(order['db_updated_at']).to('utc'),
-                            store)
+                            store.title)
                     except:
                         raven_client.captureException(level='warning')
 
