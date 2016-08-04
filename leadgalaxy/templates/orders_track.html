@@ -130,8 +130,8 @@
                                 {% endif %}
                             </td>
 
-                            <td>{{item.created_at|date:'DATETIME_FORMAT'}}</td>
-                            <td>{{item.updated_at|date:'DATETIME_FORMAT'}}</td>
+                            <td>{% date_humanize item.item.created_at %}</td>
+                            <td>{% date_humanize item.updated_at %}</td>
                             <td>
                                 {% if item.order.fulfillment_status != 'fulfilled' %}
                                 <button class="btn btn-success btn-xs fulfill-btn"

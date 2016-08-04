@@ -14,11 +14,24 @@ def app_setting(name):
     return getattr(settings, name, None)
 
 
-@register.simple_tag
-def date_humanize(date):
+@register.simple_tag(takes_context=True)
+def date_humanize(context, date, html=True):
     import arrow
 
-    return arrow.get(date).humanize() if date else None
+    date = arrow.get(date) if date else None
+    if not date:
+        return ''
+
+    try:
+        date = date.to(context['request'].session['django_timezone'])
+    except:
+        pass
+
+    if html:
+        return mark_safe('<span class="date itooltip" title="%s">%s</span>' % (
+            date.format('YYYY/MM/DD HH:mm:ss'), date.humanize()))
+    else:
+        return date.humanize()
 
 
 @register.simple_tag(takes_context=True)
