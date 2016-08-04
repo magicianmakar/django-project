@@ -1544,7 +1544,7 @@ class ProductChangeEvent():
             if product_change['category'] == 'Vendor' and self.config['product_disappears'] == 'notify':
                 availability = "Online" if not product_change['new_value'] else "Offline"
                 self.notify_events.append(
-                    'Product <a href="{}/{}">{}</a> is {}.'.format(
+                    u'Product <a href="{}/{}">{}</a> is {}.'.format(
                         self.base_product_url, self.product.id, product_name, availability))
 
         for variant in self.variants_changes:
@@ -1552,17 +1552,17 @@ class ProductChangeEvent():
             for change in variant['changes']:
                 if self.config['variant_disappears'] == 'notify' and change['category'] == 'removed':
                     self.notify_events.append(
-                        'Variant <a href="{}/{}">{}</a> were removed.'.format(
+                        u'Variant <a href="{}/{}">{}</a> were removed.'.format(
                             self.base_product_url, self.product.id, variant_name))
 
                 elif self.config['price_change'] == 'notify' and change['category'] == 'Price':
                     self.notify_events.append(
-                        'Variants <a href="{}/{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
+                        u'Variants <a href="{}/{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
                             self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
 
                 elif self.config['quantity_change'] == 'notify' and change['category'] == 'Availability':
                     self.notify_events.append(
-                        'Variants <a href="{}/{}">{}</a> has its Availability changed from {} to {}.'.format(
+                        u'Variants <a href="{}/{}">{}</a> has its Availability changed from {} to {}.'.format(
                             self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
 
         self.notify_events = list(set(self.notify_events))
