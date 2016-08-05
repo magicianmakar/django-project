@@ -7,8 +7,7 @@ map $uri $redirect_https {
 }
 
 upstream http_backend  {
-    #server shopifytools.herokuapp.com;
-    server miyazaki-35268.herokussl.com;
+    server shopifytools.herokuapp.com;
 }
 
 upstream https_backend  {
@@ -121,6 +120,6 @@ server {
         proxy_set_header X-Proxy-Protocol $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-        proxy_pass  https://https_backend;
+        proxy_pass  http://http_backend;
     }
 }
