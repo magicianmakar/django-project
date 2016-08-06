@@ -32,7 +32,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import *
 from .forms import *
-from .province_helper import load_uk_provincess
+from .province_helper import load_uk_provincess, missing_province
 
 import tasks
 import utils
@@ -3429,7 +3429,7 @@ def orders_view(request):
 
                             province = uk_provinces.get(shipping_address_asci[u'city'].lower().strip(), u'')
                             if not province:
-                                print 'WARNING: UK Province not found for:', shipping_address_asci[u'city']
+                                missing_province(shipping_address_asci['city'])
 
                             shipping_address_asci[u'province'] = province
                         else:
