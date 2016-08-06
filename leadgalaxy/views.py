@@ -23,6 +23,7 @@ from unidecode import unidecode
 from django.conf import settings
 
 import re
+import random
 import simplejson as json
 import requests
 import arrow
@@ -1934,16 +1935,21 @@ def webhook(request, provider, option):
 
                 new_order = topic == 'orders/create'
                 queue = 'priority_high' if new_order else 'celery'
-                countdown = 1 if new_order else 5
+                countdown = 1 if new_order else random.randint(2, 9)
 
                 cache.set('webhook_order_{}_{}'.format(store.id, shopify_order['id']), shopify_order, timeout=600)
-                countdown_key = 'eta_order_{}_{}_{}'.format(store.id, shopify_order['id'], topic.split('/').pop())
-                if cache.get(countdown_key) is None:
-                    cache.set(countdown_key, True, timeout=5)
-                    tasks.update_shopify_order.apply_async(
-                        args=[store.id, shopify_order['id']],
-                        queue=queue,
-                        countdown=countdown)
+                countdown_key = 'eta_order__{}_{}_{}'.format(store.id, shopify_order['id'], topic.split('/').pop())
+                countdown_saved = cache.get(countdown_key)
+                if countdown_saved is None:
+                    cache.set(countdown_key, countdown, timeout=countdown*2)
+                else:
+                    countdown = countdown_saved + random.randint(2, 5)
+                    cache.set(countdown_key, countdown, timeout=countdown*2)
+
+                tasks.update_shopify_order.apply_async(
+                    args=[store.id, shopify_order['id']],
+                    queue=queue,
+                    countdown=countdown)
 
                 return JsonResponse({'status': 'ok'})
 
