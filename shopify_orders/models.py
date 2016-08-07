@@ -24,7 +24,7 @@ class ShopifySyncStatus(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return u'{} / {}'.format(self.sync_type, self.store)
+        return u'{} / {}'.format(self.sync_type, self.store.title)
 
     def add_pending_order(self, order_id, commit=True):
         try:
