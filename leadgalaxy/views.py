@@ -1535,38 +1535,6 @@ def proccess_api(request, user, method, target, data):
         utils.set_orders_filter(user, data)
         return JsonResponse({'status': 'ok'})
 
-    if method == 'POST' and target == 'customer-source':
-        # Update Stripe Customer Card
-
-        from stripe_subscription.utils import eligible_for_trial_coupon
-
-        token = data.get('stripeToken')
-
-        cus = user.stripe_customer.retrieve()
-        cus.source = token
-
-        try:
-            user.stripe_customer.stripe_save(cus)
-        except stripe.CardError as e:
-            raven_client.captureException()
-
-            return JsonResponse({
-                'error': 'Credit Card Error: {}'.format(e.message)
-            }, status=500)
-
-        except:
-            raven_client.captureException()
-
-            return JsonResponse({
-                'error': 'Credit Card Error, Please try again'
-            }, status=500)
-
-        if eligible_for_trial_coupon(cus):
-            cus.coupon = settings.STRIP_TRIAL_DISCOUNT_COUPON
-            user.stripe_customer.stripe_save(cus)
-
-        return JsonResponse({'status': 'ok'})
-
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
