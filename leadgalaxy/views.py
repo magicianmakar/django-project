@@ -3429,7 +3429,7 @@ def orders_view(request):
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'variant': el['variant_title'],
-                        'quantity': el['fulfillable_quantity'],
+                        'quantity': el['quantity'],
                         'shipping_address': shipping_address_asci,
                         'order_id': order['id'],
                         'line_id': el['id'],
