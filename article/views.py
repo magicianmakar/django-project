@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.db.models import Q
+from django.core.exceptions import PermissionDenied
 
 from article.models import *
 from article.forms import ArticleForm, CommentForm
