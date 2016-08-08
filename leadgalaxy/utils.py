@@ -1612,12 +1612,13 @@ class ProductChangeEvent():
             if product_change['category'] == 'Vendor':
                 if self.config['product_disappears'] == 'unpublish':
                     data['product']['published'] = not product_change['new_value']
+                    self.save_revision = True
 
                 elif self.config['product_disappears'] == 'zero_quantity':
-                    self.save_revision = True
                     if product_change['new_value'] is True:
                         for variant in data['product']['variants']:
                             variant['inventory_quantity'] = 0
+                            self.save_revision = True
                     else:
                         # Try to find variants from previous revision
                         revision = self.get_previous_product_revision('Vendor', True)
@@ -1632,7 +1633,9 @@ class ProductChangeEvent():
                                 if revision_variant['id'] == variant['id']:
                                     inventory = revision_variants['inventory_quantity']
                                     break
+
                             variant['inventory_quantity'] = inventory
+                            self.save_revision = True
         return data
 
     def get_found_variant(self, variant, data):
@@ -1660,9 +1663,6 @@ class ProductChangeEvent():
         return found
 
     def variants_actions(self, data):
-        if len(self.variants_changes) > 0:
-            self.save_revision = True
-
         for variant in self.variants_changes:
             found_variants = self.get_found_variant(variant, data)
 
@@ -1673,9 +1673,12 @@ class ProductChangeEvent():
                         if self.config['variant_disappears'] == 'remove':
                             for found in found_variants[::-1]:
                                 del data['product']['variants'][found]
+                                self.save_revision = True
+
                         elif self.config['variant_disappears'] == 'zero_quantity':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = 0
+                                self.save_revision = True
 
                     elif change['category'] == 'Price':
                         # take proper action with the found variant
@@ -1685,11 +1688,13 @@ class ProductChangeEvent():
                                 selling_price = float(data['product']['variants'][found]['price'])
                                 old_price = change['old_value']
                                 data['product']['variants'][found]['price'] = change['new_value'] + (selling_price - old_price)
+                                self.save_revision = True
 
                     elif change['category'] == 'Availability':
                         if self.config['quantity_change'] == 'update':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = change['new_value']
+                                self.save_revision = True
         return data
 
 
