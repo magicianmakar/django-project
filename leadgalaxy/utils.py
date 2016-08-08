@@ -1510,8 +1510,8 @@ class ProductChangeEvent():
             if self.save_revision:
                 self.revision.save()
 
-            data = self.prepare_data_after(data)
-            # self.send_shopify(data)
+                data = self.prepare_data_after(data)
+                self.send_shopify(data)
 
     def send_email(self):
         data = {
