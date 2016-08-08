@@ -66,6 +66,12 @@ def remove_link_query(context, link):
     return re.sub('([?#].*)$', r'', link)
 
 
+@register.simple_tag
+def shopify_image_thumb(link, size='small'):
+    if link:
+        return re.sub(r'\.(jpe?g|png)(\?.+)?$', r'_{}.\1\2'.format(size), link, flags=re.I)
+
+
 @register.simple_tag(takes_context=True)
 def price_diff(context, from_, to_, reverse_colors=False):
     if from_ is not float:

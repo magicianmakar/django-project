@@ -138,7 +138,7 @@
                                 <tr class="shopify-variant" variant-id="{{item.id}}">
                                     <td>
                                         {% if item.image_src %}
-                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.image_src}}"
+                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb item.image_src %}"
                                              store="{{product.store.id}}" product="{{item.product_id}}"
                                              variant="{{item.id}}" style="width:64px" />
                                         {% endif %}

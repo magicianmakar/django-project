@@ -1126,6 +1126,10 @@ def proccess_api(request, user, method, target, data):
 
         image = utils.get_shopify_variant_image(store, data.get('product'), data.get('variant'))
 
+        if image and request.GET.get('thumb') == '1':
+            from .templatetags.template_helper import shopify_image_thumb
+            image = shopify_image_thumb(image)
+
         if image and request.GET.get('redirect') == '1':
             return HttpResponseRedirect(image)
         elif image:

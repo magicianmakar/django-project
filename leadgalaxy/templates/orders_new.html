@@ -419,7 +419,7 @@
                                                                 src="{% static 'img/blank.gif' %}"
 
                                                                 {% if item.image_src %}
-                                                                    data-src="{{item.image_src}}"
+                                                                    data-src="{% shopify_image_thumb item.image_src %}"
                                                                 {% else %}
                                                                     data-src="/api/product-variant-image?store={{store.id}}&product={{image.product}}&variant={{image.variant}}&redirect=1"
                                                                 {% endif %}
