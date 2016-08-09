@@ -80,11 +80,7 @@ $('#fullfill-order-btn').click(function (e) {
 });
 
 $('.filter-btn').click(function (e) {
-    if($('.filter-form').is(':visible')) {
-        localStorage.orders_filter = 'false';
-    } else {
-        localStorage.orders_filter = 'true';
-    }
+    Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
 
     $('.filter-form').toggle('fade');
 });
@@ -649,7 +645,7 @@ $(function () {
         $(el).trigger('change');
     });
 
-    if (localStorage.orders_filter == 'true') {
+    if (Cookies.get('orders_filter') == 'true') {
         $('.filter-form').show();
     }
 

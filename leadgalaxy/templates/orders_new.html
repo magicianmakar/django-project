@@ -47,7 +47,11 @@
                             <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
                         </div>
                     </div>
-                    <form method="get" action="/orders" class="filter-form m-b-sm m-t-sm" style="display:none;">
+                    <form method="get" action="/orders" class="filter-form m-b-sm m-t-sm"
+                    {% if request.COOKIES.orders_filter != 'true' %}
+                          style="display:none"
+                    {% endif %}
+                    >
                     {% if store_sync_enabled %}
                         <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
@@ -96,7 +100,8 @@
                             <label>Country:</label>
                         </div>
                         <div class="col-md-4">
-                            <select name="query_address"  class="form-control" id="country-filter" multiple data-placeholder="Shipping Country">
+                            <select name="query_address"  class="form-control" id="country-filter"
+                                    data-placeholder="Shipping Country" style="height:30px" multiple>
                                <option value=""></option>
                                 {% for item in countries %}
                                 <option value="{{item.0}}"
