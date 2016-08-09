@@ -30,6 +30,7 @@ $('.fulfill-btn').click(function (e) {
     $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
     $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
     $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
+    $('#modal-fulfillment #fulfill-traking-number').val($(this).attr('tracking-number'));
 
     if ($(this).prop('fulfilled')) {
         return;

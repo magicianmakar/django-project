@@ -453,7 +453,7 @@
                                                                         <span class="caret"></span></button>
 
                                                                         <ul class="dropdown-menu">
-                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}">Fulfill in Shopify</a></li>
+                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.shopify_order.source_tracking}}">Fulfill in Shopify</a></li>
                                                                         </ul>
                                                                     </div>
                                                             {% else %}
