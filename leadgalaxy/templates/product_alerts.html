@@ -79,11 +79,11 @@
                                             <td class="details-toggle">
                                                 {% if not change.new_value %}
                                                     Product
-                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a>
+                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a>
                                                     Is now <b style="color:green">Online</b>
                                                 {% else %}
                                                     Product
-                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a>
+                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a>
                                                     Is now <b style="color:red">Offline</b>
                                                 {% endif %}
 
@@ -119,7 +119,7 @@
                                         {% if forloop.first %}
                                         <tr class="header" alert-id="{{item.id}}" >
                                             <td class="category">Price</td>
-                                            <td class="details-toggle">The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td class="details-toggle">The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
@@ -166,7 +166,7 @@
                                         {% if forloop.first %}
                                         <tr class="header" alert-id="{{item.id}}" >
                                             <td class="category">Availability</td>
-                                            <td class="details-toggle">The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td class="details-toggle">The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
@@ -214,7 +214,7 @@
                                         {% if forloop.first %}
                                         <tr class="header" alert-id="{{item.id}}" >
                                             <td class="category">New Variant</td>
-                                            <td class="details-toggle">A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">2016 Fashion Metal Half Frame Glasses...</a></td>
+                                            <td class="details-toggle">A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a></td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
@@ -264,7 +264,7 @@
                                         {% if forloop.first %}
                                         <tr class="header" alert-id="{{item.id}}" >
                                             <td class="category">Removed Variant</td>
-                                            <td class="details-toggle">A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">2016 Fashion Metal Half Frame Glasses...</a></td>
+                                            <td class="details-toggle">A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a></td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
