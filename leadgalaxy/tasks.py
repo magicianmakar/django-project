@@ -111,7 +111,7 @@ def export_product(req_data, target, user_id):
             'error': 'Original URL is not set.'
         }
 
-    if not import_store or not user.can('%s_import.use' % import_store):
+    if not import_store or not user.can('%s_import.use' % import_store) or not user.can('import_from_any.use'):
         if not import_store:
             import_store = 'N/A'
 
