@@ -111,15 +111,16 @@ def export_product(req_data, target, user_id):
             'error': 'Original URL is not set.'
         }
 
-    if not import_store or not user.can('%s_import.use' % import_store) or not user.can('import_from_any.use'):
+    if not import_store or not user.can('%s_import.use' % import_store):
         if not import_store:
             import_store = 'N/A'
 
-        print 'ERROR: STORE PERMSSION FOR {} URL: {}'.format(import_store, original_url)
+        if not not user.can('import_from_any.use'):
+            print 'ERROR: STORE PERMSSION FOR {} URL: {}'.format(import_store, original_url)
 
-        return {
-            'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
-        }
+            return {
+                'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
+            }
 
     if target == 'shopify' or target == 'shopify-update':
         try:
