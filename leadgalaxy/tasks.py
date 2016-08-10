@@ -115,7 +115,7 @@ def export_product(req_data, target, user_id):
         if not import_store:
             import_store = 'N/A'
 
-        if not not user.can('import_from_any.use'):
+        if not user.can('import_from_any.use'):
             print 'ERROR: STORE PERMSSION FOR {} URL: {}'.format(import_store, original_url)
 
             return {
