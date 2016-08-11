@@ -66,6 +66,14 @@
         username: '{{ user.username }}',
         email: '{{ user.email }}'
       };
+
+      window.intercomSettings = {
+        app_id: "k9cb5frr",
+        name: "{{ user.name }}", // Full name
+        email: "{{ user.email }}", // Email address
+        created_at: {{ user.date_joined|date:"U" }} // Signup date as a Unix timestamp
+      };
+
       {% endif %}
     </script>
 
