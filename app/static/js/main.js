@@ -561,6 +561,62 @@ $('a[data-auto-click]').each(function () {
     }
 });
 
+function ajustamodal() {
+    var altura = $(window).height() - 300; //value corresponding to the modal heading + footer
+    $(".ative-scroll").css({
+        "height": altura,
+        "overflow-y": "auto"
+    });
+}
+
+$(document).ready(ajustamodal);
+$(window).resize(ajustamodal);
+
+(function($) {
+    // http://github.com/bgrins/bindWithDelay
+
+    $.fn.bindWithDelay = function(type, data, fn, timeout, throttle) {
+
+        if ($.isFunction(data)) {
+            throttle = timeout;
+            timeout = fn;
+            fn = data;
+            data = undefined;
+        }
+
+        // Allow delayed function to be removed with fn in unbind function
+        fn.guid = fn.guid || ($.guid && $.guid++);
+
+        // Bind each separately so that each element has its own delay
+        return this.each(function() {
+
+            var wait = null;
+
+            function cb() {
+                var e = $.extend(true, {}, arguments[0]);
+                var ctx = this;
+                var throttler = function() {
+                    wait = null;
+                    fn.apply(ctx, [e]);
+                };
+
+                if (!throttle) {
+                    clearTimeout(wait);
+                    wait = null;
+                }
+                if (!wait) {
+                    wait = setTimeout(throttler, timeout);
+                }
+            }
+
+            cb.guid = fn.guid;
+
+            $(this).bind(type, data, cb);
+        });
+    };
+
+})(jQuery);
+
 var ravenOptions = {
   // Will cause a deprecation warning, but the demise of `ignoreErrors` is still under discussion.
   // See: https://github.com/getsentry/raven-js/issues/73

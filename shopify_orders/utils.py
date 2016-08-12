@@ -94,7 +94,7 @@ def update_shopify_order(store, data, sync_check=True):
         cache_key = 'export_product_{}_{}'.format(store.id, line['product_id'])
         product = cache.get(cache_key)
         if product is None:
-            product = store.shopifyproduct_set.filter(shopify_export__shopify_id=safeInt(line['product_id'])).first()
+            product = store.shopifyproduct_set.filter(shopify_id=safeInt(line['product_id'])).first()
             cache.set(cache_key, product.id if product else 0, timeout=300)
         else:
             product = store.shopifyproduct_set.get(id=product) if product != 0 else None
@@ -119,7 +119,7 @@ def update_line_export(store, product_id):
     :param product_id: Shopify Product ID
     """
 
-    product = store.shopifyproduct_set.filter(shopify_export__shopify_id=product_id).first()
+    product = store.shopifyproduct_set.filter(shopify_id=product_id).first()
 
     ShopifyOrderLine.objects.filter(order__store=store, shopify_product=product_id) \
                             .update(product=product)

@@ -93,8 +93,8 @@ class Command(BaseCommand):
         if not count:
             return
 
-        self.products_map = store.shopifyproduct_set.exclude(shopify_export=None) \
-                                 .values_list('id', 'shopify_export__shopify_id') \
+        self.products_map = store.shopifyproduct_set.exclude(shopify_id=0) \
+                                 .values_list('id', 'shopify_id') \
                                  .order_by('created_at')
 
         self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))

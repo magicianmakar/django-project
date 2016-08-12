@@ -13,40 +13,40 @@
             <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
             {% endif %}
 
-            <li><a href="{{item.original_url}}" target="_blank">Manual Order</a></li>
+            <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
 
             {% if item.order_data_id %}
             <li class="divider"></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
+                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    {% else %}
-                        href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
+                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    {% endif %}
                    >Step By Step Order</a></li>
                <li><a class="place-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
                    {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
+                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
                    {% else %}
-                        href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
+                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
                    {% endif %}
                    >Add To Cart</a></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
+                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    {% else %}
-                        href="{{item.original_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}"
+                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    {% endif %}
                    >Auto Place Order</a></li>
             <li><a class="place-order-btn auto-shipping-btn" target="_blank"
                     order-id="{{order.id}}" line-id="{{item.id}}"
-                    product-id="{{item.product.id}}" original-id="{{item.original_id}}" country-code="{{order.shipping_address.country_code}}"
+                    product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping_address.country_code}}"
                     href="#"
 
                 {% if aliexpress_affiliate %}
-                    data-href="{% url 'orders_place' %}?product={{item.original_url|urlencode}}&"
+                    data-href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&"
                 {% else %}
-                    data-href="{{item.original_url}}?"
+                    data-href="{{item.supplier.short_product_url}}?"
                 {% endif %}
 
                     data-order="{{ item.order_data_id|urlencode }}"

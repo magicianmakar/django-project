@@ -102,6 +102,10 @@
             success: function (data) {
                 if (data.status == 'ok') {
                     toastr.success('Variants Mapping','Mapping Saved');
+
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 500);
                 } else {
                     displayAjaxError('Variants Mapping', data);
                 }

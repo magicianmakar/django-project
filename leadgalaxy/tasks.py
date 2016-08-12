@@ -226,17 +226,9 @@ def export_product(req_data, target, user_id):
             else:
                 product = None
 
-            product_export = ShopifyProductExport(original_url=original_url, shopify_id=pid, store=store)
-            product_export.save()
-
             if product:
-                supplier = product.get_supplier_info()
-                if supplier:
-                    product_export.supplier_name = supplier.get('name')
-                    product_export.supplier_url = supplier.get('url')
-                    product_export.save()
-
-                product.shopify_export = product_export
+                product.shopify_id = pid
+                product.default_supplier = product_supplier
                 product.save()
 
         else:
@@ -283,6 +275,18 @@ def export_product(req_data, target, user_id):
                 product.notes = req_data.get('notes', '')
 
                 user.can_add(product)
+
+                product.save()
+
+                supplier = product.get_supplier_info()
+                product.default_supplier = ProductSupplier.objects.create(
+                    store=store,
+                    product=product,
+                    product_url=original_url,
+                    supplier_name=supplier.get('name'),
+                    supplier_url=supplier.get('url'),
+                    is_default=True
+                )
 
             except PermissionDenied as e:
                 raven_client.captureException()

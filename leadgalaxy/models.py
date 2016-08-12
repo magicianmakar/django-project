@@ -468,10 +468,10 @@ class ShopifyStore(models.Model):
         return self.store_hash[:8] if self.store_hash else ''
 
     def connected_count(self):
-        return self.shopifyproduct_set.exclude(shopify_export=None).count()
+        return self.shopifyproduct_set.exclude(shopify_id=0).count()
 
     def saved_count(self):
-        return self.shopifyproduct_set.filter(shopify_export=None).count()
+        return self.shopifyproduct_set.filter(shopify_id=0).count()
 
 class AccessToken(models.Model):
     class Meta:
@@ -510,6 +510,9 @@ class ShopifyProduct(models.Model):
 
     price_notification_id = models.IntegerField(default=0)
 
+    shopify_id = models.BigIntegerField(default=0, null=True, blank=True)
+    default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
@@ -540,7 +543,13 @@ class ShopifyProduct(models.Model):
         super(ShopifyProduct, self).save(*args, **kwargs)
 
     def is_connected(self):
-        return self.get_shopify_id() is not None
+        return bool(self.get_shopify_id())
+
+    def have_supplier(self):
+        try:
+            return self.default_supplier is not None
+        except:
+            return False
 
     def shopify_link(self):
         shopify_id = self.get_shopify_id()
@@ -551,13 +560,7 @@ class ShopifyProduct(models.Model):
             return None
 
     def get_shopify_id(self):
-        try:
-            if self.store and self.shopify_export and self.shopify_export.shopify_id:
-                return self.shopify_export.shopify_id
-            else:
-                return None
-        except:
-            return None
+        return self.shopify_id
 
     def get_source_id(self):
         """
@@ -605,15 +608,17 @@ class ShopifyProduct(models.Model):
         return {}
 
     def get_supplier_info(self):
-        export = self.get_shopify_exports()
-        if export:
-            export = export.first()
+        supplier = self.default_supplier
+        if supplier:
+            info = {
+                'name': supplier.supplier_name,
+                'url': supplier.supplier_url
+            }
 
-            if export:
-                return {
-                    'name': export.supplier_name,
-                    'url': export.supplier_url
-                }
+            if info.get('url').startswith('//'):
+                info['url'] = u'http:{}'.format(info['url'])
+
+            return info
 
         data = json.loads(self.data)
         return data.get('store')
@@ -626,6 +631,27 @@ class ShopifyProduct(models.Model):
         if commit:
             self.save()
 
+    def set_default_supplier(self, supplier):
+        self.default_supplier = supplier
+
+        self.get_suppliers().update(is_default=False)
+
+        supplier.is_default = True
+        supplier.save()
+
+    def set_variant_mapping(self, mapping):
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.default_supplier.variants_map = mapping
+        self.default_supplier.save()
+
+    def get_variant_mapping(self):
+        try:
+            return json.loads(self.default_supplier.variants_map)
+        except:
+            return {}
+
     def get_shopify_exports(self):
         shopify_id = self.get_shopify_id()
         if shopify_id:
@@ -636,6 +662,9 @@ class ShopifyProduct(models.Model):
         else:
             return ShopifyProductExport.objects.filter(product=self)
 
+    def get_suppliers(self):
+        return self.productsupplier_set.all().order_by('-is_default')
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -645,6 +674,42 @@ class ShopifyProduct(models.Model):
         product_data.update(data)
 
         self.data = json.dumps(product_data)
+
+
+class ProductSupplier(models.Model):
+    store = models.ForeignKey(ShopifyStore, null=True)
+    product = models.ForeignKey(ShopifyProduct)
+
+    product_url = models.CharField(max_length=512, null=True, blank=True)
+    supplier_name = models.CharField(max_length=512, null=True, blank=True)
+    supplier_url = models.CharField(max_length=512, null=True, blank=True)
+    shipping_method = models.CharField(max_length=512, null=True, blank=True)
+    variants_map = models.TextField(null=True, blank=True)
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        if self.supplier_name:
+            return self.supplier_name
+        elif self.supplier_url:
+            return self.supplier_url
+        else:
+            return u'<ProductSupplier: {}>'.format(self.id)
+
+    def get_source_id(self):
+        try:
+            if 'aliexpress.com' in self.product_url.lower():
+                return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+        except:
+            return None
+
+    def short_product_url(self):
+        source_id = self.get_source_id()
+        if source_id:
+            if 'aliexpress.com' in self.product_url.lower():
+                return u'http://www.aliexpress.com/item//{}.html'.format(source_id)
 
 
 class ShopifyProductExport(models.Model):

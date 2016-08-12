@@ -71,6 +71,13 @@ class ShopifyProductExportAdmin(admin.ModelAdmin):
     raw_id_fields = ('store', 'product')
 
 
+@admin.register(ProductSupplier)
+class ProductSupplierAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'store', 'supplier_name', 'is_default', 'created_at')
+    search_fields = ('product_url', 'supplier_name', 'supplier_url', 'shopify_id')
+    raw_id_fields = ('store', 'product')
+
+
 @admin.register(ShopifyOrderTrack)
 class ShopifyOrderTrackAdmin(admin.ModelAdmin):
     list_display = ('order_id', 'line_id', 'shopify_status', 'store', 'source_id', 'get_source_status',

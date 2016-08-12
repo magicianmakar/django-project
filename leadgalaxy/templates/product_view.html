@@ -437,6 +437,53 @@
         <div id="tab-5" class="tab-pane">
             <div class="panel-body"  style="min-height:300px">
                 <div class="row">
+                    <div class="col-md-10 col-md-offset-1" style="padding-left:0;padding-right:0">
+                        <!-- <form class="shopify-product-form" method="post" data-product-id="{{product.qelem.id}}">
+                            <div class="form-group">
+                                <label>Product link in Shopify:</label>
+                                <input type="text" class="form-control product-shopify-link" value="{{product.qelem.shopify_link}}">
+                            </div>
+                        </form> -->
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                Shopify Product
+                            </div>
+                            <div class="panel-body">
+                                {% if shopify_product %}
+                                <div class="row" style="display: flex; align-items: center; ">
+                                    <div class="col-md-1">
+                                        <img src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}">
+                                    </div>
+                                    <div class="col-md-10">
+                                        <a href="{{product.qelem.shopify_link}}" target="_blank">{{shopify_product.title}}</a>
+                                    </div>
+                                </div>
+
+                                <div class="row text-right">
+                                    <div class="col-md-12">
+                                        <a href="#" class="btn btn-success btn-xs product-connection-change"><i class="fa fa-refresh"></i> Change</a>
+                                        <a href="#" class="btn btn-danger btn-xs product-connection-disconnect"><i class="fa fa-chain-broken"></i> Disconnect</a>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="row m-t-xs">
+                                    <div class="col-md-12">
+                                        <p>The product is not connected</p>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <a href="#" class="btn btn-success btn-xs product-connection-change"><i class="fa fa-chain"></i> Connect To Shopify</a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div id="export-container" class="col-xs-10 col-xs-offset-1">
                     </div>
 
@@ -509,6 +556,49 @@
     </div>
 </div>
 
+<div id="modal-shopify-product" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Product</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <input type="text" class="form-control input-md shopify-find-product" placeholder="Find product..." data-store="{{product.qelem.store_id}}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 text-center m-t-lg shopify-find-loading" style="position:absolute;display:none">
+                        <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="shopify-products ative-scroll"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+
+<script id="product-select-template" type="text/x-handlebars-template">
+    <div class="product-item row">
+        <div class="product-thumb col-md-1">
+            <a class="shopify-product" href="#" data-product-id="{{product.id}}">
+                <img src="{{product.image.src}}">
+            </a>
+        </div>
+        <div class="col-md-11">
+            <a class="shopify-product" href="#" data-product-id="{{product.id}}">{{product.title}}</a>
+        </div>
+    </div>
+</script>
+
+{% endverbatim %}
+
 {% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -529,10 +619,6 @@
 <script id="product-export-template" type="text/x-handlebars-template">
     <div class="row well export" style="padding: 10px 0">
         <form class="product-export-form" method="post" data-export-id="{{id}}" data-product-id="{{product}}">
-            <div class="form-group col-xs-12">
-                <label>Product link in Shopify:</label>
-                <input type="text" class="form-control product-shopify-link" value="{{shopify.url}}">
-            </div>
             <div class="form-group col-xs-12">
                 <label>Original Product link:</label>
                 <input type="text" class="form-control product-original-link" value="{{original.url}}">
@@ -569,6 +655,7 @@
         </form>
     </div>
 </script>
+
 {% endverbatim %}
 
 {% endblock %}
@@ -724,16 +811,16 @@ var config = {
         }
     },
     exports: [
-    {% for item in product.qelem.get_shopify_exports %}
+    {% for item in product.qelem.get_suppliers %}
         {
             id: {{item.id}},
             product: {{product.id}},
-            is_default: {% if item.id == product.qelem.shopify_export.id %}true{% else %}false{% endif %},
+            is_default: {% if item.id == product.qelem.default_supplier_id %}true{% else %}false{% endif %},
             original: {
-                url: '{{item.original_url|escapejs}}'
+                url: '{{item.product_url|escapejs}}'
             },
             shopify: {
-                id: {{item.shopify_id}},
+                id: {{item.shopify_id|default:'0'}},
                 url: '{{item.shopify_url|escapejs}}',
             },
             supplier: {
@@ -840,6 +927,108 @@ $(function() {
     $('.original-description').css('overflow', 'auto');
 });
 
+window.shopifyProductSelected = function (shopify_id) {
+    $.ajax({
+        url: '/api/product-connect',
+        type: 'POST',
+        data: {
+            product: '{{product.qelem.id}}',
+            shopify: shopify_id,
+        },
+        success: function (data) {
+            $('#modal-shopify-product').modal('hide');
+            window.location.hash = 'connections';
+            window.location.reload();
+        },
+        error: function (data) {
+            displayAjaxError('Connect Product', data);
+        }
+    });
+};
+
+$('.product-connection-change').click(function (e) {
+    e.preventDefault();
+
+    $('#modal-shopify-product').modal('show');
+});
+
+$('.product-connection-disconnect').click(function (e) {
+    e.preventDefault();
+
+    swal({
+        title: "Disconnect Product",
+        text: "Are you sure you want to disconnect this product?",
+        type: "warning",
+        showCancelButton: true,
+        closeOnCancel: true,
+        closeOnConfirm: false,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Disconnect",
+        cancelButtonText: "Cancel"
+    },
+    function(isConfirmed) {
+        if (isConfirmed) {
+            $.ajax({
+                url: '/api/product-connect?' + $.param({
+                    product: '{{product.qelem.id}}',
+                }),
+                type: 'DELETE',
+                success: function (data) {
+                    window.location.hash = 'connections';
+                    window.location.reload();
+                },
+                error: function (data) {
+                    displayAjaxError('Connect Product', data);
+                }
+            });
+        }
+    });
+});
+
+$('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', function (e) {
+    var query = $(this).val().trim();
+
+    var loadingContainer = $('#modal-shopify-product .shopify-find-loading');
+    var productsContainer = $('#modal-shopify-product .shopify-products');
+
+    loadingContainer.show();
+    productsContainer.empty();
+
+    $.ajax({
+        url: '/api/shopify-products',
+        type: 'POST',
+        data: {
+            store: $(this).data('store'),
+            query: query
+        },
+        success: function (data) {
+            var product_template = Handlebars.compile($("#product-select-template").html());
+
+            if (data.products.length === 0) {
+                productsContainer.append($('<div class="text-center"><h3>No Product found with the given search query</h3></div>'));
+            }
+
+            $.each(data.products, function () {
+                var el = $(product_template({product: this}));
+                $('a.shopify-product', el).click(function () {
+                    if (window.shopifyProductSelected) {
+                        window.shopifyProductSelected($(this).data('product-id'));
+                    }
+                });
+
+                productsContainer.append(el);
+            });
+        },
+        error: function (data) {
+            productsContainer.append($('<div class="text-center"><h3>Error occurred while searching for products</h3></div>'))
+        },
+        complete: function () {
+            loadingContainer.hide();
+        }
+    });
+}, 500);
+
+$('#modal-shopify-product .shopify-find-product').trigger('keyup');
 </script>
 
     {% compress js %}

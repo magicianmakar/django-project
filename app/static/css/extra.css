@@ -144,6 +144,44 @@
     padding-right: 50px !important;
 }
 
+#modal-shopify-product .shopify-products {
+    padding:10px 20px;
+}
+
+#modal-shopify-product .product-item {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#modal-shopify-product .product-item:hover {
+    background-color: #eff9fd;
+}
+
+#modal-shopify-product .product-item .shopify-product:hover {
+    cursor: pointer;
+}
+
+#modal-shopify-product .product-item .product-thumb {
+    width: 30px;
+    padding-bottom: 30px;
+    border: 1px solid #eee;
+}
+
+#modal-shopify-product .product-item .product-thumb img {
+    bottom: 0;
+    display: block;
+    left: 0;
+    margin: auto;
+    max-height: 100%;
+    max-width: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
 @media only screen and (max-width: 760px) {
     .extension-version {
         display: none;

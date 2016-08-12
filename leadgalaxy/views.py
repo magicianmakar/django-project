@@ -288,10 +288,10 @@ def proccess_api(request, user, method, target, data):
         store.save()
 
         # Make all products related to this store non-connected
-        store.shopifyproduct_set.update(store=None)
+        store.shopifyproduct_set.update(store=None, shopify_id=None)
 
         # Delete products connection with this store
-        ShopifyProductExport.objects.filter(store=store).delete()
+        ProductSupplier.objects.filter(store=store).delete()
 
         if store.version == 2:
             try:
@@ -786,6 +786,74 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok',
         })
 
+    if target == 'shopify-products':
+        from .templatetags.template_helper import shopify_image_thumb
+
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+            params = {
+                'fields': 'id,title,image',
+            }
+
+            ids = utils.get_shopify_id(data.get('query'))
+            if ids:
+                params['ids'] = [ids]
+            else:
+                params['title'] = data.get('query')
+
+            rep = requests.get(
+                url=store.get_link('/admin/products.json', api=True),
+                params=params
+            )
+
+            products = []
+            for i in rep.json()['products']:
+                i['image']['src'] = shopify_image_thumb(i['image']['src'], size='thumb')
+                products.append(i)
+
+            return JsonResponse({'products': products})
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+    if method == 'POST' and target == 'product-connect':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
+        shopify_id = utils.safeInt(data.get('shopify'))
+
+        if shopify_id != product.shopify_id or True:
+            print 'Update:', shopify_id
+            product.shopify_id = shopify_id
+            product.save()
+
+            cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
+            shopify_orders_utils.update_line_export(product.store, shopify_id)
+
+            tasks.update_shopify_product(product.store.id, shopify_id)
+
+        return JsonResponse({
+            'status': 'ok',
+        })
+
+    if method == 'DELETE' and target == 'product-connect':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
+        shopify_id = product.shopify_id
+        if shopify_id:
+            product.shopify_id = None
+            product.save()
+
+            cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
+            shopify_orders_utils.update_line_export(product.store, shopify_id)
+
+        return JsonResponse({
+            'status': 'ok',
+        })
+
     if method == 'POST' and target == 'product-metadata':
         if not user.can('product_metadata.use'):
             return JsonResponse({'error': 'Your current plan doesn\'t have this feature.'}, status=500)
@@ -794,7 +862,6 @@ def proccess_api(request, user, method, target, data):
         user.can_edit(product)
 
         original_link = utils.remove_link_query(data.get('original-link'))
-        shopify_link = data.get('shopify-link')
 
         if 'click.aliexpress.com' in original_link.lower():
             return JsonResponse({
@@ -804,63 +871,38 @@ def proccess_api(request, user, method, target, data):
         if not original_link:
             return JsonResponse({'error': 'Original Link is not set'}, status=500)
 
-        if not shopify_link:
-            return JsonResponse({'error': 'Shopify Link is not set'}, status=500)
-
         try:
             store = product.store
         except:
             store = None
         if not store:
-            store = utils.get_store_from_url(user, shopify_link)
-
-            if not store:
-                return JsonResponse({'error': 'Shopify store not found'}, status=500)
-
-            product.store = store
-            product.save()
+            return JsonResponse({'error': 'Shopify store not found'}, status=500)
 
         product.set_original_url(original_link)
-
-        if 'myshopify' not in shopify_link.lower():
-            shopify_link = utils.get_myshopify_link(user, store, shopify_link)
-            if not shopify_link:
-                return JsonResponse({'error': 'Invalid Custom domain link.'}, status=500)
-
-        shopify_id = utils.get_shopify_id(shopify_link)
-        if not shopify_id:
-            return JsonResponse({'error': 'Invalid Shopify link.'}, status=500)
 
         supplier_url = utils.remove_link_query(data.get('supplier-link'))
 
         try:
-            product_export = ShopifyProductExport.objects.get(id=data.get('export'))
-            product_export.product = product
-            product_export.original_url = original_link
-            product_export.shopify_id = shopify_id
-            product_export.supplier_name = data.get('supplier-name')
-            product_export.supplier_url = supplier_url
-            product_export.save()
+            product_supplier = ProductSupplier.objects.get(id=data.get('export'))
+            product_supplier.product = product
+            product_supplier.product_url = original_link
+            product_supplier.supplier_name = data.get('supplier-name')
+            product_supplier.supplier_url = supplier_url
+            product_supplier.save()
 
-        except (ValueError, ShopifyProductExport.DoesNotExist):
-            product_export = ShopifyProductExport.objects.create(
+        except (ValueError, ProductSupplier.DoesNotExist):
+            product_supplier = ProductSupplier.objects.create(
                 store=store,
                 product=product,
-                original_url=original_link,
-                shopify_id=shopify_id,
+                product_url=original_link,
                 supplier_name=data.get('supplier-name'),
                 supplier_url=supplier_url,
             )
 
-        if not product.shopify_export_id or not data.get('export'):
-            product.shopify_export = product_export
+        if not product.default_supplier_id or not data.get('export'):
+            product.set_default_supplier(product_supplier)
 
         product.save()
-
-        cache.delete('export_product_{}_{}'.format(store.id, shopify_id))
-        shopify_orders_utils.update_line_export(store, shopify_id)
-
-        tasks.update_shopify_product(store.id, shopify_id)
 
         return JsonResponse({
             'status': 'ok',
@@ -872,19 +914,19 @@ def proccess_api(request, user, method, target, data):
         user.can_edit(product)
 
         try:
-            product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
-        except ShopifyProductExport.DoesNotExist:
+            supplier = ProductSupplier.objects.get(id=data.get('export'), product=product)
+        except ProductSupplier.DoesNotExist:
             return JsonResponse({'error': 'Supplier not found.\nPlease reload the page and try again.'})
 
-        need_update = product.shopify_export == product_export
+        need_update = product.default_supplier == supplier
 
-        product_export.delete()
+        supplier.delete()
 
         if need_update:
-            other_export = product.get_shopify_exports().first()
-            if other_export:
-                product.set_original_url(product_export.original_url)
-                product.shopify_export = other_export
+            other_supplier = product.get_suppliers().first()
+            if other_supplier:
+                product.set_original_url(other_supplier.product_url)
+                product.set_default_supplier(other_supplier)
                 product.save()
 
         return JsonResponse({
@@ -896,16 +938,13 @@ def proccess_api(request, user, method, target, data):
         user.can_edit(product)
 
         try:
-            product_export = ShopifyProductExport.objects.get(id=data.get('export'), store=product.store)
-        except ShopifyProductExport.DoesNotExist:
+            supplier = ProductSupplier.objects.get(id=data.get('export'), product=product)
+        except ProductSupplier.DoesNotExist:
             return JsonResponse({'error': 'Supplier not found.\nPlease reload the page and try again.'})
 
-        # Must recent export is the used one
-        product_export.created_at = timezone.now()
-        product_export.save()
+        product.set_default_supplier(supplier)
 
-        product.set_original_url(product_export.original_url)
-        product.shopify_export = product_export
+        product.set_original_url(supplier.product_url)
         product.save()
 
         return JsonResponse({
@@ -933,7 +972,7 @@ def proccess_api(request, user, method, target, data):
 
         duplicate_product.pk = None
         duplicate_product.parent_product = product
-        duplicate_product.shopify_export = None
+        duplicate_product.shopify_id = 0
 
         user.can_add(duplicate_product)
 
@@ -1155,7 +1194,7 @@ def proccess_api(request, user, method, target, data):
                                  'It will cause issues with auto-variant selection'
                     })
 
-        product.variants_map = json.dumps(mapping)
+        product.set_variant_mapping(mapping)
         product.save()
 
         return JsonResponse({'status': 'ok'})
@@ -1346,7 +1385,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'find-product':
         try:
-            product = ShopifyProduct.objects.get(shopify_export__shopify_id=data.get('product'))
+            product = ShopifyProduct.objects.get(shopify_id=data.get('product'))
             user.can_view(product)
 
             return JsonResponse({
@@ -1856,8 +1895,8 @@ def webhook(request, provider, option):
                 product = None
                 try:
                     product = ShopifyProduct.objects.get(
-                        user=store.user,
-                        shopify_export__shopify_id=shopify_product['id'])
+                        store=store,
+                        shopify_id=shopify_product['id'])
                 except:
                     return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
@@ -1885,13 +1924,8 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
-                try:
-                    if product.shopify_export:
-                        product.shopify_export.delete()
-                except ShopifyProductExport.DoesNotExist:
-                    pass
-                except:
-                    raven_client.captureException()
+                product.shopify_id = None
+                product.save()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
@@ -1941,10 +1975,10 @@ def webhook(request, provider, option):
                 store.save()
 
                 # Make all products related to this store non-connected
-                store.shopifyproduct_set.update(store=None)
+                store.shopifyproduct_set.update(store=None, shopify_id=None)
 
                 # Delete products connection with this store
-                ShopifyProductExport.objects.filter(store=store).delete()
+                ProductSupplier.objects.filter(store=store).delete()
 
                 utils.detach_webhooks(store, delete_too=True)
 
@@ -2001,22 +2035,22 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     models_user = request.user.models_user
     user = request.user
     user_stores = request.user.profile.get_active_stores(flat=True)
-    res = ShopifyProduct.objects.select_related('store', 'shopify_export') \
+    res = ShopifyProduct.objects.select_related('store') \
                                 .filter(user=models_user).filter(Q(store__in=user_stores) | Q(store=None))
     if store:
         if store == 'c':  # connected
-            res = res.exclude(shopify_export__isnull=True)
+            res = res.exclude(shopify_id=0)
         elif store == 'n':  # non-connected
-            res = res.filter(shopify_export__isnull=True)
+            res = res.filter(shopify_id=0)
 
             in_store = utils.safeInt(request.GET.get('in'))
             if in_store:
                 res = res.filter(store=in_store)
         else:
-            store = utils.safeInt(store)
-            res = res.filter(shopify_export__store=store)
+            store = ShopifyStore.objects.get(id=utils.safeInt(store))
+            res = res.filter(shopify_id__gt=0, store=store)
 
-            user.can_view(get_object_or_404(ShopifyStore, id=store))
+            user.can_view(store)
 
     if board:
         res = res.filter(shopifyboard=board)
@@ -2290,12 +2324,11 @@ def product_view(request, pid):
         pass
 
     shopify_product = None
-    export = product.shopify_export
-    if export and export.shopify_id:
-        p['shopify_url'] = export.store.get_link('/admin/products/{}'.format(export.shopify_id))
-        p['variant_edit'] = '/product/variants/{}/{}'.format(export.store.id, export.shopify_id)
+    if product.shopify_id:
+        p['shopify_url'] = product.store.get_link('/admin/products/{}'.format(product.shopify_id))
+        p['variant_edit'] = '/product/variants/{}/{}'.format(product.store.id, product.shopify_id)
 
-        shopify_product = utils.get_shopify_product(product.store, export.shopify_id)
+        shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
 
         if shopify_product:
             shopify_product = utils.link_product_images(shopify_product)
@@ -2366,12 +2399,7 @@ def product_mapping(request, store_id, product_id):
 
     source_variants = []
     images = {}
-    variants_map = {}
-
-    try:
-        variants_map = json.loads(product.variants_map)
-    except:
-        pass
+    variants_map = product.get_variant_mapping()
 
     for i in shopify_product['images']:
         for var in i['variant_ids']:
@@ -2903,7 +2931,7 @@ def acp_users_emails(request):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/')
 
-    res = ShopifyProduct.objects.exclude(shopify_export__isnull=True)
+    res = ShopifyProduct.objects.exclude(shopify_id=0)
     users = []
     filtred = []
     for row in res:
@@ -3363,30 +3391,17 @@ def orders_view(request):
             if el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
-                product = ShopifyProduct.objects.filter(user=models_user, shopify_export__shopify_id=el['product_id']).first()
+                product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
 
-            if product:
+            if product and product.have_supplier():
                 original_info = product.get_original_info()
                 if not original_info:
                     original_info = {}
 
                 order['line_items'][i]['product'] = product
-                order['line_items'][i]['domain'] = original_info.get('domain')
+                order['line_items'][i]['supplier'] = product.default_supplier
+
                 order['connected_lines'] += 1
-
-                original_url = original_info.get('url')
-                if utils.get_domain(original_url) == 'aliexpress':
-                    try:
-                        original_id = re.findall('[/_]([0-9]+).html', original_url)[0]
-                        order['line_items'][i]['original_url'] = 'http://www.aliexpress.com/item//{}.html'.format(
-                            original_id)
-
-                        order['line_items'][i]['original_id'] = original_id
-                    except:
-                        order['line_items'][i]['original_url'] = original_url
-                        print 'WARNING: ID not found for:', original_url
-                else:
-                    order['line_items'][i]['original_url'] = original_url
 
             products_cache[el['product_id']] = product
 
@@ -3454,7 +3469,7 @@ def orders_view(request):
                         if mapped:
                             order_data['variant'] = ' / '.join(mapped.split(','))
 
-                    if order['line_items'][i]['domain'] == 'aliexpress':
+                    if product and product.have_supplier():
                         if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
                             order['line_items'][i]['order_data_id'] = order_data['id']
 
@@ -3627,7 +3642,7 @@ def product_alerts(request):
         return HttpResponseRedirect('/')
 
     changes = AliexpressProductChange.objects.select_related('product') \
-                                     .select_related('product__shopify_export') \
+                                     .select_related('product__default_supplier') \
                                      .filter(user=request.user.models_user,
                                              product__store=store)
 
