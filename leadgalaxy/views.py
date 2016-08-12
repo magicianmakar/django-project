@@ -2443,7 +2443,13 @@ def product_mapping(request, store_id, product_id):
         'shopify_product': shopify_product,
         'source_variants': json.dumps(list(set(source_variants))),
         'page': 'product',
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Variants Mapping']
+        'breadcrumbs': [
+            {'title': 'Products', 'url': '/product'},
+            {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
+            {'title': product.title, 'url': '/product/{}'.format(product.id)},
+            {'title': 'Variants Mapping', 'url': request.build_absolute_uri()},
+
+        ]
     })
 
 
