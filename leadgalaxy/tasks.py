@@ -318,21 +318,22 @@ def export_product(req_data, target, user_id):
 
 
 @app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def update_shopify_product(self, store_id, product_id, shopify_product=None):
+def update_shopify_product(self, store_id, shopify_id, shopify_product=None, product_id=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
         try:
-            product = ShopifyProduct.objects.get(
-                user=store.user,
-                shopify_export__shopify_id=product_id)
+            if product_id:
+                product = ShopifyProduct.objects.get(store=store, id=product_id)
+            else:
+                product = ShopifyProduct.objects.get(store=store, shopify_id=shopify_id)
         except:
             return
 
         if shopify_product is None:
-            shopify_product = cache.get('webhook_order_{}_{}'.format(store_id, product_id))
+            shopify_product = cache.get('webhook_order_{}_{}'.format(store_id, shopify_id))
 
         if shopify_product is None:
-            shopify_product = utils.get_shopify_product(store, product_id)
+            shopify_product = utils.get_shopify_product(store, shopify_id)
 
         product_data = json.loads(product.data)
         product_data['title'] = shopify_product['title']
@@ -342,14 +343,20 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
         product_data['description'] = shopify_product['body_html']
         product_data['published'] = shopify_product.get('published_at') is not None
 
-        prices = [i['price'] for i in shopify_product['variants']]
-        compare_at_prices = [i['compare_at_price'] for i in shopify_product['variants']]
+        prices = [utils.safeFloat(i['price'], 0.0) for i in shopify_product['variants']]
+        compare_at_prices = [utils.safeFloat(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
 
         if len(set(prices)) == 1:  # If all variants have the same price
-            product_data['price'] = utils.safeFloat(prices[0])
+            product_data['price'] = prices[0]
+            product_data['price_range'] = None
+        else:
+            product_data['price'] = min(prices)
+            product_data['price_range'] = [min(prices), max(prices)]
 
         if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
-            product_data['compare_at_price'] = utils.safeFloat(compare_at_prices[0])
+            product_data['compare_at_price'] = compare_at_prices[0]
+        else:
+            product_data['compare_at_price'] = max(compare_at_prices)
 
         product.data = json.dumps(product_data)
         product.save()
@@ -363,12 +370,12 @@ def update_shopify_product(self, store_id, product_id, shopify_product=None):
     except Exception as e:
         raven_client.captureException(level='warning', extra={
             'Store': store.title,
-            'Product': product_id,
+            'Product': shopify_id,
             'Retries': self.request.retries
         })
 
         if not self.request.called_directly:
-            countdown = retry_countdown('retry_product_{}'.format(product_id), self.request.retries)
+            countdown = retry_countdown('retry_product_{}'.format(shopify_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 

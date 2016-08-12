@@ -832,7 +832,7 @@ def proccess_api(request, user, method, target, data):
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
             shopify_orders_utils.update_line_export(product.store, shopify_id)
 
-            tasks.update_shopify_product(product.store.id, shopify_id)
+            tasks.update_shopify_product(product.store.id, shopify_id, product_id=product.id)
 
         return JsonResponse({
             'status': 'ok',
@@ -2080,6 +2080,10 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             pass
 
         p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
+
+        price_range = p['product'].get('price_range')
+        if price_range and type(price_range) is list and len(price_range) == 2:
+            p['price_range'] = '${:.02f} - ${:.02f}'.format(price_range[0], price_range[1])
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []

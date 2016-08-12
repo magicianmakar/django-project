@@ -92,7 +92,11 @@
                 </div>
                 <div class="product-desc">
                     <span class="product-price">
-                        {{item.price}}
+                        {% if item.price_range %}
+                            {{item.price_range}}
+                        {% else %}
+                            {{item.price}}
+                        {% endif %}
                     </span>
                     <small class="text-muted">{{item.product.type}}</small>
                     {% if item.source %}
