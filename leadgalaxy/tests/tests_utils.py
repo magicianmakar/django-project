@@ -192,6 +192,15 @@ class FulfillmentTestCase(TestCase):
         data = utils.order_track_fulfillment(**self.fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_url'], "http://track.uncommonnow.com/{}".format(self.fulfillment_data['source_tracking']))
 
+    def test_manual_fulfilement_aftership_custom_url2(self):
+        # Custom Aftership domain
+        self.fulfillment_data['source_tracking'] = 'MA7565915257226HK'
+        self.fulfillment_data['use_usps'] = False
+        self.fulfillment_data['store_id'] = 2
+        self.fulfillment_data['user_config']['aftership_domain'] = {"2": "https://www.google.co.in/#q={{tracking_number}}"}
+        data = utils.order_track_fulfillment(**self.fulfillment_data)
+        self.assertEqual(data['fulfillment']['tracking_url'], "https://www.google.co.in/#q={}".format(self.fulfillment_data['source_tracking']))
+
     def test_manual_fulfilement_aftership_custom_url_fix(self):
         # Custom Aftership domain
         self.fulfillment_data['source_tracking'] = 'MA7565915257226HK'
