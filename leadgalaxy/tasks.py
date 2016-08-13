@@ -228,7 +228,6 @@ def export_product(req_data, target, user_id):
 
             if product:
                 product.shopify_id = pid
-                product.default_supplier = product_supplier
                 product.save()
 
         else:
