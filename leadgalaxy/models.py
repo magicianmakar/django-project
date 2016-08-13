@@ -611,8 +611,8 @@ class ShopifyProduct(models.Model):
         supplier = self.default_supplier
         if supplier:
             info = {
-                'name': supplier.supplier_name,
-                'url': supplier.supplier_url
+                'name': supplier.supplier_name or '',
+                'url': supplier.supplier_url or ''
             }
 
             if info.get('url').startswith('//'):
