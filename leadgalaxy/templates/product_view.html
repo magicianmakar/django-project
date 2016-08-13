@@ -565,9 +565,23 @@
           </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-sm-12">
+                    {% with stores=user.profile.get_active_stores.count %}
+
+                    <div class="col-sm-8" style="padding-right:0">
                         <input type="text" class="form-control input-md shopify-find-product" placeholder="Find product..." data-store="{{product.qelem.store_id}}">
                     </div>
+
+                    <div class="form-group col-sm-4" style="padding-left:5px">
+                        <select class="form-control shopify-store">
+                        {% for i in user.profile.get_active_stores %}
+                            <option value="{{i.id}}" {% if i == product.store or stores == 1 %}selected{% endif %}>
+                                {{i.title}}
+                            </option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                    {% endwith %}
                 </div>
                 <div class="row">
                     <div class="col-sm-12 text-center m-t-lg shopify-find-loading" style="position:absolute;display:none">
@@ -927,13 +941,14 @@ $(function() {
     $('.original-description').css('overflow', 'auto');
 });
 
-window.shopifyProductSelected = function (shopify_id) {
+window.shopifyProductSelected = function (store, shopify_id) {
     $.ajax({
         url: '/api/product-connect',
         type: 'POST',
         data: {
             product: '{{product.qelem.id}}',
             shopify: shopify_id,
+            store: store
         },
         success: function (data) {
             $('#modal-shopify-product').modal('hide');
@@ -985,11 +1000,12 @@ $('.product-connection-disconnect').click(function (e) {
     });
 });
 
-$('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', function (e) {
-    var query = $(this).val().trim();
-
+function shopifyProductSearch (e) {
     var loadingContainer = $('#modal-shopify-product .shopify-find-loading');
     var productsContainer = $('#modal-shopify-product .shopify-products');
+
+    var store = $('#modal-shopify-product .shopify-store').val();
+    var query = $('#modal-shopify-product .shopify-find-product').val().trim();
 
     loadingContainer.show();
     productsContainer.empty();
@@ -998,8 +1014,11 @@ $('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', functio
         url: '/api/shopify-products',
         type: 'POST',
         data: {
-            store: $(this).data('store'),
+            store: store,
             query: query
+        },
+        context: {
+            store: store
         },
         success: function (data) {
             var product_template = Handlebars.compile($("#product-select-template").html());
@@ -1008,11 +1027,13 @@ $('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', functio
                 productsContainer.append($('<div class="text-center"><h3>No Product found with the given search query</h3></div>'));
             }
 
+            var store = this.store;
             $.each(data.products, function () {
                 var el = $(product_template({product: this}));
+
                 $('a.shopify-product', el).click(function () {
                     if (window.shopifyProductSelected) {
-                        window.shopifyProductSelected($(this).data('product-id'));
+                        window.shopifyProductSelected(store, $(this).data('product-id'));
                     }
                 });
 
@@ -1026,7 +1047,10 @@ $('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', functio
             loadingContainer.hide();
         }
     });
-}, 500);
+}
+
+$('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopifyProductSearch, 500);
+$('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
 
 $('#modal-shopify-product .shopify-find-product').trigger('keyup');
 </script>

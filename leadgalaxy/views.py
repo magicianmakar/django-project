@@ -822,10 +822,13 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
+
         shopify_id = utils.safeInt(data.get('shopify'))
 
-        if shopify_id != product.shopify_id or True:
-            print 'Update:', shopify_id
+        if shopify_id != product.shopify_id or product.store != store:
+            product.store = store
             product.shopify_id = shopify_id
             product.save()
 
