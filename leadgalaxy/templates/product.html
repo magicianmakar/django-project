@@ -83,11 +83,11 @@
             <div class="ibox-content product-box" product-id="{{item.id}}">
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
-                    <label for="product_{{item.id}}"><img {% if forloop.counter > 4 %}class="unveil" src="{% static 'img/blank.gif' %}" data-{% endif %}src="{{item.images|first}}"
+                    <a href="/product/{{item.id}}"><img {% if forloop.counter > 4 %}class="unveil" src="{% static 'img/blank.gif' %}" data-{% endif %}src="{{item.images|first}}"
                         {% if item.qelem.store_id and item.qelem.get_shopify_id %}
                         onerror="this.src = '/api/product-variant-image?store={{item.qelem.store_id}}&product={{item.qelem.get_shopify_id}}&redirect=1&frer=1'; this.onerror=null;"
                         {% endif %}
-                        style="width: 100%"></label>
+                        style="width: 100%"></a>
                     <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button>
                 </div>
                 <div class="product-desc">
@@ -112,7 +112,7 @@
                     </div>
                     <div class="m-t row">
                         <div class="col-md-3">
-                        <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
+                        <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
                         </div>
                         <div class="col-md-7">
                         <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
