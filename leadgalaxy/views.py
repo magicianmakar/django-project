@@ -810,7 +810,9 @@ def proccess_api(request, user, method, target, data):
 
             products = []
             for i in rep.json()['products']:
-                i['image']['src'] = shopify_image_thumb(i['image']['src'], size='thumb')
+                if i.get('image') and i['image'].get('src'):
+                    i['image']['src'] = shopify_image_thumb(i['image']['src'], size='thumb')
+
                 products.append(i)
 
             return JsonResponse({'products': products})
