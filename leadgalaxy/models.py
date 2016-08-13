@@ -631,8 +631,11 @@ class ShopifyProduct(models.Model):
         if commit:
             self.save()
 
-    def set_default_supplier(self, supplier):
+    def set_default_supplier(self, supplier, commit=False):
         self.default_supplier = supplier
+
+        if commit:
+            self.save()
 
         self.get_suppliers().update(is_default=False)
 

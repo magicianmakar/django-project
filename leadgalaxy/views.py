@@ -983,6 +983,14 @@ def proccess_api(request, user, method, target, data):
 
         duplicate_product.save()
 
+        for i in product.productsupplier_set.all():
+            i.pk = None
+            i.product = duplicate_product
+            i.save()
+
+            if i.is_default:
+                duplicate_product.set_default_supplier(i, commit=True)
+
         return JsonResponse({
             'status': 'ok',
             'product': {
