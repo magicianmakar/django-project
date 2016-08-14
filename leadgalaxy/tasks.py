@@ -209,6 +209,21 @@ def export_product(req_data, target, user_id):
 
                     original_url = product.get_original_info().get('url', '')
 
+                    product.shopify_id = pid
+
+                    if not product.default_supplier:
+                        supplier = product.get_supplier_info()
+                        product.default_supplier = ProductSupplier.objects.create(
+                            store=store,
+                            product=product,
+                            product_url=original_url,
+                            supplier_name=supplier.get('name'),
+                            supplier_url=supplier.get('url'),
+                            is_default=True
+                        )
+
+                    product.save()
+
                 except ShopifyProduct.DoesNotExist:
                     raven_client.captureException()
                     return {
@@ -220,16 +235,8 @@ def export_product(req_data, target, user_id):
                     return {
                         'error': "Product: {}".format(e.message)
                     }
-
-                product.shopify_id = pid
-                product.save()
             else:
                 product = None
-
-            if product:
-                product.shopify_id = pid
-                product.save()
-
         else:
             # messages.success(request, 'Product updated in Shopify.')
             pass
