@@ -1207,6 +1207,17 @@ def proccess_api(request, user, method, target, data):
                                  'It will cause issues with auto-variant selection'
                     })
 
+        if not product.default_supplier:
+            supplier = product.get_supplier_info()
+            product.default_supplier = ProductSupplier.objects.create(
+                store=product.store,
+                product=product,
+                product_url=product.get_original_info().get('url', ''),
+                supplier_name=supplier.get('name'),
+                supplier_url=supplier.get('url'),
+                is_default=True
+            )
+
         product.set_variant_mapping(mapping)
         product.save()
 
