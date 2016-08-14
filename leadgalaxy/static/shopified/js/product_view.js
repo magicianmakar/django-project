@@ -649,6 +649,7 @@ function bindExportEvents(target) {
                         swal.close();
 
                         setTimeout(function() {
+                            window.location.hash = '#connections';
                             window.location.reload();
                         }, 200);
                     },
