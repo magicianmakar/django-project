@@ -554,7 +554,7 @@ class ShopifyProduct(models.Model):
     def shopify_link(self):
         shopify_id = self.get_shopify_id()
 
-        if shopify_id:
+        if shopify_id and self.store:
             return self.store.get_link('/admin/products/{}'.format(shopify_id))
         else:
             return None
