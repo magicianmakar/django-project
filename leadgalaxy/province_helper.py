@@ -20,7 +20,6 @@ def load_uk_provincess():
 def missing_province(city):
     city_key = md5(city.lower().strip()).hexdigest()[:8]
     city_key = 'uk_province_{}'.format(city_key)
-    print city_key
     if cache.get(city_key) is None:
         print 'WARNING: UK Province not found for:', city
         cache.set(city_key, 1, timeout=3600)
