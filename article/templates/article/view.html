@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ article.title }}{% endblock %}
+{% block title %}{{ article.text_title }}{% endblock %}
 
 {% block main-container %}
 
@@ -15,7 +15,7 @@
                     {% endfor %}
                 </div>
                 <div class="text-center article-title">
-                    <span class="text-muted itooltip" title="Last Update"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
+                    <span class="text-muted itooltip article-updated-at" title="Last Update"><i class="fa fa-clock-o"></i> {{ article.updated_at|date }}</span>
 
                     {% if user.is_superuser %}
                         <p class="text-muted itooltip" title="Visible to admin only"><i class="fa fa-eye"></i> Page Views: {{ article.views }}</p>
@@ -25,7 +25,7 @@
                         {% if article.stat != 0 %}
                             [{{article.get_status|title}}]
                         {% endif %}
-                        {{ article.title }}
+                        {{ article.title | safe }}
                     </h1>
                 </div>
 
@@ -63,6 +63,10 @@
     </div>
 </div>
 
+{% endblock %}
 
-
+{% block extracss %}
+<style type="text/css">
+    {{ article.style|default:''|safe }}
+</style>
 {% endblock %}

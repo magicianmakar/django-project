@@ -28,6 +28,7 @@ class Article(models.Model):
     stat = models.IntegerField(choices=PUBLISH_STAT, default=0, verbose_name='Publish stat')
     tags = models.ManyToManyField('ArticleTag', blank=True)
     views = models.IntegerField(default=0)
+    style = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
@@ -40,6 +41,11 @@ class Article(models.Model):
 
     def get_status(self):
         return PUBLISH_STAT[int(self.stat)][1]
+
+    def text_title(self):
+        from bleach import clean
+
+        return clean(self.title, tags=[], strip=True).strip()
 
     def save(self, **kwargs):
         if not self.slug:

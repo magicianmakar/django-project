@@ -37,7 +37,7 @@
                     {% if article.stat != 0 %}
                         <span class="badge badge-info">{{article.get_status|title}}</span>
                     {% endif %}
-                    {{ article.title }}
+                    {{ article.text_title }}
                 </a>
                 <div class="forum-sub-title">
                     {% if user.is_superuser %}

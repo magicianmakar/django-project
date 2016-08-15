@@ -20,9 +20,13 @@ class ArticleAdmin(admin.ModelAdmin):
             'fields': ('title', 'author', 'slug', 'stat')
         }),
         # Fieldset
-        ('Blog content', {
+        ('Page content', {
             'description':'HTML tags are accepeted',
             'fields': ('body', )
+        }),
+        ('Page Style', {
+            'description':'CSS Style of this page',
+            'fields': ('style', )
         }),
     )
 
