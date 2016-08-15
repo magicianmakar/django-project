@@ -3494,10 +3494,7 @@ def orders_view(request):
                     if product:
                         order_data['product_id'] = product.id
 
-                        try:
-                            variants_map = json.loads(product.variants_map)
-                        except:
-                            variants_map = {}
+                        variants_map = product.get_variant_mapping()
 
                         mapped = variants_map.get(str(el['variant_id']))
                         if mapped:

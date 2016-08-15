@@ -651,7 +651,12 @@ class ShopifyProduct(models.Model):
 
     def get_variant_mapping(self):
         try:
-            return json.loads(self.default_supplier.variants_map)
+            if self.default_supplier and self.default_supplier.variants_map:
+                return json.loads(self.default_supplier.variants_map)
+            elif self.variants_map:
+                return json.loads(self.variants_map)
+            else:
+                return {}
         except:
             return {}
 

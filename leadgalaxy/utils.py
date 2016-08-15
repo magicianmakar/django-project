@@ -1493,9 +1493,8 @@ class ProductChangeEvent():
         self.product = product_change.product
         self.user = product_change.user
 
-        if self.product.variants_map:
-            self.variants_map = json.loads(self.product.variants_map)
-        else:
+        self.variants_map = product.get_variant_mapping()
+        if not len(self.variants_map.keys()):
             self.variants_map = None
 
         self.config = {
