@@ -678,6 +678,7 @@ class ShopifyProduct(models.Model):
                 product_url=export.original_url,
                 supplier_name='',
                 supplier_url='',
+                variants_map=self.variants_map,
                 is_default=True
             )
 
