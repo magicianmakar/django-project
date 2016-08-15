@@ -1493,7 +1493,7 @@ class ProductChangeEvent():
         self.product = product_change.product
         self.user = product_change.user
 
-        self.variants_map = product.get_variant_mapping()
+        self.variants_map = self.product.get_variant_mapping()
         if not len(self.variants_map.keys()):
             self.variants_map = None
 
