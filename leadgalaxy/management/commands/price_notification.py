@@ -84,7 +84,7 @@ class Command(BaseCommand):
         if options['new_products']:
             products = products.filter(price_notification_id=0)
 
-        products = products.exclude(shopify_id=0)
+        products = products.exclude(shopify_id=0).exclude(store=None)
 
         products_count = products.count()
 
