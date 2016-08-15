@@ -973,23 +973,7 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_view(product)
 
-        duplicate_product = ShopifyProduct.objects.get(id=data.get('product'))
-
-        duplicate_product.pk = None
-        duplicate_product.parent_product = product
-        duplicate_product.shopify_id = 0
-
-        user.can_add(duplicate_product)
-
-        duplicate_product.save()
-
-        for i in product.productsupplier_set.all():
-            i.pk = None
-            i.product = duplicate_product
-            i.save()
-
-            if i.is_default:
-                duplicate_product.set_default_supplier(i, commit=True)
+        duplicate_product = utils.duplicate_product(product)
 
         return JsonResponse({
             'status': 'ok',

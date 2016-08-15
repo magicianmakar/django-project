@@ -617,6 +617,30 @@ def get_store_from_url(user, url):
     return ShopifyStore.objects.filter(api_url__icontains=domain, user=user).first()
 
 
+def duplicate_product(product, store=None):
+    parent_product = ShopifyProduct.objects.get(id=product.id)
+
+    product.pk = None
+    product.parent_product = parent_product
+    product.shopify_id = 0
+
+    if store is not None:
+        product.store = store
+
+    product.save()
+
+    for i in parent_product.productsupplier_set.all():
+        i.pk = None
+        i.product = product
+        i.store = product.store
+        i.save()
+
+        if i.is_default:
+            product.set_default_supplier(i, commit=True)
+
+    return product
+
+
 def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
 
