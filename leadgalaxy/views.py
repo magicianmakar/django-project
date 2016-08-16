@@ -1026,10 +1026,10 @@ def proccess_api(request, user, method, target, data):
 
         can_add, total_allowed, user_count = request.user.profile.can_add_store()
 
-        extra_stores = can_add and request.user.profile.plan.is_stripe() and \
-            request.user.profile.get_active_stores().count() >= 1
+        extra_stores = can_add and user.profile.plan.is_stripe() and \
+            user.profile.get_active_stores().count() >= 1
 
-        config['extra_stores'] = True
+        config['extra_stores'] = extra_stores
 
         return JsonResponse(config)
 
