@@ -1024,7 +1024,7 @@ def proccess_api(request, user, method, target, data):
                 'force_update': cache.get('extension_required', False)
             }
 
-        can_add, total_allowed, user_count = request.user.profile.can_add_store()
+        can_add, total_allowed, user_count = user.profile.can_add_store()
 
         extra_stores = can_add and user.profile.plan.is_stripe() and \
             user.profile.get_active_stores().count() >= 1
