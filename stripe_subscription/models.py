@@ -253,7 +253,7 @@ class ExtraStore(models.Model):
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
     period_end = models.DateTimeField(null=True)
-    last_invoice = models.CharField(max_length=64, null=True, blank=True, default='Last Invoice Item')
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, verbose_name='Last Invoice Item')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
