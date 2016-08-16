@@ -830,6 +830,19 @@ def proccess_api(request, user, method, target, data):
         shopify_id = utils.safeInt(data.get('shopify'))
 
         if shopify_id != product.shopify_id or product.store != store:
+            connected_to = ShopifyProduct.objects.filter(
+                store=store,
+                shopify_id=shopify_id
+            )
+
+            if connected_to.exists():
+                return JsonResponse({
+                    'error': '\n'.join(
+                        ['The selected Product is already connected to:\n'] +
+                        [request.build_absolute_uri('/product/{}'.format(i))
+                            for i in connected_to.values_list('id', flat=True)])
+                }, status=500)
+
             product.store = store
             product.shopify_id = shopify_id
             product.save()
