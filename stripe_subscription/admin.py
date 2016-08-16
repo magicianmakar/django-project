@@ -32,6 +32,7 @@ class StripeCustomerAdmin(admin.ModelAdmin):
     list_display = ('user', 'customer_id', 'created_at', 'updated_at')
     readonly_fields = ('customer_id',)
     search_fields = ('customer_id',) + USER_SEARCH_FIELDS
+    raw_id_fields = ('user',)
 
 
 @admin.register(StripeSubscription)
@@ -39,6 +40,7 @@ class StripeSubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'subscription_id', 'created_at', 'updated_at')
     readonly_fields = ('subscription_id',)
     search_fields = ('subscription_id',) + USER_SEARCH_FIELDS
+    raw_id_fields = ('user',)
 
 
 @admin.register(StripeEvent)
@@ -51,6 +53,13 @@ class StripeEventAdmin(admin.ModelAdmin):
 
 @admin.register(ExtraStore)
 class ExtraStoreAdmin(admin.ModelAdmin):
-    list_display = ('store', 'user', 'status', 'last_invoice', 'period_start', 'period_end')
+    list_display = ('store', 'user', 'status', 'stores_count', 'is_active', 'last_invoice', 'period_start', 'period_end')
     list_filter = ('status', 'store__is_active')
     search_fields = ('store__title', 'store__id', 'last_invoice') + USER_SEARCH_FIELDS
+    raw_id_fields = ('store', 'user')
+
+    def stores_count(self, obj):
+        return obj.user.profile.get_active_stores().count()
+
+    def is_active(self, obj):
+        return obj.store.is_active
