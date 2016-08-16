@@ -69,7 +69,7 @@ def remove_link_query(context, link):
 @register.simple_tag
 def shopify_image_thumb(link, size='small'):
     if link:
-        return re.sub(r'\.(jpe?g|png)(\?.+)?$', r'_{}.\1\2'.format(size), link, flags=re.I)
+        return re.sub(r'\.(jpe?g|png|gif)(\?.+)?$', r'_{}.\1\2'.format(size), link, flags=re.I)
 
 
 @register.simple_tag(takes_context=True)
