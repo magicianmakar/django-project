@@ -2,7 +2,13 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import StripePlan, StripeCustomer, StripeSubscription, StripeEvent
+from .models import (
+    StripePlan,
+    StripeCustomer,
+    StripeSubscription,
+    StripeEvent,
+    ExtraStore
+)
 
 from leadgalaxy.models import GroupPlan
 
@@ -41,3 +47,10 @@ class StripeEventAdmin(admin.ModelAdmin):
     readonly_fields = ('event_id', 'created_at')
     list_filter = ('event_type',)
     search_fields = ('event_id', 'event_type')
+
+
+@admin.register(ExtraStore)
+class ExtraStoreAdmin(admin.ModelAdmin):
+    list_display = ('store', 'user', 'status', 'last_invoice', 'period_start', 'period_end')
+    list_filter = ('status', 'store__is_active')
+    search_fields = ('store__title', 'store__id', 'last_invoice') + USER_SEARCH_FIELDS
