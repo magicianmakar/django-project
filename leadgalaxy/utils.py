@@ -1028,12 +1028,14 @@ def order_track_fulfillment(**kwargs):
     }
 
     if source_tracking:
-        if (kwargs.get('use_usps') is None and is_usps) or kwargs.get('use_usps'):
+        have_custom_domain = store_id and type(user_config.get('aftership_domain')) is dict
+
+        if (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = "USPS"
         else:
             aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
 
-            if store_id and type(user_config.get('aftership_domain')) is dict:
+            if have_custom_domain:
                 aftership_domain = user_config.get('aftership_domain').get(str(store_id), aftership_domain)
                 if '{{tracking_number}}' not in aftership_domain:
                     aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)

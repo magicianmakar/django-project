@@ -152,6 +152,13 @@ class FulfillmentTestCase(TestCase):
         data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})
         self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(track.source_tracking))
 
+    def test_custom_aftership_domain_with_us_epacket(self):
+        # User have a custom tracking, it should be used even for ePacket-US instead of USPS
+        track = self.create_track('5415135175', '1654811', 'MA7565915257226HK', 'US')
+        data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"1": 'uncommonnow'}})
+        self.assertEqual(data['fulfillment']['tracking_company'], "Other")
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(track.source_tracking))
+
     def test_manual_fulfilement(self):
         data = utils.order_track_fulfillment(**self.fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
@@ -182,6 +189,35 @@ class FulfillmentTestCase(TestCase):
         self.fulfillment_data['user_config']['aftership_domain'] = {"2": "uncommonnow"}
         data = utils.order_track_fulfillment(**self.fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
+
+    def test_manual_fulfilement_aftership_custom_even_usps(self):
+        # User have a Custom Aftership domain and this is a ePacket-US order but he didn't choose USPS
+        self.create_track('54151351750', '16548110', 'MA7565915257226HK', 'US')
+
+        self.fulfillment_data['order_id'] = '54151351750'
+        self.fulfillment_data['line_id'] = '16548110'
+        self.fulfillment_data['source_tracking'] = 'MA7565915257226HK'
+        self.fulfillment_data['store_id'] = 2
+        self.fulfillment_data['user_config']['aftership_domain'] = {"2": "uncommonnow"}
+        del self.fulfillment_data['use_usps']
+
+        data = utils.order_track_fulfillment(**self.fulfillment_data)
+        self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(self.fulfillment_data['source_tracking']))
+
+    def test_manual_fulfilement_aftership_custom_force_usps(self):
+        # User have a Custom Aftership domain but choose USPS from the dialog for an ePacket-US order
+        self.create_track('54151351750', '16548110', 'MA7565915257226HK', 'US')
+
+        self.fulfillment_data['order_id'] = '54151351750'
+        self.fulfillment_data['line_id'] = '16548110'
+        self.fulfillment_data['source_tracking'] = 'MA7565915257226HK'
+        self.fulfillment_data['store_id'] = 2
+        self.fulfillment_data['user_config']['aftership_domain'] = {"2": "uncommonnow"}
+        self.fulfillment_data['use_usps'] = True
+
+        data = utils.order_track_fulfillment(**self.fulfillment_data)
+        self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
+        self.assertIsNone(data['fulfillment'].get('tracking_url'))
 
     def test_manual_fulfilement_aftership_custom_url(self):
         # Custom Aftership domain
