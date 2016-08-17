@@ -188,13 +188,25 @@ def invoice_extra_stores():
 
     from django.db.models import Q
 
-    extra_stores = ExtraStore.objects.filter(store__is_active=True) \
-                                     .filter(status__in=['pending', 'active']) \
+    extra_stores = ExtraStore.objects.filter(status__in=['pending', 'active']) \
                                      .filter(Q(period_end__lte=arrow.utcnow().datetime) |
                                              Q(period_end=None))
 
     invoiced = 0
     for extra in extra_stores:
+        ignore = False
+        if not extra.store.is_active:
+            extra.status = 'disabled'
+            extra.save()
+            ignore = True
+
+        if extra.user.profile.get_active_stores().count() <= 1:
+            extra.user.extrastore_set.all().update(status='disabled')
+            ignore = True
+
+        if ignore:
+            continue
+
         extra_store_invoice(extra.store, extra=extra)
         invoiced += 1
 

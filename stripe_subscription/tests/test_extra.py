@@ -146,7 +146,7 @@ class ExtraStoreTestCase(TestCase):
         from stripe_subscription import utils
         utils.stripe.InvoiceItem.create = MagicMock(return_value=Munch({'id': 'invoiceitem_id'}))
 
-        self.assertEqual(utils.invoice_extra_stores(), 1, 'Do not invcoie delete stores')
+        self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Active store')
 
         import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
@@ -154,3 +154,35 @@ class ExtraStoreTestCase(TestCase):
             extra.store.save()
 
             self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
+
+    def test_delete_extra_store_on_plan_limit(self):
+        ShopifyStore.objects.create(
+            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
+            version=2, shop=MYSHOPIFY_DOMAIN)
+
+        extra = self.user.extrastore_set.first()
+
+        from stripe_subscription import utils
+        utils.stripe.InvoiceItem.create = MagicMock(return_value=Munch({'id': 'invoiceitem_id'}))
+
+        self.store.is_active = False
+        self.store.save()
+
+        self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete store')
+        self.assertEqual(self.user.extrastore_set.first().status, 'disabled')
+
+        extra = ShopifyStore.objects.create(
+            user=self.user, title="test3", api_url=SHOPIFY_APP_URL,
+            version=2, shop=MYSHOPIFY_DOMAIN)
+
+        self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Extra Store')
+        self.assertEqual(self.user.extrastore_set.first().status, 'disabled')
+        self.assertEqual(self.user.extrastore_set.last().status, 'active')
+
+        import arrow
+        with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
+            extra.is_active = False
+            extra.save()
+
+            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
+            self.assertEqual(self.user.extrastore_set.last().status, 'disabled')
