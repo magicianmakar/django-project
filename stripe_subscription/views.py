@@ -200,7 +200,7 @@ def subscription_cancel(request):
                 if invoice.paid and invoice.closed and invoice.amount_due:
                     refound_amount = invoice.amount_due - ((usage_duration * invoice.amount_due) / invoiced_duration)
 
-                    if 0 < refound_amount and refound_amount < invoice.amount_due:
+                    if 0 < refound_amount and refound_amount <= invoice.amount_due:
                         try:
                             stripe.Refund.create(
                                 charge=invoice.charge,
