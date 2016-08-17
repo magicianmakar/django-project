@@ -452,7 +452,9 @@ function matchImagesWithExtra() {
     $('#modal-add-image .extra-added').remove();
     $('#modal-add-image .add-var-image-block').each(function(i, el) {
             if (indexOfImages(product.images, $('img', el).attr('src')) != -1) {
-                $(el).append($('<img class="extra-added" src="//i.imgur.com/HDg5nrv.png" style="position: absolute;left: 16px;top: 1px;border-radius: 0 0 8px 0;background-color: #fff;">'));
+                $(el).append($('<img class="extra-added" src="//i.imgur.com/HDg5nrv.png" ' +
+                    'style="position:absolute;left:16px;top:1px;border-radius:0 0 8px 0;' +
+                    'background-color:#fff;">'));
             }
     });
 }
@@ -674,8 +676,17 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
                 $('.description-images-add').append($('<div class="col-xs-12"></div>'));
             }
 
-            var d = $('<div>', {'class':'col-xs-3 add-var-image-block','image-url': $(el).attr('src')});
-            var img = $('<img>', {src: $(el).attr('src'), 'class': 'add-var-image', 'image-url': $(el).attr('src'), 'style':''});
+            var d = $('<div>', {
+                'class': 'col-xs-3 add-var-image-block',
+                'image-url': $(el).attr('src')
+            });
+            var img = $('<img>', {
+                src: $(el).attr('src'),
+                'class': 'add-var-image',
+                'image-url': $(el).attr('src'),
+                'style': ''
+            });
+
             d.append(img);
 
             img.click(function (e) {
@@ -795,17 +806,42 @@ function renderImages() {
             $('#var-images').append($('<div class="col-xs-12"></div>'));
         }
 
-        var d = $('<div>', {'class':'col-xs-3 var-image-block','image-url': el});
-        var img = $('<img>', {src: el, 'id':'product-image-'+i, 'class': 'var-image', 'image-url': el, 'image-id':i, 'style':'cursor: default'});
+        var d = $('<div>', {
+            'class': 'col-xs-3 var-image-block',
+            'image-url': el
+        });
+
+        var img = $('<img>', {
+            src: el,
+            'id': 'product-image-' + i,
+            'class': 'var-image',
+            'image-url': el,
+            'image-id': i,
+            'style': 'cursor: default'
+        });
         d.append(img);
-        d.append($('<button data-toggle="tooltip" title="Delete Image" class="btn btn-danger btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;border-radius: 5px;font-weight: bolder;">x</button>'));
+
+        d.append($('<button data-toggle="tooltip" title="Delete Image" class="btn btn-danger ' +
+            'btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;' +
+            'right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;' +
+            'border-radius: 5px;font-weight: bolder;">x</button>'));
 
         if (config.photo_editor) {
-            d.append($('<button data-toggle="tooltip" title="Simple Image Editor" class="btn btn-primary btn-xs edit-photo" style="display:none;position: absolute;cursor: pointer;right: 50px;top: 5px;background-color: rgb(226, 255, 228);color: rgb(0, 105, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-edit"></i></button>'));
+            d.append($('<button data-toggle="tooltip" title="Simple Image Editor" ' +
+                'class="btn btn-primary btn-xs edit-photo" style="display:none;' +
+                'position:absolute;cursor:pointer;right:50px;top:5px;' +
+                'background-color:rgb(226, 255, 228);color: rgb(0, 105, 19);' +
+                'border-radius: 5px;font-weight: bolder;">' +
+                '<i class="fa fa-edit"></i></button>'));
         }
 
         if (config.advanced_photo_editor) {
-            d.append($('<button data-toggle="tooltip" title="Advanced Image Editor" class="btn btn-warning btn-xs advanced-edit-photo" style="display:none;position: absolute;cursor: pointer;right: 80px;top: 5px;background-color: rgb(255, 245, 195);color: rgb(105, 30, 19);border-radius: 5px;font-weight: bolder;"><i class="fa fa-picture-o"></i></button>'));
+            d.append($('<button data-toggle="tooltip" title="Advanced Image Editor" ' +
+                'class="btn btn-warning btn-xs advanced-edit-photo" ' +
+                'style="display:none;position:absolute;cursor:pointer;right:80px;'+
+                'top:5px;background-color:rgb(255, 245, 195);color:rgb(105, 30, 19);'+
+                'border-radius:5px;font-weight:bolder;">' +
+                '<i class="fa fa-picture-o"></i></button>'));
         }
 
         d.find('.image-delete').click(imageClicked);
