@@ -2356,7 +2356,7 @@ def product_view(request, pid):
         pass
 
     shopify_product = None
-    if product.shopify_id:
+    if product.shopify_id and product.store:
         p['shopify_url'] = product.store.get_link('/admin/products/{}'.format(product.shopify_id))
         p['variant_edit'] = '/product/variants/{}/{}'.format(product.store.id, product.shopify_id)
 
