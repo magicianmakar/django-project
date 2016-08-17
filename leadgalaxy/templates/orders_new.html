@@ -140,7 +140,7 @@
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Status:</label>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2" style="padding-right:7px">
                             <select name="status" class="form-control help-select" style="padding: 6px 0px">
                                 <option {% if status == 'open' %}selected="selected"{% endif %} value="open">All open orders</option>
                                 <option {% if status == 'closed' %}selected="selected"{% endif %} value="closed">Show only closed orders</option>
@@ -156,12 +156,18 @@
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Fulfillment Status:</label>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2" style="padding-right:7px">
                             <select name="fulfillment" class="form-control help-select" style="padding: 6px 0px">
-                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %} value="unshipped" title="fff">Show orders that have not yet been shipped</option>
-                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %} value="shipped">Show orders that have been shipped</option>
-                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %} value="partial">Show partially shipped orders</option>
-                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %} value="any">Show orders with any fulfillment status</option>
+                                <option {% if fulfillment == 'unshipped,partial' %}selected="selected"{% endif %}
+                                        value="unshipped,partial" label="Unfulfilled / Partially fulfilled">Show orders that have not yet been fulfilled or partially fulfilled</option>
+                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}
+                                        value="unshipped" label="Unfulfilled">Show orders that have not yet been fulfilled</option>
+                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}
+                                        value="partial" label="Partially fulfilled">Show partially shipped orders</option>
+                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %}
+                                        value="shipped" label="Fulfilled">Show orders that have been fulfilled</option>
+                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %}
+                                        value="any">Show orders with any fulfillment status</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
@@ -172,7 +178,7 @@
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Financial Status:</label>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2" style="padding-right:7px">
                             <select name="financial" class="form-control help-select" style="padding: 6px 0px">
                                 <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all authorized, pending, and paid orders</option>
                                 <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>

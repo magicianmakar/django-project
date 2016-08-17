@@ -630,7 +630,9 @@ $(function () {
     $('.help-select').each(function (i, el) {
         $('option', el).each(function (index, option) {
             $(option).attr('title', $(option).text());
-            $(option).text(toTitleCase($(option).val()));
+
+            var label = $(option).attr('label') || toTitleCase($(option).val());
+            $(option).text(label);
         });
 
         $(el).change(function (e) {

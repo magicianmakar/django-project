@@ -3227,7 +3227,7 @@ def orders_view(request):
 
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
-    fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
+    fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
     financial = utils.get_orders_filter(request, 'financial', 'paid')
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
@@ -3294,7 +3294,9 @@ def orders_view(request):
         elif status == 'cancelled':
             orders = orders.exclude(cancelled_at=None)
 
-        if fulfillment == 'unshipped':
+        if fulfillment == 'unshipped,partial':
+            orders = orders.filter(Q(fulfillment_status=None) | Q(fulfillment_status='partial'))
+        elif fulfillment == 'unshipped':
             orders = orders.filter(fulfillment_status=None)
         elif fulfillment == 'shipped':
             orders = orders.filter(fulfillment_status='fulfilled')
