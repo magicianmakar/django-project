@@ -82,7 +82,11 @@ $('#fullfill-order-btn').click(function (e) {
 $('.filter-btn').click(function (e) {
     Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
 
-    $('.filter-form').toggle('fade');
+    if (!$('.filter-form').is(':visible')) {
+        $('.filter-form').fadeIn('fast');
+    } else {
+        $('.filter-form').fadeOut('fast');
+    }
 });
 
 $(".filter-form").submit(function() {
