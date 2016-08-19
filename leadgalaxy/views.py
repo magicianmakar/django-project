@@ -3225,6 +3225,11 @@ def orders_view(request):
     if request.GET.get('reset') == '1':
         request.user.profile.del_config_values('_orders_filter_', True)
 
+    breadcrumbs = [
+        {'url': '/orders', 'title': 'Orders'},
+        {'url': '/orders?store={}'.format(store.id), 'title': store.title},
+    ]
+
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
@@ -3339,7 +3344,41 @@ def orders_view(request):
                     }
                 )
 
-                shopify_orders = rep.json()['orders']
+                api_error = None
+                try:
+                    rep.raise_for_status()
+                    shopify_orders = rep.json()['orders']
+
+                except json.JSONDecodeError:
+                    api_error = 'Unexpected response content'
+                    raven_client.captureException()
+
+                except requests.exceptions.ConnectTimeout:
+                    api_error = 'Connection Timeout'
+                    raven_client.captureException()
+
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 429:
+                        api_error = 'API Rate Limit'
+                    elif e.response.status_code == 404:
+                        api_error = 'Store Not Found'
+                    else:
+                        api_error = 'Unknown Error {}'.format(e.response.status_code)
+                        raven_client.captureException()
+                except:
+                    api_error = 'Unknown Error'
+                    raven_client.captureException()
+
+                if api_error:
+                    cache.delete(cache_key)
+
+                    return render(request, 'orders_new.html', {
+                        'store': store,
+                        'api_error': api_error,
+                        'page': 'orders',
+                        'breadcrumbs': breadcrumbs
+                    })
+
                 cache.set(cache_key, zlib.compress(json.dumps(shopify_orders)), timeout=300)
             else:
                 shopify_orders = json.loads(zlib.decompress(shopify_orders))
@@ -3556,7 +3595,7 @@ def orders_view(request):
         'store_sync_enabled': store_sync_enabled,
         'countries': countries,
         'page': 'orders',
-        'breadcrumbs': ['Orders']
+        'breadcrumbs': breadcrumbs
     })
 
 

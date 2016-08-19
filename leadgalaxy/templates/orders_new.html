@@ -491,18 +491,26 @@
                             </div>
                         </div>
                         {% empty %}
-                        <h3 class="text-center">No orders found.</h3>
-                        <p class="text-center">
-                            Try adjusting your <a class="filter-btn" href="#">Filters</a> or
-                            <a href="{% url_multi_replace status='any' fulfillment='any' financial='any' connected='false' %}">
-                                {% if request.GET.query or request.GET.query_order or request.GET.query_customer or request.GET.query_address %}
-                                    Search in
-                                {% else %}
-                                    View
-                                {% endif %}
-                                all Orders
-                            </a>
-                        </p>
+
+                        {% if api_error %}
+                            <p class="text-center">Shopify Error: {{api_error}}</p>
+                            <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
+                        {% else %}
+                            <h3 class="text-center">
+                                No orders found.
+                            </h3>
+                            <p class="text-center">
+                                Try adjusting your <a class="filter-btn" href="#">Filters</a> or
+                                <a href="{% url_multi_replace status='any' fulfillment='any' financial='any' connected='false' %}">
+                                    {% if request.GET.query or request.GET.query_order or request.GET.query_customer or request.GET.query_address %}
+                                        Search in
+                                    {% else %}
+                                        View
+                                    {% endif %}
+                                    all Orders
+                                </a>
+                            </p>
+                        {% endif %}
                         {% endfor %}
                     </div>
 
