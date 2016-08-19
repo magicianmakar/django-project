@@ -15,7 +15,7 @@
 
             <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
 
-            {% if item.order_data_id %}
+            {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                    {% if aliexpress_affiliate %}

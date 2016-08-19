@@ -736,6 +736,16 @@ class ProductSupplier(models.Model):
             if 'aliexpress.com' in self.product_url.lower():
                 return u'http://www.aliexpress.com/item//{}.html'.format(source_id)
 
+        return self.product_url
+
+    def support_auto_fulfill(self):
+        """
+        Return True if this supplier support auto fulfill using the extension
+        Currently only Aliexpress support that
+        """
+
+        return 'aliexpress.com/' in self.product_url.lower()
+
 
 class ShopifyProductExport(models.Model):
     class Meta:
