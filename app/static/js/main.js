@@ -541,16 +541,6 @@ $(function() {
     $('a[data-auto-hash]').click(function (e) {
         window.location.hash = $(this).data('auto-hash');
     });
-
-    setTimeout(function() {
-        if($('.extension-version').attr('action') !== 'true') {
-            $('#page-wrapper .footer').addClass('fixed');
-
-            if ($('.extension-version').data('required')) {
-                $('.extension-version').css('color', 'red');
-            }
-        }
-    }, 1000);
 });
 
 $('a[data-auto-click]').each(function () {
