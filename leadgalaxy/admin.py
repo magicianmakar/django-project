@@ -202,7 +202,7 @@ class AliexpressProductChangeAdmin(admin.ModelAdmin):
 @admin.register(PlanPayment)
 class PlanPaymentAdmin(admin.ModelAdmin):
     list_display = ('provider', 'payment_id', 'transaction_type', 'fullname',
-                    'email', 'user', 'product_title', 'created_at')
+                    'email', 'user', 'product_title', 'amount', 'created_at')
     list_filter = ('provider', 'transaction_type',)
     search_fields = ('fullname', 'email', 'payment_id', 'data') + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
@@ -212,3 +212,10 @@ class PlanPaymentAdmin(admin.ModelAdmin):
             return json.loads(obj.data)['jvzoo']['cprodtitle']
         except:
             return ''
+
+    def amount(self, obj):
+        try:
+            return '$ {}'.format(json.loads(obj.data)['jvzoo']['ctransamount'])
+        except:
+            return ''
+
