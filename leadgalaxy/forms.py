@@ -27,6 +27,7 @@ class BsErrorList(ErrorList):
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
+    accept_terms = forms.BooleanField(required=False)
     plan_registration = None
 
     def __init__(self, *args, **kwargs):
@@ -69,6 +70,12 @@ class RegisterForm(UserCreationForm):
             'A user with that email already exists',
             code='duplicate_email',
         )
+
+    def clean_accept_terms(self):
+        terms_accpeted = self.cleaned_data.get("accept_terms", False)
+        if not terms_accpeted:
+            raise forms.ValidationError("You need to accept Terms & Conditions")
+        return terms_accpeted
 
     def save(self, commit=True):
         user = super(RegisterForm, self).save(commit=False)

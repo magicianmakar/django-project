@@ -71,6 +71,19 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label for="accept_terms">
+                            {% render_field form.accept_terms %}
+                            I agree to the
+                            <a href="https://app.shopifiedapp.com/pages/terms-of-service" target="_blank">
+                                Terms &amp; Conditions
+                            </a>
+                            {{ form.accept_terms.errors | safe }}
+                        </label>
+                    </div>
+                </div>
+
                 {% if registration %}
                     <input type="hidden" name="rid" value="{{ registration.register_hash }}">
                 {% endif %}
