@@ -196,13 +196,19 @@ class AliexpressProductChangeAdmin(admin.ModelAdmin):
     list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
     list_filter = ('seen', 'hidden',)
-    search_fields = ('data',)
+    search_fields = ('data',) + USER_SEARCH_FIELDS
 
 
 @admin.register(PlanPayment)
 class PlanPaymentAdmin(admin.ModelAdmin):
     list_display = ('provider', 'payment_id', 'transaction_type', 'fullname',
-                    'email', 'user', 'created_at')
+                    'email', 'user', 'product_title', 'created_at')
     list_filter = ('provider', 'transaction_type',)
     search_fields = ('fullname', 'email', 'payment_id', 'data') + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
+
+    def product_title(self, obj):
+        try:
+            return json.loads(obj.data)['jvzoo']['cprodtitle']
+        except:
+            return ''
