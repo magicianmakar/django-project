@@ -28,6 +28,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.HTTP_INFO('* Archive seen alerts'))
         AliexpressProductChange.objects.filter(seen=True, hidden=False).update(hidden=True)
 
+        # Archive alerts after 7 days
+        archive_date = arrow.utcnow().replace(days=-7).datetime
+        AliexpressProductChange.objects.filter(hidden=False, created_at__lt=archive_date).update(hidden=True)
+
         # Expired plans
         self.stdout.write(self.style.HTTP_INFO('* Change plan of expired profiles'))
         for profile in UserProfile.objects.filter(plan_expire_at__lte=timezone.now()):
