@@ -80,6 +80,9 @@
                                 Terms &amp; Conditions
                             </a>
                             {{ form.accept_terms.errors | safe }}
+                            <label class="control-label text-left terms-error" style="color:#ed5565;display:none">
+                                You need to accept Terms &amp; Conditions
+                            </label>
                         </label>
                     </div>
                 </div>
@@ -101,6 +104,17 @@
     <script src="{% static 'js/jquery.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
 
+    <script type="text/javascript">
+        $('form').on('submit', function(e) {
+            if ($('#id_accept_terms').prop('checked')) {
+                $('.terms-error').hide();
+                return true;
+            } else {
+                $('.terms-error').show();
+                return false;
+            }
+        });
+    </script>
 </body>
 
 </html>
