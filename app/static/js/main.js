@@ -607,6 +607,25 @@ $(window).resize(ajustamodal);
 
 })(jQuery);
 
+$('.tos-update .close-btn').click(function (e) {
+    $.ajax({
+        url: '/api/user-config',
+        type: 'POST',
+        data: {
+            'single': true,
+            'name': '_tos-update',
+            'value': Math.floor(Date.now() / 1000),
+        },
+        success: function (data) {
+            $('.tos-update').remove();
+        },
+        error: function (data) {
+            displayAjaxError('Error', data);
+        }
+    });
+});
+
+
 var ravenOptions = {
   // Will cause a deprecation warning, but the demise of `ignoreErrors` is still under discussion.
   // See: https://github.com/getsentry/raven-js/issues/73

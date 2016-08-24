@@ -1,4 +1,5 @@
 from django.core.cache import cache
+import arrow
 
 
 def extra_bundles(request):
@@ -86,8 +87,14 @@ def extra_bundles(request):
 
             cache.set(extra_cache_key, extra_bundle, timeout=3600)
 
+    # Terms of Service update message
+    # 2016-08-24 is the date of adding agree to TOS before registering
+    tos_update = not request.user.get_config('_tos-update') and \
+        arrow.get('2016-08-24').datetime > request.user.date_joined
+
     return {
-        'extra_bundle': extra_bundle
+        'extra_bundle': extra_bundle,
+        'tos_update': tos_update,
     }
 
 

@@ -89,6 +89,17 @@
 
     <div id="wrapper">
     {{ request|hijackNotification }}
+
+    {% if tos_update %}
+        <div class="tos-update">
+            Shopified App has updated our Terms of Service.
+            You can view them by clicking the link in the Shopified App footer or by
+            <a href="/pages/terms-of-service" target="_blank">clicking here</a>.
+
+            <a href="#" type="button" class="close-btn" data-dismiss="alert">×</a>
+        </div>
+    {% endif %}
+
     {% block main-nav %}
     <nav class="navbar-default navbar-static-side" role="navigation">
         <div class="sidebar-collapse">

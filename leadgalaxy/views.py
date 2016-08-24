@@ -1056,6 +1056,13 @@ def proccess_api(request, user, method, target, data):
 
         form_webapp = (data.get('from', False) == 'webapp')
 
+        if data.get('single'):
+            config[data.get('name')] = data.get('value')
+            profile.config = json.dumps(config)
+            profile.save()
+
+            return JsonResponse({'status': 'ok'})
+
         if form_webapp:
             bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha', 'validate_tracking_number']
         else:
