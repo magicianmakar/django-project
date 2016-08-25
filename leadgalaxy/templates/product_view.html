@@ -1007,15 +1007,21 @@ function shopifyProductSearch (e) {
     var store = $('#modal-shopify-product .shopify-store').val();
     var query = $('#modal-shopify-product .shopify-find-product').val().trim();
 
-    loadingContainer.show();
-    productsContainer.empty();
+
+    if (!$(this).prop('page')) {
+        loadingContainer.show();
+        productsContainer.empty();
+    } else {
+        $(this).bootstrapBtn('loading');
+    }
 
     $.ajax({
         url: '/api/shopify-products',
         type: 'POST',
         data: {
             store: store,
-            query: query
+            query: query,
+            page: $(this).prop('page')
         },
         context: {
             store: store
@@ -1039,6 +1045,19 @@ function shopifyProductSearch (e) {
 
                 productsContainer.append(el);
             });
+
+            productsContainer.find('.load-more-btn').remove();
+
+            if (data.next) {
+                var moreBtn = $('<button class="btn btn-outline btn-default btn-block ' +
+                    'load-more-btn" data-loading-text="<i class=\'fa fa-circle-o-notch fa-spin\'>' +
+                    '</i> Loading"><i class="fa fa-plus"></i> Load More</button>');
+
+                moreBtn.prop('page', data.next);
+                moreBtn.click(shopifyProductSearch);
+
+                productsContainer.append(moreBtn);
+            }
         },
         error: function (data) {
             productsContainer.append($('<div class="text-center"><h3>Error occurred while searching for products</h3></div>'))
