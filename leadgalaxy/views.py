@@ -793,8 +793,13 @@ def proccess_api(request, user, method, target, data):
             store = ShopifyStore.objects.get(id=data.get('store'))
             user.can_view(store)
 
+            page = utils.safeInt(data.get('page'), 1)
+            limit = 25
+
             params = {
                 'fields': 'id,title,image',
+                'limit': limit,
+                'page': page
             }
 
             ids = utils.get_shopify_id(data.get('query'))
@@ -815,7 +820,11 @@ def proccess_api(request, user, method, target, data):
 
                 products.append(i)
 
-            return JsonResponse({'products': products})
+            return JsonResponse({
+                'products': products,
+                'page': page,
+                'next': page + 1 if len(products) == limit else None,
+            })
 
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
