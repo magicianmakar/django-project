@@ -692,24 +692,6 @@ class ShopifyProduct(models.Model):
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
 
-    def add_supplier_from_export(self, export):
-        """ Add New Supplier from ShopifyProductExport """
-
-        supplier = ProductSupplier.objects.create(
-            store=self.store,
-            product=self,
-            product_url=export.original_url,
-            supplier_name='',
-            supplier_url='',
-            is_default=True
-        )
-
-        if not self.default_supplier:
-            self.default_supplier = supplier
-
-        self.shopify_id = export.shopify_id
-        self.save()
-
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
