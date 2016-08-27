@@ -3558,7 +3558,6 @@ def orders_view(request):
 
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
-                        'variant': el['variant_title'],
                         'quantity': el['quantity'],
                         'shipping_address': shipping_address_asci,
                         'order_id': order['id'],
@@ -3575,11 +3574,11 @@ def orders_view(request):
                     if product:
                         order_data['product_id'] = product.id
 
-                        variants_map = product.get_variant_mapping()
-
-                        mapped = variants_map.get(str(el['variant_id']))
+                        mapped = product.get_variant_mapping(el['variant_id'])
                         if mapped:
-                            order_data['variant'] = ' / '.join(mapped.split(','))
+                            order_data['variant'] = mapped
+                        else:
+                            order_data['variant'] = el['variant_title'].split('/')
 
                     if product and product.have_supplier():
                         if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):

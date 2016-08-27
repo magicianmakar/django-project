@@ -649,19 +649,35 @@ class ShopifyProduct(models.Model):
         if type(mapping) is not str:
             mapping = json.dumps(mapping)
 
-        self.default_supplier.variants_map = mapping
-        self.default_supplier.save()
+        if self.default_supplier:
+            self.default_supplier.variants_map = mapping
+            self.default_supplier.save()
 
-    def get_variant_mapping(self):
+        elif self.variants_map:
+            self.variants_map = mapping
+            self.save()
+
+    def get_variant_mapping(self, name=None, default=None):
+        mapping = {}
         try:
             if self.default_supplier and self.default_supplier.variants_map:
-                return json.loads(self.default_supplier.variants_map)
+                mapping = json.loads(self.default_supplier.variants_map)
             elif self.variants_map:
-                return json.loads(self.variants_map)
+                mapping = json.loads(self.variants_map)
             else:
-                return {}
+                mapping = {}
         except:
-            return {}
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        return mapping
 
     def get_shopify_exports(self):
         shopify_id = self.get_shopify_id()
