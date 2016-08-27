@@ -3488,17 +3488,12 @@ def orders_view(request):
                 if not product:
                     export = ShopifyProduct.objects.filter(user=models_user, shopify_export__shopify_id=el['product_id']).first()
                     if export and export.shopify_export:
-                        duplicated = False
-                        if export.store != store:
-                            export = utils.duplicate_product(export, store=store)
-                            duplicated = True
-
                         export.add_supplier_from_export(export.shopify_export)
                         product = export
 
                         try:
-                            print u'Add From Export: Product: {} Export: {} Shopify ID: {} Store: {} Duplicated: {}'.format(
-                                export.id, export.shopify_export.id, el['product_id'], store.title, duplicated)
+                            print u'Add From Export: Product: {} Export: {} Shopify ID: {} Export Store: {} Current Store: {}'.format(
+                                export.id, export.shopify_export.id, el['product_id'], export.store.title, store.title)
                         except:
                             raven_client.captureException(level='warning')
 
