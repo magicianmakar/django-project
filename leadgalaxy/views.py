@@ -3486,14 +3486,14 @@ def orders_view(request):
             else:
                 product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
                 if not product:
-                    export = ShopifyProduct.objects.filter(user=models_user, shopify_export__shopify_id=el['product_id']).first()
+                    export = ShopifyProduct.objects.filter(store=store, shopify_export__shopify_id=el['product_id']).first()
                     if export and export.shopify_export:
                         export.add_supplier_from_export(export.shopify_export)
                         product = export
 
                         try:
-                            print u'Add From Export: Product: {} Export: {} Shopify ID: {} Export Store: {} Current Store: {}'.format(
-                                export.id, export.shopify_export.id, el['product_id'], export.store.title, store.title)
+                            print u'Add From Export: Product: {} Export: {} Shopify ID: {} Store: {}'.format(
+                                export.id, export.shopify_export.id, el['product_id'], store.title)
                         except:
                             raven_client.captureException(level='warning')
 
