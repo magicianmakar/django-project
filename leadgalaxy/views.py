@@ -1221,12 +1221,6 @@ def proccess_api(request, user, method, target, data):
             if k != 'product':
                 mapping[k] = data[k]
 
-                if '/' in data[k]:
-                    return JsonResponse({
-                        'error': 'The character / is not allowed in variants name.\n'
-                                 'It will cause issues with auto-variant selection'
-                    })
-
         if not product.default_supplier:
             supplier = product.get_supplier_info()
             product.default_supplier = ProductSupplier.objects.create(
