@@ -36,11 +36,18 @@ $('.fulfill-btn').click(function (e) {
         return;
     }
 
+    if(localStorage.fulfill_notify_customer && !$('#fulfill-notify-customer').prop('initialized')) {
+        $('#fulfill-notify-customer').val(localStorage.fulfill_notify_customer);
+        $('#fulfill-notify-customer').prop('initialized', true);
+    }
+
     $('#modal-fulfillment').modal('show');
 });
 
 $('#fullfill-order-btn').click(function (e) {
     e.preventDefault();
+
+    localStorage.fulfill_notify_customer = $('#fulfill-notify-customer').val();
 
     $(this).button('loading');
     var line_btn = $('.fulfill-btn[line-id="'+$('#modal-fulfillment #fulfill-line-id').val()+'"]');
