@@ -672,10 +672,10 @@ class ShopifyProduct(models.Model):
         if name:
             mapping = mapping.get(str(name), default)
 
-        try:
-            mapping = json.loads(mapping)
-        except:
-            pass
+        # try:
+            # mapping = json.loads(mapping)
+        # except:
+            # pass
 
         return mapping
 
