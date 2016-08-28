@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load template_helper %}
 
 {% block title %}{{ article.text_title }}{% endblock %}
 
@@ -29,7 +30,11 @@
                     </h1>
                 </div>
 
-                {{ article.body|safe }}
+                {% if article.body_format == 'markdown' %}
+                    {% render_markdown article.body %}
+                {% else %}
+                    {{ article.body|safe }}
+                {% endif %}
 
                 <hr />
 

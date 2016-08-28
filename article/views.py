@@ -109,6 +109,7 @@ def edit(request, article_id):
         tags.append(i.title)
 
     return render(request, 'article/submit.html', {
+        'article': article,
         'tags': json.dumps(tags),
         'form': form,
     })

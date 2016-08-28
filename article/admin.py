@@ -17,7 +17,7 @@ class ArticleAdmin(admin.ModelAdmin):
         # Fieldset
         ('General', {
             #'classes': ['collapse',],
-            'fields': ('title', 'author', 'slug', 'stat')
+            'fields': ('title', 'author', 'slug', 'stat', 'body_format')
         }),
         # Fieldset
         ('Page content', {
@@ -29,6 +29,9 @@ class ArticleAdmin(admin.ModelAdmin):
             'fields': ('style', )
         }),
     )
+
+    def view_on_site(self, obj):
+        return '/pages/{}'.format(obj.slug)
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'stat', 'created_at', 'updated_at',)

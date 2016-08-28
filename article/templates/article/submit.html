@@ -19,7 +19,7 @@
     <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
         <label class="control-label" for="body">{{ form.body.errors|striptags }}</label>
         <div class="controls">
-            {% render_field form.body cols="40" rows="10" %}
+            {% render_field form.body cols="40" rows="10" style="width: 99%" %}
         </div>
     </div>
 
@@ -71,7 +71,9 @@
                 showAutocompleteOnFocus: true
             });
 
+            {% if article.body_format != 'markdown' %}
             setup_admin_editor('body', true);
+            {% endif %}
         });
 
     </script>

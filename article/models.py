@@ -15,6 +15,11 @@ PUBLISH_STAT = (
     (2, 'Waitting review'),
 )
 
+ARTICLE_FORMAT = (
+    ('wysiwyg', 'WYSIWYG'),
+    ('markdown', 'Markdown'),
+)
+
 
 class Article(models.Model):
     class Meta:
@@ -29,6 +34,7 @@ class Article(models.Model):
     tags = models.ManyToManyField('ArticleTag', blank=True)
     views = models.IntegerField(default=0)
     style = models.TextField(blank=True, null=True)
+    body_format = models.CharField(choices=ARTICLE_FORMAT, max_length=64, default='wysiwyg', verbose_name='Article format')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

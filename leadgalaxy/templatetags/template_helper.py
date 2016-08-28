@@ -131,3 +131,31 @@ def plan_features(plan):
     )
 
     return mark_safe(features)
+
+
+@register.simple_tag
+def render_markdown(text, render_help=True):
+    if not text:
+        return ''
+
+    def help_replace(m):
+        help = m.group(1)
+
+        if '"' in help:
+            help = help.replace('"', '\'')
+
+        return ('<i class="fa fa-fw fa-question-circle" qtip-tooltip="{}" qtip-my="bottom center"'
+                'qtip-at="top center" style="font-size:16px;color:#BBB"></i>').format(help)
+
+    import markdown
+
+    text = markdown.markdown(text, extensions=['markdown.extensions.nl2br'])
+
+    if render_help:
+        text = re.sub(
+            r'\|\|([^\|]+)\|\|',
+            help_replace,
+            text,
+        )
+
+    return mark_safe(text)
