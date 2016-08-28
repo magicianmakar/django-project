@@ -1138,42 +1138,6 @@ $(function() {
         allowSpaces: true
     });
 
-    $('.lazyload').each(function (i, el) {
-        if (!$(el).prop('image-loaded')) {
-            var cache_name = $(el).attr('store')+'|'+$(el).attr('product')+'|'+$(el).attr('variant');
-
-            if (cache_name in image_cache) {
-                $(el).attr('src', image_cache[cache_name]);
-                $(el).show('fast');
-                return;
-            }
-
-            $.ajax({
-                url: '/api/product-variant-image',
-                type: 'GET',
-                data: {
-                    store: $(el).attr('store'),
-                    product: $(el).attr('product'),
-                    variant: $(el).attr('variant'),
-                },
-                context: {img: $(el), cache_name: cache_name},
-                success: function (data) {
-                    if (data.status == 'ok') {
-                        this.img.attr('src', data.image);
-                        this.img.show('fast');
-
-                        image_cache[cache_name] = data.image;
-                    }
-                },
-                error: function (data) {
-                },
-                complete: function () {
-                    this.img.prop('image-loaded', true);
-                }
-            });
-        }
-    });
-
     $.each(config.exports, function () {
         $('#export-container').append(export_template(this));
     });
