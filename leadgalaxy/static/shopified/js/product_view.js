@@ -1123,7 +1123,7 @@ $('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopify
 $('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
 $('#modal-shopify-product .shopify-find-product').trigger('keyup');
 
-$(function() {
+(function() {
     setup_full_editor('product-description');
 
     showProductInfo(product);
@@ -1144,5 +1144,5 @@ $(function() {
 
     bindExportEvents();
 
-});
+})();
 })(config, product);
