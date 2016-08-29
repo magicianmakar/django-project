@@ -1147,6 +1147,12 @@ def proccess_api(request, user, method, target, data):
                 return JsonResponse({'error': 'Shopify API Error'})
 
     if method == 'GET' and target == 'order-data':
+        version = request.META.get('HTTP_X_EXTENSION_VERSION')
+        if version and utils.version_compare(version, '1.19.0') <= 0:
+            return JsonResponse({
+                'error': 'Please Update The Extension To Version 1.19.1 or Higher'
+            }, status=501)
+
         order_key = data.get('order')
 
         if not order_key.startswith('order_'):
