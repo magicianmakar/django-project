@@ -680,7 +680,7 @@ class ShopifyProduct(models.Model):
         if type(mapping) is int:
             mapping = str(mapping)
 
-        if for_extension and type(mapping) is str:
+        if for_extension and type(mapping) in [str, unicode]:
             mapping = mapping.split(',')
 
         return mapping
