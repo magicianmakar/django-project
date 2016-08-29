@@ -45,6 +45,13 @@ class StoreTestCase(TestCase):
 
         self.assertEqual(self.product.get_variant_mapping('987654321'), 'Blue,S')
 
+    def test_mapping_comma_list_for_extension(self):
+        self.product.set_variant_mapping({
+            '987654321': 'Blue,S'
+        })
+
+        self.assertEqual(self.product.get_variant_mapping('987654321', for_extension=True), ['Blue', 'S'])
+
     def test_mapping_with_lists(self):
         self.product.set_variant_mapping({
             '987654321': ['Blue', 'S']

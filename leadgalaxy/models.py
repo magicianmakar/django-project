@@ -657,7 +657,7 @@ class ShopifyProduct(models.Model):
             self.variants_map = mapping
             self.save()
 
-    def get_variant_mapping(self, name=None, default=None):
+    def get_variant_mapping(self, name=None, default=None, for_extension=False):
         mapping = {}
         try:
             if self.default_supplier and self.default_supplier.variants_map:
@@ -679,6 +679,9 @@ class ShopifyProduct(models.Model):
 
         if type(mapping) is int:
             mapping = str(mapping)
+
+        if for_extension and type(mapping) is str:
+            mapping = mapping.split(',')
 
         return mapping
 

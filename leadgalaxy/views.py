@@ -3552,7 +3552,7 @@ def orders_view(request):
                     if product:
                         order_data['product_id'] = product.id
 
-                        mapped = product.get_variant_mapping(el['variant_id'])
+                        mapped = product.get_variant_mapping(el['variant_id'], for_extension=True)
                         if mapped:
                             order_data['variant'] = mapped
                         else:
