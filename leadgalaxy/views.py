@@ -1940,6 +1940,7 @@ def webhook(request, provider, option):
 
             elif 'orders' in topic:
                 shopify_order = json.loads(request.body)
+                cache.set('saved_orders_clear_{}'.format(store.id), True, timeout=300)
             elif 'shop' in topic or 'app' in topic:
                 shop_data = json.loads(request.body)
             else:
@@ -3347,7 +3348,7 @@ def orders_view(request):
 
             cache_key = 'saved_orders_%s' % utils.hash_list(['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
             shopify_orders = cache.get(cache_key)
-            if shopify_orders is None:
+            if shopify_orders is None or cache.get('saved_orders_clear_{}'.format(store.id)):
                 rep = requests.get(
                     url=store.get_link('/admin/orders.json', api=True),
                     params={
@@ -3394,6 +3395,7 @@ def orders_view(request):
                     })
 
                 cache.set(cache_key, zlib.compress(json.dumps(shopify_orders)), timeout=300)
+                cache.delete('saved_orders_clear_{}'.format(store.id))
             else:
                 shopify_orders = json.loads(zlib.decompress(shopify_orders))
 
