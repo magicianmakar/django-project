@@ -184,6 +184,10 @@ SHOPIFY_API_SCOPE = u','.join([
     'write_orders', 'write_fulfillments', 'write_shipping', 'read_analytics'
 ])
 
+# Slack API
+SLACK_USERS_TEAM_API = os.environ.get('SLACK_USERS_TEAM_API')
+SLACK_ECOM_TEAM_API = os.environ.get('SLACK_ECOM_TEAM_API')
+
 # AWS S3
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']

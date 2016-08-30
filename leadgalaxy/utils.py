@@ -484,12 +484,12 @@ def verify_shopify_webhook(store, request):
 def slack_invite(data, team='users'):
     slack_teams = {
         'users': {
-            'token': 'xoxp-21001000400-20999486737-21000357922-4047773e5d',
+            'token': settings.SLACK_USERS_TEAM_API,
             'channels': ['C0M6TTRAM', 'C0VN18AGP', 'C0LVBD3FD', 'C0V9EKPLG', 'C0V9P89S6',
                          'C0M6V41S4', 'C10RT5BFC', 'C0V7P4TTM'],
         },
         'ecom': {
-            'token': 'xoxp-25785177045-25785177061-28041998548-c6763c7a78',
+            'token': settings.SLACK_ECOM_TEAM_API,
             'channels': ['C0X2GRYKB', 'C0X29Q308', 'C0X2AHJLV', 'C0X2AL0VB', 'C0X0USP5Z',
                          'C0RP77BL0', 'C0X0W91D1', 'C0X2N9JN6', 'C0RP35761', 'C0X0V4FL3',
                          'C0X27GL9W', 'C0Z90JQSG', 'C0X29D5C0', 'C11KP35SP', 'C0X0U3F6F'],
