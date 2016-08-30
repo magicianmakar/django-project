@@ -72,7 +72,8 @@
         user_id: {{ user.id }},
         name: "{{ user.name }}", // Full name
         email: "{{ user.email }}", // Email address
-        created_at: {{ user.date_joined|date:"U" }} // Signup date as a Unix timestamp
+        created_at: {{ user.date_joined|date:"U" }}, // Signup date as a Unix timestamp,
+        plan: '{{user.profile.plan.title}}',
       };
 
       {% endif %}
