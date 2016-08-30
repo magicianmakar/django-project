@@ -248,10 +248,12 @@ class UserProfile(models.Model):
 
     def set_config_value(self, name, value):
         data = self.get_config()
-        data[name] = value
 
-        self.config = json.dumps(data)
-        self.save()
+        if data.get(name) != value:
+            data[name] = value
+
+            self.config = json.dumps(data)
+            self.save()
 
     def del_config_values(self, key, startswith=False):
         data = self.get_config()
