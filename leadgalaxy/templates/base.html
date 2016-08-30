@@ -74,6 +74,7 @@
         email: "{{ user.email }}", // Email address
         created_at: {{ user.date_joined|date:"U" }}, // Signup date as a Unix timestamp,
         plan: '{{user.profile.plan.title}}',
+        extension_version: '{{user.profile.get_config._extension_version}}',
       };
 
       {% endif %}
