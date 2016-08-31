@@ -290,7 +290,7 @@ def proccess_api(request, user, method, target, data):
         store.save()
 
         # Make all products related to this store non-connected
-        store.shopifyproduct_set.update(store=None, shopify_id=None)
+        store.shopifyproduct_set.update(store=None, shopify_id=0)
 
         # Delete products connection with this store
         ProductSupplier.objects.filter(store=store).delete()
@@ -873,7 +873,7 @@ def proccess_api(request, user, method, target, data):
 
         shopify_id = product.shopify_id
         if shopify_id:
-            product.shopify_id = None
+            product.shopify_id = 0
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
@@ -2022,7 +2022,7 @@ def webhook(request, provider, option):
                 store.save()
 
                 # Make all products related to this store non-connected
-                store.shopifyproduct_set.update(store=None, shopify_id=None)
+                store.shopifyproduct_set.update(store=None, shopify_id=0)
 
                 # Delete products connection with this store
                 ProductSupplier.objects.filter(store=store).delete()
