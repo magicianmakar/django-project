@@ -46,7 +46,7 @@
     }
 
     function parse_variant_map(variants) {
-        if (!variants || !variants.trim().length) {
+        if (!variants || (typeof(variants) === 'string' && !variants.trim().length)) {
             return [];
         }
 
