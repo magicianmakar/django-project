@@ -1,4 +1,4 @@
-(function() {
+(function(product_id, variants_mapping) {
     'use strict';
 
     function select_variant(variants, variant_title, variant_sku) {
@@ -77,10 +77,19 @@
     $('#save-mapping').click(function(e) {
         $(this).bootstrapBtn('loading');
 
+        var mapping = {
+            product: product_id
+        };
+
+        $.map(variants_mapping, function (val, key) {
+            mapping[key] = JSON.stringify(val);
+            return key;
+        });
+
         $.ajax({
             url: '/api/variants-mapping',
             type: 'POST',
-            data: $('#mapping-form').serialize(),
+            data: mapping,
             context: {
                 btn: $(this)
             },
@@ -119,10 +128,13 @@
             var display = $(input).first().next('.var-data-display');
             display.empty();
 
-            $.each(parse_variant_map($(input).val()), function(j, option) {
+            var variant_data = variants_mapping[$(input).data('var-id')];
+            variant_data = parse_variant_map(variant_data);
+
+            $.each(variant_data, function(j, option) {
                 var optionEl = $(option_tpl({
                     option: option,
-                    var_json: $(input).val(),
+                    var_json: JSON.stringify(variants_mapping[$(input).data('var-id')]),
                 }));
 
                 optionEl.find('input').remove();
@@ -157,7 +169,7 @@
                 var variantEl = $(variant_tpl(variant));
 
                 $.each(variant.values, function(j, option) {
-                    var current_map = $('#var_' + variant_id).val();
+                    var current_map = variants_mapping[variant_id];
 
                     var optionEl = $(option_tpl({
                         variant: variant,
@@ -189,7 +201,7 @@
 
             extraEl.find('.options').append(inputEl);
 
-            var extra = parse_variant_map($('#var_' + variant_id).val()).filter(function(e) {
+            var extra = parse_variant_map(variants_mapping[variant_id]).filter(function(e) {
                 return e.extra;
             });
 
@@ -240,11 +252,12 @@
             }
         });
 
-        $('#var_' + variant_id).val(JSON.stringify(variants));
+        // $('#var_' + variant_id).val(JSON.stringify(variants));
+        variants_mapping[variant_id] = variants;
         $('#modal-variant-select').modal('hide');
 
         display_variant();
     });
 
     display_variant();
-})();
+})(product_id, variants_mapping);

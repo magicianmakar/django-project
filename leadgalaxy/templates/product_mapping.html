@@ -38,8 +38,8 @@
                                 <td style="vertical-align:middle">{{variant.title}}</td>
                                 <td style="vertical-align:middle">
                                     <input class="tag-it var-data-input" class="form-control"
-                                           value="{{variant.default}}" name="{{variant.id}}" id="var_{{variant.id}}"
-                                           style="display:none">
+                                           value="" name="{{variant.id}}" id="var_{{variant.id}}"
+                                           style="display:none" data-var-id="{{variant.id}}">
 
                                     <div class="var-data-display" style="display: flex; align-items: center;"></div>
                                 </td>
@@ -146,8 +146,11 @@
 
 
 <script type="text/javascript">
-    var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
-    $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+    var bootstrapButton = $.fn.button.noConflict();
+    $.fn.bootstrapBtn = bootstrapButton;
+
+    var product_id = {{product.id}};
+    var variants_mapping = {% json_dumps variants_map %};
 </script>
 
 <script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>

@@ -2461,7 +2461,7 @@ def product_mapping(request, store_id, product_id):
 
         mapped = variants_map.get(str(v['id']))
         if mapped:
-            options = mapped.split(',')
+            options = mapped
         else:
             options = []
             if v.get('option1') and v.get('option1').lower() != 'default title':
@@ -2471,35 +2471,32 @@ def product_mapping(request, store_id, product_id):
             if v.get('option3'):
                 options.append(v.get('option3'))
 
-        for o in options:
-            source_variants.append(o)
+            options = map(lambda a: {'title': a}, options)
 
-        shopify_product['variants'][i]['default'] = ','.join(options)
+        try:
+            if type(options) not in [list, dict]:
+                options = json.loads(options)
 
-    try:
-        original_data = json.loads(product.original_data)
-        if not original_data['variants']:
-            original_data = json.loads(product.data)
+                if type(options) is int:
+                    options = str(options)
+        except:
+            pass
 
-        for i in [v['values'] for v in original_data['variants']]:
-            for j in i:
-                source_variants.append(j)
-    except:
-        pass
+        variants_map[str(v['id'])] = options
+        shopify_product['variants'][i]['default'] = options
 
     return render(request, 'product_mapping.html', {
         'store': product.store,
         'product_id': product_id,
         'product': product,
         'shopify_product': shopify_product,
-        'source_variants': json.dumps(list(set(source_variants))),
+        'variants_map': variants_map,
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
             {'title': 'Variants Mapping', 'url': request.build_absolute_uri()},
-
         ]
     })
 
