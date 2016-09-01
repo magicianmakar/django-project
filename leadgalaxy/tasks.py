@@ -52,6 +52,7 @@ def export_product(req_data, target, user_id):
     store = req_data.get('store')
     data = req_data['data']
     original_data = req_data.get('original', '')
+    variants_mapping = None
 
     user = User.objects.get(id=user_id)
 
@@ -141,6 +142,10 @@ def export_product(req_data, target, user_id):
                     product_to_map = r.json()['product']
 
                     try:
+                        # Variant mapping
+                        variants_mapping = utils.get_mapping_from_product(product_to_map)
+                        variants_mapping = json.dumps(variants_mapping)
+
                         # Link images with variants
                         mapped = utils.shopify_link_images(store, product_to_map)
                         if mapped:
@@ -219,8 +224,12 @@ def export_product(req_data, target, user_id):
                             product_url=original_url,
                             supplier_name=supplier.get('name'),
                             supplier_url=supplier.get('url'),
+                            variants_map=variants_mapping,
                             is_default=True
                         )
+                    else:
+                        product.default_supplier.variants_map = variants_mapping
+                        product.default_supplier.save()
 
                     product.save()
 

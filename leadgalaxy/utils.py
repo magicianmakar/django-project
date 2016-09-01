@@ -1088,6 +1088,7 @@ def product_change_notify(user):
     # Disable notification for a day
     cache.set(notify_key, True, timeout=86400)
 
+
 def get_variant_name(variant):
     options = re.findall('#([^;:]+)', variant.get('variant_desc', ''))
     if len(options):
@@ -1095,6 +1096,20 @@ def get_variant_name(variant):
     else:
         name = variant.get('variant_id')
         return name if name else '<Default>'
+
+
+def get_mapping_from_product(product):
+    var_map = {}
+
+    for v in product['variants']:
+        options = filter(lambda j: bool(j), [v['option1'], v['option2'], v['option3']])
+
+        if len(options):
+            options = map(lambda j: {'title': j}, options)
+
+            var_map[str(v['id'])] = options
+
+    return var_map
 
 
 def product_changes_remap(changes):
