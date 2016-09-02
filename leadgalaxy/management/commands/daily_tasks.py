@@ -155,7 +155,7 @@ class Command(BaseCommand):
 
                     return False
 
-                raven_client.captureException()
+                raven_client.captureException(extra={'order_track': order.id, 'response': rep.text})
 
             except:
                 raven_client.captureException()
