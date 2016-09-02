@@ -126,6 +126,13 @@ class Command(BaseCommand):
                         order.save()
                         return False
 
+                    elif 'invalid for this fulfillment service' in rep.text:
+                        # Using a different fulfillment_service (i.e: amazon_marketplace_web)
+                        print 'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title)
+                        order.shopify_status = 'fulfilled'
+                        order.save()
+                        return False
+
                 elif e.response.status_code == 404:
                     print 'Not found #{} in [{}]'.format(order.order_id, order.store.title)
                     order.delete()
