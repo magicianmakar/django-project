@@ -130,7 +130,7 @@
                                 {% endif %}
                             </td>
 
-                            <td>{% date_humanize item.item.created_at %}</td>
+                            <td>{% date_humanize item.created_at %}</td>
                             <td>{% date_humanize item.updated_at %}</td>
                             <td>
                                 {% if item.order.fulfillment_status != 'fulfilled' %}
