@@ -312,7 +312,7 @@
         console.log('msg',$(this).data('status') );
         if ($(this).data('status') != 'active') {
             $('#modal-subscription-cancel .part-refund').hide();
-            $('#modal-subscription-cancel .period-name').text('trail');
+            $('#modal-subscription-cancel .period-name').text('trial');
         }
 
         $('#modal-subscription-cancel').modal('show');
