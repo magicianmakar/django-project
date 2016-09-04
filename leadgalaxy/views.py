@@ -102,7 +102,9 @@ def api(request, target):
                 'email': user.email
             })
 
-            user.set_config('extension_version', request.META.get('HTTP_X_EXTENSION_VERSION'))
+            extension_version = request.META.get('HTTP_X_EXTENSION_VERSION')
+            if extension_version:
+                user.set_config('extension_version', extension_version)
 
         res = proccess_api(request, user, method, target, data)
 
