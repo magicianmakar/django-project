@@ -3292,7 +3292,8 @@ def orders_view(request):
 
         if query_order:
             try:
-                order_number = re.findall('[0-9]+', query_order)
+                order_rx = models_user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
+                order_number = re.findall(order_rx, query_order)
                 order_number = int(order_number[0])
             except:
                 order_number = 0
