@@ -2456,6 +2456,7 @@ def product_mapping(request, store_id, product_id):
         for var in i['variant_ids']:
             images[var] = i['src']
 
+    seen_variants = []
     for i, v in enumerate(shopify_product['variants']):
         shopify_product['variants'][i]['image'] = images.get(v['id'])
 
@@ -2484,6 +2485,11 @@ def product_mapping(request, store_id, product_id):
 
         variants_map[str(v['id'])] = options
         shopify_product['variants'][i]['default'] = options
+        seen_variants.append(str(v['id']))
+
+    for k in variants_map.keys():
+        if k not in seen_variants:
+            del variants_map[k]
 
     return render(request, 'product_mapping.html', {
         'store': product.store,
