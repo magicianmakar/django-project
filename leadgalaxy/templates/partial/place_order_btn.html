@@ -1,6 +1,8 @@
 {% load template_helper %}
 
-{% if original %}
+{% if item.refunded %}
+    <span class="label label-warning">Refunded</span>
+{% elif original %}
     <div class="btn-group">
         <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">
             Place Order

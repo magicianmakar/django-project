@@ -3477,11 +3477,18 @@ def orders_view(request):
         order['placed_orders'] = 0
         order['connected_lines'] = 0
         order['lines_count'] = len(order['line_items'])
+        order['refunded_lines'] = []
+
+        if type(order['refunds']) is list:
+            for refund in order['refunds']:
+                for refund_line in refund['refund_line_items']:
+                    order['refunded_lines'].append(refund_line['line_item_id'])
 
         for i, el in enumerate((order['line_items'])):
             var_link = store.get_link('/admin/products/{}/variants/{}'.format(el['product_id'],
                                                                               el['variant_id']))
             order['line_items'][i]['variant_link'] = var_link
+            order['line_items'][i]['refunded'] = el['id'] in order['refunded_lines']
 
             order['line_items'][i]['image'] = {
                 'store': store.id,
