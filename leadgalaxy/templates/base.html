@@ -60,7 +60,7 @@
         'pageCategory': 'webapp',
       }];
 
-      {% if user.is_authenticated %}
+      {% if user.is_authenticated and not DEBUG %}
       var currentUser = {
         id: {{ user.id }},
         username: '{{ user.username }}',

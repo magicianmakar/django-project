@@ -105,6 +105,7 @@ def extra_bundles(request):
 
 def extension_release(request):
     return {
+        'DEBUG': settings.DEBUG,
         'extension_release': cache.get('extension_release'),
         'extension_required': cache.get('extension_required')
     }
