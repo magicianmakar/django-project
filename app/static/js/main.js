@@ -678,9 +678,8 @@ var ravenOptions = {
   ]
 };
 
-var raven = Raven.config('//9449f975eb984492bc9205e5acd0f36a@app.getsentry.com/73544', ravenOptions);
-raven.install();
-
 if (typeof currentUser !== 'undefined') {
+    var raven = Raven.config('//9449f975eb984492bc9205e5acd0f36a@sentry.io/73544', ravenOptions);
+    raven.install();
     raven.setUserContext(currentUser);
 }
