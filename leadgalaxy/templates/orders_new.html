@@ -184,10 +184,9 @@
                                 <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>
                                 <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
                                 <option value="paid" {% if financial == 'paid' %}selected="selected"{% endif %}>Show only paid orders</option>
-                                <option value="partially_paid" {% if financial == 'partially_paid' %}selected="selected"{% endif %}>Show only partially paid orders</option>
                                 <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only refunded orders</option>
+                                <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option>
                                 <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only voided orders</option>
-                                <!-- <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option> -->
                                 <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
                             </select>
                         </div>
