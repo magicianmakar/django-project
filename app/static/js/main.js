@@ -402,26 +402,24 @@ $(function() {
     });
 
     var tout = null;
-    $('#hijacked-warning').css('top', '-35px');
-    $('#hijacked-warning').mouseenter(function (e) {
-        $( this ).animate({
+    var showOnMouseEnter = ['#hijacked-warning', '.tos-update'];
+
+    $(showOnMouseEnter[0]).css('top', '-35px').prop('el-top', 36);
+    $(showOnMouseEnter.join(',')).mouseenter(function(e) {
+        $(this).animate({
             top: "0",
-        }, 500, function() {
-            // Animation complete.
-        });
+        }, 250);
         if (tout) {
             clearTimeout(tout);
             tout = null;
         }
-    }).mouseleave(function (e) {
-        // $(this).css('top', '-22px');
+    }).mouseleave(function(e) {
         var el = this;
         tout = setTimeout(function() {
-            $( el ).animate({
-                top: "-35px",
-            }, 500, function() {
-                // Animation complete.
-            });
+            var elTop = $(el).prop('el-top') || $(el).outerHeight() - (($(el).outerHeight() / 3) * 1);
+            $(el).animate({
+                top: "-" + elTop + "px",
+            }, 300);
         }, 1000);
     });
 
