@@ -1,4 +1,9 @@
+import hmac
+import hashlib
+
 from django.core.cache import cache
+from django.conf import settings
+
 import arrow
 
 
@@ -103,3 +108,17 @@ def extension_release(request):
         'extension_release': cache.get('extension_release'),
         'extension_required': cache.get('extension_required')
     }
+
+
+def intercom(request):
+    ctx = {
+        'INTERCOM_APP_ID': settings.INTERCOM_APP_ID
+    }
+
+    if request.user.is_authenticated() and settings.INTERCOM_SECRET_KEY:
+        ctx['INTERCOM_USER_HASH'] = hmac.new(settings.INTERCOM_SECRET_KEY,
+                                             str(request.user.id),
+                                             hashlib.sha256).hexdigest()
+
+
+    return ctx

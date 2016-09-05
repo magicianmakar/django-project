@@ -89,6 +89,7 @@ TEMPLATES = [
                 'article.context_processors.sidebarlinks',
                 'leadgalaxy.context_processors.extra_bundles',
                 'leadgalaxy.context_processors.extension_release',
+                'leadgalaxy.context_processors.intercom',
             ],
         },
     },
@@ -187,6 +188,10 @@ SHOPIFY_API_SCOPE = u','.join([
 # Slack API
 SLACK_USERS_TEAM_API = os.environ.get('SLACK_USERS_TEAM_API')
 SLACK_ECOM_TEAM_API = os.environ.get('SLACK_ECOM_TEAM_API')
+
+# Intercom API
+INTERCOM_APP_ID = os.environ.get('INTERCOM_APP_ID')
+INTERCOM_SECRET_KEY = os.environ.get('INTERCOM_SECRET_KEY')
 
 # AWS S3
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']

@@ -68,8 +68,9 @@
       };
 
       window.intercomSettings = {
-        app_id: "k9cb5frr",
+        app_id: "{{INTERCOM_APP_ID}}",
         user_id: {{ user.id }},
+        {% if INTERCOM_USER_HASH %}user_hash: '{{INTERCOM_USER_HASH}}',{% endif %}
         name: "{{ user.get_full_name|default:user.username|escapejs }}",
         email: "{{ user.email }}",
         created_at: {{ user.date_joined|date:"U" }},
