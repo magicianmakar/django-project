@@ -67,6 +67,8 @@
         email: '{{ user.email }}'
       };
 
+      {% if not request.session.is_hijacked_user %}
+
       window.intercomSettings = {
         app_id: "{{INTERCOM_APP_ID}}",
         user_id: {{ user.id }},
@@ -77,6 +79,8 @@
         plan: '{{user.profile.plan.title}}',
         extension_version: '{{user.profile.get_config.extension_version}}',
       };
+
+      {% endif %}
 
       {% endif %}
     </script>
