@@ -414,7 +414,7 @@
                                                         <th style="width:64px"></th>
                                                         <th style="width:30%;text-align:center">Item</th>
                                                         <th>Variant</th>
-                                                        <th style="width:30px">Qty</th>
+                                                        <th>Qty</th>
                                                         <th style="width:64px"></th>
                                                         <th style="width:64px"></th>
                                                         <th>Tracking #</th>
@@ -447,9 +447,11 @@
                                                             <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
                                                         </td>
                                                         <td>
-                                                            <span style="{% if item.quantity > 1 %} font-weight: bolder; color: blue{% endif %}">
+                                                            <span style="font-weight:bolder;{% if item.quantity > 1 %}color:blue{% endif %}">
                                                                 {{item.quantity}}
                                                             </span>
+                                                            &times;
+                                                            $<b>{{item.price}}</b>
                                                         </td>
                                                         <td>
                                                             {% include 'partial/place_order_btn.html' %}
