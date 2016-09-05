@@ -3572,7 +3572,7 @@ def orders_view(request):
                         if el['variant_id'] and mapped:
                             order_data['variant'] = mapped
                         else:
-                            order_data['variant'] = el['variant_title'].split('/')
+                            order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''
 
                     if product and product.have_supplier():
                         if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
