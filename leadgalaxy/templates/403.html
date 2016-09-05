@@ -1,4 +1,5 @@
 {% load static %}
+{% load url_tools %}
 
 <!DOCTYPE html>
 <html>
@@ -30,6 +31,9 @@
             Try checking the URL for error, then hit the refresh button on your browser.
         </div>
         <div class="m-t">
+            {% if request.session.is_hijacked_user %}
+                <a href="/hijack/release-hijack/?next={{ request.get_full_path | urlencode }}" class="btn btn-success">Release User</a>
+            {% endif %}
             <a href="/" class="btn btn-primary">Home Page</a>
         </div>
     </div>
