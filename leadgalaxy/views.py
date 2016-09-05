@@ -3580,7 +3580,7 @@ def orders_view(request):
 
                         order['line_items'][i]['order_data'] = order_data
                 except:
-                    pass
+                    raven_client.captureException()
 
         all_orders.append(order)
 
