@@ -3103,7 +3103,10 @@ def user_profile(request):
             })
 
     bundles = profile.bundles.filter(hidden_from_user=False)
-    stripe_plans = GroupPlan.objects.exclude(stripe_plan=None)
+    stripe_plans = GroupPlan.objects.exclude(stripe_plan=None) \
+                                    .annotate(num_permissions=Count('permissions')) \
+                                    .order_by('num_permissions')
+
     stripe_customer = request.user.is_stripe_customer() or request.user.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
