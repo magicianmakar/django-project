@@ -45,13 +45,16 @@ class ProductFeed():
 
     def add_product(self, product):
         if len(product['variants']):
+            # Add the first variant with Product ID
+            self._add_variant(product, product['variants'][0], variant_id=product['id'])
+
             for variant in product['variants']:
                 self._add_variant(product, variant)
 
                 if not self.all_variants:
                     break
 
-    def _add_variant(self, product, variant):
+    def _add_variant(self, product, variant, variant_id=None):
         image = product.get('image')
         if image:
             image = image.get('src')
@@ -60,10 +63,13 @@ class ProductFeed():
 
         item = ET.SubElement(self.channel, 'item')
 
+        if variant_id is None:
+            variant_id = variant['id']
+
         if self.revision == 1:
             self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         else:
-            self._add_element(item, 'g:id', '{}'.format(variant['id']))
+            self._add_element(item, 'g:id', '{}'.format(variant_id))
 
         self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element(item, 'g:title', product.get('title'))
