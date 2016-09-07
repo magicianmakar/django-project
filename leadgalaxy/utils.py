@@ -1243,7 +1243,7 @@ def jvzoo_parse_post(params):
 
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
 
-    promotion_key = 'promotion_links_{}'.format(hash_text(urls))
+    promotion_key = 'promotion_links2_{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
 
     if promotion_url is not None:
@@ -1271,6 +1271,9 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
 
         if len(r['result']['promotionUrls']):
             promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
+            if promotion_url:
+                promotion_url = promotion_url.replace('https://', 'http://')
+
             cache.set(promotion_key, promotion_url, timeout=43200)
 
             return promotion_url
