@@ -1,7 +1,7 @@
 (function(product_id, product_suppliers) {
     'use strict';
 
-    $('.select-var-mapping').click(function(e) {
+    $('.change-shipping-rules').click(function(e) {
         e.preventDefault();
 
         var supplier = $(this).parents('tr').find('.supplier-select').val();
@@ -91,7 +91,7 @@
 
     function displayRulesInTable() {
         $.each(product_suppliers, function(variant, info) {
-            var displayEl = $('tr[data-variant="' + variant + '"] .var-data-display');
+            var displayEl = $('tr[data-variant="' + variant + '"] .shipping-rules-display');
             displayEl.empty();
             $.each(info.shipping, function (i, rule) {
                 displayEl.append($('<span>', {
@@ -105,7 +105,7 @@
             });
         });
 
-        $('.var-data-display .badge').tooltip();
+        $('.shipping-rules-display .badge').tooltip();
     }
 
     function loadShippingMethods(e) {
@@ -181,7 +181,7 @@
 
         $.map(product_suppliers, function(val, key) {
             mapping[key] = JSON.stringify(val);
-            mapping['supplier_' + val.supplier + '_' + key] = JSON.stringify(val.shipping); // for Shipping mapping
+            mapping['shipping_' + val.supplier + '_' + key] = JSON.stringify(val.shipping); // for Shipping mapping
             return key;
         });
 

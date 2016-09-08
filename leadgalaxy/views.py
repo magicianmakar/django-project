@@ -1258,8 +1258,8 @@ def proccess_api(request, user, method, target, data):
         mapping = {}
         shipping_map = {}
         for k in data:
-            if k.startswith('supplier_'):  # Save the shipping mapping for this supplier
-                shipping_map[k.replace('supplier_', '')] = json.loads(data[k])
+            if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
+                shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
             elif k != 'product':  # Save the variant -> supplier mapping
                 mapping[k] = json.loads(data[k])
 
