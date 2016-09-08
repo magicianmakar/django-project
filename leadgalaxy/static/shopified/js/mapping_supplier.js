@@ -16,28 +16,18 @@
     });
 
     $('#save-shipping-rules').click(function(e) {
-        var rules = [];
-        var supplier = $('#modal-shipping-methods').prop('supplier');
+        var supplier = parseInt($('#modal-shipping-methods').prop('supplier'), 10);
         var variant = $('#modal-shipping-methods').prop('variant');
+        var rules = getShippingRules();
 
-        $('#modal-shipping-methods .shipping-methods-container .shipping-rule').each(function(i, el) {
-            if ($(el).prop('preview')) {
-                rules.push(JSON.parse($(el).prop('rule')));
-            } else {
-                rules.push({
-                    country: $('.shipping-country', el).val(),
-                    country_name: $('.shipping-country option:selected', el).text(),
-                    method: $('.shipping-method', el).val(),
-                    method_name: $('.shipping-method option:selected', el).text(),
-                });
-            }
-        });
-
-        var applyForAll = $('.apply-for-all').prop('checked');
-
-        if (applyForAll) {
+        if ($('.apply-for-all').prop('checked')) {
             $.each(product_suppliers, function (v, el) {
-                product_suppliers[v].shipping = rules;
+                if (supplier == product_suppliers[v].supplier) {
+                    product_suppliers[v].shipping = rules;
+                }
+
+                var exists = shipping_mapping.hasOwnProperty(supplier + '_' + v);
+                shipping_mapping[supplier + '_' + v] = rules;
             });
         } else {
             product_suppliers[variant].shipping = rules;
@@ -47,6 +37,39 @@
 
         displayRulesInTable();
     });
+
+    // Return current modal shipping rules
+    function getShippingRules() {
+        var shipping_rules = [];
+        var country_index = {};
+
+        $('#modal-shipping-methods .shipping-methods-container .shipping-rule').each(function(i, el) {
+            var rule = null;
+
+            if ($(el).prop('preview')) {
+                rule = JSON.parse($(el).prop('rule'));
+            } else {
+                rule = {
+                    country: $('.shipping-country', el).val(),
+                    method: $('.shipping-method', el).val(),
+                    country_name: $('.shipping-country option:selected', el).text(),
+                    method_name: $('.shipping-method option:selected', el).text(),
+                };
+            }
+
+            // Add rule only if a shipping method is selected
+            if(rule.method.length) {
+                if (country_index.hasOwnProperty(rule.country)) {
+                    shipping_rules[country_index[rule.country]] = rule;
+                } else {
+                    country_index[rule.country] = shipping_rules.length;
+                    shipping_rules.push(rule);
+                }
+            }
+        });
+
+        return shipping_rules;
+    }
 
     function displayRulesPreview(variant) {
         var container = $('#modal-shipping-methods .shipping-methods-container');
