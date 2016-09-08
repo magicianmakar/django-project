@@ -752,7 +752,7 @@ class ShopifyProduct(models.Model):
         """ Return Shipping Method for the given variant_id and country_code """
         mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
 
-        if variant_id and mapping and type(mapping) is list:
+        if variant_id and country_code and mapping and type(mapping) is list:
             for method in mapping:
                 if country_code == method.get('country'):
                     short_name = method.get('method_name').split(' ')

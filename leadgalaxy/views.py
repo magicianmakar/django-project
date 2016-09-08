@@ -3618,7 +3618,7 @@ def orders_view(request):
                     shipping_method = product.get_shipping_for_variant(
                         supplier_id=supplier.id,
                         variant_id=el['variant_id'],
-                        country_code=order['shipping_address']['country_code'])
+                        country_code=order.get('shipping_address', {}).get('country_code'))
                 else:
                     shipping_method = None
 
