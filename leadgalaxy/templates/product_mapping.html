@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load template_helper %}
+{% load perms_helper %}
 {% load compress %}
 
 {% block main-container %}
@@ -13,9 +14,11 @@
                 <a data-toggle="tab" href="#tab-1"><i class="fa fa-chain"></i> Variants</a>
             </li>
 
+            {% if user|can:'suppliers_shipping_mapping.use' %}
             <li>
                 <a href="{% url 'mapping_supplier' product.id %}"><i class="fa fa-truck"></i> Suppliers &amp; Shipping</a>
             </li>
+            {% endif %}
        </ul>
        <div class="tab-content">
            <div id="tab-1" class="tab-pane active">
