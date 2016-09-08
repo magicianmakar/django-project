@@ -1226,9 +1226,11 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
+        supplier = product.productsupplier_set.get(id=data.get('supplier'))
+
         mapping = {}
         for k in data:
-            if k != 'product':
+            if k != 'product' and k != 'supplier':
                 mapping[k] = data[k]
 
         if not product.default_supplier:
@@ -1242,7 +1244,9 @@ def proccess_api(request, user, method, target, data):
                 is_default=True
             )
 
-        product.set_variant_mapping(mapping)
+            supplier = product.default_supplier
+
+        product.set_variant_mapping(mapping, supplier=supplier)
         product.save()
 
         return JsonResponse({'status': 'ok'})
@@ -2459,6 +2463,12 @@ def product_mapping(request, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
     request.user.can_edit(product)
 
+    current_supplier = utils.safeInt(request.GET.get('supplier'))
+    if not current_supplier and product.default_supplier:
+        current_supplier = product.default_supplier.id
+
+    current_supplier = product.productsupplier_set.get(id=current_supplier)
+
     shopify_id = product.get_shopify_id()
     if not shopify_id:
         raise Http404("Product doesn't exists on Shopify Store.")
@@ -2469,7 +2479,7 @@ def product_mapping(request, product_id):
         return HttpResponseRedirect('/')
 
     images = {}
-    variants_map = product.get_variant_mapping()
+    variants_map = product.get_variant_mapping(supplier=current_supplier)
 
     for i in shopify_product['images']:
         for var in i['variant_ids']:
@@ -2510,13 +2520,13 @@ def product_mapping(request, product_id):
         if k not in seen_variants:
             del variants_map[k]
 
-    product_suppliers = []
+    product_suppliers = {}
     for i in product.get_suppliers():
-        product_suppliers.append({
+        product_suppliers[i.id] = {
             'id': i.id,
             'name': i.supplier_name,
             'url': i.product_url
-        })
+        }
 
     return render(request, 'product_mapping.html', {
         'store': product.store,
@@ -2525,6 +2535,7 @@ def product_mapping(request, product_id):
         'shopify_product': shopify_product,
         'variants_map': variants_map,
         'product_suppliers': product_suppliers,
+        'current_supplier': current_supplier,
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},

@@ -649,23 +649,30 @@ class ShopifyProduct(models.Model):
         supplier.is_default = True
         supplier.save()
 
-    def set_variant_mapping(self, mapping):
+    def set_variant_mapping(self, mapping, supplier=None):
+        if supplier is None:
+            supplier = self.default_supplier
+
         if type(mapping) is not str:
             mapping = json.dumps(mapping)
 
-        if self.default_supplier:
-            self.default_supplier.variants_map = mapping
-            self.default_supplier.save()
+        if supplier:
+            supplier.variants_map = mapping
+            supplier.save()
 
         elif self.variants_map:
             self.variants_map = mapping
             self.save()
 
-    def get_variant_mapping(self, name=None, default=None, for_extension=False):
+    def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None):
         mapping = {}
+
+        if supplier is None:
+            supplier = self.default_supplier
+
         try:
-            if self.default_supplier and self.default_supplier.variants_map:
-                mapping = json.loads(self.default_supplier.variants_map)
+            if supplier and supplier.variants_map:
+                mapping = json.loads(supplier.variants_map)
             elif self.variants_map:
                 mapping = json.loads(self.variants_map)
             else:

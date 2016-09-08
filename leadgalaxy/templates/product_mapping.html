@@ -23,7 +23,26 @@
        <div class="tab-content">
            <div id="tab-1" class="tab-pane active">
                <div class="panel-body">
-                <form id="mapping-form">
+                <form id="mapping-form" class="form-horizontal">
+                    <div class="form-group row">
+                        <div class="col-md-1">
+                            <label class="control-label ">Supplier:</label>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="supplier-select form-control" data-variant="{{variant.id}}">
+                                {% for item in product.get_suppliers %}
+                                <option value="{{item.id}}"
+                                        {% if current_supplier.id == item.id %}selected{% endif %}>
+                                        {{item.supplier_name}}
+                                        {% if product.default_supplier.id == item.id %}
+                                            (Default)
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
                     <table class="table table-borderd table-compact">
                         <thead>
                             <tr>

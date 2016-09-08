@@ -1,6 +1,8 @@
 (function(product_id, variants_mapping) {
     'use strict';
 
+    var mapping_changed = false;
+
     function select_variant(variants, variant_title, variant_sku) {
         // variants: Shopify variants to select
         // variant_title: variant name to test if need to be selected
@@ -78,7 +80,8 @@
         $(this).bootstrapBtn('loading');
 
         var mapping = {
-            product: product_id
+            product: product_id,
+            supplier: $('.supplier-select').val(),
         };
 
         $.map(variants_mapping, function (val, key) {
@@ -145,6 +148,11 @@
         });
     }
 
+    function getSupplierUrl() {
+        var supplier = parseInt($('.supplier-select').val(), 10);
+        return product_suppliers[supplier].url;
+    }
+
     $('.select-var-mapping').click(function(e) {
         e.preventDefault();
 
@@ -155,7 +163,7 @@
         window.extensionSendMessage({
             subject: 'getVariants',
             from: 'webapp',
-            url: $(this).attr('product-url'),
+            url: getSupplierUrl(),
             cache: true,
         }, function(response) {
             var variant_tpl = Handlebars.compile($("#variant-template").html());
@@ -251,11 +259,35 @@
             }
         });
 
-        // $('#var_' + variant_id).val(JSON.stringify(variants));
         variants_mapping[variant_id] = variants;
         $('#modal-variant-select').modal('hide');
 
+        mapping_changed = true;
+
         display_variant();
+    });
+
+    $('.supplier-select').on({
+        "ready": function(e) {
+            $(this).attr("readonly", true);
+        },
+        "focus": function(e) {
+            $(this).data({
+                choice: $(this).val()
+            });
+        },
+        "change": function(e) {
+            if (mapping_changed) {
+                swal('Please Save your mapping changes first.');
+                $(this).val($(this).data('choice'));
+                return false;
+            } else {
+                var link = window.location.href.split(/[\?#]/)[0];
+                window.location.href = link + '?supplier=' + $(this).val();
+
+                return true;
+            }
+        }
     });
 
     display_variant();
