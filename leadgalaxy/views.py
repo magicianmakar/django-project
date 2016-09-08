@@ -3375,6 +3375,8 @@ def orders_view(request):
     store_sync_enabled = store_order_synced and shopify_orders_utils.is_store_sync_enabled(store)
 
     if not store_sync_enabled:
+        fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
+
         open_orders = store.get_orders_count(status, fulfillment, financial)
         orders = xrange(0, open_orders)
 

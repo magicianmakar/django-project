@@ -158,8 +158,11 @@
                         </div>
                         <div class="col-md-2" style="padding-right:7px">
                             <select name="fulfillment" class="form-control help-select" style="padding: 6px 0px">
+                                {% if store_sync_enabled %}
                                 <option {% if fulfillment == 'unshipped,partial' %}selected="selected"{% endif %}
                                         value="unshipped,partial" label="Unfulfilled / Partially fulfilled">Show orders that have not yet been fulfilled or partially fulfilled</option>
+                                {% endif %}
+
                                 <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}
                                         value="unshipped" label="Unfulfilled">Show orders that have not yet been fulfilled</option>
                                 <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}
