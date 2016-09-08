@@ -291,7 +291,7 @@
                         {% endif %}
 
                         {% if product.qelem.get_shopify_id %}
-                        <li><a href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
+                        <li><a href="{% url 'product_mapping' product.qelem.id %}" target="_blank">
                             <i class="fa fa-chain"></i> Variants Mapping</a>
                         </li>
                         {% endif %}
@@ -496,7 +496,7 @@
 
                     {% if product.qelem.get_shopify_id %}
                         <div class="col-xs-6 text-right">
-                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.qelem.store.id product.qelem.id %}" target="_blank">
+                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.qelem.id %}" target="_blank">
                             Variants Mapping
                             <i class="fa fa-external-link"></i>
                         </a>

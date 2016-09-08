@@ -502,6 +502,8 @@ class ShopifyProduct(models.Model):
     data = models.TextField()
     original_data = models.TextField(default='', blank=True)
     variants_map = models.TextField(default='', blank=True)
+    supplier_map = models.TextField(default='', null=True, blank=True)
+    shipping_map = models.TextField(default='', null=True, blank=True)
     notes = models.TextField(default='', blank=True)
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -699,6 +701,110 @@ class ShopifyProduct(models.Model):
 
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
+
+    def set_suppliers_mapping(self, mapping):
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.supplier_map = mapping
+        self.save()
+
+    def get_suppliers_mapping(self, name=None, default=None):
+        mapping = {}
+        try:
+            if self.supplier_map:
+                mapping = json.loads(self.supplier_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
+    def get_suppier_for_variant(self, variant_id):
+        """
+            Return the mapped Supplier for the given variant_id
+            or the default one if mapping is not set/found
+        """
+
+        mapping = self.get_suppliers_mapping(name=variant_id)
+
+        if not variant_id or not mapping:
+            return self.default_supplier
+
+        try:
+            return self.productsupplier_set.get(id=mapping['supplier'])
+        except:
+            return self.default_supplier
+
+    def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
+        """ Return Shipping Method for the given variant_id and country_code """
+        mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
+
+        if variant_id and mapping and type(mapping) is list:
+            for method in mapping:
+                if country_code == method.get('country'):
+                    short_name = method.get('method_name').split(' ')
+                    if len(short_name) > 1 and short_name[1].lower() == 'post':
+                        method['method_short'] = ' '.join(short_name[:2])
+                    else:
+                        method['method_short'] = short_name[0]
+
+                    return method
+
+        return None
+
+    def set_shipping_mapping(self, mapping, update=True):
+        if update:
+            try:
+                current = json.loads(self.shipping_map)
+            except:
+                current = {}
+
+            for k, v in mapping.items():
+                current[k] = v
+
+            mapping = current
+
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.shipping_map = mapping
+        self.save()
+
+    def get_shipping_mapping(self, supplier=None, variant=None, default=None):
+        mapping = {}
+        try:
+            if self.shipping_map:
+                mapping = json.loads(self.shipping_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if supplier and variant:
+            mapping = mapping.get('{}_{}'.format(supplier, variant), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
 
     def update_data(self, data):
         if type(data) is not dict:

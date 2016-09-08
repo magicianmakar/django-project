@@ -9,12 +9,12 @@
 <div class="row">
     <div class="tabs-container col-md-offset-1 col-md-10">
        <ul class="nav nav-tabs">
-            <li class="active">
-                <a data-toggle="tab" href="#tab-1"><i class="fa fa-chain"></i> Variants</a>
+            <li>
+                <a href="{% url 'product_mapping' product.id %}"><i class="fa fa-chain"></i> Variants</a>
             </li>
 
-            <li>
-                <a href="{% url 'mapping_supplier' product.id %}"><i class="fa fa-truck"></i> Suppliers &amp; Shipping</a>
+            <li class="active">
+                <a data-toggle="tab" href="#tab-1"><i class="fa fa-truck"></i> Suppliers &amp; Shipping</a>
             </li>
        </ul>
        <div class="tab-content">
@@ -26,13 +26,14 @@
                             <tr>
                                 <th>Image</th>
                                 <th>Shopify</th>
-                                <th>{{product.get_original_info.source|default:'Source'|title}}</th>
-                                <th style="width:110px;"></th>
+                                <th style="width:150px;">Supplier</th>
+                                <th style="width: 150px; ">Shipping Method</th>
+                                <th style="width: 200px; "></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for variant in shopify_product.variants %}
-                            <tr>
+                            <tr data-variant="{{variant.id}}">
                                 <td style="vertical-align:middle">
                                     {% if variant.image %}
                                         <img src="{% shopify_image_thumb variant.image 'thumb' %}" style="width: 50px" />
@@ -44,17 +45,24 @@
                                 </td>
                                 <td style="vertical-align:middle">{{variant.title}}</td>
                                 <td style="vertical-align:middle">
-                                    <input class="tag-it var-data-input" class="form-control"
-                                           value="" name="{{variant.id}}" id="var_{{variant.id}}"
-                                           style="display:none" data-var-id="{{variant.id}}">
-
-                                    <div class="var-data-display" style="display: flex; align-items: center;"></div>
+                                    <select class="supplier-select form-control" data-variant="{{variant.id}}">
+                                    {% for item in product_suppliers %}
+                                        <option value="{{item.id}}" {% if variant.supplier == item.id %}selected{% endif %}>{{item.name}}</option>
+                                    {% endfor %}
+                                    </select>
                                 </td>
-                                <td style="vertical-align:middle;text-align:center">
+                                <td style="vertical-align:middle">
+                                        <input class="tag-it var-data-input" class="form-control"
+                                               value="" name="{{variant.id}}" id="var_{{variant.id}}"
+                                               style="display:none" data-var-id="{{variant.id}}">
+
+                                        <div class="var-data-display" style="display: flex; align-items: center;"></div>
+                                </td>
+                                <td style="vertical-align:middle;;text-align:center">
                                     <a href="#" class="btn btn-xs btn-success select-var-mapping"
                                        product-url="{{product.default_supplier.product_url}}"
-                                       data-var="{{variant.id}}">Change</a>
-                                </td>
+                                       data-variant="{{variant.id}}">Change</a>
+                               </td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -82,7 +90,7 @@
     </div>
 </div>
 
-<div id="modal-variant-select" class="modal" aria-hidden="true">
+<div id="modal-shipping-methods" class="modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="m-t-none modal-header">
@@ -90,34 +98,89 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
 
-                <h4 class="modal-title">Product Variants</h4>
+                <h4 class="modal-title">Shipping Methods</h4>
             </div>
 
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-sm-12 variants-container">
+                    <div class="col-sm-12 shipping-methods-container">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 m-t">
+                        <button class="btn btn-outline btn-default btn-xs add-shipping-rule"><i class="fa fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <div class="row shipping-rule-options m-t">
+                    <div class="options col-xs-5 text-left">
+
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                <button id="save-var-mapping" class="btn btn-primary" type="button">Save</button>
+                {# <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button> #}
+                <label htmlFor="apply-for-all" class="pull-left">
+                    <input name="apply-for-all" class="apply-for-all" type="checkbox"/>
+                    Apply for all variants
+                </label>
+
+                <button id="save-shipping-rules" class="btn btn-primary" type="button">Save</button>
             </div>
         </div>
     </div>
 </div>
 
-{% verbatim %}
 
-<script id="variant-template" type="text/x-handlebars-template">
-    <div class="row well variant" style="padding: 5px 10px">
-        <h3>{{title}}:</h3>
-        <div class="options col-xs-12"></div>
+<script id="shipping-rule-template" type="text/x-handlebars-template">
+    <div class="row shipping-rule m-b">
+        <div class="options col-xs-5">
+            <select name="shipping-country"  class="shipping-country form-control"
+                    data-placeholder="Shipping Country" style="">
+               <option value=""></option>
+                {% for item in countries %}
+                <option value="{{item.0}}">{{item.1}}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="options col-xs-1 text-center" style="padding: 6px 0 0 0;margin:0;">
+            <i class="fa fa-long-arrow-right"></i>
+        </div>
+
+        <div class="options col-xs-5 text-left">
+
+            <select name="shipping-method" class="shipping-method form-control"
+                    data-placeholder="Shipping Method" style="">
+               <option value=""></option>
+            </select>
+        </div>
     </div>
 </script>
 
-<script id="variant-option-template" type="text/x-handlebars-template">
+{% verbatim %}
+
+<script id="shipping-rule-display-template" type="text/x-handlebars-template">
+    <div class="row shipping-rule m-b">
+        <div class="options col-xs-3">
+            <span>{{country_name}}</span>
+        </div>
+
+        <div class="options col-xs-1 text-center" style="padding: 6px 0 0 0;margin:0;">
+            <i class="fa fa-long-arrow-right"></i>
+        </div>
+
+        <div class="options col-xs-7 text-left">
+            <span>{{method_name}}</span>
+        </div>
+
+        <div class="options col-xs-1 text-center" style="padding:0;margin:0;cursor:pointer;">
+            <i class="fa fa-times remove-rule"></i>
+        </div>
+    </div>
+</script>
+
+<script id="supplier-option-template" type="text/x-handlebars-template">
     <div class="option-item" style="display:inline-block;margin-top: 5px;">
         <div class="option-item-select" style="padding: 2px 5px;border: 1px solid rgb(204, 204, 204);border-radius: 3px;margin-right: 10px;display: flex;align-items: center;min-height: 30px;cursor: pointer;background-color: #fff;min-width: 55px;">
             <input class="variant-select" name="{{variant.title}}" type="radio"
@@ -142,33 +205,20 @@
 </script>
 
 {% endverbatim %}
-
-{% endblock %}
-
-{% block extracss %}
-<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
-<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
-<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
 
-
 <script type="text/javascript">
-    var bootstrapButton = $.fn.button.noConflict();
-    $.fn.bootstrapBtn = bootstrapButton;
-
     var product_id = {{product.id}};
-    var variants_mapping = {% json_dumps variants_map %};
-    var product_suppliers = {% json_dumps product_suppliers %};
-</script>
+    var product_suppliers = {% json_dumps suppliers_map %};
 
-<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    var shipping_mapping = {% json_dumps shipping_map %};
+</script>
 
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'shopified/js/product_mapping.js' %}"></script>
+<script type="text/javascript" src="{% static 'shopified/js/mapping_supplier.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

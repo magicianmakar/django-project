@@ -1247,6 +1247,24 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'suppliers-mapping':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_edit(product)
+
+        mapping = {}
+        shipping_map = {}
+        for k in data:
+            if k.startswith('supplier_'):  # Save the shipping mapping for this supplier
+                shipping_map[k.replace('supplier_', '')] = json.loads(data[k])
+            elif k != 'product':  # Save the variant -> supplier mapping
+                mapping[k] = json.loads(data[k])
+
+        product.set_suppliers_mapping(mapping)
+        product.set_shipping_mapping(shipping_map)
+        product.save()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'GET' and target == 'order-fulfill':
         if int(data.get('count', 0)) >= 30:
             raise Http404('Not found')
@@ -2437,7 +2455,7 @@ def variants_edit(request, store_id, pid):
 
 
 @login_required
-def product_mapping(request, store_id, product_id):
+def product_mapping(request, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
     request.user.can_edit(product)
 
@@ -2450,7 +2468,6 @@ def product_mapping(request, store_id, product_id):
         messages.error(request, 'Product not found in Shopify')
         return HttpResponseRedirect('/')
 
-    source_variants = []
     images = {}
     variants_map = product.get_variant_mapping()
 
@@ -2493,18 +2510,86 @@ def product_mapping(request, store_id, product_id):
         if k not in seen_variants:
             del variants_map[k]
 
+    product_suppliers = []
+    for i in product.get_suppliers():
+        product_suppliers.append({
+            'id': i.id,
+            'name': i.supplier_name,
+            'url': i.product_url
+        })
+
     return render(request, 'product_mapping.html', {
         'store': product.store,
         'product_id': product_id,
         'product': product,
         'shopify_product': shopify_product,
         'variants_map': variants_map,
+        'product_suppliers': product_suppliers,
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
             {'title': 'Variants Mapping', 'url': request.build_absolute_uri()},
+        ]
+    })
+
+
+@login_required
+def mapping_supplier(request, product_id):
+    product = get_object_or_404(ShopifyProduct, id=product_id)
+    request.user.can_edit(product)
+
+    shopify_id = product.get_shopify_id()
+    if not shopify_id:
+        raise Http404("Product doesn't exists on Shopify Store.")
+
+    shopify_product = utils.get_shopify_product(product.store, shopify_id)
+    if not shopify_product:
+        messages.error(request, 'Product not found in Shopify')
+        return HttpResponseRedirect('/')
+
+    images = {}
+    suppliers_map = product.get_suppliers_mapping()
+
+    for i in shopify_product['images']:
+        for var in i['variant_ids']:
+            images[var] = i['src']
+
+    default_supplier_id = product.default_supplier.id
+    for i, v in enumerate(shopify_product['variants']):
+        supplier = suppliers_map.get(str(v['id']), {'supplier': default_supplier_id, 'shipping': {}})
+        suppliers_map[str(v['id'])] = supplier
+
+        shopify_product['variants'][i]['image'] = images.get(v['id'])
+        shopify_product['variants'][i]['supplier'] = supplier['supplier']
+        shopify_product['variants'][i]['shipping'] = supplier['shipping']
+
+    product_suppliers = []
+    for i in product.get_suppliers():
+        product_suppliers.append({
+            'id': i.id,
+            'name': i.supplier_name,
+            'url': i.product_url
+        })
+
+    shipping_map = product.get_shipping_mapping()
+
+    return render(request, 'mapping_supplier.html', {
+        'store': product.store,
+        'product_id': product_id,
+        'product': product,
+        'shopify_product': shopify_product,
+        'suppliers_map': suppliers_map,
+        'shipping_map': shipping_map,
+        'product_suppliers': product_suppliers,
+        'countries': utils.get_countries(),
+        'page': 'product',
+        'breadcrumbs': [
+            {'title': 'Products', 'url': '/product'},
+            {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
+            {'title': product.title, 'url': '/product/{}'.format(product.id)},
+            {'title': 'Suppliers &amp; Shipping', 'url': request.build_absolute_uri()},
         ]
     })
 
@@ -2582,10 +2667,21 @@ def boards(request, board_id):
 def get_shipping_info(request):
     aliexpress_id = request.GET.get('id')
     product = request.GET.get('product')
+    supplier = request.GET.get('supplier')
 
     country_code = request.GET.get('country', 'US')
     if country_code == 'GB':
         country_code = 'UK'
+
+    if not aliexpress_id and supplier:
+        if int(supplier) == 0:
+            product = ShopifyProduct.objects.get(id=product)
+            request.user.can_view(product)
+            supplier = product.default_supplier
+        else:
+            supplier = ProductSupplier.objects.get(id=supplier)
+
+        aliexpress_id = supplier.get_source_id()
 
     try:
         shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
@@ -3517,8 +3613,18 @@ def orders_view(request):
                 if not original_info:
                     original_info = {}
 
+                supplier = product.get_suppier_for_variant(el['variant_id'])
+                if supplier:
+                    shipping_method = product.get_shipping_for_variant(
+                        supplier_id=supplier.id,
+                        variant_id=el['variant_id'],
+                        country_code=order['shipping_address']['country_code'])
+                else:
+                    shipping_method = None
+
                 order['line_items'][i]['product'] = product
-                order['line_items'][i]['supplier'] = product.default_supplier
+                order['line_items'][i]['supplier'] = supplier
+                order['line_items'][i]['shipping_method'] = shipping_method
 
                 order['connected_lines'] += 1
 

@@ -4,7 +4,8 @@ from django.contrib.auth.views import password_reset
 
 import leadgalaxy.views
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     url(r'^$', leadgalaxy.views.index_view, name='index'),
     url(r'^logout$', leadgalaxy.views.logout),
 
@@ -14,7 +15,8 @@ urlpatterns = patterns('',
     url(r'^product/?(?P<tpl>(grid|table))?$', leadgalaxy.views.products_list, name='product'),
     url(r'^product/(?P<pid>[0-9]+)$', leadgalaxy.views.product_view, name='product_view'),
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', leadgalaxy.views.variants_edit, name='variants_edit'),
-    url(r'^product/mapping/(?P<store_id>[0-9]+)/(?P<product_id>[0-9]+)$', leadgalaxy.views.product_mapping, name='product_mapping'),
+    url(r'^product/mapping/(?P<product_id>[0-9]+)$', leadgalaxy.views.product_mapping, name='product_mapping'),
+    url(r'^product/mapping/supplier/(?P<product_id>[0-9]+)$', leadgalaxy.views.mapping_supplier, name='mapping_supplier'),
     url(r'^boards/list$', leadgalaxy.views.boards_list, name='boards_list'),
     url(r'^boards/(?P<board_id>[0-9]+)$', leadgalaxy.views.boards, name='boards'),
     url(r'^shipping/info$', leadgalaxy.views.get_shipping_info, name='get_shipping_info'),

@@ -111,7 +111,6 @@
                 this.btn.bootstrapBtn('reset');
             }
         });
-        $('#mapping-form').serialize();
     });
 
     function selectColor() {

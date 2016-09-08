@@ -342,12 +342,11 @@
                                          line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}">
                                         <div class="row source-order">
 
-                                            {% with supplier=item.product.get_supplier_info %}
                                             <div class="col-xs-3">
                                                 <span>Supplier:</span>
-                                                {% if supplier %}
+                                                {% if item.supplier %}
                                                     <a {% if supplier.url %}
-                                                        href="{{supplier.url|default:'#'}}" target="_blank"
+                                                        href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
                                                     {% else %}
                                                         href="#"
                                                     {% endif %}
@@ -357,12 +356,11 @@
                                                         source-order-id="{{item.shopify_order.source_id}}"
                                                     {% endif %}
 
-                                                    >{{supplier.name|truncatechars:25}}</a>
+                                                    >{{item.supplier.supplier_name|truncatechars:25}}</a>
                                                 {% else %}
                                                     N/A
                                                 {% endif %}
                                             </div>
-                                            {% endwith %}
 
                                             <div class="col-xs-3 line-order-id">
                                                 Order ID:
@@ -415,7 +413,7 @@
                                                         <th style="width:30%;text-align:center">Item</th>
                                                         <th>Variant</th>
                                                         <th>Qty</th>
-                                                        <th style="width:64px"></th>
+                                                        <th style="{% if item.shipping_method %}width:125px{% else %}width:64px{% endif %}"></th>
                                                         <th style="width:64px"></th>
                                                         <th>Tracking #</th>
                                                     </tr>

@@ -4,9 +4,28 @@
     <span class="label label-warning">Refunded</span>
 {% elif original %}
     <div class="btn-group">
+    {% if item.shipping_method %}
+        <a type="button" class="btn btn-success btn-xs itooltip" data-container="body" data-html="true"
+            title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
+            {% if aliexpress_affiliate %}
+                 href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
+            {% else %}
+                 href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
+            {% endif %}
+            target="_blank"
+            style="border-right:1px solid #66a8cc"
+            >
+            {{item.shipping_method.method_short}}
+        </a>
+        <button type="button" class="btn btn-success btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="caret"></span>
+        </button>
+
+    {% else %}
         <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">
             Place Order
             <span class="caret"></span></button>
+    {% endif %}
 
         <ul class="dropdown-menu">
             {% if item.shopify_order %}
