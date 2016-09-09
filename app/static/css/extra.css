@@ -1,14 +1,17 @@
 /* Fix modal shift page to the left */
 body.modal-open #page-wrapper .row.border-bottom.page-search-nav,
-body.modal-open #page-wrapper .row.wrapper.border-bottom.white-bg.page-heading {
+body.modal-open #page-wrapper .row.wrapper.border-bottom.white-bg.page-heading,
+body.stop-scrolling #page-wrapper .row.border-bottom.page-search-nav,
+body.stop-scrolling #page-wrapper .row.wrapper.border-bottom.white-bg.page-heading {
     padding-right: 15px !important;
 }
 
-body.modal-open #page-wrapper .wrapper.wrapper-content {
+body.modal-open #page-wrapper .wrapper.wrapper-content,
+body.stop-scrolling #page-wrapper .wrapper.wrapper-content {
     padding-right: 25px !important;
 }
 
-body.modal-open #page-wrapper {
+body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     transition: inherit !important;
     -webkit-transition: inherit !important;
     -moz-transition: inherit !important;
