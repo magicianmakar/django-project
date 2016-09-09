@@ -27,6 +27,7 @@
                                 <th>Image</th>
                                 <th>Shopify</th>
                                 <th style="width:150px;">Supplier</th>
+                                <th>Aliexpress Variants</th>
                                 <th style="width: 150px; ">Shipping Method</th>
                                 <th style="width: 200px; "></th>
                             </tr>
@@ -36,9 +37,9 @@
                             <tr data-variant="{{variant.id}}">
                                 <td style="vertical-align:middle">
                                     {% if variant.image %}
-                                        <img src="{% shopify_image_thumb variant.image 'thumb' %}" style="width: 50px" />
+                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb variant.image 'thumb' %}" style="width: 50px" />
                                     {% elif shopify_product.image %}
-                                        <img src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}" style="width: 50px" />
+                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}" style="width: 50px" />
                                     {% else %}
                                         <span style="width: 50px; height:50px"></span>
                                     {% endif %}
@@ -46,18 +47,29 @@
                                 <td style="vertical-align:middle">{{variant.title}}</td>
                                 <td style="vertical-align:middle">
                                     <select class="supplier-select form-control" data-variant="{{variant.id}}">
-                                    {% for item in product_suppliers %}
+                                    {% for key, item in product_suppliers.items %}
                                         <option value="{{item.id}}" {% if variant.supplier == item.id %}selected{% endif %}>{{item.name}}</option>
                                     {% endfor %}
                                     </select>
                                 </td>
+
+                                <td style="vertical-align:middle">
+                                    <div class="var-data-display" style="display: flex; align-items: center;"
+                                         id="var_{{variant.id}}" data-var-id="{{variant.id}}"></div>
+                                </td>
+
                                 <td style="vertical-align:middle">
                                     <div class="shipping-rules-display" style="display: flex; align-items: center;"></div>
                                 </td>
+
                                 <td style="vertical-align:middle;;text-align:center">
-                                    <a href="#" class="btn btn-xs btn-success change-shipping-rules"
+                                    <a href="#" class="btn btn-xs btn-info btn-outline select-var-mapping"
                                        product-url="{{product.default_supplier.product_url}}"
-                                       data-variant="{{variant.id}}">Change</a>
+                                       data-var="{{variant.id}}"><i class="fa fa-edit"></i> Mapping</a>
+
+                                    <a href="#" class="btn btn-xs btn-default btn-outline change-shipping-rules"
+                                       product-url="{{product.default_supplier.product_url}}"
+                                       data-variant="{{variant.id}}"><i class="fa fa-edit"></i> Shipping</a>
                                </td>
                             </tr>
                             {% empty %}
@@ -122,6 +134,33 @@
                 </label>
 
                 <button id="save-shipping-rules" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-variant-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title">Product Variants</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12 variants-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button id="save-var-mapping" class="btn btn-primary" type="button">Save</button>
             </div>
         </div>
     </div>
@@ -200,20 +239,68 @@
     </div>
 </script>
 
+<script id="variant-template" type="text/x-handlebars-template">
+    <div class="row well variant" style="padding: 5px 10px">
+        <h3>{{title}}:</h3>
+        <div class="options col-xs-12"></div>
+    </div>
+</script>
+
+<script id="variant-option-template" type="text/x-handlebars-template">
+    <div class="option-item" style="display:inline-block;margin-top: 5px;">
+        <div class="option-item-select" style="padding: 2px 5px;border: 1px solid rgb(204, 204, 204);border-radius: 3px;margin-right: 10px;display: flex;align-items: center;min-height: 30px;cursor: pointer;background-color: #fff;min-width: 55px;">
+            <input class="variant-select" name="{{variant.title}}" type="radio"
+                   style="margin: 0 5px 0" var-data="{{var_json}}"
+                   {{#if selected }}
+                   checked
+                   {{/if}}
+                   >
+            {{#if option.image}}
+                <img src="{{option.image}}" style="max-width:35px;max-height:35px;display:inline-block;margin-right: 5px;">
+            {{/if}}
+
+            <span class="variant-title" style="font-weight:bold;">{{option.title}}</span>
+        </div>
+    </div>
+</script>
+
+<script id="extra-input-template" type="text/x-handlebars-template">
+    <div class="" style="padding: 5px 0">
+        <input class="extra-input form-control" type="text">
+    </div>
+</script>
+
 {% endverbatim %}
+{% endblock %}
+
+{% block extracss %}
+<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
 
 <script type="text/javascript">
-    var product_id = {{product.id}};
-    var product_suppliers = {% json_dumps suppliers_map %};
+    var bootstrapButton = $.fn.button.noConflict();
+    $.fn.bootstrapBtn = bootstrapButton;
 
+    var bootstrapTooltip = $.fn.tooltip.noConflict();
+    $.fn.bootstrapTooltip = bootstrapTooltip;
+
+    var product_id = {{product.id}};
+    var product_suppliers = {% json_dumps product_suppliers %};
+
+    var suppliers_mapping = {% json_dumps suppliers_map %};
     var shipping_mapping = {% json_dumps shipping_map %};
+    var variants_mapping = {% json_dumps variants_map %};
 </script>
+
+<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'shopified/js/mapping_supplier.js' %}"></script>
 {% endcompress %}
 

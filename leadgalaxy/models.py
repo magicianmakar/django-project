@@ -649,20 +649,26 @@ class ShopifyProduct(models.Model):
         supplier.is_default = True
         supplier.save()
 
-    def set_variant_mapping(self, mapping, supplier=None):
+    def set_variant_mapping(self, mapping, supplier=None, update=False):
         if supplier is None:
             supplier = self.default_supplier
+
+        if update:
+            try:
+                current = json.loads(supplier.variants_map)
+            except:
+                current = {}
+
+            for k, v in mapping.items():
+                current[k] = v
+
+            mapping = current
 
         if type(mapping) is not str:
             mapping = json.dumps(mapping)
 
-        if supplier:
-            supplier.variants_map = mapping
-            supplier.save()
-
-        elif self.variants_map:
-            self.variants_map = mapping
-            self.save()
+        supplier.variants_map = mapping
+        supplier.save()
 
     def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None):
         mapping = {}
@@ -695,6 +701,58 @@ class ShopifyProduct(models.Model):
             mapping = mapping.split(',')
 
         return mapping
+
+    def get_all_variants_mapping(self):
+        from leadgalaxy.utils import get_shopify_product
+
+        all_mapping = {}
+
+        shopify_id = self.get_shopify_id()
+        if not shopify_id:
+            return None
+
+        shopify_product = get_shopify_product(self.store, shopify_id)
+        if not shopify_product:
+            return None
+
+        for supplier in self.get_suppliers():
+            variants_map = self.get_variant_mapping(supplier=supplier)
+
+            seen_variants = []
+            for i, v in enumerate(shopify_product['variants']):
+                mapped = variants_map.get(str(v['id']))
+                if mapped:
+                    options = mapped
+                else:
+                    options = []
+                    if v.get('option1') and v.get('option1').lower() != 'default title':
+                        options.append(v.get('option1'))
+                    if v.get('option2'):
+                        options.append(v.get('option2'))
+                    if v.get('option3'):
+                        options.append(v.get('option3'))
+
+                    options = map(lambda a: {'title': a}, options)
+
+                try:
+                    if type(options) not in [list, dict]:
+                        options = json.loads(options)
+
+                        if type(options) is int:
+                            options = str(options)
+                except:
+                    pass
+
+                variants_map[str(v['id'])] = options
+                seen_variants.append(str(v['id']))
+
+            for k in variants_map.keys():
+                if k not in seen_variants:
+                    del variants_map[k]
+
+            all_mapping[str(supplier.id)] = variants_map
+
+        return all_mapping
 
     def get_shopify_exports(self):
         shopify_id = self.get_shopify_id()

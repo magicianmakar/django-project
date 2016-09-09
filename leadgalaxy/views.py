@@ -1252,20 +1252,35 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'suppliers-mapping':
+        from django.db import transaction
+
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
+        suppliers_cache = {}
+
         mapping = {}
         shipping_map = {}
-        for k in data:
-            if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
-                shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
-            elif k != 'product':  # Save the variant -> supplier mapping
-                mapping[k] = json.loads(data[k])
 
-        product.set_suppliers_mapping(mapping)
-        product.set_shipping_mapping(shipping_map)
-        product.save()
+        with transaction.atomic():
+            for k in data:
+                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
+                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
+                elif k.startswith('variant_'):  # Save the shipping mapping for this supplier
+                    supplier_id, variant_id = k.replace('variant_', '').split('_')
+                    supplier = suppliers_cache.get(supplier_id, product.productsupplier_set.get(id=supplier_id))
+
+                    suppliers_cache[supplier_id] = supplier
+                    var_mapping = {variant_id: data[k]}
+
+                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True)
+
+                elif k != 'product':  # Save the variant -> supplier mapping
+                    mapping[k] = json.loads(data[k])
+
+            product.set_suppliers_mapping(mapping)
+            product.set_shipping_mapping(shipping_map)
+            product.save()
 
         return JsonResponse({'status': 'ok'})
 
@@ -2576,15 +2591,16 @@ def mapping_supplier(request, product_id):
         shopify_product['variants'][i]['supplier'] = supplier['supplier']
         shopify_product['variants'][i]['shipping'] = supplier['shipping']
 
-    product_suppliers = []
+    product_suppliers = {}
     for i in product.get_suppliers():
-        product_suppliers.append({
+        product_suppliers[i.id] = {
             'id': i.id,
             'name': i.supplier_name,
             'url': i.product_url
-        })
+        }
 
     shipping_map = product.get_shipping_mapping()
+    variants_map = product.get_all_variants_mapping()
 
     return render(request, 'mapping_supplier.html', {
         'store': product.store,
@@ -2593,6 +2609,7 @@ def mapping_supplier(request, product_id):
         'shopify_product': shopify_product,
         'suppliers_map': suppliers_map,
         'shipping_map': shipping_map,
+        'variants_map': variants_map,
         'product_suppliers': product_suppliers,
         'countries': utils.get_countries(),
         'page': 'product',
