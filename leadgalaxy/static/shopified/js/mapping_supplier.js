@@ -246,6 +246,9 @@
         displayRulesPreview(variant);
 
         $('.apply-for-all').prop('checked', false);
+        $('#modal-shipping-methods .modal-title').text('Shipping Methods for ' +
+            product_suppliers[supplier].name + ' Supplier');
+
         $('#modal-shipping-methods').prop('supplier', supplier)
             .prop('variant', variant)
             .modal('show');
