@@ -2556,7 +2556,7 @@ def product_mapping(request, product_id):
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
-            {'title': 'Variants Mapping', 'url': request.build_absolute_uri()},
+            'Variants Mapping',
         ]
     })
 
@@ -2617,7 +2617,7 @@ def mapping_supplier(request, product_id):
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
-            {'title': 'Suppliers &amp; Shipping', 'url': request.build_absolute_uri()},
+            'Advanced Mapping',
         ]
     })
 
