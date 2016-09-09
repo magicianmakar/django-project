@@ -126,24 +126,23 @@
     function display_variant() {
         var option_tpl = Handlebars.compile($("#variant-option-template").html());
 
-        $('.var-data-input').each(function(i, input) {
-            var display = $(input).first().next('.var-data-display');
-            display.empty();
+        $('.var-data-display').each(function(i, display) {
+            $(display).empty();
 
-            var variant_data = variants_mapping[$(input).data('var-id')];
+            var variant_data = variants_mapping[$(display).data('var-id')];
             variant_data = parse_variant_map(variant_data);
 
             $.each(variant_data, function(j, option) {
                 var optionEl = $(option_tpl({
                     option: option,
-                    var_json: JSON.stringify(variants_mapping[$(input).data('var-id')]),
+                    var_json: JSON.stringify(variants_mapping[$(display).data('var-id')]),
                 }));
 
                 optionEl.find('input').remove();
                 optionEl.find('img').css('max-width', '25px');
                 optionEl.find('.option-item-select').css('cursor', 'inherit');
 
-                display.append(optionEl);
+                $(display).append(optionEl);
             });
         });
     }
