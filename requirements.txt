@@ -5,10 +5,10 @@ billiard==3.3.0.23
 bleach==1.4.3
 boto==2.42.0
 celery==3.1.23
-cffi==1.7.0
+cffi==1.8.2
 characteristic==14.3.0
 contextlib2==0.5.4
-cryptography==1.4
+cryptography==1.5
 cssselect==0.9.1
 dj-database-url==0.3.0
 Django==1.8.13
@@ -46,7 +46,7 @@ mock==2.0.0
 munch==2.0.4
 MySQL-python==1.2.5
 ndg-httpsclient==0.4.1
-newrelic==2.68.0.50
+newrelic==2.70.0.51
 oauth2client==1.4.11
 oauthlib==1.1.2
 pbr==1.10.0
@@ -62,7 +62,7 @@ pytz==2016.6.1
 queuelib==1.4.2
 raven==5.26.0
 redis==2.10.5
-requests==2.11.0
+requests==2.11.1
 requests-oauthlib==0.6.2
 rsa==3.1.4
 service-identity==14.0.0
