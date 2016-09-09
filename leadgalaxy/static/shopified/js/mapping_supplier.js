@@ -205,6 +205,13 @@
         });
     });
 
+    $('.var-data-display, .shipping-rules-display').click(function (e) {
+        e.preventDefault();
+
+        $(this).parents('td').find('a').trigger('click');
+    });
+
+
     $('#save-var-mapping').click(function(e) {
         e.preventDefault();
 

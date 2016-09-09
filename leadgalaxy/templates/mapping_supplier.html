@@ -10,11 +10,11 @@
     <div class="tabs-container col-md-offset-1 col-md-10">
        <ul class="nav nav-tabs">
             <li>
-                <a href="{% url 'product_mapping' product.id %}"><i class="fa fa-chain"></i> Variants</a>
+                <a href="{% url 'product_mapping' product.id %}"><i class="fa fa-chain"></i> Variants Mapping</a>
             </li>
 
             <li class="active">
-                <a data-toggle="tab" href="#tab-1"><i class="fa fa-truck"></i> Suppliers &amp; Shipping</a>
+                <a data-toggle="tab" href="#tab-1"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
             </li>
        </ul>
        <div class="tab-content">
@@ -63,7 +63,7 @@
                                             </a>
                                         </div>
 
-                                        <div class="var-data-display select-var-mapping preview-display"
+                                        <div class="var-data-display preview-display"
                                              id="var_{{variant.id}}" data-variant="{{variant.id}}"></div>
                                     </div>
                                 </td>
@@ -76,7 +76,7 @@
                                             </a>
                                        </div>
 
-                                        <div class="shipping-rules-display change-shipping-rules preview-display"
+                                        <div class="shipping-rules-display preview-display"
                                              data-variant="{{variant.id}}"></div>
                                     </div>
                                </td>
