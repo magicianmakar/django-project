@@ -1,3 +1,21 @@
+/* Fix modal shift page to the left */
+body.modal-open #page-wrapper .row.border-bottom.page-search-nav,
+body.modal-open #page-wrapper .row.wrapper.border-bottom.white-bg.page-heading {
+    padding-right: 15px !important;
+}
+
+body.modal-open #page-wrapper .wrapper.wrapper-content {
+    padding-right: 25px !important;
+}
+
+body.modal-open #page-wrapper {
+    transition: inherit !important;
+    -webkit-transition: inherit !important;
+    -moz-transition: inherit !important;
+    -o-transition: inherit !important;
+
+}
+
 #hijacked-warning {
   z-index: 1000000;
   font-weight: 600;
