@@ -257,7 +257,7 @@
         var rules = getShippingRules();
 
         if ($('.apply-for-all').prop('checked')) {
-            $.each(suppliers_mapping, function (v, el) {
+            $.each(suppliers_mapping, function(v, el) {
                 if (supplier == suppliers_mapping[v].supplier) {
                     suppliers_mapping[v].shipping = rules;
                 }
@@ -294,7 +294,7 @@
             }
 
             // Add rule only if a shipping method is selected
-            if(rule.method.length) {
+            if (rule.method.length) {
                 if (country_index.hasOwnProperty(rule.country)) {
                     shipping_rules[country_index[rule.country]] = rule;
                 } else {
@@ -317,7 +317,7 @@
             var rule_el = $(shipping_rule_tpl(rule));
             rule_el.prop('preview', true);
             rule_el.prop('rule', JSON.stringify(rule));
-            $('.remove-rule', rule_el).click(function (e) {
+            $('.remove-rule', rule_el).click(function(e) {
                 rule_el.remove();
             });
 
@@ -329,7 +329,7 @@
         $.each(suppliers_mapping, function(variant, info) {
             var displayEl = $('tr[data-variant="' + variant + '"] .shipping-rules-display');
             displayEl.empty();
-            $.each(info.shipping, function (i, rule) {
+            $.each(info.shipping, function(i, rule) {
                 displayEl.append($('<span>', {
                     'class': 'badge badge-deafult m-l-xs',
                     'text': rule.country,
@@ -379,7 +379,7 @@
         });
     }
 
-    $('.supplier-select').on('change', function (e) {
+    $('.supplier-select').on('change', function(e) {
         var supplier = $(this).val();
         var variant = $(this).parents('tr').data('variant');
         var mapping_key = supplier + '_' + variant;
@@ -420,7 +420,7 @@
         };
 
         // This is done to save Shipping mapping when using "Apply to all variants"
-        $.each(shipping_mapping, function (key, val) {
+        $.each(shipping_mapping, function(key, val) {
             mapping['shipping_' + key] = JSON.stringify(val);
         });
 
@@ -465,5 +465,3 @@
     displayRulesInTable();
 
 })(product_id, product_suppliers, suppliers_mapping, shipping_mapping, variants_mapping);
-
-
