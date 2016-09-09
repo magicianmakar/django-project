@@ -28,8 +28,7 @@
                                 <th>Shopify</th>
                                 <th style="width:150px;">Supplier</th>
                                 <th>Aliexpress Variants</th>
-                                <th style="width: 150px; ">Shipping Method</th>
-                                <th style="width: 200px; "></th>
+                                <th>Shipping Method</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,23 +52,32 @@
                                     </select>
                                 </td>
 
-                                <td style="vertical-align:middle">
-                                    <div class="var-data-display" style="display: flex; align-items: center;"
-                                         id="var_{{variant.id}}" data-var-id="{{variant.id}}"></div>
+                                <td>
+                                    <div style="display:flex;align-items:center">
+                                        <div>
+                                            <a href="#" class="select-var-mapping" style="padding:20px 10px"
+                                                data-variant="{{variant.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                        </div>
+
+                                        <div class="xcol-xs-10 var-data-display select-var-mapping" style="display:flex;align-items:center"
+                                             id="var_{{variant.id}}" data-variant="{{variant.id}}"></div>
+                                    </div>
                                 </td>
 
-                                <td style="vertical-align:middle">
-                                    <div class="shipping-rules-display" style="display: flex; align-items: center;"></div>
-                                </td>
+                                <td>
+                                    <div style="display:flex;align-items:center">
+                                        <div>
+                                            <a href="#" class="change-shipping-rules" style="padding:20px 10px"
+                                               data-variant="{{variant.id}}">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                       </div>
 
-                                <td style="vertical-align:middle;;text-align:center">
-                                    <a href="#" class="btn btn-xs btn-info btn-outline select-var-mapping"
-                                       product-url="{{product.default_supplier.product_url}}"
-                                       data-var="{{variant.id}}"><i class="fa fa-edit"></i> Mapping</a>
-
-                                    <a href="#" class="btn btn-xs btn-default btn-outline change-shipping-rules"
-                                       product-url="{{product.default_supplier.product_url}}"
-                                       data-variant="{{variant.id}}"><i class="fa fa-edit"></i> Shipping</a>
+                                        <div class="shipping-rules-display change-shipping-rules" style="display:flex;align-items:center"
+                                             data-variant="{{variant.id}}"></div>
+                                    </div>
                                </td>
                             </tr>
                             {% empty %}

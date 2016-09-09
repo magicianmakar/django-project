@@ -1266,7 +1266,7 @@ def proccess_api(request, user, method, target, data):
             for k in data:
                 if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
                     shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
-                elif k.startswith('variant_'):  # Save the shipping mapping for this supplier
+                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
                     supplier_id, variant_id = k.replace('variant_', '').split('_')
                     supplier = suppliers_cache.get(supplier_id, product.productsupplier_set.get(id=supplier_id))
 

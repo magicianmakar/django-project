@@ -93,7 +93,7 @@
 
             var supplier = getSelectedSupplier(display);
 
-            var variant_data = variants_mapping[supplier][$(display).data('var-id')];
+            var variant_data = variants_mapping[supplier][$(display).data('variant')];
             variant_data = parse_variant_map(variant_data);
 
             $.each(variant_data, function(j, option) {
@@ -123,7 +123,7 @@
 
         $(this).bootstrapBtn('loading');
 
-        $('#modal-variant-select').data('var', $(this).data('var'));
+        $('#modal-variant-select').data('variant', $(this).data('variant'));
         $('#modal-variant-select').data('supplier', getSelectedSupplier(this));
 
         window.extensionSendMessage({
@@ -136,7 +136,7 @@
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());
 
-            var variant_id = $('#modal-variant-select').data('var');
+            var variant_id = $('#modal-variant-select').data('variant');
             var supplier = $('#modal-variant-select').data('supplier');
 
             $('.variants-container').empty();
@@ -208,7 +208,7 @@
     $('#save-var-mapping').click(function(e) {
         e.preventDefault();
 
-        var variant_id = $('#modal-variant-select').data('var');
+        var variant_id = $('#modal-variant-select').data('variant');
         var supplier = $('#modal-variant-select').data('supplier');
         var variants = [];
 
