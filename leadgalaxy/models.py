@@ -927,6 +927,21 @@ class ProductSupplier(models.Model):
 
         return 'aliexpress.com/' in self.product_url.lower()
 
+    def get_name(self):
+        if self.supplier_name and self.supplier_name.strip():
+            name = self.supplier_name.strip()
+        else:
+            supplier_idx = 1
+            for i in self.product.get_suppliers():
+                if self.id == i.id:
+                    break
+                else:
+                    supplier_idx += 1
+
+            name = u'Supplier #{}'.format(supplier_idx)
+
+        return name
+
 
 class ShopifyProductExport(models.Model):
     class Meta:

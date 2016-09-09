@@ -33,7 +33,7 @@
                                 {% for item in product.get_suppliers %}
                                 <option value="{{item.id}}"
                                         {% if current_supplier.id == item.id %}selected{% endif %}>
-                                        {{item.supplier_name}}
+                                        {{item.get_name}}
                                         {% if product.default_supplier.id == item.id %}
                                             (Default)
                                         {% endif %}

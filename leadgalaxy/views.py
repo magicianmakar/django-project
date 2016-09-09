@@ -2539,7 +2539,7 @@ def product_mapping(request, product_id):
     for i in product.get_suppliers():
         product_suppliers[i.id] = {
             'id': i.id,
-            'name': i.supplier_name,
+            'name': i.get_name(),
             'url': i.product_url
         }
 
@@ -2595,7 +2595,7 @@ def mapping_supplier(request, product_id):
     for i in product.get_suppliers():
         product_suppliers[i.id] = {
             'id': i.id,
-            'name': i.supplier_name,
+            'name': i.get_name(),
             'url': i.product_url
         }
 
