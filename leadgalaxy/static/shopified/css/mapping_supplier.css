@@ -15,7 +15,7 @@ td.variant-image .thumb {
   .mapping-preview .select-var-mapping:hover, .mapping-preview .change-shipping-rules:hover {
     cursor: pointer; }
     .mapping-preview .select-var-mapping:hover .variant-title, .mapping-preview .change-shipping-rules:hover .variant-title {
-      color: #23527c; }
+      color: #6c9fcb; }
 
 #modal-shipping-methods .shipping-methods-container .shipping-rule .rule-arrow {
   padding: 6px 0 0 0;
