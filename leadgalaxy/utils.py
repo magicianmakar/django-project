@@ -1690,6 +1690,9 @@ class ProductChangeEvent():
             if self.variants_map is not None:
                 found_map = []
                 for key, variant in self.variants_map.items():
+                    if not isinstance(variant, basestring):
+                        variant = str(variant)
+
                     match = [x for x in search if x.lower() in variant.lower()]
                     if len(match) == len(search):
                         found_map.append(key)
