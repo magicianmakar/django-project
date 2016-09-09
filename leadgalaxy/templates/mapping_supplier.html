@@ -34,17 +34,19 @@
                         <tbody>
                             {% for variant in shopify_product.variants %}
                             <tr data-variant="{{variant.id}}">
-                                <td style="vertical-align:middle">
+                                <td class="variant-image">
                                     {% if variant.image %}
-                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb variant.image 'thumb' %}" style="width: 50px" />
+                                        <img class="thumb unveil" src="{% static 'img/blank.gif' %}"
+                                             data-src="{% shopify_image_thumb variant.image 'thumb' %}" />
                                     {% elif shopify_product.image %}
-                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}" style="width: 50px" />
+                                        <img class="thumb unveil" src="{% static 'img/blank.gif' %}"
+                                             data-src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}" />
                                     {% else %}
-                                        <span style="width: 50px; height:50px"></span>
+                                        <img class="thumb" src="{% static 'img/blank.gif' %}" />
                                     {% endif %}
                                 </td>
-                                <td style="vertical-align:middle">{{variant.title}}</td>
-                                <td style="vertical-align:middle">
+                                <td>{{variant.title}}</td>
+                                <td>
                                     <select class="supplier-select form-control" data-variant="{{variant.id}}">
                                     {% for key, item in product_suppliers.items %}
                                         <option value="{{item.id}}" {% if variant.supplier == item.id %}selected{% endif %}>{{item.name}}</option>
@@ -53,29 +55,28 @@
                                 </td>
 
                                 <td>
-                                    <div style="display:flex;align-items:center">
+                                    <div class="mapping-preview">
                                         <div>
-                                            <a href="#" class="select-var-mapping" style="padding:20px 10px"
-                                                data-variant="{{variant.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>">
+                                            <a class="select-var-mapping edit-btn" data-variant="{{variant.id}}"
+                                               href="#" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                         </div>
 
-                                        <div class="xcol-xs-10 var-data-display select-var-mapping" style="display:flex;align-items:center"
+                                        <div class="var-data-display select-var-mapping preview-display"
                                              id="var_{{variant.id}}" data-variant="{{variant.id}}"></div>
                                     </div>
                                 </td>
 
                                 <td>
-                                    <div style="display:flex;align-items:center">
+                                    <div class="mapping-preview">
                                         <div>
-                                            <a href="#" class="change-shipping-rules" style="padding:20px 10px"
-                                               data-variant="{{variant.id}}">
+                                            <a href="#" class="change-shipping-rules edit-btn"data-variant="{{variant.id}}">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                        </div>
 
-                                        <div class="shipping-rules-display change-shipping-rules" style="display:flex;align-items:center"
+                                        <div class="shipping-rules-display change-shipping-rules preview-display"
                                              data-variant="{{variant.id}}"></div>
                                     </div>
                                </td>
@@ -179,7 +180,7 @@
     <div class="row shipping-rule m-b">
         <div class="options col-xs-5">
             <select name="shipping-country"  class="shipping-country form-control"
-                    data-placeholder="Shipping Country" style="">
+                    data-placeholder="Shipping Country">
                <option value=""></option>
                 {% for item in countries %}
                 <option value="{{item.0}}">{{item.1}}</option>
@@ -187,14 +188,14 @@
             </select>
         </div>
 
-        <div class="options col-xs-1 text-center" style="padding: 6px 0 0 0;margin:0;">
+        <div class="options col-xs-1 text-center rule-arrow">
             <i class="fa fa-long-arrow-right"></i>
         </div>
 
         <div class="options col-xs-5 text-left">
 
             <select name="shipping-method" class="shipping-method form-control"
-                    data-placeholder="Shipping Method" style="">
+                    data-placeholder="Shipping Method">
                <option value=""></option>
             </select>
         </div>
@@ -209,7 +210,7 @@
             <span>{{country_name}}</span>
         </div>
 
-        <div class="options col-xs-1 text-center" style="padding: 6px 0 0 0;margin:0;">
+        <div class="options col-xs-1 text-center rule-arrow">
             <i class="fa fa-long-arrow-right"></i>
         </div>
 
@@ -217,63 +218,39 @@
             <span>{{method_name}}</span>
         </div>
 
-        <div class="options col-xs-1 text-center" style="padding:0;margin:0;cursor:pointer;">
+        <div class="options col-xs-1 text-center delete-btn">
             <i class="fa fa-times remove-rule"></i>
         </div>
     </div>
 </script>
 
-<script id="supplier-option-template" type="text/x-handlebars-template">
-    <div class="option-item" style="display:inline-block;margin-top: 5px;">
-        <div class="option-item-select" style="padding: 2px 5px;border: 1px solid rgb(204, 204, 204);border-radius: 3px;margin-right: 10px;display: flex;align-items: center;min-height: 30px;cursor: pointer;background-color: #fff;min-width: 55px;">
-            <input class="variant-select" name="{{variant.title}}" type="radio"
-                   style="margin: 0 5px 0" var-data="{{var_json}}"
-                   {{#if selected }}
-                   checked
-                   {{/if}}
-                   >
-            {{#if option.image}}
-                <img src="{{option.image}}" style="max-width:35px;max-height:35px;display:inline-block;margin-right: 5px;">
-            {{/if}}
-
-            <span class="variant-title" style="font-weight:bold;">{{option.title}}</span>
-        </div>
-    </div>
-</script>
-
-<script id="extra-input-template" type="text/x-handlebars-template">
-    <div class="" style="padding: 5px 0">
-        <input class="extra-input form-control" type="text">
-    </div>
-</script>
-
 <script id="variant-template" type="text/x-handlebars-template">
-    <div class="row well variant" style="padding: 5px 10px">
+    <div class="row well variant">
         <h3>{{title}}:</h3>
         <div class="options col-xs-12"></div>
     </div>
 </script>
 
 <script id="variant-option-template" type="text/x-handlebars-template">
-    <div class="option-item" style="display:inline-block;margin-top: 5px;">
-        <div class="option-item-select" style="padding: 2px 5px;border: 1px solid rgb(204, 204, 204);border-radius: 3px;margin-right: 10px;display: flex;align-items: center;min-height: 30px;cursor: pointer;background-color: #fff;min-width: 55px;">
-            <input class="variant-select" name="{{variant.title}}" type="radio"
-                   style="margin: 0 5px 0" var-data="{{var_json}}"
+    <div class="option-item">
+        <div class="option-item-select">
+            <input class="variant-select" name="{{variant.title}}"
+                   type="radio" var-data="{{var_json}}"
                    {{#if selected }}
                    checked
                    {{/if}}
                    >
             {{#if option.image}}
-                <img src="{{option.image}}" style="max-width:35px;max-height:35px;display:inline-block;margin-right: 5px;">
+                <img src="{{option.image}}">
             {{/if}}
 
-            <span class="variant-title" style="font-weight:bold;">{{option.title}}</span>
+            <span class="variant-title">{{option.title}}</span>
         </div>
     </div>
 </script>
 
 <script id="extra-input-template" type="text/x-handlebars-template">
-    <div class="" style="padding: 5px 0">
+    <div style="padding: 5px 0">
         <input class="extra-input form-control" type="text">
     </div>
 </script>
@@ -285,6 +262,7 @@
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+<link href="{% static 'shopified/css/mapping_supplier.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
