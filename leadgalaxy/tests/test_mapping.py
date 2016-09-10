@@ -2,10 +2,10 @@ from django.test import TestCase
 
 import json
 
-from leadgalaxy.models import User, ShopifyStore, ShopifyProduct
+from leadgalaxy.models import User, ShopifyStore, ShopifyProduct, ProductSupplier
 
 
-class StoreTestCase(TestCase):
+class MappingTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
 
@@ -72,3 +72,46 @@ class StoreTestCase(TestCase):
 
         self.assertEqual(map(lambda e: e['title'], self.product.get_variant_mapping('987654321')), ['Blue', 'S'])
         self.assertEqual(map(lambda e: e['sku'], self.product.get_variant_mapping('987654321')), ['sku-1-12345', 'sku-2-12345'])
+
+    def test_default_supplier_mapping(self):
+        supplier1 = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            )
+
+        supplier2 = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            )
+
+        self.product.set_default_supplier(supplier1)
+
+        self.product.set_variant_mapping({
+            '987654321': 'Blue,S'
+        })
+
+        self.assertIsNotNone(supplier1.variants_map)
+        self.assertIsNone(supplier2.variants_map)
+
+    def test_select_supplier_mapping(self):
+        supplier1 = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            )
+
+        supplier2 = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            )
+
+        self.product.set_default_supplier(supplier1)
+
+        self.product.set_variant_mapping(
+            {
+                '987654321': 'Blue,S'
+            },
+            select_supplier=supplier2
+        )
+
+        self.assertIsNotNone(supplier2.variants_map)
+        self.assertIsNone(supplier1.variants_map)

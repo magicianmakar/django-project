@@ -649,8 +649,10 @@ class ShopifyProduct(models.Model):
         supplier.is_default = True
         supplier.save()
 
-    def set_variant_mapping(self, mapping, supplier=None, update=False):
-        if supplier is None:
+    def set_variant_mapping(self, mapping, select_supplier=None, update=False):
+        if select_supplier is not None:
+            supplier = select_supplier
+        else:
             supplier = self.default_supplier
 
         if update:
@@ -667,8 +669,12 @@ class ShopifyProduct(models.Model):
         if type(mapping) is not str:
             mapping = json.dumps(mapping)
 
-        supplier.variants_map = mapping
-        supplier.save()
+        if supplier:
+            supplier.variants_map = mapping
+            supplier.save()
+        else:
+            self.variants_map = mapping
+            self.save()
 
     def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None):
         mapping = {}
