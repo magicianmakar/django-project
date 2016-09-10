@@ -44,6 +44,10 @@ urlpatterns = patterns(
 
     url(r'^user/profile$', leadgalaxy.views.user_profile, name='user_profile'),
     url(r'^user/unlock/(?P<token>[a-z0-9]+)$', leadgalaxy.views.user_unlock, name='user_unlock'),
+    url(r'^user/invoices/(?P<invoice_id>[\w-]+)$', leadgalaxy.views.user_invoices, name='user_invoices'),
+    url(r'^user/invoices/(?P<invoice_id>[\w-]+)/download$', leadgalaxy.views.user_invoices_download, name='user_invoices_download'),
+    url(r'^user/invoices/(?P<invoice_id>[\w-]+)/pay$', leadgalaxy.views.user_invoices_pay, name='user_invoices_pay'),
+    url(r'^user/profile/invoices$', leadgalaxy.views.user_profile_invoices, name='user_profile_invoices'),
 
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',

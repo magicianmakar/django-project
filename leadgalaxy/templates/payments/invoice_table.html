@@ -1,35 +1,71 @@
+{% if invoices %}
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h4 class="panel-title">Invoices</h4>
+        Invoices
     </div>
     <div class="xpanel-body">
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Date</th><th>Description</th><th>Period</th><th>Total</th><th>Paid</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Billing Period</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="invoice-table-body">
             {% for invoice in invoices %}
             <tr>
                 <td>
-                    {{ invoice.date }}
+                    {{ invoice.date|date:'M. d, Y' }}
                 </td>
                 <td>
-                    {{ invoice.subscription.plan.name }}
+                    {{ invoice.currency|upper }} {{ invoice.total }}
                 </td>
                 <td>
-                    {{ invoice.period_start }}—{{ invoice.period_end }}
+                    {% for line in invoice.lines.data %}
+                        <p>{{ line.plan.name }}</p>
+                    {% endfor %}
                 </td>
-                <td class="text-right">
-                    {{ invoice.total }}
+                <td>
+                    {{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}
                 </td>
                 <td class="text-center">
-                    {% if invoice.paid %}<i class="text-success fa fa-fw fa-check"></i>{% endif %}
+                    {% if invoice.paid %}
+                        <i class="fa fa-fw fa-check"></i>
+                    {% else %}
+                        <i class="text-danger fa fa-fw fa-close"></i>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not invoice.paid %}
+                        <form
+                            id="pay-invoice-form-{{ invoice.id }}"
+                            action="{% url 'user_invoices_pay' invoice.id %}"
+                            method="post"
+                        >{% csrf_token %}</form>
+                    {% endif %}
+                    <a href="{% url 'user_invoices_download' invoice.id %}" title="Download as PDF">
+                        <i class="fa fa-fw fa-file-pdf-o"></i>
+                    </a>
+                    <a href="{% url 'user_invoices' invoice.id %}" title="View in browser">
+                        <i class="fa fa-fw fa-eye"></i>
+                    </a>
+                    {% if not invoice.paid %}
+                    <a class="pay-invoice-link" title="Pay invoice" data-invoice-id={{ invoice.id }}>
+                        <i class="fa fa-fw fa-credit-card"></i>
+                    </a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
             <tbody>
         </table>
+        <p class="text-center">
+            <a id="more-invoices"></a>
+        </p>
     </div>
 </div>
+{% endif %}

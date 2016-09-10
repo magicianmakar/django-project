@@ -1,8 +1,15 @@
+import datetime
+import time
+
+from decimal import Decimal, ROUND_HALF_UP
+
 import simplejson as json
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.core.cache import cache
+
 
 import arrow
 
@@ -367,8 +374,6 @@ def process_webhook_event(request, event_id, raven_client):
 
         return HttpResponse('Customer Deleted')
 
-    elif event.type == 'invoice.updated':
-        pass
     elif event.type == 'customer.subscription.trial_will_end':
         try:
             customer = StripeCustomer.objects.get(customer_id=event.data.object.customer)
@@ -396,9 +401,79 @@ def process_webhook_event(request, event_id, raven_client):
         return HttpResponse('No Email Sent - Status: {} Have Source: {}'.format(
             event.data.object.status, customer.have_source()))
 
-    elif event.type == 'invoice.payment_succeeded':
-        pass
+    elif event.type in ['invoice.created', 'invoice.updated']:
+        customer = event.data.object.customer
+        stripe_customer = StripeCustomer.objects.get(customer_id=customer)
+        refresh_invoice_cache(stripe_customer)
     else:
         return HttpResponse('Ignore Event')
 
     return HttpResponse('ok')
+
+
+def get_stripe_invoice_list(stripe_customer):
+    cache_key = 'invoices-' + stripe_customer.customer_id
+    invoices = cache.get(cache_key)
+    if invoices is None:
+        invoices = [normalize_invoice(i) for i in stripe_customer.invoices]
+        timeout = settings.CUSTOMER_INVOICES_CACHE_TIMEOUT
+        cache.set(cache_key, invoices, timeout=timeout)
+    return invoices
+
+
+def refresh_invoice_cache(stripe_customer):
+    cache_key = 'invoices-' + stripe_customer.customer_id
+    cache.delete(cache_key)
+    invoices = [normalize_invoice(i) for i in stripe_customer.invoices]
+    timeout = settings.CUSTOMER_INVOICES_CACHE_TIMEOUT
+    cache.set(cache_key, invoices, timeout=timeout)
+
+
+def get_stripe_invoice(invoice_id, expand=None):
+    expand = [] if expand is None else expand
+    invoice = None
+
+    while True:
+        try:
+            invoice = stripe.Invoice.retrieve(invoice_id, expand=expand)
+        except stripe.error.RateLimitError:
+            time.sleep(5)
+            continue
+        except stripe.error.InvalidRequestError:
+            invoice = None
+        break
+
+    return normalize_invoice(invoice) if invoice else None
+
+
+def normalize_invoice(invoice):
+    invoice.date = datetime.datetime.fromtimestamp(float(invoice.date))
+    invoice.period_start = datetime.datetime.fromtimestamp(float(invoice.period_start))
+    invoice.period_end = datetime.datetime.fromtimestamp(float(invoice.period_end))
+    invoice.total *= Decimal('0.01')
+    invoice.subtotal *= Decimal('0.01')
+    if invoice.tax:
+        invoice.tax = invoice.tax * Decimal('0.01')
+    if isinstance(invoice.charge, stripe.resource.Charge):
+        invoice.charge = normalize_charge(invoice.charge)
+    invoice.discount_amount = 0 * Decimal('0.01')
+    if invoice.discount is not None:
+        amount_off = invoice.discount['coupon'].get('amount_off')
+        if amount_off is None:
+            percent_off = invoice.discount['coupon']['percent_off'] * Decimal('0.01')
+            invoice.discount_amount = (invoice.subtotal * percent_off).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP)
+        else:
+            invoice.discount_amount = amount_off * Decimal('0.01')
+    for line in invoice.lines.get('data', []):
+        line['amount'] *= Decimal('0.01')
+
+    return invoice
+
+
+def normalize_charge(charge):
+    charge.created = datetime.datetime.fromtimestamp(float(charge.created))
+    charge.amount *= Decimal('0.01')
+    if isinstance(charge.invoice, stripe.resource.Invoice):
+        charge.invoice = normalize_invoice(charge.invoice)
+    return charge
