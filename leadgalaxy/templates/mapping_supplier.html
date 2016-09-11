@@ -283,8 +283,12 @@
 {% block extracss %}
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+
+{% compress css %}
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 <link href="{% static 'shopified/css/mapping_supplier.css' %}" rel="stylesheet">
+{% endcompress %}
+
 {% endblock %}
 
 {% block extrajs %}
