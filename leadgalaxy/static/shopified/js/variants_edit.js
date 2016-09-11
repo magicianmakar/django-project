@@ -9,7 +9,7 @@ $('#btn-variants-img').click(function(e) {
 });
 
 function updateSelectButton() {
-    var current = parseInt($('.current-var').val());
+    var current = parseInt($('.current-var').val(), 10);
     var total = $('.current-var').prop('total');
     var variant_id = product.variants[current].id;
     var image_id = product.variants[current].image_id;
@@ -23,7 +23,7 @@ function updateSelectButton() {
 }
 
 $('.var-btn-next').click(function(e) {
-    var current = parseInt($('.current-var').val());
+    var current = parseInt($('.current-var').val(), 10);
     var total = $('.current-var').prop('total');
     var next = current + 1;
 
@@ -35,7 +35,7 @@ $('.var-btn-next').click(function(e) {
 });
 
 $('.var-btn-prev').click(function(e) {
-    var current = parseInt($('.current-var').val());
+    var current = parseInt($('.current-var').val(), 10);
     var total = $('.current-var').prop('total');
     var next = current - 1;
 
@@ -51,7 +51,7 @@ $('#view-btn').click(function(e) {
 });
 
 function imageClicked(e) {
-    var img = $(this);
+    var img = $(e.target);
     var current = $('.current-var').val();
     var variant_id = product.variants[current].id;
     var image_id = img.attr('image-id');
