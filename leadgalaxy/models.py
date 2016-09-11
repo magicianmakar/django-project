@@ -649,10 +649,8 @@ class ShopifyProduct(models.Model):
         supplier.is_default = True
         supplier.save()
 
-    def set_variant_mapping(self, mapping, select_supplier=None, update=False):
-        if select_supplier is not None:
-            supplier = select_supplier
-        else:
+    def set_variant_mapping(self, mapping, supplier=None, update=False):
+        if supplier is None:
             supplier = self.default_supplier
 
         if update:

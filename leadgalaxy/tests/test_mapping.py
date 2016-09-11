@@ -110,7 +110,7 @@ class MappingTestCase(TestCase):
             {
                 '987654321': 'Blue,S'
             },
-            select_supplier=supplier2
+            supplier=supplier2
         )
 
         self.assertIsNotNone(supplier2.variants_map)
