@@ -26,9 +26,11 @@ def get_shopify_exports(product):
 
 
 def merge_suppliers(debug=False):
+    count = 0
     for product in ShopifyProduct.objects.defer('data', 'original_data') \
                                          .select_related('store', 'shopify_export') \
-                                         .exclude(shopify_export=None):
+                                         .exclude(shopify_export=None) \
+                                         .exclude(shopify_id__gt=0):
 
         last_export, last_supplier = None, None
         for export in get_shopify_exports(product).order_by('created_at'):
@@ -42,7 +44,7 @@ def merge_suppliers(debug=False):
                     export.supplier_url
 
             supplier_url = export.supplier_url
-            if supplier_url.startswith('//'):
+            if supplier_url and supplier_url.startswith('//'):
                 supplier_url = u'http:{}'.format(supplier_url)
 
             last_supplier = ProductSupplier.objects.create(
@@ -59,7 +61,20 @@ def merge_suppliers(debug=False):
             product.shopify_id = last_export.shopify_id
             product.save()
 
+        count += 1
+
+        if count % 100 == 0:
+            print count,
+
 print 'Before Connected:', ShopifyProduct.objects.exclude(shopify_export=None).count()
+
+
+total = ShopifyProduct.objects.defer('data', 'original_data') \
+                                         .select_related('store', 'shopify_export') \
+                                         .exclude(shopify_export=None) \
+                                         .exclude(shopify_id__gt=0).count()
+
+print 'Total:', total
 
 with transaction.atomic():
     merge_suppliers(not True)
