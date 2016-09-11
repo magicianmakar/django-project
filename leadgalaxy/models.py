@@ -501,9 +501,12 @@ class ShopifyProduct(models.Model):
 
     data = models.TextField()
     original_data = models.TextField(default='', blank=True)
+
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
+    mapping_config = models.TextField(null=True, blank=True)
+
     notes = models.TextField(default='', blank=True)
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -771,6 +774,19 @@ class ShopifyProduct(models.Model):
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
 
+    def get_mapping_config(self):
+        try:
+            return json.loads(self.mapping_config)
+        except:
+            return {}
+
+    def set_mapping_config(self, config):
+        if type(config) is not str:
+            config = json.dumps(config)
+
+        self.mapping_config = config
+        self.save()
+
     def set_suppliers_mapping(self, mapping):
         if type(mapping) is not str:
             mapping = json.dumps(mapping)
@@ -807,9 +823,10 @@ class ShopifyProduct(models.Model):
             or the default one if mapping is not set/found
         """
 
+        config = self.get_mapping_config()
         mapping = self.get_suppliers_mapping(name=variant_id)
 
-        if not variant_id or not mapping:
+        if not variant_id or not mapping or config.get('supplier') == 'default':
             return self.default_supplier
 
         try:

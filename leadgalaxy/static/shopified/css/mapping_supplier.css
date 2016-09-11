@@ -52,3 +52,9 @@ td.variant-image .thumb {
       margin-right: 5px;
       max-height: 35px;
       max-width: 35px; }
+
+.supplier-config td {
+  padding-top: 25px !important; }
+  .supplier-config td .supplier-config-select {
+    width: 35%;
+    max-width: 200px; }

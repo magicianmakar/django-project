@@ -1275,6 +1275,9 @@ def proccess_api(request, user, method, target, data):
 
                     product.set_variant_mapping(var_mapping, supplier=supplier, update=True)
 
+                elif k == 'config':
+                    product.set_mapping_config({'supplier': data[k]})
+
                 elif k != 'product':  # Save the variant -> supplier mapping
                     mapping[k] = json.loads(data[k])
 
@@ -2601,6 +2604,7 @@ def mapping_supplier(request, product_id):
 
     shipping_map = product.get_shipping_mapping()
     variants_map = product.get_all_variants_mapping()
+    mapping_config = product.get_mapping_config()
 
     return render(request, 'mapping_supplier.html', {
         'store': product.store,
@@ -2611,6 +2615,7 @@ def mapping_supplier(request, product_id):
         'shipping_map': shipping_map,
         'variants_map': variants_map,
         'product_suppliers': product_suppliers,
+        'mapping_config': mapping_config,
         'countries': utils.get_countries(),
         'page': 'product',
         'breadcrumbs': [

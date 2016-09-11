@@ -6,7 +6,7 @@
 
 {% block main-container %}
 
-<div class="row">
+<div class="row m-b">
     <div class="tabs-container col-md-offset-1 col-md-10">
        <ul class="nav nav-tabs">
             <li>
@@ -88,11 +88,33 @@
                                 </td>
                             </tr>
                             {% endfor %}
+
+                            <tr class="supplier-config">
+                                <td colspan="2">
+                                    <label class="control-label ">Supplier To Use: {% include 'partial/help_tooltip.html' with help="<b>Default Supplier:</b> Default supplier in <i>Connections</i> tab will be used.<br/><br/><b>Advanced Mapping:</b> The supplier will be chosen from the mapping above." qtipstyle="color:#BBB" pos_at="top center" pos_my="bottom center" %}</label>
+                                </td>
+                                <td colspan="3">
+                                    <select class="supplier-config-select form-control">
+                                            <option value="default" {% if mapping_config.supplier == 'default' %}selected=""{% endif %}>Default Supplier</option>
+                                            <option value="advanced" {% if mapping_config.supplier == 'advanced' %}selected=""{% endif %}>Advanced Mapping</option>
+                                            <option disabled>------</option>
+
+                                        {% for item in product.get_suppliers %}
+                                            <option value="{{item.id}}" data-supplier="true" {% if mapping_config.supplier == item.id|slugify %}selected=""{% endif %}>
+                                                {{item.get_name}}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
 
                     <input type="hidden" name="product" value="{{product.id}}">
                 </form>
+
+                <hr />
+
 
                 {% if shopify_product.variants %}
                 <div class="row">

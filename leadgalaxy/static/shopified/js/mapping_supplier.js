@@ -356,6 +356,24 @@
         display_variant();
     }
 
+    function supplierSelectConfig() {
+        if (document.disableSupplierSelectConfig) {
+            return;
+        }
+
+        var supplier = $('.supplier-select').first().val();
+        var variantsCount = $('.supplier-select').length;
+        var seemVariant = $('.supplier-select').filter(function (i, el) {
+            return $(el).val() == supplier;
+        });
+
+        if (seemVariant.length == variantsCount) {
+            $('.supplier-config-select').val(supplier);
+        } else {
+            $('.supplier-config-select').val('advanced');
+        }
+    }
+
     function loadShippingMethods(e) {
         var select = $(e.target);
 
@@ -403,7 +421,28 @@
 
         mapping_changed = true;
 
+        supplierSelectConfig();
         displayRulesInTable();
+    });
+
+    $('.supplier-config-select').on('change', function(e) {
+        var isSupplier = $('option:selected', this).data('supplier');
+        var value = $(this).val();
+
+        document.disableSupplierSelectConfig = true;
+
+        if (isSupplier) {
+            var supplier = parseInt(value, 10);
+            $('.supplier-select').filter(function(i, el) {
+                return parseInt($(el).val(), 10) != supplier;
+            }).val($(this).val()).trigger('change');
+        } else {
+            if ($(this).val()) {
+
+            }
+        }
+
+        document.disableSupplierSelectConfig = false;
     });
 
     $('.add-shipping-rule').click(function(e) {
@@ -426,7 +465,8 @@
         $(this).bootstrapBtn('loading');
 
         var mapping = {
-            product: product_id
+            product: product_id,
+            config: $('.supplier-config-select').val(),
         };
 
         // This is done to save Shipping mapping when using "Apply to all variants"
@@ -472,6 +512,7 @@
         });
     });
 
+    //supplierSelectConfig();
     displayRulesInTable();
 
 })(product_id, product_suppliers, suppliers_mapping, shipping_mapping, variants_mapping);
