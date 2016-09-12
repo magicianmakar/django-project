@@ -3434,11 +3434,11 @@ def orders_view(request):
             except:
                 order_number = 0
 
-            if order_number:
-                source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
-                tracks = ShopifyOrderTrack.objects.filter(user=models_user, source_id=source_id) \
-                                                  .values_list('order_id', flat=True)
+            source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
+            tracks = ShopifyOrderTrack.objects.filter(user=models_user, source_id=source_id) \
+                                              .values_list('order_id', flat=True)
 
+            if order_number or len(tracks):
                 orders = orders.filter(Q(order_number=order_number) |
                                        Q(order_number=(order_number-1000)) |
                                        Q(order_id=order_number) |
