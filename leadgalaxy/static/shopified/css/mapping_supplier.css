@@ -12,11 +12,19 @@ td.variant-image .thumb {
   .mapping-preview .preview-display {
     display: flex;
     align-items: center; }
+  .mapping-preview .preview-display-block {
+    display: block; }
+    .mapping-preview .preview-display-block .badge {
+      cursor: help;
+      margin-top: 5px;
+      margin-left: 5px;
+      background-color: #fff;
+      border: 1px solid #ddd; }
   .mapping-preview .select-var-mapping:hover, .mapping-preview .change-shipping-rules:hover {
     cursor: pointer; }
-  .mapping-preview .preview-display:hover {
+  .mapping-preview .preview-display:hover, .mapping-preview .preview-display-block:hover {
     cursor: pointer; }
-    .mapping-preview .preview-display:hover .variant-title {
+    .mapping-preview .preview-display:hover .variant-title, .mapping-preview .preview-display-block:hover .variant-title {
       color: #6c9fcb; }
 
 #modal-shipping-methods .shipping-methods-container .shipping-rule .rule-arrow {

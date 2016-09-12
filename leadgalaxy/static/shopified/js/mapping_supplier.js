@@ -341,19 +341,36 @@
             displayEl.empty();
             $.each(info.shipping, function(i, rule) {
                 displayEl.append($('<span>', {
-                    'class': 'badge badge-deafult m-l-xs',
-                    'text': rule.country,
+                    'class': 'badge badge-default',
+                    'text': formatRulePreview(rule, info.shipping.length),
                     'title': 'Ship to <b>' + rule.country_name + '</b> using <b>' + rule.method_name + '</b>',
-                    'style': 'cursor: help',
                     'data-container': 'body',
                     'data-html': 'true',
                 }));
+
+                if ((1 < info.shipping.length && info.shipping.length <= 3) || (i + 1) % 3 === 0) {
+                    displayEl.append($('<br>'));
+                }
             });
         });
 
         $('.shipping-rules-display .badge').bootstrapTooltip();
 
         display_variant();
+    }
+
+    function formatRulePreview(rule, rulesCount) {
+        var price = (rule.method_name.match(/\(([^\)]+)\)/) || []).pop();
+        var methods = rule.method_name.split(' ');
+        var method = methods[0];
+
+        if (rulesCount <= 3 && price) {
+            return rule.country_name + ': ' + (methods[1].toLowerCase() == 'post' ? method + ' ' + methods[1] : method) + ' ' + price;
+        } else if (rulesCount <= 9) {
+            return rule.country + ': ' + (methods[1].toLowerCase() == 'post' ? method + ' ' + methods[1] : method);
+        } else {
+            return rule.country;
+        }
     }
 
     function supplierSelectConfig() {
