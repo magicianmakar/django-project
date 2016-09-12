@@ -406,12 +406,15 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             shopify_order = utils.get_shopify_order(store, order_id)
 
         for line in shopify_order['line_items']:
-            fulfillment_status = line['fulfillment_status']
+            fulfillment_status = line.get('fulfillment_status')
+            manual_fulfillement = line.get('fulfillment_service') == 'manual'
+
             if not fulfillment_status:
                 fulfillment_status = ''
 
-            ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
-                                     .update(shopify_status=fulfillment_status)
+            if manual_fulfillement:
+                ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
+                                         .update(shopify_status=fulfillment_status)
 
         order_utils.update_shopify_order(store, shopify_order)
 
