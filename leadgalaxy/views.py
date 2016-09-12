@@ -3435,7 +3435,9 @@ def orders_view(request):
                 order_number = 0
 
             if order_number:
-                tracks = ShopifyOrderTrack.objects.filter(user=models_user, source_id=order_number).values_list('order_id', flat=True)
+                source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
+                tracks = ShopifyOrderTrack.objects.filter(user=models_user, source_id=source_id) \
+                                                  .values_list('order_id', flat=True)
 
                 orders = orders.filter(Q(order_number=order_number) |
                                        Q(order_number=(order_number-1000)) |
