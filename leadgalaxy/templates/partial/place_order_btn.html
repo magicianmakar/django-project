@@ -1,8 +1,6 @@
 {% load template_helper %}
 
-{% if item.refunded %}
-    <span class="label label-warning">Refunded</span>
-{% elif original %}
+{% if original %}
     <div class="btn-group">
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip" data-container="body" data-html="true"
@@ -22,8 +20,11 @@
         </button>
 
     {% else %}
-        <button data-toggle="dropdown" class="btn btn-success btn-xs dropdown-toggle" aria-expanded="false">
+        <button data-toggle="dropdown" class="btn {% if item.refunded %}btn-danger{% else %}btn-success{% endif %} btn-xs dropdown-toggle" aria-expanded="false">
             Place Order
+            {% if item.refunded %}
+                {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
+            {% endif %}
             <span class="caret"></span></button>
     {% endif %}
 
