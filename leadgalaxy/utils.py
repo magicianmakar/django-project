@@ -958,11 +958,13 @@ def get_tracking_orders(store, tracker_orders):
         tracked.line = lines.get('{}-{}'.format(tracked.order_id, tracked.line_id))
 
         if tracked.line:
-            fulfillment_status = tracked.line['fulfillment_status']
+            fulfillment_status = tracked.line.get('fulfillment_status')
+            manual_fulfillement = tracked.line.get('fulfillment_service') == 'manual'
+
             if not fulfillment_status:
                 fulfillment_status = ''
 
-            if tracked.shopify_status != fulfillment_status:
+            if manual_fulfillement and tracked.shopify_status != fulfillment_status:
                 tracked.shopify_status = fulfillment_status
                 tracked.save()
 
