@@ -515,7 +515,9 @@ $(function() {
       restartOnRequestAfter: false
     };
 
-    $('.itooltip').tooltip();
+    $('.itooltip').tooltip({
+        container: 'body'
+    });
 
     $('[qtip-tooltip]').each(function() {
         $(this).qtip({
