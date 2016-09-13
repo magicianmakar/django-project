@@ -99,7 +99,7 @@
                           <th><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
                           <th><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
                           <th><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
-                          <th style="width:120px"></th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -115,7 +115,9 @@
                             <td>
                                 <a href="{{item.get_shopify_link}}" target="_blank">
                                     <span class="badge badge-primary">{{item.order.name}}</span>
-                                    <span class="m-l-xs">{{item.line.title}}</span>
+                                    <span class="m-l-xs">
+                                        {{item.line.title|truncatewords:10}}
+                                    </span>
                                 </a>
                             </td>
                             <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
@@ -130,33 +132,33 @@
                                 {% endif %}
                             </td>
 
-                            <td>{% date_humanize item.created_at %}</td>
-                            <td>{% date_humanize item.updated_at %}</td>
-                            <td>
+                            <td style="white-space:nowrap">{% date_humanize item.created_at %}</td>
+                            <td style="white-space:nowrap">{% date_humanize item.updated_at %}</td>
+                            <td style="white-space:nowrap">
                                 {% if item.order.fulfillment_status != 'fulfilled' %}
-                                <button class="btn btn-success btn-xs fulfill-btn"
+                                <button class="btn btn-success btn-xs fulfill-btn itooltip"
                                         store="{{item.store_id}}"
                                         order-id="{{item.order.id}}"
                                         line-id="{{item.line.id}}"
                                         quantity="{{item.line.quantity}}"
                                         tracking-number="{{item.source_tracking|default:''}}"
-                                        >Fulfill in Shopify</button>
+                                        title="Fulfill this item in Shopify"
+                                        >Fulfill</button>
                                 {% else %}
                                     <span class="badge badge-primary">
                                         {{item.order.fulfillment_status|default:"Unfulfilled"|title}}
                                     </span>
                                 {% endif %}
 
-                                {% if request.GET.hidden != '1' %}
-                                <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order m-t-xs">Archive Order</button>
-                                {% else %}
-                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order m-t-xs">Un-Archive</button>
+                                {% if item.auto_fulfilled %}
+                                    <span class="badge badge-primary itooltip" title="Item was Automatically fulfilled by Shopified App">Auto</span>
                                 {% endif %}
 
-                                {% if item.auto_fulfilled %}
-                                <div style="padding:5px 0px">
-                                    <span class="label label-primary" style="margin-top:5px">Auto Fulfilled</span>
-                                </div>
+                                {% if request.GET.hidden != '1' %}
+                                <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order itooltip"
+                                        title="Archive in Tracking page">Archive</button>
+                                {% else %}
+                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order">Un-Archive</button>
                                 {% endif %}
                             </td>
                         </tr>
