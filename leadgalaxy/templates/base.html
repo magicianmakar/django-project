@@ -54,10 +54,14 @@
   </head>
   <body class="fixed-sidebar">
     <script>
+
+    {% with plan=user.profile.plan %}
       var dataLayer = [{
-        'userPlan': '{{user.profile.plan}}',
+        'userPlan': '{{plan.title}}',
+        'monthlyPlan': {{plan.is_stripe|lower}},
         'pageCategory': 'webapp',
       }];
+    {% endwith %}
 
       {% if user.is_authenticated and not DEBUG %}
       var currentUser = {
