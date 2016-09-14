@@ -231,6 +231,11 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     opacity: .2;
 }
 
+.appcues-widget-icon {
+    font-size: 18px !important;
+    color: #999c9e !important;
+}
+
 @media only screen and (max-width: 760px) {
     .extension-version {
         display: none;
