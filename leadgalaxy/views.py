@@ -50,17 +50,12 @@ def index_view(request):
     config = request.user.models_user.profile.get_config()
 
     first_visit = config.get('_first_visit', True)
-    intro_video = config.get('_intro_video', True)
 
     if first_visit:
         request.user.set_config('_first_visit', False)
 
-    if intro_video:
-        request.user.set_config('_intro_video', False)
-
     if request.user.profile.plan.slug == 'jvzoo-free-gift':
         first_visit = False
-        intro_video = True
 
     can_add, total_allowed, user_count = request.user.profile.can_add_store()
 
@@ -71,7 +66,6 @@ def index_view(request):
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
-        'intro_video': intro_video or request.GET.get('intro'),
         'extra_stores': extra_stores,
         'page': 'index',
         'breadcrumbs': ['Stores']

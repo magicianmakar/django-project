@@ -6,30 +6,6 @@
 
 {% block main-container %}
 
-    {% if intro_video %}
-    <div class="ibox float-e-margins welcome-intro">
-        <div class="ibox-title">
-            <h5>WELCOME TO SHOPIFIED APP!</h5>
-            <div class="ibox-tools">
-                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                <a class="welcome-intro-btn"><i class="fa fa-times"></i></a>
-            </div>
-        </div>
-
-        <div class="ibox-content">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    {% if user.profile.plan.slug == 'jvzoo-free-gift' or request.GET.freegif %}
-                    <iframe src="https://player.vimeo.com/video/160189263" width="720" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                    {% else %}
-                    <iframe src="https://player.vimeo.com/video/182447624" width="720" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     <div class="ibox float-e-margins">
         <div class="ibox-title">
             <h5>Shopify Stores<small></small></h5>
@@ -673,15 +649,6 @@
         });
         tour.init();
         tour.start();
-    });
-
-</script>
-{% endif %}
-
-{% if intro_video %}
-<script type="text/javascript">
-    $('.welcome-intro-btn').click(function () {
-        $('.welcome-intro').hide('fade');
     });
 
 </script>
