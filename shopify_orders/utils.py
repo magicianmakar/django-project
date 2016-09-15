@@ -179,7 +179,8 @@ def order_id_from_number(store, order_number):
     orders = ShopifyOrder.objects.filter(store=store)
 
     try:
-        order_number = re.findall('[0-9]+', str(order_number))
+        order_rx = store.user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
+        order_number = re.findall(order_rx, order_number)
         order_number = int(order_number[0])
     except:
         return None
