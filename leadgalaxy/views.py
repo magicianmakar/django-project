@@ -852,6 +852,21 @@ def proccess_api(request, user, method, target, data):
 
             product.store = store
             product.shopify_id = shopify_id
+
+            # Add a supplier if there is no default one
+            if not product.default_supplier:
+                supplier = product.get_supplier_info()
+                supplier = ProductSupplier.objects.create(
+                    store=product.store,
+                    product=product,
+                    product_url=product.get_original_info().get('url', ''),
+                    supplier_name=supplier.get('name'),
+                    supplier_url=supplier.get('url'),
+                    is_default=True
+                )
+
+                product.set_default_supplier(supplier)
+
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
