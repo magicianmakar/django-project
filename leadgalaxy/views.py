@@ -288,8 +288,8 @@ def proccess_api(request, user, method, target, data):
         # Make all products related to this store non-connected
         store.shopifyproduct_set.update(store=None, shopify_id=0)
 
-        # Delete products connection with this store
-        ProductSupplier.objects.filter(store=store).delete()
+        # Change Suppliers store
+        ProductSupplier.objects.filter(store=store).update(store=None)
 
         if store.version == 2:
             try:
@@ -2060,8 +2060,8 @@ def webhook(request, provider, option):
                 # Make all products related to this store non-connected
                 store.shopifyproduct_set.update(store=None, shopify_id=0)
 
-                # Delete products connection with this store
-                ProductSupplier.objects.filter(store=store).delete()
+                # Change Suppliers store
+                ProductSupplier.objects.filter(store=store).update(store=None)
 
                 utils.detach_webhooks(store, delete_too=True)
 
