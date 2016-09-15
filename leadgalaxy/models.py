@@ -847,6 +847,9 @@ class ShopifyProduct(models.Model):
                     else:
                         method['method_short'] = short_name[0]
 
+                    if method['country'] == 'GB':
+                        method['country'] = 'UK'
+
                     return method
 
         return None
