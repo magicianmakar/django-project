@@ -626,6 +626,17 @@ $('.tos-update .close-btn').click(function (e) {
 });
 
 
+$('.extension-version a').click(function (e) {
+    e.preventDefault();
+
+    window.extensionSendMessage({
+        subject: 'UpdateExtension',
+        from: 'website',
+    }, function() {
+        $('.extension-version a').hide();
+    });
+});
+
 var ravenOptions = {
   // Will cause a deprecation warning, but the demise of `ignoreErrors` is still under discussion.
   // See: https://github.com/getsentry/raven-js/issues/73
