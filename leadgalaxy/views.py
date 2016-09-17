@@ -1475,7 +1475,7 @@ def proccess_api(request, user, method, target, data):
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         user.can_edit(order)
 
-        order.hidden = data.get('hide', False)
+        order.hidden = data.get('hide') == 'true'
         order.save()
 
         return JsonResponse({'status': 'ok'})
