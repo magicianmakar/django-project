@@ -24,11 +24,6 @@
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter</button>
                             {# <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span> #}
                         </div>
-                    {% if not request.GET.hidden %}
-                        <div class="col-md-2 col-md-offset-6 text-right">
-                            <a href="{% url 'orders_track' %}?hidden=1" class="btn btn-default btn-rounded btn-outline btn-sm expand-btn">Archived Orders</a>
-                        </div>
-                    {% endif %}
                     </div>
                     <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm" style="display:none;">
                     <div class="row">
@@ -152,7 +147,7 @@
                                     <span class="badge badge-primary itooltip" title="Item was Automatically fulfilled by Shopified App">Auto</span>
                                 {% endif %}
 
-                                {% if request.GET.hidden != '1' %}
+                                {% if not item.hidden %}
                                 <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order itooltip"
                                         title="Archive in Tracking page">Archive</button>
                                 {% else %}
@@ -242,26 +237,22 @@
         });
     });
 
-    function hideOrder(order_id) {
+    function hideOrder(order_id, hide) {
         $.ajax({
             url: '/api/order-fullfill-hide',
             type: 'POST',
             data: {
                 order: order_id,
-                {% if not request.GET.hidden %}
-                hide: true
-                {% endif %}
+                hide: hide
             },
             context: {order_id: order_id},
             success: function (data) {
                 if (data.status == 'ok') {
-                    {% if request.GET.hidden != '1' %}
-                    $('tr[id="'+this.order_id+'"]').hide();
-
-                    toastr.success('Order has been Archived.', 'Archive Order');
-                    {% else %}
-                    toastr.success('Order has been Un-Archived.', 'Un-Archive Order');
-                    {% endif %}
+                    if (hide) {
+                        toastr.success('Order has been Archived.', 'Archive Order');
+                    } else {
+                        toastr.success('Order has been Un-Archived.', 'Un-Archive Order');
+                    }
                 } else {
                     displayAjaxError('Hide Order', data);
                 }
@@ -291,14 +282,14 @@
         },
         function(isConfirmed) {
             if(isConfirmed) {
-                hideOrder(order_id);
+                hideOrder(order_id, true);
             }
 
             swal.close();
         });
     });
     $('.show-order').click(function (e) {
-        hideOrder($(this).attr('order-id'));
+        hideOrder($(this).attr('order-id'), false);
     });
 
 
