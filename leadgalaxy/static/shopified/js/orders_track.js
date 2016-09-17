@@ -71,6 +71,8 @@
             },
             success: function(data) {
                 if (data.status == 'ok') {
+                    $('tr[id="'+this.order_id+'"]').find('.hide-order, .show-order').hide();
+
                     if (hide) {
                         toastr.success('Order has been Archived.', 'Archive Order');
                     } else {
@@ -90,10 +92,13 @@
         var order_id = $(this).attr('order-id');
 
         swal({
-            title: "Archive Order",
-            text: "Do you want to Archive order?\nYou will be abale " +
-                "to view it by clicking on 'Archived Orders' button",
-            type: "warning",
+            title: 'Archive Order',
+            text: 'Do you want to Archive this order?' +
+                  '<br><b style="color:#dd5555">Archived orders ' +
+                  'are not synced with Aliexpress</b>' +
+                  '<br><b>Archive only Canceled or Completed Orders<b>',
+            type: 'warning',
+            html: true,
             animation: false,
             showCancelButton: true,
             confirmButtonColor: "#DD6B55",
