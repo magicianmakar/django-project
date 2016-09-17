@@ -1308,7 +1308,9 @@ def proccess_api(request, user, method, target, data):
                                                   .filter(source_tracking='') \
                                                   .exclude(source_status='FINISH') \
                                                   .order_by('updated_at')
-        if user.is_subuser:
+        if user.models_user.username == 'bbros':
+            shopify_orders = shopify_orders.filter(store=522).order_by('created_at')
+        elif user.is_subuser:
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
 
         if not data.get('order_id') and not data.get('line_id'):
