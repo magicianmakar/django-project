@@ -787,8 +787,12 @@ def proccess_api(request, user, method, target, data):
     if target == 'shopify-products':
         from .templatetags.template_helper import shopify_image_thumb
 
+        store = utils.safeInt(data.get('store'))
+        if not store:
+            return JsonResponse({'error': 'No Store was selected'}, status=404)
+
         try:
-            store = ShopifyStore.objects.get(id=data.get('store'))
+            store = ShopifyStore.objects.get(id=store)
             user.can_view(store)
 
             page = utils.safeInt(data.get('page'), 1)
