@@ -236,6 +236,10 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     color: #999c9e !important;
 }
 
+.no-wrap {
+    white-space: nowrap;
+}
+
 @media only screen and (max-width: 760px) {
     .extension-version {
         display: none;

@@ -88,13 +88,13 @@
                       <thead>
                         <tr>
                           <th style="width:64px"></th>
-                          <th style="width:26%">
+                          <th  class="no-wrap" style="width:26%">
                               <a href="{% url_toggle 'sort' '-order,order' %}">Shopify Order {% sort_icon 'sort' 'order' %}</a></th>
-                          <th><a href="{% url_toggle 'sort' '-source,source' %}">Aliexpress Order {% sort_icon 'sort' 'source' %}</a></th>
-                          <th><a href="{% url_toggle 'sort' '-status,status' %}">Aliexpress Status {% sort_icon 'sort' 'status' %}</a></th>
-                          <th><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
-                          <th><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
-                          <th><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-source,source' %}">Aliexpress Order {% sort_icon 'sort' 'source' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-status,status' %}">Aliexpress Status {% sort_icon 'sort' 'status' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
                           <th></th>
                         </tr>
                       </thead>
@@ -109,7 +109,7 @@
                                     style="width:64px" />
                             </td>
                             <td>
-                                <a href="{{item.get_shopify_link}}" target="_blank">
+                                <a class="itooltip" href="{{item.get_shopify_link}}" target="_blank" title="{{item.line.title}}">
                                     <span class="badge badge-primary">{{item.order.name}}</span>
                                     <span class="m-l-xs">
                                         {{item.line.title|truncatewords:10}}
@@ -126,9 +126,9 @@
                                 {% endif %}
                             </td>
 
-                            <td style="white-space:nowrap">{% date_humanize item.created_at %}</td>
-                            <td style="white-space:nowrap">{% date_humanize item.updated_at %}</td>
-                            <td style="white-space:nowrap">
+                            <td class="no-wrap">{% date_humanize item.created_at %}</td>
+                            <td class="no-wrap">{% date_humanize item.updated_at %}</td>
+                            <td class="no-wrap">
                                 {% if item.order.fulfillment_status != 'fulfilled' %}
                                 <button class="btn btn-success btn-xs fulfill-btn itooltip"
                                         store="{{item.store_id}}"
