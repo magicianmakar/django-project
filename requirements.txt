@@ -76,7 +76,6 @@ Twisted==15.4.0
 Unidecode==0.4.19
 uritemplate==0.6
 w3lib==1.12.0
-WeasyPrint==0.31
 Werkzeug==0.10.4
 whitenoise==1.0.6
 zope.interface==4.1.2

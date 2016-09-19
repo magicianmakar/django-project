@@ -19,7 +19,7 @@ export LANG="en_US.UTF-8"
 
 apt-get update -qy
 
-apt-get install -y python-dev python-pip python-virtualenv libmysqld-dev libssl-dev libffi-dev libxml2-dev libxslt1-dev libpq-dev python-lxml python-cffi libcairo2 libpango1.0-0 libgdk-pixbuf2.0-0 shared-mime-info
+apt-get install -y python-dev python-pip python-virtualenv libmysqld-dev libssl-dev libffi-dev libxml2-dev libxslt1-dev libpq-dev
 
 if [ ! -d "venv" ]; then
     virtualenv venv

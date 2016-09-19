@@ -40,8 +40,6 @@ from .province_helper import load_uk_provincess, missing_province
 import tasks
 import utils
 
-from weasyprint import HTML
-
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder
 
@@ -4212,27 +4210,6 @@ def user_invoices(request, invoice_id):
         raise Http404
 
     return render(request, 'user/invoice_view.html', {'invoice': invoice})
-
-
-@login_required
-def user_invoices_download(request, invoice_id):
-    if not request.user.is_stripe_customer():
-        raise Http404
-
-    invoice = get_stripe_invoice(invoice_id, expand=['charge'])
-
-    if not invoice:
-        raise Http404
-    if not invoice.customer == request.user.stripe_customer.customer_id:
-        raise Http404
-
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % invoice.id
-    string = render_to_string('user/invoice_download.html', {'invoice': invoice})
-    base_url = request.build_absolute_uri()
-    HTML(string=string, base_url=base_url).write_pdf(response)
-
-    return response
 
 
 @csrf_protect

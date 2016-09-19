@@ -47,9 +47,6 @@
                             method="post"
                         >{% csrf_token %}</form>
                     {% endif %}
-                    <a href="{% url 'user_invoices_download' invoice.id %}" title="Download as PDF">
-                        <i class="fa fa-fw fa-file-pdf-o"></i>
-                    </a>
                     <a href="{% url 'user_invoices' invoice.id %}" title="View in browser">
                         <i class="fa fa-fw fa-eye"></i>
                     </a>
