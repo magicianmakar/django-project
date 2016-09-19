@@ -80,7 +80,7 @@
                             <label>Order:</label>
                         </div>
                         <div class="col-md-4">
-                            <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control"
+                            <input name="query_order" value="{{query_order|default:''}}" class="form-control"
                                    style="xpadding: 6px 0px" placeholder="Order Number or ID">
                         </div>
                     </div>
@@ -504,7 +504,7 @@
                             <p class="text-center">
                                 Try adjusting your <a class="filter-btn" href="#">Filters</a> or
                                 <a href="{% url_multi_replace status='any' fulfillment='any' financial='any' connected='false' %}">
-                                    {% if request.GET.query or request.GET.query_order or request.GET.query_customer or request.GET.query_address %}
+                                    {% if request.GET.query or query_order or request.GET.query_customer or request.GET.query_address %}
                                         Search in
                                     {% else %}
                                         View

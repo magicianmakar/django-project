@@ -3407,10 +3407,13 @@ def orders_view(request):
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
 
-    query = request.GET.get('query')
-    query_order = request.GET.get('query_order')
+    query = request.GET.get('query') or request.GET.get('id')
+    query_order = request.GET.get('query_order') or request.GET.get('id')
     query_customer = request.GET.get('query_customer')
     query_address = request.GET.getlist('query_address')
+
+    if request.GET.get('shop'):
+        status, fulfillment, financial = ['any', 'any', 'any']
 
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
@@ -3421,7 +3424,9 @@ def orders_view(request):
     store_sync_enabled = store_order_synced and shopify_orders_utils.is_store_sync_enabled(store)
 
     if not store_sync_enabled:
-        fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
+        if ',' in fulfillment:
+            # Direct API call doesn't support more that one fulfillment status
+            fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
 
         open_orders = store.get_orders_count(status, fulfillment, financial)
         orders = xrange(0, open_orders)
@@ -3761,6 +3766,7 @@ def orders_view(request):
         'paginator': paginator,
         'current_page': current_page,
         'open_orders': open_orders,
+        'query_order': query_order,
         'sort': sort_field,
         'sort_type': sort_type,
         'status': status,

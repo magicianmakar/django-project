@@ -561,13 +561,19 @@ def get_store_from_request(request):
     store = None
     stores = request.user.profile.get_active_stores()
 
-    if request.GET.get('store'):
+    if request.GET.get('shop'):
+        try:
+            store = stores.get(shop=request.GET.get('shop'))
+        except (ShopifyStore.DoesNotExist, ShopifyStore.MultipleObjectsReturned):
+            pass
+
+    if not store and request.GET.get('store'):
         store = stores.get(id=request.GET.get('store'))
+
+    if store:
         request.user.can_view(store)
-
         request.session['last_store'] = store.id
-
-    if not store:
+    else:
         try:
             if 'last_store' in request.session:
                 store = stores.get(id=request.session['last_store'])
