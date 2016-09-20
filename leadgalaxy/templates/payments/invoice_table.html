@@ -45,9 +45,9 @@
                     <a href="{% url 'user_invoices' invoice.id %}" title="View in browser">
                         <i class="fa fa-fw fa-eye"></i>
                     </a>
-                    {% if not invoice.paid %}
-                    <a class="pay-invoice-link" title="Pay invoice" data-invoice-id={{ invoice.id }}>
-                        <i class="fa fa-fw fa-credit-card"></i>
+                    {% if not invoice.paid and not invoice.closed and invoice.attempted %}
+                    <a class="btn btn-default btn-outline btn-xs pay-invoice-link" data-invoice-id={{ invoice.id }}>
+                        Pay Now
                     </a>
                     {% endif %}
                 </td>

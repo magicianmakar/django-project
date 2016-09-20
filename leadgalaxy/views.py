@@ -4226,8 +4226,8 @@ def user_invoices_pay(request, invoice_id):
     if not invoice.customer == request.user.stripe_customer.customer_id:
         raise Http404
 
-    if invoice.paid:
-        messages.error(request, _('Invoice already paid'))
+    if invoice.paid or invoice.closed:
+        messages.error(request, _('Invoice is already paid or closed'))
     else:
         try:
             invoice.pay()
