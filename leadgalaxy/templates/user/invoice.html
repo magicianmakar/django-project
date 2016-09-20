@@ -66,6 +66,11 @@
                     <td>Total</td>
                     <td>{{ invoice.currency|upper }} {{ invoice.total }}</td>
                 </tr>
+                <tr>
+                    <td></td>
+                    <td><b>Amount {% if invoice.paid %}paid{% else %}due{% endif %}<b></td>
+                    <td><b>${{ invoice.total }} {{ invoice.currency|upper }}<b></td>
+                </tr>
             </tbody>
         </table>
         <p class="text-center">Thank you for your business!</p>

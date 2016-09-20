@@ -7,14 +7,16 @@
                     <th>Description</th>
                     <th>Billing Period</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody id="invoice-table-body">
             {% for invoice in invoices %}
             <tr>
                 <td>
-                    {{ invoice.date|date:'M. d, Y' }}
+                    <a href="{% url 'user_invoices' invoice.id %}">
+                        {{ invoice.date|date:'M. d, Y' }}
+                    </a>
                 </td>
                 <td>
                     {{ invoice.currency|upper }} {{ invoice.total }}
@@ -27,11 +29,13 @@
                 <td>
                     {{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}
                 </td>
-                <td class="text-center">
+                <td class="text-left">
                     {% if invoice.paid %}
-                        <i class="fa fa-fw fa-check"></i>
+                        <i class="text-success fa fa-fw fa-check"></i> Paid
+                    {% elif not invoice.attempted %}
+                        <i class="fa fa-fw fa-clock-o"></i> Pending
                     {% else %}
-                        <i class="text-danger fa fa-fw fa-close"></i>
+                        <i class="text-danger fa fa-fw fa-close"></i> Past Due
                     {% endif %}
                 </td>
                 <td>
@@ -42,9 +46,6 @@
                             method="post"
                         >{% csrf_token %}</form>
                     {% endif %}
-                    <a href="{% url 'user_invoices' invoice.id %}" title="View in browser">
-                        <i class="fa fa-fw fa-eye"></i>
-                    </a>
                     {% if not invoice.paid and not invoice.closed and invoice.attempted %}
                     <a class="btn btn-default btn-outline btn-xs pay-invoice-link" data-invoice-id={{ invoice.id }}>
                         Pay Now
