@@ -1,0 +1,90 @@
+<div id="modal-tracking-update" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Tracking Update</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="pending-msg">
+                            <p>Update <b class="pending-orders"></b> in this store</p>
+                            <p>Make sure you are logged in Aliexpress with the right account.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="update-progress" style="display:none">
+                            <p><i class="fa fa-refresh fa-spin"></i> Syncing with Aliexpress...</p>
+                            <div class="progress progress-striped active">
+                                <div style="width: 0%" class="progress-bar progress-bar-danger"></div>
+                                <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12 progress-table-row" style="display:none;height:300px;max-height:300px;overflow:auto;">
+                        <table class="table progress-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Aliexpress Order</th>
+                                    <th>Status</th>
+                                    <th>Tracking number</th>
+                                    <th>Order date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary pull-left start-update-btn"
+                    data-store="{{store.id}}">Start Update</button>
+
+                <button class="btn btn-danger btn-outline pull-left stop-update-btn" style="display:none"
+                    data-store="{{store.id}}">Stop Update</button>
+
+                <button class="btn btn-default btn-outline pull-left refresh-page-btn" style="display:none"
+                    data-store="{{store.id}}"><i class="fa fa-refresh"></i> Refresh Page</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+<script id="order-update-template" type="text/x-handlebars-template">
+    <tr>
+        <td>
+            {{#if source.error}}
+                <i class="fa fa-times-circle text-danger"></i>
+            {{else}}
+                <i class="fa fa-check-circle text-success"></i>
+            {{/if}}
+        </td>
+        <td>
+            <a href="https://trade.aliexpress.com/order_detail.htm?orderId={{order.source_id}}" target="_blank">
+                #{{order.source_id}}
+            </a>
+        </td>
+        <td>
+            {{#if source.error}}
+                {{source.error}}
+            {{else}}
+                {{source.order_status}}
+            {{/if}}
+        </td>
+        <td {{#if order.updated}}style="font-weight: bold;"{{/if}}>
+            {{source.tracking_number}}
+        </td>
+        <td>{{order.created_at}}</td>
+    </tr>
+</script>
+{% endverbatim %}

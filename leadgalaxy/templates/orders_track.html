@@ -25,6 +25,11 @@
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter</button>
                             {# <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span> #}
                         </div>
+
+                        <div class="col-md-2 col-md-offset-6 text-right">
+                            <button class="btn btn-success btn-rounded btn-outline btn-sm aliexpress-sync-btn" data-store="{{store.id}}">
+                                <i class="fa fa-refresh"></i> Sync with Aliexpress</button>
+                        </div>
                     </div>
                     <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm" style="display:none;">
                     <div class="row">
@@ -177,14 +182,17 @@
     </div>
 
 {% include 'partial/fulfillment_modal.html' with notify=True only %}
+{% include 'partial/tracking_update_modal.html' with store=store only %}
 
 {% endblock %}
-
 
 {% block extrajs %}
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'libs/bower_components/bluebird/js/browser/bluebird.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders_track.js' %}" type="text/javascript"></script>
+    <script src="{% static 'shopified/js/orders_track_update.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
 {% endblock %}

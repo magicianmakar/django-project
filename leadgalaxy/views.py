@@ -1318,6 +1318,7 @@ def proccess_api(request, user, method, target, data):
         from django.core import serializers
 
         orders = []
+        all_orders = data.get('all') == 'true'
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
                                                   .filter(source_tracking='') \
                                                   .exclude(source_status='FINISH') \
@@ -1325,7 +1326,10 @@ def proccess_api(request, user, method, target, data):
         if user.is_subuser:
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
 
-        if not data.get('order_id') and not data.get('line_id'):
+        if data.get('store'):
+            shopify_orders = shopify_orders.filter(store=data.get('store'))
+
+        if not data.get('order_id') and not data.get('line_id') and not all_orders:
             limit_key = 'order_fulfill_limit_%d' % user.models_user.id
             limit = cache.get(limit_key)
 
@@ -1336,25 +1340,32 @@ def proccess_api(request, user, method, target, data):
                     cache.set(limit_key, limit, timeout=3600)
                     print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
 
-            if request.GET.get('forced') == 'true':
+            if data.get('forced') == 'true':
                 limit = limit * 2
 
             shopify_orders = shopify_orders[:limit]
 
-        if data.get('order_id'):
-            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'))
+        elif data.get('all') == 'true':
+            shopify_orders = shopify_orders.order_by('created_at')
 
-        if data.get('line_id'):
-            shopify_orders = shopify_orders.filter(line_id=data.get('line_id'))
+        if data.get('order_id') and data.get('line_id'):
+            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
+
+        if data.get('count_only') == 'true':
+            return JsonResponse({'pending': shopify_orders.count()})
 
         shopify_orders = serializers.serialize('python', shopify_orders,
                                                fields=('id', 'order_id', 'line_id',
                                                        'source_id', 'source_status',
-                                                       'source_tracking'))
+                                                       'source_tracking', 'created_at'))
 
         for i in shopify_orders:
             fields = i['fields']
             fields['id'] = i['pk']
+
+            if all_orders:
+                fields['created_at'] = arrow.get(fields['created_at']).humanize()
+
             orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):

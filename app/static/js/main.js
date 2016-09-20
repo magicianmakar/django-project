@@ -41,6 +41,20 @@ function displayAjaxError(desc, data) {
     swal(desc, error_msg, 'error');
 }
 
+function getAjaxError(data) {
+    var error_msg = 'Server error.';
+
+    if (typeof (data.error) == 'string') {
+        error_msg = data.error;
+    } else if (data.responseJSON && typeof (data.responseJSON.error) == 'string') {
+        error_msg = data.responseJSON.error;
+    } else if (typeof (data) == 'string') {
+        error_msg = data;
+    }
+
+    return error_msg;
+}
+
 function cleanImageLink(link) {
     return link.replace(/\?[^\?]+$/, '');
 }
