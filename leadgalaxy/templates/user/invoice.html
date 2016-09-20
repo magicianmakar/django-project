@@ -1,0 +1,76 @@
+{% load static %}
+<div class="panel panel-default">
+    <div class="panel-body">
+        <img src="{% static 'Shopified-App2.png' %}" alt="Shopified App" style='width: 100%;'/>
+        <h2 class="text-center">
+            {% if invoice.paid %}
+                <strong>Receipt</strong>
+            {% else %}
+                <strong>Invoice</strong>
+            {% endif %}
+        </h2>
+        {% if invoice.charge.paid %}
+            <p class="text-center">
+                {{ invoice.charge.source.brand }} {{ invoice.charge.source.last4 }}
+            </p>
+        {% endif %}
+    </div>
+    <div class="panel-heading">
+        <p>{{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}</p>
+    </div>
+    <div class="panel-body">
+        <table class="table table-striped">
+            <thead>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+            </thead>
+            <tbody>
+                <tr>
+                {% for line in invoice.lines.data %}
+                    <td>{{ line.plan.name }}</td>
+                    <td>{{ line.quantity }}</td>
+                    <td>{{ line.plan.currency|upper }} {{ line.amount }}</td>
+                {% endfor %}
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>Subtotal</td>
+                    <td>{{ invoice.currency|upper }} {{ invoice.subtotal }}</td>
+                </tr>
+                {% if invoice.discount %}
+                <tr>
+                    <td></td>
+                    <td>
+                        {{ invoice.discount.coupon.id }}
+                        {% if invoice.discount.coupon.amount_off %}
+                            ({{ invoice.currency|upper }} {{ invoice.discount_amount }} off)
+                        {% else %}
+                            ({{ invoice.discount.coupon.percent_off }}% off)
+                        {% endif %}
+                    </td>
+                    <td>-{{ invoice.currency|upper }} {{ invoice.discount_amount }}</td>
+                </tr>
+                {% endif %}
+                {% if invoice.tax %}
+                <tr>
+                    <td></td>
+                    <td>
+                        Tax ({{ invoice.tax_percent }}%)
+                    </td>
+                    <td>{{ invoice.currency|upper }} {{ invoice.tax }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td></td>
+                    <td>Total</td>
+                    <td>{{ invoice.currency|upper }} {{ invoice.total }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="text-center">Thank you for your business!</p>
+    </div>
+    <div class="panel-footer">
+        <p class="text-center">Questions? Email support@shopifiedapp.com</p>
+    </div>
+</div>

@@ -33,6 +33,12 @@
                     <a data-toggle="tab" href="#tab-4" data-auto-hash="billing" data-auto-click="true" aria-expanded="false">Billing</a>
                 </li>
                 {% endif %}
+
+                {% if stripe_customer %}
+                <li class="invoices-tab">
+                    <a data-toggle="tab" href="#tab-5" data-auto-hash="invoices" data-auto-click="true" aria-expanded="false">Invoices</a>
+                </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -312,11 +318,6 @@
                                 <div class="col-md-3 col-md-offset-2 text-right">
                                     <button class="btn btn-danger delete-cc-btn"><i class="fa fa-times"></i> Delete Credit Card</button>
                                 </div>
-
-                                {# <div class="col-md-8 col-md-offset-2"> #}
-                                    {# {% include "payments/invoice_table.html" with invoices=user.stripe_customer.invoices %} #}
-                                {# </div> #}
-
                             </div>
                             {% else %}
                                 <p>This account does not have a credit card.</p>
@@ -327,6 +328,17 @@
                                 <button class="btn btn-primary add-cc-btn"><i class="fa fa-plus"></i> Add Credit Card</button>
                             {% endif %}
                         {% endwith %}
+                    </div>
+                </div>
+                {% endif %}
+                {% if stripe_customer %}
+                <div id="tab-5" class="tab-pane">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div id="invoice-table">Loading invoices...</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
@@ -371,6 +383,7 @@
     <script src="{% static 'libs/bower_components/jquery.payment/lib/jquery.payment.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/profile.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/payment.js' %}" type="text/javascript"></script>
+    <script src="{% static 'shopified/js/invoices.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
 {% endblock %}

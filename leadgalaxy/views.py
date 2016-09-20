@@ -16,11 +16,13 @@ from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.core.cache import cache
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_http_methods
+from django.utils.translation import ugettext as _
+from django.conf import settings
 
 from unidecode import unidecode
-
-from django.conf import settings
 
 import re
 import random
@@ -41,7 +43,15 @@ import utils
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder
 
-from stripe_subscription.utils import process_webhook_event, sync_subscription
+import stripe.error
+
+from stripe_subscription.utils import (
+    process_webhook_event,
+    sync_subscription,
+    get_stripe_invoice,
+    get_stripe_invoice_list,
+    refresh_invoice_cache,
+)
 
 
 @login_required
@@ -4175,6 +4185,61 @@ def register(request, registration=None, subscribe_plan=None):
         'registration': registration,
         'subscribe_plan': subscribe_plan
     })
+
+
+@ensure_csrf_cookie
+@require_http_methods(['GET'])
+@login_required
+def user_profile_invoices(request):
+    if request.is_ajax() and request.user.is_stripe_customer():
+        invoices = get_stripe_invoice_list(request.user.stripe_customer)
+        return render(request, 'payments/invoice_table.html', {'invoices': invoices})
+    raise Http404
+
+
+@login_required
+def user_invoices(request, invoice_id):
+    if not request.user.is_stripe_customer():
+        raise Http404
+
+    invoice = get_stripe_invoice(invoice_id, expand=['charge'])
+
+    if not invoice:
+        raise Http404
+    if not invoice.customer == request.user.stripe_customer.customer_id:
+        raise Http404
+
+    return render(request, 'user/invoice_view.html', {'invoice': invoice})
+
+
+@csrf_protect
+@require_http_methods(['POST'])
+@login_required
+def user_invoices_pay(request, invoice_id):
+    if not request.user.is_stripe_customer():
+        raise Http404
+
+    invoice = get_stripe_invoice(invoice_id)
+
+    if not invoice:
+        raise Http404
+    if not invoice.customer == request.user.stripe_customer.customer_id:
+        raise Http404
+
+    if invoice.paid:
+        messages.error(request, _('Invoice already paid'))
+    else:
+        try:
+            invoice.pay()
+        except stripe.error.CardError as e:
+            messages.error(request, str(e).split(': ')[1])
+        except:
+            messages.error(request, _('Something went wrong, please try again'))
+        else:
+            refresh_invoice_cache(request.user.stripe_customer)
+            messages.success(request, _('Invoice payment successful'))
+
+    return redirect(reverse('user_profile') + '#invoices')
 
 
 def crossdomain(request):

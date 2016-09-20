@@ -1,3 +1,5 @@
+import time
+
 from django.db import models
 
 from django.contrib.auth.models import User
@@ -10,6 +12,7 @@ import simplejson as json
 import arrow
 
 from .stripe_api import stripe
+import stripe.error
 
 from leadgalaxy.models import GroupPlan, ShopifyStore
 
@@ -86,6 +89,34 @@ class StripeCustomer(models.Model):
                 return format_coupon(coupon)
         else:
             return coupon
+
+    @cached_property
+    def invoices(self):
+        return self.get_invoices()
+
+    def get_invoices(self):
+        invoices = []
+        starting_after = None
+        while True:
+            kwargs = {'limit': 100, 'customer': self.customer_id}
+            if starting_after:
+                kwargs['starting_after'] = starting_after
+
+            try:
+                invoice_list = stripe.Invoice.list(**kwargs)
+            except stripe.error.RateLimitError:
+                time.sleep(5)
+                continue
+
+            invoices += invoice_list.data
+
+            if invoice_list.has_more:
+                last_invoice = invoice_list.data.pop()
+                starting_after = last_invoice.id
+            else:
+                break
+
+        return invoices
 
 
 class StripePlan(models.Model):
