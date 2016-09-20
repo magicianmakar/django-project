@@ -14,8 +14,6 @@ export STRIPE_PUBLIC_KEY=""
 export STRIPE_SECRET_KEY=""
 export SHOPIFY_API_KEY=""
 export SHOPIFY_API_SECRET=""
-export LC_ALL="en_US.UTF-8"
-export LANG="en_US.UTF-8"
 
 apt-get update -qy
 
