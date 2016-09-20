@@ -4231,13 +4231,21 @@ def user_invoices_pay(request, invoice_id):
     else:
         try:
             invoice.pay()
-        except stripe.error.CardError as e:
-            messages.error(request, str(e).split(': ')[1])
-        except:
-            messages.error(request, _('Something went wrong, please try again'))
-        else:
+
             refresh_invoice_cache(request.user.stripe_customer)
             messages.success(request, _('Invoice payment successful'))
+
+        except stripe.error.CardError as e:
+            messages.error(request, 'Invoice payment error: {}'.format(e.message))
+            raven_client.captureException(level='warning')
+
+        except stripe.InvalidRequestError as e:
+            messages.error(request, 'Invoice payment error: {}'.format(e.message))
+            raven_client.captureException(level='warning')
+
+        except:
+            messages.error(request, _('Invoice was not paid, please try again'))
+            raven_client.captureException()
 
     return redirect(reverse('user_profile') + '#invoices')
 
