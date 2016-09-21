@@ -25,7 +25,33 @@
     });
 
     $('.aliexpress-sync-btn').click(function(e) {
-        var btn = $(this);
+        window.extensionSendMessage({
+            subject: 'getVersion',
+        }, function(rep) {
+            if (rep && rep.version) {
+                $('.aliexpress-sync-btn').prop('updated-version', true);
+
+                syncTrackedOrders();
+            } else {
+                upgradeWarning();
+            }
+        });
+
+        setTimeout(function() {
+            if (!$('.aliexpress-sync-btn').prop('updated-version')) {
+                upgradeWarning();
+            }
+        }, 1000);
+    });
+
+    function upgradeWarning() {
+        swal('Upgrade Extension',
+            'Please upgrade to a newer version of Shopified App Chrome Extension to use this feature.',
+            'warning');
+    }
+
+    function syncTrackedOrders() {
+        var btn = $('.aliexpress-sync-btn');
         var modal = $('#modal-tracking-update');
 
         btn.button('loading');
@@ -55,8 +81,7 @@
         }).always(function() {
             btn.button('reset');
         });
-
-    });
+    }
 
     $('.start-update-btn').click(function(e) {
         var btn = $(this);
