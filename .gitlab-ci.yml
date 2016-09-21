@@ -1,7 +1,7 @@
 image: ubuntu:14.04
 
 services:
-  - postgres:9.4.5
+  - postgres:9.4.9
   - redis:latest
 
 before_script:
