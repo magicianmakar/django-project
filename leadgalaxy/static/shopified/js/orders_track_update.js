@@ -20,7 +20,7 @@
         "IN_PRESELL_PROMOTION": "Promotion is on",
     };
 
-    Promise.config({
+    P.config({
         cancellation: true
     });
 
@@ -102,7 +102,7 @@
                 all: true
             }
         }).done(function(data) {
-            updatePromise = Promise.map(data, checkOrder, {
+            updatePromise = P.map(data, checkOrder, {
                 concurrency: 3
             }).then(function(allValues) {
                 updateComplete();
@@ -141,7 +141,7 @@
     });
 
     function checkOrder(order) {
-        return new Promise(function(resolve, reject) {
+        return new P(function(resolve, reject) {
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
                 order: order.source_id,
