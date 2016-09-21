@@ -33,6 +33,7 @@
 
     <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
     <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+    <link href="//fast.appcues.com/widget.css" rel="stylesheet">
 
     {% compress css %}
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
@@ -483,6 +484,9 @@
     {% endcompress %}
 
     {% block extrajs %}{% endblock %}
+
+    <script src="//fast.appcues.com/20262.js"></script>
+    <script src="//fast.appcues.com/widget-bundle.js"></script>
 
     <script type="text/javascript" src="https://static.leaddyno.com/js"></script>
     <script>
