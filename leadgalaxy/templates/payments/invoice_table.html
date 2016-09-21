@@ -22,9 +22,19 @@
                     {{ invoice.currency|upper }} {{ invoice.total }}
                 </td>
                 <td>
-                    {% for line in invoice.lines.data %}
-                        <p>{{ line.plan.name }}</p>
-                    {% endfor %}
+                    {% if invoice.description %}
+                        <p>{{ invoice.description }}</p>
+                    {% else %}
+                        {% with invoice.lines.data.pop as line %}
+                            {% if line.description %}
+                                <p>{{ line.description }}</p>
+                            {% elif line.plan.name %}
+                                <p>{{ line.plan.name }}</p>
+                            {% else %}
+                                <p></p>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
                 </td>
                 <td>
                     {{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}

@@ -467,6 +467,8 @@ def normalize_invoice(invoice):
             invoice.discount_amount = amount_off * Decimal('0.01')
     for line in invoice.lines.get('data', []):
         line['amount'] *= Decimal('0.01')
+        if line.get('plan'):
+            line['plan']['amount'] *= Decimal('0.01')
 
     return invoice
 

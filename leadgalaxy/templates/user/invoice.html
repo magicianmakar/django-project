@@ -26,13 +26,23 @@
                 <th>Amount</th>
             </thead>
             <tbody>
-                <tr>
                 {% for line in invoice.lines.data %}
-                    <td>{{ line.plan.name }}</td>
-                    <td>{{ line.quantity }}</td>
-                    <td>{{ line.plan.currency|upper }} {{ line.amount }}</td>
-                {% endfor %}
+                <tr>
+                    {% if line.plan %}
+                        {% if line.description %}
+                            <td>{{ line.description }}</td>
+                        {% else %}
+                            <td>{{ line.plan.name }}</td>
+                        {% endif %}
+                        <td>{{ line.quantity }}</td>
+                        <td>{{ line.plan.currency|upper }} {{ line.plan.amount }}</td>
+                    {% else %}
+                        <td>{{ line.description }}</td>
+                        <td></td>
+                        <td>{{ line.currency|upper }} {{ line.amount }}</td>
+                    {% endif %}
                 </tr>
+                {% endfor %}
                 <tr>
                     <td></td>
                     <td>Subtotal</td>
