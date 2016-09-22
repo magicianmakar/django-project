@@ -56,6 +56,16 @@
 
         btn.button('loading');
 
+        window.extensionSendMessage({
+            subject: 'AliexpessAccount',
+        }, function(rep) {
+            if (rep && rep.name) {
+                $('.aliexpress-account').html(' - Update using <b>' + rep.name + '</b> Aliexpress Account.').show();
+            } else {
+                $('.aliexpress-account').hide();
+            }
+        });
+
         $.ajax({
             url: '/api/order-fulfill',
             data: {
