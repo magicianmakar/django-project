@@ -31,7 +31,10 @@
                                     {{item.title}}
                                 </a>
                             </td>
-                            <td class="products-count">{{item.products.count}}</td>
+                            <td class="products-count">
+                                <a href="/boards/{{item.id}}" class="btn btn-outline btn-xs btn-default">{{ item.saved_count }} Saved</a>
+                                <a href="/boards/{{item.id}}?f=1&is_connected=on" class="btn btn-outline btn-xs btn-default">{{ item.connected_count }} Connected</a>
+                            </td>
                             <td>{{item.updated_at|date}}</td>
                             <td>
                                 <button board-id="{{item.id}}" class="btn btn-xs btn-primary board-edit"><i class="fa fa-edit"></i>Edit</button>
