@@ -163,6 +163,12 @@ class Command(BaseCommand):
 
                     return False
 
+                elif e.response.status_code == 402:
+                    order.hidden = True
+                    order.save()
+
+                    return False
+
                 raven_client.captureException(extra={'order_track': order.id, 'response': rep.text})
 
             except:
