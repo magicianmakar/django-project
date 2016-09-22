@@ -1084,6 +1084,12 @@ class ShopifyBoard(models.Model):
     def __unicode__(self):
         return self.title
 
+    def saved_count(self):
+        return self.products.count() - self.connected_count()
+
+    def connected_count(self):
+        return self.products.exclude(shopify_id=0).count()
+
 
 class ShopifyWebhook(models.Model):
     class Meta:
