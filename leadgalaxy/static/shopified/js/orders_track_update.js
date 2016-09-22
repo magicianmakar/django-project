@@ -70,6 +70,14 @@
                 error: 0
             };
 
+            if (!data.pending) {
+                return swal({
+                    title: 'No Pending Order',
+                    text: 'No Order is awaiting Shipment',
+                    type: 'warning'
+                });
+            }
+
             $('.pending-orders', modal).text(data.pending + ' ' + 'Orders');
 
             modal.modal({
