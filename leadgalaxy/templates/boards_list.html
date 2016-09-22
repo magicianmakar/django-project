@@ -17,10 +17,10 @@
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
-                            <th>Title</th>
-                            <th style="width:10%">Products</th>
-                            <th style="width:12%">Updated</th>
-                            <th style="width:25%">Options</th>
+                            <th style="width:50%">Title</th>
+                            <th>Products</th>
+                            <th>Updated</th>
+                            <th>Options</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,6 +134,7 @@
 
             var table = $('.dataTables').dataTable({
                 responsive: true,
+                autoWidth: false,
                 dom: 'T<"clear">lfrtip',
                 bLengthChange: false,
                 iDisplayLength: 25,
