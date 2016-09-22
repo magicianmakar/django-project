@@ -268,9 +268,10 @@ CELERY_ROUTES = {
     "leadgalaxy.tasks.export_product": {"queue": "priority_high"}
 }
 
-if not DEBUG:
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+if not DEBUG and SENTRY_DSN:
     RAVEN_CONFIG = {
-        'dsn': 'https://30d5c32fb8974ed4852091787c978228:0bfa090f08724fa1a811c92f9faf45b6@app.getsentry.com/73543',
+        'dsn': SENTRY_DSN
     }
 
 # Stripe
