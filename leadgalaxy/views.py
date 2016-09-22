@@ -2197,7 +2197,6 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             'created_at': i.created_at,
             'updated_at': i.updated_at,
             'product': json.loads(i.data),
-            'is_connected': i.is_connected(),
         }
 
         try:
@@ -2295,12 +2294,6 @@ def accept_product(product, fdata):
     if fdata.get('visibile'):
         published = (fdata.get('visibile').lower() == 'yes')
         accept = (accept and published == bool(product['product'].get('published')))
-
-    is_connected = fdata.get('is_connected', '').lower()
-    if is_connected == 'on':
-        accept = product['is_connected']
-    if is_connected == 'off':
-        accept = not product['is_connected']
 
     return accept
 
@@ -2719,6 +2712,7 @@ def boards(request, board_id):
         'filter_products': (request.GET.get('f') == '1'),
         'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
         'sort': request.GET.get('sort'),
+        'store': request.GET.get('store'),
         'board': board.id
     }
 

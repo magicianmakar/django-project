@@ -32,8 +32,8 @@
                                 </a>
                             </td>
                             <td class="products-count">
-                                <a href="/boards/{{item.id}}?f=1&is_connected=off" class="btn btn-outline btn-xs btn-default">{{ item.saved_count }} Saved</a>
-                                <a href="/boards/{{item.id}}?f=1&is_connected=on" class="btn btn-outline btn-xs btn-default">{{ item.connected_count }} Connected</a>
+                                <a href="/boards/{{item.id}}?store=n" class="btn btn-outline btn-xs btn-default">{{ item.saved_count }} Saved</a>
+                                <a href="/boards/{{item.id}}?store=c" class="btn btn-outline btn-xs btn-default">{{ item.connected_count }} Connected</a>
                             </td>
                             <td>{{item.updated_at|date}}</td>
                             <td>
