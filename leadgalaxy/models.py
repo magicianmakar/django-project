@@ -1085,7 +1085,7 @@ class ShopifyBoard(models.Model):
         return self.title
 
     def saved_count(self):
-        return self.products.count() - self.connected_count()
+        return self.products.filter(shopify_id=0).count()
 
     def connected_count(self):
         return self.products.exclude(shopify_id=0).count()
