@@ -30,6 +30,7 @@ class Command(BaseCommand):
         time_threshold = timezone.now() - timezone.timedelta(hours=1)
         orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
                                           .filter(status_updated_at__lt=time_threshold) \
+                                          .exclude(hidden=True) \
                                           .order_by('store', 'status_updated_at')
 
         print 'Orders Count (hourly):', orders.count()

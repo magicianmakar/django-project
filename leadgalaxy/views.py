@@ -1323,6 +1323,7 @@ def proccess_api(request, user, method, target, data):
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
                                                   .filter(source_tracking='') \
                                                   .exclude(source_status='FINISH') \
+                                                  .exclude(hidden=True) \
                                                   .order_by('updated_at')
         if user.is_subuser:
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
