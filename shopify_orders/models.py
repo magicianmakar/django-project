@@ -1,7 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from leadgalaxy.models import ShopifyStore, ShopifyProduct
+from leadgalaxy.models import (
+    ShopifyStore,
+    ShopifyProduct,
+    ShopifyOrderTrack
+)
 
 SYNC_STATUS = (
     (0, 'Pending'),
@@ -88,7 +92,7 @@ class ShopifyOrder(models.Model):
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
-        return u'#{}'.format(self.order_number)
+        return u'#{} | {}'.format(self.order_number + 1000, self.store.title)
 
 
 class ShopifyOrderLine(models.Model):
@@ -97,6 +101,7 @@ class ShopifyOrderLine(models.Model):
 
     order = models.ForeignKey(ShopifyOrder)
     product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.deletion.SET_NULL)
+    track = models.ForeignKey(ShopifyOrderTrack, null=True, on_delete=models.deletion.SET_NULL)
 
     line_id = models.BigIntegerField()
     shopify_product = models.BigIntegerField()

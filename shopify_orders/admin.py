@@ -20,5 +20,5 @@ class ShopifyOrderApiAdmin(admin.ModelAdmin):
 
 @admin.register(ShopifyOrderLine)
 class ShopifyOrderLineAdmin(admin.ModelAdmin):
-    list_display = ('line_id', 'order', 'title', 'variant_title')
-    raw_id_fields = ('product', 'order')
+    list_display = ('line_id', 'order', 'track', 'variant_title')
+    raw_id_fields = ('product', 'order', 'track')
