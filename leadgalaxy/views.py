@@ -3450,7 +3450,7 @@ def orders_view(request):
     if not store_sync_enabled:
         if ',' in fulfillment:
             # Direct API call doesn't support more that one fulfillment status
-            fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped')
+            fulfillment = 'unshipped'
 
         open_orders = store.get_orders_count(status, fulfillment, financial)
         orders = xrange(0, open_orders)
