@@ -159,9 +159,11 @@ def export_product(req_data, target, user_id):
                 shopify_error = utils.format_shopify_error(rep)
 
                 if 'Invalid API key or access token' in shopify_error:
-                    print u'SHOPIFY EXPORT: {} - Store: {} - Link: {}'.format(shopify_error, store, store.get_link('/admin/products.json', api=True))
+                    print u'SHOPIFY EXPORT: {} - Store: {} - Link: {}'.format(
+                        shopify_error, store, store.get_link('/admin/products.json', api=True)
+                    ).encode('utf-8')
                 else:
-                    print u'SHOPIFY EXPORT: {} - Store: {}'.format(shopify_error, store)
+                    print u'SHOPIFY EXPORT: {} - Store: {}'.format(shopify_error, store).encode('utf-8')
 
                 if 'requires write_products scope' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
