@@ -2836,6 +2836,7 @@ def acp_users_list(request):
         'plans': plans,
         'profiles': profiles,
         'users_count': users.count(),
+        'random_cache': arrow.now().timestamp if q else 0,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']

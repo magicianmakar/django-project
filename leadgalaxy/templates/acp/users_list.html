@@ -36,7 +36,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% cache 600 acp_users_table user.id users_count request.GET.plan request.GET.q %}
+                    {% cache 600 acp_users_table user.id users_count request.GET.plan request.GET.q random_cache %}
                     {% for item in users %}
                         <tr>
                             <td><a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
