@@ -41,7 +41,7 @@ import tasks
 import utils
 
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.models import ShopifyOrder
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 
 import stripe.error
 
@@ -1424,7 +1424,7 @@ def proccess_api(request, user, method, target, data):
 
                 tracks.delete()
 
-            ShopifyOrderTrack.objects.update_or_create(
+            track, created = ShopifyOrderTrack.objects.update_or_create(
                 user=user.models_user,
                 store=store,
                 order_id=order_id,
@@ -1436,6 +1436,12 @@ def proccess_api(request, user, method, target, data):
                     'status_updated_at': timezone.now()
                 }
             )
+
+            ShopifyOrderLine.objects.filter(
+                order__store=store,
+                order__order_id=order_id,
+                line_id=line_id
+            ).update(track=track)
 
             tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
 
