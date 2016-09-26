@@ -49,7 +49,7 @@ class UtilsTestCase(TestCase):
 
         return lines
 
-    def test_connected_filter(self):
+    def test_connected_filter_one(self):
         # One Order with a connected line
         self.create_lines(1456789123, [(1789456, 0), (1789457, 0), (1789458, 0)])
         self.create_lines(2456789123, [(2789456, 0), (2789457, 1321654), (2789458, 0)])
@@ -63,6 +63,7 @@ class UtilsTestCase(TestCase):
 
         ShopifyOrder.objects.all().delete()
 
+    def test_connected_filter_multi(self):
         # One Order with multi connected lines
         self.create_lines(1456789123, [(1789456, 0), (1789457, 0), (1789458, 0)])
         self.create_lines(2456789123, [(2789456, 0), (2789457, 1321654), (2789458, 1321655)])
@@ -76,6 +77,7 @@ class UtilsTestCase(TestCase):
 
         ShopifyOrder.objects.all().delete()
 
+    def test_connected_filter_two(self):
         # Two Orders with connected lines
         self.create_lines(1456789123, [(1789456, 0), (1789457, 156444), (1789458, 0)])
         self.create_lines(2456789123, [(2789456, 0), (2789457, 1321654), (2789458, 1321655)])
@@ -88,6 +90,7 @@ class UtilsTestCase(TestCase):
 
         ShopifyOrder.objects.all().delete()
 
+    def test_connected_filter_two_without_connected(self):
         # Two Orders without any connected lines
         self.create_lines(1456789123, [(1789456, 0), (1789457, 0), (1789458, 0)])
         self.create_lines(2456789123, [(2789456, 0), (2789457, 0), (2789458, 0)])
