@@ -200,13 +200,23 @@
 
                     {% if store_sync_enabled %}
                     <div class="row m-t-xs">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                        </div>
+                        <div class="col-md-2" style="width:150px;margin-right:0;padding-right:0"></div>
                         <div class="col-md-8">
                             <label for="connected-orders" class="control-label">
-                                <input type="checkbox" id="connected-orders" name="connected"value="true" class="icheck"
+                                <input type="checkbox" id="connected-orders" name="connected" value="true" class="icheck"
                                        {% if connected_only == 'true' %}checked{% endif %}>
                                 Only Orders with Connected Products
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row m-t-xs">
+                        <div class="col-md-2" style="width:150px;margin-right:0;padding-right:0"></div>
+                        <div class="col-md-8">
+                            <label for="awaiting_order" class="control-label">
+                                <input type="checkbox" id="awaiting_order" name="awaiting_order" value="true" class="icheck"
+                                       {% if awaiting_order == 'true' %}checked{% endif %}>
+                                Only Pending Orders
                             </label>
                         </div>
                     </div>

@@ -3440,6 +3440,7 @@ def orders_view(request):
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
+    awaiting_order = request.GET.get('awaiting_order')
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
@@ -3530,6 +3531,9 @@ def orders_view(request):
 
         if connected_only == 'true':
             orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
+
+        if awaiting_order:
+            orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if request.GET.get('product'):
             orders = orders.filter(shopifyorderline__product_id=request.GET.get('product'))
@@ -3808,6 +3812,7 @@ def orders_view(request):
         'fulfillment': fulfillment,
         'query': query,
         'connected_only': connected_only,
+        'awaiting_order': awaiting_order,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
