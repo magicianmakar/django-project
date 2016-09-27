@@ -2176,7 +2176,10 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
             in_store = utils.safeInt(request.GET.get('in'))
             if in_store:
+                in_store = get_object_or_404(ShopifyStore, id=in_store)
                 res = res.filter(store=in_store)
+
+                user.can_view(in_store)
         else:
             store = get_object_or_404(ShopifyStore, id=utils.safeInt(store))
             res = res.filter(shopify_id__gt=0, store=store)
@@ -2359,9 +2362,9 @@ def products_list(request, tpl='grid'):
     elif request.GET.get('store', 'n') == 'c':
         breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
 
-    in_store = None
-    if request.GET.get('in'):
-        in_store = request.user.profile.get_active_stores().filter(id=request.GET.get('in')).first()
+    in_store = utils.safeInt(request.GET.get('in'))
+    if in_store:
+        in_store = get_object_or_404(request.user.profile.get_active_stores(), id=in_store)
     elif store:
         in_store = store
 
