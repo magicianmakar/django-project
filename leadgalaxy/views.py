@@ -17,12 +17,10 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.core.cache import cache
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
-from django.template.loader import render_to_string
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
-from io import BytesIO
 from unidecode import unidecode
 
 import re
@@ -31,8 +29,6 @@ import simplejson as json
 import requests
 import arrow
 import traceback
-
-from reportlab.pdfgen import canvas
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -46,9 +42,6 @@ import utils
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 
-import stripe.error
-
-from stripe_subscription.invoices.pdf import draw_pdf
 from stripe_subscription.utils import (
     process_webhook_event,
     sync_subscription,
@@ -4249,6 +4242,8 @@ def user_invoices(request, invoice_id):
 @require_http_methods(['POST'])
 @login_required
 def user_invoices_pay(request, invoice_id):
+    import stripe.error
+
     if not request.user.is_stripe_customer():
         raise Http404
 
@@ -4285,6 +4280,9 @@ def user_invoices_pay(request, invoice_id):
 
 @login_required
 def user_invoices_download(request, invoice_id):
+    from io import BytesIO
+    from stripe_subscription.invoices.pdf import draw_pdf
+
     if not request.user.is_stripe_customer():
         raise Http404
 
