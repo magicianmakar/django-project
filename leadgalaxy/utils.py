@@ -788,6 +788,7 @@ def set_shopify_order_note(store, order_id, note):
             }
     )
 
+    response_text = rep.text
     rep.raise_for_status()
 
     return rep.json()['order']['id']
