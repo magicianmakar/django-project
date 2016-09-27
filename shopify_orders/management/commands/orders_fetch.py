@@ -227,6 +227,7 @@ class Command(BaseCommand):
             city=str_max(address.get('city'), 63),
             zip_code=str_max(address.get('zip'), 31),
             country_code=str_max(address.get('country_code'), 31),
+            items_count=len(data.get('line_items', [])),
             created_at=get_datetime(data['created_at']),
             updated_at=get_datetime(data['updated_at']),
             closed_at=get_datetime(data['closed_at']),
