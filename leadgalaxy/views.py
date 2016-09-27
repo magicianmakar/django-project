@@ -22,6 +22,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
+from io import BytesIO
 from unidecode import unidecode
 
 import re
@@ -30,6 +31,8 @@ import simplejson as json
 import requests
 import arrow
 import traceback
+
+from reportlab.pdfgen import canvas
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -45,6 +48,7 @@ from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 
 import stripe.error
 
+from stripe_subscription.invoices.pdf import draw_pdf
 from stripe_subscription.utils import (
     process_webhook_event,
     sync_subscription,
@@ -4277,6 +4281,28 @@ def user_invoices_pay(request, invoice_id):
             raven_client.captureException()
 
     return redirect(reverse('user_profile') + '#invoices')
+
+
+@login_required
+def user_invoices_download(request, invoice_id):
+    if not request.user.is_stripe_customer():
+        raise Http404
+
+    invoice = get_stripe_invoice(invoice_id, expand=['charge'])
+
+    if not invoice:
+        raise Http404
+    if not invoice.customer == request.user.stripe_customer.customer_id:
+        raise Http404
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % invoice.id
+    buffer = BytesIO()  # Output buffer
+    draw_pdf(buffer, invoice)
+    response.write(buffer.getvalue())
+    buffer.close()
+
+    return response
 
 
 def crossdomain(request):
