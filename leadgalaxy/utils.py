@@ -557,6 +557,7 @@ def get_store_from_request(request):
     """
 
     from django.core.exceptions import PermissionDenied
+    from django.shortcuts import get_object_or_404
 
     store = None
     stores = request.user.profile.get_active_stores()
@@ -568,7 +569,7 @@ def get_store_from_request(request):
             pass
 
     if not store and request.GET.get('store'):
-        store = stores.get(id=request.GET.get('store'))
+        store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
 
     if store:
         request.user.can_view(store)

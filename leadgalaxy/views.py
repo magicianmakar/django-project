@@ -2178,7 +2178,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             if in_store:
                 res = res.filter(store=in_store)
         else:
-            store = ShopifyStore.objects.get(id=utils.safeInt(store))
+            store = get_object_or_404(ShopifyStore, id=utils.safeInt(store))
             res = res.filter(shopify_id__gt=0, store=store)
 
             user.can_view(store)
