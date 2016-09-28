@@ -403,7 +403,7 @@ def process_webhook_event(request, event_id, raven_client):
     elif event.type in ['invoice.created', 'invoice.updated']:
         customer = event.data.object.customer
         stripe_customer = StripeCustomer.objects.get(customer_id=customer)
-        refresh_invoice_cache(stripe_customer)
+        clear_invoice_cache(stripe_customer)
     else:
         return HttpResponse('Ignore Event')
 
@@ -426,6 +426,11 @@ def refresh_invoice_cache(stripe_customer):
     invoices = [normalize_invoice(i) for i in stripe_customer.invoices]
     timeout = settings.CUSTOMER_INVOICES_CACHE_TIMEOUT
     cache.set(cache_key, invoices, timeout=timeout)
+
+
+def clear_invoice_cache(stripe_customer):
+    cache_key = 'invoices-' + stripe_customer.customer_id
+    cache.delete(cache_key)
 
 
 def get_stripe_invoice(invoice_id, expand=None):
