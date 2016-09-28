@@ -8,7 +8,7 @@ celery==3.1.23
 cffi==1.8.3
 characteristic==14.3.0
 contextlib2==0.5.4
-cryptography==1.5
+cryptography==1.5.2
 cssselect==0.9.1
 dj-database-url==0.3.0
 Django==1.8.13
@@ -73,6 +73,7 @@ slimit==0.8.1
 SQLAlchemy==1.0.12
 sqlparse==0.1.18
 stripe==1.35.0
+tqdm==4.8.4
 Twisted==15.4.0
 Unidecode==0.4.19
 uritemplate==0.6
