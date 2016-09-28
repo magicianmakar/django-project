@@ -28,7 +28,8 @@ app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 # hook into the Celery error handler
-register_signal(raven_client)
+if hasattr(settings, 'RAVEN_CONFIG'):
+    register_signal(raven_client)
 
 
 class CaptureFailure(Task):
