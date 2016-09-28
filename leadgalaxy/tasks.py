@@ -419,7 +419,8 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
                 ShopifyOrderTrack.objects.filter(store=store, order_id=shopify_order['id'], line_id=line['id']) \
                                          .update(shopify_status=fulfillment_status)
 
-        order_utils.update_shopify_order(store, shopify_order)
+        with cache.lock('order_lock_{}_{}'.format(store_id, order_id), timeout=10):
+            order_utils.update_shopify_order(store, shopify_order)
 
     except AssertionError:
         raven_client.captureMessage('Store is being imported', extra={'store': store})
