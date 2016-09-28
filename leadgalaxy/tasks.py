@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
 from raven.contrib.django.raven_compat.models import client as raven_client
+from raven.contrib.celery import register_signal
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -26,15 +27,15 @@ app = Celery('shopified')
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
+# hook into the Celery error handler
+register_signal(raven_client)
+
 
 class CaptureFailure(Task):
     abstract = True
 
     def after_return(self, *args, **kwargs):
         raven_client.context.clear()
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        raven_client.captureException(exc_info=einfo.exc_info)
 
 
 def retry_countdown(key, retries):
