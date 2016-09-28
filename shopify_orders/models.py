@@ -66,8 +66,8 @@ class ShopifyOrder(models.Model):
     class Meta:
         unique_together = ('store', 'order_id')
 
-    user = models.ForeignKey(User, related_name='user')
-    store = models.ForeignKey(ShopifyStore, related_name='store')
+    user = models.ForeignKey(User)
+    store = models.ForeignKey(ShopifyStore)
 
     order_id = models.BigIntegerField()
     order_number = models.IntegerField()
