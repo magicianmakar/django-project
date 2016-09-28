@@ -42,9 +42,8 @@
 
                             {% if not store_sync_enabled %}
                             <button class="btn btn-primary btn-rounded btn-sm hide-non-connected-btn">Hide Non Connected</button>
-                            {% endif %}
-
                             <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
+                            {% endif %}
                         </div>
                     </div>
                     <form method="get" action="/orders" class="filter-form m-b-sm m-t-sm"
@@ -206,6 +205,7 @@
                                 <input type="checkbox" id="connected-orders" name="connected" value="true" class="icheck"
                                        {% if connected_only == 'true' %}checked{% endif %}>
                                 Only Orders with Connected Products
+                                {% include 'partial/help_tooltip.html' with help="Show only Orders with connected products" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
                             </label>
                         </div>
                     </div>
@@ -217,6 +217,7 @@
                                 <input type="checkbox" id="awaiting_order" name="awaiting_order" value="true" class="icheck"
                                        {% if awaiting_order == 'true' %}checked{% endif %}>
                                 Only Pending Orders
+                                {% include 'partial/help_tooltip.html' with help="Hides orders placed on AliExpress" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
                             </label>
                         </div>
                     </div>
