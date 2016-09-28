@@ -1,0 +1,34 @@
+{
+  "curly": false,
+  "eqeqeq": false,
+  "immed": true,
+  "latedef": false,
+  "newcap": true,
+  "noarg": true,
+  "sub": true,
+  "undef": false,
+  "unused": false,
+  "boss": true,
+  "eqnull": true,
+  "node": true,
+  "trailing"      : false,
+  "globals": {
+    "window": false,
+    "document": false,
+    "$": false,
+    "jQuery": false,
+    "chrome": false,
+    "WebSocket": false
+  },
+  "predef": [
+    "atob", "btoa", "Event", "Image", "localStorage", "swal", "toastr",
+    "Raven", "XMLHttpRequest", "Uint8Array",
+    "api_base", "getAjaxError", "loginError", "displayAjaxError", "isLoggedIn",
+    "getUserConfig", "syncUserConfig", "convert_kgToLbs", "convert_LbsToKg", "convert_LbsToG",
+    "convert_LbsToOz", "getQueryVariable", "getPathInfo", "matchDomainName", "locationMatch",
+    "getDomainName", "cleanUrlPath", "getFileName", "getFileExt", "hashUrlFileName", "getNow",
+    "cleanURLParameter", "titleCase", "contentScriptMessage", "contentScriptMessageAll",
+    "addScriptString", "addScriptLink", "addStyleString", "addStyleLink", "reduceWhitespaceHTML",
+    "runAfter", "versionCompare", "changeToastrStyle"
+  ]
+}
