@@ -415,8 +415,7 @@ def get_stripe_invoice_list(stripe_customer):
     invoices = cache.get(cache_key)
     if invoices is None:
         invoices = [normalize_invoice(i) for i in stripe_customer.invoices]
-        timeout = settings.CUSTOMER_INVOICES_CACHE_TIMEOUT
-        cache.set(cache_key, invoices, timeout=timeout)
+        cache.set(cache_key, invoices, timeout=900)
     return invoices
 
 
@@ -424,8 +423,7 @@ def refresh_invoice_cache(stripe_customer):
     cache_key = 'invoices-' + stripe_customer.customer_id
     cache.delete(cache_key)
     invoices = [normalize_invoice(i) for i in stripe_customer.invoices]
-    timeout = settings.CUSTOMER_INVOICES_CACHE_TIMEOUT
-    cache.set(cache_key, invoices, timeout=timeout)
+    cache.set(cache_key, invoices, timeout=900)
 
 
 def clear_invoice_cache(stripe_customer):
