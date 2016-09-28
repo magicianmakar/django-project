@@ -3639,7 +3639,7 @@ def orders_view(request):
             products_ids.append(line_id)
 
     orders_list = {}
-    res = ShopifyOrderTrack.objects.filter(user=models_user, order_id__in=orders_ids)
+    res = ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids)
     for i in res:
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
