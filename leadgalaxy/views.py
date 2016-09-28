@@ -2194,6 +2194,17 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         page = paginator.page(page)
         res = page
 
+    if filter_products:
+        title = request.GET.get('title')
+        if title:
+            res.filter(title__contains=title)
+
+    if sort:
+        field = sort[1:] if sort[0] == '-' else sort
+        sortable_fields = ['title', 'price']
+        if field in sortable_fields:
+            res.order_by(sort)
+
     for i in res:
         p = {
             'qelem': i,
@@ -2228,9 +2239,6 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             products.append(p)
 
     if len(products):
-        if sort:
-            products = sorted_products(products, sort)
-
         if filter_products or sort:
             paginator = utils.SimplePaginator(products, post_per_page)
 
@@ -2302,26 +2310,6 @@ def accept_product(product, fdata):
         accept = (accept and published == bool(product['product'].get('published')))
 
     return accept
-
-
-def sorted_products(products, sort):
-    sort_reversed = (sort[0] == '-')
-
-    if sort_reversed:
-        sort = sort[1:]
-
-    if sort == 'title':
-        products = sorted(products,
-                          cmp=lambda x, y: cmp(x['product']['title'], y['product']['title']),
-                          reverse=sort_reversed)
-
-    elif sort == 'price':
-        products = sorted(products,
-                          cmp=lambda x, y: cmp(utils.safeFloat(x['product'].get('price')),
-                                               utils.safeFloat(y['product'].get('price'))),
-                          reverse=sort_reversed)
-
-    return products
 
 
 @login_required

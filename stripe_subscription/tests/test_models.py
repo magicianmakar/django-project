@@ -1,36 +1,14 @@
 import datetime
 from decimal import Decimal
 
+import stripe.error
 from mock import Mock, patch
 
-import factory
-import factory.fuzzy
-
-import stripe.error
-
 from django.test import TestCase
-from django.conf import settings
 
-from stripe_subscription.models import StripeCustomer
 from stripe_subscription import utils
 
-
-class UserFactory(factory.django.DjangoModelFactory):
-    username = factory.fuzzy.FuzzyText()
-    first_name = factory.fuzzy.FuzzyText()
-    last_name = factory.fuzzy.FuzzyText()
-    is_active = True
-
-    class Meta:
-        model = settings.AUTH_USER_MODEL
-
-
-class StripeCustomerFactory(factory.django.DjangoModelFactory):
-    user = factory.SubFactory('stripe_subscription.tests.test_models.UserFactory')
-    customer_id = factory.fuzzy.FuzzyText()
-
-    class Meta:
-        model = StripeCustomer
+import factories as f
 
 
 class StripeCustomerTestCase(TestCase):
@@ -76,7 +54,7 @@ class StripeCustomerTestCase(TestCase):
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_is_a_cached_property(self, invoice_list):
         invoice_list.side_effect = self.side_effect
-        customer = StripeCustomerFactory(customer_id='test')
+        customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
         customer.invoices
         customer.invoices
@@ -85,28 +63,28 @@ class StripeCustomerTestCase(TestCase):
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_must_fetch_all_invoices(self, invoice_list):
         invoice_list.side_effect = self.side_effect
-        customer = StripeCustomerFactory(customer_id='test')
+        customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
         self.assertEquals(len(customer.invoices), 4)
 
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_must_make_multiple_calls_to_fetch_all(self, invoice_list):
         invoice_list.side_effect = self.side_effect
-        customer = StripeCustomerFactory(customer_id='test')
+        customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
         self.assertEquals(invoice_list.call_count, 2)
 
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_next_calls_must_start_after_last_invoice_id(self, invoice_list):
         invoice_list.side_effect = self.side_effect
-        customer = StripeCustomerFactory(customer_id='test')
+        customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
         invoice_list.assert_called_with(limit=100, customer='test', starting_after=2)
 
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_can_be_normalized(self, invoice_list):
         invoice_list.side_effect = self.side_effect
-        customer = StripeCustomerFactory(customer_id='test')
+        customer = f.StripeCustomerFactory(customer_id='test')
         for invoice in customer.invoices:
             invoice = utils.normalize_invoice(invoice)
             self.assertIsInstance(invoice.date, datetime.datetime)
@@ -127,7 +105,7 @@ class StripeCustomerTestCase(TestCase):
             stripe.error.RateLimitError('Too many requests made'),
             Mock(data=[], has_more=False)
         )
-        customer = StripeCustomerFactory(customer_id='test')
+        customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
         self.assertEquals(sleep.call_count, 1)
         self.assertEquals(invoice_list.call_count, 2)
