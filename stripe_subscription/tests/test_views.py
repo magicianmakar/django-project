@@ -3,32 +3,12 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
-from django.conf import settings
 
 from mock import Mock, patch
 
-import factory
-import factory.fuzzy
+import factories as f
 
-from stripe_subscription.models import StripeCustomer
-
-
-class UserFactory(factory.django.DjangoModelFactory):
-    username = factory.fuzzy.FuzzyText()
-    first_name = factory.fuzzy.FuzzyText()
-    last_name = factory.fuzzy.FuzzyText()
-    is_active = True
-
-    class Meta:
-        model = settings.AUTH_USER_MODEL
-
-
-class StripeCustomerFactory(factory.django.DjangoModelFactory):
-    user = factory.SubFactory('stripe_subscription.tests.test_models.UserFactory')
-    customer_id = factory.fuzzy.FuzzyText()
-
-    class Meta:
-        model = StripeCustomer
+from leadgalaxy.tests.factories import UserFactory
 
 
 class InvoicePayView(TestCase):
@@ -37,7 +17,7 @@ class InvoicePayView(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
-        StripeCustomerFactory(user=self.user)
+        f.StripeCustomerFactory(user=self.user)
         self.client.login(username=self.user.username, password=self.password)
 
     def tearDown(self):
