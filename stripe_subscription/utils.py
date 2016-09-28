@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.core.cache import cache
-
+from django.db.models import Q
 
 import arrow
 
@@ -193,8 +193,6 @@ def invoice_extra_stores():
     Find Extra Stores that need to be invoiced
     """
 
-    from django.db.models import Q
-
     extra_stores = ExtraStore.objects.filter(status__in=['pending', 'active']) \
                                      .filter(Q(period_end__lte=arrow.utcnow().datetime) |
                                              Q(period_end=None))
@@ -286,7 +284,8 @@ def process_webhook_event(request, event_id, raven_client):
         except StripeSubscription.DoesNotExist:
             try:
                 sub = stripe.Subscription.retrieve(sub.id)
-                plan = GroupPlan.objects.get(id=sub.metadata.plan_id)
+                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) |
+                                             Q(stripe_plan__stripe_id=sub.plan.id))
 
                 update_subscription(customer.user, plan, sub)
             except stripe.InvalidRequestError:
