@@ -20,20 +20,18 @@
         <div class="ibox-content">
             <div class="row">
                 <div class="col-md-12">
-            <table class="table table-condensed table-hover table-bordered store-tables">
+            <table class="table table-ligthborder store-tables">
               <thead>
                 <tr>
                   {% if not user.is_subuser %}
-                  <th style="">Title</th>
+                  <th style="width:70%">Name</th>
                   {% else %}
-                  <th style="width:70%">Title</th>
+                  <th style="">Name</th>
                   {% endif %}
 
-                  <th style="width:200px">Products</th>
-                  {% if not user.is_subuser %}
-                  <th class="hidden-sm hidden-xs" style="width:100px">Store Setup</th>
-                  {% endif %}
-                  <th style="width:300px">Options</th>
+                  <th style="">Products</th>
+                  <th style="">Orders</th>
+                  <th style="">Options</th>
                 </tr>
               </thead>
               <tbody id="stores-table-body">
@@ -44,28 +42,47 @@
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
-                      <td>
+                      <td style="white-space:nowrap">
                         {% with connected=item.connected_count saved=item.saved_count %}
                             {% if connected or saved %}
                                 {% if saved %}
-                                    <a href="/product?store=n&in={{item.id}}" class="btn btn-outline btn-xs btn-default">{{saved}} Saved</a>
+                                    <a href="/product?store=n&in={{item.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
                                 {% endif %}
 
                                 {% if connected %}
-                                    <a href="/product?store={{item.id}}" class="btn btn-outline btn-xs btn-default">{{connected}} Connected</a>
+                                    <a href="/product?store={{item.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
                                 {% endif %}
                             {% else %}
                                 <a href="#" class="btn btn-outline btn-xs btn-default">Empty</a>
                             {% endif %}
                         {% endwith %}
                       </td>
-                      <td class="hidden-sm hidden-xs">
+                      <td style="white-space:nowrap">
+                        {% with pending=item.pending_orders awaiting_tracking=item.awaiting_tracking %}
+                            {% if pending or awaiting_tracking %}
+                                {% if pending %}
+                                <a class="label "
+                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true{% if item.is_synced %}&old=0{% endif %}"
+                                ><span class="num">{{pending}}</span> Pending</a>
+                                {% endif %}
+
+                                {% if awaiting_tracking %}
+                                    <a class="label "
+                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0"
+                                    ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
+                                {% endif %}
+                            {% else %}
+                            {% endif %}
+                        {% endwith %}
+                      </td>
+                      <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        {% if not user.is_subuser %}
                         <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
                                 data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                             <i class="fa fa-check-circle-o"></i> Verify
                         </button>
-                      </td>
-                      <td>
+                        {% endif %}
+
                         <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
                             Visit Store
                         </a>
@@ -609,6 +626,27 @@
     h3.setting-title {
         padding: 0;
         margin: 5px 0;
+    }
+    .table-ligthborder {
+        border:1px solid #eee;
+    }
+    .table-ligthborder > thead > tr > th {
+        background-color: #fafafa;
+    }
+
+    table .label {
+        border-radius: 3px !important;
+        background-color: #f7f7f8 !important;
+        color: #564c4c !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        font-weight: 500 !important;
+    }
+    table .label:hover {
+        background-color: #dbdbdb !important;
+    }
+    table .label .num {
+        font-weight: 600 !important;
     }
 </style>
 {% endblock %}

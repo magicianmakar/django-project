@@ -5,6 +5,7 @@ from django.utils.functional import cached_property
 from django.core.exceptions import PermissionDenied
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db.models import Count, Q, F
 
 import re
 import simplejson as json
@@ -472,11 +473,30 @@ class ShopifyStore(models.Model):
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
 
+    def is_synced(self):
+        from shopify_orders.utils import is_store_synced
+        return is_store_synced(self)
+
     def connected_count(self):
         return self.shopifyproduct_set.exclude(shopify_id=0).count()
 
     def saved_count(self):
         return self.shopifyproduct_set.filter(shopify_id=0).count()
+
+    def pending_orders(self):
+        return self.shopifyorder_set.filter(closed_at=None, cancelled_at=None) \
+                                    .filter(Q(fulfillment_status=None) | Q(fulfillment_status='partial')) \
+                                    .filter(financial_status='paid') \
+                                    .annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count')) \
+                                    .count()
+
+    def awaiting_tracking(self):
+        return self.shopifyordertrack_set.filter(hidden=False) \
+                                         .filter(source_tracking='') \
+                                         .exclude(source_status='FINISH') \
+                                         .exclude(hidden=True) \
+                                         .count()
+
 
 class AccessToken(models.Model):
     class Meta:
