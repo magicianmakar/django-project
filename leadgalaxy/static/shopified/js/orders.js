@@ -662,6 +662,8 @@ $('#country-filter').chosen({
     width: '325px'
 });
 
+$('.order:last .line .btn-group').addClass('dropup');
+
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
         $('.filter-form').show();
