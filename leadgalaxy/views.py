@@ -3849,6 +3849,7 @@ def orders_track(request):
     tracking_filter = request.GET.get('tracking')
     fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
+    completed = request.GET.get('completed')
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -3881,6 +3882,9 @@ def orders_track(request):
         orders = orders.filter(hidden=True)
     elif not hidden_filter or hidden_filter == '0':
         orders = orders.exclude(hidden=True)
+
+    if completed == '1':
+        orders = orders.exclude(source_status='FINISH')
 
     orders = orders.order_by(sorting)
 

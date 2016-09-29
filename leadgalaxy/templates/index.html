@@ -66,7 +66,7 @@
 
                                 {% if awaiting_tracking %}
                                     <a class="label "
-                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0"
+                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0&completed=1"
                                     ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
                                 {% endif %}
                             {% endif %}
