@@ -2297,6 +2297,10 @@ def accept_product(product, fdata):
 
     if fdata.get('tag'):
         accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
+
+    if fdata.get('vendor'):
+        accept = (accept and fdata.get('vendor').lower() in product['product'].get('vendor').lower())
+
     if fdata.get('visibile'):
         published = (fdata.get('visibile').lower() == 'yes')
         accept = (accept and published == bool(product['product'].get('published')))
@@ -3203,6 +3207,20 @@ def autocomplete(request, target):
                     types.append(ptype)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
+
+    if target == 'vendor':
+        vendors = []
+        for product in request.user.models_user.shopifyproduct_set.all():
+            prodct_info = json.loads(product.data)
+            ptype = prodct_info.get('vendor')
+            if ptype not in vendors:
+                if q:
+                    if q.lower() in ptype.lower():
+                        vendors.append(ptype)
+                else:
+                    vendors.append(ptype)
+
+        return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in vendors]}, safe=False)
 
     elif target == 'tags':
         tags = []
