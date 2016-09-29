@@ -381,6 +381,12 @@ $(function() {
         onSelect: function(suggestion) {}
     });
 
+    $('#filter-vendor').autocomplete({
+        serviceUrl: '/autocomplete/vendor',
+        minChars: 1,
+        onSelect: function(suggestion) {}
+    });
+
     $('#filter-tag').autocomplete({
         serviceUrl: '/autocomplete/tags',
         minChars: 1,
