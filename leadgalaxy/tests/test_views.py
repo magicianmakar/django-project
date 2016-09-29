@@ -1,37 +1,18 @@
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
-from django.conf import settings
 
 from mock import patch
 
-import factory
-import factory.fuzzy
+import factories as f
 
+from stripe_subscription.tests.factories import StripeCustomerFactory
 from stripe_subscription.models import StripeCustomer
-
-
-class UserFactory(factory.django.DjangoModelFactory):
-    username = factory.fuzzy.FuzzyText()
-    first_name = factory.fuzzy.FuzzyText()
-    last_name = factory.fuzzy.FuzzyText()
-    is_active = True
-
-    class Meta:
-        model = settings.AUTH_USER_MODEL
-
-
-class StripeCustomerFactory(factory.django.DjangoModelFactory):
-    user = factory.SubFactory('stripe_subscription.tests.test_models.UserFactory')
-    customer_id = factory.fuzzy.FuzzyText()
-
-    class Meta:
-        model = StripeCustomer
 
 
 class ProfileViewTestCase(TestCase):
     def setUp(self):
-        self.user = UserFactory(username='test')
+        self.user = f.UserFactory(username='test')
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
@@ -48,7 +29,7 @@ class ProfileViewTestCase(TestCase):
 
 class ProfileInvoicesTestCase(TestCase):
     def setUp(self):
-        self.user = UserFactory(username='test')
+        self.user = f.UserFactory(username='test')
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()

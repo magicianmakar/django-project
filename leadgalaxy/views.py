@@ -47,7 +47,6 @@ from stripe_subscription.utils import (
     sync_subscription,
     get_stripe_invoice,
     get_stripe_invoice_list,
-    refresh_invoice_cache,
 )
 
 
@@ -4238,7 +4237,6 @@ def register(request, registration=None, subscribe_plan=None):
     })
 
 
-@ensure_csrf_cookie
 @require_http_methods(['GET'])
 @login_required
 def user_profile_invoices(request):
@@ -4261,46 +4259,6 @@ def user_invoices(request, invoice_id):
         raise Http404
 
     return render(request, 'user/invoice_view.html', {'invoice': invoice})
-
-
-@csrf_protect
-@require_http_methods(['POST'])
-@login_required
-def user_invoices_pay(request, invoice_id):
-    import stripe.error
-
-    if not request.user.is_stripe_customer():
-        raise Http404
-
-    invoice = get_stripe_invoice(invoice_id)
-
-    if not invoice:
-        raise Http404
-    if not invoice.customer == request.user.stripe_customer.customer_id:
-        raise Http404
-
-    if invoice.paid or invoice.closed:
-        messages.error(request, _('Invoice is already paid or closed'))
-    else:
-        try:
-            invoice.pay()
-
-            refresh_invoice_cache(request.user.stripe_customer)
-            messages.success(request, _('Invoice payment successful'))
-
-        except stripe.error.CardError as e:
-            messages.error(request, 'Invoice payment error: {}'.format(e.message))
-            raven_client.captureException(level='warning')
-
-        except stripe.InvalidRequestError as e:
-            messages.error(request, 'Invoice payment error: {}'.format(e.message))
-            raven_client.captureException(level='warning')
-
-        except:
-            messages.error(request, _('Invoice was not paid, please try again'))
-            raven_client.captureException()
-
-    return redirect(reverse('user_profile') + '#invoices')
 
 
 @login_required

@@ -349,6 +349,7 @@
 
 {% if stripe_customer %}
     {% include 'payments/billing_modal.html' %}
+    {% include 'payments/pay_now_modal.html' %}
     {% include 'payments/subscription_cancel.html' %}
 {% endif %}
 
