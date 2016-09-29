@@ -60,7 +60,7 @@
                             {% if pending or awaiting_tracking %}
                                 {% if pending %}
                                 <a class="label "
-                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true{% if item.is_synced %}&old=0{% endif %}"
+                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
                                 ><span class="num">{{pending}}</span> Pending</a>
                                 {% endif %}
 

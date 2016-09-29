@@ -477,6 +477,11 @@ class ShopifyStore(models.Model):
         from shopify_orders.utils import is_store_synced
         return is_store_synced(self)
 
+    def is_sync_enabled(self):
+        from shopify_orders.utils import is_store_synced, is_store_sync_enabled
+
+        return is_store_synced(self) and is_store_sync_enabled(self)
+
     def connected_count(self):
         return self.shopifyproduct_set.exclude(shopify_id=0).count()
 
