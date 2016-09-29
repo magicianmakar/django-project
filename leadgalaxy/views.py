@@ -3276,7 +3276,7 @@ def user_profile(request):
             })
 
     bundles = profile.bundles.filter(hidden_from_user=False)
-    stripe_plans = GroupPlan.objects.exclude(stripe_plan=None) \
+    stripe_plans = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 

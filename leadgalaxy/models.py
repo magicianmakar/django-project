@@ -1170,6 +1170,7 @@ class GroupPlan(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
+    hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
 
     def save(self, *args, **kwargs):
         from django.utils.crypto import get_random_string
