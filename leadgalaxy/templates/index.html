@@ -52,8 +52,6 @@
                                 {% if connected %}
                                     <a href="/product?store={{item.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
                                 {% endif %}
-                            {% else %}
-                                <a href="#" class="btn btn-outline btn-xs btn-default">Empty</a>
                             {% endif %}
                         {% endwith %}
                       </td>
@@ -71,7 +69,6 @@
                                     href="/orders/track?store={{item.id}}&tracking=0&hidden=0"
                                     ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
                                 {% endif %}
-                            {% else %}
                             {% endif %}
                         {% endwith %}
                       </td>
