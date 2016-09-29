@@ -2804,15 +2804,17 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
-    if cache.get('template.cache.acp_users.invalidate'):
-        cache.delete_pattern('template.cache.acp_users.*')
+    random_cache = 0
+    q = request.GET.get('q')
+
+    if q or cache.get('template.cache.acp_users.invalidate'):
+        random_cache = arrow.now().timestamp
 
     users = User.objects.select_related('profile', 'profile__plan').order_by('-date_joined')
 
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
 
-    q = request.GET.get('q')
     if q:
         qid = utils.safeInt(q)
         if qid:
@@ -2836,7 +2838,7 @@ def acp_users_list(request):
         'plans': plans,
         'profiles': profiles,
         'users_count': users.count(),
-        'random_cache': arrow.now().timestamp if q else 0,
+        'random_cache': random_cache,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']
