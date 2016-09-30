@@ -5,7 +5,7 @@ from django.utils.functional import cached_property
 from django.core.exceptions import PermissionDenied
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import Count, Q, F
+from django.db.models import Count, Max, Q, F
 
 import re
 import simplejson as json
@@ -492,6 +492,7 @@ class ShopifyStore(models.Model):
         return self.shopifyorder_set.filter(closed_at=None, cancelled_at=None) \
                                     .filter(Q(fulfillment_status=None) | Q(fulfillment_status='partial')) \
                                     .filter(financial_status='paid') \
+                                    .annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0) \
                                     .annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count')) \
                                     .count()
 
