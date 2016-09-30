@@ -111,7 +111,7 @@
     <div id="wrapper">
     {{ request|hijackNotification }}
 
-    {% if tos_update %}
+    {% if tos_update and not user.is_subuser %}
         <div class="tos-update">
             Shopified App has updated our Terms of Service.
             You can view them by clicking the link in the Shopified App footer or by
