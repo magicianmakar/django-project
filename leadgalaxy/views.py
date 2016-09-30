@@ -3192,7 +3192,7 @@ def autocomplete(request, target):
     if not request.user.is_authenticated():
         return JsonResponse({'error': 'User login required'})
 
-    q = request.GET.get('query', '')
+    q = request.GET.get('query', '').strip()
 
     if target == 'types':
         types = []
@@ -3238,11 +3238,16 @@ def autocomplete(request, target):
         return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
 
     elif target == 'title':
-        products = []
-        for product in ShopifyProduct.objects.filter(title__contains=q):
-            products.append({'value': product.title, 'data': product.id})
+        results = []
+        products = request.user.models_user.shopifyproduct_set.filter(title__icontains=q, shopify_id__gt=0)
+        store = request.GET.get('store')
+        if store:
+            products = products.filter(store=store)
 
-        return JsonResponse({'query': q, 'suggestions': products}, safe=False)
+        for product in products:
+            results.append({'value': product.title, 'data': product.id})
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
     else:
         return JsonResponse({'error': 'Unknown target'})
@@ -3472,6 +3477,8 @@ def orders_view(request):
     query_customer = request.GET.get('query_customer')
     query_address = request.GET.getlist('query_address')
 
+    product_filter = request.GET.get('product')
+
     if request.GET.get('shop'):
         status, fulfillment, financial = ['any', 'any', 'any']
 
@@ -3560,8 +3567,8 @@ def orders_view(request):
         if awaiting_order:
             orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
-        if request.GET.get('product'):
-            orders = orders.filter(shopifyorderline__product_id=request.GET.get('product'))
+        if product_filter:
+            orders = orders.filter(shopifyorderline__product_id=product_filter)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
@@ -3826,6 +3833,9 @@ def orders_view(request):
     else:
         countries = []
 
+    if product_filter:
+        product_filter = models_user.shopifyproduct_set.get(id=product_filter)
+
     return render(request, 'orders_new.html', {
         'orders': all_orders,
         'store': store,
@@ -3841,6 +3851,7 @@ def orders_view(request):
         'query': query,
         'connected_only': connected_only,
         'awaiting_order': awaiting_order,
+        'product_filter': product_filter,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,

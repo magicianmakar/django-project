@@ -664,12 +664,6 @@ $('#country-filter').chosen({
 
 $('.order:last .line .btn-group').addClass('dropup');
 
-$('form.filter-form').submit(function() {
-    $('input[name="product"]', $(this)).filter(function() {
-        return this.value.trim() === '';
-    }).remove();
-});
-
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
         $('.filter-form').show();
@@ -697,10 +691,11 @@ $(function () {
     });
 
     $('#product_title').keyup(function() {
-        if (!$(this).val().trim().length)
+        if (!$(this).val().trim().length) {
             $('input[name="product"]', $(this).parent()).val('');
+        }
     }).autocomplete({
-        serviceUrl: '/autocomplete/title',
+        serviceUrl: '/autocomplete/title?' + $.param({store: $('#product_title').data('store')}),
         minChars: 1,
         onSelect: function(suggestion) {
             $('input[name="product"]', $(this).parent()).val(suggestion.data);
