@@ -223,13 +223,6 @@
                     <a href="{% url 'product_alerts' %}">
                         <i class="fa fa-bell"></i>
                         <span class="nav-label">Alerts</span>
-                        {% cache 1800 alert_info user.id %}
-                        {% with user.profile.get_new_alerts as alerts %}
-                            {% if alerts %}
-                            <span class="label label-info pull-right">{{alerts}}</span>
-                            {% endif %}
-                        {% endwith %}
-                        {% endcache %}
                     </a>
                 </li>
                 {% endif %}
