@@ -16,9 +16,8 @@ from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.core.cache import cache
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-from django.utils.translation import ugettext as _
 from django.core.cache.utils import make_template_fragment_key
 from django.conf import settings
 
