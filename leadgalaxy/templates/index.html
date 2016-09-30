@@ -35,7 +35,6 @@
               <tbody id="stores-table-body">
                     {% for item in stores %}
                     <tr class="store-item" store-id="{{item.id}}">
-                    {% if not user.is_subuser %}
                         <td class="drag-show">
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
@@ -70,13 +69,12 @@
                             {% endif %}
                         {% endwith %}
                       </td>
+                      {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
-                        {% if not user.is_subuser %}
                         <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
                                 data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                             <i class="fa fa-check-circle-o"></i> Verify
                         </button>
-                        {% endif %}
 
                         <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
                             Visit Store
@@ -94,13 +92,7 @@
                             <i class="fa fa-times"></i> Delete
                         </button>
                       </td>
-                    {% else %}
-                      <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
-                      <td>{{item.shopifyproduct_set.count}}</td>
-                      <td>
-                        <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank"> Visit Store</a>
-                      </td>
-                    {% endif %}
+                      {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
