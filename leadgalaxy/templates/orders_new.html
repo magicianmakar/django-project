@@ -86,6 +86,17 @@
 
                     <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Product Title:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="product" value="{{request.GET.product|default:''}}" type="hidden" />
+                            <input name="product_title" id="product_title" value="{{request.GET.product_title|default:''}}" class="form-control"
+                                   style="xpadding: 6px 0px" placeholder="Product Title">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Customer:</label>
                         </div>
                         <div class="col-md-4">

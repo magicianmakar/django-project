@@ -3236,6 +3236,14 @@ def autocomplete(request, target):
                         tags.append(i)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
+
+    elif target == 'title':
+        products = []
+        for product in ShopifyProduct.objects.filter(title__contains=q):
+            products.append({'value': product.title, 'data': product.id})
+
+        return JsonResponse({'query': q, 'suggestions': products}, safe=False)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
