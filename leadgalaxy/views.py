@@ -19,6 +19,7 @@ from django.core.cache import cache
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import ugettext as _
+from django.core.cache.utils import make_template_fragment_key
 from django.conf import settings
 
 from unidecode import unidecode
@@ -2084,6 +2085,8 @@ def webhook(request, provider, option):
                     queue=queue,
                     countdown=countdown)
 
+                cache.delete(make_template_fragment_key('orders_status', [store.id]))
+
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/delete':
@@ -4040,7 +4043,6 @@ def product_alerts(request):
     tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
 
     # Delete sidebar alert info cache
-    from django.core.cache.utils import make_template_fragment_key
     cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
 
     return render(request, tpl, {

@@ -6,6 +6,8 @@ from django.core.exceptions import PermissionDenied
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Count, Max, Q, F
+from django.core.cache import cache
+from django.core.cache.utils import make_template_fragment_key
 
 import re
 import simplejson as json
@@ -1497,8 +1499,12 @@ User.add_to_class("can_delete", user_can_delete)
 
 @receiver(post_save, sender=UserProfile)
 def invalidate_acp_users(sender, instance, created, **kwargs):
-    from django.core.cache import cache
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
+
+
+@receiver(post_save, sender=ShopifyOrderTrack)
+def invalidate_orders_status(sender, instance, created, **kwargs):
+    cache.delete(make_template_fragment_key('orders_status', [instance.store_id]))
 
 
 @receiver(post_save, sender=User)

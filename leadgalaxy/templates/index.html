@@ -3,6 +3,7 @@
 {% load static %}
 {% load perms_helper %}
 {% load compress %}
+{% load cache %}
 
 {% block main-container %}
 
@@ -53,6 +54,7 @@
                         {% endwith %}
                       </td>
                       <td class="hidden-xs" style="white-space:nowrap">
+                        {% cache 600 orders_status item.id %}
                         {% with pending=item.pending_orders awaiting_tracking=item.awaiting_tracking %}
                             {% if pending or awaiting_tracking %}
                                 {% if pending %}
@@ -68,6 +70,7 @@
                                 {% endif %}
                             {% endif %}
                         {% endwith %}
+                        {% endcache %}
                       </td>
                       {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
