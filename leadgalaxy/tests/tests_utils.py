@@ -451,6 +451,16 @@ class UtilsTestCase(TestCase):
         url = 'http://notfound.myshopify.com/admin/products/1234'
         self.assertIsNone(utils.get_store_from_url(user, url))
 
+    def test_ensure_title_word(self):
+        self.assertEqual(utils.ensure_title('james'), 'James')
+        self.assertEqual(utils.ensure_title('James'), 'James')
+        self.assertEqual(utils.ensure_title('JAMES'), 'JAMES')
+
+    def test_ensure_title_str(self):
+        self.assertEqual(utils.ensure_title('james bond'), 'James Bond')
+
+    def test_ensure_title_unicode(self):
+        self.assertEqual(utils.ensure_title(u'vari\xe9t\xe9'), u'vari\xe9t\xe9')
 
 class ProductChangeAlertTestCase(TransactionTestCase):
     fixtures = ['product_changes.json']

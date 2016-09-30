@@ -3780,6 +3780,9 @@ def orders_view(request):
                         shipping_address_asci['country_code'] = 'PR'
                         shipping_address_asci['country'] = 'Puerto Rico'
 
+                    for name in ['first_name', 'last_name']:
+                        shipping_address_asci[name] = utils.ensure_title(shipping_address_asci[name])
+
                     phone = shipping_address_asci.get('phone')
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
                         phone = models_user.get_config('order_phone_number')

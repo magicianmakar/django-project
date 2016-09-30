@@ -1392,6 +1392,20 @@ def clean_query_id(qid):
         return 0
 
 
+def ensure_title(text):
+    """ Ensure the given string start with an upper case letter """
+
+    try:
+        if text.encode().strip():
+            is_lower = all([c.islower() or not c.isalpha() for c in text])
+            if is_lower:
+                return text.title()
+    except:
+        pass
+
+    return text
+
+
 def get_orders_filter(request, name=None, default=None, checkbox=False):
     if name:
         key = '_orders_filter_{}'.format(name)
