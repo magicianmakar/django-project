@@ -23,15 +23,13 @@
             <table class="table table-ligthborder store-tables">
               <thead>
                 <tr>
-                  {% if not user.is_subuser %}
-                  <th style="width:70%">Name</th>
-                  {% else %}
                   <th style="">Name</th>
-                  {% endif %}
-
                   <th style="width:13%">Products</th>
                   <th style="width:13%">Orders</th>
+
+                  {% if not user.is_subuser %}
                   <th style="">Options</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody id="stores-table-body">
