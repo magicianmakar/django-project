@@ -24,11 +24,11 @@
               <thead>
                 <tr>
                   <th style="">Name</th>
-                  <th style="width:13%">Products</th>
-                  <th style="width:13%">Orders</th>
+                  <th class="hidden-xs" style="width:13%">Products</th>
+                  <th class="hidden-xs" style="width:13%">Orders</th>
 
                   {% if not user.is_subuser %}
-                  <th style="">Options</th>
+                  <th class="hidden-sm hidden-xs">Options</th>
                   {% endif %}
                 </tr>
               </thead>
@@ -39,7 +39,7 @@
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
-                      <td style="white-space:nowrap">
+                      <td class="hidden-xs" style="white-space:nowrap">
                         {% with connected=item.connected_count saved=item.saved_count %}
                             {% if connected or saved %}
                                 {% if saved %}
@@ -52,7 +52,7 @@
                             {% endif %}
                         {% endwith %}
                       </td>
-                      <td style="white-space:nowrap">
+                      <td class="hidden-xs" style="white-space:nowrap">
                         {% with pending=item.pending_orders awaiting_tracking=item.awaiting_tracking %}
                             {% if pending or awaiting_tracking %}
                                 {% if pending %}
@@ -110,7 +110,7 @@
         {% endif %}
 
             <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
-               class="btn btn-default btn-outline btn-xs pull-right extension-link" target="_blank">Install Chrome Extension</a>
+               class="btn btn-default btn-outline btn-xs pull-right extension-link hidden-sm hidden-xs" target="_blank">Install Chrome Extension</a>
 
                 </div>
             </div>
@@ -634,6 +634,9 @@
     }
     table .label .num {
         font-weight: 600 !important;
+    }
+    table td:first-child {
+        width: 100%;
     }
 </style>
 {% endblock %}
