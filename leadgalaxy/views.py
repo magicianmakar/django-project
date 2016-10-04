@@ -1441,6 +1441,12 @@ def proccess_api(request, user, method, target, data):
 
             tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
 
+            store.pusher_trigger('order-source-id-add', {
+                'order_id': order_id,
+                'line_id': line_id,
+                'source_id': source_id,
+            })
+
         return JsonResponse({'status': 'ok'})
 
     if method == 'DELETE' and target == 'order-fulfill':
@@ -1453,6 +1459,12 @@ def proccess_api(request, user, method, target, data):
             for order in orders:
                 user.can_delete(order)
                 order.delete()
+
+                order.store.pusher_trigger('order-source-id-delete', {
+                    'store_id': order.store.id,
+                    'order_id': order.order_id,
+                    'line_id': order.line_id,
+                })
 
             return JsonResponse({'status': 'ok'})
         else:
@@ -3667,6 +3679,7 @@ def orders_view(request):
     auto_orders = request.user.can('auto_order.use')
     uk_provinces = None
 
+    orders_cache = {}
     orders_ids = []
     products_ids = []
     for order in page:
@@ -3821,14 +3834,21 @@ def orders_view(request):
                             order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''
 
                     if product and product.have_supplier():
-                        if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
-                            order['line_items'][i]['order_data_id'] = order_data['id']
+                        orders_cache['order_{}'.format(order_data['id'])] = order_data
+                        order['line_items'][i]['order_data_id'] = order_data['id']
 
                         order['line_items'][i]['order_data'] = order_data
                 except:
                     raven_client.captureException()
 
         all_orders.append(order)
+
+    active_orders = {}
+    for i in orders_ids:
+        active_orders['active_order_{}'.format(i)] = True
+
+    cache.set_many(orders_cache, timeout=3600)
+    cache.set_many(active_orders, timeout=3600)
 
     if store_order_synced:
         countries = utils.get_countries()

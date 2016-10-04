@@ -683,9 +683,15 @@
         sort_type: "{{ user_filter.desc|default:'false'}}",
         connected: "{{ user_filter.connected|default:'false' }}",
     };
+
+    var sub_conf = {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "order_{{store.get_short_hash}}",
+    };
 </script>
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/pusher-websocket-iso/dist/web/pusher.js' %}"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
 

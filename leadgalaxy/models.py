@@ -505,6 +505,13 @@ class ShopifyStore(models.Model):
                                          .exclude(hidden=True) \
                                          .count()
 
+    def pusher_trigger(self, event, data):
+        from django.conf import settings
+        from pusher import Pusher
+
+        pusher = Pusher(app_id=settings.PUSHER_APP_ID, key=settings.PUSHER_KEY, secret=settings.PUSHER_SECRET)
+        pusher.trigger('order_{}'.format(self.get_short_hash()), event, data)
+
 
 class AccessToken(models.Model):
     class Meta:
