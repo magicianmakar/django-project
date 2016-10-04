@@ -657,7 +657,6 @@ channel.bind('order-source-id-delete', function(data) {
 });
 
 channel.bind('order-note-update', function(data) {
-    console.log('order-note-update', data);
     var order = $('.order[order-id="' + data.order_id + '"]');
 
     order.find('.note-panel textarea').val(data.note);
