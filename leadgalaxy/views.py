@@ -1442,6 +1442,7 @@ def proccess_api(request, user, method, target, data):
             tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
 
             store.pusher_trigger('order-source-id-add', {
+                'track': track.id,
                 'order_id': order_id,
                 'line_id': line_id,
                 'source_id': source_id,

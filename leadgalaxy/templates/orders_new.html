@@ -276,15 +276,15 @@
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
-                                    <div class="col-xs-3">
+                                    <div class="col-xs-3 order-status">
                                         {% if order.placed_orders == 0 %}
-                                            <span class="badge badge-danger primary" style="width:15px;height:15px">&nbsp;</span>
+                                            <span class="badge badge-danger primary">&nbsp;</span>
                                             No Products Ordered
                                         {% elif order.placed_orders != order.lines_count %}
-                                            <span class="badge badge-warning primary" style="width:15px;height:15px">&nbsp;</span>
+                                            <span class="badge badge-warning primary">&nbsp;</span>
                                             Partially Ordered
                                         {% else %}
-                                            <span class="badge badge-primary completed-order" style="width:15px;height:15px">&nbsp;</span>
+                                            <span class="badge badge-primary completed-order">&nbsp;</span>
                                             Order Complete
                                         {% endif %}
                                     </div>
@@ -668,6 +668,10 @@
         width: 125px !important;
         font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
         color: #989898 !important;
+    }
+    .order-status span {
+        width: 15px;
+        height: 15px;
     }
 </style>
 

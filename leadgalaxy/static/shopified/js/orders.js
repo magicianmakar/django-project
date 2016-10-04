@@ -451,6 +451,25 @@ function findMarkedLines() {
     $(".itooltip").tooltip();
 }
 
+function updateOrderedStatus(line) {
+    var order = $(line).parents('.order');
+
+    var ordered = order.find('.line').filter(function (i, el) {
+      return $(el).attr('line-track');
+    }).length;
+
+    var order_items = order.find('.line').length;
+    var order_status = order.find('.order-status');
+
+    if (ordered === 0) {
+        order_status.html('<span class="badge badge-danger primary">&nbsp;</span> No Products Ordered');
+    } else if (ordered != order_items) {
+        order_status.html('<span class="badge badge-warning primary">&nbsp;</span> Partially Ordered');
+    } else {
+        order_status.html('<span class="badge badge-primary completed-order">&nbsp;</span> Order Complete');
+    }
+}
+
 function fixNotePanelHeight() {
     $('.note-panel').each(function (i, el) {
         $(el).css({
@@ -618,6 +637,7 @@ channel.bind('order-source-id-add', function(data) {
         return;
     }
 
+    line.attr('line-track', data.track);
     line.find('.line-order-id').find('a').remove();
     line.find('.line-order-id').append($('<a>', {
         'class': 'placed-order-details',
@@ -632,6 +652,7 @@ channel.bind('order-source-id-add', function(data) {
     line.find('.line-ordered .ordered-status').text('Order Placed');
     line.find('.line-tracking').empty();
 
+    updateOrderedStatus(line);
     findMarkedLines();
 });
 
@@ -640,6 +661,8 @@ channel.bind('order-source-id-delete', function(data) {
     if (!line.length) {
         return;
     }
+
+    line.attr('line-track', '');
     line.find('.line-order-id').find('a').remove();
     line.find('.line-order-id').append($('<a>', {
         'class': 'mark-as-ordered',
@@ -653,6 +676,7 @@ channel.bind('order-source-id-delete', function(data) {
     line.find('.line-ordered .ordered-status').text('Not ordered');
     line.find('.line-tracking').empty();
 
+    updateOrderedStatus(line);
     findMarkedLines();
 });
 
