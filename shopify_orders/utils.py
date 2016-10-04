@@ -1,6 +1,5 @@
 from django.db.models import Q
 from django.core.cache import cache
-from django.template.defaultfilters import truncatewords
 
 import re
 import arrow
@@ -113,17 +112,6 @@ def update_shopify_order(store, data, sync_check=True):
                 'variant_title': line['variant_title'],
                 'product': product
             })
-
-    if not created and cache.get('active_order_{}'.format(data['id'])):
-        order_note = data.get('note')
-        if not order_note:
-            order_note = ''
-
-        store.pusher_trigger('order-note-update', {
-            'order_id': data['id'],
-            'note': order_note,
-            'note_snippet': truncatewords(order_note, 10),
-        })
 
 
 def update_line_export(store, product_id):

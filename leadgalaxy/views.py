@@ -6,6 +6,7 @@ from django.contrib.auth import logout as user_logout
 from django.contrib.auth import login as user_login
 from django.shortcuts import redirect
 from django.template import RequestContext
+from django.template.defaultfilters import truncatewords
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -2098,6 +2099,17 @@ def webhook(request, provider, option):
                     countdown=countdown)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
+
+                if not new_order and cache.get('active_order_{}'.format(shopify_order['id'])):
+                    order_note = shopify_order.get('note')
+                    if not order_note:
+                        order_note = ''
+
+                    store.pusher_trigger('order-note-update', {
+                        'order_id': shopify_order['id'],
+                        'note': order_note,
+                        'note_snippet': truncatewords(order_note, 10),
+                    })
 
                 return JsonResponse({'status': 'ok'})
 
