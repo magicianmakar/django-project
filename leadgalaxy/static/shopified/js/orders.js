@@ -105,11 +105,12 @@ $(".filter-form").submit(function() {
         }
 
         var ret = (((!el.value || el.value.trim().length === 0) &&
-                (el.type == 'text' || el.type.match(/select/) )) ||
+                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/) )) ||
             (el.name == 'sort' && el.value == user_filter.sort) ||
             (el.name == 'sort' && el.value == user_filter.sort) ||
             (el.name == 'desc' && el.value == user_filter.sort_type) ||
             (el.name == 'connected' && el.value == user_filter.connected) ||
+            (el.name == 'awaiting_order' && el.value == user_filter.awaiting_order) ||
             (el.name == 'status' && el.value == user_filter.status) ||
             (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
             (el.name == 'financial' && el.value == user_filter.financial));

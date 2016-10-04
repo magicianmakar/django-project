@@ -686,6 +686,7 @@
         financial: '{{ user_filter.financial }}',
         sort_type: "{{ user_filter.desc|default:'false'}}",
         connected: "{{ user_filter.connected|default:'false' }}",
+        awaiting_order: "{{ user_filter.awaiting_order|default:'false' }}",
     };
 
     var sub_conf = {

@@ -1426,7 +1426,7 @@ def get_orders_filter(request, name=None, default=None, checkbox=False):
 
 def set_orders_filter(user, filters, default=None):
     fields = ['sort', 'status', 'fulfillment', 'financial',
-              'desc', 'connected']
+              'desc', 'connected', 'awaiting_order']
 
     for name, val in filters.items():
         if name in fields:

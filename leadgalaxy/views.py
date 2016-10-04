@@ -3497,7 +3497,7 @@ def orders_view(request):
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
-    awaiting_order = request.GET.get('awaiting_order')
+    awaiting_order = utils.get_orders_filter(request, 'awaiting_order', checkbox=True)
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
