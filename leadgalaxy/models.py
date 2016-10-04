@@ -877,7 +877,7 @@ class ShopifyProduct(models.Model):
             for method in mapping:
                 if country_code == method.get('country'):
                     short_name = method.get('method_name').split(' ')
-                    if len(short_name) > 1 and short_name[1].lower() == 'post':
+                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
                         method['method_short'] = ' '.join(short_name[:2])
                     else:
                         method['method_short'] = short_name[0]

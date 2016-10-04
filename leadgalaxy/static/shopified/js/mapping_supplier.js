@@ -365,9 +365,11 @@
         var method = methods[0];
 
         if (rulesCount <= 3 && price) {
-            return rule.country_name + ': ' + (methods[1].toLowerCase() == 'post' ? method + ' ' + methods[1] : method) + ' ' + price;
+            return rule.country_name + ': ' + (['post', 'seller\'s', 'aliexpress'].includes(methods[1].toLowerCase()) ?
+                method + ' ' + methods[1] : method) + ' ' + price;
         } else if (rulesCount <= 9) {
-            return rule.country + ': ' + (methods[1].toLowerCase() == 'post' ? method + ' ' + methods[1] : method);
+            return rule.country + ': ' + (['post', 'seller\'s', 'aliexpress'].includes(methods[1].toLowerCase()) ?
+                method + ' ' + methods[1] : method);
         } else {
             return rule.country;
         }
