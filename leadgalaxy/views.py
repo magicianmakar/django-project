@@ -1030,7 +1030,11 @@ def proccess_api(request, user, method, target, data):
         })
 
     if method == 'GET' and target == 'user-config':
-        profile = user.models_user.profile
+        if data.get('current'):
+            profile = user.profile
+        else:
+            profile = user.models_user.profile
+
         config = profile.get_config()
         if not user.can('auto_margin.use'):
             for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
