@@ -98,7 +98,8 @@ $('.filter-btn').click(function (e) {
 
 $(".filter-form").submit(function() {
     $(this).find(":input").filter(function(i, el) {
-        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred'))  {
+        if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
+            // Note: Update in $('.save-filter-btn').click() too
             el.value = JSON.stringify(el.checked);
             el.checked = true;
             $(el).prop('filtred', true);
@@ -124,7 +125,7 @@ $('.save-filter-btn').click(function (e) {
     e.preventDefault();
 
     $(".filter-form").find(":input").filter(function(i, el) {
-        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred')) {
+        if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred')) {
             el.value = JSON.stringify(el.checked);
             el.checked = true;
             $(el).prop('filtred', true);
