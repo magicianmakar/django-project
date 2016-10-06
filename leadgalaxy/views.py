@@ -2022,6 +2022,199 @@ def webhook(request, provider, option):
 
         return JsonResponse({'status': 'ok', 'warning': 'Unknown'})
 
+    elif provider == 'zaxaa':
+        if ':' not in option and option not in ['vip-elite', 'elite', 'pro', 'basic']:
+            return JsonResponse({'error': 'Unknown Plan'}, status=404)
+
+        plan_map = {
+            'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
+            'elite': '3eccff4f178db4b85ff7245373102aec',
+            'pro': '55cb8a0ddbc9dacab8d99ac7ecaae00b',
+            'basic': '2877056b74f4683ee0cf9724b128e27b',
+            'free': '606bd8eb8cb148c28c4c022a43f0432d'
+        }
+
+        plan = None
+        bundle = None
+
+        if ':' in option:
+            option_type, option_title = option.split(':')
+            if option_type == 'bundle':
+                bundle = FeatureBundle.objects.get(slug=option_title)
+            elif option_type == 'plan':
+                plan = GroupPlan.objects.get(slug=option_title)
+        else:
+            # Before bundles, option is the plan slug
+            plan = GroupPlan.objects.get(register_hash=plan_map[option])
+
+        if request.method == 'GET':
+            webhook_type = 'Plan'
+            if bundle:
+                webhook_type = 'Bundle'
+
+            if not request.user.is_superuser:
+                return JsonResponse({'status': 'ok'})
+            else:
+                return HttpResponse('<i>JVZoo</i> Webhook for <b><span style=color:green>{}</span>: {}</b>'
+                                    .format(webhook_type, (bundle.title if bundle else plan.title)))
+
+        elif request.method != 'POST':
+            raise Exception('Unexpected HTTP Method: {}'.request.method)
+
+        params = dict(request.POST.iteritems())
+
+        # verify and parse request
+        utils.zaxaa_verify_post(params)
+        data = utils.zaxaa_parse_post(params)
+
+        trans_type = data['trans_type']
+        if trans_type not in ['SALE', 'FIRST_BILL']:
+            raise Exception('Unknown Transaction Type: {}'.format(trans_type))
+
+        if trans_type in ['SALE', 'FIRST_BILL']:
+            if plan:
+                data['zaxaa'] = params
+
+                expire = request.GET.get('expire')
+                if expire:
+                    if expire != '1y':
+                        raven_client.captureMessage('Unsupported Expire format',
+                                                    extra={'expire': expire})
+
+                    expire_date = timezone.now() + timezone.timedelta(days=365)
+                    data['expire_date'] = expire_date.isoformat()
+                    data['expire_param'] = expire
+
+                reg = utils.generate_plan_registration(plan, data)
+
+                data['reg_hash'] = reg.register_hash
+                data['plan_title'] = plan.title
+
+                try:
+                    user = User.objects.get(email__iexact=data['email'])
+                    print 'WARNING: ZAXAA SALE UPGARDING: {} to {}'.format(data['email'], plan.title)
+                except User.DoesNotExist:
+                    user = None
+                except Exception:
+                    raven_client.captureException()
+                    user = None
+
+                if user:
+                    user.profile.apply_registration(reg)
+                else:
+                    utils.send_email_from_template(tpl='webhook_register.html',
+                                                   subject='Your Shopified App Access',
+                                                   recipient=data['email'],
+                                                   data=data)
+
+            else:
+                # Handle bundle purchase
+                data['bundle_title'] = bundle.title
+
+                data['zaxaa'] = params
+                reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
+
+                try:
+                    user = User.objects.get(email__iexact=data['email'])
+                    user.profile.apply_registration(reg)
+                except User.DoesNotExist:
+                    user = None
+
+                utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
+                                               subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                                               recipient=data['email'],
+                                               data=data)
+
+            data.update(params)
+
+            tasks.invite_user_to_slack.delay(slack_teams=request.GET.get('slack', 'users'), data=data)
+
+            smartmemeber = request.GET.get('sm')
+            if smartmemeber:
+                tasks.smartmemeber_webhook_call.delay(subdomain=smartmemeber, data=params)
+
+            payment = PlanPayment(fullname=data['fullname'],
+                                  email=data['email'],
+                                  provider='Zaxaa',
+                                  transaction_type=trans_type,
+                                  payment_id=params['trans_receipt'],
+                                  data=json.dumps(data))
+            payment.save()
+
+            tags = {'trans_type': trans_type}
+            if plan:
+                tags['sale_type'] = 'Plan'
+                tags['sale_title'] = plan.title
+            else:
+                tags['sale_type'] = 'Bundle'
+                tags['sale_title'] = bundle.title
+
+            raven_client.captureMessage('Zaxaa New Purchase',
+                                        extra={'name': data['fullname'], 'email': data['email'],
+                                               'trans_type': trans_type, 'payment': payment.id},
+                                        tags=tags,
+                                        level='info')
+
+            return JsonResponse({'status': 'ok'})
+
+        elif trans_type == 'REBILL':
+            data['zaxaa'] = params
+            payment = PlanPayment(fullname=data['fullname'],
+                                  email=data['email'],
+                                  provider='Zaxaa',
+                                  transaction_type=trans_type,
+                                  payment_id=params['trans_receipt'],
+                                  data=json.dumps(data))
+            payment.save()
+
+        elif trans_type in ['CANCELED', 'REFUND']:
+            try:
+                user = User.objects.get(email__iexact=data['email'])
+            except User.DoesNotExist:
+                user = None
+
+            new_refund = PlanPayment.objects.filter(payment_id=params['trans_receipt'],
+                                                    transaction_type=trans_type).count() == 0
+
+            new_refund = True  # Disable this check until we see Zaxaa behavior
+
+            if new_refund:
+                if user:
+                    if plan:
+                        free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                        user.profile.plan = free_plan
+                        user.profile.save()
+
+                        data['previous_plan'] = plan.title
+                        data['new_plan'] = free_plan.title
+                    elif bundle:
+                        data['removed_bundle'] = bundle.title
+                        user.profile.bundles.remove(bundle)
+                else:
+                    PlanRegistration.objects.filter(plan=plan, bundle=bundle, email__iexact=data['email']) \
+                                            .update(expired=True)
+
+            data['new_refund'] = new_refund
+            data['zaxaa'] = params
+
+            payment = PlanPayment(fullname=data['fullname'],
+                                  email=data['email'],
+                                  user=user,
+                                  provider='Zaxaa',
+                                  transaction_type=trans_type,
+                                  payment_id=params['trans_receipt'],
+                                  data=json.dumps(data))
+            payment.save()
+
+            if new_refund:
+                raven_client.captureMessage('Zaxaa User Cancel/Refund',
+                                            extra={'name': data['fullname'], 'email': data['email'],
+                                                   'trans_type': trans_type, 'payment': payment.id},
+                                            tags={'trans_type': trans_type},
+                                            level='info')
+
+        return HttpResponse('ok')
+
     elif provider == 'shopify' and request.method == 'POST':
         try:
             token = request.GET['t']

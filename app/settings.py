@@ -253,6 +253,9 @@ COMPRESS_CSS_FILTERS = [
 # JVZoo
 JVZOO_SECRET_KEY = os.environ['JVZOO_SECRET']
 
+# Zaxaa
+ZAXAA_API_SIGNATURE = os.environ.get('ZAXAA_API_SIGNATURE')
+
 # Celery Config
 
 BROKER_URL = os.environ['REDISCLOUD_URL']

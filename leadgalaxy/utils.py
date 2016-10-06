@@ -1251,6 +1251,40 @@ def jvzoo_parse_post(params):
         }
 
 
+def zaxaa_verify_post(params):
+    """ Verifies if received POST is a valid Zaxaa POST request. """
+
+    if not settings.ZAXAA_API_SIGNATURE:
+        raise Exception('Zaxaa secret-key is not set.')
+
+    strparams = u"{}{}{}{}".format(
+        params['seller_id'],
+        settings.ZAXAA_API_SIGNATURE,
+        params['trans_receipt'],
+        params['trans_amount']
+    ).upper()
+
+    post_hash = hashlib.md5(strparams.encode('utf-8')).hexdigest().upper()
+    assert params['hash_key'] == post_hash, 'Checksum verification failed. ({} <> {})'.format(params['hash_key'], post_hash)
+
+
+def zaxaa_parse_post(params):
+        """ Parse POST from Zaxaa and extract information we need.
+
+        :param params: POST parameters sent by Zaxaa Notification Service
+        :type params: dict """
+
+        return {
+            'email': params['cust_email'],
+            'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
+            'firstname': params['cust_firstname'],
+            'lastname': params['cust_lastname'],
+            'product_id': params['products[0][prod_number]'],
+            'affiliate': '',
+            'trans_type': params['trans_type'],
+        }
+
+
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
 
     promotion_key = 'promotion_links2_{}'.format(hash_text(urls))
