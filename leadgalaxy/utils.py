@@ -1214,13 +1214,13 @@ def object_dump(obj, desc=None):
         print json.dumps(obj, indent=4)
 
 
-def jvzoo_verify_post(params, secretkey):
+def jvzoo_verify_post(params):
     """Verifies if received POST is a valid JVZoo POST request.
 
     :param params: POST parameters sent by JVZoo Notification Service
     :type params: dict"""
 
-    if not secretkey:
+    if not settings.JVZOO_SECRET_KEY:
         raise Exception('JVZoo secret-key is not set.')
 
     strparams = u""
@@ -1229,7 +1229,7 @@ def jvzoo_verify_post(params, secretkey):
         if key in ['cverify', 'secretkey']:
             continue
         strparams += params[key] + "|"
-    strparams += secretkey
+    strparams += settings.JVZOO_SECRET_KEY
     sha = hashlib.sha1(strparams.encode('utf-8')).hexdigest().upper()
     assert params['cverify'] == sha[:8], 'Checksum verification failed. ({} <> {})'.format(params['cverify'], sha[:8])
 

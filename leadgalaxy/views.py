@@ -1865,10 +1865,9 @@ def webhook(request, provider, option):
                 raise Exception('Unexpected HTTP Method: {}'.request.method)
 
             params = dict(request.POST.iteritems())
-            secretkey = settings.JVZOO_SECRET_KEY
 
             # verify and parse post
-            utils.jvzoo_verify_post(params, secretkey)
+            utils.jvzoo_verify_post(params)
             data = utils.jvzoo_parse_post(params)
 
             trans_type = data['trans_type']

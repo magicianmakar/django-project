@@ -250,6 +250,7 @@ COMPRESS_CSS_FILTERS = [
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
 
+# JVZoo
 JVZOO_SECRET_KEY = os.environ['JVZOO_SECRET']
 
 # Celery Config
