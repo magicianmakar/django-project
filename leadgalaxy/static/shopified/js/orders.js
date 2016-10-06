@@ -629,74 +629,96 @@ $('#country-filter').chosen({
 
 $('.order:last .line .btn-group').addClass('dropup');
 
-var pusher = new Pusher(sub_conf.key);
-var channel = pusher.subscribe(sub_conf.channel);
-
-channel.bind('order-source-id-add', function(data) {
-    var line = $('.line[line-id="' + data.line_id + '"]');
-    if (!line.length) {
+function pusherSub() {
+    if (typeof(Pusher) === 'undefined') {
+        toastr.error('This could be due to using Adblocker extensions<br>' +
+            'Please whitelist Shopified App website and reload the page<br>' +
+            'Contact us for further assistance',
+            'Pusher service is not loaded', {timeOut: 0});
         return;
     }
 
-    line.attr('line-track', data.track);
-    line.find('.line-order-id').find('a').remove();
-    line.find('.line-order-id').append($('<a>', {
-        'class': 'placed-order-details',
-        'text': '#' + data.source_id,
-        'order-id': data.order_id,
-        'line-id': data.line_id,
-        'source-order-id': data.source_id,
-        'order-date': 'Few minutes ago'
-    }).click(confirmDeleteOrderID));
+    var pusher = new Pusher(sub_conf.key);
+    var channel = pusher.subscribe(sub_conf.channel);
 
-    line.find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
-    line.find('.line-ordered .ordered-status').text('Order Placed');
-    line.find('.line-tracking').empty();
+    channel.bind('order-source-id-add', function(data) {
+        var line = $('.line[line-id="' + data.line_id + '"]');
+        if (!line.length) {
+            return;
+        }
 
-    updateOrderedStatus(line);
-    findMarkedLines();
-});
+        line.attr('line-track', data.track);
+        line.find('.line-order-id').find('a').remove();
+        line.find('.line-order-id').append($('<a>', {
+            'class': 'placed-order-details',
+            'text': '#' + data.source_id,
+            'order-id': data.order_id,
+            'line-id': data.line_id,
+            'source-order-id': data.source_id,
+            'order-date': 'Few minutes ago'
+        }).click(confirmDeleteOrderID));
 
-channel.bind('order-source-id-delete', function(data) {
-    var line = $('.line[line-id="' + data.line_id + '"]');
-    if (!line.length) {
-        return;
-    }
+        line.find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
+        line.find('.line-ordered .ordered-status').text('Order Placed');
+        line.find('.line-tracking').empty();
 
-    line.attr('line-track', '');
-    line.find('.line-order-id').find('a').remove();
-    line.find('.line-order-id').append($('<a>', {
-        'class': 'mark-as-ordered',
-        'text': 'Add',
-        'order-id': data.order_id,
-        'line-id': data.line_id,
-        'store': data.store_id,
-    }).click(addOrderSourceID));
+        updateOrderedStatus(line);
+        findMarkedLines();
+    });
 
-    line.find('.line-ordered .badge').addClass('badge-danger').removeClass('badge-primary');
-    line.find('.line-ordered .ordered-status').text('Not ordered');
-    line.find('.line-tracking').empty();
+    channel.bind('order-source-id-delete', function(data) {
+        var line = $('.line[line-id="' + data.line_id + '"]');
+        if (!line.length) {
+            return;
+        }
 
-    updateOrderedStatus(line);
-    findMarkedLines();
-});
+        line.attr('line-track', '');
+        line.find('.line-order-id').find('a').remove();
+        line.find('.line-order-id').append($('<a>', {
+            'class': 'mark-as-ordered',
+            'text': 'Add',
+            'order-id': data.order_id,
+            'line-id': data.line_id,
+            'store': data.store_id,
+        }).click(addOrderSourceID));
 
-channel.bind('order-note-update', function(data) {
-    var order = $('.order[order-id="' + data.order_id + '"]');
+        line.find('.line-ordered .badge').addClass('badge-danger').removeClass('badge-primary');
+        line.find('.line-ordered .ordered-status').text('Not ordered');
+        line.find('.line-tracking').empty();
 
-    order.find('.note-panel textarea').val(data.note);
-    order.find('.note-panel .note-text').text(data.note_snippet);
+        updateOrderedStatus(line);
+        findMarkedLines();
+    });
 
-    if (!order.find('.note-panel textarea').is(":visible")) {
-        fixNotePanelHeight();
-    }
-});
+    channel.bind('order-note-update', function(data) {
+        var order = $('.order[order-id="' + data.order_id + '"]');
+
+        order.find('.note-panel textarea').val(data.note);
+        order.find('.note-panel .note-text').text(data.note_snippet);
+
+        if (!order.find('.note-panel textarea').is(":visible")) {
+            fixNotePanelHeight();
+        }
+    });
+
+    /*
+    pusher.connection.bind('disconnected', function () {
+        toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
+    });
+
+    channel.bind('pusher:subscription_error', function(status) {
+        toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
+    });
+    */
+}
+
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
         $('.filter-form').show();
     }
 
+    pusherSub();
     findMarkedLines();
 
     if (window.location.hash.match(/hide-compete/)) {
