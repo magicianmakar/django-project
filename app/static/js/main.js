@@ -193,9 +193,7 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
 
         var vars_list = [];
         $(product.variants).each(function (i, el) {
-            if (el.values.length>1) {
-                vars_list.push(el.values);
-            }
+            vars_list.push(el.values);
         });
 
         if (vars_list.length>0) {
