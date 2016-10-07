@@ -3381,18 +3381,14 @@ def autocomplete(request, target):
         return JsonResponse({'error': 'User login required'})
 
     q = request.GET.get('query', '').strip()
+    if not q:
+        return JsonResponse({'query': q, 'suggestions': []}, safe=False)
 
     if target == 'types':
         types = []
-        for product in request.user.models_user.shopifyproduct_set.only('data').all():
-            prodct_info = json.loads(product.data)
-            ptype = prodct_info.get('type')
-            if ptype not in types:
-                if q:
-                    if q.lower() in ptype.lower():
-                        types.append(ptype)
-                else:
-                    types.append(ptype)
+        for product in request.user.models_user.shopifyproduct_set.only('product_type').filter(product_type__icontains=q)[:10]:
+            if product.product_type not in types:
+                types.append(product.product_type)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
 
@@ -3400,28 +3396,23 @@ def autocomplete(request, target):
         vendors = []
         for product in request.user.models_user.shopifyproduct_set.only('data').all():
             prodct_info = json.loads(product.data)
-            ptype = prodct_info.get('vendor')
-            if ptype and ptype not in vendors:
-                if q:
-                    if q.lower() in ptype.lower():
-                        vendors.append(ptype)
-                else:
-                    vendors.append(ptype)
+            vendor = prodct_info.get('vendor')
+            if vendor and vendor not in vendors:
+                if q.lower() in vendor.lower():
+                    vendors.append(vendor)
+
+                if len(vendors) > 10:
+                    break
 
         return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in vendors]}, safe=False)
 
     elif target == 'tags':
         tags = []
-        for product in request.user.models_user.shopifyproduct_set.only('data').all():
-            prodct_info = json.loads(product.data)
-            for i in prodct_info.get('tags', '').split(','):
+        for product in request.user.models_user.shopifyproduct_set.only('tag').filter(tag__icontains=q)[:10]:
+            for i in product.tag.split(','):
                 i = i.strip()
                 if i and i not in tags:
-                    if q:
-                        if q.lower() in i.lower():
-                            tags.append(i)
-                    else:
-                        tags.append(i)
+                    tags.append(i)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
 
@@ -3432,7 +3423,7 @@ def autocomplete(request, target):
         if store:
             products = products.filter(store=store)
 
-        for product in products:
+        for product in products[:10]:
             results.append({'value': product.title, 'data': product.id})
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
