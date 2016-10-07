@@ -2415,7 +2415,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         res = accept_product(res, request.GET)
 
     if sort:
-        if re.match(r'^-?(title|order)$', sort):
+        if re.match(r'^-?(title|price)$', sort):
             res = res.order_by(sort)
 
     paginator = utils.SimplePaginator(res, post_per_page)
