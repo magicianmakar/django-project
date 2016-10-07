@@ -49,19 +49,6 @@
                             </div>
                         </div>
 
-                        {% if not filter_no_visibility %}
-                        <div class="col-md-12 m-t-xs">
-                            <div class="form-group">
-                                <label class="m-r-sm" style="width: 95px">Product Visibility</label>
-                                <select name="visibile" type="text" class="form-control">
-                                    <option value=""></option>
-                                    <option value="yes" {% if request.GET.visibile %}selected="selected"{% endif %}>Yes</option>
-                                    <option value="no"  {% if request.GET.visibile %}selected="selected"{% endif %}>No</option>
-                                </select>
-                            </div>
-                        </div>
-                        {% endif %}
-
                         <div class="col-md-5 col-md-offset-8 m-t-md">
                             <button id="product-filter-form-btn" class="btn btn-primary">Apply</button>
                         </div>

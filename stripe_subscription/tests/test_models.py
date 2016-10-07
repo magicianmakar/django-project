@@ -1,13 +1,13 @@
 import datetime
 from decimal import Decimal
 
+import stripe.error
 from mock import Mock, patch
 
 from django.test import TestCase
 
 from stripe_subscription import utils
-import stripe_subscription.tests.factories as f
-import stripe.error
+from stripe_subscription.tests import factories as f
 
 
 class StripeCustomerTestCase(TestCase):
