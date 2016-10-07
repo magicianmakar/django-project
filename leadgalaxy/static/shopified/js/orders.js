@@ -743,6 +743,7 @@ $(function () {
     }).autocomplete({
         serviceUrl: '/autocomplete/title?' + $.param({store: $('#product_title').data('store')}),
         minChars: 1,
+        deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('input[name="product"]', $(this).parent()).val(suggestion.data);
         }

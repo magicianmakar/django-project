@@ -378,18 +378,21 @@ $(function() {
     $('#filter-type').autocomplete({
         serviceUrl: '/autocomplete/types',
         minChars: 1,
+        deferRequestBy: 1000,
         onSelect: function(suggestion) {}
     });
 
     $('#filter-vendor').autocomplete({
         serviceUrl: '/autocomplete/vendor',
         minChars: 1,
+        deferRequestBy: 1000,
         onSelect: function(suggestion) {}
     });
 
     $('#filter-tag').autocomplete({
         serviceUrl: '/autocomplete/tags',
         minChars: 1,
+        deferRequestBy: 1000,
         onSelect: function(suggestion) {}
     });
 });
