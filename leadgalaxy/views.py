@@ -3384,7 +3384,7 @@ def autocomplete(request, target):
 
     if target == 'types':
         types = []
-        for product in request.user.models_user.shopifyproduct_set.all():
+        for product in request.user.models_user.shopifyproduct_set.only('data').all():
             prodct_info = json.loads(product.data)
             ptype = prodct_info.get('type')
             if ptype not in types:
@@ -3398,7 +3398,7 @@ def autocomplete(request, target):
 
     if target == 'vendor':
         vendors = []
-        for product in request.user.models_user.shopifyproduct_set.all():
+        for product in request.user.models_user.shopifyproduct_set.only('data').all():
             prodct_info = json.loads(product.data)
             ptype = prodct_info.get('vendor')
             if ptype and ptype not in vendors:
@@ -3412,7 +3412,7 @@ def autocomplete(request, target):
 
     elif target == 'tags':
         tags = []
-        for product in request.user.models_user.shopifyproduct_set.all():
+        for product in request.user.models_user.shopifyproduct_set.only('data').all():
             prodct_info = json.loads(product.data)
             for i in prodct_info.get('tags', '').split(','):
                 i = i.strip()
@@ -3427,7 +3427,7 @@ def autocomplete(request, target):
 
     elif target == 'title':
         results = []
-        products = request.user.models_user.shopifyproduct_set.filter(title__icontains=q, shopify_id__gt=0)
+        products = request.user.models_user.shopifyproduct_set.only('id', 'title').filter(title__icontains=q, shopify_id__gt=0)
         store = request.GET.get('store')
         if store:
             products = products.filter(store=store)
