@@ -11,8 +11,7 @@ import factories as f
 from stripe_subscription.tests.factories import StripeCustomerFactory
 from stripe_subscription.models import StripeCustomer
 
-from ..views import get_product
-
+from leadgalaxy.views import get_product
 
 class ProfileViewTestCase(TestCase):
     def setUp(self):

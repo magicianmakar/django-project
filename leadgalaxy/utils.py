@@ -1214,13 +1214,13 @@ def object_dump(obj, desc=None):
         print json.dumps(obj, indent=4)
 
 
-def jvzoo_verify_post(params, secretkey):
+def jvzoo_verify_post(params):
     """Verifies if received POST is a valid JVZoo POST request.
 
     :param params: POST parameters sent by JVZoo Notification Service
     :type params: dict"""
 
-    if not secretkey:
+    if not settings.JVZOO_SECRET_KEY:
         raise Exception('JVZoo secret-key is not set.')
 
     strparams = u""
@@ -1229,7 +1229,7 @@ def jvzoo_verify_post(params, secretkey):
         if key in ['cverify', 'secretkey']:
             continue
         strparams += params[key] + "|"
-    strparams += secretkey
+    strparams += settings.JVZOO_SECRET_KEY
     sha = hashlib.sha1(strparams.encode('utf-8')).hexdigest().upper()
     assert params['cverify'] == sha[:8], 'Checksum verification failed. ({} <> {})'.format(params['cverify'], sha[:8])
 
@@ -1248,6 +1248,40 @@ def jvzoo_parse_post(params):
             'product_id': params['cproditem'],
             'affiliate': params['ctransaffiliate'],
             'trans_type': params['ctransaction'],
+        }
+
+
+def zaxaa_verify_post(params):
+    """ Verifies if received POST is a valid Zaxaa POST request. """
+
+    if not settings.ZAXAA_API_SIGNATURE:
+        raise Exception('Zaxaa secret-key is not set.')
+
+    strparams = u"{}{}{}{}".format(
+        params['seller_id'],
+        settings.ZAXAA_API_SIGNATURE,
+        params['trans_receipt'],
+        params['trans_amount']
+    ).upper()
+
+    post_hash = hashlib.md5(strparams.encode('utf-8')).hexdigest().upper()
+    assert params['hash_key'] == post_hash, 'Checksum verification failed. ({} <> {})'.format(params['hash_key'], post_hash)
+
+
+def zaxaa_parse_post(params):
+        """ Parse POST from Zaxaa and extract information we need.
+
+        :param params: POST parameters sent by Zaxaa Notification Service
+        :type params: dict """
+
+        return {
+            'email': params['cust_email'],
+            'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
+            'firstname': params['cust_firstname'],
+            'lastname': params['cust_lastname'],
+            'product_id': params['products[0][prod_number]'],
+            'affiliate': '',
+            'trans_type': params['trans_type'],
         }
 
 
@@ -1392,6 +1426,20 @@ def clean_query_id(qid):
         return 0
 
 
+def ensure_title(text):
+    """ Ensure the given string start with an upper case letter """
+
+    try:
+        if text.encode().strip():
+            is_lower = all([c.islower() or not c.isalpha() for c in text])
+            if is_lower:
+                return text.title()
+    except:
+        pass
+
+    return text
+
+
 def get_orders_filter(request, name=None, default=None, checkbox=False):
     if name:
         key = '_orders_filter_{}'.format(name)
@@ -1412,7 +1460,7 @@ def get_orders_filter(request, name=None, default=None, checkbox=False):
 
 def set_orders_filter(user, filters, default=None):
     fields = ['sort', 'status', 'fulfillment', 'financial',
-              'desc', 'connected']
+              'desc', 'connected', 'awaiting_order']
 
     for name, val in filters.items():
         if name in fields:

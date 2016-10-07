@@ -211,9 +211,7 @@ $('#export-btn').click(function () {
             var vars_list = [];
             $('#variants .variant').each(function (i, el) {
                 var vals = $(el).find('#product-variant-values').val().split(',');
-                if (vals.length>1) {
-                    vars_list.push(vals);
-                }
+                vars_list.push(vals);
             });
 
             if (vars_list.length>0) {

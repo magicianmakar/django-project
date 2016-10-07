@@ -254,6 +254,9 @@ def process_webhook_event(request, event_id, raven_client):
 
         elif not customer.have_source():
             sub = customer.user.stripesubscription_set.first()
+            if not sub:
+                return HttpResponse('Subscription Not found')
+
             sub = sub.retrieve()
             sub.delete()
 

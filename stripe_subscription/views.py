@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
 
 import arrow
 
@@ -16,7 +17,9 @@ from .utils import (
     eligible_for_trial_coupon,
     subscription_end_trial,
     update_subscription,
-    get_recent_invoice
+    get_recent_invoice,
+    get_stripe_invoice,
+    refresh_invoice_cache,
 )
 
 
@@ -231,3 +234,45 @@ def subscription_cancel(request):
 
     else:
         return JsonResponse({'error': 'Unknown "when" parameter'}, status=500)
+
+
+@csrf_protect
+@require_http_methods(['POST'])
+@login_required
+def invoice_pay(request, invoice_id):
+    if not request.is_ajax():
+        return JsonResponse({'error': 'Bad Request'}, status=500)
+
+    response_404 = JsonResponse({'error': 'Page not found'}, status=404)
+    if not request.user.is_stripe_customer():
+        return response_404
+
+    invoice = get_stripe_invoice(invoice_id)
+
+    if not invoice:
+        return response_404
+    if not invoice.customer == request.user.stripe_customer.customer_id:
+        return response_404
+
+    if invoice.paid or invoice.closed:
+        return JsonResponse({'error': 'Invoice is already paid or closed'}, status=500)
+    else:
+        try:
+            invoice.pay()
+            refresh_invoice_cache(request.user.stripe_customer)
+
+        except stripe.error.CardError as e:
+            raven_client.captureException(level='warning')
+            return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+        except stripe.InvalidRequestError as e:
+            raven_client.captureException(level='warning')
+            return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+        except:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Invoice was not paid, please try again.'}, status=500)
+
+        else:
+            return JsonResponse({'status': 'ok'}, status=200)
+

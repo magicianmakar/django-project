@@ -250,7 +250,11 @@ COMPRESS_CSS_FILTERS = [
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
 
+# JVZoo
 JVZOO_SECRET_KEY = os.environ['JVZOO_SECRET']
+
+# Zaxaa
+ZAXAA_API_SIGNATURE = os.environ.get('ZAXAA_API_SIGNATURE')
 
 # Celery Config
 
@@ -275,8 +279,12 @@ if not DEBUG and SENTRY_DSN:
     }
 
 # Stripe
-
 STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
 STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
 STRIP_TRIAL_DISCOUNT_DAYS = 10
 STRIP_TRIAL_DISCOUNT_COUPON = 'TRIAL-1MONTH'
+
+# Pusher
+PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID')
+PUSHER_KEY = os.environ.get('PUSHER_KEY')
+PUSHER_SECRET = os.environ.get('PUSHER_SECRET')

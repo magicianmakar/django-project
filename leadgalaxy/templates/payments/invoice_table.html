@@ -1,72 +1,68 @@
 {% if invoices %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Description</th>
-                    <th>Billing Period</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="invoice-table-body">
-            {% for invoice in invoices %}
+    <table class="table">
+        <thead>
             <tr>
-                <td>
-                    <a href="{% url 'user_invoices' invoice.id %}">
-                        {{ invoice.date|date:'M. d, Y' }}
-                    </a>
-                </td>
-                <td>
-                    {{ invoice.currency|upper }} {{ invoice.total }}
-                </td>
-                <td>
-                    {% if invoice.description %}
-                        <p>{{ invoice.description }}</p>
-                    {% else %}
-                        {% with invoice.lines.data.pop as line %}
-                            {% if line.description %}
-                                <p>{{ line.description }}</p>
-                            {% elif line.plan.name %}
-                                <p>{{ line.plan.name }}</p>
-                            {% else %}
-                                <p></p>
-                            {% endif %}
-                        {% endwith %}
-                    {% endif %}
-                </td>
-                <td>
-                    {{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}
-                </td>
-                <td class="text-left">
-                    {% if invoice.paid %}
-                        <i class="text-success fa fa-fw fa-check"></i> Paid
-                    {% elif not invoice.attempted %}
-                        <i class="fa fa-fw fa-clock-o"></i> Pending
-                    {% else %}
-                        <i class="text-danger fa fa-fw fa-close"></i> Past Due
-                    {% endif %}
-                </td>
-                <td>
-                    {% if not invoice.paid %}
-                        <form
-                            id="pay-invoice-form-{{ invoice.id }}"
-                            action="{% url 'user_invoices_pay' invoice.id %}"
-                            method="post"
-                        >{% csrf_token %}</form>
-                    {% endif %}
-                    {% if not invoice.paid and not invoice.closed and invoice.attempted %}
-                    <a class="btn btn-default btn-outline btn-xs pay-invoice-link" data-invoice-id={{ invoice.id }}>
-                        Pay Now
-                    </a>
-                    {% endif %}
-                </td>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Billing Period</th>
+                <th>Status</th>
+                <th></th>
             </tr>
-            {% endfor %}
-            <tbody>
-        </table>
-        <p class="text-center">
-            <a id="more-invoices"></a>
-        </p>
+        </thead>
+        <tbody id="invoice-table-body">
+        {% for invoice in invoices %}
+            {% if invoice.total %}
+                <tr>
+                    <td>
+                        <a href="{% url 'user_invoices' invoice.id %}">
+                            {{ invoice.date|date:'M. d, Y' }}
+                        </a>
+                    </td>
+                    <td>
+                        {{ invoice.currency|upper }} {{ invoice.total }}
+                    </td>
+                    <td>
+                        {% if invoice.description %}
+                            <p>{{ invoice.description }}</p>
+                        {% else %}
+                            {% with invoice.lines.data.pop as line %}
+                                {% if line.description %}
+                                    <p>{{ line.description }}</p>
+                                {% elif line.plan.name %}
+                                    <p>{{ line.plan.name }}</p>
+                                {% else %}
+                                    <p></p>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}
+                    </td>
+                    <td class="text-left">
+                        {% if invoice.paid %}
+                            <i class="text-success fa fa-fw fa-check"></i> Paid
+                        {% elif not invoice.attempted %}
+                            <i class="fa fa-fw fa-clock-o"></i> Pending
+                        {% else %}
+                            <i class="text-danger fa fa-fw fa-close"></i> Past Due
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not invoice.paid and not invoice.closed and invoice.attempted %}
+                        <a
+                            class="btn btn-default btn-outline btn-xs pay-invoice-link"
+                            data-invoice-pay-url="{% url 'invoice_pay' invoice.id %}"
+                        >Pay Now</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+        <tbody>
+    </table>
+    <p class="text-center">
+        <a id="more-invoices"></a>
+    </p>
 {% endif %}

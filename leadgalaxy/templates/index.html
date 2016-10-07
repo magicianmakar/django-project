@@ -3,6 +3,7 @@
 {% load static %}
 {% load perms_helper %}
 {% load compress %}
+{% load cache %}
 
 {% block main-container %}
 
@@ -23,26 +24,23 @@
             <table class="table table-ligthborder store-tables">
               <thead>
                 <tr>
-                  {% if not user.is_subuser %}
-                  <th style="width:70%">Name</th>
-                  {% else %}
                   <th style="">Name</th>
-                  {% endif %}
+                  <th class="hidden-xs" style="width:13%">Products</th>
+                  <th class="hidden-xs" style="width:13%">Orders</th>
 
-                  <th style="">Products</th>
-                  <th style="">Orders</th>
-                  <th style="">Options</th>
+                  {% if not user.is_subuser %}
+                  <th class="hidden-sm hidden-xs">Options</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody id="stores-table-body">
                     {% for item in stores %}
                     <tr class="store-item" store-id="{{item.id}}">
-                    {% if not user.is_subuser %}
                         <td class="drag-show">
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
-                      <td style="white-space:nowrap">
+                      <td class="hidden-xs" style="white-space:nowrap">
                         {% with connected=item.connected_count saved=item.saved_count %}
                             {% if connected or saved %}
                                 {% if saved %}
@@ -52,36 +50,34 @@
                                 {% if connected %}
                                     <a href="/product?store={{item.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
                                 {% endif %}
-                            {% else %}
-                                <a href="#" class="btn btn-outline btn-xs btn-default">Empty</a>
                             {% endif %}
                         {% endwith %}
                       </td>
-                      <td style="white-space:nowrap">
+                      <td class="hidden-xs" style="white-space:nowrap">
+                        {% cache 600 orders_status item.id %}
                         {% with pending=item.pending_orders awaiting_tracking=item.awaiting_tracking %}
                             {% if pending or awaiting_tracking %}
                                 {% if pending %}
                                 <a class="label "
-                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true{% if item.is_synced %}&old=0{% endif %}"
+                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
                                 ><span class="num">{{pending}}</span> Pending</a>
                                 {% endif %}
 
                                 {% if awaiting_tracking %}
                                     <a class="label "
-                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0"
+                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0&completed=1"
                                     ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
                                 {% endif %}
-                            {% else %}
                             {% endif %}
                         {% endwith %}
+                        {% endcache %}
                       </td>
+                      {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
-                        {% if not user.is_subuser %}
                         <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
                                 data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                             <i class="fa fa-check-circle-o"></i> Verify
                         </button>
-                        {% endif %}
 
                         <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
                             Visit Store
@@ -99,13 +95,7 @@
                             <i class="fa fa-times"></i> Delete
                         </button>
                       </td>
-                    {% else %}
-                      <td><a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a></td>
-                      <td>{{item.shopifyproduct_set.count}}</td>
-                      <td>
-                        <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank"> Visit Store</a>
-                      </td>
-                    {% endif %}
+                      {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
@@ -123,7 +113,7 @@
         {% endif %}
 
             <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
-               class="btn btn-default btn-outline btn-xs pull-right extension-link" target="_blank">Install Chrome Extension</a>
+               class="btn btn-default btn-outline btn-xs pull-right extension-link hidden-sm hidden-xs" target="_blank">Install Chrome Extension</a>
 
                 </div>
             </div>
@@ -647,6 +637,9 @@
     }
     table .label .num {
         font-weight: 600 !important;
+    }
+    table td:first-child {
+        width: 100%;
     }
 </style>
 {% endblock %}

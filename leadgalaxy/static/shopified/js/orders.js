@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function(user_filter) {
+(function(user_filter, sub_conf) {
 'use strict';
 
 var placed_order_interval = {};
@@ -98,18 +98,20 @@ $('.filter-btn').click(function (e) {
 
 $(".filter-form").submit(function() {
     $(this).find(":input").filter(function(i, el) {
-        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred'))  {
+        if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
+            // Note: Update in $('.save-filter-btn').click() too
             el.value = JSON.stringify(el.checked);
             el.checked = true;
             $(el).prop('filtred', true);
         }
 
         var ret = (((!el.value || el.value.trim().length === 0) &&
-                (el.type == 'text' || el.type.match(/select/) )) ||
+                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/) )) ||
             (el.name == 'sort' && el.value == user_filter.sort) ||
             (el.name == 'sort' && el.value == user_filter.sort) ||
             (el.name == 'desc' && el.value == user_filter.sort_type) ||
             (el.name == 'connected' && el.value == user_filter.connected) ||
+            (el.name == 'awaiting_order' && el.value == user_filter.awaiting_order) ||
             (el.name == 'status' && el.value == user_filter.status) ||
             (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
             (el.name == 'financial' && el.value == user_filter.financial));
@@ -123,7 +125,7 @@ $('.save-filter-btn').click(function (e) {
     e.preventDefault();
 
     $(".filter-form").find(":input").filter(function(i, el) {
-        if ((el.name  == 'desc' || el.name  == 'connected') && !$(el).prop('filtred')) {
+        if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred')) {
             el.value = JSON.stringify(el.checked);
             el.checked = true;
             $(el).prop('filtred', true);
@@ -153,17 +155,20 @@ function toTitleCase(str) {
 $('.expand-btn').click(function (e) {
     $(".more-info").trigger('click');
 });
-$('.placed-order-details').click(function (e) {
+
+function confirmDeleteOrderID(e) {
     e.preventDefault();
 
-    var tr_parent = $(this).parents('tr').first();
-    var order_id = $(this).attr('order-id');
-    var source_id = $(this).attr('source-order-id');
-    var line_id = $(this).attr('line-id');
+    var btn = $(e.target);
+
+    var tr_parent = btn.parents('tr').first();
+    var order_id = btn.attr('order-id');
+    var source_id = btn.attr('source-order-id');
+    var line_id = btn.attr('line-id');
     var html = '<ul>';
-    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" '+
-            'href="http://trade.aliexpress.com/order_detail.htm?orderId='+source_id+'">'+source_id+'</a></li>';
-    html += '<li style="list-style:none">Order date: '+$(this).attr('order-date')+'</li>';
+    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" ' +
+        'href="http://trade.aliexpress.com/order_detail.htm?orderId=' + source_id + '">' + source_id + '</a></li>';
+    html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
     html += '</ul';
 
     swal({
@@ -183,7 +188,9 @@ $('.placed-order-details').click(function (e) {
             deleteOrderID(tr_parent, order_id, line_id);
         }
     });
-});
+}
+
+$('.placed-order-details').click(confirmDeleteOrderID);
 
 function deleteOrderID(tr_parent, order_id, line_id) {
     swal({
@@ -207,11 +214,8 @@ function deleteOrderID(tr_parent, order_id, line_id) {
                 context: {tr: tr_parent},
                 success: function (data) {
                     if (data.status == 'ok') {
-                        swal({
-                            title: "Order ID",
-                            text: "Product Order ID has been deleted.\nNote: The Order ID has not been removed from the order notes.",
-                            type: "success"
-                        });
+                        toastr.success('Note: The Order ID has not been removed from the order notes.', 'Order ID has been deleted');
+                        swal.close();
                         $(this.tr).removeClass('success');
                     } else {
                         displayAjaxError('Delete Order ID', data);
@@ -225,14 +229,15 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     });
 }
 
-$('.mark-as-ordered').click(function (e) {
+function addOrderSourceID(e) {
     e.preventDefault();
+    var btn = $(e.target);
 
     var orderData = {
-        order_id: $(this).attr('order-id'),
-        line_id: $(this).attr('line-id'),
-        store: $(this).attr('store'),
-        btn:  $(this)
+        order_id: btn.attr('order-id'),
+        line_id: btn.attr('line-id'),
+        store: btn.attr('store'),
+        btn: btn
     };
 
     swal({
@@ -275,17 +280,6 @@ $('.mark-as-ordered').click(function (e) {
             context: {orderData: orderData, aliexpress_id: inputValue},
             success: function (data) {
                 if (data.status == 'ok') {
-                    this.orderData.btn.text('#' + this.aliexpress_id);
-
-                    var line = this.orderData.btn.parents('.line');
-                    line.find('.line-ordered .badge').removeClass('badge-danger')
-                                                     .addClass('badge-primary');
-
-                    line.find('.line-ordered .ordered-status').text('Order Placed');
-                    line.find('.line-tracking').text('Tracked');
-
-                    findMarkedLines();
-
                     swal.close();
                     toastr.success('Item was marked as ordered in Shopified App.', 'Marked as Ordered');
                 } else {
@@ -299,7 +293,9 @@ $('.mark-as-ordered').click(function (e) {
             }
         });
     });
-});
+}
+
+$('.mark-as-ordered').click(addOrderSourceID);
 
 $('.add-order-note').click(function (e) {
     e.preventDefault();
@@ -457,6 +453,34 @@ function findMarkedLines() {
     $(".itooltip").tooltip();
 }
 
+function updateOrderedStatus(line) {
+    var order = $(line).parents('.order');
+
+    var ordered = order.find('.line').filter(function (i, el) {
+      return $(el).attr('line-track');
+    }).length;
+
+    var order_items = order.find('.line').length;
+    var order_status = order.find('.order-status');
+
+    if (ordered === 0) {
+        order_status.html('<span class="badge badge-danger primary">&nbsp;</span> No Products Ordered');
+    } else if (ordered != order_items) {
+        order_status.html('<span class="badge badge-warning primary">&nbsp;</span> Partially Ordered');
+    } else {
+        order_status.html('<span class="badge badge-primary completed-order">&nbsp;</span> Order Complete');
+    }
+}
+
+function fixNotePanelHeight() {
+    $('.note-panel').each(function (i, el) {
+        $(el).css({
+            height: $(el).parents('.shipping-info').outerHeight() + 'px',
+            overflow: 'hidden'
+        });
+    });
+}
+
 $('.hide-ordered-btn').click(function () {
     $('.completed-order').parents('.order').toggle();
 
@@ -523,64 +547,6 @@ $('.hide-non-connected-btn').click(function () {
             }
         });
     }
-});
-
-$('.place-order-btn').click(function (e) {
-    var btn = $(this);
-    var order_id = $(this).attr('order-id');
-    var line_id = $(this).attr('line-id');
-
-    var interval = setInterval(function() {
-        var interval_id = placed_order_interval[order_id+'|'+line_id];
-        if (interval_id.count >= 30) {
-            clearInterval(interval_id.interval);
-            return;
-        }
-
-        $.ajax({
-            url: '/api/order-fulfill',
-            type: 'GET',
-            data: {
-                order_id: order_id,
-                line_id: line_id,
-                count: interval_id.count
-            },
-            context: {
-                btn: btn,
-                order_id: order_id,
-                line_id: line_id,
-                interval_id: interval_id,
-            },
-            success: function (data) {
-                if (data.length) {
-                    this.btn.parents('.line').find('.line-order-id').text('Order ID: #'+data[0].source_id);
-                    this.btn.parents('.line').find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
-                    this.btn.parents('.line').find('.line-ordered .ordered-status').text('Order Placed');
-                    this.btn.parents('.line').find('.line-tracking').empty();
-
-                    this.interval_id.count = 100;
-                    clearInterval(this.interval_id.interval);
-                }
-
-                if  (this.interval_id.count >= 30) {
-                    clearInterval(this.interval_id.interval);
-                } else {
-                    this.interval_id.count += 1;
-                }
-            },
-            error: function (data) {
-                clearInterval(this.interval_id.interval);
-            },
-            complete: function () {
-                placed_order_interval[this.order_id+'|'+this.line_id] = this.interval_id;
-            }
-        });
-    }, 10*1000);
-
-    placed_order_interval[order_id + '|' + line_id] = {
-        interval: interval,
-        count: 1
-    };
 });
 
 $('.auto-shipping-btn').click(function (e) {
@@ -664,11 +630,96 @@ $('#country-filter').chosen({
 
 $('.order:last .line .btn-group').addClass('dropup');
 
+function pusherSub() {
+    if (typeof(Pusher) === 'undefined') {
+        toastr.error('This could be due to using Adblocker extensions<br>' +
+            'Please whitelist Shopified App website and reload the page<br>' +
+            'Contact us for further assistance',
+            'Pusher service is not loaded', {timeOut: 0});
+        return;
+    }
+
+    var pusher = new Pusher(sub_conf.key);
+    var channel = pusher.subscribe(sub_conf.channel);
+
+    channel.bind('order-source-id-add', function(data) {
+        var line = $('.line[line-id="' + data.line_id + '"]');
+        if (!line.length) {
+            return;
+        }
+
+        line.attr('line-track', data.track);
+        line.find('.line-order-id').find('a').remove();
+        line.find('.line-order-id').append($('<a>', {
+            'class': 'placed-order-details',
+            'text': '#' + data.source_id,
+            'order-id': data.order_id,
+            'line-id': data.line_id,
+            'source-order-id': data.source_id,
+            'order-date': 'Few minutes ago'
+        }).click(confirmDeleteOrderID));
+
+        line.find('.line-ordered .badge').removeClass('badge-danger').addClass('badge-primary');
+        line.find('.line-ordered .ordered-status').text('Order Placed');
+        line.find('.line-tracking').empty();
+
+        updateOrderedStatus(line);
+        findMarkedLines();
+    });
+
+    channel.bind('order-source-id-delete', function(data) {
+        var line = $('.line[line-id="' + data.line_id + '"]');
+        if (!line.length) {
+            return;
+        }
+
+        line.attr('line-track', '');
+        line.find('.line-order-id').find('a').remove();
+        line.find('.line-order-id').append($('<a>', {
+            'class': 'mark-as-ordered',
+            'text': 'Add',
+            'order-id': data.order_id,
+            'line-id': data.line_id,
+            'store': data.store_id,
+        }).click(addOrderSourceID));
+
+        line.find('.line-ordered .badge').addClass('badge-danger').removeClass('badge-primary');
+        line.find('.line-ordered .ordered-status').text('Not ordered');
+        line.find('.line-tracking').empty();
+
+        updateOrderedStatus(line);
+        findMarkedLines();
+    });
+
+    channel.bind('order-note-update', function(data) {
+        var order = $('.order[order-id="' + data.order_id + '"]');
+
+        order.find('.note-panel textarea').val(data.note);
+        order.find('.note-panel .note-text').text(data.note_snippet);
+
+        if (!order.find('.note-panel textarea').is(":visible")) {
+            fixNotePanelHeight();
+        }
+    });
+
+    /*
+    pusher.connection.bind('disconnected', function () {
+        toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
+    });
+
+    channel.bind('pusher:subscription_error', function(status) {
+        toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
+    });
+    */
+}
+
+
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
         $('.filter-form').show();
     }
 
+    pusherSub();
     findMarkedLines();
 
     if (window.location.hash.match(/hide-compete/)) {
@@ -683,15 +734,22 @@ $(function () {
         window.location.hash = '';
     }
 
-    $('.note-panel').each(function (i, el) {
-        $(el).css({
-            height: $(el).parents('.shipping-info').outerHeight() + 'px',
-            overflow: 'hidden'
-        });
+    fixNotePanelHeight();
+
+    $('#product_title').keyup(function() {
+        if (!$(this).val().trim().length) {
+            $('input[name="product"]', $(this).parent()).val('');
+        }
+    }).autocomplete({
+        serviceUrl: '/autocomplete/title?' + $.param({store: $('#product_title').data('store')}),
+        minChars: 1,
+        onSelect: function(suggestion) {
+            $('input[name="product"]', $(this).parent()).val(suggestion.data);
+        }
     });
 
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);
 });
-})(user_filter);
+})(user_filter, sub_conf);

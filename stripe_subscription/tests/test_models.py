@@ -7,8 +7,7 @@ from mock import Mock, patch
 from django.test import TestCase
 
 from stripe_subscription import utils
-
-import factories as f
+from stripe_subscription.tests import factories as f
 
 
 class StripeCustomerTestCase(TestCase):

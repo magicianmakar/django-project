@@ -5,7 +5,9 @@ from django.utils.functional import cached_property
 from django.core.exceptions import PermissionDenied
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import Count, Q, F
+from django.db.models import Count, Max, Q, F
+from django.core.cache import cache
+from django.core.cache.utils import make_template_fragment_key
 
 import re
 import simplejson as json
@@ -477,6 +479,11 @@ class ShopifyStore(models.Model):
         from shopify_orders.utils import is_store_synced
         return is_store_synced(self)
 
+    def is_sync_enabled(self):
+        from shopify_orders.utils import is_store_synced, is_store_sync_enabled
+
+        return is_store_synced(self) and is_store_sync_enabled(self)
+
     def connected_count(self):
         return self.shopifyproduct_set.exclude(shopify_id=0).count()
 
@@ -487,6 +494,7 @@ class ShopifyStore(models.Model):
         return self.shopifyorder_set.filter(closed_at=None, cancelled_at=None) \
                                     .filter(Q(fulfillment_status=None) | Q(fulfillment_status='partial')) \
                                     .filter(financial_status='paid') \
+                                    .annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0) \
                                     .annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count')) \
                                     .count()
 
@@ -496,6 +504,13 @@ class ShopifyStore(models.Model):
                                          .exclude(source_status='FINISH') \
                                          .exclude(hidden=True) \
                                          .count()
+
+    def pusher_trigger(self, event, data):
+        from django.conf import settings
+        from pusher import Pusher
+
+        pusher = Pusher(app_id=settings.PUSHER_APP_ID, key=settings.PUSHER_KEY, secret=settings.PUSHER_SECRET)
+        pusher.trigger('order_{}'.format(self.get_short_hash()), event, data)
 
 
 class AccessToken(models.Model):
@@ -862,7 +877,7 @@ class ShopifyProduct(models.Model):
             for method in mapping:
                 if country_code == method.get('country'):
                     short_name = method.get('method_name').split(' ')
-                    if len(short_name) > 1 and short_name[1].lower() == 'post':
+                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
                         method['method_short'] = ' '.join(short_name[:2])
                     else:
                         method['method_short'] = short_name[0]
@@ -1170,6 +1185,7 @@ class GroupPlan(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
+    hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
 
     def save(self, *args, **kwargs):
         from django.utils.crypto import get_random_string
@@ -1490,8 +1506,12 @@ User.add_to_class("can_delete", user_can_delete)
 
 @receiver(post_save, sender=UserProfile)
 def invalidate_acp_users(sender, instance, created, **kwargs):
-    from django.core.cache import cache
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
+
+
+@receiver(post_save, sender=ShopifyOrderTrack)
+def invalidate_orders_status(sender, instance, created, **kwargs):
+    cache.delete(make_template_fragment_key('orders_status', [instance.store_id]))
 
 
 @receiver(post_save, sender=User)

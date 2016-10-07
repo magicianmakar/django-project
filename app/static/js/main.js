@@ -193,9 +193,7 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
 
         var vars_list = [];
         $(product.variants).each(function (i, el) {
-            if (el.values.length>1) {
-                vars_list.push(el.values);
-            }
+            vars_list.push(el.values);
         });
 
         if (vars_list.length>0) {
@@ -649,6 +647,34 @@ $('.extension-version a').click(function (e) {
     }, function() {
         $('.extension-version a').hide();
     });
+});
+
+$(function() {
+    if (window.location.hash == '#support' && window.intercomSettings /*&& !window.Intercom*/ ) {
+        swal({
+            title: 'Shopified App Support',
+            text: 'It look like our Support App is not loaded correctly, this could be because you are using and <b>Adblocker</b><br>' +
+                'Please try to whitelist Shopified App website in your adblocking extension.<br>' +
+                'You can also contact use by email: <a href="mailto:support@shopifiedapp.com">support@shopifiedapp.com</a>',
+            type: 'warning',
+            html: true
+        });
+    }
+
+    setTimeout(function() {
+        if (window.intercomSettings && !window.Intercom) {
+            $.ajax({
+                url: '/api/user-config',
+                type: 'POST',
+                data: {
+                    single: true,
+                    current: true,
+                    name: '_adbocler',
+                    value: true,
+                }
+            });
+        }
+    }, 5000);
 });
 
 var ravenOptions = {

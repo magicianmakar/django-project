@@ -6,6 +6,7 @@ from django.contrib.auth import logout as user_logout
 from django.contrib.auth import login as user_login
 from django.shortcuts import redirect
 from django.template import RequestContext
+from django.template.defaultfilters import truncatewords
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -16,9 +17,9 @@ from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.core.cache import cache
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-from django.utils.translation import ugettext as _
+from django.core.cache.utils import make_template_fragment_key
 from django.conf import settings
 
 from unidecode import unidecode
@@ -47,7 +48,6 @@ from stripe_subscription.utils import (
     sync_subscription,
     get_stripe_invoice,
     get_stripe_invoice_list,
-    refresh_invoice_cache,
 )
 
 
@@ -1030,7 +1030,11 @@ def proccess_api(request, user, method, target, data):
         })
 
     if method == 'GET' and target == 'user-config':
-        profile = user.models_user.profile
+        if data.get('current'):
+            profile = user.profile
+        else:
+            profile = user.models_user.profile
+
         config = profile.get_config()
         if not user.can('auto_margin.use'):
             for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
@@ -1442,6 +1446,13 @@ def proccess_api(request, user, method, target, data):
 
             tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
 
+            store.pusher_trigger('order-source-id-add', {
+                'track': track.id,
+                'order_id': order_id,
+                'line_id': line_id,
+                'source_id': source_id,
+            })
+
         return JsonResponse({'status': 'ok'})
 
     if method == 'DELETE' and target == 'order-fulfill':
@@ -1454,6 +1465,12 @@ def proccess_api(request, user, method, target, data):
             for order in orders:
                 user.can_delete(order)
                 order.delete()
+
+                order.store.pusher_trigger('order-source-id-delete', {
+                    'store_id': order.store.id,
+                    'order_id': order.order_id,
+                    'line_id': order.line_id,
+                })
 
             return JsonResponse({'status': 'ok'})
         else:
@@ -1848,10 +1865,9 @@ def webhook(request, provider, option):
                 raise Exception('Unexpected HTTP Method: {}'.request.method)
 
             params = dict(request.POST.iteritems())
-            secretkey = settings.JVZOO_SECRET_KEY
 
             # verify and parse post
-            utils.jvzoo_verify_post(params, secretkey)
+            utils.jvzoo_verify_post(params)
             data = utils.jvzoo_parse_post(params)
 
             trans_type = data['trans_type']
@@ -2006,6 +2022,199 @@ def webhook(request, provider, option):
 
         return JsonResponse({'status': 'ok', 'warning': 'Unknown'})
 
+    elif provider == 'zaxaa':
+        if ':' not in option and option not in ['vip-elite', 'elite', 'pro', 'basic']:
+            return JsonResponse({'error': 'Unknown Plan'}, status=404)
+
+        plan_map = {
+            'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
+            'elite': '3eccff4f178db4b85ff7245373102aec',
+            'pro': '55cb8a0ddbc9dacab8d99ac7ecaae00b',
+            'basic': '2877056b74f4683ee0cf9724b128e27b',
+            'free': '606bd8eb8cb148c28c4c022a43f0432d'
+        }
+
+        plan = None
+        bundle = None
+
+        if ':' in option:
+            option_type, option_title = option.split(':')
+            if option_type == 'bundle':
+                bundle = FeatureBundle.objects.get(slug=option_title)
+            elif option_type == 'plan':
+                plan = GroupPlan.objects.get(slug=option_title)
+        else:
+            # Before bundles, option is the plan slug
+            plan = GroupPlan.objects.get(register_hash=plan_map[option])
+
+        if request.method == 'GET':
+            webhook_type = 'Plan'
+            if bundle:
+                webhook_type = 'Bundle'
+
+            if not request.user.is_superuser:
+                return JsonResponse({'status': 'ok'})
+            else:
+                return HttpResponse('<i>JVZoo</i> Webhook for <b><span style=color:green>{}</span>: {}</b>'
+                                    .format(webhook_type, (bundle.title if bundle else plan.title)))
+
+        elif request.method != 'POST':
+            raise Exception('Unexpected HTTP Method: {}'.request.method)
+
+        params = dict(request.POST.iteritems())
+
+        # verify and parse request
+        utils.zaxaa_verify_post(params)
+        data = utils.zaxaa_parse_post(params)
+
+        trans_type = data['trans_type']
+        if trans_type not in ['SALE', 'FIRST_BILL']:
+            raise Exception('Unknown Transaction Type: {}'.format(trans_type))
+
+        if trans_type in ['SALE', 'FIRST_BILL']:
+            if plan:
+                data['zaxaa'] = params
+
+                expire = request.GET.get('expire')
+                if expire:
+                    if expire != '1y':
+                        raven_client.captureMessage('Unsupported Expire format',
+                                                    extra={'expire': expire})
+
+                    expire_date = timezone.now() + timezone.timedelta(days=365)
+                    data['expire_date'] = expire_date.isoformat()
+                    data['expire_param'] = expire
+
+                reg = utils.generate_plan_registration(plan, data)
+
+                data['reg_hash'] = reg.register_hash
+                data['plan_title'] = plan.title
+
+                try:
+                    user = User.objects.get(email__iexact=data['email'])
+                    print 'WARNING: ZAXAA SALE UPGARDING: {} to {}'.format(data['email'], plan.title)
+                except User.DoesNotExist:
+                    user = None
+                except Exception:
+                    raven_client.captureException()
+                    user = None
+
+                if user:
+                    user.profile.apply_registration(reg)
+                else:
+                    utils.send_email_from_template(tpl='webhook_register.html',
+                                                   subject='Your Shopified App Access',
+                                                   recipient=data['email'],
+                                                   data=data)
+
+            else:
+                # Handle bundle purchase
+                data['bundle_title'] = bundle.title
+
+                data['zaxaa'] = params
+                reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
+
+                try:
+                    user = User.objects.get(email__iexact=data['email'])
+                    user.profile.apply_registration(reg)
+                except User.DoesNotExist:
+                    user = None
+
+                utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
+                                               subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                                               recipient=data['email'],
+                                               data=data)
+
+            data.update(params)
+
+            tasks.invite_user_to_slack.delay(slack_teams=request.GET.get('slack', 'users'), data=data)
+
+            smartmemeber = request.GET.get('sm')
+            if smartmemeber:
+                tasks.smartmemeber_webhook_call.delay(subdomain=smartmemeber, data=params)
+
+            payment = PlanPayment(fullname=data['fullname'],
+                                  email=data['email'],
+                                  provider='Zaxaa',
+                                  transaction_type=trans_type,
+                                  payment_id=params['trans_receipt'],
+                                  data=json.dumps(data))
+            payment.save()
+
+            tags = {'trans_type': trans_type}
+            if plan:
+                tags['sale_type'] = 'Plan'
+                tags['sale_title'] = plan.title
+            else:
+                tags['sale_type'] = 'Bundle'
+                tags['sale_title'] = bundle.title
+
+            raven_client.captureMessage('Zaxaa New Purchase',
+                                        extra={'name': data['fullname'], 'email': data['email'],
+                                               'trans_type': trans_type, 'payment': payment.id},
+                                        tags=tags,
+                                        level='info')
+
+            return JsonResponse({'status': 'ok'})
+
+        elif trans_type == 'REBILL':
+            data['zaxaa'] = params
+            payment = PlanPayment(fullname=data['fullname'],
+                                  email=data['email'],
+                                  provider='Zaxaa',
+                                  transaction_type=trans_type,
+                                  payment_id=params['trans_receipt'],
+                                  data=json.dumps(data))
+            payment.save()
+
+        elif trans_type in ['CANCELED', 'REFUND']:
+            try:
+                user = User.objects.get(email__iexact=data['email'])
+            except User.DoesNotExist:
+                user = None
+
+            new_refund = PlanPayment.objects.filter(payment_id=params['trans_receipt'],
+                                                    transaction_type=trans_type).count() == 0
+
+            new_refund = True  # Disable this check until we see Zaxaa behavior
+
+            if new_refund:
+                if user:
+                    if plan:
+                        free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
+                        user.profile.plan = free_plan
+                        user.profile.save()
+
+                        data['previous_plan'] = plan.title
+                        data['new_plan'] = free_plan.title
+                    elif bundle:
+                        data['removed_bundle'] = bundle.title
+                        user.profile.bundles.remove(bundle)
+                else:
+                    PlanRegistration.objects.filter(plan=plan, bundle=bundle, email__iexact=data['email']) \
+                                            .update(expired=True)
+
+            data['new_refund'] = new_refund
+            data['zaxaa'] = params
+
+            payment = PlanPayment(fullname=data['fullname'],
+                                  email=data['email'],
+                                  user=user,
+                                  provider='Zaxaa',
+                                  transaction_type=trans_type,
+                                  payment_id=params['trans_receipt'],
+                                  data=json.dumps(data))
+            payment.save()
+
+            if new_refund:
+                raven_client.captureMessage('Zaxaa User Cancel/Refund',
+                                            extra={'name': data['fullname'], 'email': data['email'],
+                                                   'trans_type': trans_type, 'payment': payment.id},
+                                            tags={'trans_type': trans_type},
+                                            level='info')
+
+        return HttpResponse('ok')
+
     elif provider == 'shopify' and request.method == 'POST':
         try:
             token = request.GET['t']
@@ -2084,6 +2293,19 @@ def webhook(request, provider, option):
                     args=[store.id, shopify_order['id']],
                     queue=queue,
                     countdown=countdown)
+
+                cache.delete(make_template_fragment_key('orders_status', [store.id]))
+
+                if not new_order and cache.get('active_order_{}'.format(shopify_order['id'])):
+                    order_note = shopify_order.get('note')
+                    if not order_note:
+                        order_note = ''
+
+                    store.pusher_trigger('order-note-update', {
+                        'order_id': shopify_order['id'],
+                        'note': order_note,
+                        'note_snippet': truncatewords(order_note, 10),
+                    })
 
                 return JsonResponse({'status': 'ok'})
 
@@ -2305,6 +2527,11 @@ def accept_product(product, fdata):
 
     if fdata.get('tag'):
         accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
+
+    if fdata.get('vendor'):
+        product_vendor = product['product'].get('vendor')
+        accept = (accept and product_vendor and fdata.get('vendor').lower() in product_vendor.lower())
+
     if fdata.get('visibile'):
         published = (fdata.get('visibile').lower() == 'yes')
         accept = (accept and published == bool(product['product'].get('published')))
@@ -2792,15 +3019,17 @@ def acp_users_list(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
-    if cache.get('template.cache.acp_users.invalidate'):
-        cache.delete_pattern('template.cache.acp_users.*')
+    random_cache = 0
+    q = request.GET.get('q')
+
+    if q or cache.get('template.cache.acp_users.invalidate'):
+        random_cache = arrow.now().timestamp
 
     users = User.objects.select_related('profile', 'profile__plan').order_by('-date_joined')
 
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
 
-    q = request.GET.get('q')
     if q:
         qid = utils.safeInt(q)
         if qid:
@@ -2824,7 +3053,7 @@ def acp_users_list(request):
         'plans': plans,
         'profiles': profiles,
         'users_count': users.count(),
-        'random_cache': arrow.now().timestamp if q else 0,
+        'random_cache': random_cache,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']
@@ -3174,7 +3403,7 @@ def autocomplete(request, target):
     if not request.user.is_authenticated():
         return JsonResponse({'error': 'User login required'})
 
-    q = request.GET.get('query', '')
+    q = request.GET.get('query', '').strip()
 
     if target == 'types':
         types = []
@@ -3190,6 +3419,20 @@ def autocomplete(request, target):
 
         return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
 
+    if target == 'vendor':
+        vendors = []
+        for product in request.user.models_user.shopifyproduct_set.all():
+            prodct_info = json.loads(product.data)
+            ptype = prodct_info.get('vendor')
+            if ptype and ptype not in vendors:
+                if q:
+                    if q.lower() in ptype.lower():
+                        vendors.append(ptype)
+                else:
+                    vendors.append(ptype)
+
+        return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in vendors]}, safe=False)
+
     elif target == 'tags':
         tags = []
         for product in request.user.models_user.shopifyproduct_set.all():
@@ -3204,6 +3447,19 @@ def autocomplete(request, target):
                         tags.append(i)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
+
+    elif target == 'title':
+        results = []
+        products = request.user.models_user.shopifyproduct_set.filter(title__icontains=q, shopify_id__gt=0)
+        store = request.GET.get('store')
+        if store:
+            products = products.filter(store=store)
+
+        for product in products:
+            results.append({'value': product.title, 'data': product.id})
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
@@ -3264,7 +3520,7 @@ def user_profile(request):
             })
 
     bundles = profile.bundles.filter(hidden_from_user=False)
-    stripe_plans = GroupPlan.objects.exclude(stripe_plan=None) \
+    stripe_plans = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 
@@ -3425,12 +3681,14 @@ def orders_view(request):
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
-    awaiting_order = request.GET.get('awaiting_order')
+    awaiting_order = utils.get_orders_filter(request, 'awaiting_order', checkbox=True)
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
     query_customer = request.GET.get('query_customer')
     query_address = request.GET.getlist('query_address')
+
+    product_filter = request.GET.get('product')
 
     if request.GET.get('shop'):
         status, fulfillment, financial = ['any', 'any', 'any']
@@ -3441,7 +3699,7 @@ def orders_view(request):
         shopify_orders_utils.enable_store_sync(store)
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
-    store_sync_enabled = store_order_synced and shopify_orders_utils.is_store_sync_enabled(store)
+    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
 
     if not store_sync_enabled:
         if ',' in fulfillment:
@@ -3520,8 +3778,8 @@ def orders_view(request):
         if awaiting_order:
             orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
-        if request.GET.get('product'):
-            orders = orders.filter(shopifyorderline__product_id=request.GET.get('product'))
+        if product_filter:
+            orders = orders.filter(shopifyorderline__product_id=product_filter)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
@@ -3618,6 +3876,7 @@ def orders_view(request):
     auto_orders = request.user.can('auto_order.use')
     uk_provinces = None
 
+    orders_cache = {}
     orders_ids = []
     products_ids = []
     for order in page:
@@ -3740,6 +3999,9 @@ def orders_view(request):
                         shipping_address_asci['country_code'] = 'PR'
                         shipping_address_asci['country'] = 'Puerto Rico'
 
+                    for name in ['first_name', 'last_name']:
+                        shipping_address_asci[name] = utils.ensure_title(shipping_address_asci[name])
+
                     phone = shipping_address_asci.get('phone')
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
                         phone = models_user.get_config('order_phone_number')
@@ -3769,8 +4031,8 @@ def orders_view(request):
                             order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''
 
                     if product and product.have_supplier():
-                        if cache.set('order_%s' % order_data['id'], order_data, timeout=3600):
-                            order['line_items'][i]['order_data_id'] = order_data['id']
+                        orders_cache['order_{}'.format(order_data['id'])] = order_data
+                        order['line_items'][i]['order_data_id'] = order_data['id']
 
                         order['line_items'][i]['order_data'] = order_data
                 except:
@@ -3778,10 +4040,20 @@ def orders_view(request):
 
         all_orders.append(order)
 
+    active_orders = {}
+    for i in orders_ids:
+        active_orders['active_order_{}'.format(i)] = True
+
+    cache.set_many(orders_cache, timeout=3600)
+    cache.set_many(active_orders, timeout=3600)
+
     if store_order_synced:
         countries = utils.get_countries()
     else:
         countries = []
+
+    if product_filter:
+        product_filter = models_user.shopifyproduct_set.get(id=product_filter)
 
     return render(request, 'orders_new.html', {
         'orders': all_orders,
@@ -3798,6 +4070,7 @@ def orders_view(request):
         'query': query,
         'connected_only': connected_only,
         'awaiting_order': awaiting_order,
+        'product_filter': product_filter,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
@@ -3835,6 +4108,7 @@ def orders_track(request):
     tracking_filter = request.GET.get('tracking')
     fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
+    completed = request.GET.get('completed')
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -3867,6 +4141,9 @@ def orders_track(request):
         orders = orders.filter(hidden=True)
     elif not hidden_filter or hidden_filter == '0':
         orders = orders.exclude(hidden=True)
+
+    if completed == '1':
+        orders = orders.exclude(source_status='FINISH')
 
     orders = orders.order_by(sorting)
 
@@ -3982,7 +4259,6 @@ def product_alerts(request):
     tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
 
     # Delete sidebar alert info cache
-    from django.core.cache.utils import make_template_fragment_key
     cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
 
     return render(request, tpl, {
@@ -4201,7 +4477,6 @@ def register(request, registration=None, subscribe_plan=None):
     })
 
 
-@ensure_csrf_cookie
 @require_http_methods(['GET'])
 @login_required
 def user_profile_invoices(request):
@@ -4224,46 +4499,6 @@ def user_invoices(request, invoice_id):
         raise Http404
 
     return render(request, 'user/invoice_view.html', {'invoice': invoice})
-
-
-@csrf_protect
-@require_http_methods(['POST'])
-@login_required
-def user_invoices_pay(request, invoice_id):
-    import stripe.error
-
-    if not request.user.is_stripe_customer():
-        raise Http404
-
-    invoice = get_stripe_invoice(invoice_id)
-
-    if not invoice:
-        raise Http404
-    if not invoice.customer == request.user.stripe_customer.customer_id:
-        raise Http404
-
-    if invoice.paid or invoice.closed:
-        messages.error(request, _('Invoice is already paid or closed'))
-    else:
-        try:
-            invoice.pay()
-
-            refresh_invoice_cache(request.user.stripe_customer)
-            messages.success(request, _('Invoice payment successful'))
-
-        except stripe.error.CardError as e:
-            messages.error(request, 'Invoice payment error: {}'.format(e.message))
-            raven_client.captureException(level='warning')
-
-        except stripe.InvalidRequestError as e:
-            messages.error(request, 'Invoice payment error: {}'.format(e.message))
-            raven_client.captureException(level='warning')
-
-        except:
-            messages.error(request, _('Invoice was not paid, please try again'))
-            raven_client.captureException()
-
-    return redirect(reverse('user_profile') + '#invoices')
 
 
 @login_required

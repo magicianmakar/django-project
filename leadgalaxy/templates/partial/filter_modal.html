@@ -32,6 +32,7 @@
                                 <input id="filter-type" name="type" type="text" class="form-control" value="{{request.GET.type}}" placeholder="">
                             </div>
                         </div>
+
                         {% if not filter_no_tag %}
                         <div class="col-md-12 m-t-xs">
                             <div class="form-group">
@@ -40,6 +41,13 @@
                             </div>
                         </div>
                         {% endif %}
+
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Vendor</label>
+                                <input id="filter-vendor" name="vendor" type="text" class="form-control" value="{{request.GET.vendor}}" placeholder="">
+                            </div>
+                        </div>
 
                         {% if not filter_no_visibility %}
                         <div class="col-md-12 m-t-xs">

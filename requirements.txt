@@ -53,6 +53,7 @@ pbr==1.10.0
 Pillow==2.9.0
 ply==3.8
 psycopg2==2.6.1
+pusher==1.5
 pyasn1==0.1.9
 pyasn1-modules==0.0.5
 pycparser==2.14
@@ -77,6 +78,7 @@ tqdm==4.8.4
 Twisted==15.4.0
 Unidecode==0.4.19
 uritemplate==0.6
+urllib3==1.18
 w3lib==1.12.0
 Werkzeug==0.10.4
 whitenoise==1.0.6
