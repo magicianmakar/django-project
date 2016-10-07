@@ -3412,7 +3412,8 @@ def autocomplete(request, target):
             for i in product.tag.split(','):
                 i = i.strip()
                 if i and i not in tags:
-                    tags.append(i)
+                    if q.lower() in i.lower():
+                        tags.append(i)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
 
