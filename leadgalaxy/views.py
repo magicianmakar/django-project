@@ -3393,18 +3393,12 @@ def autocomplete(request, target):
         return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
 
     if target == 'vendor':
-        vendors = []
-        for product in request.user.models_user.shopifyproduct_set.only('data').all():
-            prodct_info = json.loads(product.data)
-            vendor = prodct_info.get('vendor')
-            if vendor and vendor not in vendors:
-                if q.lower() in vendor.lower():
-                    vendors.append(vendor)
+        suppliers = []
+        for supplier in ProductSupplier.objects.filter(store__in=request.user.profile.get_active_stores(), supplier_name__icontains=q)[:10]:
+            if supplier.supplier_name and supplier.supplier_name not in suppliers:
+                suppliers.append(supplier.supplier_name)
 
-                if len(vendors) > 10:
-                    break
-
-        return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in vendors]}, safe=False)
+        return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in suppliers]}, safe=False)
 
     elif target == 'tags':
         tags = []
