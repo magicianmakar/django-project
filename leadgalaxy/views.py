@@ -2409,23 +2409,18 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         res = res.filter(shopifyboard=board)
         user.can_view(get_object_or_404(ShopifyBoard, id=board))
 
-    if not filter_products and not sort:
-        paginator = utils.SimplePaginator(res, post_per_page)
-
-        page = min(max(1, utils.safeInt(page)), paginator.num_pages)
-        page = paginator.page(page)
-        res = page
-
     if filter_products:
-        title = request.GET.get('title')
-        if title:
-            res.filter(title__contains=title)
+        res = accept_product(res, request.GET)
 
     if sort:
-        field = sort[1:] if sort[0] == '-' else sort
-        sortable_fields = ['title', 'price']
-        if field in sortable_fields:
-            res.order_by(sort)
+        if re.match(r'^-?(title|order)$', sort):
+            res = res.order_by(sort)
+
+    paginator = utils.SimplePaginator(res, post_per_page)
+
+    page = min(max(1, utils.safeInt(page)), paginator.num_pages)
+    page = paginator.page(page)
+    res = page
 
     for i in res:
         p = {
@@ -2454,20 +2449,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
         p['images'] = p['product']['images']
 
-        if (filter_products):
-            if accept_product(p, request.GET):
-                products.append(p)
-        else:
-            products.append(p)
-
-    if len(products):
-        if filter_products or sort:
-            paginator = utils.SimplePaginator(products, post_per_page)
-
-            page = min(max(1, int(page)), paginator.num_pages)
-            page = paginator.page(page)
-
-            products = page.object_list
+        products.append(p)
 
     if load_boards and len(products):
         link_product_board(products, request.user.get_boards())
@@ -2503,40 +2485,33 @@ def link_product_board(products, boards):
     return products
 
 
-def accept_product(product, fdata):
-    accept = True
-
+def accept_product(res, fdata):
     if fdata.get('title'):
-        accept = fdata.get('title').lower() in product['product']['title'].lower()
+        res = res.filter(title__icontains=fdata.get('title'))
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        price = utils.safeFloat(product['product'].get('price'))
         min_price = utils.safeFloat(fdata.get('price_min'), -1)
         max_price = utils.safeFloat(fdata.get('price_max'), -1)
 
         if (min_price > 0 and max_price > 0):
-            accept = (accept and (min_price <= price) and (price <= max_price))
+            res = res.filter(price__gte=min_price, price_lte=max_price)
+
         elif (min_price > 0):
-            accept = (accept and (min_price <= price))
+            res = res.filter(price__gte=min_price)
 
         elif (max_price > 0):
-            accept = (accept and (max_price >= price))
+            res = res.filter(price__lte=max_price)
 
     if fdata.get('type'):
-        accept = (accept and fdata.get('type').lower() in product['product'].get('type').lower())
+        res = res.filter(product_type__icontains=fdata.get('type'))
 
     if fdata.get('tag'):
-        accept = (accept and fdata.get('tag').lower() in product['product'].get('tags').lower())
+        res = res.filter(tag__icontains=fdata.get('tag'))
 
     if fdata.get('vendor'):
-        product_vendor = product['product'].get('vendor')
-        accept = (accept and product_vendor and fdata.get('vendor').lower() in product_vendor.lower())
+        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
 
-    if fdata.get('visibile'):
-        published = (fdata.get('visibile').lower() == 'yes')
-        accept = (accept and published == bool(product['product'].get('published')))
-
-    return accept
+    return res
 
 
 @login_required
