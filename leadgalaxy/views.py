@@ -3903,7 +3903,9 @@ def orders_view(request):
             if shopify_order:
                 order['placed_orders'] += 1
 
-            if el['product_id'] in products_cache:
+            if not el['product_id']:
+                product = None
+            elif el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
                 product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
