@@ -52,10 +52,14 @@
                                             More <span class="caret"></span>
                                         </a>
                                         <ul class="dropdown-menu dropdown-user">
-                                            <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
                                             <li><a href="/admin/leadgalaxy/planregistration/?q={{item.email|urlencode}}" target="_blank">Registration Links</a></li>
                                             <li><a href="/admin/leadgalaxy/planpayment/?q={{item.email|urlencode}}" target="_blank">Payements</a></li>
-                                            <li><a href="#" class="clear-access-tokens" user-id="{{item.id}}" username="{{item.username}}">Clear Access Tokens</a></li>
+                                            <li><a href="https://dashboard.stripe.com/search?query={{item.email|urlencode}}" target="_blank">Stripe</a></li>
+                                            <li><a href="#" class="intercom-btn" data-email="{{item.email}}" target="_blank">Intercom</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href="text-danger" class="clear-access-tokens btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Access Tokens</a></li>
                                         </ul>
                                     </div>
                             </td>
@@ -225,7 +229,30 @@
                         btn.button('reset');
                     }
                 });
-            })
+            });
+
+            $('.intercom-btn').click(function (e) {
+                e.preventDefault();
+
+                var data = {
+                    "predicates": [
+                        {
+                          "comparison": "eq",
+                          "value": $(e.target).data('email'),
+                          "attribute": "email",
+                          "type": "string"
+                        },
+                        {
+                          "type": "anonymous",
+                          "comparison": "false",
+                          "value": null,
+                          "attribute": "anonymous"
+                        }
+                    ]
+                };
+
+                window.open('https://app.intercom.io/a/apps/k9cb5frr/users/segments/all:' + btoa(JSON.stringify(data)), '_blank');
+            });
         });
     </script>
 {% endblock %}
