@@ -2261,7 +2261,7 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
-                product.shopify_id = None
+                product.shopify_id = 0
                 product.save()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
