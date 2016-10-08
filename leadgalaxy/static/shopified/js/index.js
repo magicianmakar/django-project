@@ -3,6 +3,14 @@
 (function() {
 'use strict';
 
+function syncConfig() {
+    window.extensionSendMessage({
+        subject: 'SyncUserConfig',
+        from: 'website',
+        stores: true,
+    }, function() {});
+}
+
 $('.add-store-btn').click(function (e) {
     e.preventDefault();
 
@@ -132,6 +140,8 @@ $('.delete-store').click(function (e) {
 
                 swal.close();
                 toastr.success('Store has been deleted.', 'Delete Store');
+
+                syncConfig();
             },
             error: function(data) {
                 displayAjaxError('Delete Store', data);
@@ -157,6 +167,9 @@ $('form#config-form').submit(function (e) {
         success: function (data) {
             if (data.status == 'ok') {
                 toastr.success('Saved.','User Config');
+
+                syncConfig();
+
             } else {
                 displayAjaxError('User Config', data);
             }
@@ -241,6 +254,8 @@ $('#update-store').click(function (e) {
             if (data.status == 'ok') {
                 $('#modal-add-store-form').modal('hide');
                 toastr.success('Store information updated', 'Store update');
+
+                syncConfig();
             } else {
                 displayAjaxError('Store update', data);
             }
