@@ -16,7 +16,7 @@ import arrow
 from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore
 from .stripe_api import stripe
 
-from leadgalaxy.models import GroupPlan
+from leadgalaxy.models import GroupPlan, UserProfile
 
 
 class SubscriptionException(Exception):
@@ -316,11 +316,18 @@ def process_webhook_event(request, event_id, raven_client):
 
         try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
-        except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
-            return HttpResponse('Customer Not Found')
+            customer.can_trial = False
+            customer.save()
 
-        profile = customer.user.profile
+            profile = customer.user.profile
+
+        except StripeCustomer.DoesNotExist:
+            try:
+                profile = UserProfile.objects.get(user=sub.metadata.user_id)
+            except UserProfile.DoesNotExist:
+                raven_client.captureException(level='warning')
+                return HttpResponse('Customer Not Found')
+
         current_plan = profile.plan
         if not profile.plan.is_free and profile.plan.is_stripe():
             profile.plan = GroupPlan.objects.get(default_plan=True)
@@ -329,16 +336,12 @@ def process_webhook_event(request, event_id, raven_client):
             raven_client.captureMessage(
                 'Plan was not changed to Free plan',
                 extra={
-                    'email': customer.user.email,
+                    'email': profile.user.email,
                     'plan': profile.plan.title,
                 },
                 level='warning')
 
         StripeSubscription.objects.filter(subscription_id=sub.id).delete()
-
-        customer = StripeCustomer.objects.get(customer_id=sub.customer)
-        customer.can_trial = False
-        customer.save()
 
         if current_plan == profile.plan:
             return HttpResponse('Subscription Deleted - Plan Unchanged')
@@ -405,7 +408,11 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type in ['invoice.created', 'invoice.updated']:
         customer = event.data.object.customer
-        stripe_customer = StripeCustomer.objects.get(customer_id=customer)
+        try:
+            stripe_customer = StripeCustomer.objects.get(customer_id=customer)
+        except StripeCustomer.DoesNotExist:
+            return HttpResponse('Customer Not Found')
+
         clear_invoice_cache(stripe_customer)
     else:
         return HttpResponse('Ignore Event')
