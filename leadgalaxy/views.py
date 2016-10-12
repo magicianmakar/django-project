@@ -3740,7 +3740,7 @@ def orders_view(request):
         if connected_only == 'true':
             orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
 
-        if awaiting_order:
+        if awaiting_order == 'true':
             orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if product_filter:

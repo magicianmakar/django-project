@@ -525,7 +525,7 @@
                             </h3>
                             <p class="text-center">
                                 Try adjusting your <a class="filter-btn" href="#">Filters</a> or
-                                <a href="{% url_multi_replace status='any' fulfillment='any' financial='any' connected='false' %}">
+                                <a href="{% url_multi_replace status='any' fulfillment='any' financial='any' connected='false' awaiting_order='false' %}">
                                     {% if request.GET.query or query_order or request.GET.query_customer or request.GET.query_address %}
                                         Search in
                                     {% else %}
