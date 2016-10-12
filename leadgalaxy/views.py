@@ -2940,6 +2940,8 @@ def get_shipping_info(request):
     country_code = request.GET.get('country', 'US')
     if country_code == 'GB':
         country_code = 'UK'
+    elif country_code == 'ME':
+        country_code = 'MNE'
 
     if not aliexpress_id and supplier:
         if int(supplier) == 0:
