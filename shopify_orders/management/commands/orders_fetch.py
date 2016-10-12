@@ -96,8 +96,11 @@ class Command(BaseCommand):
         self.products_map = store.shopifyproduct_set.exclude(shopify_id=0) \
                                  .values_list('id', 'shopify_id') \
                                  .order_by('created_at')
-
         self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
+
+        self.tracking_map = store.shopifyordertrack_set.values_list('id', 'line_id')
+        self.tracking_map = dict(map(lambda a: (a[1], a[0]), self.tracking_map))
+
         self.imported_orders = []
         self.saved_orders = {}
         self.saved_orders_last = 0
@@ -248,7 +251,8 @@ class Command(BaseCommand):
                 quantity=line['quantity'],
                 variant_id=safeInt(line.get('variant_id')),
                 variant_title=line['variant_title'],
-                product_id=self.products_map.get(safeInt(line['product_id']))
+                product_id=self.products_map.get(safeInt(line['product_id'])),
+                track=self.tracking_map.get(safeInt(line['id']))
             ))
 
         return lines
