@@ -56,6 +56,9 @@ class Command(BaseCommand):
                 if options.get('max_orders'):
                     order_sync = order_sync.filter(orders_count__lte=options.get('max_orders'))
 
+                if options['store_id']:
+                    order_sync = order_sync.filter(store__in=options['store_id'])
+
                 order_sync = order_sync.latest('updated_at')
 
                 if not order_sync:
