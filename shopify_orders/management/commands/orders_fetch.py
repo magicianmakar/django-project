@@ -255,7 +255,7 @@ class Command(BaseCommand):
                 variant_id=safeInt(line.get('variant_id')),
                 variant_title=line['variant_title'],
                 product_id=self.products_map.get(safeInt(line['product_id'])),
-                track=self.tracking_map.get(safeInt(line['id']))
+                track_id=self.tracking_map.get(safeInt(line['id']))
             ))
 
         return lines
