@@ -2068,7 +2068,7 @@ def webhook(request, provider, option):
         data = utils.zaxaa_parse_post(params)
 
         trans_type = data['trans_type']
-        if trans_type not in ['SALE', 'FIRST_BILL']:
+        if trans_type not in ['SALE', 'FIRST_BILL', 'REBILL', 'CANCELED', 'REFUND']:
             raise Exception('Unknown Transaction Type: {}'.format(trans_type))
 
         if trans_type in ['SALE', 'FIRST_BILL']:
