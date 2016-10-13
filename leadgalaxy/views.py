@@ -3018,7 +3018,7 @@ def acp_users_list(request):
         else:
             users = users.filter(
                 Q(username__icontains=q) |
-                Q(email__iexact=q) |
+                Q(email__icontains=q) |
                 Q(profile__emails__icontains=q) |
                 Q(shopifystore__title__icontains=q)
             )
