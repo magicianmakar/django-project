@@ -21,6 +21,11 @@ $(function () {
                 'No credit card is required.', 'success');
         }, 500);
     }
+
+    $('#company_country').chosen({
+        search_contains: true,
+        width: '250px'
+    });
 });
 
 $('#country').change(function (e) {

@@ -111,7 +111,37 @@ def invoicee_label(invoice):
 
 
 def invoicee_paragraph(customer):
+    invoice_to_company = customer.user.profile.get_config().get('invoice_to_company')
+    if invoice_to_company:
+        return company_paragraph(customer.user.profile)
     return Paragraph(customer.user.get_full_name(), STYLES['default'])
+
+
+def company_paragraph(profile):
+    br = '<br />'
+    company = profile.company
+    company_info = company.name
+
+    street = get_address_line_string(company.address_line1, company.address_line2)
+    if street:
+        company_info += br
+        company_info += street
+
+    city_state = get_address_line_string(company.city, company.state, company.zip_code)
+    if city_state:
+        company_info += br
+        company_info += city_state
+
+    if company.country:
+        company_info += br
+        company_info += company.country
+
+    return Paragraph(company_info, STYLES['default'])
+
+
+def get_address_line_string(*args):
+    line_items = [item for item in args if item]
+    return ', '.join(line_items)
 
 
 def billing_period_label(invoice):

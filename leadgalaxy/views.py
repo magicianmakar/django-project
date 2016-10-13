@@ -1582,7 +1582,24 @@ def proccess_api(request, user, method, target, data):
             profile = user.profile
             profile.timezone = form.cleaned_data['timezone']
             profile.country = form.cleaned_data['country']
+
+            if not profile.company:
+                profile.company = UserCompany.objects.create()
+
+            profile.company.name = form.cleaned_data['company_name']
+            profile.company.address_line1 = form.cleaned_data['company_address_line1']
+            profile.company.address_line2 = form.cleaned_data['company_address_line2']
+            profile.company.city = form.cleaned_data['company_city']
+            profile.company.state = form.cleaned_data['company_state']
+            profile.company.zip_code = form.cleaned_data['company_zip_code']
+            profile.company.country = form.cleaned_data['company_country']
+
+            profile.company.save()
             profile.save()
+
+            invoice_to_company = form.cleaned_data.get('invoice_to_company')
+            if invoice_to_company is not None:
+                profile.set_config_value('invoice_to_company', bool(invoice_to_company))
 
             request.session['django_timezone'] = form.cleaned_data['timezone']
 

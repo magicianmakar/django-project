@@ -97,6 +97,16 @@ class UserProfileForm(forms.Form):
     country = forms.CharField(required=False, max_length=10)
     timezone = forms.CharField(required=False, max_length=64)
 
+    company_name = forms.CharField(max_length=100, required=False)
+    company_address_line1 = forms.CharField(max_length=255, required=False)
+    company_address_line2 = forms.CharField(max_length=255, required=False)
+    company_city = forms.CharField(max_length=100, required=False)
+    company_state = forms.CharField(max_length=100, required=False)
+    company_country = forms.CharField(max_length=100, required=False)
+    company_zip_code = forms.CharField(max_length=100, required=False)
+
+    invoice_to_company = forms.BooleanField(required=False)
+
 
 class UserProfileEmailForm(forms.Form):
     password = forms.CharField(label='Current Password')
