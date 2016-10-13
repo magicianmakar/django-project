@@ -712,11 +712,14 @@ class ShopifyProduct(models.Model):
             self.variants_map = mapping
             self.save()
 
-    def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None):
+    def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
         mapping = {}
 
         if supplier is None:
-            supplier = self.default_supplier
+            if mapping_supplier:
+                supplier = self.get_suppier_for_variant(name)
+            else:
+                supplier = self.default_supplier
 
         try:
             if supplier and supplier.variants_map:
