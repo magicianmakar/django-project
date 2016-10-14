@@ -2219,7 +2219,10 @@ def webhook(request, provider, option):
         try:
             token = request.GET['t']
             topic = option.replace('-', '/')
-            store = ShopifyStore.objects.get(id=request.GET['store'])
+            try:
+                store = ShopifyStore.objects.get(id=request.GET['store'])
+            except ShopifyStore.DoesNotExist:
+                return HttpResponse('ok')
 
             if token != utils.webhook_token(store.id):
                 raise Exception('Unvalide token: {} <> {}'.format(
