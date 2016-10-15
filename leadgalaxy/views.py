@@ -822,6 +822,9 @@ def proccess_api(request, user, method, target, data):
                 params=params
             )
 
+            if not rep.ok:
+                return JsonResponse({'error': 'Shopify API Error'}, status=500)
+
             products = []
             for i in rep.json()['products']:
                 if i.get('image') and i['image'].get('src'):
