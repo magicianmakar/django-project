@@ -231,7 +231,12 @@ def process_webhook_event(request, event_id, raven_client):
 
     if event.type == 'invoice.payment_failed':
         invoice = event.data.object
-        customer = StripeCustomer.objects.get(customer_id=invoice.customer)
+
+        try:
+            customer = StripeCustomer.objects.get(customer_id=invoice.customer)
+        except StripeCustomer.DoesNotExist:
+            raven_client.captureException(level='warning')
+            return HttpResponse('Customer Not Found')
 
         if customer.have_source() and invoice.attempted:
             from leadgalaxy.utils import send_email_from_template
@@ -277,9 +282,13 @@ def process_webhook_event(request, event_id, raven_client):
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
 
-        customer = StripeCustomer.objects.get(customer_id=sub.customer)
-        customer.can_trial = False
-        customer.save()
+        try:
+            customer = StripeCustomer.objects.get(customer_id=sub.customer)
+            customer.can_trial = False
+            customer.save()
+        except StripeSubscription.DoesNotExist:
+            raven_client.captureException(level='warning')
+            return HttpResponse('Customer Not Found')
 
         try:
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
@@ -301,7 +310,8 @@ def process_webhook_event(request, event_id, raven_client):
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
             stripe_sub.refresh(sub=sub)
         except StripeSubscription.DoesNotExist:
-            pass
+            raven_client.captureException(level='warning')
+            return HttpResponse('Subscription Not Found')
 
         trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()
         if not sub.trial_end or trial_delta.days <= 0:
@@ -324,7 +334,7 @@ def process_webhook_event(request, event_id, raven_client):
         except StripeCustomer.DoesNotExist:
             try:
                 profile = UserProfile.objects.get(user=sub.metadata.user_id)
-            except UserProfile.DoesNotExist:
+            except (UserProfile.DoesNotExist, AttributeError):
                 raven_client.captureException(level='warning')
                 return HttpResponse('Customer Not Found')
 
@@ -351,8 +361,13 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type == 'customer.updated':
         cus = event.data.object
-        customer = StripeCustomer.objects.get(customer_id=cus.id)
-        customer.refresh()
+
+        try:
+            customer = StripeCustomer.objects.get(customer_id=cus.id)
+            customer.refresh()
+        except StripeCustomer.DoesNotExist:
+            raven_client.captureException(level='warning')
+            return HttpResponse('Customer Not Found')
 
         return HttpResponse('Customer Refreshed')
 
@@ -411,6 +426,7 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             stripe_customer = StripeCustomer.objects.get(customer_id=customer)
         except StripeCustomer.DoesNotExist:
+            raven_client.captureException(level='warning')
             return HttpResponse('Customer Not Found')
 
         clear_invoice_cache(stripe_customer)
