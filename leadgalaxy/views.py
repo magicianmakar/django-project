@@ -1765,7 +1765,7 @@ def proccess_api(request, user, method, target, data):
             product = ShopifyProduct.objects.get(id=data.get('product'))
             user.can_view(product)
 
-            return HttpResponse(json.loads(product.original_data)['description'])
+            return HttpResponse(json.loads(product.get_original_data())['description'])
         except:
             return HttpResponse('')
 
@@ -2009,12 +2009,11 @@ def proccess_api(request, user, method, target, data):
                 'title': 'Importing...',
                 'variants': [],
                 'original_url': supplier_url
-                }),
-            original_data='{}'
+                })
         )
 
         user.can_add(product)
-
+        product.set_original_data('{}')
         product.save()
 
         supplier = ProductSupplier.objects.create(
@@ -2704,7 +2703,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     user = request.user
     user_stores = request.user.profile.get_active_stores(flat=True)
     res = ShopifyProduct.objects.select_related('store') \
-                                .defer('original_data', 'variants_map', 'shipping_map', 'notes') \
+                                .defer('variants_map', 'shipping_map', 'notes') \
                                 .filter(user=models_user) \
                                 .filter(Q(store__in=user_stores) | Q(store=None))
     if store:
@@ -2964,7 +2963,7 @@ def product_view(request, pid):
 
     original = None
     try:
-        original = json.loads(product.original_data)
+        original = json.loads(product.get_original_data())
     except:
         pass
 

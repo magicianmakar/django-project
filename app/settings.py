@@ -57,6 +57,7 @@ INSTALLED_APPS = (
     'shopify_revision',
     'stripe_subscription',
     'product_feed',
+    'data_store',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -112,6 +113,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'store_db': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'store_db.sqlite3'),
     }
 }
 
@@ -132,11 +137,18 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-
 # Parse database configuration from $DATABASE_URL
 if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config()
     DATABASES['default']['ENGINE'] = 'django_postgrespool'
+
+if os.environ.get('DATA_STORE_DATABASE_URL'):
+    DATABASES['store_db'] = dj_database_url.parse(os.environ['DATA_STORE_DATABASE_URL'])
+    DATABASES['store_db']['ENGINE'] = 'django_postgrespool'
+
+DATABASE_ROUTERS = [
+    'data_store.routers.DataStoreRouter',
+]
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_PROXY_PROTOCOL', 'https')

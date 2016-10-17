@@ -5,6 +5,7 @@ from django.test import TestCase
 from factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
 from leadgalaxy.models import *
+from factories import ShopifyProductFactory
 
 
 class UserTestCase(TestCase):
@@ -79,3 +80,24 @@ class UserProfileTestCase(TestCase):
         user.profile.apply_registration(registration)
         permissions_count = user.profile.subuser_permissions.count()
         self.assertEqual(permissions_count, len(SUBUSER_PERMISSIONS))
+
+
+class ShopifyProductTestCase(TestCase):
+    def tearDown(self):
+        DataStore.objects.all().delete()
+
+    def test_can_set_original_data_to_data_store(self):
+        data = '{}'
+        product = ShopifyProductFactory()
+        product.set_original_data(data)
+        original_data = product.get_original_data()
+        self.assertEqual(data, original_data)
+
+    def test_store_db_is_used_to_store_data(self):
+        data = '{}'
+        product = ShopifyProductFactory()
+        product.set_original_data(data)
+        data_store = DataStore.objects.using('store_db').first()
+        self.assertEqual(data_store.key, product.original_data_key)
+
+

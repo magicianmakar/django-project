@@ -27,7 +27,7 @@ def get_shopify_exports(product):
 
 def merge_suppliers(debug=False):
     count = 0
-    for product in ShopifyProduct.objects.defer('data', 'original_data') \
+    for product in ShopifyProduct.objects.defer('data') \
                                          .select_related('store', 'shopify_export') \
                                          .exclude(shopify_export=None) \
                                          .exclude(shopify_id__gt=0):
@@ -69,10 +69,10 @@ def merge_suppliers(debug=False):
 print 'Before Connected:', ShopifyProduct.objects.exclude(shopify_export=None).count()
 
 
-total = ShopifyProduct.objects.defer('data', 'original_data') \
-                                         .select_related('store', 'shopify_export') \
-                                         .exclude(shopify_export=None) \
-                                         .exclude(shopify_id__gt=0).count()
+total = ShopifyProduct.objects.defer('data') \
+                              .select_related('store', 'shopify_export') \
+                              .exclude(shopify_export=None) \
+                              .exclude(shopify_id__gt=0).count()
 
 print 'Total:', total
 

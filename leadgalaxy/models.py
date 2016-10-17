@@ -8,14 +8,17 @@ from django.dispatch import receiver
 from django.db.models import Count, Max, Q, F
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
+from django.utils.crypto import get_random_string
 
 import re
 import simplejson as json
 import requests
 import textwrap
+import hashlib
 from urlparse import urlparse
 
 from stripe_subscription.stripe_api import stripe
+from data_store.models import DataStore
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -624,6 +627,7 @@ class ShopifyProduct(models.Model):
 
     data = models.TextField()
     original_data = models.TextField(default='', blank=True)
+    original_data_key = models.CharField(max_length=32, null=True, blank=True)
 
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
@@ -660,6 +664,23 @@ class ShopifyProduct(models.Model):
                 return u'<ShopifyProduct: %d>' % self.id
         except:
             return u'<ShopifyProduct: %d>' % self.id
+
+    def get_original_data(self):
+        if self.original_data_key:
+            data_store = DataStore.objects.get(key=self.original_data_key)
+            return data_store.data
+        return getattr(self, 'original_data', '{}')
+
+    def set_original_data(self, value):
+        if self.original_data_key:
+            data_store = DataStore.objects.get(key=self.original_data_key)
+            data_store.data = value
+            data_store.save()
+        else:
+            token = get_random_string(32)
+            self.original_data_key = hashlib.md5(token).hexdigest()
+            self.save()
+            DataStore.objects.create(key=self.original_data_key, data=value)
 
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
