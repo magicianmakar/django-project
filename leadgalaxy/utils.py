@@ -718,6 +718,16 @@ def link_product_images(product):
     return product
 
 
+def check_requires_shipping(product):
+    requires_shipping = True
+    for variant in product.get('variants', []):
+        if not variant.get('requires_shipping', False):
+            requires_shipping = False
+            break
+
+    return requires_shipping
+
+
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
     product_id = safeInt(product_id)
