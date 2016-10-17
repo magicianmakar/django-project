@@ -3706,8 +3706,7 @@ def orders_view(request):
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
-                orders = orders.filter(Q(order_number=order_number) |
-                                       Q(order_number=(order_number-1000)) |
+                orders = orders.filter(Q(order_number=(order_number-1000)) |
                                        Q(order_id=order_number) |
                                        Q(order_id__in=tracks))
 
