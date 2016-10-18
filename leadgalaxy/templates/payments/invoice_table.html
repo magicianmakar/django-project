@@ -4,8 +4,6 @@
             <tr>
                 <th>Date</th>
                 <th>Amount</th>
-                <th>Description</th>
-                <th>Billing Period</th>
                 <th>Status</th>
                 <th></th>
             </tr>
@@ -14,33 +12,18 @@
         {% for invoice in invoices %}
             {% if invoice.total %}
                 <tr>
-                    <td>
+                    <td  style="width: 70%">
                         <a href="{% url 'user_invoices' invoice.id %}">
                             {{ invoice.date|date:'M. d, Y' }}
                         </a>
+
+                        [<a href="{% url 'user_invoices_download' invoice.id %}"
+                           title="Download invoice">PDF</a>]
                     </td>
-                    <td>
-                        {{ invoice.currency|upper }} {{ invoice.total }}
+                    <td style="white-space: nowrap: width: 10%">
+                        ${{ invoice.total }}
                     </td>
-                    <td>
-                        {% if invoice.description %}
-                            <p>{{ invoice.description }}</p>
-                        {% else %}
-                            {% with invoice.lines.data.pop as line %}
-                                {% if line.description %}
-                                    <p>{{ line.description }}</p>
-                                {% elif line.plan.name %}
-                                    <p>{{ line.plan.name }}</p>
-                                {% else %}
-                                    <p></p>
-                                {% endif %}
-                            {% endwith %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}
-                    </td>
-                    <td class="text-left">
+                    <td style="white-space: nowrap: width: 10%" class="text-left">
                         {% if invoice.paid %}
                             <i class="text-success fa fa-fw fa-check"></i> Paid
                         {% elif not invoice.attempted %}
@@ -49,7 +32,7 @@
                             <i class="text-danger fa fa-fw fa-close"></i> Past Due
                         {% endif %}
                     </td>
-                    <td>
+                    <td style="white-space: nowrap">
                         {% if not invoice.paid and not invoice.closed and invoice.attempted %}
                         <a
                             class="btn btn-default btn-outline btn-xs pay-invoice-link"
