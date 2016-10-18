@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.core.cache import cache
 
 import re
