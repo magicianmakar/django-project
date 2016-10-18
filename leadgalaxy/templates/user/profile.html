@@ -92,6 +92,51 @@
                                     </div>
 
                                     <div class="hr-line-dashed"></div>
+                                    <h4>Company</h4>
+                                    <div class="form-group"><label class="col-sm-2 control-label">Name</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="company_name" value="{{ user.profile.company.name }}" class="form-control" placeholder="Company Name">
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="checkbox">
+                                                <label><input type="checkbox" name="invoice_to_company" {% if user.profile.get_config.invoice_to_company %}checked{% endif %}>Send invoice to company</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group"><label class="col-sm-2 control-label">Address</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="company_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="company_address_line2" value="{{ user.profile.company.address_line2 }}" class="form-control" placeholder="Address line 2">
+                                        </div>
+                                    </div>
+                                    <div class="form-group"><label class="col-sm-2 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="company_city" value="{{ user.profile.company.city }}" class="form-control" placeholder="City">
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="company_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
+                                        </div>
+                                    </div>
+                                    <div class="form-group"><label class="col-sm-2 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="company_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+                                        </div>
+                                    </div>
+                                    <div class="form-group"><label class="col-sm-2 control-label">Country</label>
+                                        <div class="col-sm-10">
+                                            <select id="company_country" name="company_country" current="{{user.profile.timezone}}" style="width:350px;">
+                                                <option value=""></option>
+                                                {% for item in countries %}
+                                                <option value="{{item.0}}"
+                                                    {% if user.profile.company.country == item.0 %}selected="selected"{% endif %}
+                                                    >{{item.1}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="hr-line-dashed"></div>
                                 </form>
                             </div>
 

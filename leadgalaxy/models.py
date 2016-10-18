@@ -65,6 +65,8 @@ class UserProfile(models.Model):
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
+    company = models.ForeignKey('UserCompany', null=True, blank=True)
+
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title)
 
@@ -341,6 +343,19 @@ class UserProfile(models.Model):
                 can_add = False
 
         return can_add, total_allowed, user_count
+
+
+class UserCompany(models.Model):
+    name = models.CharField(max_length=100, blank=True, default='')
+    address_line1 = models.CharField(max_length=255, blank=True, default='')
+    address_line2 = models.CharField(max_length=255, blank=True, default='')
+    city = models.CharField(max_length=100, blank=True, default='')
+    state = models.CharField(max_length=100, blank=True, default='')
+    country = models.CharField(max_length=100, blank=True, default='')
+    zip_code = models.CharField(max_length=100, blank=True, default='')
+
+    def __unicode__(self):
+        return self.name
 
 
 @add_to_class(User, 'get_first_name')
