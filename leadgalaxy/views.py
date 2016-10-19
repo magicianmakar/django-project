@@ -3993,6 +3993,9 @@ def orders_view(request):
 
             products_cache[el['product_id']] = product
 
+            if 'shipping_address' not in order and order.get('customer'):
+                order['shipping_address'] = order['customer']['default_address']
+
             if auto_orders and 'shipping_address' in order:
                 try:
                     shipping_address_asci = {}  # Aliexpress doesn't allow unicode
