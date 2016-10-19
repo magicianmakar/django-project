@@ -563,6 +563,15 @@ $('a[data-auto-click]').each(function () {
     }
 });
 
+$('img.no-img').on('error', function(e) {
+    if($(this).prop('no-img-error') && $(this).prop('no-img-error') > 3) {
+        return;
+    }
+
+    $(this).attr('src', '//d2kadg5e284yn4.cloudfront.net/static/img/no-image.png');
+    $(this).prop('no-img-error', ($(this).prop('no-img-error') || 0) + 1);
+});
+
 function ajustamodal() {
     var altura = $(window).height() - 300; //value corresponding to the modal heading + footer
     $(".ative-scroll").css({
