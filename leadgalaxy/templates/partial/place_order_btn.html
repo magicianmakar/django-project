@@ -48,9 +48,9 @@
                    >Step By Step Order</a></li>
                <li><a class="place-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
                    {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
+                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
                    {% else %}
-                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true"
+                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
                    {% endif %}
                    >Add To Cart</a></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
