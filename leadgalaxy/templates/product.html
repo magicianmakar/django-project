@@ -84,7 +84,7 @@
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
                     <a href="/product/{{item.id}}">
-                        <img class="no-img" {% if forloop.counter > 4 %}class="unveil" src="{% static 'img/blank.gif' %}" data-{% endif %}src="{{item.images|first}}" style="width: 100%">
+                        <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.images|first}}" style="width: 100%">
                     </a>
                     <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button>
                 </div>
