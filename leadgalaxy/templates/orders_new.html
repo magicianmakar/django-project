@@ -469,17 +469,17 @@
                                                         <td>
                                                             <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
                                                         </td>
-                                                        <td>
+                                                        <td style="white-space:nowra">
                                                             <span style="font-weight:bolder;{% if item.quantity > 1 %}color:blue{% endif %}">
                                                                 {{item.quantity}}
                                                             </span>
                                                             &times;
                                                             $<b>{{item.price}}</b>
                                                         </td>
-                                                        <td>
+                                                        <td style="white-space:nowra">
                                                             {% include 'partial/place_order_btn.html' %}
                                                         </td>
-                                                        <td>
+                                                        <td style="white-space:nowra">
                                                             {% if not item.fulfillment_status %}
 
                                                                 <div class="btn-group">

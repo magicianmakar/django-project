@@ -153,15 +153,18 @@
                                         <!-- <input class="var-input var-input-title" type="text" name="title" value="{{item.title}}" /> -->
                                         <span>{{item.title}}</span>
                                     </td>
-                                    <td>
+
+                                    <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
                                         <span class="var-pad">$</span>
                                     </td>
-                                    <td>
+
+                                    <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
                                         <span class="var-pad">$</span>
                                     </td>
-                                    <td>
+
+                                    <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="weight" value="{{item.weight}}" />
                                         <select class="var-pad var-input" name="weight_unit" class="form-control"
                                             style="border-left: 1px #EAEAEA solid;display: inline;width: 20%;background-color: #fff;padding: 9px 2px;">
