@@ -736,16 +736,23 @@ def proccess_api(request, user, method, target, data):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        product_id = data.get('product', 0)
+        product_id = data.get('product')
         shopify_product = utils.get_shopify_product(store, product_id)
         if shopify_product:
-            for variant in shopify_product.get('variants', []):
-                variant['requires_shipping'] = 'true'
+            api_data = {
+                'product': {
+                    'variants': []
+                }
+            }
+
+            for variant in shopify_product['variants']:
+                api_data['product']['variants'].append({
+                    'id': variant['id'],
+                    'requires_shipping': True
+                })
 
             api_url = store.get_link('/admin/products/{}.json'.format(product_id), api=True)
-            requests.put(api_url, json={
-                'product':shopify_product
-            })
+            requests.put(api_url, json=api_data)
 
             return JsonResponse({'status': 'ok'})
         else:
