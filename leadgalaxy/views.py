@@ -728,6 +728,36 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
+    if method == 'POST' and target == 'variant-requires-shipping':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        product_id = data.get('product')
+        shopify_product = utils.get_shopify_product(store, product_id)
+        if shopify_product:
+            api_data = {
+                'product': {
+                    'variants': []
+                }
+            }
+
+            for variant in shopify_product['variants']:
+                api_data['product']['variants'].append({
+                    'id': variant['id'],
+                    'requires_shipping': True
+                })
+
+            api_url = store.get_link('/admin/products/{}.json'.format(product_id), api=True)
+            requests.put(api_url, json=api_data)
+
+            return JsonResponse({'status': 'ok'})
+        else:
+            return JsonResponse({'error': 'Invalid product'})
+
     if method == 'DELETE' and target == 'product-image':
         store = ShopifyStore.objects.get(id=data.get('store'))
         user.can_view(store)
@@ -2681,6 +2711,13 @@ def product_view(request, pid):
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
 
         if shopify_product:
+            if not utils.check_requires_shipping(shopify_product):
+                messages.error(request, """This product currently has a setting of <b>Shipping Not Required</b> in your
+                                        Shopify admin. To enable <b>Require Shipping</b> and fix this error for this product
+                                        <button id="requires_shipping" type="button" class="btn btn-success btn-xs" data-product='%s'
+                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">
+                                        Click here</button>""" % product.shopify_id)
+
             shopify_product = utils.link_product_images(shopify_product)
 
             p['product']['description'] = shopify_product['body_html']
