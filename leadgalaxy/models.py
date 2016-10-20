@@ -411,6 +411,7 @@ class ShopifyStore(models.Model):
     version = models.IntegerField(default=1, choices=((1, 'Private App'), (2, 'Shopify App')), verbose_name='Store Version')
 
     list_index = models.IntegerField(default=0)
+    auto_fulfill = models.CharField(max_length=50, null=True, blank=True)
 
     user = models.ForeignKey(User)
 
@@ -422,6 +423,8 @@ class ShopifyStore(models.Model):
 
         if not self.store_hash:
             self.store_hash = get_random_string(32, 'abcdef0123456789')
+
+        self.auto_fulfill = self.user.get_config('auto_shopify_fulfill', '')
 
         super(ShopifyStore, self).save(*args, **kwargs)
 
@@ -1525,6 +1528,9 @@ User.add_to_class("can_delete", user_can_delete)
 @receiver(post_save, sender=UserProfile)
 def invalidate_acp_users(sender, instance, created, **kwargs):
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
+
+    if not created:
+        instance.get_active_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
 
 
 @receiver(post_save, sender=ShopifyOrderTrack)
