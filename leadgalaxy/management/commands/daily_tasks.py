@@ -35,7 +35,7 @@ class Command(BaseCommand):
 
         # Remove alerts after 30 days
         delete_date = arrow.utcnow().replace(days=-30).datetime
-        AliexpressProductChange.objects.filter(hidden=False, created_at__lt=delete_date).update(hidden=True)
+        AliexpressProductChange.objects.filter(created_at__lt=delete_date).update(hidden=True)
 
         # Expired plans
         self.stdout.write(self.style.HTTP_INFO('* Change plan of expired profiles'))
