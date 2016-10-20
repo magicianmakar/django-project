@@ -195,7 +195,6 @@ class ShopifyProductImageAdmin(admin.ModelAdmin):
 class AliexpressProductChangeAdmin(admin.ModelAdmin):
     list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
     raw_id_fields = ('product', 'user')
-    list_filter = ('seen', 'hidden',)
     search_fields = ('data',) + USER_SEARCH_FIELDS
 
 
