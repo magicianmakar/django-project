@@ -424,7 +424,10 @@ class ShopifyStore(models.Model):
         if not self.store_hash:
             self.store_hash = get_random_string(32, 'abcdef0123456789')
 
-        self.auto_fulfill = self.user.get_config('auto_shopify_fulfill', '')
+        try:
+            self.auto_fulfill = self.user.get_config('auto_shopify_fulfill', '')
+        except User.DoesNotExist:
+            pass
 
         super(ShopifyStore, self).save(*args, **kwargs)
 
