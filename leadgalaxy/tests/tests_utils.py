@@ -344,6 +344,10 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
         self.assertEqual(utils.get_domain('www.ebay.com/itm/131696353919'), 'ebay')
         self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919'), 'ebay')
+        self.assertEqual(utils.get_domain('www.amazon.co.uk'), 'amazon')
+        self.assertEqual(utils.get_domain('www.amazon.fr'), 'amazon')
+        self.assertEqual(utils.get_domain('www.amazon.de'), 'amazon')
+        self.assertEqual(utils.get_domain('www.wanelo.co'), 'wanelo')
 
         self.assertEqual(utils.get_domain('www.aliexpress.com', full=True), 'www.aliexpress.com')
         self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')

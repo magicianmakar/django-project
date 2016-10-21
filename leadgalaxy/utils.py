@@ -51,7 +51,7 @@ def get_domain(url, full=False):
     if full:
         return hostname
 
-    for i in ['com', 'co.uk', 'org', 'net']:
+    for i in ['com', 'co.uk', 'org', 'net', 'co', 'de', 'fr', 'co']:
         hostname = hostname.replace('.%s' % i, '')
 
     return hostname.split('.')[-1]
