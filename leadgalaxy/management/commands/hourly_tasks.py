@@ -32,6 +32,7 @@ class Command(BaseCommand):
                                           .filter(status_updated_at__lt=time_threshold) \
                                           .exclude(hidden=True) \
                                           .filter(store__auto_fulfill='hourly') \
+                                          .filter(store__is_active=True) \
                                           .order_by('store', 'status_updated_at')
 
         print 'Orders Count (hourly):', orders.count()

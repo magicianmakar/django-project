@@ -59,6 +59,7 @@ class Command(BaseCommand):
                                           .filter(status_updated_at__lt=time_threshold) \
                                           .exclude(hidden=True) \
                                           .filter(store__auto_fulfill='daily') \
+                                          .filter(store__is_active=True) \
                                           .order_by('store', 'status_updated_at')
 
         print 'Orders Count (daily):', orders.count()
