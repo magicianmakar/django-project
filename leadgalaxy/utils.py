@@ -51,7 +51,10 @@ def get_domain(url, full=False):
     if full:
         return hostname
 
-    return filter(lambda i: len(i) > 3, hostname.replace('www.', '').split('.')).pop()
+    for i in ['com', 'co.uk', 'org', 'net', 'co', 'de', 'fr', 'co']:
+        hostname = hostname.replace('.%s' % i, '')
+
+    return hostname.split('.')[-1]
 
 
 def upload_from_url(url, stores=[]):
