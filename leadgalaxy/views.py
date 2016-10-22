@@ -1562,7 +1562,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'find-product':
         try:
-            product = ShopifyProduct.objects.get(shopify_id=data.get('product'))
+            product = ShopifyProduct.objects.get(user=user, shopify_id=data.get('product'))
             user.can_view(product)
 
             return JsonResponse({
