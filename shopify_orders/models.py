@@ -109,6 +109,7 @@ class ShopifyOrderLine(models.Model):
     title = models.TextField(blank=True, null=True, default='')
     price = models.FloatField()
     quantity = models.IntegerField()
+    fulfillment_status = models.TextField(blank=True, null=True)
 
     variant_id = models.BigIntegerField()
     variant_title = models.TextField(blank=True, null=True, default='')

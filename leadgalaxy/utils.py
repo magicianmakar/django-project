@@ -51,10 +51,7 @@ def get_domain(url, full=False):
     if full:
         return hostname
 
-    for i in ['com', 'co.uk', 'org', 'net', 'co', 'de', 'fr', 'co']:
-        hostname = hostname.replace('.%s' % i, '')
-
-    return hostname.split('.')[-1]
+    return filter(lambda i: len(i) > 3, hostname.replace('www.', '').split('.')).pop()
 
 
 def upload_from_url(url, stores=[]):
@@ -1025,11 +1022,12 @@ def order_track_fulfillment(**kwargs):
     user_config = kwargs['user_config']
 
     is_usps = False
+    line = None
 
     try:
         line = ShopifyOrderLine.objects.get(line_id=line_id,
-                                            order__order_id=order_id,
-                                            order__store_id=store_id)
+                                            order__store_id=store_id,
+                                            order__order_id=order_id)
 
         is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
 
@@ -1071,7 +1069,19 @@ def order_track_fulfillment(**kwargs):
     else:
         notify_customer = user_config.get('send_shipping_confirmation', 'default')
 
-    if notify_customer and notify_customer != 'default':
+    if notify_customer == 'default':
+        if line:
+            if line.order.items_count <= 1:
+                data['fulfillment']['notify_customer'] = True
+            else:
+                fulfilled = line.order.shopifyorderline_set.filter(fulfillment_status='fulfilled').exclude(id=line.id).count()
+                data['fulfillment']['notify_customer'] = (line.order.items_count <= fulfilled + 1)
+
+                line.fulfillment_status = 'fulfilled'
+                line.save()
+        else:
+            data['fulfillment']['notify_customer'] = True
+    else:
         data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
 
     return data

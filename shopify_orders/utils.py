@@ -109,6 +109,7 @@ def update_shopify_order(store, data, sync_check=True):
                 'quantity': line['quantity'],
                 'variant_id': safeInt(line['variant_id']),
                 'variant_title': line['variant_title'],
+                'fulfillment_status': line['fulfillment_status'],
                 'product': product
             })
 

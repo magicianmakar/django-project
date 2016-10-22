@@ -123,10 +123,88 @@ class FulfillmentTestCase(TestCase):
     def test_default_confirmation_email(self):
         track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
         data = utils.order_track_fulfillment(order_track=track, user_config={})
-        self.assertNotIn('notify_customer', data['fulfillment'])
+        self.assertTrue(data['fulfillment']['notify_customer'])
 
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
-        self.assertNotIn('notify_customer', data['fulfillment'])
+        self.assertTrue(data['fulfillment']['notify_customer'])
+
+    def test_default_confirmation_email_order_with_multi_lines_unfulfilled(self):
+        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        lines = [
+            ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status=''),
+            ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
+        ]
+
+        order.items_count = order.shopifyorderline_set.count()
+        order.save()
+
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store_id=2)
+
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
+        self.assertFalse(data['fulfillment']['notify_customer'])
+
+    def test_default_confirmation_email_order_with_multi_lines_partialy_fulfilled(self):
+        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        lines = [
+            ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status='fulfilled'),
+            ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
+        ]
+
+        order.items_count = order.shopifyorderline_set.count()
+        order.save()
+
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store_id=2)
+
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
+        self.assertTrue(data['fulfillment']['notify_customer'])
+
+    def test_default_confirmation_email_order_with_multi_lines_already_fulfilled(self):
+        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        lines = [
+            ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status='fulfilled'),
+            ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status='fulfilled'),
+        ]
+
+        order.items_count = order.shopifyorderline_set.count()
+        order.save()
+
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store_id=2)
+
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
+        self.assertTrue(data['fulfillment']['notify_customer'])
+
+    def test_default_confirmation_email_order_with_multi_lines_partialy_fulfilled_duplicated(self):
+        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        lines = [
+            ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status='fulfilled'),
+            ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
+        ]
+
+        order.items_count = order.shopifyorderline_set.count()
+        order.save()
+
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines[0].line_id, source_tracking='MA7565915257226HK', store_id=2)
+
+        data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
+        self.assertFalse(data['fulfillment']['notify_customer'])
+
+    def test_default_confirmation_email_order_with_multi_lines_all(self):
+        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        lines = [
+            ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status=''),
+            ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
+            ShopifyOrderLineFactory(order=order, line_id='1654812', fulfillment_status=''),
+        ]
+
+        order.items_count = order.shopifyorderline_set.count()
+        order.save()
+
+        for i, line in enumerate(lines):
+            track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=line.line_id, source_tracking='MA7565915257226HK', store_id=2)
+            data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
+
+            # notify_customer should be True for last line only
+            self.assertEqual(data['fulfillment']['notify_customer'], len(lines) - 1 == i)
 
     def test_dont_send_confirmation_email(self):
         track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
