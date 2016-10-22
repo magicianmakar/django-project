@@ -19,12 +19,10 @@
                             <div class="form-group">
                                 <label for="fulfill-notify-customer">
                                     Send shipping confirmation email to the customer
-                                    {% include 'partial/help_tooltip.html' with help="Select <b>Default</b> in confirmation email to notify the customer If All items from this order have been shipped." %}
                                 </label>
                                 <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:100px">
                                     <option value="no">No</option>
                                     <option value="yes">Yes</option>
-                                    <option value="default">Default</option>
                                 </select>
                             </div>
                             {% endif %}

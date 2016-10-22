@@ -369,11 +369,11 @@
                                 <div class="form-group shiping-confirmation">
                                     <label for="send_shipping_confirmation" class="col-sm-4 control-label">
                                         Send Shipping Confirmation
-                                        {% include 'partial/help_tooltip.html' with help="Select <b>Default</b> to notify the customer if all items in his order have been shipped." qtipstyle="color:#BBB" %}
+                                        {% include 'partial/help_tooltip.html' with help="Select <b>Auto</b> to notify the customer if all items in his order have been shipped." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-3">
                                         <select id="send_shipping_confirmation" name="send_shipping_confirmation" class="form-control">
-                                            <option value="default" {% if not config.send_shipping_confirmation or config.send_shipping_confirmation == 'default' %}selected="selected"{% endif %}>Default</option>
+                                            <option value="default" {% if not config.send_shipping_confirmation or config.send_shipping_confirmation == 'default' %}selected="selected"{% endif %}>Auto</option>
                                             <option value="yes" {% if config.send_shipping_confirmation == 'yes' %}selected="selected"{% endif %}>Always</option>
                                             <option value="no" {% if config.send_shipping_confirmation == 'no' %}selected="selected"{% endif %}>Never</option>
                                         </select>
