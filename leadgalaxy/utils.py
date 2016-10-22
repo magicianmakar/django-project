@@ -1028,11 +1028,13 @@ def order_track_fulfillment(**kwargs):
     line = None
 
     try:
-        line = ShopifyOrderLine.objects.get(line_id=line_id,
-                                            order__store_id=store_id,
-                                            order__order_id=order_id)
+        if kwargs.get('use_usps') is None:  # Find line when shipping method is not selected
+            line = ShopifyOrderLine.objects.select_related('order').get(
+                line_id=line_id,
+                order__store_id=store_id,
+                order__order_id=order_id)
 
-        is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
+            is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
 
     except ShopifyOrderLine.DoesNotExist:
         pass
