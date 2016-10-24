@@ -1416,8 +1416,6 @@ def proccess_api(request, user, method, target, data):
         order_lines = data.get('line_id')
         source_id = data.get('aliexpress_order_id', '')
 
-        version = request.META.get('HTTP_X_EXTENSION_VERSION')
-
         try:
             assert len(source_id) > 0, 'Empty Order ID'
             assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
@@ -1436,10 +1434,7 @@ def proccess_api(request, user, method, target, data):
 
         for line_id in order_lines.split(','):
             if not line_id:
-                if version and utils.version_compare(version, '1.10.4') <= 0:
-                    return JsonResponse({'error': 'Please Update The Extension To Version 1.10.5 or Higher'}, status=501)
-                else:
-                    return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
+                return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
 
             tracks = ShopifyOrderTrack.objects.filter(
                 user=user.models_user,
