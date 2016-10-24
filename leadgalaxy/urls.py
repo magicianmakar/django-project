@@ -36,6 +36,8 @@ urlpatterns = patterns(
     url(r'^products/collections/(?P<collection>[a-z]+)$', leadgalaxy.views.products_collections, name='products_collections'),
     url(r'^subusers$', leadgalaxy.views.subusers, name='subusers'),
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', leadgalaxy.views.subusers_perms, name='subusers_perms'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/edit$', leadgalaxy.views.subuser_perms_edit, name='subuser_perms_edit'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$', leadgalaxy.views.subuser_store_permissions, name='subuser_store_permissions'),
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),

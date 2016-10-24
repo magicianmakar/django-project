@@ -348,7 +348,7 @@ $('#export-btn').click(function () {
         error: function (data) {
             $(this.btn).bootstrapBtn('reset');
 
-            swal('Shopify Export', 'Server error', 'error');
+            displayAjaxError('Error', data);
         }
 
     });

@@ -13,6 +13,7 @@ from stripe_subscription.models import StripeCustomer
 
 from leadgalaxy.views import get_product
 
+
 class ProfileViewTestCase(TestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
@@ -129,3 +130,135 @@ class GetProductTestCase(TestCase):
             map(lambda p: float(p.price), [product3, product2, product1]),
             map(lambda p: float(p.price), products)
         )
+
+
+class SubuserpermissionsApiTestCase(TestCase):
+    def setUp(self):
+        self.error_message = "You don't have permission to perform this action."
+        self.parent_user = f.UserFactory()
+        self.user = f.UserFactory()
+        self.user.profile.subuser_parent = self.parent_user
+        self.user.profile.save()
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.store = f.ShopifyStoreFactory(user=self.parent_user)
+        self.client.login(username=self.user.username, password=self.password)
+
+    @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
+    @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
+    @patch('leadgalaxy.utils.get_api_user')
+    def test_subuser_can_save_for_later_with_permission(self, get_api_user):
+        get_api_user.return_value = self.user
+        data = json.dumps({'b': False, 'store': self.store.id})
+        self.user.profile.subuser_stores.add(self.store)
+        r = self.client.post('/api/save-for-later', data, content_type='application/json')
+        self.assertEquals(r.status_code, 200)
+
+    @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
+    @patch('leadgalaxy.utils.get_api_user')
+    def test_subuser_cant_save_for_later_without_permission(self, get_api_user):
+        get_api_user.return_value = self.user
+        self.user.profile.subuser_stores.add(self.store)
+        permission = self.user.profile.subuser_permissions.get(codename='save_for_later')
+        self.user.profile.subuser_permissions.remove(permission)
+        data = json.dumps({'b': False, 'store': self.store.id})
+        r = self.client.post('/api/save-for-later', data, content_type='application/json')
+        self.assertEquals(r.status_code, 403)
+
+    @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
+    @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
+    @patch('leadgalaxy.utils.get_api_user')
+    def test_subuser_can_send_to_shopify_with_permission(self, get_api_user):
+        get_api_user.return_value = self.user
+        data = json.dumps({'b': False, 'store': self.store.id})
+        self.user.profile.subuser_stores.add(self.store)
+        r = self.client.post('/api/shopify', data, content_type='application/json')
+        self.assertEquals(r.status_code, 200)
+
+    @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
+    @patch('leadgalaxy.utils.get_api_user')
+    def test_subuser_cant_send_to_shopify_without_permission(self, get_api_user):
+        get_api_user.return_value = self.user
+        self.user.profile.subuser_stores.add(self.store)
+        permission = self.user.profile.subuser_permissions.get(codename='send_to_shopify')
+        self.user.profile.subuser_permissions.remove(permission)
+        data = json.dumps({'b': False, 'store': self.store.id})
+        r = self.client.post('/api/shopify', data, content_type='application/json')
+        self.assertEquals(r.status_code, 403)
+
+    @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
+    @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
+    @patch('leadgalaxy.utils.get_api_user')
+    def test_subuser_can_update_shopify_with_permission(self, get_api_user):
+        get_api_user.return_value = self.user
+        data = json.dumps({'b': False, 'store': self.store.id})
+        self.user.profile.subuser_stores.add(self.store)
+        r = self.client.post('/api/shopify-update', data, content_type='application/json')
+        self.assertEquals(r.status_code, 200)
+
+    @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
+    @patch('leadgalaxy.utils.get_api_user')
+    def test_subuser_cant_update_shopify_without_permission(self, get_api_user):
+        get_api_user.return_value = self.user
+        self.user.profile.subuser_stores.add(self.store)
+        permission = self.user.profile.subuser_permissions.get(codename='send_to_shopify')
+        self.user.profile.subuser_permissions.remove(permission)
+        data = json.dumps({'b': False, 'store': self.store.id})
+        r = self.client.post('/api/shopify-update', data, content_type='application/json')
+        self.assertEquals(r.status_code, 403)
+
+    def test_subuser_can_delete_product_with_permission(self):
+        product = f.ShopifyProductFactory(store=self.store, user=self.parent_user)
+        self.user.profile.subuser_stores.add(self.store)
+        data = {'product': product.id}
+        r = self.client.post('/api/product-delete', data)
+        self.assertEquals(r.status_code, 200)
+
+    def test_subuser_cant_delete_product_without_permission(self):
+        self.user.profile.subuser_stores.add(self.store)
+        permission = self.user.profile.subuser_permissions.get(codename='delete_products')
+        self.user.profile.subuser_permissions.remove(permission)
+        product = f.ShopifyProductFactory(store=self.store, user=self.parent_user)
+        data = {'product': product.id}
+        r = self.client.post('/api/product-delete', data)
+        self.assertEquals(r.status_code, 403)
+        json_response = json.loads(r.content)
+        self.assertEquals(json_response['error'], self.error_message)
+
+    @patch('leadgalaxy.models.ShopifyStore.pusher_trigger', Mock(return_value=None))
+    @patch('leadgalaxy.tasks.mark_as_ordered_note')
+    def test_subuser_can_order_fulfill_with_permission(self, mark_as_ordered_note):
+        mark_as_ordered_note.delay = Mock(return_value=None)
+        self.user.profile.subuser_stores.add(self.store)
+        data = {'store': self.store.id, 'order_id': '1', 'line_id': '1', 'aliexpress_order_id': '01234566789'}
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEquals(r.status_code, 200)
+
+    def test_subuser_cant_order_fulfill_without_permission(self):
+        self.user.profile.subuser_stores.add(self.store)
+        permission = self.user.profile.subuser_permissions.get(codename='place_orders')
+        self.user.profile.subuser_permissions.remove(permission)
+        data = {'store': self.store.id, 'order_id': '1', 'line_id': '1', 'aliexpress_order_id': '01234566789'}
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEquals(r.status_code, 403)
+
+    @patch('leadgalaxy.views.utils.order_track_fulfillment', Mock(return_value=None))
+    @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=None))
+    @patch('leadgalaxy.views.requests.post')
+    def test_subuser_can_fulfill_order_without_permission(self, request_post):
+        response = Mock()
+        response.json = Mock(return_value={'fulfillment': '1'})
+        request_post.return_value = response
+        self.user.profile.subuser_stores.add(self.store)
+        data = {'fulfill-store': self.store.id, 'fulfill-line-id': 1}
+        r = self.client.post('/api/fulfill-order', data)
+        self.assertEquals(r.status_code, 200)
+
+    def test_subuser_cant_fulfill_order_without_permission(self):
+        self.user.profile.subuser_stores.add(self.store)
+        permission = self.user.profile.subuser_permissions.get(codename='place_orders')
+        self.user.profile.subuser_permissions.remove(permission)
+        data = {'fulfill-store': self.store.id}
+        r = self.client.post('/api/fulfill-order', data)
+        self.assertEquals(r.status_code, 403)

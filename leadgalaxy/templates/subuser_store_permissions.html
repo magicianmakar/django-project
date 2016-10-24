@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block extracss %}
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extrajs %}
+    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+    <script src="{% static 'shopified/js/subuser_store_permissions.js' %}" type="text/javascript"></script>
+{% endblock %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox collapsed border-bottom">
+            <div class="ibox-title">
+                <h5>Store Permissions</h5>
+            </div>
+            <div class="ibox-content" style="display:block">
+                {% for error in form.permissions.errors %}
+                    <p class="text-danger">{{ error }}</p>
+                {% endfor %}
+                <form
+                    method="POST"
+                    role="form"
+                    action="{% url 'subuser_store_permissions' subuser.id form.initial.store.id %}"
+                >
+                    <div class="form-group">
+                        {% render_field form.permissions %}
+                    </div>
+                    <p>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Save
+                        </button>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main-container %}

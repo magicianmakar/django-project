@@ -10,7 +10,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms import ValidationError
 
-from .models import UserProfile
+from .models import UserProfile, SubuserPermission
 from .utils import login_attempts_exceeded, unlock_account_email
 
 
@@ -237,3 +237,29 @@ class SubUserStoresForm(forms.ModelForm):
             self.save_m2m()
 
         return instance
+
+
+class SubuserPermissionsChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return obj.name
+
+
+class SubuserPermissionsCheckboxFieldRenderer(forms.widgets.CheckboxFieldRenderer):
+    outer_html = '<ul{id_attr} class="list-unstyled">{content}</ul>'
+
+
+class SubuserPermissionsSelectMultiple(forms.widgets.CheckboxSelectMultiple):
+    renderer = SubuserPermissionsCheckboxFieldRenderer
+
+
+class SubuserPermissionsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SubuserPermissionsForm, self).__init__(*args, **kwargs)
+        permissions_initial = kwargs['initial']['permissions']
+        permissions_queryset = SubuserPermission.objects.filter(store=kwargs['initial']['store'])
+        permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
+        permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
+                                                          queryset=permissions_queryset,
+                                                          widget=permissions_widget,
+                                                          required=False)
+        self.fields['permissions'] = permissions_field

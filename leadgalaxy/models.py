@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 from django.core.exceptions import PermissionDenied
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 from django.db.models import Count, Max, Q, F
 from django.core.cache import cache
@@ -32,6 +32,22 @@ YES_NO_CHOICES = (
 PLAN_PAYMENT_GATEWAY = (
     ('jvzoo', 'JVZoo'),
     ('stripe', 'Stripe'),
+)
+
+SUBUSER_PERMISSIONS = (
+    ('edit_settings', 'Edit settings'),
+    ('view_product_boards', 'View product boards'),
+    ('edit_product_boards', 'Edit product boards'),
+    ('view_help_and_support', 'View help and support'),
+    ('view_bonus_training', 'View bonus training'),
+)
+
+SUBUSER_STORE_PERMISSIONS = (
+    ('save_for_later', 'Save products for later'),
+    ('send_to_shopify', 'Send products to Shopify'),
+    ('delete_products', 'Delete products'),
+    ('place_orders', 'Place orders'),
+    ('view_alerts', 'View alerts'),
 )
 
 
@@ -66,6 +82,7 @@ class UserProfile(models.Model):
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
     company = models.ForeignKey('UserCompany', null=True, blank=True)
+    subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True, related_name='user_profiles')
 
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title)
@@ -221,7 +238,11 @@ class UserProfile(models.Model):
 
         return stores
 
-    def can(self, perm_name):
+    def can(self, perm_name, store=None):
+        if perm_name[-4:] == '.sub':
+            codename = perm_name[:-4]
+            return self.has_subuser_permission(codename, store)
+
         if self.subuser_parent is not None:
             return self.subuser_parent.profile.can(perm_name)
 
@@ -351,6 +372,17 @@ class UserProfile(models.Model):
 
         return can_add, total_allowed, user_count
 
+    def has_subuser_permission(self, codename, store=None):
+        if self.user.is_subuser:
+            permission = self.subuser_permissions.filter(codename=codename)
+            if store:
+                if not self.subuser_stores.filter(pk=store.id).exists():
+                    return False
+                permission = permission.filter(store=store)
+            if not permission.exists():
+                return False
+        return True
+
 
 class UserCompany(models.Model):
     name = models.CharField(max_length=100, blank=True, default='')
@@ -365,14 +397,27 @@ class UserCompany(models.Model):
         return self.name
 
 
+class SubuserPermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('ShopifyStore', blank=True, null=True, related_name='subuser_permissions')
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __unicode__(self):
+        return '{} - {}'.format(self.store.title, self.codename)
+
+
 @add_to_class(User, 'get_first_name')
 def user_first_name(self):
     return self.first_name.title() if self.first_name else self.username
 
 
 @add_to_class(User, 'can')
-def user_can(self, perms):
-    return self.profile.can(perms)
+def user_can(self, perms, store_id=None):
+    return self.profile.can(perms, store_id)
 
 
 @add_to_class(User, 'get_config')
@@ -1578,3 +1623,30 @@ def userprofile_creation(sender, instance, created, **kwargs):
         except:
             from raven.contrib.django.raven_compat.models import client as raven_client
             raven_client.captureException()
+
+
+@receiver(post_save, sender=ShopifyStore)
+def add_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        for codename, name in SUBUSER_STORE_PERMISSIONS:
+            SubuserPermission.objects.create(store=instance, codename=codename, name=name)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_stores.through)
+def add_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = ShopifyStore.objects.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_permissions.all()
+            instance.subuser_permissions.add(*permissions)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_permissions.through)
+def clear_cached_template(sender, instance, pk_set, action, **kwargs):
+    permission_pks = SubuserPermission.objects.filter(
+        Q(codename='view_help_and_support') | Q(codename='view_bonus_training')
+    ).values_list('pk', flat=True)
+
+    if set(permission_pks) & set(pk_set):
+        key = make_template_fragment_key('sidebar_link', [instance.user.id, instance.plan_id])
+        cache.delete(key)

@@ -20,6 +20,7 @@ from django.core.cache import cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.core.cache.utils import make_template_fragment_key
+from django.db import transaction
 from django.conf import settings
 
 from unidecode import unidecode
@@ -160,7 +161,50 @@ def api(request, target):
     return res
 
 
+def validate_subuser_permission(request, user, method, target, data):
+    if target == 'user-config':
+        return user.can('edit_settings.sub')
+
+    board_targets = ['board-empty', 'board-delete', 'board-config', 'boards-add',
+                     'board-add-products', 'product-remove-board', 'product-board']
+    if target in board_targets:
+        if request.method == 'GET':
+            return user.can('view_product_boards.sub')
+        if request.method == 'POST':
+            return user.can('edit_product_boards.sub')
+
+    if target in ['shopify', 'shopify-update', 'save-for-later']:
+        req_data = json.loads(request.body)
+        if req_data.get('store'):
+            store = ShopifyStore.objects.get(pk=int(req_data['store']))
+            if target == 'save-for-later':
+                return user.can('save_for_later.sub', store)
+            if target == 'shopify' or target == 'shopify-update':
+                return user.can('send_to_shopify.sub', store)
+
+    if target == 'product-delete':
+        if request.method == 'POST' and data.get('product'):
+            product = ShopifyProduct.objects.get(id=int(data['product']))
+            return user.can('delete_products.sub', product.store)
+
+    if target in ['order-fulfill', 'order-fulfill-update']:
+        if request.method == 'POST' and data.get('store'):
+            store = ShopifyStore.objects.get(pk=int(data['store']))
+            return user.can('place_orders.sub', store)
+
+    if target == 'fulfill-order':
+        if request.method == 'POST' and data.get('fulfill-store'):
+            store = ShopifyStore.objects.get(pk=int(data['fulfill-store']))
+            return user.can('place_orders.sub', store)
+
+    return True
+
+
 def proccess_api(request, user, method, target, data):
+    if user.is_subuser:
+        if not validate_subuser_permission(request, user, method, target, data):
+            return JsonResponse({'error': "You don't have permission to perform this action."}, status=403)
+
     if target == 'login':
         username = data.get('username')
         password = data.get('password')
@@ -3066,6 +3110,9 @@ def bulk_edit(request, what):
 
 @login_required
 def boards_list(request):
+    if not request.user.can('view_product_boards.sub'):
+        raise PermissionDenied()
+
     boards = request.user.models_user.shopifyboard_set.all()
 
     return render(request, 'boards_list.html', {
@@ -3077,6 +3124,9 @@ def boards_list(request):
 
 @login_required
 def boards(request, board_id):
+    if not request.user.can('view_product_boards.sub'):
+        raise PermissionDenied()
+
     board = get_object_or_404(ShopifyBoard, id=board_id)
     request.user.can_view(board)
 
@@ -4396,6 +4446,14 @@ def product_alerts(request):
                                      .filter(user=request.user.models_user,
                                              product__store=store)
 
+    if request.user.is_subuser:
+        store_ids = request.user.profile.subuser_permissions.filter(
+            codename='view_alerts'
+        ).values_list(
+            'store_id', flat=True
+        )
+        changes = changes.filter(product__store_id__in=store_ids)
+
     if product:
         changes = changes.filter(product=product)
     else:
@@ -4696,6 +4754,56 @@ def user_invoices_download(request, invoice_id):
     buffer.close()
 
     return response
+
+
+@transaction.atomic
+@login_required
+def subuser_perms_edit(request, user_id):
+    subuser = get_object_or_404(User, pk=user_id, profile__subuser_parent=request.user)
+    global_permissions = subuser.profile.subuser_permissions.filter(store__isnull=True)
+    initial = {'permissions': global_permissions, 'store': None}
+
+    if request.method == 'POST':
+        form = SubuserPermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_permissions.remove(*global_permissions)
+            subuser.profile.subuser_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect('leadgalaxy.views.subuser_perms_edit', user_id)
+    else:
+        form  = SubuserPermissionsForm(initial=initial)
+
+    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username]
+    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+    return render(request, 'subuser_perms_edit.html', context)
+
+
+@transaction.atomic
+@login_required
+def subuser_store_permissions(request, user_id, store_id):
+    store = get_object_or_404(ShopifyStore, pk=store_id, user=request.user)
+    subuser = get_object_or_404(User,
+                                pk=user_id,
+                                profile__subuser_parent=request.user,
+                                profile__subuser_stores__pk=store_id)
+    subuser_permissions = subuser.profile.subuser_permissions.filter(store=store)
+    initial = {'permissions': subuser_permissions, 'store': store}
+
+    if request.method == 'POST':
+        form = SubuserPermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_permissions.remove(*subuser_permissions)
+            subuser.profile.subuser_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect('leadgalaxy.views.subuser_store_permissions', user_id, store_id)
+    else:
+        form  = SubuserPermissionsForm(initial=initial)
+
+    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
+    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+    return render(request, 'subuser_store_permissions.html', context)
 
 
 def crossdomain(request):

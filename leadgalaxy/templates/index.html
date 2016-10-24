@@ -120,7 +120,7 @@
 
         </div>
     </div>
-
+    {% if user|can:'edit_settings.sub' %}
     <div class="ibox float-e-margins">
         <div class="ibox-title">
             <h5>Settings<small></small></h5>
@@ -526,7 +526,7 @@
             </div>
         </div>
     </div>
-
+    {% endif %}
 <div id="modal-add-store-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

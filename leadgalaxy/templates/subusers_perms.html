@@ -10,7 +10,10 @@
                 {% render_field form.subuser_stores  %}
                 {{ form.subuser_stores.errors | safe }}
             </div>
-            <button type="submit" class="btn btn-primary m-b">Save</button>
+            <p class="text-right">
+                <a href="{% url 'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
+                <button type="submit" class="btn btn-primary m-b">Save</button>
+            </p>
         </form>
     </div>
 </div>
