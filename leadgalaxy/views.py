@@ -1443,7 +1443,9 @@ def proccess_api(request, user, method, target, data):
                 line_id=line_id
             )
 
-            if tracks.count() > 1:
+            tracks_count = tracks.count()
+
+            if tracks_count > 1:
                 raven_client.captureMessage('More Than One Order Track', level='warning', extra={
                     'store': store.title,
                     'order_id': order_id,
@@ -1452,6 +1454,17 @@ def proccess_api(request, user, method, target, data):
                 })
 
                 tracks.delete()
+
+            elif tracks_count == 1:
+                saved_track = tracks.first()
+                if saved_track.source_id and source_id != saved_track.source_id:
+                    raven_client.captureMessage('Possible Double Order', level='warning', extra={
+                        'store': store.title,
+                        'order_id': order_id,
+                        'line_id': line_id,
+                        'first_aliexpress_id': saved_track.source_id,
+                        'second_aliexpress_id': source_id,
+                    })
 
             track, created = ShopifyOrderTrack.objects.update_or_create(
                 user=user.models_user,
