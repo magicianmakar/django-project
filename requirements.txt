@@ -74,6 +74,7 @@ slimit==0.8.1
 SQLAlchemy==1.0.12
 sqlparse==0.1.18
 stripe==1.35.0
+tld==0.7.6
 tqdm==4.8.4
 Twisted==15.4.0
 Unidecode==0.4.19

@@ -6,6 +6,7 @@ import pytz
 import collections
 import time
 from urlparse import urlparse
+from tld import get_tld
 
 from django.core.mail import send_mail
 from django.template import Context, Template
@@ -50,8 +51,8 @@ def get_domain(url, full=False):
 
     if full:
         return hostname
-
-    return filter(lambda i: len(i) > 3, hostname.split('.')).pop()
+    else:
+        return get_tld(url, as_object=True).domain
 
 
 def upload_from_url(url, stores=[]):
