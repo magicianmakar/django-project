@@ -3773,8 +3773,7 @@ def orders_view(request):
                 orders = orders.filter(Q(order_id=utils.safeInt(query_order)))
 
         if query_customer:
-            orders = orders.filter(Q(customer_id=utils.safeInt(query_customer, -1)) |
-                                   Q(customer_name__icontains=query_customer) |
+            orders = orders.filter(Q(customer_name__icontains=query_customer) |
                                    Q(customer_email__iexact=query_customer))
 
         if query_address and len(query_address):
