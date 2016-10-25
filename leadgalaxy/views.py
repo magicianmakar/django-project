@@ -1418,7 +1418,11 @@ def proccess_api(request, user, method, target, data):
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
+            assert utils.safeInt(source_id), 'Order ID is not a numbers'
             assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
+
+            source_id = int(source_id)
+
         except AssertionError as e:
             raven_client.captureMessage('Non valid Aliexpress Order ID')
 
@@ -1462,8 +1466,8 @@ def proccess_api(request, user, method, target, data):
                         'store': store.title,
                         'order_id': order_id,
                         'line_id': line_id,
-                        'first_aliexpress_id': saved_track.source_id,
-                        'second_aliexpress_id': source_id,
+                        'old': saved_track.source_id,
+                        'new': source_id,
                     })
 
             track, created = ShopifyOrderTrack.objects.update_or_create(
