@@ -1799,7 +1799,7 @@ def proccess_api(request, user, method, target, data):
             }, status=401)
 
         supplier_url = data.get('supplier')
-        if 's.aliexpress.com' in supplier.lower():
+        if 's.aliexpress.com' in supplier_url.lower():
             rep = requests.get(supplier_url, allow_redirects=False)
             rep.raise_for_status()
 
