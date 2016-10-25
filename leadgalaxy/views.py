@@ -1784,6 +1784,57 @@ def proccess_api(request, user, method, target, data):
         utils.set_orders_filter(user, data)
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'import-product':
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            user.can_edit(store)
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        can_add, total_allowed, user_count = user.models_user.profile.can_add_product()
+        if not can_add:
+            return JsonResponse({
+                'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'
+                         % (total_allowed, user_count)
+            }, status=401)
+
+        supplier_url = data.get('supplier')
+        if 's.aliexpress.com' in supplier.lower():
+            rep = requests.get(supplier_url, allow_redirects=False)
+            rep.raise_for_status()
+
+            supplier_url = utils.remove_link_query(rep.headers.get('location'))
+
+        product = ShopifyProduct(
+            store=store,
+            user=user.models_user,
+            shopify_id=data.get('product'),
+            data=json.dumps({
+                'variants': [],
+                'original_url': supplier_url
+                }),
+            original_data='{}'
+        )
+
+        user.can_add(product)
+
+        product.save()
+
+        supplier = ProductSupplier.objects.create(
+            store=product.store,
+            product=product,
+            product_url=supplier_url,
+            supplier_name=data.get('vendor_name', 'Supplier'),
+            supplier_url=data.get('vendor_url', 'http://www.aliexpress.com/'),
+            is_default=True
+        )
+
+        product.set_default_supplier(supplier)
+
+        tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
+
+        return JsonResponse({'status': 'ok', 'product': product.id})
+
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
 
