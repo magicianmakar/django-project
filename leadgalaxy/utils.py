@@ -169,7 +169,7 @@ def get_api_user(request, data, assert_login=False):
         if not user:
             raise ApiLoginException('unvalid_access_token')
 
-        if authorization and token != authorization:
+        if token != authorization:
             raven_client.captureMessage(
                 'Authorization Different From Access Token',
                 extra={
