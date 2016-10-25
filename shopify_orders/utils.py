@@ -62,8 +62,8 @@ def update_shopify_order(store, data, sync_check=True):
         except ShopifySyncStatus.DoesNotExist:
             return
 
-    customer = data.get('customer', {})
-    address = data.get('shipping_address', {})
+    address = data.get('shipping_address', data.get('customer', {}).get('default_address', {}))
+    customer = data.get('customer', address)
 
     order, created = ShopifyOrder.objects.update_or_create(
         order_id=data['id'],

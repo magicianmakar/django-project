@@ -214,8 +214,8 @@ class Command(BaseCommand):
         return saved_order
 
     def prepare_order(self, data, store):
-        customer = data.get('customer', {})
-        address = data.get('shipping_address', {})
+        address = data.get('shipping_address', data.get('customer', {}).get('default_address', {}))
+        customer = data.get('customer', address)
 
         order = ShopifyOrder(
             store=store,
