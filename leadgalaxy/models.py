@@ -297,7 +297,7 @@ class UserProfile(models.Model):
         can_add = True
 
         if (total_allowed > -1) and (user_count + 1 > total_allowed):
-            if not self.can('unlimited_stores.use'):
+            if not self.can('unlimited_stores.use') or self.get_config_value('_limit_stores'):
                 can_add = False
 
         if not can_add and self.plan.is_stripe():
