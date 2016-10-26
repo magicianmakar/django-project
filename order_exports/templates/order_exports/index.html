@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load compress %}
+
+{% block main-container %}
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Exports<small></small></h5>
+            <div class="ibox-tools">
+                <a href="{% url 'order_exports_add' %}">
+                    <i class="fa fa-plus"></i>
+                </a>
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            {% if saved %}
+            <div class="alert alert-success">
+                Successfuly saved order export.
+            </div>
+            {% endif %}
+             <div class="row">
+                <div class="col-md-12">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Schedule</th>
+                                <th>Receiver</th>
+                                <th>Store</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for export in order_exports %}
+                            <tr class="order-export-row">
+                                <td>{{ export.description }}</td>
+                                <td>{{ export.schedule|date:"H:i" }}</td>
+                                <td>{{ export.receiver }}</td>
+                                <td>{{ export.store.title }}</td>
+                                <th>
+                                    <a href="{% url 'order_exports_edit' export.id %}" data-toggle="tooltip" data-placement="top" title="Edit" style="padding: 8px;">
+                                        <i class="fa fa-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'order_exports_delete' export.id %}" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;" class="delete-order">
+                                        <i class="fa fa-eraser"></i>
+                                    </a>
+                                    {% if order_export.sample_url %}
+                                    <a href="{{ order_export.sample_url }}" data-toggle="tooltip" data-placement="top" title="Download sample" style="margin-left: 5px; padding: 8px;">
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                    {% endif %}
+                                </th>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    $('[data-toggle="tooltip"]').tooltip();
+
+    $('.delete-order').click(function(e) {
+        e.preventDefault();
+        var btn = $(this);
+
+        swal(
+            {
+                title: "Delete Order Export",
+                text: "This will remove the order export permanently. Are you sure you want to remove it?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                showLoaderOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Remove Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    console.log(isConfirmed);
+                    $.ajax({
+                        url: btn.attr('href'),
+                        type: 'GET',
+                        success: function(data) {
+                            btn.parents('.order-export-row').remove();
+
+                            swal.close();
+                            toastr.success("The order export has been deleted.", "Deleted!");
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Order Export', data);
+                        }
+                    });
+                }
+            }
+        );
+    });
+</script>
+{% endblock %}
