@@ -1925,51 +1925,35 @@ class ShopifyOrderPaginator(Paginator):
 
     def get_orders(self, page):
         if self.reverse_order:
-            order = 'asc'
+            sorting = 'asc'
         else:
-            order = 'desc'
+            sorting = 'desc'
 
-        if self.query and type(self.query) is long:
-            rep = requests.get(
-                url=self.store.get_link('/admin/orders/{}.json'.format(self.query), api=True),
-                params={
-                    'limit': self.order_limit,
-                    'page': page,
-                    'status': self.status,
-                    'fulfillment_status': self.fulfillment,
-                    'financial_status': self.financial,
-                    'order': 'processed_at '+order
-                }
-            )
-            rep = rep.json()
-            if 'order' in rep:
-                return [rep['order']]
+        params = {
+            'limit': self.order_limit,
+            'page': page,
+            'status': self.status,
+            'fulfillment_status': self.fulfillment,
+            'financial_status': self.financial,
+            'order': 'processed_at {}'.format(sorting)
+        }
+
+        if self.query:
+            if type(self.query) is long:
+                params['ids'] = [self.query]
             else:
-                return []
-
-        else:
-            params = {
-                'limit': self.order_limit,
-                'page': page,
-                'status': self.status,
-                'fulfillment_status': self.fulfillment,
-                'financial_status': self.financial,
-                'order': 'processed_at '+order
-            }
-
-            if self.query:
                 params['name'] = self.query
 
-            rep = requests.get(
-                url=self.store.get_link('/admin/orders.json', api=True),
-                params=params
-            )
+        rep = requests.get(
+            url=self.store.get_link('/admin/orders.json', api=True),
+            params=params
+        )
 
-            rep = rep.json()
-            if 'orders' in rep:
-                return rep['orders']
-            else:
-                return []
+        rep = rep.json()
+        if 'orders' in rep:
+            return rep['orders']
+        else:
+            return []
 
 
 class ProductsCollectionPaginator(Paginator):
