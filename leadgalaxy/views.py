@@ -1413,7 +1413,7 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and target == 'order-fulfill':
         # Mark Order as Ordered
         order_id = data.get('order_id')
-        order_lines = data.get('line_id')
+        order_lines = data.get('line_id').split(',')
         source_id = data.get('aliexpress_order_id', '')
 
         try:
@@ -1436,7 +1436,8 @@ def proccess_api(request, user, method, target, data):
             raven_client.captureException()
             return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
 
-        for line_id in order_lines.split(','):
+        note_delay = 0
+        for line_id in order_lines:
             if not line_id:
                 return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
 
@@ -1492,7 +1493,10 @@ def proccess_api(request, user, method, target, data):
                 line_id=line_id
             ).update(track=track)
 
-            tasks.mark_as_ordered_note.delay(store.id, order_id, line_id, source_id)
+            # TODO: make this done with one api call
+            tasks.mark_as_ordered_note.apply_async(
+                args=[store.id, order_id, line_id, source_id],
+                countdown=note_delay)
 
             store.pusher_trigger('order-source-id-add', {
                 'track': track.id,
@@ -1500,6 +1504,8 @@ def proccess_api(request, user, method, target, data):
                 'line_id': line_id,
                 'source_id': source_id,
             })
+
+            note_delay += 5
 
         return JsonResponse({'status': 'ok'})
 
