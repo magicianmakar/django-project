@@ -1466,7 +1466,10 @@ def proccess_api(request, user, method, target, data):
                         'store': store.title,
                         'order_id': order_id,
                         'line_id': line_id,
-                        'old': saved_track.source_id,
+                        'old': {
+                            'id': saved_track.source_id,
+                            'date': saved_track.created_at
+                        },
                         'new': source_id,
                     })
 
