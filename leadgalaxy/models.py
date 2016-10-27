@@ -474,14 +474,22 @@ class ShopifyStore(models.Model):
             status = 'any'
             query = ''
 
+        params = {
+            'status': status,
+            'fulfillment_status': fulfillment,
+            'financial_status': financial,
+            'query': query
+        }
+
+        if query:
+            if type(query) is long:
+                params['ids'] = [query]
+            else:
+                params['name'] = query
+
         return requests.get(
             url=self.get_link('/admin/orders/count.json', api=True),
-            params={
-                'status': status,
-                'fulfillment_status': fulfillment,
-                'financial_status': financial,
-                'query': query
-            }
+            params=params
         ).json().get('count', 0)
 
     @cached_property

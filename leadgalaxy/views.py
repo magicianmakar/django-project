@@ -3790,7 +3790,7 @@ def orders_view(request):
             # Direct API call doesn't support more that one fulfillment status
             fulfillment = 'unshipped'
 
-        open_orders = store.get_orders_count(status, fulfillment, financial)
+        open_orders = store.get_orders_count(status, fulfillment, financial, query=utils.safeInt(query, query))
         orders = xrange(0, open_orders)
 
         paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
