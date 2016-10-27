@@ -1468,7 +1468,7 @@ def proccess_api(request, user, method, target, data):
                         'line_id': line_id,
                         'old': {
                             'id': saved_track.source_id,
-                            'date': saved_track.created_at
+                            'date': arrow.get(saved_track.created_at).humanize()
                         },
                         'new': source_id,
                     })
