@@ -2612,7 +2612,7 @@ def accept_product(res, fdata):
         max_price = utils.safeFloat(fdata.get('price_max'), -1)
 
         if (min_price > 0 and max_price > 0):
-            res = res.filter(price__gte=min_price, price_lte=max_price)
+            res = res.filter(price__gte=min_price, price__lte=max_price)
 
         elif (min_price > 0):
             res = res.filter(price__gte=min_price)
