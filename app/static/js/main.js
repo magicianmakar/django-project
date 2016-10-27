@@ -568,6 +568,7 @@ $('img.no-img').on('error', function(e) {
         return;
     }
 
+    var img = '//d2kadg5e284yn4.cloudfront.net/static/img/' + ($(this).hasClass('no-img-sm') ? 'no-image-sm.png' : 'no-image.png');
     $(this).attr('src', '//d2kadg5e284yn4.cloudfront.net/static/img/no-image.png');
     $(this).prop('no-img-error', ($(this).prop('no-img-error') || 0) + 1);
 });
