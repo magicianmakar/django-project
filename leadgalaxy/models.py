@@ -70,6 +70,12 @@ class UserProfile(models.Model):
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title)
 
+    def save(self, *args, **kwargs):
+        if self.config:
+            json.loads(self.config)
+
+        super(UserProfile, self).save(*args, **kwargs)
+
     def get_plan(self):
         try:
             return self.plan
