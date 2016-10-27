@@ -4023,7 +4023,10 @@ def orders_view(request):
                 order['placed_orders'] += 1
 
             if not el['product_id']:
-                product = None
+                if el['variant_id']:
+                    product = ShopifyProduct.objects.filter(store=store, title=el['title'], shopify_id__gt=0).first()
+                else:
+                    product = None
             elif el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
