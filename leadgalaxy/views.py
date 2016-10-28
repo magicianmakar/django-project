@@ -3948,15 +3948,6 @@ def orders_view(request):
                         countdown=countdown)
 
                     countdown = countdown + 1
-
-                    try:
-                        print u'Outdated Order: {} > {} - Store: {}'.format(
-                            arrow.get(order['updated_at']).to('utc'),
-                            arrow.get(order['db_updated_at']).to('utc'),
-                            store.title).encode('utf-8')
-                    except:
-                        raven_client.captureException(level='warning')
-
         else:
             page = []
 
