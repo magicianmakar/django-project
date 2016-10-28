@@ -1808,11 +1808,17 @@ def proccess_api(request, user, method, target, data):
             }, status=401)
 
         supplier_url = data.get('supplier')
+        if not supplier_url:
+            return JsonResponse({'error': 'Supplier URL is missing'}, status=422)
+
         if 's.aliexpress.com' in supplier_url.lower():
             rep = requests.get(supplier_url, allow_redirects=False)
             rep.raise_for_status()
 
             supplier_url = utils.remove_link_query(rep.headers.get('location'))
+
+        if not utils.safeInt(data.get('product')):
+            return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
 
         product = ShopifyProduct(
             store=store,
