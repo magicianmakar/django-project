@@ -456,7 +456,8 @@
                                 {% if shopify_product %}
                                 <div class="row" style="display: flex; align-items: center; ">
                                     <div class="col-md-1">
-                                        <img class="no-img no-img-sm" src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}">
+                                        <img class="no-img no-img-sm" no-img-width="45px"
+                                             src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}">
                                     </div>
                                     <div class="col-md-10">
                                         <a href="{{product.qelem.shopify_link}}" target="_blank">{{shopify_product.title}}</a>
