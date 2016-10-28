@@ -107,7 +107,7 @@
                         {% for item in orders %}
                         <tr id="{{item.id}}">
                             <td>
-                                <img class="unveil"
+                                <img class="no-img no-img-sm unveil"
                                     store="{{item.store_id}}" product="{{item.line.product_id}}" variant="{{item.line.variant_id}}"
                                     src="{% static 'img/blank.gif' %}"
                                     data-src="/api/product-variant-image?store={{item.store_id}}&product={{item.line.product_id}}&variant={{item.line.variant_id}}&redirect=1&thumb=1"
