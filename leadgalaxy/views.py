@@ -4294,6 +4294,22 @@ def orders_place(request):
 
 
 @login_required
+def locate(request, what):
+    if what == 'order':
+        aliexpress_id = utils.safeInt(request.GET.get('aliexpress'))
+
+        if aliexpress_id:
+            track = ShopifyOrderTrack.objects.filter(user=request.user.models_user, source_id=aliexpress_id).first()
+            if track:
+                return HttpResponseRedirect(
+                    '{}?store={}&query_order={}&new=1&status=any&'
+                    'financial=any&fulfillment=any&awaiting_order=false&connected=false'.format(
+                        reverse('orders'), track.store.id, aliexpress_id))
+
+    raise Http404
+
+
+@login_required
 def product_alerts(request):
     if not request.user.can('price_changes.use'):
         return render(request, 'upgrade.html')

@@ -30,6 +30,7 @@ urlpatterns = patterns(
     url(r'^orders$', leadgalaxy.views.orders_view, name='orders'),
     url(r'^orders/track$', leadgalaxy.views.orders_track, name='orders_track'),
     url(r'^orders/place$', leadgalaxy.views.orders_place, name='orders_place'),
+    url(r'^locate/(?P<what>[a-z-]+)$', leadgalaxy.views.locate),
     url(r'^products/update$', leadgalaxy.views.product_alerts, name='product_alerts'),
     url(r'^bundles/(?P<bundle_id>[a-z0-9]+)$', leadgalaxy.views.bundles_bonus, name='bundles_bonus'),
     url(r'^products/collections/(?P<collection>[a-z]+)$', leadgalaxy.views.products_collections, name='products_collections'),
