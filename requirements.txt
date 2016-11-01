@@ -11,7 +11,7 @@ contextlib2==0.5.4
 cryptography==1.5.2
 cssselect==0.9.1
 dj-database-url==0.3.0
-Django==1.8.13
+Django==1.8.15
 django-appconf==1.0.1
 django-compat==1.0.10
 django-compressor==1.6
