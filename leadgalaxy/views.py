@@ -1198,9 +1198,14 @@ def proccess_api(request, user, method, target, data):
             json=api_data
         )
 
-        if 'fulfillment' in rep.json():
+        try:
+            rep.raise_for_status()
+
             return JsonResponse({'status': 'ok'})
-        else:
+
+        except:
+            raven_client.captureException(extra={'response': rep.text})
+
             try:
                 errors = utils.format_shopify_error(rep.json())
                 return JsonResponse({'error': 'Shopify Error: {}'.format(errors)})
