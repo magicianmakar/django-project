@@ -151,20 +151,20 @@ class Command(BaseCommand):
                 elif e.response.status_code == 422:
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
-                        print 'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title)
+                        print u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title)
                         order.shopify_status = 'fulfilled'
                         order.save()
                         return False
 
                     elif 'invalid for this fulfillment service' in rep.text:
                         # Using a different fulfillment_service (i.e: amazon_marketplace_web)
-                        print 'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title)
+                        print u'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title)
                         order.shopify_status = 'fulfilled'
                         order.save()
                         return False
 
                 elif e.response.status_code == 404:
-                    print 'Not found #{} in [{}]'.format(order.order_id, order.store.title)
+                    print u'Not found #{} in [{}]'.format(order.order_id, order.store.title)
                     order.delete()
 
                     return False
