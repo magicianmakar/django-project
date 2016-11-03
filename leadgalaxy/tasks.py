@@ -18,6 +18,7 @@ from raven.contrib.celery import register_signal
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
+from leadgalaxy.statuspage import record_import_metric
 from shopify_orders import utils as order_utils
 
 app = Celery('shopified')
@@ -330,6 +331,8 @@ def export_product(req_data, target, user_id):
 
     if 'later' not in target:
         print '%s Took: %.02f ms' % (target.replace('-', ' ').title(), time.time() - start)
+
+        record_import_metric(time.time() - start)
 
     return {
         'product': {
