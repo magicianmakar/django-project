@@ -513,6 +513,23 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'bulk-edit-connected':
+        req_data = json.loads(request.body)
+        try:
+            store = ShopifyStore.objects.get(id=req_data.get('store'))
+            user.can_view(store)
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        task = tasks.bulk_edit_products.apply_async(
+            args=[store.id, req_data['products']],
+            queue='priority_high')
+
+        return JsonResponse({
+            'status': 'ok',
+            'task': task.id
+        })
+
     if method == 'GET' and target == 'product-shopify-id':
         ids = []
         products = data.get('product').split(',')
@@ -2998,31 +3015,54 @@ def mapping_supplier(request, product_id):
 
 
 @login_required
-def bulk_edit(request):
+def bulk_edit(request, what):
     if not request.user.can('bulk_editing.use'):
         return render(request, 'upgrade.html')
 
-    args = {
-        'request': request,
-        'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
-        'sort': request.GET.get('sort'),
-        'store': 'n'
-    }
+    if what == 'saved':
+        args = {
+            'request': request,
+            'filter_products': (request.GET.get('f') == '1'),
+            'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
+            'sort': request.GET.get('sort'),
+            'store': 'n'
+        }
 
-    if args['filter_products'] and not request.user.can('product_filters.use'):
-        return render(request, 'upgrade.html')
+        if args['filter_products'] and not request.user.can('product_filters.use'):
+            return render(request, 'upgrade.html')
 
-    products, paginator, page = get_product(**args)
+        products, paginator, page = get_product(**args)
 
-    return render(request, 'bulk_edit.html', {
-        'products': products,
-        'paginator': paginator,
-        'current_page': page,
-        'filter_products': args['filter_products'],
-        'page': 'bulk',
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
-    })
+        return render(request, 'bulk_edit.html', {
+            'products': products,
+            'paginator': paginator,
+            'current_page': page,
+            'filter_products': args['filter_products'],
+            'page': 'bulk',
+            'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit', 'Saved']
+        })
+
+    elif what == 'connected':
+        store = get_object_or_404(ShopifyStore, id=request.GET.get('store'))
+        request.user.can_view(store)
+
+        product_ids = request.GET.get('products')
+        if not product_ids:
+            raise Http404
+
+        products = utils.get_shopify_products(
+            store=store,
+            product_ids=product_ids,
+            fields='id,title,product_type,image,variants')
+
+        return render(request, 'bulk_edit_connected.html', {
+            'products': list(products),
+            'store': store,
+            'page': 'bulk',
+            'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit', store.title]
+        })
+
+    raise Http404
 
 
 @login_required

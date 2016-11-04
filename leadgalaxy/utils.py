@@ -650,14 +650,30 @@ def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
 
 
-def get_shopify_products(store, page=1, limit=50, all_products=False, session=requests):
+def get_shopify_products(store, page=1, limit=50, all_products=False,
+                         product_ids=None, fields=None, session=requests):
+
     if not all_products:
+        params = {
+            'page': page,
+            'limit': limit
+        }
+
+        if product_ids:
+            if type(product_ids) is list:
+                params['ids'] = ','.join(product_ids)
+            else:
+                params['ids'] = product_ids
+
+        if fields:
+            if type(fields) is list:
+                params['fields'] = ','.join(fields)
+            else:
+                params['fields'] = fields
+
         rep = session.get(
             url=store.get_link('/admin/products.json', api=True),
-            params={
-                'page': page,
-                'limit': limit
-            }
+            params=params
         )
 
         rep = rep.json()

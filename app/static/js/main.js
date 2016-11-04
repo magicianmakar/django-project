@@ -284,17 +284,9 @@ function productsEditModal(products) {
                     toastr.warning('Selected products are not found in Shopify');
                     return;
                 }
-                window.open(modal.attr('store-url') + '/admin/bulk?' + $.param({
-                    "resource_name": "Product",
-                    "return_toh": "/admin/products",
-                    "routing_method": "shop_from_host",
-                    "protocol": "https://",
-                    "edit": "variants.price,variants.compare_at_price,product_type,variants.weight,title",
-                    "show": "",
-                    "ids": data.ids.join(','),
-                    "metafield_titles": "",
-                    "metafield_options": "",
-                    "SA": "true",
+                window.open('/product/edit/connected?' + $.param({
+                    store: modal.attr('store-id'),
+                    products: data.ids.join(','),
                 }), '_blank');
             },
             error: function (data) {

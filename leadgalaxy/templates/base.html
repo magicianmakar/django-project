@@ -185,7 +185,7 @@
 
                         {% if request.user|can:'bulk_editing.view' %}
                         <li {% if page == 'bulk' %}class="active"{% endif %}>
-                            <a href="{% url 'bulk_edit' %}">
+                            <a href="{% url 'bulk_edit' what='saved' %}">
                                 <i class="fa fa-table"></i>
                                 <span class="nav-label">Bulk edit</span>
                             </a>

@@ -539,3 +539,33 @@ def product_change_alert(change_id):
 
     except:
         raven_client.captureException()
+
+
+@app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def bulk_edit_products(self, store, products):
+    """ Bulk Edit Connected products """
+
+    from django.template.defaultfilters import truncatewords
+
+    store = ShopifyStore.objects.get(id=store)
+
+    errors = []
+    for product in products:
+        try:
+            api_url = store.get_link('/admin/products/{}.json'.format(product['id']), api=True)
+            title = product['title']
+            del product['title']
+
+            rep = requests.put(api_url, json={'product': product})
+            rep.raise_for_status()
+
+            time.sleep(0.5)
+
+        except:
+            errors.append(truncatewords(title, 10))
+            raven_client.captureException()
+
+    store.pusher_trigger('bulk-edit-connected', {
+        'task': self.request.id,
+        'errors': errors
+    })

@@ -1,0 +1,105 @@
+{% verbatim %}
+    <script type="text/x-template" id="bulk-edit-table-tpl">
+        <div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th colspan="2" style="width:40%"></th>
+                        <th style="width: 15%">Price</th>
+                        <th style="width: 15%">Compare at</th>
+                        <th style="width: 15%">Weight</th>
+                        <th style="width: 15%">Product Type</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <bulk-edit-inputs :products="products" />
+
+                    <template v-for="item in products">
+                        <product-row :product="item" />
+                        <variant-row v-if="item.variants.length > 1" v-for="v in item.variants" :variant="v" :product="item" />
+                    </template>
+                </tbody>
+            </table>
+
+            <button class="btn btn-success"
+                @click="saveChanges"
+                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving">
+                    <i class="fa fa-save"></i> Save
+            </button>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="product-row-tpl">
+      <tr :product-id="product.id">
+          <td>
+              <img
+                class=""
+                style="width: 50px"
+                :src="product.image.src" alt="">
+          </td>
+          <td style="padding-left:10px">
+              <input type="hidden" name="product" v-model="product.id" />
+              <span>{{product.title}}</span>
+          </td>
+
+          <template v-if="product.variants.length <= 1">
+              <td class="text-right no-wrap"><span class="currency">$</span><input v-model="product.variants[0].price" /></td>
+              <td class="text-right no-wrap"><span class="currency">$</span><input v-model="product.variants[0].compare_at_price" /></td>
+              <td class="text-right no-wrap">
+                  <input style="width:70%" v-model="product.variants[0].weight" />
+                  <select v-model="product.variants[0].weight_unit">
+                      <option value="g">g</option>
+                      <option value="kg">kg</option>
+                      <option value="oz">oz</option>
+                      <option value="lb">lb</option>
+                  </select>
+              </td>
+              <td class="text-left"><input style="text-align:left" v-model="product.product_type" /></td>
+          </template>
+          <template v-else>
+              <td v-for="n in 4" class="text-right" style="padding:5px">&mdash;</td>
+          </template>
+      </tr>
+    </script>
+
+    <script type="text/x-template" id="variant-row-tpl">
+      <tr :variant-id="variant.id">
+          <td></td>
+          <td>{{variant.title}}</td>
+
+          <td class="text-right no-wrap"><span class="currency">$</span><input v-model="variant.price" /></td>
+          <td class="text-right no-wrap"><span class="currency">$</span><input v-model="variant.compare_at_price" /></td>
+          <td class="text-right no-wrap">
+                <input style="width:70%" v-model="variant.weight" />
+                <select v-model="variant.weight_unit">
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="oz">oz</option>
+                    <option value="lb">lb</option>
+                </select>
+          </td>
+          <td class="text-left"><input style="text-align:left" v-model="product.product_type" /></td>
+      </tr>
+    </script>
+
+    <script type="text/x-template" id="bulk-edit-inputs-tpl">
+      <tr>
+          <td></td>
+          <td class="text-right"><i>All Products</i></td>
+
+          <td class="text-right no-wrap"><input @keyup="onExpChange" placeholder="Price"  data-calc="price"/></td>
+          <td class="text-right no-wrap"><input @keyup="onExpChange" placeholder="Compare At Price"  data-calc="compare_at_price"/></td>
+          <td class="text-right no-wrap">
+                <input style="width:70%" @keyup="onExpChange" placeholder="Weight" data-calc="weight"/>
+                <select @change="onExpChange" data-calc="weight_unit">
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="oz">oz</option>
+                    <option value="lb">lb</option>
+                </select>
+          </td>
+          <td class="text-left"></td>
+      </tr>
+    </script>
+{% endverbatim %}

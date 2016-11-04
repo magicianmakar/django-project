@@ -11,7 +11,7 @@ urlpatterns = patterns(
 
     url(r'^api/(?P<target>[a-z-]+)$', leadgalaxy.views.api),
     url(r'^webhook/(?P<provider>[a-z-]+)/(?P<option>[a-z:-]+)/?$', leadgalaxy.views.webhook),
-    url(r'^product/edit/all$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
+    url(r'^product/edit/(?P<what>[a-z-]+)$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
     url(r'^product/?(?P<tpl>(grid|table))?$', leadgalaxy.views.products_list, name='product'),
     url(r'^product/(?P<pid>[0-9]+)$', leadgalaxy.views.product_view, name='product_view'),
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', leadgalaxy.views.variants_edit, name='variants_edit'),

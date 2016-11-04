@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Connected Products<small></small></h5>
+            </div>
+            <div class="ibox-content">
+                <div id="bulk-edit">
+                    <bulk-edit-table :products="products"></bulk-edit-table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partial/bulk_edit_vue.html' %}
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <style type="text/css">
+
+    .table > thead > tr > th {
+        white-space: nowrap;
+    }
+    .table > tbody > tr > td {
+        padding: 0px;
+        margin: 0px;
+        vertical-align: middle;
+    }
+
+    .table > tbody > tr > td:first-child {
+        border-right: none;
+    }
+
+    .table > tbody > tr > td:nth-child(2) {
+        border-left: none;
+        padding: 5px;
+    }
+
+    .table > tbody > tr > td > input {
+        margin: 0px;
+        padding: 10px;
+        width: 100%;
+        height: 45px;
+        border:0 none;
+        text-align: right;
+    }
+    .table > tbody > tr > td > .currency {
+        position: absolute;
+        padding: 15px 5px;
+    }
+    .table select {
+        border: none;
+        background-color: white;
+        width: 27%;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "order_{{store.get_short_hash}}",
+            store: {{store.id}},
+        };
+
+        var products = {% json_dumps products %};
+        var original_products = $.extend(true, {}, products);
+    </script>
+
+    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+
+    {% compress js %}
+    <script src="{% static 'libs/bower_components/vue/dist/vue.min.js' %}"></script>
+    <script src="{% static 'shopified/js/bulk_edit_connected.js' %}"></script>
+    {% endcompress %}
+
+{% endblock %}
+
