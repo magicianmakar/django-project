@@ -449,9 +449,13 @@
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
-                                                            <a href="/product/{{item.product.id}}" target="_blank">{{item.title}}</a>
+                                                            <a href="/product/{{item.product.id}}" target="_blank" title="{{item.title}}">
+                                                                {{item.title|truncatewords:9}}
+                                                            </a>
                                                             {% else %}
-                                                            {{item.title}}
+                                                            <span title="{{item.title}}">
+                                                                {{item.title|truncatewords:9}}
+                                                            </span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
