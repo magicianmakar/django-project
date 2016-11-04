@@ -8,7 +8,8 @@ class Command(BaseCommand):
         parser.add_argument('--required', dest='required', action='store_true', help='Version is required')
 
     def handle(self, *args, **options):
-        print 'Change Extension Version to:', options['version'], 'Required:', options['required']
+        self.stdout.write('Change Extension Version to: {} Required: {}'.format(
+            self.style.MIGRATE_SUCCESS(options['version']), options['required']), self.style.HTTP_INFO)
 
         cache.set('extension_release', options['version'], timeout=3600)
         cache.set('extension_required', options['required'], timeout=3600)

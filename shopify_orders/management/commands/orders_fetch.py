@@ -116,13 +116,13 @@ class Command(BaseCommand):
         for page in xrange(1, pages+1):
             if count > 1000:
                 imported_count = len(self.imported_orders)
-                print 'Page {} ({:0.2f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
+                self.stdout.write('Page {} ({:0.2f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
                     page,
                     imported_count / float(count) * 100.0,
                     self.rate_limit,
                     self.req_time,
                     imported_count
-                )
+                ))
 
             req_start = time.time()
             rep = requests.get(
@@ -152,12 +152,12 @@ class Command(BaseCommand):
                     self.imported_orders.append(order['id'])
                 else:
                     already_imported.append(order['id'])
-                    print 'Already Imported', order['id']
+                    self.stdout.write('Order #{} Already Imported'.format(order['id']), self.style.WARNING)
 
             if len(orders):
                 ShopifyOrder.objects.bulk_create(orders)
             else:
-                print 'Empty Orders'
+                self.stdout.write('Empty Orders', self.style.WARNING)
 
             self.load_saved_orders(store)
 
@@ -170,12 +170,12 @@ class Command(BaseCommand):
                     for line in self.prepare_lines(order, saved_order):
                         lines.append(line)
                 else:
-                    print 'Already Imported (line)', order['id']
+                    self.stdout.write('Line Already Imported of order #{}'.format(order['id']), self.style.WARNING)
 
             if len(lines):
                 ShopifyOrderLine.objects.bulk_create(lines)
             else:
-                print 'Empty lines'
+                self.stdout.write('Empty Order Lines', self.style.WARNING)
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
 
@@ -189,7 +189,7 @@ class Command(BaseCommand):
             if not order_id:
                 break
 
-            print '> Update pending order:', order_id
+            self.stdout.write('Update pending order #{}'.format(order_id))
             time.sleep(1)
 
             try:
@@ -208,7 +208,7 @@ class Command(BaseCommand):
     def get_saved_order(self, store, order_id):
         saved_order = self.saved_orders.get(order_id)
         if saved_order is None:
-            print 'Get Order from database:', order_id
+            self.stdout.write('Get Order from database #{}'.format(order_id))
             saved_order = ShopifyOrder.objects.get(store=store, order_id=order_id)
 
         return saved_order

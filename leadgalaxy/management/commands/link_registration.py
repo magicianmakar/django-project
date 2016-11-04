@@ -27,15 +27,17 @@ class Command(BaseCommand):
                 user = User.objects.get(email__iexact=reg.email)
             except User.DoesNotExist:
                 if options['unregistered']:
-                    print 'Not Registred|{}|{}|{}'.format(reg.email, reg.plan.title, str(reg.created_at).split(' ')[0])
+                    self.stdout.write(u'Not Registred|{}|{}|{}'.format(
+                        reg.email, reg.plan.title, str(reg.created_at).split(' ')[0]))
                 continue
             except:
-                print 'WARNING: Get Email Exception for:', reg.email
+                self.stdout.write(u'WARNING: Get Email Exception for: {}'.format(reg.email), self.style.WARNING)
                 raven_client.captureException()
                 continue
 
             profile = user.profile
-            print 'Change user {} ({}) Plan from {} to {}'.format(user.username, user.email, profile.plan.title, reg.plan.title)
+            self.stdout.write(u'Change user {} ({}) Plan from {} to {}'.format(
+                user.username, user.email, profile.plan.title, reg.plan.title), self.style.MIGRATE_SUCCESS)
 
             self.apply_plan_registrations(profile, reg)
 
@@ -48,11 +50,13 @@ class Command(BaseCommand):
                 user = User.objects.get(email__iexact=reg.email)
             except User.DoesNotExist:
                 if options['unregistered']:
-                    print 'Not Registred|{}|{}|{}'.format(reg.email, reg.bundle.title, str(reg.created_at).split(' ')[0])
+                    self.stdout.write(u'Not Registred|{}|{}|{}'.format(
+                        reg.email, reg.bundle.title, str(reg.created_at).split(' ')[0]))
                 continue
 
             profile = user.profile
-            print 'Add Bundle: {} for: {} ({})'.format(reg.bundle.title, user.username, user.email)
+            self.stdout.write(u'Add Bundle: {} for: {} ({})'.format(
+                reg.bundle.title, user.username, user.email), self.style.MIGRATE_SUCCESS)
 
             profile.bundles.add(reg.bundle)
             reg.user = user
@@ -73,5 +77,5 @@ class Command(BaseCommand):
             if not p.bundle:
                 continue
 
-            print ' + Add Bundle:', p.bundle.title
+            self.stdout.write(u' + Add Bundle: {}'.format(p.bundle.title))
             profile.apply_registration(p)

@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
     def start_command(self, *args, **options):
         # Archive seen changes
-        self.stdout.write(self.style.HTTP_INFO('* Archive seen alerts'))
+        self.stdout.write('Archive seen alerts', self.style.HTTP_INFO)
         AliexpressProductChange.objects.filter(seen=True, hidden=False).update(hidden=True)
 
         # Archive alerts after 7 days
@@ -38,10 +38,10 @@ class Command(BaseCommand):
         AliexpressProductChange.objects.filter(created_at__lt=delete_date).update(hidden=True)
 
         # Expired plans
-        self.stdout.write(self.style.HTTP_INFO('* Change plan of expired profiles'))
+        self.stdout.write('Change plan of expired profiles', self.style.HTTP_INFO)
         for profile in UserProfile.objects.filter(plan_expire_at__lte=timezone.now()):
             if profile.plan_after_expire:
-                print 'Changing:', profile
+                self.stdout.write(u'Changing: {}'.format(profile.user.username))
                 self.profile_changed(profile, profile.plan, profile.plan_after_expire)
 
                 profile.plan = profile.plan_after_expire
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                                           .filter(store__is_active=True) \
                                           .order_by('store', 'status_updated_at')
 
-        print 'Orders Count (daily):', orders.count()
+        self.stdout.write('Orders Count (daily): %d' % orders.count(), self.style.HTTP_INFO)
 
         users = {}
         counter = {
@@ -97,14 +97,14 @@ class Command(BaseCommand):
 
                     counter['fulfilled'] += 1
                     if counter['fulfilled'] % 50 == 0:
-                        print 'Fulfill Progress: %d' % counter['fulfilled']
+                        self.stdout.write('Fulfill Progress: %d' % counter['fulfilled'])
 
             except:
                 raven_client.captureException()
 
-        print 'Fulfilled Orders:', counter['fulfilled']
-        print 'Need Fulfill Orders:', counter['need_fulfill']
-        print 'Ignored Orders:', counter['ignored_orders']
+        self.stdout.write('Fulfilled Orders: %d' % counter['fulfilled'])
+        self.stdout.write('    Need Fulfill: %d' % counter['need_fulfill'])
+        self.stdout.write('  Ignored Orders: %d' % counter['ignored_orders'])
 
     def profile_changed(self, profile, expired_plan, new_plan):
         data = {
@@ -138,33 +138,33 @@ class Command(BaseCommand):
                 break
 
             except (JSONDecodeError, requests.exceptions.ConnectTimeout):
-                print 'Sleep For 2 sec'
+                self.stdout.write('Sleep for 2 sec')
                 time.sleep(2)
                 continue
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 429:
                     # Wait and retry
-                    print 'Sleep For 5 sec'
+                    self.stdout.write('Sleep for 5 sec')
                     time.sleep(5)
                     continue
 
                 elif e.response.status_code == 422:
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
-                        print u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title)
+                        self.stdout.write(u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'
                         order.save()
                         return False
 
                     elif 'invalid for this fulfillment service' in rep.text:
                         # Using a different fulfillment_service (i.e: amazon_marketplace_web)
-                        print u'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title)
+                        self.stdout.write(u'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'
                         order.save()
                         return False
 
                 elif e.response.status_code == 404:
-                    print u'Not found #{} in [{}]'.format(order.order_id, order.store.title)
+                    self.stdout.write(u'Not found #{} in [{}]'.format(order.order_id, order.store.title))
                     order.delete()
 
                     return False
