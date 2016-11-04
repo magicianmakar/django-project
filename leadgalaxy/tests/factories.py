@@ -59,3 +59,14 @@ class ShopifyStoreFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'leadgalaxy.ShopifyStore'
+
+
+class GroupPlanFactory(factory.DjangoModelFactory):
+    stores = factory.fuzzy.FuzzyInteger(999)
+    products = factory.fuzzy.FuzzyInteger(999)
+    boards = factory.fuzzy.FuzzyInteger(999)
+    register_hash = factory.fuzzy.FuzzyText(length=50)
+    default_plan = 1
+
+    class Meta:
+        model = 'leadgalaxy.GroupPlan'

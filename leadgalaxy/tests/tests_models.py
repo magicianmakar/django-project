@@ -1,6 +1,8 @@
+from mock import Mock
+
 from django.test import TestCase
 
-from factories import UserFactory, ShopifyStoreFactory
+from factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
 from leadgalaxy.models import *
 
@@ -55,12 +57,25 @@ class ShopifyStoreTestCase(TestCase):
 
 
 class UserProfileTestCase(TestCase):
-    def test_must_have_all_store_permissions_when_assigned_a_store(self):
+    def test_subusers_must_have_all_store_permissions_when_assigned_a_store(self):
         parent_user = UserFactory()
         store = ShopifyStoreFactory(user=parent_user)
         user = UserFactory()
         user.profile.subuser_parent = parent_user
-        user.save()
+        user.profile.save()
         user.profile.subuser_stores.add(store)
         store_permissions_count = user.profile.subuser_permissions.filter(store=store).count()
         self.assertEqual(store_permissions_count, len(SUBUSER_STORE_PERMISSIONS))
+
+    def test_subusers_must_have_global_permissions_when_created(self):
+        parent_user = UserFactory()
+        plan = GroupPlanFactory(title='Subuser Plan', slug='subuser-plan')
+        registration = Mock()
+        registration.plan = plan
+        registration.sender = parent_user
+        registration.get_data = Mock(return_value={})
+        registration.bundle = None
+        user = UserFactory()
+        user.profile.apply_registration(registration)
+        permissions_count = user.profile.subuser_permissions.count()
+        self.assertEqual(permissions_count, len(SUBUSER_PERMISSIONS))

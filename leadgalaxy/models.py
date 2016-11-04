@@ -144,6 +144,11 @@ class UserProfile(models.Model):
 
         self.save()
 
+        if self.subuser_parent:
+            permissions = SubuserPermission.objects.filter(store__isnull=True)
+            # Subusers have global permissions by default
+            self.subuser_permissions.add(*permissions)
+
         reg.user = self.user
         reg.expired = True
         reg.save()

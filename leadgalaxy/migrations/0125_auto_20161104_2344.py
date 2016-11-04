@@ -41,9 +41,9 @@ def backward(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('leadgalaxy', '0123_auto_20161027_1728'),
+        ('leadgalaxy', '0124_auto_20161104_2343'),
     ]
 
     operations = [
-        migrations.RunPython(forward, backward)
+        migrations.RunPython(forward, backward),
     ]
