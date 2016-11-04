@@ -3,7 +3,7 @@ from django.test import TestCase
 from leadgalaxy.templatetags import template_helper
 
 
-class StoreTestCase(TestCase):
+class TagsTestCase(TestCase):
     def setUp(self):
         pass
 
@@ -32,3 +32,16 @@ class StoreTestCase(TestCase):
         self.assertEqual(template_helper.shopify_image_thumb(
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='thumb'),
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_thumb.jpg?v=1445304129')
+
+        self.assertEqual(template_helper.shopify_image_thumb(
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='64x64'),
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_64x64.jpg?v=1445304129')
+
+    def test_shopify_image_crop(self):
+        self.assertEqual(template_helper.shopify_image_thumb(
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='thumb', crop='center'),
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_thumb_crop_center.jpg?v=1445304129')
+
+        self.assertEqual(template_helper.shopify_image_thumb(
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='64x64', crop='center'),
+            'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_64x64_crop_center.jpg?v=1445304129')

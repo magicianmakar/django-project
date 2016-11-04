@@ -262,7 +262,7 @@
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
                                     </div>
                                     <div class="col-xs-2">
-                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #ccc;border-radius: 3px;">
+                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
                                         {% date_humanize order.date %}
                                         </span>
                                     </div>
@@ -289,7 +289,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-xs-1 text-right">
-                                        {% if user|can:'combined_order.use' %}
+                                        {% if order.lines_count > 1 %}
                                         <button class="btn btn-success btn-xs order-all"
                                                 order-id="{{order.id}}" style="display:none">Order All</button>
                                         {% endif %}
@@ -299,7 +299,7 @@
 
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
-                                    <div class="col-md-3 col-xs-6">
+                                    <div class="col-md-3 col-xs-6" style="padding-left:5px">
                                         {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}<br>
                                         {{order.shipping_address.address1}}<br>
                                         {{order.shipping_address.address2}}
@@ -363,11 +363,11 @@
                                     {% for item in order.line_items %}
                                     {% with image=item.image original=item.product.get_original_info %}
 
-                                    <div class="line container-fluid" line-id="{{item.id}}"
+                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}" line-id="{{item.id}}"
                                          line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}">
                                         <div class="row source-order">
 
-                                            <div class="col-xs-3">
+                                            <div class="col-xs-3 no-wrap">
                                                 <span>Supplier:</span>
                                                 {% if item.supplier %}
                                                     <a {% if supplier.url %}
@@ -400,7 +400,7 @@
                                                 {% endif %}
                                             </div>
                                             <div class="col-xs-3 line-ordered">
-                                                <span class="badge badge-{% if not item.shopify_order %}danger{% else %}primary{% endif %}" style="width:15px;height:15px">&nbsp;</span>
+                                                <span class="badge badge-{% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
                                                 {% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}
                                                     <span class="ordered-status"
                                                     {% if item.shopify_order.source_id %}
@@ -409,11 +409,13 @@
                                                         >Order Placed
 
                                                         {% if item.shopify_order.created_at %}
-                                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #ccc;border-radius: 3px;">
+                                                        <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
                                                             {% date_humanize item.shopify_order.created_at %}
                                                         </span>
                                                         {% endif %}
                                                     </span>
+                                                {% elif item.fulfillment_status == 'fulfilled' %}
+                                                    <span class="ordered-status">Fulfilled</span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
@@ -422,7 +424,7 @@
                                                 {% if item.shopify_order %}
                                                     <span class="badge badge-{{ item.shopify_order.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
                                                     {{item.shopify_order.get_source_status|default:'No Tracking Status'}}
-                                                {% else %}
+                                                {% elif item.fulfillment_status != 'fulfilled' %}
                                                     <span class="badge badge-default" style="width:15px;height:15px">&nbsp;</span>
                                                     Not Tracked
                                                 {% endif %}
@@ -434,30 +436,16 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width:64px"></th>
-                                                        <th style="width:30%;text-align:center">Item</th>
-                                                        <th>Variant</th>
-                                                        <th>Qty</th>
-                                                        <th style="{% if item.shipping_method %}width:125px{% else %}width:64px{% endif %}"></th>
-                                                        <th style="width:64px"></th>
-                                                        <th>Tracking #</th>
-                                                    </tr>
-                                                </thead>
-
-                                                <thead>
-                                                    <tr>
                                                         <td>
                                                             <img class="cached-img no-img no-img-sm unveil"
                                                                 store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
                                                                 src="{% static 'img/blank.gif' %}"
 
                                                                 {% if item.image_src %}
-                                                                    data-src="{% shopify_image_thumb item.image_src %}"
+                                                                    data-src="{% shopify_image_thumb item.image_src '64x64' 'center' %}"
                                                                 {% else %}
                                                                     data-src="/api/product-variant-image?store={{store.id}}&product={{image.product}}&variant={{image.variant}}&redirect=1"
-                                                                {% endif %}
-
-                                                                style="width:64px" />
+                                                                {% endif %} />
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
@@ -466,23 +454,23 @@
                                                             {{item.title}}
                                                             {% endif %}
                                                         </td>
-                                                        <td>
+                                                        <td class="text-center no-wrap" style="width:10%">
                                                             <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
                                                         </td>
-                                                        <td style="white-space:nowrap">
+                                                        <td class="text-center no-wrap" style="width:10%">
                                                             <span style="font-weight:bolder;{% if item.quantity > 1 %}color:blue{% endif %}">
                                                                 {{item.quantity}}
                                                             </span>
                                                             &times;
                                                             $<b>{{item.price}}</b>
                                                         </td>
-                                                        <td style="white-space:nowrap">
+                                                        <td class="text-center no-wrap" style="width:10%">
                                                             {% include 'partial/place_order_btn.html' %}
                                                         </td>
-                                                        <td style="white-space:nowrap">
+                                                        <td class="text-center no-wrap" style="width:10%">
                                                             {% if not item.fulfillment_status %}
 
-                                                                <div class="btn-group">
+                                                                <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
                                                                         <span class="caret"></span></button>
@@ -495,7 +483,7 @@
                                                                 <span class="label label-success">{{item.fulfillment_status|title}}</span>
                                                             {% endif %}
                                                         </td>
-                                                        <td>
+                                                        <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.shopify_order and item.shopify_order.source_tracking %}
                                                             <a href="https://track.aftership.com/{{item.shopify_order.source_tracking}}" target="_blank">
                                                                 {{item.shopify_order.source_tracking}}
@@ -584,14 +572,14 @@
         margin:  20px 5px;
     }
     .orders .order {
-        border: 1px solid #ccc;
+        border: 1px solid #eee;
         margin: 10px 0 30px 0;
         border-radius: 4px;
         box-shadow: 0px 0px 10px 0px rgb(204, 204, 204);
     }
     .orders .order .header {
-        padding: 20px 10px;
-        border-bottom: 1px solid #ccc;
+        padding: 15px 5px;
+        border-bottom: 1px solid #eee;
 
     }
     .orders .order .details {
@@ -599,21 +587,23 @@
     }
     .orders .order .details .shipping-info {
         padding: 10px;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 1px solid #eee;
     }
     .orders .order .details .line {
         padding: 0;
-        margin: 15px;
-        border: 1px solid #ccc;
+        margin: 0;
+    }
+    .orders .order .details .line.multi-lines {
+        border-top: 1px solid #eee;
     }
     .orders .order .details .line .source-order {
-        padding: 15px 0px;
-        border-bottom: 1px solid #CCC;
+        padding: 7px 0;
+        border-bottom: 1px solid #eee;
     }
     .orders .order .details .line .item {
     }
     .orders .order .details .line .table{
-        margin: 0px;
+        margin: 0;
     }
 
     .orders .order .details .panel {
@@ -638,12 +628,12 @@
         padding: 0 !important;
         margin-top: -11px !important;
         margin-right: -11px !important;
-        border-bottom: 0px solid #ccc !important;
+        border-bottom: 0px solid #eee !important;
         border-radius: 0 !important;
-        border-color: #ccc !important;
+        border-color: #eee !important;
     }
     .note-panel .panel-body {
-        border: 0px solid #ccc !important;
+        border: 0px solid #eee !important;
     }
     .note-panel .edit-note{
         display: none;
@@ -672,6 +662,25 @@
     .order-status span {
         width: 15px;
         height: 15px;
+    }
+    .table > thead > tr > td {
+        vertical-align: middle;
+        padding: 5px;
+        /*border-right: 1px solid #eee;*/
+    }
+    .table > thead > tr > th {
+        text-align: center;
+        white-space: nowrap;
+        /*padding: 0;*/
+        /*border-right: 1px solid #eee;*/
+    }
+    .table > thead > tr > td:first-child {
+        padding: 3px 3px 3px 5px;
+        width:64px;
+    }
+    .table > thead > tr > td:first-child > img {
+        /*border: 1px solid #eee;*/
+        width:64px;
     }
 </style>
 

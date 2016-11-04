@@ -67,9 +67,15 @@ def remove_link_query(context, link):
 
 
 @register.simple_tag
-def shopify_image_thumb(link, size='small'):
+def shopify_image_thumb(link, size='small', crop=''):
     if link:
-        return re.sub(r'\.(jpe?g|png|gif)(\?.+)?$', r'_{}.\1\2'.format(size), link, flags=re.I)
+        if 'cdn.shopify.com' in link.lower():
+            if crop:
+                crop = '_crop_{}'.format(crop)
+
+            return re.sub(r'\.(jpe?g|png|gif)(\?.+)?$', r'_{}{}.\1\2'.format(size, crop), link, flags=re.I)
+        else:
+            return link
 
 
 @register.simple_tag(takes_context=True)

@@ -628,8 +628,6 @@ $('#country-filter').chosen({
     width: '325px'
 });
 
-$('.order:last .line .btn-group').addClass('dropup');
-
 function pusherSub() {
     if (typeof(Pusher) === 'undefined') {
         toastr.error('This could be due to using Adblocker extensions<br>' +
