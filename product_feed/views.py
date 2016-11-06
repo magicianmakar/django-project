@@ -39,12 +39,6 @@ def product_feeds(request):
                 if feed.status == 2:
                     return JsonResponse({'error': 'Feed is being updated'}, status=500)
 
-                raven_client.captureMessage(
-                    'Manual Feed Generation',
-                    extra={'feed': feed.id, 'store': feed.store.title},
-                    level='warning'
-                )
-
                 from leadgalaxy.tasks import generate_feed
 
                 generate_feed.delay(feed.id, nocache=True)
