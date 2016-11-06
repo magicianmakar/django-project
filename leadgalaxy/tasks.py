@@ -439,7 +439,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
 
     except Exception as e:
         raven_client.captureException(level='warning', extra={
-            'Store': store.title,
+            'Store': store_id,
             'Order': order_id,
             'from_webhook': from_webhook,
             'Retries': self.request.retries
