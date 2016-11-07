@@ -664,11 +664,19 @@ def split_product(product, store=None):
             new_data['title'] = '{}, {} - {}'.format(data['title'], active_variant['title'], v)
             clone.data = json.dumps(new_data)
 
-            if clone is not None:
+            if store is not None:
                 clone.store = store
 
-            clone.default_supplier = None
             clone.save()
+
+            for i in product.productsupplier_set.all():
+                i.pk = None
+                i.product = clone
+                i.store = clone.store
+                i.save()
+
+                if i.is_default:
+                    clone.set_default_supplier(i, commit=True)
 
             new_products.append(clone)
 
