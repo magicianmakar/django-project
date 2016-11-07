@@ -1396,7 +1396,6 @@ def proccess_api(request, user, method, target, data):
 
                 if limit != 20:
                     cache.set(limit_key, limit, timeout=3600)
-                    print "ORDER FULFILL LIMIT: {} FOR {}".format(limit, user.username)
 
             if data.get('forced') == 'true':
                 limit = limit * 2
