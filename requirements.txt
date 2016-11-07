@@ -2,13 +2,13 @@ amqp==1.4.9
 anyjson==0.3.3
 arrow==0.7.0
 billiard==3.3.0.23
-bleach==1.4.3
+bleach==1.5.0
 boto==2.43.0
 celery==3.1.24
 cffi==1.8.3
 characteristic==14.3.0
 contextlib2==0.5.4
-cryptography==1.5.2
+cryptography==1.5.3
 cssselect==0.9.1
 dj-database-url==0.3.0
 Django==1.8.15
