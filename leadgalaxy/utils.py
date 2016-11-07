@@ -645,6 +645,35 @@ def duplicate_product(product, store=None):
 
     return product
 
+def split_product(product, store=None):
+    data = json.loads(product.data)
+    new_products = []
+
+    if data['variants'] and len(data['variants']):
+        active_variant = data['variants'][0]
+        for idx, v in enumerate(active_variant['values']):
+            clone = ShopifyProduct.objects.get(id=product.id)
+            clone.pk = None
+            clone.parent_product = product
+            clone.shopify_id = 0
+            new_data = json.loads(clone.data)
+            new_data['images'] = data['images'][idx:idx + 1]
+            if not new_data['images']:
+                new_data['images'] = [data['images'][0]]
+            new_data['variants'] = [{'title': active_variant['title'], 'values': [v]}]
+            new_data['title'] = '{}, {} - {}'.format(data['title'], active_variant['title'], v)
+            clone.data = json.dumps(new_data)
+
+            if clone is not None:
+                clone.store = store
+
+            clone.default_supplier = None
+            clone.save()
+
+            new_products.append(clone)
+
+    return new_products
+
 
 def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)

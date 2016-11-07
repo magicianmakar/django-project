@@ -1062,6 +1062,17 @@ def proccess_api(request, user, method, target, data):
             }
         })
 
+    if method == 'POST' and target == 'product-split-variants':
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        user.can_view(product)
+
+        splitted_products = utils.split_product(product)
+
+        return JsonResponse({
+            'status': 'ok',
+            'products_ids': map(lambda p: p.pk, splitted_products)
+        })
+
     if method == 'GET' and target == 'user-config':
         if data.get('current'):
             profile = user.profile
