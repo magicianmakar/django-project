@@ -28,4 +28,4 @@ def record_import_metric(value):
 
     conn = httplib.HTTPSConnection(api_base)
     conn.request("POST", "/v1/pages/{}/metrics/{}/data.json".format(page_id, metric_id), params, headers)
-    print conn.getresponse()
+    conn.getresponse()
