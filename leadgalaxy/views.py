@@ -3814,6 +3814,17 @@ def orders_view(request):
         {'url': '/orders?store={}'.format(store.id), 'title': store.title},
     ]
 
+    # Check if the extension is up-to-date
+    latest_release = cache.get('extension_min_version')
+    user_version = request.user.get_config('extension_version')
+
+    if user_version and latest_release \
+            and utils.version_compare(user_version, latest_release) < 0 \
+            and cache.get('extension_required', False):
+        messages.warning(
+            request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
+            '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
+
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
