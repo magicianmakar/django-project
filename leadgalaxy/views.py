@@ -1751,6 +1751,12 @@ def proccess_api(request, user, method, target, data):
         if PlanRegistration.objects.filter(email__iexact=data.get('email')).count():
             return JsonResponse({'error': 'An Invitation is already sent to this email'}, status=501)
 
+        if user.get_config('_limit_subusers_invite'):
+            raven_client.captureMessage('Sub User Invite Attempts', level='warning')
+            return JsonResponse({'error': 'Server Error'}, status=501)
+
+        return JsonResponse({'error': 'An Invitation is already sent to this email'}, status=501)
+
         plan = utils.get_plan(plan_slug='subuser-plan')
         reg = utils.generate_plan_registration(plan=plan, sender=user, data={
             'email': data.get('email')
