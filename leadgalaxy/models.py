@@ -378,7 +378,7 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def has_subuser_permission(self, codename, store=None):
-        if self.user.is_subuser:
+        if self.subuser_parent is not None:
             permission = self.subuser_permissions.filter(codename=codename)
             if store:
                 if not self.subuser_stores.filter(pk=store.id).exists():

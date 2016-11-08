@@ -161,50 +161,7 @@ def api(request, target):
     return res
 
 
-def validate_subuser_permission(request, user, method, target, data):
-    if target == 'user-config':
-        return user.can('edit_settings.sub')
-
-    board_targets = ['board-empty', 'board-delete', 'board-config', 'boards-add',
-                     'board-add-products', 'product-remove-board', 'product-board']
-    if target in board_targets:
-        if request.method == 'GET':
-            return user.can('view_product_boards.sub')
-        if request.method == 'POST':
-            return user.can('edit_product_boards.sub')
-
-    if target in ['shopify', 'shopify-update', 'save-for-later']:
-        req_data = json.loads(request.body)
-        if req_data.get('store'):
-            store = ShopifyStore.objects.get(pk=int(req_data['store']))
-            if target == 'save-for-later':
-                return user.can('save_for_later.sub', store)
-            if target == 'shopify' or target == 'shopify-update':
-                return user.can('send_to_shopify.sub', store)
-
-    if target == 'product-delete':
-        if request.method == 'POST' and data.get('product'):
-            product = ShopifyProduct.objects.get(id=int(data['product']))
-            return user.can('delete_products.sub', product.store)
-
-    if target in ['order-fulfill', 'order-fulfill-update']:
-        if request.method == 'POST' and data.get('store'):
-            store = ShopifyStore.objects.get(pk=int(data['store']))
-            return user.can('place_orders.sub', store)
-
-    if target == 'fulfill-order':
-        if request.method == 'POST' and data.get('fulfill-store'):
-            store = ShopifyStore.objects.get(pk=int(data['fulfill-store']))
-            return user.can('place_orders.sub', store)
-
-    return True
-
-
 def proccess_api(request, user, method, target, data):
-    if user.is_subuser:
-        if not validate_subuser_permission(request, user, method, target, data):
-            return JsonResponse({'error': "You don't have permission to perform this action."}, status=403)
-
     if target == 'login':
         username = data.get('username')
         password = data.get('password')
@@ -460,8 +417,16 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and (target == 'shopify' or target == 'shopify-update' or target == 'save-for-later'):
         req_data = json.loads(request.body)
-        delayed = req_data.get('b')
 
+        if req_data.get('store'):
+            store_id = int(req_data['store'])
+            store = ShopifyStore.objects.get(pk=store_id)
+            if target == 'save-for-later' and not user.can('save_for_later.sub', store):
+                raise PermissionDenied('Sub User Invite')
+            if target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
+                raise PermissionDenied('Sub User Invite')
+
+        delayed = req_data.get('b')
         user = utils.get_api_user(request, req_data, assert_login=True)
 
         if not delayed or target == 'save-for-later':
@@ -532,6 +497,9 @@ def proccess_api(request, user, method, target, data):
             user.can_delete(product)
         except ShopifyProduct.DoesNotExist:
             return JsonResponse({'error': 'Product does not exists'}, status=404)
+
+        if not user.can('delete_products.sub', product.store):
+            raise PermissionDenied('Sub User Invite')
 
         product.userupload_set.update(product=None)
         product.delete()
@@ -625,6 +593,9 @@ def proccess_api(request, user, method, target, data):
         }, safe=False)
 
     if method == 'POST' and target == 'boards-add':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         can_add, total_allowed, user_count = user.profile.can_add_board()
 
         if not can_add:
@@ -652,6 +623,9 @@ def proccess_api(request, user, method, target, data):
         })
 
     if method == 'POST' and target == 'board-add-products':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
@@ -666,6 +640,9 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'product-remove-board':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
@@ -680,6 +657,9 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'product-board':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
@@ -705,6 +685,9 @@ def proccess_api(request, user, method, target, data):
                 }
             })
     if method == 'POST' and target == 'board-delete':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_delete(board)
 
@@ -715,6 +698,9 @@ def proccess_api(request, user, method, target, data):
         })
 
     if method == 'POST' and target == 'board-empty':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
@@ -725,6 +711,9 @@ def proccess_api(request, user, method, target, data):
         })
 
     if method == 'GET' and target == 'board-config':
+        if not user.can('view_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
@@ -746,6 +735,9 @@ def proccess_api(request, user, method, target, data):
             })
 
     if method == 'POST' and target == 'board-config':
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
 
@@ -1124,6 +1116,9 @@ def proccess_api(request, user, method, target, data):
         })
 
     if method == 'GET' and target == 'user-config':
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         if data.get('current'):
             profile = user.profile
         else:
@@ -1178,6 +1173,9 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied('Sub User Invite')
+
         profile = user.models_user.profile
 
         try:
@@ -1234,6 +1232,10 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and target == 'fulfill-order':
         try:
             store = ShopifyStore.objects.get(id=data.get('fulfill-store'))
+
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied('Sub User Invite')
+
             user.can_view(store)
 
         except ShopifyStore.DoesNotExist:
@@ -1476,6 +1478,15 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse(orders, safe=False)
 
     if method == 'POST' and target == 'order-fulfill':
+        try:
+            store = ShopifyStore.objects.get(id=int(data.get('store')))
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied('Sub User Invite')
+            user.can_view(store)
+        except ShopifyStore.DoesNotExist:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
+
         # Mark Order as Ordered
         order_id = data.get('order_id')
         order_lines = data.get('line_id').split(',')
@@ -1492,14 +1503,6 @@ def proccess_api(request, user, method, target, data):
             raven_client.captureMessage('Non valid Aliexpress Order ID')
 
             return JsonResponse({'error': e.message}, status=501)
-
-        try:
-            store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
-
-        except ShopifyStore.DoesNotExist:
-            raven_client.captureException()
-            return JsonResponse({'error': 'Store {} not found'.format(data.get('store'))}, status=404)
 
         note_delay = 0
         for line_id in order_lines:
@@ -1596,6 +1599,11 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Order not found.'}, status=404)
 
     if method == 'POST' and target == 'order-fulfill-update':
+        if data.get('store'):
+            store = ShopifyStore.objects.get(pk=int(data['store']))
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied('Sub User Invite')
+
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         user.can_edit(order)
 
