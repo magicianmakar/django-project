@@ -1484,16 +1484,19 @@ def proccess_api(request, user, method, target, data):
             elif tracks_count == 1:
                 saved_track = tracks.first()
                 if saved_track.source_id and source_id != saved_track.source_id:
-                    raven_client.captureMessage('Possible Double Order', level='warning', extra={
-                        'store': store.title,
-                        'order_id': order_id,
-                        'line_id': line_id,
-                        'old': {
-                            'id': saved_track.source_id,
-                            'date': arrow.get(saved_track.created_at).humanize()
-                        },
-                        'new': source_id,
-                    })
+                    delta = timezone.now() - saved_track.created_at
+                    if delta.days < 1:
+                        raven_client.captureMessage('Possible Double Order', level='warning', extra={
+                            'store': store.title,
+                            'order_id': order_id,
+                            'line_id': line_id,
+                            'old': {
+                                'id': saved_track.source_id,
+                                'date': arrow.get(saved_track.created_at).humanize(),
+                                'delta': delta
+                            },
+                            'new': source_id,
+                        })
 
             track, created = ShopifyOrderTrack.objects.update_or_create(
                 user=user.models_user,
