@@ -472,12 +472,17 @@ function updateOrderedStatus(line) {
     }
 }
 
-function fixNotePanelHeight() {
-    $('.note-panel').each(function (i, el) {
-        $(el).css({
-            height: $(el).parents('.shipping-info').outerHeight() + 'px',
-            overflow: 'hidden'
-        });
+function fixNotePanelHeight(order) {
+    order = typeof(order) === 'undefined' ? document : order;
+    $('.note-panel', order).each(function(i, el) {
+        if ($(el).prop('editing-mode')) {
+            $(el).prop('init-height', $(el).parents('.shipping-info').outerHeight() + 'px');
+        } else {
+            $(el).css({
+                height: $(el).parents('.shipping-info').outerHeight() + 'px',
+                overflow: 'hidden'
+            });
+        }
     });
 }
 
@@ -691,13 +696,14 @@ function pusherSub() {
 
     channel.bind('order-note-update', function(data) {
         var order = $('.order[order-id="' + data.order_id + '"]');
+        if (!order.length) {
+            return;
+        }
 
         order.find('.note-panel textarea').val(data.note);
         order.find('.note-panel .note-text').text(data.note_snippet);
 
-        if (!order.find('.note-panel textarea').is(":visible")) {
-            fixNotePanelHeight();
-        }
+        fixNotePanelHeight(order);
     });
 
     /*
