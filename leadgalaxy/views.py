@@ -1785,7 +1785,7 @@ def proccess_api(request, user, method, target, data):
         try:
             if data.get('all') == '1':
                 store = ShopifyStore.objects.get(id=data.get('store'))
-                user.can_edit(store)
+                user.can_view(store)
 
                 AliexpressProductChange.objects.filter(product__store=store).update(hidden=1)
 
@@ -1806,7 +1806,7 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and target == 'alert-delete':
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_edit(store)
+            user.can_view(store)
 
             AliexpressProductChange.objects.filter(product__store=store).delete()
 
@@ -1824,7 +1824,7 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and target == 'import-product':
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_edit(store)
+            user.can_view(store)
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
