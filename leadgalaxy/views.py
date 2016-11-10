@@ -4398,6 +4398,9 @@ def product_alerts(request):
         messages.warning(request, 'Please add at least one store before using the Alerts page.')
         return HttpResponseRedirect('/')
 
+    AliexpressProductChange.objects.filter(user=request.user.models_user,
+                                           product__store=None).delete()
+
     changes = AliexpressProductChange.objects.select_related('product') \
                                      .select_related('product__default_supplier') \
                                      .filter(user=request.user.models_user,

@@ -194,7 +194,6 @@ class UserProfile(models.Model):
         return self.user.models_user.aliexpressproductchange_set \
                                     .filter(seen=False) \
                                     .filter(hidden=False) \
-                                    .exclude(product__store=None) \
                                     .count()
 
     @cached_property
@@ -1399,6 +1398,7 @@ class PlanRegistration(models.Model):
 class AliexpressProductChange(models.Model):
     class Meta:
         ordering = ['-updated_at']
+        index_together = ['user', 'seen', 'hidden']
 
     user = models.ForeignKey(User, null=True)
     product = models.ForeignKey(ShopifyProduct)
