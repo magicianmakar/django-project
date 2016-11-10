@@ -1221,7 +1221,10 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'status': 'ok'})
 
         except:
-            raven_client.captureException(extra={'response': rep.text})
+            if 'is already fulfilled' not in rep.text:
+                raven_client.captureException(
+                    level='warning',
+                    extra={'response': rep.text})
 
             try:
                 errors = utils.format_shopify_error(rep.json())
