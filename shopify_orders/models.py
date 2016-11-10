@@ -84,7 +84,7 @@ class ShopifyOrder(models.Model):
     tags = models.TextField(blank=True, null=True, default='')
     city = models.CharField(max_length=64, blank=True, null=True, default='')
     zip_code = models.CharField(max_length=32, blank=True, null=True, default='')
-    country_code = models.CharField(max_length=32, blank=True, null=True, default='', db_index=True)
+    country_code = models.CharField(max_length=32, blank=True, null=True, default='')
     items_count = models.IntegerField(blank=True, null=True, verbose_name='Item Lines count')
 
     created_at = models.DateTimeField()
