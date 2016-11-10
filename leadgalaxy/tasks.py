@@ -225,6 +225,7 @@ def export_product(req_data, target, user_id):
                     original_url = product.get_original_info().get('url', '')
 
                     product.shopify_id = pid
+                    product.store = store
 
                     if not product.default_supplier:
                         supplier = product.get_supplier_info()
