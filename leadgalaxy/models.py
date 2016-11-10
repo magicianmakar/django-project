@@ -1076,6 +1076,7 @@ class ShopifyProductImage(models.Model):
 class ShopifyOrderTrack(models.Model):
     class Meta:
         ordering = ['-created_at']
+        index_together = ['store', 'order_id', 'line_id']
 
     user = models.ForeignKey(User)
     store = models.ForeignKey(ShopifyStore, null=True)

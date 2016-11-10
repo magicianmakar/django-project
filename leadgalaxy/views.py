@@ -1463,7 +1463,6 @@ def proccess_api(request, user, method, target, data):
                 return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
 
             tracks = ShopifyOrderTrack.objects.filter(
-                user=user.models_user,
                 store=store,
                 order_id=order_id,
                 line_id=line_id
@@ -1499,11 +1498,11 @@ def proccess_api(request, user, method, target, data):
                         })
 
             track, created = ShopifyOrderTrack.objects.update_or_create(
-                user=user.models_user,
                 store=store,
                 order_id=order_id,
                 line_id=line_id,
                 defaults={
+                    'user': user.models_user,
                     'source_id': source_id,
                     'created_at': timezone.now(),
                     'updated_at': timezone.now(),
@@ -3894,7 +3893,7 @@ def orders_view(request):
                 order_number = 0
 
             source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
-            tracks = ShopifyOrderTrack.objects.filter(user=models_user, source_id=source_id) \
+            tracks = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
@@ -4316,8 +4315,7 @@ def orders_track(request):
     if len(orders):
         orders = utils.get_tracking_orders(store, orders)
 
-    ShopifyOrderTrack.objects.filter(user=request.user.models_user,
-                                     id__in=[i.id for i in orders]) \
+    ShopifyOrderTrack.objects.filter(store=store, id__in=[i.id for i in orders]) \
                              .update(seen=True)
 
     return render(request, 'orders_track.html', {
