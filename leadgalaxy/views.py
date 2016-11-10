@@ -1872,7 +1872,7 @@ def proccess_api(request, user, method, target, data):
             is_default=True
         )
 
-        product.set_default_supplier(supplier)
+        product.set_default_supplier(supplier, commit=True)
 
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
