@@ -2420,8 +2420,11 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
+                product.price_notification_id = 0
                 product.shopify_id = 0
                 product.save()
+
+                AliexpressProductChange.objects.filter(product=product).delete()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
@@ -2482,6 +2485,8 @@ def webhook(request, provider, option):
             elif topic == 'app/uninstalled':
                 store.is_active = False
                 store.save()
+
+                AliexpressProductChange.objects.filter(product__store=store).delete()
 
                 # Make all products related to this store non-connected
                 store.shopifyproduct_set.update(store=None, shopify_id=0)
