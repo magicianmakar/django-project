@@ -803,13 +803,13 @@ def get_shopify_order_note(store, order_id):
 
 def set_shopify_order_note(store, order_id, note):
     rep = requests.put(
-            url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
-            json={
-                'order': {
-                    'id': order_id,
-                    'note': note
-                }
+        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+        json={
+            'order': {
+                'id': order_id,
+                'note': note[:5000]
             }
+        }
     )
 
     response_text = rep.text
