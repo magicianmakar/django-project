@@ -1332,6 +1332,8 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
     if promotion_url is not None:
         return promotion_url
 
+    rep = None
+
     try:
         r = requests.get(
             url='http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/{}'.format(appkey),
@@ -1344,7 +1346,9 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             timeout=5
         )
 
+        rep = r.text
         r = r.json()
+
         errorCode = r['errorCode']
         if errorCode != 20010000:
             raven_client.captureMessage('Aliexpress Promotion Error',
@@ -1365,7 +1369,8 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             return None
 
     except:
-        raven_client.captureException(level='warning')
+        cache.set(promotion_key, False, timeout=3600)
+        raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
 
