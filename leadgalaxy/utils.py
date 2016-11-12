@@ -682,6 +682,10 @@ def split_product(product, store=None):
 
     return new_products
 
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
 
 def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)

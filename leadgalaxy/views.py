@@ -1068,9 +1068,33 @@ def proccess_api(request, user, method, target, data):
 
         splitted_products = utils.split_product(product)
 
+        # if current product is connected, automatically connect splitted products.
+        if product.shopify_id:
+            for splitted_product in splitted_products:
+                data = json.loads(product.data)
+                req_data = {
+                    'product': splitted_product.id,
+                    'store': splitted_product.store_id,
+                    'data': json.dumps({
+                        'product': {
+                            'title': data['title'],
+                            'body_html': data['description'],
+                            'product_type': data['type'],
+                            'vendor': data['vendor'],
+                            'published': data['published'],
+                            'tags': data['tags'],
+                            'variants': [utils.merge_two_dicts({'title': v['title'], 'price': data['price'], 'compare_at_price': data['compare_at_price'], 'weight': data['weight'], 'weight_unit': data['weight_unit']}, {'option{}'.format(i): o for i, o in enumerate(v['values'])}) for v in data['variants']],
+                            'options': [{'name': v['title'], 'values': v['values']} for v in data['variants']],
+                            'images': [{'src': i} for i in data['images']]
+                        }
+                    })
+                }
+                task = tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
+                print('task id: {}'.format(str(task.id)))
+
         return JsonResponse({
             'status': 'ok',
-            'products_ids': map(lambda p: p.pk, splitted_products)
+            'products_ids': [p.id for p in splitted_products]
         })
 
     if method == 'GET' and target == 'user-config':

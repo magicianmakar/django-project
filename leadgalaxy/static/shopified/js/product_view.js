@@ -357,6 +357,11 @@ $('#export-btn').click(function () {
 $('#btn-split-variants').click(function (e) {
     e.preventDefault();
 
+    if ($('#variants .variant').length <= 1 && $('#shopify-variants tr.shopify-variant').length <= 1) {
+        swal('There should be more than one variant to split it.');
+        return;
+    }
+
     var product_id = $(this).attr('product-id');
 
     $(this).bootstrapBtn('loading');
@@ -373,9 +378,13 @@ $('#btn-split-variants').click(function (e) {
             btn.bootstrapBtn('reset');
 
             if ('products_ids' in data) {
-                toastr.success('The variants are splitted into new products now.', 'Product Split!');
-
-                window.location.href = '/product';
+                // check if current product is already connected to shopify..
+                if ($('#export-btn').attr('target') === 'shopify-update') {
+                  toastr.success('The variants are splitted into new products now.\r\nThe new products will get connected to shopify very soon.', 'Product Split!');
+                } else {
+                  toastr.success('The variants are splitted into new products now.', 'Product Split!');
+                }
+                setTimeout(function() { window.location.href = '/product'; }, 500);
             }
         },
         error: function (data) {
