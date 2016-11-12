@@ -1089,8 +1089,7 @@ def proccess_api(request, user, method, target, data):
                         }
                     })
                 }
-                task = tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
-                print('task id: {}'.format(str(task.id)))
+                tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
 
         return JsonResponse({
             'status': 'ok',
