@@ -109,6 +109,9 @@ def api(request, target):
 
         res = proccess_api(request, user, method, target, data)
 
+        if not request.is_ajax():
+            raven_client.captureMessage('Not an AJAX API Call', level='warning')
+
         if res is None:
             raven_client.captureMessage('API Response is empty')
             res = JsonResponse({'error': 'Internal Server Error'}, status=500)
