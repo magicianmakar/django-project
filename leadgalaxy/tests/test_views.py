@@ -134,7 +134,7 @@ class GetProductTestCase(TestCase):
 
 class SubuserpermissionsApiTestCase(TestCase):
     def setUp(self):
-        self.error_message = "Permission Denied: Sub User Invite"
+        self.error_message = "Permission Denied: You don't have permission to perform this action"
         self.parent_user = f.UserFactory()
         self.user = f.UserFactory()
         self.user.profile.subuser_parent = self.parent_user

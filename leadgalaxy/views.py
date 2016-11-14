@@ -116,7 +116,11 @@ def api(request, target):
 
     except PermissionDenied as e:
         raven_client.captureException()
-        res = JsonResponse({'error': 'Permission Denied: %s' % e.message}, status=403)
+        reason = e.message
+        if not reason:
+            reason = "You don't have permission to perform this action"
+
+        res = JsonResponse({'error': 'Permission Denied: %s' % reason}, status=403)
 
     except requests.Timeout:
         raven_client.captureException()
@@ -422,9 +426,9 @@ def proccess_api(request, user, method, target, data):
             store_id = int(req_data['store'])
             store = ShopifyStore.objects.get(pk=store_id)
             if target == 'save-for-later' and not user.can('save_for_later.sub', store):
-                raise PermissionDenied('Sub User Invite')
+                raise PermissionDenied()
             if target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
-                raise PermissionDenied('Sub User Invite')
+                raise PermissionDenied()
 
         delayed = req_data.get('b')
         user = utils.get_api_user(request, req_data, assert_login=True)
@@ -499,7 +503,7 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Product does not exists'}, status=404)
 
         if not user.can('delete_products.sub', product.store):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         product.userupload_set.update(product=None)
         product.delete()
@@ -594,7 +598,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'boards-add':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         can_add, total_allowed, user_count = user.profile.can_add_board()
 
@@ -624,7 +628,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'board-add-products':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -641,7 +645,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-remove-board':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -658,7 +662,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-board':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
@@ -686,7 +690,7 @@ def proccess_api(request, user, method, target, data):
             })
     if method == 'POST' and target == 'board-delete':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_delete(board)
@@ -699,7 +703,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'board-empty':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -712,7 +716,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'board-config':
         if not user.can('view_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -736,7 +740,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'board-config':
         if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
         user.can_edit(board)
@@ -1117,7 +1121,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'user-config':
         if not user.can('edit_settings.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         if data.get('current'):
             profile = user.profile
@@ -1174,7 +1178,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'user-config':
         if not user.can('edit_settings.sub'):
-            raise PermissionDenied('Sub User Invite')
+            raise PermissionDenied()
 
         profile = user.models_user.profile
 
@@ -1234,7 +1238,7 @@ def proccess_api(request, user, method, target, data):
             store = ShopifyStore.objects.get(id=data.get('fulfill-store'))
 
             if not user.can('place_orders.sub', store):
-                raise PermissionDenied('Sub User Invite')
+                raise PermissionDenied()
 
             user.can_view(store)
 
@@ -1481,7 +1485,7 @@ def proccess_api(request, user, method, target, data):
         try:
             store = ShopifyStore.objects.get(id=int(data.get('store')))
             if not user.can('place_orders.sub', store):
-                raise PermissionDenied('Sub User Invite')
+                raise PermissionDenied()
             user.can_view(store)
         except ShopifyStore.DoesNotExist:
             raven_client.captureException()
@@ -1602,7 +1606,7 @@ def proccess_api(request, user, method, target, data):
         if data.get('store'):
             store = ShopifyStore.objects.get(pk=int(data['store']))
             if not user.can('place_orders.sub', store):
-                raise PermissionDenied('Sub User Invite')
+                raise PermissionDenied()
 
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         user.can_edit(order)
@@ -3768,7 +3772,7 @@ def pixlr_close(request):
 @login_required
 def pixlr_serve_image(request):
     if not request.user.can('pixlr_photo_editor.use'):
-        raise PermissionDenied
+        raise PermissionDenied()
 
     import StringIO
 
@@ -3778,7 +3782,7 @@ def pixlr_serve_image(request):
 
     if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
         raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-        raise PermissionDenied
+        raise PermissionDenied()
 
     fp = StringIO.StringIO(requests.get(img_url).content)
     return HttpResponse(fp, content_type=utils.get_mimetype(img_url))
