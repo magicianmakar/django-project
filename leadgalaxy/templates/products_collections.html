@@ -33,6 +33,7 @@
                             <th><a href="{% url_toggle 'sort' '-category,category' %}">Category {% sort_icon 'sort' 'category' %}</a></th>
                             <th><a href="{% url_toggle 'sort' '-rating,rating' %}">Rating {% sort_icon 'sort' 'rating' %}</a></th>
                             <th><a href="{% url_toggle 'sort' '-orders_numbers,orders_numbers' %}">Orders {% sort_icon 'sort' 'orders_numbers' %}</a></th>
+                            <th style="width: 10%;"><a href="{% url_toggle 'sort' '-created_at,created_at' %}">Date added {% sort_icon 'sort' 'created_at' %}</a></th>
                             <th style="width: 110px">Store</th>
                             {# <th>Options</th> #}
                         </tr>
@@ -55,6 +56,7 @@
                             <td><a href="?f=1&type={{item.category|urlencode}}">{{item.category}}</a></td>
                             <td>{{item.rating}}</td>
                             <td>{{item.orders_numbers}}</td>
+                            <td>{{item.created_at|date:"M d, Y"}}</td>
                             <td><a href="{{item.store.url}}" target="_blank">{{item.store.name}}</a></td>
                             {# <td> <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button> </td> #}
                         </tr>
