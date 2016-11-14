@@ -1,7 +1,7 @@
 {% load template_helper %}
 
 {% if original %}
-    <div class="btn-group dropup">
+    <div class="btn-group dropup" {% if item.shipping_method %}style="display:flex"{% endif %}>
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"

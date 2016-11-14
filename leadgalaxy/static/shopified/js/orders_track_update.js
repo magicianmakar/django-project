@@ -24,6 +24,10 @@
         cancellation: true
     });
 
+    Number.prototype.bound = function(min, max) {
+      return Math.min(Math.max(this, min), max);
+    };
+
     $('.aliexpress-sync-btn').click(function(e) {
         window.extensionSendMessage({
             subject: 'getVersion',
@@ -121,7 +125,7 @@
             }
         }).done(function(data) {
             updatePromise = P.map(data, checkOrder, {
-                concurrency: 3
+                concurrency: parseInt($('#update-concurrency').val(), 10).bound(1, 10)
             }).then(function(allValues) {
                 updateComplete();
             }).finally(function() {
@@ -158,23 +162,31 @@
         }, 1000);
     });
 
+    $('#advanced-options-check').on('change', function (e) {
+        $('.advanced-options').toggle(e.target.checked);
+    });
+
     function checkOrder(order) {
+        var delay = parseFloat($('#update-delay').val(), 10).bound(0.1, 100) * 1000;
+
         return new P(function(resolve, reject) {
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
                 order: order.source_id,
             }, function(rep) {
-                if (rep.hasOwnProperty('error')) {
-                    reject({
-                        order: order,
-                        source: rep
-                    });
-                } else {
-                    resolve({
-                        order: order,
-                        source: rep
-                    });
-                }
+                setTimeout(function() {
+                    if (rep.hasOwnProperty('error')) {
+                        reject({
+                            order: order,
+                            source: rep
+                        });
+                    } else {
+                        resolve({
+                            order: order,
+                            source: rep
+                        });
+                    }
+                }, delay);
             });
         }).then(
             function(data) {

@@ -20,6 +20,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from shopify_revision.models import ProductRevision
+from shopify_orders.utils import get_datetime
 
 from django.conf import settings
 
@@ -803,13 +804,13 @@ def get_shopify_order_note(store, order_id):
 
 def set_shopify_order_note(store, order_id, note):
     rep = requests.put(
-            url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
-            json={
-                'order': {
-                    'id': order_id,
-                    'note': note
-                }
+        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+        json={
+            'order': {
+                'id': order_id,
+                'note': note[:5000]
             }
+        }
     )
 
     response_text = rep.text
@@ -1332,6 +1333,8 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
     if promotion_url is not None:
         return promotion_url
 
+    rep = None
+
     try:
         r = requests.get(
             url='http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/{}'.format(appkey),
@@ -1344,7 +1347,9 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             timeout=5
         )
 
+        rep = r.text
         r = r.json()
+
         errorCode = r['errorCode']
         if errorCode != 20010000:
             raven_client.captureMessage('Aliexpress Promotion Error',
@@ -1365,7 +1370,8 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
             return None
 
     except:
-        raven_client.captureException(level='warning')
+        cache.set(promotion_key, False, timeout=3600)
+        raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
 
@@ -2037,7 +2043,7 @@ class ProductsCollectionPaginator(Paginator):
             try:
                 rep = self._api_request()
                 self._count = rep.get('count', 0)
-                self._products = rep.get('products')
+                self._products = self.format_products_date(rep.get('products'))
             except:
                 raven_client.captureException()
                 self._count = 0
@@ -2045,6 +2051,12 @@ class ProductsCollectionPaginator(Paginator):
         return self._count
 
     count = property(_get_product_count)
+
+    def format_products_date(self, products):
+        for product in products:
+            product['created_at'] = get_datetime(product['created_at'])
+
+        return products
 
     def _api_request(self):
         params = {

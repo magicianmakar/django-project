@@ -247,7 +247,8 @@ $('.delete-product-btn').click(function(e) {
 
 $('#shopify-send-btn').click(function(e) {
 
-    $(this).button('loading');
+    var btn = $(this);
+    btn.button('loading');
 
     var products = [];
     var products_ids = [];
@@ -267,6 +268,7 @@ $('#shopify-send-btn').click(function(e) {
 
     if (products.length === 0) {
         swal('Please select a product(s) first', '', "warning");
+        btn.button('reset');
         return;
     }
 
@@ -307,6 +309,7 @@ $('#shopify-send-btn').click(function(e) {
 
                         if ((total_sent_success + total_sent_error) == products.length) {
                             $('#modal-shopify-send').modal('hide');
+                            btn.button('reset');
                         }
                     }, {
                         'element': el.element,

@@ -1271,7 +1271,10 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'status': 'ok'})
 
         except:
-            raven_client.captureException(extra={'response': rep.text})
+            if 'is already fulfilled' not in rep.text:
+                raven_client.captureException(
+                    level='warning',
+                    extra={'response': rep.text})
 
             try:
                 errors = utils.format_shopify_error(rep.json())
@@ -1281,10 +1284,23 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'order-data':
         version = request.META.get('HTTP_X_EXTENSION_VERSION')
-        if version and utils.version_compare(version, '1.19.0') <= 0:
-            return JsonResponse({
-                'error': 'Please Update The Extension To Version 1.19.1 or Higher'
-            }, status=501)
+        if version:
+            required = None
+
+            if utils.version_compare(version, '1.25.6') < 0:
+                required = '1.25.6'
+            elif utils.version_compare(version, '1.26.0') == 0:
+                required = '1.26.1'
+
+            if required:
+                raven_client.captureMessage(
+                    'Extension Update Required',
+                    level='warning',
+                    extra={'current': version, 'required': required})
+
+                return JsonResponse({
+                    'error': 'Please Update The Extension To Version %s or Higher' % required
+                }, status=501)
 
         order_key = data.get('order')
 
@@ -1514,7 +1530,6 @@ def proccess_api(request, user, method, target, data):
                 return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
 
             tracks = ShopifyOrderTrack.objects.filter(
-                user=user.models_user,
                 store=store,
                 order_id=order_id,
                 line_id=line_id
@@ -1535,23 +1550,26 @@ def proccess_api(request, user, method, target, data):
             elif tracks_count == 1:
                 saved_track = tracks.first()
                 if saved_track.source_id and source_id != saved_track.source_id:
-                    raven_client.captureMessage('Possible Double Order', level='warning', extra={
-                        'store': store.title,
-                        'order_id': order_id,
-                        'line_id': line_id,
-                        'old': {
-                            'id': saved_track.source_id,
-                            'date': arrow.get(saved_track.created_at).humanize()
-                        },
-                        'new': source_id,
-                    })
+                    delta = timezone.now() - saved_track.created_at
+                    if delta.days < 1:
+                        raven_client.captureMessage('Possible Double Order', level='warning', extra={
+                            'store': store.title,
+                            'order_id': order_id,
+                            'line_id': line_id,
+                            'old': {
+                                'id': saved_track.source_id,
+                                'date': arrow.get(saved_track.created_at).humanize(),
+                                'delta': delta
+                            },
+                            'new': source_id,
+                        })
 
             track, created = ShopifyOrderTrack.objects.update_or_create(
-                user=user.models_user,
                 store=store,
                 order_id=order_id,
                 line_id=line_id,
                 defaults={
+                    'user': user.models_user,
                     'source_id': source_id,
                     'created_at': timezone.now(),
                     'updated_at': timezone.now(),
@@ -1807,6 +1825,10 @@ def proccess_api(request, user, method, target, data):
         if PlanRegistration.objects.filter(email__iexact=data.get('email')).count():
             return JsonResponse({'error': 'An Invitation is already sent to this email'}, status=501)
 
+        if user.get_config('_limit_subusers_invite'):
+            raven_client.captureMessage('Sub User Invite Attempts', level='warning')
+            return JsonResponse({'error': 'Server Error'}, status=501)
+
         plan = utils.get_plan(plan_slug='subuser-plan')
         reg = utils.generate_plan_registration(plan=plan, sender=user, data={
             'email': data.get('email')
@@ -1834,7 +1856,7 @@ def proccess_api(request, user, method, target, data):
         try:
             if data.get('all') == '1':
                 store = ShopifyStore.objects.get(id=data.get('store'))
-                user.can_edit(store)
+                user.can_view(store)
 
                 AliexpressProductChange.objects.filter(product__store=store).update(hidden=1)
 
@@ -1855,7 +1877,7 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and target == 'alert-delete':
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_edit(store)
+            user.can_view(store)
 
             AliexpressProductChange.objects.filter(product__store=store).delete()
 
@@ -1873,7 +1895,7 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and target == 'import-product':
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_edit(store)
+            user.can_view(store)
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
@@ -1921,7 +1943,7 @@ def proccess_api(request, user, method, target, data):
             is_default=True
         )
 
-        product.set_default_supplier(supplier)
+        product.set_default_supplier(supplier, commit=True)
 
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
@@ -2469,8 +2491,11 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
+                product.price_notification_id = 0
                 product.shopify_id = 0
                 product.save()
+
+                AliexpressProductChange.objects.filter(product=product).delete()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
                                       .update(call_count=F('call_count')+1, updated_at=timezone.now())
@@ -2531,6 +2556,8 @@ def webhook(request, provider, option):
             elif topic == 'app/uninstalled':
                 store.is_active = False
                 store.save()
+
+                AliexpressProductChange.objects.filter(product__store=store).delete()
 
                 # Make all products related to this store non-connected
                 store.shopifyproduct_set.update(store=None, shopify_id=0)
@@ -3944,7 +3971,7 @@ def orders_view(request):
                 order_number = 0
 
             source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
-            tracks = ShopifyOrderTrack.objects.filter(user=models_user, source_id=source_id) \
+            tracks = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
@@ -4366,8 +4393,7 @@ def orders_track(request):
     if len(orders):
         orders = utils.get_tracking_orders(store, orders)
 
-    ShopifyOrderTrack.objects.filter(user=request.user.models_user,
-                                     id__in=[i.id for i in orders]) \
+    ShopifyOrderTrack.objects.filter(store=store, id__in=[i.id for i in orders]) \
                              .update(seen=True)
 
     return render(request, 'orders_track.html', {
@@ -4452,6 +4478,9 @@ def product_alerts(request):
     if not store:
         messages.warning(request, 'Please add at least one store before using the Alerts page.')
         return HttpResponseRedirect('/')
+
+    AliexpressProductChange.objects.filter(user=request.user.models_user,
+                                           product__store=None).delete()
 
     changes = AliexpressProductChange.objects.select_related('product') \
                                      .select_related('product__default_supplier') \
