@@ -354,6 +354,47 @@ $('#export-btn').click(function () {
     });
 });
 
+$('#btn-split-variants').click(function (e) {
+    e.preventDefault();
+
+    if ($('#variants .variant').length <= 1 && $('#shopify-variants tr.shopify-variant').length <= 1) {
+        swal('There should be more than one variant to split it.');
+        return;
+    }
+
+    var product_id = $(this).attr('product-id');
+
+    $(this).bootstrapBtn('loading');
+
+    $.ajax({
+        url: '/api/product-split-variants',
+        type: 'POST',
+        data: {
+            product: product_id
+        },
+        context: {btn: $(this)},
+        success: function (data) {
+            var btn = this.btn;
+            btn.bootstrapBtn('reset');
+
+            if ('products_ids' in data) {
+                // check if current product is already connected to shopify..
+                if ($('#export-btn').attr('target') === 'shopify-update') {
+                  toastr.success('The variants are splitted into new products now.\r\nThe new products will get connected to shopify very soon.', 'Product Split!');
+                } else {
+                  toastr.success('The variants are splitted into new products now.', 'Product Split!');
+                }
+                setTimeout(function() { window.location.href = '/product'; }, 500);
+            }
+        },
+        error: function (data) {
+            this.btn.bootstrapBtn('reset');
+
+            displayAjaxError('Split variants into separate products', data);
+        }
+    });
+});
+
 $('#save-for-later-btn').click(function (e) {
     var btn = $(this);
     var target = btn.attr('target');
