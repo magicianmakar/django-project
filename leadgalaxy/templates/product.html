@@ -109,10 +109,10 @@
                         Submitted at {{item.created_at|date}}
                     </div>
                     <div class="m-t row">
-                        <div class="col-md-3">
+                        <div class="col-md-4" style="padding-right:0">
                         <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
                         </div>
-                        <div class="col-md-7">
+                        <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
                         <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
                             {% with board=item.board %}
                                 {% if board %}
