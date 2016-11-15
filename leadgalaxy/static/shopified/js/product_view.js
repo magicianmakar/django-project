@@ -357,7 +357,12 @@ $('#export-btn').click(function () {
 $('#btn-split-variants').click(function (e) {
     e.preventDefault();
 
-    if ($('#variants .variant').length <= 1 && $('#shopify-variants tr.shopify-variant').length <= 1) {
+    if ($('#export-btn').attr('target') === 'shopify' && ($('#variants .variant #product-variant-values').length === 0 || $('#variants .variant #product-variant-values').val().split(',').length <= 1)) {
+        swal('There should be more than one variant to split it.');
+        return;
+    }
+
+    if ($('#export-btn').attr('target') === 'shopify-update' && $('#shopify-variants tr.shopify-variant').length <= 1) {
         swal('There should be more than one variant to split it.');
         return;
     }

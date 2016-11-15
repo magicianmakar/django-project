@@ -284,9 +284,6 @@
                                 <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
                             </li>
                             {% endif %}
-                            <li><a id="btn-split-variants" product-id="{{product.id}}" type="button" target="_blank">
-                                <i class="fa fa-shopping-cart"></i> Split Variants into Separate Products</a>
-                            </li>
                         {% else %}
                             <li><a id="view-btn" type="button" style="display:none">View in Shopify</a></li>
                             {% if request.user|can:'product_variant_setup.view' %}
@@ -301,6 +298,10 @@
                             <i class="fa fa-chain"></i> Variants Mapping</a>
                         </li>
                         {% endif %}
+
+                        <li><a id="btn-split-variants" product-id="{{product.id}}" type="button" target="_blank">
+                            <i class="fa fa-shopping-cart"></i> Split Variants into Separate Products</a>
+                        </li>
 
                         <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
 
