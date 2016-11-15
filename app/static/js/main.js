@@ -519,9 +519,15 @@ $(function() {
       restartOnRequestAfter: false
     };
 
-    $('.itooltip').tooltip({
+    var tooltipOptions = {
         container: 'body'
-    });
+    };
+
+    if (typeof ($.fn.bootstrapTooltip) === 'undefined') {
+        $('.itooltip').tooltip(tooltipOptions);
+    } else {
+        $('.itooltip').bootstrapTooltip(tooltipOptions);
+    }
 
     $('[qtip-tooltip]').each(function() {
         $(this).qtip({
