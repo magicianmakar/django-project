@@ -823,10 +823,16 @@ def get_shopify_order(store, order_id):
     return rep.json()['order']
 
 
-def get_shopify_order_line(store, order_id, line_id, note=False):
+def get_shopify_order_line(store, order_id, line_id, line_sku=None, note=False):
     order = get_shopify_order(store, order_id)
     for line in order['line_items']:
-        if int(line['id']) == int(line_id):
+        if line_id and int(line['id']) == int(line_id):
+            if note:
+                return line, order['note']
+            else:
+                return line
+
+        elif line_sku and line['sku'] == line_sku:
             if note:
                 return line, order['note']
             else:

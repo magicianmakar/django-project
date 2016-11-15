@@ -1544,6 +1544,7 @@ def proccess_api(request, user, method, target, data):
         # Mark Order as Ordered
         order_id = data.get('order_id')
         order_lines = data.get('line_id').split(',')
+        order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
 
         try:
@@ -1557,6 +1558,11 @@ def proccess_api(request, user, method, target, data):
             raven_client.captureMessage('Non valid Aliexpress Order ID')
 
             return JsonResponse({'error': e.message}, status=501)
+
+        if not order_lines and order_line_sku:
+            line = utils.get_shopify_order_line(store, order_id, order_line_sku)
+            if line:
+                order_lines = [line['id']]
 
         note_delay = 0
         for line_id in order_lines:
