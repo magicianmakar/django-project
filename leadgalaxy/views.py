@@ -1543,7 +1543,7 @@ def proccess_api(request, user, method, target, data):
 
         # Mark Order as Ordered
         order_id = data.get('order_id')
-        order_lines = data.get('line_id').split(',')
+        order_lines = data.get('line_id', '')
         order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
 
@@ -1560,12 +1560,12 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': e.message}, status=501)
 
         if not order_lines and order_line_sku:
-            line = utils.get_shopify_order_line(store, order_id, order_line_sku)
+            line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku)
             if line:
-                order_lines = [line['id']]
+                order_lines = str(line['id'])
 
         note_delay = 0
-        for line_id in order_lines:
+        for line_id in order_lines.split(','):
             if not line_id:
                 return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
 
