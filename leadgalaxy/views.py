@@ -1892,6 +1892,16 @@ def proccess_api(request, user, method, target, data):
             'hash': reg.register_hash
         })
 
+    if method == 'DELETE' and target == 'subuser-invite':
+        if not user.can('sub_users.use'):
+            raise PermissionDenied('Sub User Invite')
+
+        PlanRegistration.objects.get(id=data.get('invite'), sender=user).delete()
+
+        return JsonResponse({
+            'status': 'ok',
+        })
+
     if method == 'POST' and target == 'alert-archive':
         try:
             if data.get('all') == '1':

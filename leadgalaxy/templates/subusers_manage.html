@@ -69,26 +69,26 @@
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
-                            <th>Email</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Registration Link</th>
+                            <th class="no-wrap" width="99%">Email</th>
+                            <th class="no-wrap">Date</th>
+                            <th class="no-wrap">Status</th>
+                            <th class="no-wrap">Registration Link</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in invitation %}
                         {% if not item.expired or not item.user.profile.subuser_stores.count %}
                         <tr>
-                            <td>{{item.email|urlize}}</td>
-                            <td>{{item.created_at|date}}</td>
-                            <td>
+                            <td class="no-wrap">{{item.email|urlize}}</td>
+                            <td class="no-wrap">{{item.created_at|date}}</td>
+                            <td class="no-wrap">
                                 {% if not item.expired %}
                                      Awaiting User Registration
                                  {% else %}
                                      User Doesn't have access to any store
                                  {% endif %}
                              </td>
-                            <td>
+                            <td class="no-wrap">
                                 {% if not item.expired %}
                                     {% with reg_link="https://app.shopifiedapp.com/accounts/register/" %}
                                     <a class="btn btn-success btn-xs" href="{{reg_link}}{{item.register_hash}}" target="_blank">
@@ -97,6 +97,11 @@
                                     <a class="btn btn-primary btn-xs email-link-btn"
                                         href="mailto:{{item.email}}?subject=Invitation to join Shopified App&body=Hello%2C%0D%0AYou%20can%20register%20at%20Shopified%20App%20using%20this%20link%3A%0D%0A{{reg_link}}{{item.register_hash}}"><i class="fa fa-envelope-o"></i> Email Link</a>
                                     {% endwith %}
+
+                                    <button class="btn btn-danger btn-xs itooltip cancel-invitation-user"
+                                            invite-id="{{item.id}}" title="Cancel This Invitation">
+                                        <i class="fa fa-user-times"></i> Cancel
+                                    </button>
                                 {% else %}
                                     <a class="btn btn-primary btn-xs edit-user-prems" user-id="{{item.user.id}}" href="#">
                                         <i class="fa fa-unlock-alt"></i> Change Permissions</a>
@@ -186,6 +191,7 @@
                 dom: 'T<"clear">lfrtip',
                 bLengthChange: false,
                 iDisplayLength: 50,
+                order: [],
                 tableTools: {
                     aButtons: [],
                 }
@@ -240,6 +246,41 @@
                         },
                         error: function(data) {
                             displayAjaxError('Delete Sub User', data);
+                        }
+                    });
+                }
+            });
+        });
+
+        $('.cancel-invitation-user').click(function (e) {
+            var invite_id = $(this).attr('invite-id');
+
+            swal({
+                title: "Cancel Sub User Invitation",
+                text: "This will Cancel the Invitation link. \nAre you sure you want to continue?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Yes, Cancel the Invitation",
+                cancelButtonText: "No, Keep the Invitation"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    $.ajax({
+                        url: '/api/subuser-invite?' + $.param({invite: invite_id}),
+                        type: 'DELETE',
+                        success: function(data) {
+                            swal.close();
+                            toastr.success("Cancel Invitation", "Invitation has been Canceled.");
+
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1000);
+                        },
+                        error: function(data) {
+                            displayAjaxError('Cancel Invitation', data);
                         }
                     });
                 }
