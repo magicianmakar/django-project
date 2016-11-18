@@ -646,6 +646,7 @@ def duplicate_product(product, store=None):
 
     return product
 
+
 def split_product(product, store=None):
     data = json.loads(product.data)
     new_products = []
@@ -662,7 +663,7 @@ def split_product(product, store=None):
             if not new_data['images']:
                 new_data['images'] = [data['images'][0]]
             new_data['variants'] = [{'title': active_variant['title'], 'values': [v]}]
-            new_data['title'] = '{}, {} - {}'.format(data['title'], active_variant['title'], v)
+            new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
             clone.data = json.dumps(new_data)
 
             if store is not None:
@@ -683,10 +684,12 @@ def split_product(product, store=None):
 
     return new_products
 
+
 def merge_two_dicts(x, y):
     z = x.copy()
     z.update(y)
     return z
+
 
 def get_shopify_products_count(store):
     return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
