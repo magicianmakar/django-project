@@ -462,8 +462,8 @@ def proccess_api(request, user, method, target, data):
             task.revoke(terminate=True)
             return JsonResponse({'error': 'Export Error'}, status=500)
 
-        if count <= 125:
-            return JsonResponse({'error': 'Export Error'}, status=404)
+        if count >= 125:
+            return JsonResponse({'error': 'Export Error'}, status=500)
 
         if not task.ready():
             return JsonResponse({
