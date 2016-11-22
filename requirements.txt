@@ -39,6 +39,7 @@ itsdangerous==0.24
 Jinja2==2.8
 kombu==3.0.37
 lockfile==0.10.2
+loxun==2.0
 lxml==3.4.4
 Markdown==2.6.6
 MarkupSafe==0.23

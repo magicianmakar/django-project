@@ -1,9 +1,10 @@
 from django.utils.html import strip_tags
 from django.conf import settings
 
-import xml.etree.ElementTree as ET
 import re
-import hashlib
+from tempfile import NamedTemporaryFile
+
+from loxun import XmlWriter
 
 from .models import FeedStatus
 
@@ -26,22 +27,46 @@ class ProductFeed():
         self.revision = safeInt(revision, 1)
         self.all_variants = all_variants
 
-    def _add_element(self, parent, tag, text):
-        element = ET.SubElement(parent, tag)
-        element.text = text
-
-        return element
+    def _add_element(self, tag, text):
+        self.writer.startTag(tag)
+        self.writer.text(text)
+        self.writer.endTag()
 
     def init(self):
-        self.root = ET.Element("rss")
-        self.root.attrib['xmlns:g'] = 'http://base.google.com/ns/1.0'
-        self.root.attrib['version'] = '2.0'
+        self.out = NamedTemporaryFile(suffix='.xml', prefix='feed_', delete=False)
+        self.writer = XmlWriter(self.out, pretty=True, indent='')
 
-        self.channel = ET.SubElement(self.root, 'channel')
+        self.writer.addNamespace("g", "http://base.google.com/ns/1.0")
 
-        self._add_element(self.channel, 'title', self.info['name'])
-        self._add_element(self.channel, 'link', 'https://{}'.format(self.info['domain']))
-        self._add_element(self.channel, 'description', u'{} Products Feed'.format(self.info['name']))
+        self.writer.startTag("rss", {"version": "2.0"})
+        self.writer.startTag("channel")
+
+        self._add_element('title', self.info['name'])
+        self._add_element('link', 'https://{}'.format(self.info['domain']))
+        self._add_element('description', u'{} Products Feed'.format(self.info['name']))
+
+    def save(self):
+        self.writer.endTag()
+        self.writer.endTag()
+        self.writer.close()
+
+        return self.out
+
+    def generate_feed(self):
+        from math import ceil
+        from leadgalaxy.utils import get_shopify_products_count, get_shopify_products
+
+        limit = 200
+        count = get_shopify_products_count(self.store)
+
+        if not count:
+            return
+
+        pages = int(ceil(count/float(limit)))
+        for page in xrange(1, pages+1):
+            products = get_shopify_products(store=self.store, page=page, limit=limit, all_products=False)
+            for p in products:
+                self.add_product(p)
 
     def add_product(self, product):
         if len(product['variants']):
@@ -61,28 +86,28 @@ class ProductFeed():
         else:
             return None
 
-        item = ET.SubElement(self.channel, 'item')
+        self.writer.startTag('item')
 
         if variant_id is None:
             variant_id = variant['id']
 
         if self.revision == 1:
-            self._add_element(item, 'g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+            self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         else:
-            self._add_element(item, 'g:id', '{}'.format(variant_id))
+            self._add_element('g:id', '{}'.format(variant_id))
 
-        self._add_element(item, 'g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
-        self._add_element(item, 'g:title', product.get('title'))
-        self._add_element(item, 'g:description', self._clean_description(product))
-        self._add_element(item, 'g:image_link', image)
-        self._add_element(item, 'g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
-        self._add_element(item, 'g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
-        self._add_element(item, 'g:brand', product.get('vendor'))
-        self._add_element(item, 'g:google_product_category', product.get('product_type'))
-        self._add_element(item, 'g:availability', 'in stock')
-        self._add_element(item, 'g:condition', 'new')
+        self._add_element('g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
+        self._add_element('g:title', product.get('title'))
+        self._add_element('g:description', self._clean_description(product))
+        self._add_element('g:image_link', image)
+        self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
+        self._add_element('g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
+        self._add_element('g:brand', product.get('vendor'))
+        self._add_element('g:google_product_category', product.get('product_type'))
+        self._add_element('g:availability', 'in stock')
+        self._add_element('g:condition', 'new')
 
-        return item
+        self.writer.endTag()
 
     def _clean_description(self, product):
         text = product.get('body_html', '')
@@ -94,37 +119,12 @@ class ProductFeed():
 
         return text
 
-    def get_feed_stream(self):
-        yield u'<?xml version="1.0" encoding="utf-8"?>'
+    def out_file(self):
+        return self.out
 
-        for i in ET.tostringlist(self.root, encoding='utf-8', method="xml"):
-            yield i
-
-    def get_feed(self, formated=False):
-        xml = ET.tostring(self.root, encoding='utf-8', method="xml")
-
-        if formated:
-            return self.prettify(xml)
-        else:
-            return u'{}\n{}'.format(u'<?xml version="1.0" encoding="utf-8"?>', xml.decode('utf-8'))
-
-    def prettify(self, xml_str):
-        """Return a pretty-printed XML string for the Element.
-        """
-        from xml.dom import minidom
-
-        reparsed = minidom.parseString(xml_str)
-        return reparsed.toprettyxml(indent="  ")
-
-    def save(self, filename=None):
-        if filename is None:
-            import tempfile
-            filename = tempfile.NamedTemporaryFile(mode="wb", suffix=".xml", delete=False)
-
-        tree = ET.ElementTree(self.root)
-        tree.write(filename, encoding='utf-8', xml_declaration=True)
-
-        return filename
+    def delete_out(self):
+        import os
+        os.unlink(self.out.name)
 
 
 def get_store_feed(store):
@@ -141,7 +141,7 @@ def get_store_feed(store):
 def generate_product_feed(feed_status, nocache=False):
     import time
     from django.utils import timezone
-    from leadgalaxy.utils import get_shopify_products, aws_s3_upload
+    from leadgalaxy.utils import aws_s3_upload
 
     store = feed_status.store
 
@@ -157,20 +157,23 @@ def generate_product_feed(feed_status, nocache=False):
         feed_status.status = 2
         feed_status.save()
 
-        for p in get_shopify_products(store, all_products=True):
-            feed.add_product(p)
+        feed.generate_feed()
+        feed.save()
 
         feed_status.generation_time = time.time() - feed_start
         feed_status.updated_at = timezone.now()
 
         feed_s3_url, upload_time = aws_s3_upload(
             filename=feed_status.get_filename(),
-            content=feed.get_feed(),
+            fp=feed.out_file(),
             mimetype='application/xml',
             upload_time=True,
             compress=True,
             bucket_name=settings.S3_PRODUCT_FEED_BUCKET
         )
+
+        feed.delete_out()
+
     else:
         feed_s3_url = feed_status.get_url()
 
