@@ -35,6 +35,12 @@ def product_feeds(request):
 
                 return JsonResponse({'status': 'ok'})
 
+            elif request.POST.get('include_variants_id'):
+                feed.include_variants_id = request.POST['include_variants_id'] == 'true'
+                feed.save()
+
+                return JsonResponse({'status': 'ok'})
+
             elif request.POST.get('update_feed'):
                 if feed.status == 2:
                     return JsonResponse({'error': 'Feed is being updated'}, status=500)

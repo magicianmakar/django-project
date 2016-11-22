@@ -34,6 +34,10 @@
                                 All Variants
                                 {% include 'partial/help_tooltip.html' with help="Turn this off to remove variants from showing in the product feed." %}
                             </th>
+                            <th style="width:12%">
+                                Include Variants IDs
+                                {% include 'partial/help_tooltip.html' with help="For each product, use both Variant and Product ID" %}
+                            </th>
                             <th style="width:15%">
                                 Last Update
                                 {% include 'partial/help_tooltip.html' with help="This shows the date & time when the product feed was last updated." %}
@@ -61,6 +65,7 @@
                                 </div>
                             </td>
                             <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
+                            <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
                             <td>
                                 {% if item.status == 2 %}
                                     Updating...
@@ -103,6 +108,9 @@
         table td {
             vertical-align: middle !important;
         }
+        table th {
+            white-space: nowrap;
+        }
     </style>
 {% endblock %}
 
@@ -139,6 +147,23 @@
             $.ajax({
                 type: 'POST',
                 data: {feed: $(this).parents('tr').data('feed'), all_variants: this.checked},
+                context: {el: $(this)},
+                success: function (data) {
+                    toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
+                },
+                error: function (data) {
+                    displayAjaxError('Feed Settings', data);
+                }
+            });
+        });
+
+        $('.include-variants-id').on('change', function (e) {
+            $.ajax({
+                type: 'POST',
+                data: {
+                    feed: $(this).parents('tr').data('feed'),
+                    include_variants_id: this.checked
+                },
                 context: {el: $(this)},
                 success: function (data) {
                     toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');

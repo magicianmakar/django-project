@@ -15,6 +15,7 @@ class FeedStatus(models.Model):
 
     revision = models.IntegerField(default=0)
     all_variants = models.BooleanField(default=True)
+    include_variants_id = models.BooleanField(default=True)
     generation_time = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)

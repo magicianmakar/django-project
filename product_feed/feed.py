@@ -17,7 +17,7 @@ def safeInt(v, default=0):
 
 
 class ProductFeed():
-    def __init__(self, store, revision=1, all_variants=True):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True):
         self.store = store
         self.info = store.get_info
 
@@ -26,6 +26,7 @@ class ProductFeed():
 
         self.revision = safeInt(revision, 1)
         self.all_variants = all_variants
+        self.include_variants = include_variants
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -73,11 +74,12 @@ class ProductFeed():
             # Add the first variant with Product ID
             self._add_variant(product, product['variants'][0], variant_id=product['id'])
 
-            for variant in product['variants']:
-                self._add_variant(product, variant)
+            if self.include_variants:
+                for variant in product['variants']:
+                    self._add_variant(product, variant)
 
-                if not self.all_variants:
-                    break
+                    if not self.all_variants:
+                        break
 
     def _add_variant(self, product, variant, variant_id=None):
         image = product.get('image')
@@ -151,7 +153,11 @@ def generate_product_feed(feed_status, nocache=False):
     feed_start = time.time()
 
     if not feed_status.feed_exists() or nocache:
-        feed = ProductFeed(store, feed_status.revision, feed_status.all_variants)
+        feed = ProductFeed(store,
+                           feed_status.revision,
+                           feed_status.all_variants,
+                           feed_status.include_variants_id)
+
         feed.init()
 
         feed_status.status = 2
