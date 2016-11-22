@@ -1315,6 +1315,10 @@ class GroupPlan(models.Model):
     def is_free(self):
         return self.slug in ['free-stripe-plan']
 
+    @property
+    def large_badge_image(self):
+        return self.badge_image.replace('_small.', '.')
+
     def __unicode__(self):
         return self.title
 

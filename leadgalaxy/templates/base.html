@@ -347,7 +347,14 @@
                                 {% endif %}
 
                                 {% if request.user.profile.plan.badge_image %}
-                                    <img style="height: 35px;" src="{{ request.user.profile.plan.badge_image }}" alt="">
+                                    <img style="height: 35px;" src="{{ request.user.profile.plan.badge_image }}" alt=""
+                                        {% if 'tooltip' in request.user.profile.plan.badge_image %}
+                                        qtip-tooltip="<img style='width: 100%' src='{{ request.user.profile.plan.large_badge_image }}'>"
+
+                                        qtip-my="top right"
+                                        qtip-at="bottom left"
+                                        {% endif %}
+                                    />
                                 {% endif %}
                             {% endif %}
                         </span>
