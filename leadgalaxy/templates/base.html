@@ -88,6 +88,24 @@
         created_at: dataLayer.created_at,
         plan: dataLayer.userPlan,
         extension_version: dataLayer.extension_version,
+
+        stores_count: {{user.profile.get_active_stores.count}},
+
+       {% cache 3600 total_orders user.id %}
+        total_orders: {{user.models_user.shopifyorder_set.count}},
+       {% endcache %}
+
+        {% if user.is_subuser %}
+            {% with parent=user.profile.parent_user.profile %}
+            parent_plan: {{parent.plan.title}},
+            {% endwith %}
+        {% endif %}
+
+
+        {% if not user.is_stripe_customer %}
+            bundles: {{user.profile.bundles_list|join:","}},
+        {% endif %}
+
         widget: {
             activator: '.navbar-default a[href="#support"]',
         }

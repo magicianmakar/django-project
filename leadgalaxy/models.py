@@ -99,6 +99,9 @@ class UserProfile(models.Model):
         except:
             return None
 
+    def bundles_list(self):
+        return map(lambda b: b.replace('Bundle', '').strip(), self.bundles.all().values_list('title', flat=True))
+
     def apply_registration(self, reg, verbose=False):
         if reg.plan is None and reg.bundle is None:
             return
