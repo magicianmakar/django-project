@@ -96,9 +96,7 @@
        {% endcache %}
 
         {% if user.is_subuser %}
-            {% with parent=user.profile.parent_user.profile %}
-            parent_plan: '{{parent.plan.title}}',
-            {% endwith %}
+            parent_plan: '{{user.models_user.profile.plan.title}}',
         {% endif %}
 
 
