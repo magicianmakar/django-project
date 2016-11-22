@@ -103,7 +103,7 @@
 
 
         {% if not user.is_stripe_customer %}
-            bundles: {{user.profile.bundles_list|join:","}},
+            bundles: '{{user.profile.bundles_list|join:","}}',
         {% endif %}
 
         widget: {
