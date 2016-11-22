@@ -58,9 +58,9 @@
 
     {% with plan=user.profile.plan %}
       var dataLayer = [{
-        'userPlan': '{{plan.title}}',
-        'monthlyPlan': {{plan.is_stripe|lower}},
-        'pageCategory': 'webapp',
+        userPlan: '{{plan.title}}',
+        monthlyPlan: {{plan.is_stripe|lower}},
+        pageCategory: 'webapp',
 
         user_id: {{ user.id }},
         name: "{{ user.get_full_name|default:user.username|escapejs }}",
@@ -83,11 +83,11 @@
         app_id: "{{INTERCOM_APP_ID}}",
         user_id: {{ user.id }},
         {% if INTERCOM_USER_HASH %}user_hash: '{{INTERCOM_USER_HASH}}',{% endif %}
-        name: "{{ user.get_full_name|default:user.username|escapejs }}",
-        email: "{{ user.email }}",
-        created_at: {{ user.date_joined|date:"U" }},
-        plan: '{{user.profile.plan.title}}',
-        extension_version: '{{user.profile.get_config.extension_version}}',
+        name: dataLayer.name,
+        email: dataLayer.email,
+        created_at: dataLayer.created_at,
+        plan: dataLayer.userPlan,
+        extension_version: dataLayer.extension_version,
         widget: {
             activator: '.navbar-default a[href="#support"]',
         }
