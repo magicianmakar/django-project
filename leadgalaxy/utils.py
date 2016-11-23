@@ -1575,7 +1575,7 @@ def aws_s3_get_key(filename, bucket_name=None):
     return bucket.get_key(filename)
 
 
-def aws_s3_upload(filename, content=None, fp=None, mimetype=None,
+def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype=None,
                   upload_time=False, compress=False, bucket_name=None):
     """
     Store an object in S3 using the 'filename' as the key in S3 and the
@@ -1607,12 +1607,16 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None,
     k.key = filename
     k.set_metadata("Content-Type", mimetype)
 
-    if not fp and not content:
+    if not fp and not input_filename and not content:
         raise Exception('content or fp parameters are both empty')
 
     if not compress:
         if content:
             k.set_contents_from_string(content)
+
+        elif input_filename:
+            k.set_contents_from_filename(input_filename)
+
         elif fp:
             k.set_contents_from_file(fp)
     else:
@@ -1620,6 +1624,11 @@ def aws_s3_upload(filename, content=None, fp=None, mimetype=None,
 
         if fp:
             with open(fp.name, 'rb') as f_in:
+                with gzip.open(tmp_file.name, 'wb') as gz_out:
+                    shutil.copyfileobj(f_in, gz_out)
+
+        if input_filename:
+            with open(input_filename, 'rb') as f_in:
                 with gzip.open(tmp_file.name, 'wb') as gz_out:
                     shutil.copyfileobj(f_in, gz_out)
 

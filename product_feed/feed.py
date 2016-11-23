@@ -51,6 +51,8 @@ class ProductFeed():
         self.writer.endTag()
         self.writer.close()
 
+        self.out.close()
+
         return self.out
 
     def generate_feed(self):
@@ -124,6 +126,9 @@ class ProductFeed():
     def out_file(self):
         return self.out
 
+    def out_filename(self):
+        return self.out.name
+
     def delete_out(self):
         import os
         os.unlink(self.out.name)
@@ -171,7 +176,7 @@ def generate_product_feed(feed_status, nocache=False):
 
         feed_s3_url, upload_time = aws_s3_upload(
             filename=feed_status.get_filename(),
-            fp=feed.out_file(),
+            input_filename=feed.out_filename(),
             mimetype='application/xml',
             upload_time=True,
             compress=True,
