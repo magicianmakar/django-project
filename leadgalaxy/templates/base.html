@@ -83,11 +83,11 @@
         app_id: "{{INTERCOM_APP_ID}}",
         user_id: {{ user.id }},
         {% if INTERCOM_USER_HASH %}user_hash: '{{INTERCOM_USER_HASH}}',{% endif %}
-        name: dataLayer.name,
-        email: dataLayer.email,
-        created_at: dataLayer.created_at,
-        plan: dataLayer.userPlan,
-        extension_version: dataLayer.extension_version,
+        name: dataLayer[0].name,
+        email: dataLayer[0].email,
+        created_at: dataLayer[0].created_at,
+        plan: dataLayer[0].userPlan,
+        extension_version: dataLayer[0].extension_version,
 
         stores_count: {{user.profile.get_active_stores.count}},
 
