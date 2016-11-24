@@ -13,14 +13,19 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
+from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
 from raven.contrib.celery import register_signal
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
+
 from shopify_orders import utils as order_utils
 from product_alerts import events as product_alerts_events
+
+from product_feed.feed import generate_product_feed
+from product_feed.models import FeedStatus
 
 app = Celery('shopified')
 
@@ -514,9 +519,6 @@ def invite_user_to_slack(slack_teams, data):
 
 @app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
 def generate_feed(self, feed_id, nocache=False, by_fb=False):
-    from product_feed.feed import generate_product_feed
-    from product_feed.models import FeedStatus
-
     try:
         feed = FeedStatus.objects.get(id=feed_id)
         generate_product_feed(feed, nocache=nocache)
@@ -543,8 +545,6 @@ def product_change_alert(change_id):
 @app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def bulk_edit_products(self, store, products):
     """ Bulk Edit Connected products """
-
-    from django.template.defaultfilters import truncatewords
 
     store = ShopifyStore.objects.get(id=store)
 

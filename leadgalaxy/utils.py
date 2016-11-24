@@ -5,15 +5,34 @@ import hashlib
 import pytz
 import collections
 import time
+import base64
+import boto
+import datetime
+import gzip
+import hmac
+import mimetypes
+import re
+import shutil
+import tempfile
 from urlparse import urlparse
-from tld import get_tld
+from hashlib import sha256
+from math import ceil
 
+from tld import get_tld
+from bleach import clean
+from boto.s3.key import Key
+
+from django.conf import settings
 from django.core.mail import send_mail
 from django.template import Context, Template
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.utils.crypto import get_random_string
+from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import truncatewords
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -21,8 +40,6 @@ from leadgalaxy.models import *
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from shopify_revision.models import ProductRevision
 from shopify_orders.utils import get_datetime
-
-from django.conf import settings
 
 
 def safeInt(v, default=0):
@@ -57,8 +74,6 @@ def get_domain(url, full=False):
 
 
 def upload_from_url(url, stores=[]):
-    import mimetypes
-
     # Domains are taken from allowed stores plus store's CDN
     allowed_stores = stores + ['alicdn', 'aliimg', 'ebayimg', 'sunfrogshirts']
     allowed_paths = [r'^https?://s3.amazonaws.com/feather(-client)?-files-aviary-prod-us-east-1/']  # Aviary
@@ -88,8 +103,6 @@ def remove_link_query(link):
 
 
 def get_mimetype(url):
-    import mimetypes
-
     return mimetypes.guess_type(remove_link_query(url))[0]
 
 
@@ -202,8 +215,6 @@ def get_api_user(request, data, assert_login=False):
 
 
 def login_attempts_exceeded(username):
-    from django.core.cache import cache
-
     tries_key = 'login_attempts_{}'.format(hash_text(username.lower()))
     tries = cache.get(tries_key)
     if tries is None:
@@ -224,8 +235,6 @@ def login_attempts_exceeded(username):
 
 
 def unlock_account_email(username):
-    from django.core.urlresolvers import reverse
-
     try:
         if '@' in username:
             user = User.objects.get(email__iexact=username)
@@ -469,10 +478,6 @@ def verify_shopify_permissions(store):
 
 
 def verify_shopify_webhook(store, request):
-    import hmac
-    import base64
-    from hashlib import sha256
-
     api_secret = store.get_api_credintals().get('api_secret')
     webhook_hash = hmac.new(api_secret.encode(), request.body, sha256).digest()
     webhook_hash = base64.encodestring(webhook_hash).strip()
@@ -554,9 +559,6 @@ def get_store_from_request(request):
     """
     Return ShopifyStore from based on `store` value or last saved store
     """
-
-    from django.core.exceptions import PermissionDenied
-    from django.shortcuts import get_object_or_404
 
     store = None
     stores = request.user.profile.get_active_stores()
@@ -725,8 +727,6 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
         for p in rep['products']:
             yield p
     else:
-        from math import ceil
-
         limit = 200
         count = get_shopify_products_count(store)
 
@@ -1452,8 +1452,6 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
             email_plain = email_html
             email_html = email_html.replace('\n', '<br />')
         else:
-            from bleach import clean
-
             email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
             email_plain = map(lambda l: l.strip(), email_plain)
             email_plain = '\n'.join(email_plain)
@@ -1469,6 +1467,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
 
         return email_html
 
+
 def get_countries():
     country_names = pytz.country_names
     country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
@@ -1478,9 +1477,6 @@ def get_countries():
 
 
 def get_timezones(country=None):
-    import datetime
-    import re
-
     if country:
         zones = pytz.country_timezones(country)
     else:
@@ -1563,8 +1559,6 @@ def set_orders_filter(user, filters, default=None):
 
 
 def aws_s3_get_key(filename, bucket_name=None):
-    import boto
-
     if bucket_name is None:
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
@@ -1582,14 +1576,6 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
     contents.
     """
 
-    import time
-    import tempfile
-    import gzip
-    import shutil
-
-    import boto
-    from boto.s3.key import Key
-
     if upload_time:
         upload_start = time.time()
 
@@ -1601,7 +1587,6 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
     k = Key(bucket)
 
     if not mimetype:
-        import mimetypes
         mimetype = mimetypes.guess_type(filename)[0]
 
     k.key = filename

@@ -1,10 +1,20 @@
 from django.utils.html import strip_tags
+from django.utils import timezone
 from django.conf import settings
 
+import os
 import re
+import time
+from math import ceil
 from tempfile import NamedTemporaryFile
 
 from loxun import XmlWriter
+
+from leadgalaxy.utils import (
+    aws_s3_upload,
+    get_shopify_products_count,
+    get_shopify_products
+)
 
 from .models import FeedStatus
 
@@ -56,9 +66,6 @@ class ProductFeed():
         return self.out
 
     def generate_feed(self):
-        from math import ceil
-        from leadgalaxy.utils import get_shopify_products_count, get_shopify_products
-
         limit = 200
         count = get_shopify_products_count(self.store)
 
@@ -130,7 +137,6 @@ class ProductFeed():
         return self.out.name
 
     def delete_out(self):
-        import os
         os.unlink(self.out.name)
 
 
@@ -146,10 +152,6 @@ def get_store_feed(store):
 
 
 def generate_product_feed(feed_status, nocache=False):
-    import time
-    from django.utils import timezone
-    from leadgalaxy.utils import aws_s3_upload
-
     store = feed_status.store
 
     if not store.user.can('product_feeds.use'):

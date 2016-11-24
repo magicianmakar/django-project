@@ -22,6 +22,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.cache.utils import make_template_fragment_key
 from django.db import transaction
 from django.conf import settings
+from django.core import serializers
 
 from unidecode import unidecode
 
@@ -31,13 +32,22 @@ import simplejson as json
 import requests
 import arrow
 import traceback
+import base64
+import hmac
+import mimetypes
+import StringIO
+import time
+import urllib
 import urllib2
+import zlib
+from hashlib import sha1
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import *
 from .forms import *
 from .province_helper import load_uk_provincess, missing_province
+from .templatetags.template_helper import shopify_image_thumb
 
 import tasks
 import utils
@@ -971,8 +981,6 @@ def proccess_api(request, user, method, target, data):
         })
 
     if target == 'shopify-products':
-        from .templatetags.template_helper import shopify_image_thumb
-
         store = utils.safeInt(data.get('store'))
         if not store:
             return JsonResponse({'error': 'No Store was selected'}, status=404)
@@ -1583,7 +1591,6 @@ def proccess_api(request, user, method, target, data):
         image = utils.get_shopify_variant_image(store, data.get('product'), data.get('variant'))
 
         if image and request.GET.get('thumb') == '1':
-            from .templatetags.template_helper import shopify_image_thumb
             image = shopify_image_thumb(image)
 
         if image and request.GET.get('redirect') == '1':
@@ -1626,8 +1633,6 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'suppliers-mapping':
-        from django.db import transaction
-
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
@@ -1666,7 +1671,6 @@ def proccess_api(request, user, method, target, data):
             raise Http404('Not found')
 
         # Get Orders marked as Ordered
-        from django.core import serializers
 
         orders = []
 
@@ -3118,9 +3122,6 @@ def product_image_download(request, pid):
 @login_required
 def product_view(request, pid):
     #  AWS
-    import base64
-    import hmac
-    from hashlib import sha1
 
     aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
 
@@ -3879,8 +3880,6 @@ def acp_groups_install(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
-    from django.db import transaction
-
     plan = GroupPlan.objects.get(id=request.GET.get('default'))
     vip_plan = GroupPlan.objects.get(id=request.GET.get('vip'))
     users = User.objects.filter(profile__plan=None)
@@ -4031,12 +4030,6 @@ def autocomplete(request, target):
 
 @login_required
 def upload_file_sign(request):
-    import time
-    import base64
-    import hmac
-    import urllib
-    from hashlib import sha1
-
     if not request.user.can('image_uploader.use'):
         return JsonResponse({'error': 'You don\'t have access to this feature.'})
 
@@ -4137,8 +4130,6 @@ def pixlr_serve_image(request):
     if not request.user.can('pixlr_photo_editor.use'):
         raise PermissionDenied()
 
-    import StringIO
-
     img_url = request.GET.get('image')
     if not img_url:
         raise Http404
@@ -4154,10 +4145,6 @@ def pixlr_serve_image(request):
 @login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
-
-    import StringIO
-    import mimetypes
-    import urllib2
 
     if 'advanced' in request.GET:
         # Pixlr
@@ -4388,8 +4375,6 @@ def orders_view(request):
         open_orders = paginator.count
 
         if open_orders:
-            import zlib
-
             cache_key = 'saved_orders_%s' % utils.hash_list(['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
             shopify_orders = cache.get(cache_key)
             if shopify_orders is None or cache.get('saved_orders_clear_{}'.format(store.id)):
