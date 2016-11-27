@@ -629,6 +629,7 @@ class ShopifyProduct(models.Model):
     original_data = models.TextField(default='', blank=True)
     original_data_key = models.CharField(max_length=32, null=True, blank=True)
 
+    config = models.TextField(default='', blank=True)
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
@@ -710,6 +711,12 @@ class ShopifyProduct(models.Model):
             self.price = 0.0
 
         super(ShopifyProduct, self).save(*args, **kwargs)
+
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def is_connected(self):
         return bool(self.get_shopify_id())
@@ -1066,7 +1073,6 @@ class ShopifyProduct(models.Model):
         product_data.update(data)
 
         self.data = json.dumps(product_data)
-
 
 class ProductSupplier(models.Model):
     store = models.ForeignKey(ShopifyStore, null=True)

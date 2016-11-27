@@ -864,6 +864,34 @@ $('.product-alerts-tab').click(function () {
     }
 });
 
+$('form#product-config-form').submit(function (e) {
+    e.preventDefault();
+
+    var data = $(this).serialize();
+
+    $.ajax({
+        url: '/api/product-config?product=' + config.product_id,
+        type: 'POST',
+        data: data,
+        context: {form: $(this)},
+        success: function (data) {
+            if (data.status == 'ok') {
+                toastr.success('Saved.','User Config');
+
+            } else {
+                displayAjaxError('Product Config', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Product Config', data);
+        },
+        complete: function () {
+        }
+    });
+
+    return false;
+});
+
 function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {

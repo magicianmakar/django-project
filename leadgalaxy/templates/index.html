@@ -461,6 +461,7 @@
                                         <select id="alert_price_change" name="alert_price_change" class="form-control">
                                             <option value="notify" {% if config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="update" {% if config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update with the same margin</option>
+                                            <option value="update_for_increase" {% if config.alert_price_change == 'update_for_increase' %} selected="selected"{% endif %}>Update only when price goes up</option>
                                         </select>
                                     </div>
                                 </div>

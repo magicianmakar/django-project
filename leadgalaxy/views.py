@@ -1306,6 +1306,48 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'GET' and target == 'product-config':
+        if not user.can('price_changes.use'):
+            raise PermissionDenied()
+
+        product = request.GET.get('product')
+        if product:
+            product = get_object_or_404(ShopifyProduct, id=product)
+            request.user.can_view(product)
+        else:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
+
+        return JsonResponse(config)
+
+    if method == 'POST' and target == 'product-config':
+        if not user.can('price_changes.use'):
+            raise PermissionDenied()
+
+        product = request.GET.get('product')
+        if product:
+            product = get_object_or_404(ShopifyProduct, id=product)
+            request.user.can_edit(product)
+        else:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
+
+        for key in data:
+            config[key] = data[key]
+
+        product.config = json.dumps(config)
+        product.save()
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'POST' and target == 'fulfill-order':
         try:
             store = ShopifyStore.objects.get(id=data.get('fulfill-store'))
@@ -2691,6 +2733,7 @@ def webhook(request, provider, option):
 
     elif provider == 'price-notification' and request.method == 'POST':
         product_id = request.GET['product']
+        print 'webhook product change with id: {}'.format(product_id)
         try:
             product = ShopifyProduct.objects.get(id=product_id)
         except ShopifyProduct.DoesNotExist:
@@ -3005,6 +3048,11 @@ def product_view(request, pid):
         product = get_object_or_404(ShopifyProduct, id=pid)
         request.user.can_view(product)
 
+    try:
+        alert_config = json.loads(product.config)
+    except:
+        alert_config = {}
+
     p = {
         'qelem': product,
         'id': product.id,
@@ -3014,6 +3062,7 @@ def product_view(request, pid):
         'updated_at': product.updated_at,
         'product': json.loads(product.data),
         'notes': product.notes,
+        'alert_config': alert_config
     }
 
     if 'images' not in p['product'] or not p['product']['images']:

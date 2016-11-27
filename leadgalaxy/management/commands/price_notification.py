@@ -12,6 +12,8 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
 SHOPIFIEDAPP_WEBHOOK_BASE = 'http://app.shopifiedapp.com/webhook/price-notification/product'
 
+# ALI_WEB_API_BASE = 'http://dev.aliwebapi.com/api'
+# SHOPIFIEDAPP_WEBHOOK_BASE = 'http://dev.shopifiedapp.com/webhook/price-notification/product'
 
 class Command(BaseCommand):
     help = 'Attach Shopify Webhooks to a specific Plan'
@@ -74,7 +76,7 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(pk=user_id)
                 products = ShopifyProduct.objects.filter(user=user)
-
+                # self.stdout.write(', '.join(map(lambda id: str(id), products.values_list('id', flat=True))))
                 self.handle_products(user, products, action, options)
 
             except ShopifyStore.DoesNotExist:

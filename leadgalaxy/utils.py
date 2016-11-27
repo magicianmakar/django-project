@@ -1674,11 +1674,12 @@ class ProductChangeEvent():
         if not len(self.variants_map.keys()):
             self.variants_map = None
 
+        product_config = self.product.get_config();
         self.config = {
-            'product_disappears': self.user.get_config('alert_product_disappears', 'notify'),
-            'variant_disappears': self.user.get_config('alert_variant_disappears', 'notify'),
-            'quantity_change': self.user.get_config('alert_quantity_change', 'notify'),
-            'price_change': self.user.get_config('alert_price_change', 'notify'),
+            'product_disappears': product_config.get('alert_product_disappears', '') or self.user.get_config('alert_product_disappears', 'notify'),
+            'variant_disappears': product_config.get('alert_variant_disappears', '') or self.user.get_config('alert_variant_disappears', 'notify'),
+            'quantity_change': product_config.get('alert_quantity_change', '') or self.user.get_config('alert_quantity_change', 'notify'),
+            'price_change': product_config.get('alert_price_change', '') or self.user.get_config('alert_price_change', 'notify'),
         }
 
     def prepare_data_before(self, data):
@@ -1831,7 +1832,7 @@ class ProductChangeEvent():
                             inventory = variant['old_inventory_quantity']
                             for revision_variant in revision_variants:
                                 if revision_variant['id'] == variant['id']:
-                                    inventory = revision_variants['inventory_quantity']
+                                    inventory = revision_variant['inventory_quantity']
                                     break
 
                             variant['inventory_quantity'] = inventory
@@ -1885,7 +1886,7 @@ class ProductChangeEvent():
 
                     elif change['category'] == 'Price':
                         # take proper action with the found variant
-                        if self.config['price_change'] == 'update':
+                        if self.config['price_change'] == 'update' or (self.config['price_change'] == 'update_for_increase' and change['new_value'] > change['old_value']):
                             for found in found_variants:
                                 data['product']['variants'][found]['price'] = data['product']['variants'][found]['_original_price']
                                 selling_price = float(data['product']['variants'][found]['price'])
