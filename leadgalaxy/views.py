@@ -1195,7 +1195,7 @@ def proccess_api(request, user, method, target, data):
         config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
 
         for k in config.keys():
-            if k.startswith('_') or k == 'access_token':
+            if (k.startswith('_') or k == 'access_token') and k not in data.get('name', ''):
                 del config[k]
 
         extension_release = cache.get('extension_release')
@@ -1211,6 +1211,14 @@ def proccess_api(request, user, method, target, data):
             user.profile.get_active_stores().count() >= 1
 
         config['extra_stores'] = extra_stores
+
+        if data.get('name'):
+            named_config = {}
+            for name in data.get('name').split(','):
+                if name in config:
+                    named_config[name] = config[name]
+
+            config = named_config
 
         return JsonResponse(config)
 

@@ -4,6 +4,7 @@
     var orders = {};
     var updatePromise;
     var order_update_tpl = Handlebars.compile($("#order-update-template").html());
+    var disable_config_sync = false;
 
     var status_map = {
         "PLACE_ORDER_SUCCESS": "Awaiting Payment",
@@ -164,7 +165,68 @@
 
     $('#advanced-options-check').on('change', function (e) {
         $('.advanced-options').toggle(e.target.checked);
+
+        saveConfig('_track_advanced_options', e.target.checked);
     });
+
+    $('#update-delay').on('change', function (e) {
+        saveConfig('_track_update_delay', $(e.target).val());
+    });
+
+    $('#update-concurrency').on('change', function (e) {
+        saveConfig('_track_update_concurrency', $(e.target).val());
+    });
+
+    function saveConfig(name, value) {
+        if (disable_config_sync) {
+            return;
+        }
+
+        $.ajax({
+            url: '/api/user-config',
+            method: 'POST',
+            data: {
+                'single': true,
+                'name': name,
+                'value': value
+            }
+        });
+    }
+
+    function loadConfig() {
+        $.ajax({
+            url: '/api/user-config',
+            data: {
+                'name': '_track_advanced_options,_track_update_delay,_track_update_concurrency',
+            }
+        }).done(function(data) {
+            disable_config_sync = true;
+
+            if (orders.pending > 100) {
+                if (!data._track_update_delay) {
+                    data._track_update_delay = 1;
+                }
+
+                if (!data._track_update_concurrency) {
+                    data._track_update_concurrency = 1;
+                }
+            }
+
+            if(data._track_advanced_options) {
+                $('#advanced-options-check').prop('checked', true).trigger('change');
+            }
+
+            if(data._track_update_delay) {
+                $('#update-delay').val(data._track_update_delay);
+            }
+
+            if(data._track_update_concurrency) {
+                $('#update-concurrency').val(data._track_update_concurrency);
+            }
+
+            disable_config_sync = false;
+        });
+    }
 
     function checkOrder(order) {
         var delay = parseFloat($('#update-delay').val(), 10).bound(0.1, 100) * 1000;
@@ -268,5 +330,9 @@
         $('.stop-update-btn').hide();
         $('.refresh-page-btn').show();
     }
+
+    $(function () {
+        setTimeout(loadConfig, 500);
+    });
 
 })();
