@@ -154,14 +154,19 @@ class Command(BaseCommand):
         notification_api_url = '{}/product/add'.format(ALI_WEB_API_BASE)
 
         try:
+            product_json = json.loads(product.data)
+            post_data = {
+                'product_id': product_id,
+                'store_id': store_id,
+                'webhook': webhook_url,
+                'user_id': product.user_id,
+            }
+            # if product is variant-splitted product, pass its value.
+            if product_json['variants_sku'] and len(product_json['variants_sku']) == 1:
+                post_data['variant_value'] = product_json['variants_sku'].values()[0]
             rep = requests.post(
                 url=notification_api_url,
-                data={
-                    'product_id': product_id,
-                    'store_id': store_id,
-                    'webhook': webhook_url,
-                    'user_id': product.user_id
-                }
+                data=post_data
             )
         except Exception as e:
             raven_client.captureException()
