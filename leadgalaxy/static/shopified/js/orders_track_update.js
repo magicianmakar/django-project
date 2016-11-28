@@ -214,7 +214,9 @@
                 'name': '_track_advanced_options,_track_update_delay,_track_update_concurrency',
             }
         }).done(function(data) {
-            if(data._track_advanced_options) {
+            disable_config_sync = true;
+
+            if(data._track_advanced_options == 'true') {
                 $('#advanced-options-check').prop('checked', true).trigger('change');
             }
 
@@ -225,6 +227,8 @@
             if(data._track_update_concurrency) {
                 $('#update-concurrency').val(data._track_update_concurrency).prop('synced', true);
             }
+
+            disable_config_sync = false;
         });
     }
 
