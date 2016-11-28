@@ -95,6 +95,20 @@
 
             $('.pending-orders', modal).text(data.pending + ' ' + 'Orders');
 
+            disable_config_sync = true;
+
+            if (data.pending > 100) {
+                if(!$('#update-delay').prop('synced')) {
+                    $('#update-delay').val('1');
+                }
+
+                if(!$('#update-concurrency').prop('synced')) {
+                    $('#update-concurrency').val('1');
+                }
+            }
+
+            disable_config_sync = false;
+
             modal.modal({
                 backdrop: 'static',
                 keyboard: false
@@ -200,31 +214,17 @@
                 'name': '_track_advanced_options,_track_update_delay,_track_update_concurrency',
             }
         }).done(function(data) {
-            disable_config_sync = true;
-
-            if (orders.pending > 100) {
-                if (!data._track_update_delay) {
-                    data._track_update_delay = 1;
-                }
-
-                if (!data._track_update_concurrency) {
-                    data._track_update_concurrency = 1;
-                }
-            }
-
             if(data._track_advanced_options) {
                 $('#advanced-options-check').prop('checked', true).trigger('change');
             }
 
             if(data._track_update_delay) {
-                $('#update-delay').val(data._track_update_delay);
+                $('#update-delay').val(data._track_update_delay).prop('synced', true);
             }
 
             if(data._track_update_concurrency) {
-                $('#update-concurrency').val(data._track_update_concurrency);
+                $('#update-concurrency').val(data._track_update_concurrency).prop('synced', true);
             }
-
-            disable_config_sync = false;
         });
     }
 
