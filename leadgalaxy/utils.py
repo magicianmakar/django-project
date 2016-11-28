@@ -663,7 +663,12 @@ def split_product(product, store=None):
             if not new_data['images']:
                 new_data['images'] = [data['images'][0]]
             new_data['variants'] = [{'title': active_variant['title'], 'values': [v]}]
+            if new_data['variants_sku'] and v in new_data['variants_sku']:
+                new_data['variants_sku'] = { v: new_data['variants_sku'][v] }
+            else:
+                new_data['variants_sku'] = {}
             new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
+            new_data['price_notification_id'] = 0
             clone.data = json.dumps(new_data)
 
             if store is not None:
@@ -1697,10 +1702,10 @@ class ProductChangeEvent():
         return data
 
     def take_action(self):
-        if self.notify():
-            self.send_email()
-
         data = self.get_shopify_product()
+        if self.notify():
+            self.send_email(data)
+
         self.revision.data = data
 
         if data is not None:
@@ -1714,11 +1719,17 @@ class ProductChangeEvent():
                 data = self.prepare_data_after(data)
                 self.send_shopify(data)
 
-    def send_email(self):
+    def send_email(self, product_data):
         data = {
             'username': self.user.username,
             'email': self.user.email,
             'events': self.notify_events,
+            'product_title': self.product.title,
+            'product_image': product_data['product']['image']['src'],
+            'shopify_link': self.product.store.get_link('/admin/products/{}'.format(
+                self.product.get_shopify_id())),
+            'store_title': self.product.store.title,
+            'store_link': self.product.store.get_link()
         }
 
         html_message = send_email_from_template(
@@ -1767,7 +1778,6 @@ class ProductChangeEvent():
                             self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
 
         self.notify_events = list(set(self.notify_events))
-
         if len(self.notify_events):
             # Disable notification for a day
             cache.set(notify_key, True, timeout=86400)

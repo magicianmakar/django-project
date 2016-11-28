@@ -7,18 +7,24 @@
 <body>
     <p>Hi {{username}},</p>
 
-    <p>One or more products have changed in AliExpress:<br>
-	{% autoescape off %}
-		{% for event in events %}
-			{% if not foorloop.first %}<br>{% endif %}
-			{{ event }}
-		{% endfor %}
-	{% endautoescape %}
-	<p/>
+    <p>One or more changes have occurred for product <strong>{{ product_title }}</strong> in AliExpress:<br>
+			{% autoescape off %}
+				{% for event in events %}
+					{% if not foorloop.first %}<br>{% endif %}
+					{{ event }}
+				{% endfor %}
+			{% endautoescape %}
+		</p>
 
     <p>You can find more details by clicking the link below.<br/>
-    <a href="https://app.shopifiedapp.com/products/update">Click Here To View Product Updates</a></p>
+    <a href="https://app.shopifiedapp.com/products/update" target="_blank">Click Here To View Product Updates</a></p>
+
+		<p>
+			The link for this product on your <a href="{{ store_link }}" target="_blank">{{ store_title }}</a> is: <br />
+			<a href="{{ shopify_link }}" target="_blank">{{ shopify_link }}</a>
+		</p>
+		<div>
+			<img src="{{ product_image }}" alt="product image" width="150" />
+		</div>
 </body>
 </html>
-
-
