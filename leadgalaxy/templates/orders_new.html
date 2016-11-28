@@ -300,7 +300,11 @@
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
                                     <div class="col-md-3 col-xs-6" style="padding-left:5px">
-                                        {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}<br>
+                                        {{order.shipping_address.first_name}} {{order.shipping_address.last_name}}
+                                        {% if order.shipping_address.company %}
+                                            - {{order.shipping_address.company}}
+                                        {% endif %}
+                                        <br>
                                         {{order.shipping_address.address1}}<br>
                                         {{order.shipping_address.address2}}
 

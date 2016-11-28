@@ -4295,6 +4295,9 @@ def orders_view(request):
 
                     shipping_address_asci['name'] = utils.ensure_title(shipping_address_asci['name'])
 
+                    if shipping_address_asci['company']:
+                        shipping_address_asci['name'] = '{} - {}'.format(shipping_address_asci['name'],
+                                                                         shipping_address_asci['company'])
 
                     phone = shipping_address_asci.get('phone')
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
