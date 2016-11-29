@@ -2,7 +2,7 @@ venv
 *.pyc
 staticfiles
 .env
-db.sqlite3
+*.sqlite3
 *.sublime-*
 docs
 node_modules
