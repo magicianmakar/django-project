@@ -285,6 +285,8 @@ $('#auto_shopify_fulfill').change(function (e) {
 });
 
 $('.verify-api-url').click(function (e) {
+    e.preventDefault();
+
     $(this).button('loading');
 
     $.ajax({

@@ -29,7 +29,7 @@
                   <th class="hidden-xs" style="width:13%">Orders</th>
 
                   {% if not user.is_subuser %}
-                  <th class="hidden-sm hidden-xs">Options</th>
+                  <th class="hidden-sm hidden-xs"></th>
                   {% endif %}
                 </tr>
               </thead>
@@ -74,26 +74,43 @@
                       </td>
                       {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
-                        <button store-id="{{item.id}}" class="verify-api-url btn btn-primary btn-xs"
-                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
-                            <i class="fa fa-check-circle-o"></i> Verify
-                        </button>
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu">
 
-                        <a class="visit-store btn btn-outline btn-xs btn-success" href="{{item.get_link}}/admin" target="_blank">
-                            Visit Store
-                        </a>
+                        <li>
+                            <a class="visit-store " href="{{item.get_link}}/admin" target="_blank">
+                                <i class="fa fa-external-link"></i> Visit Store
+                            </a>
+                        </li>
+
+                        <li class="divider"></li>
+
+                        <li>
+                            <a store-id="{{item.id}}" class="verify-api-url btn-success btn-outline"
+                               data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                <i class="fa fa-check-circle-o"></i> Verify
+                            </a>
+                        </li>
 
                         {% if item.version == 1 %}
-                        <button class="edit-store btn btn-outline btn-xs btn-primary" store-id="{{item.id}}"
-                                store-name="{{item.title}}" store-version="{{item.version}}"
-                                store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
-                            <i class="fa fa-edit"></i> Edit
-                        </button>
+                        <li>
+                            <a class="edit-store  " store-id="{{item.id}}"
+                                    store-name="{{item.title}}" store-version="{{item.version}}"
+                                    store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
+                                <i class="fa fa-edit"></i> Edit
+                            </a>
+                        </li>
                         {% endif %}
 
-                        <button class="delete-store btn btn-outline btn-xs btn-danger" store-id="{{item.id}}" store-version="{{item.version}}">
-                            <i class="fa fa-times"></i> Delete
-                        </button>
+                        <li>
+                            <a class="delete-store btn-danger btn-outline" store-id="{{item.id}}" store-version="{{item.version}}">
+                                <i class="fa fa-times"></i> Delete
+                            </a>
+                        </li>
+                        </ul>
+                        </div>
                       </td>
                       {% endif %}
                     </tr>
@@ -106,7 +123,7 @@
             </table>
 
         {% if not user.is_subuser %}
-            <a class="add-store-btn btn btn-primary" href="#" data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
+            <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
                 Add Store</a>
 
             Need a new Shopify store?  <a href="http://bit.ly/sashopifyspecial" class="itooltip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="21 day free trial with 10% off Shopify for Life">Get your Free Trial here</a>
