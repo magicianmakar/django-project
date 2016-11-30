@@ -134,7 +134,7 @@
                             <td class="no-wrap">{% date_humanize item.created_at %}</td>
                             <td class="no-wrap">{% date_humanize item.updated_at %}</td>
                             <td class="no-wrap">
-                                {% if item.order.fulfillment_status != 'fulfilled' %}
+                                {% if item.line.fulfillment_status != 'fulfilled' %}
                                 <button class="btn btn-success btn-xs fulfill-btn itooltip"
                                         store="{{item.store_id}}"
                                         order-id="{{item.order.id}}"
@@ -145,7 +145,7 @@
                                         >Fulfill</button>
                                 {% else %}
                                     <span class="badge badge-primary">
-                                        {{item.order.fulfillment_status|default:"Unfulfilled"|title}}
+                                        {{item.line.fulfillment_status|default:"Unfulfilled"|title}}
                                     </span>
                                 {% endif %}
 
