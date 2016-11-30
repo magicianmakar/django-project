@@ -3432,14 +3432,19 @@ def acp_graph(request):
                                                   .filter(updated_at__gt=time_threshold).count(),
             'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True)
                                              .filter(updated_at__gt=time_threshold).count(),
-            'disabled': 0
+            'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+                                                 .filter(updated_at__gt=time_threshold)
+                                                 .exclude(Q(store__auto_fulfill='hourly') | Q(store__auto_fulfill='daily'))
+                                                 .count()
         }
     else:
         tracking_count = {
             'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='').count(),
             'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled').count(),
             'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True).count(),
-            'disabled': 0
+            'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+                                                 .exclude(Q(store__auto_fulfill='hourly') | Q(store__auto_fulfill='daily'))
+                                                 .count()
         }
 
     if request.GET.get('cum'):
@@ -3502,36 +3507,6 @@ def acp_graph(request):
                 'created': i['created']
                 })
         shopify_orders = shopify_orders_cum
-
-    # Count disabled auto fulfill orders
-    count_time_threshold = timezone.now() - timezone.timedelta(hours=1)
-    orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
-                                      .filter(status_updated_at__lt=count_time_threshold) \
-                                      .order_by('store', 'status_updated_at')
-    if time_threshold:
-        orders = orders.filter(updated_at__gt=time_threshold)
-
-    cache_key = 'disabled_autofulfill_count'
-    if request.GET.get('days'):
-        cache_key = '{}_{}'.format(cache_key, request.GET.get('days'))
-
-    if cache.get(cache_key) is None:
-        saved_users = {}
-        for order in orders:
-            if order.store_id in saved_users:
-                user = saved_users[order.store_id]
-            else:
-                user = order.store.user
-
-            if not user or user.get_config('auto_shopify_fulfill') != 'hourly':
-                saved_users[order.store_id] = False
-                tracking_count['disabled'] += 1
-            else:
-                saved_users[order.store_id] = user
-
-        cache.set(cache_key, tracking_count['disabled'], timeout=3600)
-    else:
-        tracking_count['disabled'] = cache.get(cache_key)
 
     tracking_count['enabled_awaiting'] = tracking_count['awaiting'] - tracking_count['disabled']
 
