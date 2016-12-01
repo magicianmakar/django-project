@@ -25,11 +25,11 @@ amesbury|Wiltshire
 ammanford|Carmarthenshire
 andover|Hampshire
 anstruther|Fife
-antrim|Co Antrim
+antrim|County Antrim
 appleby-in-westmorland|Cumbria
 arbroath|Angus
 ardrossan|Ayrshire
-armagh|Co Armagh
+armagh|County Armagh
 arthog|Gwynedd
 arundel|West Sussex
 ascot|Berkshire
@@ -48,22 +48,22 @@ ayr|Ayrshire
 bala|Gwynedd
 baldock|Hertfordshire
 ballachulish|Argyll
-ballycastle|Co Antrim
-ballyclare|Co Antrim
-ballymena|Co Antrim
-ballymoney|Co Antrim
+ballycastle|County Antrim
+ballyclare|County Antrim
+ballymena|County Antrim
+ballymoney|County Antrim
 bamburgh|Northumberland
 bamstaple|Devon
-banbridge|Co Down
+banbridge|County Down
 banbury|Oxfordshire
 banchory|Kincardineshire
 banff|Aberdeenshire
-bangor|Co Down
+bangor|County Down
 bangor|Gwynedd
 banstead|Surrey
 barking|Essex
 barmouth|Gwynedd
-barnard castle|Co Durham
+barnard castle|County Durham
 barnet|Hertfordshire
 barnsley|South Yorkshire
 barnstaple|Devon
@@ -80,12 +80,12 @@ beccles|Suffolk
 beckenham|Kent
 bedale|North Yorkshire
 bedford|Bedfordshire
-belfast|Belfast
+belfast|County Antrim
 belvedere|Kent
 benneet|Essex
 berkhamsted|Hertfordshire
 berwick-on-tweed|Northumberland
-betws-y-coed|Conwy
+betws-y-coed|Clwyd
 beverley|North Humberside
 bewdley|Worcestershire
 bexhill-on-sea|East Sussex
@@ -98,7 +98,7 @@ billingshurst|West Sussex
 bingley|West Yorkshire
 birkenhead|Merseyside
 birmingham|West Midlands
-bishop auckland|Co Durham
+bishop auckland|County Durham
 bishops castle|Shropshire
 bishop's stortford|Hertfordshire
 bishops waltham|Hampshire
@@ -141,11 +141,11 @@ bristol|Avon
 brixham|Devon
 broadford|Isle of Skye
 broadstairs|Kent
-broadway|Hereford and Worcester
+broadway|Worcestershire
 brockenhurst|Hampshire
 brodick|Isle of Arran
 bromley|Kent
-bromsgrove|Hereford and Worcester
+bromsgrove|Worcestershire
 brooke|Norfolk
 broxburn|West Lothian
 buckfastleigh|Devon
@@ -163,7 +163,7 @@ burnley|Lancashire
 burton-on-trent|Staffordshire
 bury|Lancashire
 bury st edmunds|Suffolk
-bushmills|Co Antrim
+bushmills|County Antrim
 buxton|Derbyshire
 caernarvon|Gwynedd
 caerphilly|Mid Glamorgan
@@ -181,12 +181,12 @@ carloway|Isle of Lewis
 carluke|Lanarkshire
 carmarthen|Dyfed
 carnforth|Lancashire
-carrickfergus|Co Antrim
+carrickfergus|County Antrim
 carshalton|Surrey
 castle douglas|Kirkcudbrightshire
-castlederg|Co Tyrone
+castlederg|County Tyrone
 castletown|Isle of Man
-castlewellan|Co Down
+castlewellan|County Down
 caterham|Surrey
 cemmaes bay|Gwynedd
 cemmaes road|Gwynedd
@@ -203,7 +203,7 @@ chepstow|Gwent
 chertsey|Surrey
 chesham|Buckinghamshire
 chester|Cheshire
-chester-le-street|Co Durham
+chester-le-street|County Durham
 chesterfield|Derbyshire
 chichester|West Sussex
 chippenham|Wiltshire
@@ -212,13 +212,13 @@ chipping sodbury|Gloucestershire
 chorley|Lancashire
 christchurch|Dorset
 church stretton|Shropshire
-cinderford|Gloucestershne
+cinderford|Gloucestershire
 cirencester|Gloucestershire
 clacton-on-sea|Essex
 cleethorpes|South Humberside
 clevedon|Avon
 clitheroe|Lancashire
-clogher|Co Tyrone
+clogher|County Tyrone
 clopton|Northamptonshire
 coalville|Leicestershire
 coatbridge|Lanarkshire
@@ -226,20 +226,20 @@ cobham|Surrey
 cockermouth|Cumbria
 colchester|Essex
 coleshill|Warwickshire
-coleraine|Co Londonderry
+coleraine|County Londonderry
 colwyn bay|Clwyd
 congleton|Cheshire
 coniston|Cumbria
-consett|Co Durham
+consett|County Durham
 conwy|Gwynedd
-cookstown|Co Tyrone
+cookstown|County Tyrone
 coppull|Lancashire
 corbridge|Northumberland
 corby|Northamptonshire
 corwen|Clwyd
 coulsdon|Surrey
 coventry|West Midlands
-craigavon|Co Armagh
+craigavon|County Armagh
 cramlington|Northumberland
 cranbrook|Kent
 cranleigh|Surrey
@@ -252,16 +252,16 @@ cromer|Norfolk
 crowborough|East Sussex
 croy|Inverness-shire
 croydon|Surrey
-crumlin|Co Antrim
+crumlin|County Antrim
 cullompton|Devon
-cumnock|East Ayrshire
+cumnock|Ayrshire
 cupar|Fife
 cwmbran|Gwent
 dagenham|Essex
 dalbeattie|Kirkcudbrightshire
 dalmally|Argyll
 dalry|Ayrshire
-darlington|Co Durham
+darlington|County Durham
 dartford|Kent
 darvel|Ayrshire
 daventry|Northamptonshire
@@ -283,10 +283,10 @@ dornoch|Sutherland
 douglas|Isle of Man
 dover|Kent
 downham market|Norfolk
-downpatrick|Co Down
+downpatrick|County Down
 driffield|North Humberside
-droitwich|Hereford and Worcester
-dromore|Co Down
+droitwich|Worcestershire
+dromore|County Down
 dudley|West Midlands
 dulverton|Somerset
 dumbarton|Dunbartonshire
@@ -295,14 +295,14 @@ dunbar|East Lothian
 dunblane|Perthshire
 dundee|Angus
 dunfermline|Fife
-dungannon|Co Tyrone
+dungannon|County Tyrone
 dunkeld|Perthshire
 dunmow|Essex
-dunmurry|Belfast
+dunmurry|County Antrim
 dunoon|Argyll
 duns|Berwickshire
 dunstable|Bedfordshire
-durham|Co Durham
+durham|County Durham
 dursley|Gloucestershire
 easingwold|North Yorkshire
 east grinstead|West Sussex
@@ -322,7 +322,7 @@ ellon|Aberdeenshire
 ely|Cambridgeshire
 emsworth|Hampshire
 enfeld|Middlesex
-enniskillen|Co Fermanagh
+enniskillen|County Fermanagh
 epping|Essex
 epsom|Surrey
 erith|Kent
@@ -339,7 +339,7 @@ farnborough|Hampshire
 farnham|Surrey
 felixstowe|Suffolk
 fishguard|Dyfed
-fivemiletown|Co Tyrone
+fivemiletown|County Tyrone
 fleet|Hampshire
 fleetwood|Lancashire
 flint|Clwyd
@@ -360,7 +360,7 @@ gateshead|Tyne and Wear
 gerrards cross|Buckinghamshire
 gillingham|Dorset
 gillingham|Kent
-girvan|South Ayrshire
+girvan|Ayrshire
 glamorgan|Rotherham
 glasgow|Glasgow
 glastonbury|Somerset
@@ -425,7 +425,7 @@ helston|Cornwall
 hemel hempstead|Hertfordshire
 henfield|West Sussex
 henley-on-thames|Oxfordshire
-hereford|Hereford and Worcester
+hereford|Worcestershire
 herne bay|Kent
 hertford|Hertfordshire
 hessle|North Humberside
@@ -433,7 +433,7 @@ hexham|Northumberland
 heywood|Lancashire
 high wycombe|Buckinghamshire
 highbridge|Somerset
-hillsborough|Co Down
+hillsborough|County Down
 hinckley|Leicestershire
 hindhead|Surrey
 hitchin|Hertfordshire
@@ -444,7 +444,7 @@ holmes chapel|Cheshire
 holsworthy|Devon
 holt|Norfolk
 holyhead|Gwynedd
-holywood|Co Down
+holywood|County Down
 honington|Lincolnshire
 honiton|Devon
 hook|Hampshire
@@ -488,7 +488,7 @@ kendal|Cumbria
 kenilworth|Warwickshire
 keswick|Cumbria
 kettering|Northamptonshire
-kidderminster|Hereford and Worcester
+kidderminster|Worcestershire
 kilbirnie|Ayrshire
 killin|Perthshire
 killingholme|Lincolnshire
@@ -511,7 +511,7 @@ kyle|Ross-shire
 kyleakin|Isle of Skye
 laindon|Essex
 lairg|Sutherland
-lampeter|Ceredigion
+lampeter|Dyfed
 lanark|Lanarkshire
 lancaster|Lancashire
 lancing|West Sussex
@@ -521,33 +521,33 @@ latheron|Caithness
 launceston|Cornwall
 leamington spa|Warwickshire
 leatherhead|Surrey
-ledbury|Hereford and Worcester
+ledbury|Worcestershire
 leeds|West Yorkshire
 leicester|Leicestershire
 leigh|Lancashire
 leigh-on-sea|Essex
 leighton buzzard|Bedfordshire
 leiston|Suffolk
-leominster|Hereford and Worcester
-lerwick|Isle of Shetland
+leominster|Worcestershire
+lerwick|Shetland Islands
 letchworth|Hertfordshire
 lewes|East Sussex
 leyburn|North Yorkshire
 leyland|Lancashire
 lichfield|Staffordshire
 lightwater|Surrey
-limavady|Co Londonderry
+limavady|County Londonderry
 lincoln|Lincolnshire
 lingfield|Surrey
 liphook|Hampshire
-lisburn|Co Antrim
+lisburn|County Antrim
 liskeard|Cornwall
 liss|Hampshire
 littleborough|Lancashire
 littlehampton|West Sussex
 liverpool|Merseyside
 livingston|West Lothian
-llanarth|Ceredigion
+llanarth|Dyfed
 llanbedr|Gwynedd
 llandeilo|Carmarthenshire
 llandovery|Carmarthenshire
@@ -557,25 +557,25 @@ llandysul|Dyfed
 llanelli|Dyfed
 llangollen|Clwyd
 llanidloes|Powys
-llanon|Ceredigion
+llanon|Dyfed
 llanrwst|Gwynedd
 llantwit|South Glamorgan
 llanwrda|Dyfed
 llanwrtyd wells|Powys
 loanhead|Midlothian
-lochboisdale|Isle of Uist
+lochboisdale|Isle Of South Uist
 lochcarron|Ross-shire
 lochgilphead|Argyll
 lochwinnoch|Renfrewshire
 lockerbie|Dumfriesshire
 london|London
-londonderry|Co Londonderry
+londonderry|County Londonderry
 loughborough|Leicestershire
 loughton|Essex
 louth|Lincolnshire
 lowestoft|Suffolk
 ludlow|Shropshire
-lurgan|Co Antrim
+lurgan|County Antrim
 luton|Bedfordshire
 lutterworth|Leicestershire
 lydney|Gloucestershire
@@ -587,14 +587,14 @@ macclesfield|Cheshire
 machynlleth|Powys
 madingley|Cambridgeshire
 maesteg|Mid Glamorgan
-magharafelt|Co Londonderry
+magharafelt|County Londonderry
 maidenhead|Berkshire
 maidstone|Kent
 maldon|Essex
 malmesbury|Wiltshire
 malpas|Cheshire
 malton|North Yorkshire
-malvern|Hereford and Worcester
+malvern|Worcestershire
 manchester|Greater Manchester
 mansfield|Nottinghamshire
 march|Cambridgeshire
@@ -635,7 +635,7 @@ morden|Surrey
 morecambe|Lancashire
 moretonhampstead|Devon
 morpeth|Northumberland
-moscow|East Ayrshire
+moscow|Ayrshire
 motherwell|Lanarkshire
 musselburgh|Midlothian
 nailsea|Avon
@@ -650,7 +650,7 @@ new malden|Surrey
 new mills|Derbyshire
 newark|Nottinghamshire
 newbury|Berkshire
-newcastle|Co Down
+newcastle|County Down
 newcastle|Staffordshire
 newcastle emlyn|Dyfed
 newcastle upon tyne|Tyne and Wear
@@ -666,8 +666,8 @@ newquay|Cornwall
 newton abbot|Devon
 newtown|Powys
 newtown-le- willows|Merseyside
-newtownabbey|Co Antrim
-newtownards|Co Down
+newtownabbey|County Antrim
+newtownards|County Down
 north berwick|East Lothian
 north shields|Tyne and Wear
 north walsham|Norfolk
@@ -683,7 +683,7 @@ oakham|Leicestershire
 oban|Argyll
 okehampton|Devon
 oldham|Lancashire
-omagh|Co Tyrone
+omagh|County Tyrone
 ongar|Essex
 ormskirk|Lancashire
 orpington|Kent
@@ -705,7 +705,7 @@ penrhyndeudraeth|Gwynedd
 penrith|Cumbria
 penryn|Cornwall
 penzance|Cornwall
-pershore|Hereford and Worcester
+pershore|Worcestershire
 perth|Perthshire
 peterborough|Cambridgeshire
 peterhead|Aberdeenshire
@@ -720,7 +720,7 @@ plymouth|Devon
 pocklington|East Riding of Yorkshire
 pontefract|West Yorkshire
 pontyclun|Mid Glamorgan
-pontypool|Torfaen
+pontypool|Gwent
 pontypridd|Mid Glamorgan
 poole|Dorset
 pooley bridge|Cumbria
@@ -729,7 +729,7 @@ port talbot|West Glamorgan
 porthcawl|Mid Glamorgan
 porthmadog|Gwynedd
 portree|Isle of Skye
-portrush|Co Antrim
+portrush|County Antrim
 portsmouth|Hampshire
 potters bar|Hertfordshire
 poulton-le-fylde|Lancashire
@@ -749,11 +749,11 @@ raughton head|Cumbria
 rayleigh|Essex
 reading|Berkshire
 redcar|Cleveland
-redditch|Hereford and
+redditch|Worcestershire
 redhill|Surrey
 redruth|Cornwall
 reigate|Surrey
-retford|Nottmghamshire
+retford|Nottinghamshire
 rhyl|Clwyd
 richmond|North Yorkshire
 richmond|Surrey
@@ -773,7 +773,7 @@ ross-on-wye|Herefordshire
 rossendale|Lancashire
 rothbury|Northumberland
 rotherham|South Yorkshire
-rothesay|Isle ofBute
+rothesay|Isle of Bute
 royston|Hertfordshire
 rugby|Warwickshire
 rugeley|Staffordshire
@@ -801,11 +801,11 @@ scarborough|North Yorkshire
 scarinish|Isle of Tiree
 scunthorpe|South Humberside
 seaford|East Sussex
-seaham|Co Durham
+seaham|County Durham
 seahouses|Northumberland
 seaton|Devon
 sedbergh|Cumbria
-sedgefield|Co Durham
+sedgefield|County Durham
 selby|North Yorkshire
 selkirk|Selkirkshire
 settle|North Yorkshire
@@ -818,7 +818,7 @@ shepperton|Middlesex
 shepton mallet|Somerset
 sherborne|Dorset
 sheringham|Norfolk
-shetland|Isle of Shetland
+shetland|Shetland Islands
 shifnal|Shropshire
 shipley|West Yorkshire
 shrewsbury|Shropshire
@@ -872,13 +872,13 @@ stone|Staffordshire
 stonehaven|Kincardineshire
 stornoway|Isle of Lewis
 stourbridge|West Midlands
-stourport-on-severn|Hereford and Worcester
+stourport-on-severn|Worcestershire
 stow-on-the-wold|Gloucestershire
 stowmarket|Suffolk
 stranraer|Wigtownshire
 stratford-upon-avon|Warwickshire
 strathcarron|Ross-shire
-strathaven|South Lanarkshire
+strathaven|Lanarkshire
 strathpeffer|Ross-shire
 street|Somerset
 stroud|Gloucestershire
@@ -937,7 +937,7 @@ ulverston|Cumbria
 umberleigh|Devon
 uttoxeter|Staffordshire
 uxbridge|Middlesex
-ventnor|Isle ofWight
+ventnor|Isle of Wight
 wadebridge|Cornwall
 wakefield|West Yorkshire
 wallasey|Merseyside
@@ -1014,7 +1014,7 @@ woking|Surrey
 wokingham|Berkshire
 wolverhampton|West Midlands
 woodford green|Essex
-worcester|Hereford and Worcester
+worcester|Worcestershire
 workington|Cumbria
 worksop|Nottinghamshire
 wormbridge|Herefordshire
@@ -1027,7 +1027,7 @@ yelverton|Devon
 yeovil|Somerset
 york|North Yorkshire
 rothwell|Northamptonshire
-strabane|Co Tyrone
+strabane|County Tyrone
 swadlincote|Derbyshire
 kings lynn|Norfolk
 hathern|Leicestershire
@@ -1041,7 +1041,7 @@ chipping campden|Gloucestershire
 bishops stortford|Hertfordshire
 inverkeithing|Fife
 castleford|West Yorkshire
-comber|Co Down
+comber|County Down
 ealing|London
 cowbridge|South Glamorgan
 hayes middlesex|Middlesex

@@ -1,7 +1,7 @@
 Abbotsham|Devon
 Abbots Langley|Hertfordshire
 Abenbury|Wrexham
-Aberaeron|Ceredigion
+Aberaeron|Dyfed
 Abercarn|Caerphilly
 Aberdare|Rhondda Cynon Taff
 Aberdeen|Aberdeen City
@@ -78,7 +78,7 @@ Aviemore|Highland
 Avoch|Highland
 Axminster|Devon
 Aylesbury|Buckinghamshire
-Ayr|South Ayrshire
+Ayr|Ayrshire
 Badby|Northamptonshire
 Baglan|Neath Port Talbot
 Bagnall|Staffordshire
@@ -130,7 +130,7 @@ Berkeley|Gloucestershire
 Berkhamsted|Hertfordshire
 Berwick-upon-Tweed|Northumberland
 Betws|Carmarthenshire
-Betws-yn-Rhos|Conwy
+Betws-yn-Rhos|Clwyd
 Bexhill|East Sussex
 Bexley|Greater London
 Bicester|Oxfordshire
@@ -217,7 +217,7 @@ Broadstairs|Kent
 Broadway|Worcestershire
 Brockham|Surrey
 Brodsworth|Doncaster
-Bro Machno|Conwy
+Bro Machno|Clwyd
 Bromeswell|Suffolk
 Bromley|Greater London
 Bromsgrove|Worcestershire
@@ -404,8 +404,8 @@ Cuckfield Rural|West Sussex
 Cuddesdon|Oxfordshire
 Culham|Oxfordshire
 Cumbernauld|North Lanarkshire
-Cumnock|East Ayrshire
-Cwmbran|Torfaen
+Cumnock|Ayrshire
+Cwmbran|Gwent
 Cwm Cadnant|Isle of Anglesey
 Cymmer|Rhondda Cynon Taff
 Cynffig|Bridgend
@@ -421,11 +421,11 @@ Darenth|Kent
 Darfield|Barnsley
 Dartford|Kent
 Dartmouth|Devon
-Darvel|East Ayrshire
+Darvel|Ayrshire
 Darwen|Blackburn with Darwen
 Dawlish|Devon
 Deeping St James|Lincolnshire
-Deganwy|Conwy
+Deganwy|Clwyd
 Denbigh|Denbighshire
 Denham Green|Buckinghamshire
 Dennyloanhead|Falkirk
@@ -442,7 +442,7 @@ Dinton|Wiltshire
 Ditton|Kent
 Doddiscombsleigh|Devon
 Dolbenmaen|Gwynedd
-Dolwyddelan|Conwy
+Dolwyddelan|Clwyd
 Donaghadee|Ards
 Dorchester|Dorset
 Dorking|Surrey
@@ -567,12 +567,12 @@ Fulbourn|Cambridgeshire
 Funtington|West Sussex
 Gairloch|Highland
 Galashiels|The Scottish Borders
-Galston|East Ayrshire
+Galston|Ayrshire
 Garston|Liverpool
 Garw Valley|Bridgend
-Gatehead|East Ayrshire
+Gatehead|Ayrshire
 Gelligaer|Caerphilly
-Geneur Glyn|Ceredigion
+Geneur Glyn|Dyfed
 Gildersome|Leeds
 Gillingham|Dorset
 Gillingham|Medway
@@ -679,7 +679,7 @@ Hempnall|Norfolk
 Henfield|West Sussex
 Henley-in-Arden|Warwickshire
 Henlow|Central Bedfordshire
-Henryd|Conwy
+Henryd|Clwyd
 Hermitage|West Sussex
 Hertford|Hertfordshire
 Heslington|York
@@ -802,7 +802,7 @@ Killearn|Stirling
 Killichonan|Perth and Kinross
 Killin|Stirling
 Kilmacolm|Inverclyde
-Kilmarnock|East Ayrshire
+Kilmarnock|Ayrshire
 Kilmersdon|Somerset
 Kilsyth|North Lanarkshire
 Kilwinning|North Ayrshire
@@ -884,31 +884,31 @@ Littlehampton|West Sussex
 Little Shelford|Cambridgeshire
 Little Torrington|Devon
 Livingston|West Lothian
-Llanarth|Ceredigion
+Llanarth|Dyfed
 Llanbadrig|Isle of Anglesey
 Llanbedr|Gwynedd
 Llanbrynmair|Powys
 Llanddew|Powys
 Llandovery|Carmarthenshire
 Llandrindod Wells|Powys
-Llandudno|Conwy
+Llandudno|Clwyd
 Llandygai|Gwynedd
 Llanegwad|Carmarthenshire
 Llanelli Rural|Carmarthenshire
 Llaneugrad|Isle of Anglesey
-Llanfairfechan|Conwy
+Llanfairfechan|Clwyd
 Llanfair-Mathafarn-Eithaf|Isle of Anglesey
 Llanfallteg|Carmarthenshire
-Llanfarian|Ceredigion
+Llanfarian|Dyfed
 Llanfihangel-Ar-Arth|Carmarthenshire
 Llanfihangel Ysgeifiog|Isle of Anglesey
 Llangamarch|Powys
 Llangattock|Powys
 Llangefni|Isle of Anglesey
 Llangelynin|Gwynedd
-Llangoedmor|Ceredigion
+Llangoedmor|Dyfed
 Llangollen|Denbighshire
-Llangybi|Ceredigion
+Llangybi|Dyfed
 Llanharan|Rhondda Cynon Taff
 Llanidan|Isle of Anglesey
 Llanidloes|Powys
@@ -917,12 +917,12 @@ Llanllyfni|Gwynedd
 Llannerch-Y-Medd|Isle of Anglesey
 Llannon|Carmarthenshire
 Llanrug|Gwynedd
-Llanrwst|Conwy
+Llanrwst|Clwyd
 Llansamlet|Swansea
 Llansantffraid|Powys
 Llantwit Fardre|Rhondda Cynon Taff
 Llantwit Major|The Vale of Glamorgan
-Llanwenog|Ceredigion
+Llanwenog|Dyfed
 Loanhead|Midlothian
 Lochdon|Argyll and Bute
 Lochgoilhead|Argyll and Bute
@@ -988,7 +988,7 @@ Martley|Worcestershire
 Martock|Somerset
 Maryport|Cumbria
 Matlock Bath|Derbyshire
-Mauchline|East Ayrshire
+Mauchline|Ayrshire
 Maulden|Central Bedfordshire
 Mayfield|East Sussex
 Meidrim|Carmarthenshire
@@ -1015,7 +1015,7 @@ Milngavie|East Dunbartonshire
 Milnthorpe|Cumbria
 Mirfield|Kirklees
 Mistley|Essex
-Mochdre|Conwy
+Mochdre|Clwyd
 Moelfre|Isle of Anglesey
 Mold|Flintshire
 Monk Hesleden|County Durham
@@ -1059,14 +1059,14 @@ Newchurch|Lancashire
 Newhaven|East Sussex
 New Lanark|South Lanarkshire
 New Mills|Derbyshire
-Newmilns|East Ayrshire
+Newmilns|Ayrshire
 New Milton|Hampshire
 Newport|Essex
 Newport|Isle Of Wight
 Newport Pagnell|Milton Keynes
 Newport|Pembrokeshire
 Newport|Telford and Wrekin
-New Quay|Ceredigion
+New Quay|Dyfed
 Newquay|Cornwall
 New Romney|Kent
 Newtimber|West Sussex
@@ -1099,7 +1099,7 @@ Oadby|Leicester
 Odiham|Hampshire
 Okehampton Hamlets|Devon
 Old Buckenham|Norfolk
-Old Colwyn|Conwy
+Old Colwyn|Clwyd
 Old Hunstanton|Norfolk
 Old Leake|Lincolnshire
 Ompton|Nottinghamshire
@@ -1141,7 +1141,7 @@ Pencoed|Bridgend
 Penderry|Swansea
 Penicuik|Midlothian
 Penkridge|Staffordshire
-Penmaenmawr|Conwy
+Penmaenmawr|Clwyd
 Penrhiwceiber|Rhondda Cynon Taff
 Penrhyndeudraeth|Gwynedd
 Penryn|Cornwall
@@ -1471,17 +1471,17 @@ town|region
 Tranent|East Lothian
 Tredegar|Blaenau Gwent
 Treflys|Powys
-Trefriw|Conwy
-Tregaron|Ceredigion
+Trefriw|Clwyd
+Tregaron|Dyfed
 Tregoney|Cornwall
 Treharris|Merthyr Tydfil
 Treorchy|Rhondda Cynon Taff
-Trevethin|Torfaen
+Trevethin|Gwent
 Trimdon|County Durham
 Trindon|Stockton-on-Tees
 Tring|Hertfordshire
-Troedyraur|Ceredigion
-Troon|South Ayrshire
+Troedyraur|Dyfed
+Troon|Ayrshire
 Trowbridge|Cardiff
 Trowbridge|Wiltshire
 Truro|Cornwall
