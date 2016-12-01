@@ -1037,7 +1037,7 @@ class ProductSupplier(models.Model):
     product = models.ForeignKey(ShopifyProduct)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)
-    supplier_name = models.CharField(max_length=512, null=True, blank=True)
+    supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
     supplier_url = models.CharField(max_length=512, null=True, blank=True)
     shipping_method = models.CharField(max_length=512, null=True, blank=True)
     variants_map = models.TextField(null=True, blank=True)

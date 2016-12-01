@@ -110,8 +110,7 @@
                             <label>Supplier:</label>
                         </div>
                         <div class="col-md-4">
-                            <input name="supplier" value="{{request.GET.supplier|default:''}}" type="hidden" />
-                            <input name="" id="supplier_name" value="{{supplier_filter.supplier_name|default:''}}" class="form-control"
+                            <input name="supplier_name" id="supplier_name" value="{{supplier_filter|default:''}}" class="form-control"
                                    placeholder="Supplier Name" data-store="{{store.id}}">
                         </div>
                     </div>

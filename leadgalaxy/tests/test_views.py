@@ -286,7 +286,6 @@ class AutocompleteTestCase(TestCase):
         r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(self.store.id))
         content = json.loads(r.content)
         suggestion = content['suggestions'].pop()
-        self.assertEquals(suggestion['data'], supplier.id)
         self.assertEquals(suggestion['value'], supplier.supplier_name)
 
     def test_must_not_suggest_names_from_other_users_stores(self):
