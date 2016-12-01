@@ -629,7 +629,7 @@ class ShopifyProduct(models.Model):
     original_data = models.TextField(default='', blank=True)
     original_data_key = models.CharField(max_length=32, null=True, blank=True)
 
-    config = models.TextField(default='', blank=True)
+    config = models.TextField(null=True, blank=True)
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)

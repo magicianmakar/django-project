@@ -870,7 +870,7 @@ $('form#product-config-form').submit(function (e) {
     var data = $(this).serialize();
 
     $.ajax({
-        url: '/api/product-config?product=' + config.product_id,
+        url: '/api/product-config',
         type: 'POST',
         data: data,
         context: {form: $(this)},

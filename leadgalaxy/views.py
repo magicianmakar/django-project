@@ -1328,7 +1328,7 @@ def proccess_api(request, user, method, target, data):
         if not user.can('price_changes.use'):
             raise PermissionDenied()
 
-        product = request.GET.get('product')
+        product = data.get('product')
         if product:
             product = get_object_or_404(ShopifyProduct, id=product)
             request.user.can_edit(product)
@@ -1341,6 +1341,8 @@ def proccess_api(request, user, method, target, data):
             config = {}
 
         for key in data:
+            if key == 'product':
+                continue
             config[key] = data[key]
 
         product.config = json.dumps(config)
@@ -2733,7 +2735,6 @@ def webhook(request, provider, option):
 
     elif provider == 'price-notification' and request.method == 'POST':
         product_id = request.GET['product']
-        print 'webhook product change with id: {}'.format(product_id)
         try:
             product = ShopifyProduct.objects.get(id=product_id)
         except ShopifyProduct.DoesNotExist:
