@@ -753,6 +753,19 @@ $(function () {
         }
     });
 
+    $('#supplier_name').keyup(function() {
+        if (!$(this).val().trim().length) {
+            $('input[name="supplier"]', $(this).parent()).val('');
+        }
+    }).autocomplete({
+        serviceUrl: '/autocomplete/supplier-name?' + $.param({store: $('#supplier_name').data('store')}),
+        minChars: 1,
+        deferRequestBy: 1000,
+        onSelect: function(suggestion) {
+            $('input[name="supplier"]', $(this).parent()).val(suggestion.data);
+        }
+    });
+
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);

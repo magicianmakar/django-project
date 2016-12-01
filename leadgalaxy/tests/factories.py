@@ -43,6 +43,13 @@ class ShopifyProductFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.ShopifyProduct'
 
 
+class ProductSupplierFactory(factory.DjangoModelFactory):
+    product = factory.SubFactory('leadgalaxy.tests.factories.ShopifyProduct')
+
+    class Meta:
+        model = 'leadgalaxy.ProductSupplier'
+
+
 class ShopifyStoreFactory(factory.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
     api_url = factory.fuzzy.FuzzyText(prefix='https://', suffix='.myshopify.com')

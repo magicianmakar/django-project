@@ -262,3 +262,38 @@ class SubuserpermissionsApiTestCase(TestCase):
         data = {'fulfill-store': self.store.id}
         r = self.client.post('/api/fulfill-order', data)
         self.assertEquals(r.status_code, 403)
+
+
+class AutocompleteTestCase(TestCase):
+    def setUp(self):
+        self.user = f.UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.profile.delete()
+        self.user.save()
+
+        self.store = f.ShopifyStoreFactory()
+        self.store.user = self.user
+        self.store.save()
+
+        f.UserProfileFactory(user=self.user)
+
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_returns_suggestions(self):
+        product = f.ShopifyProductFactory(store=self.store, user=self.user)
+        supplier = f.ProductSupplierFactory(product=product, supplier_name='Test')
+        r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(self.store.id))
+        content = json.loads(r.content)
+        suggestion = content['suggestions'].pop()
+        self.assertEquals(suggestion['data'], supplier.id)
+        self.assertEquals(suggestion['value'], supplier.supplier_name)
+
+    def test_must_not_suggest_names_from_other_users_stores(self):
+        store = f.ShopifyStoreFactory()
+        product = f.ShopifyProductFactory(store=store, user=store.user)
+        f.ProductSupplierFactory(product=product, supplier_name='Test')
+        r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(store.id))
+        content = json.loads(r.content)
+        self.assertEquals(len(content['suggestions']), 0)
+

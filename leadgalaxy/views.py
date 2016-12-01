@@ -3746,6 +3746,20 @@ def autocomplete(request, target):
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
+    elif target == 'supplier-name':
+        store_id = request.GET.get('store')
+
+        suppliers = ProductSupplier.objects.only('id', 'supplier_name')
+        suppliers = suppliers.filter(product__store_id=store_id)
+        suppliers = suppliers.filter(product__store__user=request.user.models_user)
+        suppliers = suppliers.filter(supplier_name__icontains=q)
+
+        results = []
+        for supplier in suppliers[:10]:
+            results.append({'value': supplier.supplier_name, 'data': supplier.id})
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
@@ -3986,6 +4000,7 @@ def orders_view(request):
     query_address = request.GET.getlist('query_address')
 
     product_filter = request.GET.get('product')
+    supplier_filter = request.GET.get('supplier')
 
     if request.GET.get('shop'):
         status, fulfillment, financial = ['any', 'any', 'any']
@@ -4075,6 +4090,9 @@ def orders_view(request):
 
         if product_filter:
             orders = orders.filter(shopifyorderline__product_id=product_filter)
+
+        if supplier_filter:
+            orders = orders.filter(shopifyorderline__product__default_supplier_id=supplier_filter)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
@@ -4353,6 +4371,9 @@ def orders_view(request):
     if product_filter:
         product_filter = models_user.shopifyproduct_set.get(id=product_filter)
 
+    if supplier_filter:
+        supplier_filter = ProductSupplier.objects.get(id=supplier_filter, product__store__user=models_user)
+
     return render(request, 'orders_new.html', {
         'orders': all_orders,
         'store': store,
@@ -4369,6 +4390,7 @@ def orders_view(request):
         'connected_only': connected_only,
         'awaiting_order': awaiting_order,
         'product_filter': product_filter,
+        'supplier_filter': supplier_filter,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
