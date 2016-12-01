@@ -1975,10 +1975,18 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Supplier URL is missing'}, status=422)
 
         if 's.aliexpress.com' in supplier_url.lower():
+            from urlparse import urlparse, parse_qs
+
             rep = requests.get(supplier_url, allow_redirects=False)
             rep.raise_for_status()
 
-            supplier_url = utils.remove_link_query(rep.headers.get('location'))
+            location_url = rep.headers.get('location')
+
+            if '/deep_link.htm' in location_url:
+                supplier_url = parse_qs(urlparse(location_url).query)['dl_target_url'].pop()
+                supplier_url = utils.remove_link_query(supplier_url)
+            else:
+                supplier_url = utils.remove_link_query(location_url)
 
         if not utils.safeInt(data.get('product')):
             return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
