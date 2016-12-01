@@ -1988,6 +1988,7 @@ def proccess_api(request, user, method, target, data):
             user=user.models_user,
             shopify_id=data.get('product'),
             data=json.dumps({
+                'title': 'Importing...',
                 'variants': [],
                 'original_url': supplier_url
                 }),
