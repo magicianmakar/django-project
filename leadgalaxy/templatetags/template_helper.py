@@ -9,6 +9,11 @@ import re
 register = template.Library()
 
 
+@register.filter
+def key_value(dict, key):
+    return dict.get(key, '')
+
+
 @register.simple_tag
 def app_setting(name):
     return getattr(settings, name, None)

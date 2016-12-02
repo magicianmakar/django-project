@@ -9,6 +9,7 @@ window.OrderExportAdd = {
         // events
         this.onClickEdit();
         this.onUnselectField();
+        this.onToggleUsername();
         var clockpickerInput = $('input[name="schedule"]');
         clockpickerInput.clockpicker({
             autoclose: true,
@@ -16,6 +17,8 @@ window.OrderExportAdd = {
                 clockpickerInput.clockpicker('done');
             }
         });
+
+        $('input[name="daterange"]').daterangepicker();
     },
     onClickEdit: function() {
         $('.field-wrapper').hide();
@@ -27,6 +30,19 @@ window.OrderExportAdd = {
     },
     initializeFieldsSelect: function() {
         var OrderExportAdd = this;
+        $('input[name="previous_day"]').on('ifChecked', function() {
+            $('#schedule .range').hide();
+            $('#schedule .daily').show();
+            $('input[name="receiver"]').parents('.form-group').show();
+            $('#vendor-login').show();
+        });
+
+        $('input[name="previous_day"]').on('ifUnchecked', function() {
+            $('#schedule .range').show();
+            $('#schedule .daily').hide();
+            $('input[name="receiver"]').val('').parents('.form-group').hide();
+            $('#vendor-login').hide();
+        });
 
         this.selectableFields.on("ifChecked", function() {
             var self = this;
@@ -156,6 +172,26 @@ window.OrderExportAdd = {
                 listItem.after(this.createListItem(list, item));
             }
         }
+    },
+    onToggleUsername: function() {
+        $('[name="vendor_user"]').on('change', function() {
+            if ($(this).val() != '') {
+                $('[name="vendor_username"]').val('');
+                $('[name="vendor_email"]').val('');
+            }
+        });
+        
+        $('[name="vendor_username"]').on('keyup', function() {
+            if ($(this).val() != '') {
+                $('[name="vendor_user"]').val('');
+            }
+        });
+
+        $('[name="vendor_email"]').on('keyup', function() {
+            if ($(this).val() != '') {
+                $('[name="vendor_user"]').val('');
+            }
+        });
     }
 };
 

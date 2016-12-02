@@ -14,7 +14,7 @@ class Command(BaseCommand):
         start, end = self.get_scheduled_time()
         for order_export in OrderExport.objects.filter(schedule__gte=start, schedule__lte=end):
             api = ShopifyOrderExportAPI(order_export)
-            api.generate_export()
+            api.generate_query()
 
     def get_scheduled_time(self):
         """ Returns start and end time of the current hour.

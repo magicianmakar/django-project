@@ -58,3 +58,16 @@ a.edit {
     padding: 0 10px 0 15px;
     outline: none;
 }
+
+.icheck.no-margin {
+    margin: 0 20px 0 0;
+}
+
+.icheck.no-margin .icheckbox_square-blue {
+    margin: 0;
+}
+
+#title {
+    margin: 0; 
+    line-height: 18px;
+}

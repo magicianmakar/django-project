@@ -1581,6 +1581,7 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
     import tempfile
     import gzip
     import shutil
+    import mimetypes
 
     import boto
     from boto.s3.key import Key

@@ -1,32 +1,58 @@
+# -*- coding: utf-8 -*-
 import csv
 import logging
 import tempfile
-from os import remove as os_remove
+import StringIO
+import os
+import uuid
+import json
 from json import loads, dumps
 from datetime import datetime, timedelta
 from math import ceil
 
 import requests
+from django.core.urlresolvers import reverse
+from django.utils import timezone
+from django.utils.text import slugify
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.utils import aws_s3_upload, send_email_from_template
 
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+GENERATED_PAGE_LIMIT = 10
 
 
 class ShopifyOrderExportAPI():
 
-    def __init__(self, order_export):
+    def __init__(self, order_export, code=None):
         """Set order_export, store and base url for shopify endpoint URIs"""
         self.order_export = order_export
+        
+        self.unique_code = code
+        if self.unique_code:
+            self.query = order_export.queries.get(code=self.unique_code)
+        else:
+            self.query = order_export.query
 
         # setting ShopifyStore Model for handling the APIs
         self.store = order_export.store
 
         # create the base url for accessing Shopify with basic http auth
         self.base_url = self.store.get_link('/', api=True)
+        self.file_path = tempfile.mktemp(suffix='.csv', prefix='%d/' % self.order_export.id)
 
-        self.file_name = tempfile.mktemp(suffix='.csv', prefix='%d-'%self.order_export.id)
+        file_name = self.file_path.split('/')[-1]
+        self._s3_path = os.path.join('order-exports', str(self.order_export.id), file_name)
+
+        self.order_export.save()
+
+        raven_client.user_context({
+            'id': self.store.user.id,
+            'username': self.store.user.username,
+            'email': self.store.user.email
+        })
 
     def _get_response_from_url(self, url, params=None):
         """Access any given url and return the corresponding response"""
@@ -49,6 +75,62 @@ class ShopifyOrderExportAPI():
 
         return response
 
+    def _post_response_from_url(self, url, data):
+        """Access any given url and return the corresponding response"""
+        # concatenate the URL to be requested with the base url and do the request
+        request_url = self.base_url + url
+        response = requests.post(request_url, json=data)
+
+        # check for response and log if error
+        if not response.ok:
+            logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
+                    response.url, response.text, response.status_code)
+
+            response = requests.post(request_url, json=data)
+
+        return response
+
+    def _put_response_from_url(self, url, data):
+        """Access any given url and return the corresponding response"""
+        # concatenate the URL to be requested with the base url and do the request
+        request_url = self.base_url + url
+        response = requests.put(request_url, json=data)
+
+        # check for response and log if error
+        if not response.ok:
+            logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
+                    response.url, response.text, response.status_code)
+
+            response = requests.put(request_url, json=data)
+
+        return response
+
+    def _create_fulfillment_params(self, tracking_number, line_items):
+        vendor = self.order_export.filters.vendor
+        items = []
+        for item in line_items:
+            if vendor.strip() != '' and item['vendor'] != vendor:
+                continue
+            items.append({"id": item['id']})
+        
+        return {
+          "fulfillment": {
+            "tracking_number": tracking_number,
+            "line_items": items
+          }
+        }
+
+    def _post_fulfillment(self, data, order_id, fulfillment_id):
+        if fulfillment_id:
+            url = '/admin/orders/{}/fulfillments/{}.json'.format(order_id, fulfillment_id)
+            data['fulfillment']['id'] = fulfillment_id
+            response = self._put_response_from_url(url=url, data=data)
+        else:
+            url = '/admin/orders/{}/fulfillments.json'.format(order_id)
+            response = self._post_response_from_url(url=url, data=data)
+
+        return response.ok
+
     def _create_url_params(self):
         params = {}
         filters = self.order_export.filters
@@ -57,28 +139,30 @@ class ShopifyOrderExportAPI():
             if value:
                 params[common_status] = value
 
-        params['created_at_min'] = self.order_export.created_at.strftime("%Y-%m-%dT%H:%M:%S%z")
-        if self.order_export.since_id:
-            params['since_id'] = self.order_export.since_id
+        if self.order_export.previous_day:
+            params['created_at_min'] = self.order_export.created_at.strftime("%Y-%m-%dT%H:%M:%S%z")
+            if self.order_export.since_id:
+                params['since_id'] = self.order_export.since_id
+        else:
+            params['created_at_min'] = self.order_export.filters.created_at_min.strftime("%Y-%m-%dT%H:%M:%S%z")
+            params['created_at_max'] = self.order_export.filters.created_at_max.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         return params
 
-    def _get_orders_count(self):
-        filters = self._create_url_params()
+    def _get_orders_count(self, params):
         url = '/admin/orders/count.json'
 
-        response = self._get_response_from_url(url, filters)
+        response = self._get_response_from_url(url, params)
 
         return response.json()['count']
 
-    def _get_orders(self, limit=250, page=1):
-        filters = self._create_url_params()
+    def _get_orders(self, params={}, limit=250, page=1):
         url = '/admin/orders.json'
 
-        filters['page'] = page
-        filters['limit'] = limit
+        params['page'] = page
+        params['limit'] = limit
 
-        response = self._get_response_from_url(url, filters)
+        response = self._get_response_from_url(url, params)
 
         return response.json()['orders']
 
@@ -88,36 +172,181 @@ class ShopifyOrderExportAPI():
             fieldnames.append(prefix + field[1])
         return fieldnames
 
-    def generate_sample_export(self):
-        orders = self._get_orders(limit=20)
-        url = self.create_csv(orders)
+    def _percentage(self, current_page, max_pages):
+        return (max_pages / current_page) * 95
 
-        self.order_export.sample_url = url
-        self.order_export.save()
+    @property
+    def _get_unique_code(self):
+        from order_exports.models import OrderExportQuery
+        
+        if self.unique_code:
+            return self.unique_code
+
+        count = 1
+        while count != 0:
+            self.unique_code = uuid.uuid4().hex[:6].upper()
+            count = self.order_export.queries.filter(code=self.unique_code).count()
+
+        return self.unique_code
+
+    def fulfill(self, order_id, tracking_number, fulfillment_id=''):
+        url = '/admin/orders/{}.json'.format(order_id)
+        params = {'fields': 'line_items'}
+
+        order = self._get_response_from_url(url, params=params).json()['order']
+
+        fulfillment_params = self._create_fulfillment_params(tracking_number, order['line_items'])
+        return self._post_fulfillment(fulfillment_params, order_id, fulfillment_id)
+
+    def generate_query(self):
+        params = self._create_url_params()
+        self.query = self.order_export.queries.create(
+            params=json.dumps(params),
+            code=self._get_unique_code,
+            count=self._get_orders_count(params)
+        )
+        
+        if self.order_export.previous_day:
+            self.send_email(code=self._get_unique_code)
+
+    def generate_sample_export(self):
+        log = self.order_export.logs.create()
+        try:
+            params = self._create_url_params()
+            orders = self._get_orders(params=params, limit=20)
+            url = self.create_csv(orders)
+
+            self.order_export.sample_url = url
+            self.order_export.save()
+
+            log.successful = True
+            log.finished_by = timezone.now()
+            log.csv_url = url
+            log.type = log.SAMPLE
+            log.save()
+
+        except Exception as e:
+            raven_client.captureException()
+            log.finished_by = timezone.now()
+            log.save()
 
     def generate_export(self):
-        count = self._get_orders_count()
-        max_pages = ceil(float(count) / 250.0) + 1
-        
-        orders = []
-        for page in range(1, max_pages):
-            orders += self._get_orders(page=page)
+        log = self.order_export.logs.create()
 
-        url = self.create_csv(orders)
+        try:
+            params = self._create_url_params()
 
-        if len(orders) > 1:
-            self.order_export.since_id = orders[-1]['id']
+            count = self._get_orders_count(params)
+            max_pages = int(ceil(float(count) / 250.0) + 1)
+            
+            orders = []
+            for page in range(1, max_pages):
+                if not self.order_export.previous_day:
+                    self.order_export.progress = self._percentage(page, max_pages)
+                    self.order_export.save()
+                orders += self._get_orders(params=params, page=page)
 
-        self.order_export.url = url
-        self.order_export.save()
+            url = self.create_csv(orders)
 
-        self.send_email()
+            if len(orders) > 1:
+                self.order_export.since_id = orders[-1]['id']
+
+            self.order_export.progress = 100
+            self.order_export.url = url
+            self.order_export.save()
+
+            log.successful = True
+            log.finished_by = timezone.now()
+            log.csv_url = url
+            log.type = log.COMPLETE
+            log.save()
+
+        except Exception as e:
+            raven_client.captureException()
+            log.finished_by = timezone.now()
+            log.save()
+
+    def get_query_info(self):
+        count = self._get_orders_count(params=self.query.params_dict)
+        max_pages = int(ceil(float(count) / float(GENERATED_PAGE_LIMIT)) + 1)
+
+        return {
+            'fieldnames': {
+                'fields': self.order_export.fields_choices,
+                'shipping_address': self.order_export.shipping_address_choices,
+                'line_items': self.order_export.line_fields_choices,
+            },
+            'pages': range(1, max_pages),
+            'max_page': max_pages-1,
+            'count': count
+        }
+
+    def get_data(self, page=1):
+        if not self.query:
+            return []
+
+        orders = self._get_orders(params=self.query.params_dict, page=page, limit=GENERATED_PAGE_LIMIT)
+        vendor = slugify(self.order_export.filters.vendor.strip())
+
+        fields = self.order_export.fields_choices
+        fieldnames = self._get_fieldnames(fields)
+
+        line_fields = self.order_export.line_fields_choices
+        fieldnames += self._get_fieldnames(line_fields, 'Line Field - ')
+
+        shipping_address = self.order_export.shipping_address_choices
+        fieldnames += self._get_fieldnames(shipping_address, 'Shipping Address - ')
+
+        count_fieldnames = len(fieldnames)
+
+        lines = []
+        for order in orders:
+            line = {'fields': {}, 'shipping_address': {}, 'line_items': []}
+            if vendor != '':
+                vendor_found = [l for l in order['line_items'] if l['vendor'] == vendor]
+                if len(vendor_found) == 0: # vendor not found on line items
+                    continue
+
+            line['fields']['id'] = unicode(order['id']).encode("utf-8")
+            for fulfillment in order['fulfillments']:
+                for line_item in fulfillment['line_items']:
+                    if vendor == '' or slugify(line_item['vendor']) == vendor:
+                        line['fields']['tracking_number'] = fulfillment.get('tracking_number') or ''
+                        line['fields']['fulfillment_id'] = fulfillment['id']
+                        break
+                
+                if line['fields'].get('tracking_number'):
+                    break
+
+            if len(fields):
+                write = True
+                for field in fields:
+                    line['fields'][field[0]] = unicode(order[field[0]]).encode("utf-8")
+
+            if len(shipping_address) and 'shipping_address' in order:
+                write = True
+                for field in shipping_address:
+                    line['shipping_address'][field[0]] = unicode(order['shipping_address'][field[0]]).encode("utf-8")
+
+            if len(line_fields) and 'line_items' in order:
+                for line_item in order['line_items']:
+                    if vendor.strip() != '' and slugify(line_item['vendor']) != vendor:
+                        continue
+                        
+                    items = {}
+                    for line_field in line_fields:
+                        items[line_field[0]] = unicode(line_item[line_field[0]]).encode("utf-8")
+                    line['line_items'].append(items)
+
+            lines.append(line)
+
+        return lines
 
     def create_csv(self, orders=[]):
         url = ''
-        vendor = self.order_export.filters.vendor
+        vendor = slugify(self.order_export.filters.vendor)
 
-        with open(self.file_name, 'w') as csv_file:
+        with open(self.file_path, 'wr') as csv_file:
             fields = self.order_export.fields_choices
             fieldnames = self._get_fieldnames(fields)
 
@@ -132,49 +361,60 @@ class ShopifyOrderExportAPI():
             writer.writeheader()
             for order in orders:
                 if vendor.strip() != '':
-                    vendor_found = [l for l in order['line_items'] if l['vendor'] == vendor]
+                    vendor_found = [l for l in order['line_items'] if slugify(l['vendor']) == vendor]
                     if len(vendor_found) == 0: # vendor not found on line items
                         continue
 
+                line = {}
                 if len(fields):
-                    line = {}
+                    write = True
                     for field in fields:
-                        line[field[1]] = order[field[0]]
-                    writer.writerow(line)
+                        line[field[1]] = unicode(order[field[0]]).encode("utf-8")
 
                 if len(shipping_address) and 'shipping_address' in order:
-                    line = {}
+                    write = True
                     for field in shipping_address:
-                        line['Shipping Address - %s' % field[1]] = order['shipping_address'][field[0]]
+                        line['Shipping Address - %s' % field[1]] = unicode(order['shipping_address'][field[0]]).encode("utf-8")
+
+                if write:
                     writer.writerow(line)
 
                 if len(line_fields) and 'line_items' in order:
                     for line_item in order['line_items']:
+                        if vendor.strip() != '' and slugify(line_item['vendor']) != vendor:
+                            continue
+
                         line = {}
                         for line_field in line_fields:
-                            line['Line Field - %s' % line_field[1]] = line_item[line_field[0]]
+                            line['Line Field - %s' % line_field[1]] = unicode(line_item[line_field[0]]).encode("utf-8")
                         writer.writerow(line)
 
-            url = self.send_to_s3(csv_file)
-        
-        os_remove(self.file_name)
+        url = self.send_to_s3()
 
         return url
 
-    def send_to_s3(self, csv_file):
-        url = aws_s3_upload(self.file_name, fp=csv_file)
+    def send_to_s3(self):
+        csv_file = open(self.file_path, 'r')
+        fp = StringIO.StringIO(csv_file.read())
+
+        url = aws_s3_upload(self._s3_path, fp=fp)
+
+        os.remove(self.file_path)
 
         return url
 
-    def send_email(self):
+    def send_email(self, code):
         data = {
-            'url': self.order_export.url
+            'url': 'https://app.shopifiedapp.com{}'.format(reverse('order_exports_generated', kwargs={
+                'order_export_id': self.order_export.id, 'code': code
+            }))
         }
 
         html_message = send_email_from_template(
             'order_export.html',
             '[Shopified App] Order Export',
-            self.order_export.receiver,
+            self.order_export.emails,
             data,
             nl2br=False
         )
+

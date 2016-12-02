@@ -1,8 +1,19 @@
+# -*- coding: utf-8 -*-
 import json
+import re
+import uuid
 
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver, Signal
+from django.utils.functional import cached_property
 
 from leadgalaxy.models import ShopifyStore
+from order_exports.api import ShopifyOrderExportAPI
+
+
+order_export_done = Signal(providing_args=["instance"])
 
 
 ORDER_STATUS = (
@@ -22,6 +33,7 @@ ORDER_FULFILLMENT_STATUS = (
 
 
 ORDER_FINANCIAL_STATUS = (
+    ("any", "All authorized, pending, and paid orders."),
     ("authorized", "Only authorized orders"),
     ("pending", "Only pending orders"),
     ("paid", "Only paid orders"),
@@ -29,18 +41,24 @@ ORDER_FINANCIAL_STATUS = (
     ("refunded", "Only refunded orders"),
     ("voided", "Only voided orders"),
     ("partially_refunded", "Only partially_refunded orders"),
-    ("any", "All authorized, pending, and paid orders."),
     ("unpaid", "All authorized, or partially_paid orders."),
 )
 
 
-DEFAULT_FIELDS = ('name', 'total_price', 'email')
+DEFAULT_FIELDS = ('name',)
+DEFAULT_FIELDS_CHOICES = (('name', 'Order ID'),)
 
 
-DEFAULT_FIELDS_CHOICES = (
-    ('name', 'Order ID'), ('total_price', 'Total Price'),
-    ('email', 'E-mail')
-)
+DEFAULT_SHIPPING_ADDRESS = ('name', 'address1', 'address2', 'city', 'zip', 'province',
+    'prone', 'country')
+DEFAULT_SHIPPING_ADDRESS_CHOICES = (("name", "Name"), ("address1", "Address Line 1"), 
+    ("address2", "Address Line 2"), ("city", "City"), ("zip", "ZIP"), 
+    ("province", "Province"), ("phone", "Phone"), ("country", "Country"))
+
+
+DEFAULT_LINE_FIELDS = ('title', 'variant_title', 'sku', 'quantity')
+DEFAULT_LINE_FIELDS_CHOICES = (('title', 'Title'), ('variant_title', 'Variant Title'),
+    ('sku', 'SKU'), ('quantity', 'Quantity'))
 
 
 ORDER_FIELD_CHOICES = (('browser_ip', 'Browser IP'),
@@ -98,11 +116,32 @@ def fix_fields(data, choices_list, prefix=''):
     return data_result, choices_result
 
 
+class OrderExportVendor(models.Model):
+    owner = models.ForeignKey(User, related_name='vendors')
+    user = models.OneToOneField(User, related_name='vendor')
+    raw_password = models.CharField(max_length=255, blank=True, null=True)
+
+    def generate_password(self):
+        self.raw_password = uuid.uuid4().hex[:6]
+
+
+def is_vendor(self):
+    try:
+        return self.vendor is not None
+    except OrderExportVendor.DoesNotExist:
+        return False
+
+
+User.add_to_class("is_vendor", cached_property(is_vendor))
+
+
 class OrderExportFilter(models.Model):
     vendor = models.CharField(max_length=255, default="")
     status = models.CharField(max_length=50, default="", blank=True)
     fulfillment_status = models.CharField(max_length=50, default="", blank=True)
     financial_status = models.CharField(max_length=50, default="", blank=True)
+    created_at_min = models.DateTimeField(null=True, blank=True)
+    created_at_max = models.DateTimeField(null=True, blank=True)
 
 
 class OrderExport(models.Model):
@@ -115,16 +154,27 @@ class OrderExport(models.Model):
     store = models.ForeignKey(ShopifyStore)
     filters = models.OneToOneField(OrderExportFilter)
     created_at = models.DateTimeField(auto_now_add=True)
-    schedule = models.TimeField()
-    receiver = models.EmailField()
+    schedule = models.TimeField(null=True, blank=True)
+    receiver = models.TextField(null=True, blank=True)
     description = models.CharField(max_length=255, default="")
     url = models.CharField(max_length=512, blank=True, default='')
     sample_url = models.CharField(max_length=512, blank=True, default='')
     since_id = models.CharField(max_length=100, null=True)
+    copy_me = models.BooleanField(default=False)
 
+    previous_day = models.BooleanField(default=True)
     fields = models.TextField(blank=True, default='[]')
     line_fields = models.TextField(blank=True, default='[]')
     shipping_address = models.TextField(blank=True, default='[]')
+
+    progress = models.IntegerField(null=True, blank=True, default=0)
+    vendor_user = models.ForeignKey(
+        OrderExportVendor, 
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='exports'
+    )
 
     def __getattr__(self, name):
         display_list = ['fields_display', 'line_fields_display', 'shipping_address_display']
@@ -136,7 +186,7 @@ class OrderExport(models.Model):
         if 'data' in name and name in data_list:
             attr = name.replace('_data', '')
             value = getattr(self, attr)
-            return json.loads(value)
+            return json.loads(value.replace("'", '"'))
 
         choices_list = ['fields_choices', 'line_fields_choices', 'shipping_address_choices']
         if 'choices' in name and name in choices_list:
@@ -144,6 +194,21 @@ class OrderExport(models.Model):
             return self.get_selected_choices(attr)
 
         super(OrderExport, self).__getattr__(name)
+
+    @cached_property
+    def emails(self):
+        SEPARATOR_RE = re.compile(r'[,;]+')
+        emails = []
+        if self.copy_me:
+            emails.append(self.store.user.email)
+
+        for email in SEPARATOR_RE.split(self.receiver):
+            emails.append(email.strip(' '))
+
+        return emails
+
+    def send_done_signal(self):
+        order_export_done.send(sender=self.__class__, order_export_pk=self.id)
 
     def get_data(self, attr):
         data = json.loads(getattr(self, attr))
@@ -157,7 +222,7 @@ class OrderExport(models.Model):
         return result
 
     def get_selected_choices(self, attr):
-        data = json.loads(getattr(self, attr))
+        data = json.loads(getattr(self, attr).replace("'", '"'))
         choices = dict(self.RELATED_CHOICES[attr])
         result = []
 
@@ -167,4 +232,58 @@ class OrderExport(models.Model):
 
         return result
 
+    @cached_property
+    def query(self):
+        return self.queries.first()
+
+
+class OrderExportQuery(models.Model):
+    order_export = models.ForeignKey(OrderExport, related_name="queries")
+    created_at = models.DateTimeField(auto_now_add=True) 
+    code = models.CharField(max_length=50, null=True, blank=True)
+    params = models.TextField(default="")
+    count = models.IntegerField(default=0)
+
+    @cached_property
+    def params_dict(self):
+        return json.loads(self.params)
+
+    class Meta:
+        ordering = ['created_at']
+
+
+class OrderExportLog(models.Model):
+    SAMPLE = 'sample'
+    COMPLETE = 'complete'
+    TYPE_CHOICES = (
+        (SAMPLE, 'Sample file'),
+        (COMPLETE, 'Complete file')
+    )
+
+    started_by = models.DateTimeField(auto_now_add=True)
+    finished_by = models.DateTimeField(blank=True, null=True)
+    
+
+    order_export = models.ForeignKey(OrderExport, related_name="logs")
+    successful = models.BooleanField(default=False)
+    csv_url = models.CharField(max_length=512, blank=True, default='')
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES, default=SAMPLE)
+
+
+@receiver(order_export_done)
+def generate_reports(sender, order_export_pk, **kwargs):
+    from leadgalaxy.tasks import generate_order_export
+    order_export = OrderExport.objects.get(pk=order_export_pk)
+    order_export.url = ''
+    order_export.sample_url = ''
+    order_export.progress = 0
+    order_export.save()
+
+    if order_export.previous_day:
+        api = ShopifyOrderExportAPI(order_export)
+
+        # Generate Sample Export
+        api.generate_sample_export()
+    else:
+        generate_order_export.delay(order_export_pk)
 

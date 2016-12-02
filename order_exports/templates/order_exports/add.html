@@ -5,245 +5,325 @@
 {% load compress %}
 
 {% block extrajs %}
-    <script src="{% static 'js/jquery.nestable.js' %}"></script>
-    <script src="{% static 'js/clockpicker.js' %}"></script>
+    <script src="{% static 'libs/bower_components/Nestable/jquery.nestable.js' %}"></script>
+    <script src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'order_exports/js/fields.js' %}"></script>
 {% endblock %}
 
 {% block extracss %}
-    <link href="{% static 'css/clockpicker.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
     <link href="{% static 'order_exports/css/fields.css' %}" rel="stylesheet">
 {% endblock %}
 
 
 {% block main-container %}
+<form method="post" class="well-box form form-horizontal" role="form" action="{% url 'order_exports_add' %}">
+    {% csrf_token %}
     <div class="ibox float-e-margins">
         <div class="ibox-title">
-            <h5>Exports<small></small></h5>
+            <h5 id="title">Exports<small></small></h5>
             <div class="ibox-tools">
                 <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
             </div>
         </div>
         <div class="ibox-content">
-            <form method="post" class="well-box form form-horizontal" role="form" action="{% url 'order_exports_add' %}">
-                {% csrf_token %}
 
-                <div class="form-group">
-                    <label for="store" class="col-sm-2 control-label">Store</label>
-                    <div class="col-sm-10">
-                        <select class="form-control" name="store" autocomplete="off">
-                            {% for item in user.profile.get_active_stores %}
-                            <option value="{{ item.id }}">{{ item.title }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <div class="form-group">
+                <label for="store" class="col-sm-2 control-label">Step 1: Choose your store</label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="store" autocomplete="off">
+                        {% for item in user.profile.get_active_stores %}
+                        <option value="{{ item.id }}">{{ item.title }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="help-block">Choose the store you would like to export orders from.</p>
                 </div>
+            </div>
 
-                <div class="form-group{% if form.schedule.errors %} has-error{% endif %}">
-                    <label for="schedule" class="col-sm-2 control-label">Time</label>
-                    <div id="schedule" class="col-sm-10">
+            <div class="form-group{% if form.schedule.errors %} has-error{% endif %}">
+                <label for="schedule" class="col-sm-2 control-label">Step 2: Select export time</label>
+
+                <div id="schedule" class="col-sm-10">
+                    <div class="checkbox" style="padding: 0;">
+                        <label class="icheck" style="padding: 0;">
+                            <input type="checkbox" name="previous_day"{% if form.previous_day.value %} checked="checked"{% endif %} autocomplete="off">
+                            Only previous day orders
+                        </label>
+                    </div>
+                    
+                    <div class="daily"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
                         <div class="input-group clockpicker">
-                            <input type="text" class="form-control" name="schedule" value="{{ form.schedule.data }}" autocomplete="off">
+                            <input type="text" class="form-control" name="schedule" value="{{ form.schedule.data|default:"" }}" autocomplete="off">
                             <span class="input-group-addon">
                                 <span class="fa fa-clock-o"></span>
                             </span>
                         </div>
+                        <p class="help-block">What time would you like the export notification to be sent?</p>
+                    
                         {% for error in form.schedule.errors %}
                         <p class="help-block">
                             {{ error }}
                         </p>
                         {% endfor %}
                     </div>
-                </div>
 
-                <div class="form-group{% if form.receiver.errors %} has-error{% endif %}">
-                    <label for="email" class="col-sm-2 control-label">Receiver E-mail</label>
-                    <div class="col-sm-10">
-                        <input type="text" placeholder="Enter email" class="form-control" name="receiver" value="{{ form.receiver.data }}">
-                        {% for error in form.receiver.errors %}
+                    <div class="range"{% if form.previous_day.value %} style="display: none;"{% endif %}>
+                        <input class="form-control" type="text" name="daterange" autocomplete="off" placeholder="Select date range" />
+                        <p class="help-block">Chose the created date for the orders being exported.</p>
+                        {% for error in form.daterange.errors %}
                         <p class="help-block">
                             {{ error }}
                         </p>
                         {% endfor %}
                     </div>
                 </div>
+            </div>
+
+            <div class="form-group{% if form.receiver.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
+                <label for="email" class="col-sm-2 control-label">Receiver E-mail(s)</label>
+                <div class="col-sm-10">
+                    <input type="text" placeholder="Enter email" class="form-control" name="receiver" value="{{ form.receiver.data|default:"" }}">
+                    <div class="checkbox" style="padding: 0;">
+                        <label class="icheck" style="padding: 0;">
+                            <input type="checkbox" name="copy_me"{% if form.copy_me.value %} checked="checked"{% endif %} autocomplete="off">
+                            Copy me on order export notification emails.
+                        </label>
+                    </div>
+                    <p class="help-block">For more than one e-mail separate them using comma (,).</p>
+                    {% for error in form.receiver.errors %}
+                    <p class="help-block">
+                        {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="col-sm-2 control-label">Description</label>
+                <div class="col-sm-10">
+                    <textarea name="description" class="form-control"></textarea>
+                </div>
+            </div>
+
+            <fieldset>
+                <legend>Headers</legend>
+                <div class="fields-selection-wrapper">
+                    <div class="form-group{% if form.fields.errors %} has-error{% endif %}">
+                        <label for="fields" class="col-sm-2 control-label">Fields</label>
+                        <div id="fields" class="col-sm-10 fields">
+                            <div class="dd nestable">
+                                <ol class="dd-list">
+                                    {% for field in fields_choices %}
+                                    <li data-id="fields_{{ field.0 }}" class="dd-item">
+                                        <div class="dd-handle">
+                                            <label class="icheck">
+                                                <input type="checkbox" class="selectable" name="fields_{{ field.0 }}" checked="checked" autocomplete="off"> {{ field.1 }}
+                                            </label>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                    <a class="pull-right edit" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                </ol>
+                            </div>
+                            <input type="hidden" class="output" id="fields-output" name="fields" value="">
+                            
+                            {% for field in order_fields %}
+                            <div class="field-wrapper" data-name="fields_{{ field.0 }}">
+                                {% if field.0 not in selected_fields %}
+                                <label class="icheck">
+                                    <input type="checkbox" class="selectable" name="fields_{{ field.0 }}" autocomplete="off"> {{ field.1 }}
+                                </label>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+
+                            {% for error in form.fields.errors %}
+                            <p class="help-block">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fields-selection-wrapper">
+                    <div class="form-group{% if form.shipping_address.errors %} has-error{% endif %}">
+                        <label for="shipping_address" class="col-sm-2 control-label">Shipping Address Fields</label>
+                        <div id="shipping_address" class="col-sm-10 fields">
+                            <div class="dd nestable" id="shipping-address-nestable">
+                                <ol class="dd-list">
+                                    {% for field in shipping_address_choices %}
+                                    <li data-id="shipping_address_{{ field.0 }}" class="dd-item">
+                                        <div class="dd-handle">
+                                            <label class="icheck">
+                                                <input type="checkbox" class="selectable" name="shipping_address_{{ field.0 }}" checked="checked" autocomplete="off"> {{ field.1 }}
+                                            </label>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                    <a class="pull-right edit" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                </ol>
+                            </div>
+                            <input type="hidden" class="output" id="shipping-address-nestable-output" name="shipping_address" value="">
+                            {% for field in order_shipping_address %}
+                            <div class="field-wrapper" data-name="shipping_address_{{ field.0 }}">
+                                {% if field.0 not in selected_shipping_address %}
+                                <label class="icheck">
+                                    <input type="checkbox" class="selectable" name="shipping_address_{{ field.0 }}" autocomplete="off"> {{ field.1 }}
+                                </label>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+
+                            {% for error in form.shipping_address.errors %}
+                            <p class="help-block">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fields-selection-wrapper">
+                    <div class="form-group{% if form.line_fields.errors %} has-error{% endif %}">
+                        <label for="line_fields" class="col-sm-2 control-label">Line Fields</label>
+                        <div id="line_fields" class="col-sm-10 fields">
+                            <div class="dd nestable" id="line-fields-nestable">
+                                <ol class="dd-list">
+                                    {% for field in line_fields_choices %}
+                                    <li data-id="line_fields_{{ field.0 }}" class="dd-item">
+                                        <div class="dd-handle">
+                                            <label class="icheck">
+                                                <input type="checkbox" class="selectable" name="line_fields_{{ field.0 }}" checked="checked" autocomplete="off"> {{ field.1 }}
+                                            </label>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                    <a class="pull-right edit" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                </ol>
+                            </div>
+                            <input type="hidden" class="output" id="line-fields-nestable-output" name="line_fields" value="">
+
+                            {% for field in order_line_fields %}
+                            <div class="field-wrapper" data-name="line_fields_{{ field.0 }}">
+                                {% if field.0 not in selected_line_fields %}
+                                <label class="icheck">
+                                    <input type="checkbox" class="selectable" name="line_fields_{{ field.0 }}" autocomplete="off"> {{ field.1 }}
+                                </label>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+
+                            {% for error in form.line_fields.errors %}
+                            <p class="help-block">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Filters</legend>
 
                 <div class="form-group">
-                    <label for="description" class="col-sm-2 control-label">Description</label>
+                    <label for="vendor" class="col-sm-2 control-label">Vendor</label>
                     <div class="col-sm-10">
-                        <textarea name="description" class="form-control"></textarea>
+                        <input type="text" name="vendor" class="form-control" placeholder="Enter vendor name" autocomplete="off" value="{{ form.vendor.data|default:"" }}">
                     </div>
                 </div>
-
-                <fieldset>
-                    <legend>Headers</legend>
-                    <div class="fields-selection-wrapper">
-                        <div class="form-group{% if form.fields.errors %} has-error{% endif %}">
-                            <label for="fields" class="col-sm-2 control-label">Fields</label>
-                            <div id="fields" class="col-sm-10 fields">
-                                <div class="dd nestable">
-                                    <ol class="dd-list">
-                                        {% for field in fields_choices %}
-                                        <li data-id="fields_{{ field.0 }}" class="dd-item">
-                                            <div class="dd-handle">
-                                                <label class="icheck">
-                                                    <input type="checkbox" class="selectable" name="fields_{{ field.0 }}" checked="checked" autocomplete="off"> {{ field.1 }}
-                                                </label>
-                                            </div>
-                                        </li>
-                                        {% endfor %}
-                                        <a class="pull-right edit" href="#"><i class="fa fa-edit"></i> Edit</a>
-                                    </ol>
-                                </div>
-                                <input type="hidden" class="output" id="fields-output" name="fields" value="">
-                                
-                                {% for field in order_fields %}
-                                <div class="field-wrapper" data-name="fields_{{ field.0 }}">
-                                    {% if field.0 not in selected_fields %}
-                                    <label class="icheck">
-                                        <input type="checkbox" class="selectable" name="fields_{{ field.0 }}" autocomplete="off"> {{ field.1 }}
-                                    </label>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-
-                                {% for error in form.fields.errors %}
-                                <p class="help-block">
-                                    {{ error }}
-                                </p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="fields-selection-wrapper">
-                        <div class="form-group{% if form.shipping_address.errors %} has-error{% endif %}">
-                            <label for="shipping_address" class="col-sm-2 control-label">Shipping Address Fields</label>
-                            <div id="shipping_address" class="col-sm-10 fields">
-                                <div class="dd nestable" id="shipping-address-nestable">
-                                    <ol class="dd-list">
-                                        {% for field in shipping_address_choices %}
-                                        <li data-id="shipping_address_{{ field.0 }}" class="dd-item">
-                                            <div class="dd-handle">
-                                                <label class="icheck">
-                                                    <input type="checkbox" class="selectable" name="shipping_address_{{ field.0 }}" checked="checked" autocomplete="off"> {{ field.1 }}
-                                                </label>
-                                            </div>
-                                        </li>
-                                        {% endfor %}
-                                        <a class="pull-right edit" href="#"><i class="fa fa-edit"></i> Edit</a>
-                                    </ol>
-                                </div>
-                                <input type="hidden" class="output" id="shipping-address-nestable-output" name="shipping_address" value="">
-                                {% for field in order_shipping_address %}
-                                <div class="field-wrapper" data-name="shipping_address_{{ field.0 }}">
-                                    {% if field.0 not in selected_shipping_address %}
-                                    <label class="icheck">
-                                        <input type="checkbox" class="selectable" name="shipping_address_{{ field.0 }}" autocomplete="off"> {{ field.1 }}
-                                    </label>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-
-                                {% for error in form.shipping_address.errors %}
-                                <p class="help-block">
-                                    {{ error }}
-                                </p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="fields-selection-wrapper">
-                        <div class="form-group{% if form.line_fields.errors %} has-error{% endif %}">
-                            <label for="line_fields" class="col-sm-2 control-label">Line Fields</label>
-                            <div id="line_fields" class="col-sm-10 fields">
-                                <div class="dd nestable" id="line-fields-nestable">
-                                    <ol class="dd-list">
-                                        {% for field in line_fields_choices %}
-                                        <li data-id="line_fields_{{ field.0 }}" class="dd-item">
-                                            <div class="dd-handle">
-                                                <label class="icheck">
-                                                    <input type="checkbox" class="selectable" name="line_fields_{{ field.0 }}" checked="checked" autocomplete="off"> {{ field.1 }}
-                                                </label>
-                                            </div>
-                                        </li>
-                                        {% endfor %}
-                                        <a class="pull-right edit" href="#"><i class="fa fa-edit"></i> Edit</a>
-                                    </ol>
-                                </div>
-                                <input type="hidden" class="output" id="line-fields-nestable-output" name="line_fields" value="">
-
-                                {% for field in order_line_fields %}
-                                <div class="field-wrapper" data-name="line_fields_{{ field.0 }}">
-                                    {% if field.0 not in selected_line_fields %}
-                                    <label class="icheck">
-                                        <input type="checkbox" class="selectable" name="line_fields_{{ field.0 }}" autocomplete="off"> {{ field.1 }}
-                                    </label>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-
-                                {% for error in form.line_fields.errors %}
-                                <p class="help-block">
-                                    {{ error }}
-                                </p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <fieldset>
-                    <legend>Filters</legend>
-
-                    <div class="form-group">
-                        <label for="vendor" class="col-sm-2 control-label">Vendor</label>
-                        <div class="col-sm-10">
-                            <input type="text" name="vendor" class="form-control" placeholder="Enter vendor name" autocomplete="off" value="{{ form.vendor.data }}">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="status" class="col-sm-2 control-label">Status</label>
-                        <div class="col-sm-10">
-                            <select data-placeholder="Choose the order status" name="status" class="form-control m-b" autocomplete="off">
-                                {% for status in order_status %}
-                                <option value="{{ status.0 }}"{% if status.0 in form.status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fulfillment_status" class="col-sm-2 control-label">Fulfillment Status</label>
-                        <div class="col-sm-10">
-                            <select data-placeholder="Choose the fulfillment status of the order" name="fulfillment_status" class="form-control m-b" autocomplete="off">
-                                {% for status in order_fulfillment_status %}
-                                <option value="{{ status.0 }}"{% if status.0 in form.fulfillment_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="financial_status" class="col-sm-2 control-label">Financial Status</label>
-                        <div class="col-sm-10">
-                            <select data-placeholder="Choose the financial status of the order" name="financial_status" class="form-control m-b" autocomplete="off">
-                                {% for status in order_financial_status %}
-                                <option value="{{ status.0 }}"{% if status.0 in form.financial_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
 
                 <div class="form-group">
-                    <div class="col-sm-offset-2 col-sm-10">
-                        <button class="btn btn-primary" data-toggle="modal"><i class="fa fa-save"></i> Save</button>
+                    <label for="status" class="col-sm-2 control-label">Status</label>
+                    <div class="col-sm-10">
+                        <select data-placeholder="Choose the order status" name="status" class="form-control m-b" autocomplete="off">
+                            {% for status in order_status %}
+                            <option value="{{ status.0 }}"{% if status.0 in form.status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
-            </form>
+
+                <div class="form-group">
+                    <label for="fulfillment_status" class="col-sm-2 control-label">Fulfillment Status</label>
+                    <div class="col-sm-10">
+                        <select data-placeholder="Choose the fulfillment status of the order" name="fulfillment_status" class="form-control m-b" autocomplete="off">
+                            {% for status in order_fulfillment_status %}
+                            <option value="{{ status.0 }}"{% if status.0 in form.fulfillment_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="financial_status" class="col-sm-2 control-label">Financial Status</label>
+                    <div class="col-sm-10">
+                        <select data-placeholder="Choose the financial status of the order" name="financial_status" class="form-control m-b" autocomplete="off">
+                            {% for status in order_financial_status %}
+                            <option value="{{ status.0 }}"{% if status.0 in form.financial_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset id="vendor-login">
+                <legend>Vendor Login</legend>
+
+                {% if vendor_users.count > 0 %}
+                <div class="form-group">
+                    <label for="vendor_user" class="col-sm-2 control-label">Select User</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="vendor_user" autocomplete="off">
+                            <option></option>
+                            {% for vendor_user in vendor_users %}
+                            <option value="{{ vendor_user.id }}">{{ vendor_user.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="help-block">Choose a login to access the page with the exported orders or create a new one below.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div id="add-vendor-login">
+                    <div class="form-group{% if form.vendor_email.errors %} has-error{% endif %}">
+                        <label for="vendor_email" class="col-sm-2 control-label">E-mail</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="vendor_email" class="form-control" placeholder="Enter vendor e-mail" autocomplete="off"   value="{{ form.vendor_email.data|default:"" }}">
+                            <p class="help-block">Filling the e-mail will create a new vendor user for this export.</p>
+                            
+                            {% for error in form.vendor_email.errors %}
+                            <p class="help-block">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="form-group{% if form.vendor_username.errors %} has-error{% endif %}">
+                        <label for="vendor_username" class="col-sm-2 control-label">Username</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="vendor_username" class="form-control" placeholder="Enter vendor username" autocomplete="off"   value="{{ form.vendor_username.data|default:"" }}">
+                            
+                            {% for error in form.vendor_username.errors %}
+                            <p class="help-block">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button class="btn btn-primary" data-toggle="modal"><i class="fa fa-save"></i> Save</button>
+                </div>
+            </div>
         </div>
     </div>
+</form>
 {% endblock %}

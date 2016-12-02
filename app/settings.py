@@ -210,7 +210,7 @@ INTERCOM_SECRET_KEY = os.environ.get('INTERCOM_SECRET_KEY')
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 
-S3_STATIC_BUCKET = 'shopifiedapp-assets'
+S3_STATIC_BUCKET = os.environ.get('S3_BUCKET_NAME', 'shopifiedapp-assets')
 S3_PRODUCT_FEED_BUCKET = 'shopifiedapp-feeds'
 S3_UPLOADS_BUCKET = os.environ.get('S3_UPLOADS_BUCKET', 'shopifiedapp-uploads')
 

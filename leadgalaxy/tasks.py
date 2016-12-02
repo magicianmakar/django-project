@@ -20,6 +20,8 @@ from leadgalaxy.models import *
 from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
 from shopify_orders import utils as order_utils
+from order_exports.models import OrderExport
+from order_exports.api import ShopifyOrderExportAPI
 
 app = Celery('shopified')
 
@@ -567,3 +569,18 @@ def bulk_edit_products(self, store, products):
         'task': self.request.id,
         'errors': errors
     })
+
+
+@app.task(bind=True, base=CaptureFailure)
+def generate_order_export(self, order_export_id):
+    try:
+        order_export = OrderExport.objects.get(pk=order_export_id)
+
+        api = ShopifyOrderExportAPI(order_export)
+        api.generate_export()
+    except Exception as exc:
+        raven_client.captureException()
+
+        raise self.retry(exc=exc, countdown=5)
+
+
