@@ -1367,8 +1367,8 @@ def proccess_api(request, user, method, target, data):
                 order['shipping_address']['address2'] = ''
 
             order['ordered'] = False
-            order['fast_checkout'] = store.user.get_config('_fast_checkout', False)
-            order['solve'] = store.user.get_config('aliexpress_captcha', False)
+            order['fast_checkout'] = user.get_config('_fast_checkout', False)
+            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
 
             try:
                 track = ShopifyOrderTrack.objects.get(
