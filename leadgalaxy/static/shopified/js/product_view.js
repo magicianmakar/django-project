@@ -1055,6 +1055,9 @@ function pixlrCheck(key) {
 
 document.renderImages = renderImages;
 var export_template = Handlebars.compile($("#product-export-template").html());
+Handlebars.registerHelper('urlencode', function(text) {
+    return encodeURIComponent(text).replace(/%20/g, '+');
+});
 
 // Product Shopify Connect
 window.shopifyProductSelected = function (store, shopify_id) {
