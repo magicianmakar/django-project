@@ -282,7 +282,7 @@ class AutocompleteTestCase(TestCase):
 
     def test_returns_suggestions(self):
         product = f.ShopifyProductFactory(store=self.store, user=self.user)
-        supplier = f.ProductSupplierFactory(product=product, supplier_name='Test')
+        supplier = f.ProductSupplierFactory(store=self.store, product=product, supplier_name='Test')
         r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(self.store.id))
         content = json.loads(r.content)
         suggestion = content['suggestions'].pop()
@@ -293,6 +293,4 @@ class AutocompleteTestCase(TestCase):
         product = f.ShopifyProductFactory(store=store, user=store.user)
         f.ProductSupplierFactory(product=product, supplier_name='Test')
         r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(store.id))
-        content = json.loads(r.content)
-        self.assertEquals(len(content['suggestions']), 0)
-
+        self.assertEquals(r.status_code, 403)

@@ -3747,12 +3747,21 @@ def autocomplete(request, target):
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
     elif target == 'supplier-name':
-        store_id = request.GET.get('store')
+        try:
+            store = ShopifyStore.objects.get(id=request.GET.get('store'))
+            request.user.can_view(store)
 
-        suppliers = ProductSupplier.objects.only('supplier_name').distinct('supplier_name')
-        suppliers = suppliers.filter(product__store_id=store_id)
-        suppliers = suppliers.filter(product__store__user=request.user.models_user)
-        suppliers = suppliers.filter(supplier_name__icontains=q)
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except PermissionDenied as e:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Permission Denied'}, status=403)
+
+        suppliers = ProductSupplier.objects.only('supplier_name') \
+                                           .distinct('supplier_name') \
+                                           .filter(store=store) \
+                                           .filter(supplier_name__icontains=q)
 
         results = []
         for supplier in suppliers[:10]:
