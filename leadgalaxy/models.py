@@ -677,10 +677,21 @@ class ShopifyProduct(models.Model):
             data_store.data = value
             data_store.save()
         else:
-            token = get_random_string(32)
-            self.original_data_key = hashlib.md5(token).hexdigest()
-            self.save()
-            DataStore.objects.create(key=self.original_data_key, data=value)
+            while True:
+                data_key = hashlib.md5(get_random_string(32)).hexdigest()
+
+                try:
+                    DataStore.objects.get(key=data_key)
+                    continue  # Retry an other key
+
+                except DataStore.DoesNotExist:
+                    # the key is unique
+                    DataStore.objects.create(key=data_key, data=value)
+
+                    self.original_data_key = data_key
+                    self.save()
+
+                    break
 
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
