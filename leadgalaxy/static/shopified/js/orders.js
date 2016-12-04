@@ -630,7 +630,7 @@ $('.help-select').each(function (i, el) {
 
 $('#country-filter').chosen({
     search_contains: true,
-    width: '325px'
+    width: '100%'
 });
 
 function pusherSub() {
