@@ -1636,10 +1636,11 @@ def proccess_api(request, user, method, target, data):
                 line_id=line_id
             ).update(track=track)
 
-            # TODO: make this done with one api call
-            tasks.mark_as_ordered_note.apply_async(
-                args=[store.id, order_id, line_id, source_id],
-                countdown=note_delay)
+            if not settings.DEBUG:
+                # TODO: make this done with one api call
+                tasks.mark_as_ordered_note.apply_async(
+                    args=[store.id, order_id, line_id, source_id],
+                    countdown=note_delay)
 
             store.pusher_trigger('order-source-id-add', {
                 'track': track.id,
@@ -4175,7 +4176,7 @@ def orders_view(request):
             # Update outdated order data by comparing last update timestamp
             countdown = 1
             for order in page:
-                if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
+                if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
                     tasks.update_shopify_order.apply_async(
                         args=[store.id, order['id']],
                         kwarg={'shopify_order': order, 'from_webhook': False},
