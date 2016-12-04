@@ -142,6 +142,10 @@ $('.delete-store').click(function (e) {
                 toastr.success('Store has been deleted.', 'Delete Store');
 
                 syncConfig();
+
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
             },
             error: function(data) {
                 displayAjaxError('Delete Store', data);
