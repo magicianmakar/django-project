@@ -4331,7 +4331,8 @@ def orders_view(request):
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
                         phone = models_user.get_config('order_phone_number')
 
-                    phone = re.sub('[^0-9/-]', '', phone)
+                    if phone:
+                        phone = re.sub('[^0-9/-]', '', phone)
 
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
