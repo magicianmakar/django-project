@@ -51,6 +51,10 @@ var pixlr = (function () {
                         div = pixlr.overlay.div = document.createElement('div'),
                         idiv = pixlr.overlay.idiv = document.createElement('div');
 
+                    var url = buildUrl(opt);
+                    document.pixlrPopup = window.open(url, "_blank");
+                    return true;
+                    /*
                     div.setAttribute("id", "pixlr-background");
                     div.style.background = '#696969';
                     div.style.opacity = 0.8;
@@ -94,17 +98,19 @@ var pixlr = (function () {
                     iframe.style.backgroundColor = '#606060';
                     iframe.style.display = 'block';
                     iframe.frameBorder = 0;
-                    iframe.src = buildUrl(opt);
+                    // iframe.sandbox = "allow-same-origin allow-scripts allow-popups allow-forms";
+                    iframe.src = url;
 
-                    idiv.appendChild(iframe);
+                    // idiv.appendChild(iframe);
+                    */
                 },
                 hide: function (callback) {
                     if (pixlr.overlay.idiv && pixlr.overlay.div) {
-                        document.body.removeChild(pixlr.overlay.idiv);
-                        document.body.removeChild(pixlr.overlay.div);
+                        // document.body.removeChild(pixlr.overlay.idiv);
+                        // document.body.removeChild(pixlr.overlay.div);
                     }
                     if (callback) {
-                        eval(callback);
+                        // eval(callback);
                     }
                 }
             },
