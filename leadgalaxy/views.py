@@ -422,16 +422,17 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and (target == 'shopify' or target == 'shopify-update' or target == 'save-for-later'):
         req_data = json.loads(request.body)
 
+        user = utils.get_api_user(request, req_data, assert_login=True)
+
         if req_data.get('store'):
-            store_id = int(req_data['store'])
-            store = ShopifyStore.objects.get(pk=store_id)
+            store = ShopifyStore.objects.get(pk=req_data['store'])
+
             if target == 'save-for-later' and not user.can('save_for_later.sub', store):
                 raise PermissionDenied()
-            if target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
+            elif target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
                 raise PermissionDenied()
 
         delayed = req_data.get('b')
-        user = utils.get_api_user(request, req_data, assert_login=True)
 
         if not delayed or target == 'save-for-later':
             result = tasks.export_product(req_data, target, user.id)
