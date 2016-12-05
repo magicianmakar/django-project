@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        products = ShopifyProduct.objects.filter(original_data_key=None)[:options['max']]
+        products = ShopifyProduct.objects.filter(original_data_key=None).order_by('id')[:options['max']]
         total = products.count()
 
         self.write_success('Transferring {} products'.format(products.count()))
