@@ -48,7 +48,7 @@ class Command(BaseCommand):
             try:
                 counter['need_fulfill'] += 1
 
-                if self.fulfill_order(order, order.store, user):
+                if self.fulfill_order(order, order.store, order.store.user):
                     order.shopify_status = 'fulfilled'
                     order.auto_fulfilled = True
                     order.save()
