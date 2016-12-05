@@ -4281,6 +4281,7 @@ def orders_view(request):
             else:
                 product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
 
+            supplier = None
             if product and product.have_supplier():
                 original_info = product.get_original_info()
                 if not original_info:
