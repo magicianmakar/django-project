@@ -6,6 +6,21 @@ from leadgalaxy.models import ShopifyProduct
 from tqdm import tqdm
 
 
+class Progress(object):
+    """docstring for Progress"""
+    def __init__(self, stdout=None, total=None):
+        self.total = total
+        self.stdout = stdout
+
+    def update(self, c):
+        if self.stdout:
+            self.stdout.write('.', ending='')
+
+    def close(self):
+        if self.stdout:
+            self.stdout.write('')
+
+
 class Command(BaseCommand):
     help = 'Transfers original data from products to the data store'
 
@@ -13,6 +28,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--max', dest='max', action='store', required=True, type=int,
             help='Maximuim number of products to migrate')
+        parser.add_argument('--tqdm', dest='tqdm', action='store_true', help='Use tqdm for progress')
 
     def handle(self, *args, **options):
 
@@ -22,7 +38,7 @@ class Command(BaseCommand):
         self.write_success('Transferring {} / {} products'.format(
             products.count(), ShopifyProduct.objects.filter(original_data_key=None).count()))
 
-        pbar = tqdm(total=total)
+        pbar = tqdm(total=total) if options['tqdm'] else Progress()
 
         with transaction.atomic():
             for product in products:
