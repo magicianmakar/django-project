@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             for product in products:
-                product.set_original_data(product.original_data)
+                product.set_original_data(product.original_data, clear_original=True)
                 pbar.update(1)
 
         pbar.close()
