@@ -19,7 +19,8 @@ class Command(BaseCommand):
         products = ShopifyProduct.objects.filter(original_data_key=None).order_by('id')[:options['max']]
         total = products.count()
 
-        self.write_success('Transferring {} products'.format(products.count()))
+        self.write_success('Transferring {} / {} products'.format(
+            products.count(), ShopifyProduct.objects.filter(original_data_key=None).count()))
 
         pbar = tqdm(total=total)
 
