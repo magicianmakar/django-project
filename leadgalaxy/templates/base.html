@@ -435,10 +435,8 @@
 
         <div class="footer">
             <div class="pull-right" style="margin-right:30px">
-                 <span class="extension-version" data-version="{{extension_release}}" {% if extension_required %}data-required="true"{% endif %} style="color:#008c06">
-                    New Extension Version Available!
-                    <a class="btn btn-outline btn-xs btn-success" href="/pages/view/how-to-update-the-extension-to-the-latest-version">Update</a>
-                </span>
+                 <span class="extension-version" data-extension-version="{{extension_release}}" style="color:#008c06"
+                       {% if extension_required %}data-required="true"{% endif %}></span>
             </div>
 
             <div>
