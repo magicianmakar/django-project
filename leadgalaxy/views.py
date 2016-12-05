@@ -4340,6 +4340,8 @@ def orders_view(request):
                         'shipping_address': shipping_address_asci,
                         'order_id': order['id'],
                         'line_id': el['id'],
+                        'product_id': product.id if product else None,
+                        'source_id': supplier.get_source_id() if supplier else None,
                         'store': store.id,
                         'order': {
                             'phone': phone,
@@ -4350,8 +4352,6 @@ def orders_view(request):
                     }
 
                     if product:
-                        order_data['product_id'] = product.id
-
                         mapped = product.get_variant_mapping(name=el['variant_id'], for_extension=True, mapping_supplier=True)
                         if el['variant_id'] and mapped:
                             order_data['variant'] = mapped
