@@ -422,16 +422,17 @@ def proccess_api(request, user, method, target, data):
     if method == 'POST' and (target == 'shopify' or target == 'shopify-update' or target == 'save-for-later'):
         req_data = json.loads(request.body)
 
+        user = utils.get_api_user(request, req_data, assert_login=True)
+
         if req_data.get('store'):
-            store_id = int(req_data['store'])
-            store = ShopifyStore.objects.get(pk=store_id)
+            store = ShopifyStore.objects.get(pk=req_data['store'])
+
             if target == 'save-for-later' and not user.can('save_for_later.sub', store):
                 raise PermissionDenied()
-            if target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
+            elif target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
                 raise PermissionDenied()
 
         delayed = req_data.get('b')
-        user = utils.get_api_user(request, req_data, assert_login=True)
 
         if not delayed or target == 'save-for-later':
             result = tasks.export_product(req_data, target, user.id)
@@ -1133,6 +1134,22 @@ def proccess_api(request, user, method, target, data):
         if product.shopify_id:
             for splitted_product in splitted_products:
                 data = json.loads(product.data)
+
+                variants = []
+                for v in data['variants']:
+                    variant = {
+                        'title': v['title'],
+                        'price': data['price'],
+                        'compare_at_price': data['compare_at_price'],
+                        'weight': data['weight'],
+                        'weight_unit': data['weight_unit']
+                    }
+
+                    for i, option in enumerate(v['values']):
+                        variant['option{}'.format(i)] = option
+
+                    variants.append(variant)
+
                 req_data = {
                     'product': splitted_product.id,
                     'store': splitted_product.store_id,
@@ -1144,12 +1161,13 @@ def proccess_api(request, user, method, target, data):
                             'vendor': data['vendor'],
                             'published': data['published'],
                             'tags': data['tags'],
-                            'variants': [utils.merge_two_dicts({'title': v['title'], 'price': data['price'], 'compare_at_price': data['compare_at_price'], 'weight': data['weight'], 'weight_unit': data['weight_unit']}, {'option{}'.format(i): o for i, o in enumerate(v['values'])}) for v in data['variants']],
+                            'variants': variants,
                             'options': [{'name': v['title'], 'values': v['values']} for v in data['variants']],
                             'images': [{'src': i} for i in data['images']]
                         }
                     })
                 }
+
                 tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
 
         return JsonResponse({
@@ -4263,6 +4281,7 @@ def orders_view(request):
             else:
                 product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
 
+            supplier = None
             if product and product.have_supplier():
                 original_info = product.get_original_info()
                 if not original_info:
@@ -4331,12 +4350,17 @@ def orders_view(request):
                     if not phone or models_user.get_config('order_default_phone') != 'customer':
                         phone = models_user.get_config('order_phone_number')
 
+                    if phone:
+                        phone = re.sub('[^0-9/-]', '', phone)
+
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'quantity': el['quantity'],
                         'shipping_address': shipping_address_asci,
                         'order_id': order['id'],
                         'line_id': el['id'],
+                        'product_id': product.id if product else None,
+                        'source_id': supplier.get_source_id() if supplier else None,
                         'store': store.id,
                         'order': {
                             'phone': phone,
@@ -4347,8 +4371,6 @@ def orders_view(request):
                     }
 
                     if product:
-                        order_data['product_id'] = product.id
-
                         mapped = product.get_variant_mapping(name=el['variant_id'], for_extension=True, mapping_supplier=True)
                         if el['variant_id'] and mapped:
                             order_data['variant'] = mapped

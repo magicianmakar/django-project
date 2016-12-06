@@ -652,19 +652,81 @@ $('.tos-update .close-btn').click(function (e) {
     });
 });
 
+function versionCompare(left, right) {
+    if (typeof left + typeof right != 'stringstring')
+        return false;
 
-$('.extension-version a').click(function (e) {
-    e.preventDefault();
+    var a = left.split('.');
+    var b = right.split('.');
+    var i = 0,
+        len = Math.max(a.length, b.length);
 
-    window.extensionSendMessage({
-        subject: 'UpdateExtension',
-        from: 'website',
-    }, function() {
-        $('.extension-version a').hide();
-    });
-});
+    for (; i < len; i++) {
+        if ((a[i] && !b[i] && parseInt(a[i], 10) > 0) || (parseInt(a[i], 10) > parseInt(b[i], 10))) {
+            return 1;
+        } else if ((b[i] && !a[i] && parseInt(b[i], 10) > 0) || (parseInt(a[i], 10) < parseInt(b[i], 10))) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
 
 $(function() {
+    setTimeout(function() {
+        console.log('setTimeout');
+        var version = $('.extension-version').data('extension-version');
+        if (version && window.extensionSendMessage) {
+            window.extensionSendMessage({
+                subject: 'getVersion',
+                from: 'website',
+            }, function(rep) {
+                var current_version = rep.version;
+                var comapre = versionCompare(version, current_version);
+
+                console.log('Current:', current_version, 'Comapre:', comapre);
+
+                if (comapre <= 0) {
+                    $('#page-wrapper .footer').removeClass('fixed');
+                    $('.extension-version').html('<i class="fa fa-check"></i> Using Latest Extension Version');
+                    $('.extension-version').css('color', 'green');
+                } else if (comapre > 0) {
+                    $('.extension-version').text('New Extension Version Available!');
+                    $('.extension-version').append($('<a>', {
+                        'class': "btn btn-outline btn-xs btn-success",
+                        'href': "/pages/view/how-to-update-the-extension-to-the-latest-version",
+                        'style': "margin-left:10px",
+                        'html': '<i class="fa fa-refresh" aria-hidden="true"></i> Update',
+                    }).click(function(e) {
+                        e.preventDefault();
+
+                        $('#page-wrapper .footer').removeClass('fixed');
+
+                        window.extensionSendMessage({
+                            subject: 'UpdateExtension',
+                            from: 'website',
+                        }, function() {
+                            $('.extension-version a').hide();
+                        });
+                    }));
+
+                    $('.extension-version').append($('<a>', {
+                        'class': "btn btn-outline btn-xs btn-info",
+                        'href': "/pages/extension-changelog",
+                        'target': "_blank",
+                        'style': "margin-left:10px",
+                        'html': '<i class="fa fa-lightbulb-o" aria-hidden="true"></i> What\'s New?',
+                    }));
+
+                    if ($('.extension-version').data('required')) {
+                        $('#page-wrapper .footer').addClass('fixed');
+                    }
+                }
+            });
+
+        }
+    }, 1000);
+
     if (window.location.hash == '#support' && window.intercomSettings /*&& !window.Intercom*/ ) {
         swal({
             title: 'Shopified App Support',

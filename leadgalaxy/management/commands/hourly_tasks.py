@@ -37,33 +37,18 @@ class Command(BaseCommand):
 
         self.stdout.write('Orders Count (hourly): %d' % orders.count(), self.style.HTTP_INFO)
 
-        users = {}
         counter = {
             'fulfilled': 0,
             'need_fulfill': 0,
-            'ignored_orders': 0,
         }
 
         self.store_countdown = {}
 
         for order in orders:
-            if order.store_id in users:
-                user = users[order.store_id]
-            else:
-                user = order.store.user
-
-            fulfill_option = user.get_config('auto_shopify_fulfill') if user else None
-            if not user or fulfill_option != 'hourly':
-                users[order.store_id] = False
-                counter['ignored_orders'] += 1
-                continue
-            else:
-                users[order.store_id] = user
-
             try:
                 counter['need_fulfill'] += 1
 
-                if self.fulfill_order(order, order.store, user):
+                if self.fulfill_order(order, order.store, order.store.user):
                     order.shopify_status = 'fulfilled'
                     order.auto_fulfilled = True
                     order.save()
@@ -75,9 +60,8 @@ class Command(BaseCommand):
             except:
                 raven_client.captureException()
 
-        self.stdout.write('Fulfilled Orders: %d' % counter['fulfilled'])
-        self.stdout.write('    Need Fulfill: %d' % counter['need_fulfill'])
-        self.stdout.write('  Ignored Orders: %d' % counter['ignored_orders'])
+        self.stdout.write('Fulfilled Orders: {} / {}'.format(
+            counter['fulfilled'], counter['need_fulfill']))
 
     def profile_changed(self, profile, expired_plan, new_plan):
         data = {

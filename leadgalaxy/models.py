@@ -671,7 +671,7 @@ class ShopifyProduct(models.Model):
             return data_store.data
         return getattr(self, 'original_data', '{}')
 
-    def set_original_data(self, value):
+    def set_original_data(self, value, clear_original=False):
         if self.original_data_key:
             data_store = DataStore.objects.get(key=self.original_data_key)
             data_store.data = value
@@ -689,6 +689,10 @@ class ShopifyProduct(models.Model):
                     DataStore.objects.create(key=data_key, data=value)
 
                     self.original_data_key = data_key
+
+                    if clear_original:
+                        self.original_data = ''
+
                     self.save()
 
                     break

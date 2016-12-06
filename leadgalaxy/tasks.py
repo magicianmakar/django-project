@@ -508,8 +508,8 @@ def invite_user_to_slack(slack_teams, data):
         utils.slack_invite(data, team=team)
 
 
-@app.task(base=CaptureFailure, ignore_result=True)
-def generate_feed(feed_id, nocache=False, by_fb=False):
+@app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
+def generate_feed(self, feed_id, nocache=False, by_fb=False):
     from product_feed.feed import generate_product_feed
     from product_feed.models import FeedStatus
 
