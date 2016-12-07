@@ -31,7 +31,9 @@
         }
     </style>
 
-    <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+ <!--    <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700" rel="stylesheet">
+
     <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
     <link href="//fast.appcues.com/widget.css" rel="stylesheet">
 
@@ -141,8 +143,8 @@
     <nav class="navbar-default navbar-static-side" role="navigation">
         <div class="sidebar-collapse">
             <ul class="nav metismenu" id="side-menu">
-                <li class="profile-element">
-                    <img src="{% static 'Shopified-App.png' %}" style="width: 100%; padding: 10px 25px;">
+                <li class="profile-element" style="padding:12px 5px 11px 5px;text-align:center;">
+                    <img src="{% static 'Shopified-App-White.png' %}" width="160" height="37" />
                 </li>
 
                 {% if user.is_authenticated %}

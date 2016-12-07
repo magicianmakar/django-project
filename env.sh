@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export DATABASE_URL="localhost://localhost:@root:5432/python-test-app"
+export DATABASE_URL="postgres://postgres:@postgres:5432/python-test-app"
 export DEBUG_APP="TRUE"
 export SENDGRID_PASSWORD=""
 export SENDGRID_USERNAME=""

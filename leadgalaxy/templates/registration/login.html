@@ -33,20 +33,22 @@
 </style>
 </head>
 
-<body class="gray-bg">
+<body class="login-body gray-bg">
+    
+    <div class="d-table">
+    <div class="d-table-cell">
 
     <div class="middle-box text-center loginscreen animated fadeInDown">
         <div>
             <div>
                 <h1 class="logo-name" style="font-size: 16px">
-                    <img style="width: 100%; margin-left: -30px;" src={% static 'Shopified-App2.png' %}>
+                    <img width="220" height="50" src={% static 'Shopified-App2.png' %}>
                 </h1>
             </div>
 
-            <h3>Welcome to Shopified App</h3>
-            <p>Perfectly designed and precisely prepared application to manage your Shopify Store.
-            </p>
-            <p>Login in. To see it in action.</p>
+            <h3 class="welcome-title">Welcome to Shopified App!</h3>
+            <p class="welcome-text">It’s time to start automating your drop shipping business and experience how great drop shipping can be.</p>
+            <h5 class="welcome-subtitle font-alt color-green">Login to see it in action!</h5>
             <form method="POST" class="m-t" role="form" action="{% url 'django.contrib.auth.views.login' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{request.GET.next|default:'/'}}" />
@@ -59,13 +61,33 @@
                     {% render_field form.password class+="form-control input-lg" placeholder="Password" %}
                     {{ form.password.errors | safe }}
                 </div>
-                <button type="submit" class="btn btn-primary block full-width m-b">Login</button>
+                <div style="text-align:center;">
+                    <button type="submit" class="btn btn-primary m-b">Login Now</button>
+                </div>
 
-                <a href="/accounts/password/reset/"><small>Forgot password?</small></a>
-                <p class="text-muted text-center"><small>Do not have an account?</small></p>
-                <a class="btn btn-sm btn-white btn-block" href="{% url 'leadgalaxy.views.register' %}">Create an account</a>
+                <a href="/accounts/password/reset/" class="forgot-password">Forgot password?</a>
+                <p class="text-muted text-center no-account">Don't have an account yet?</p>
+                <a class="btn btn-info" href="{% url 'leadgalaxy.views.register' %}">Create an account</a>
             </form>
-            <p class="m-t"> <small>Shopified App &copy; {% now "Y" %}</small> </p>
+            <div class="m-t copyright"><img width="110" height="25" src={% static 'Shopified-App2.png' %}> &copy; {% now "Y" %}</div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+
+    <div class="support-footer">
+        <div class="constrain">
+            <h3 class="support-title">
+                Support
+                <img width="30" height="30" src={% static 'logo-element.png' %}>
+            </h3>
+            <p>
+                Need help? Visit our <a href="http://www.getshopifiedapp.com/training-videos/" title="Training Center" class="btn btn-info">Training Center</a> or create a ticket <a href="http://www.getshopifiedapp.com/support/" title="Support Center" class="btn btn-info">Support Center</a>
+                <a href="https://www.facebook.com/shopifiedapp/" target="_blank" title="Facebook" class="fa fa-facebook social"></a>
+                <a href="https://www.twitter.com/shopifiedapp" target="_blank" title="Twitter" class="fa fa-twitter social"></a>
+            </p>
+
         </div>
     </div>
 
