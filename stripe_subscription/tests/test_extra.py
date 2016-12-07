@@ -9,8 +9,8 @@ from stripe_subscription.utils import have_extra_stores
 
 from leadgalaxy.models import GroupPlan, ShopifyStore, User
 
-MYSHOPIFY_DOMAIN = 'rank-engine.myshopify.com'
-SHOPIFY_APP_URL = ':408e98a11f031f8e4fcad0e94114789a@%s' % MYSHOPIFY_DOMAIN
+MYSHOPIFY_DOMAIN = 'shopified-app-ci.myshopify.com'
+SHOPIFY_APP_URL = ':88937df17024aa5126203507e2147f47@%s' % MYSHOPIFY_DOMAIN
 
 
 class ExtraStoreTestCase(TestCase):

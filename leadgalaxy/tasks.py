@@ -192,7 +192,10 @@ def export_product(req_data, target, user_id):
                     return {'error': u'Shopify Error: {}'.format(shopify_error)}
 
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
-            raven_client.captureException()
+            raven_client.captureException(extra={
+                'rep': r.text
+                })
+
             return {'error': 'Shopify API is not available, please try again.'}
 
         except ShopifyProduct.DoesNotExist:
