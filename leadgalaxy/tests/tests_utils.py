@@ -29,7 +29,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ['api_url']
 
     title = 'uncommonnow'
-    api_url = 'https://d43e2fd73231e565c290a548c05f9c1f:c2fb34b864894a4f03e6a00205301de7@rank-engine.myshopify.com'
+    api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
     user_id = 1
 
 
@@ -375,8 +375,8 @@ class OrdersTestCase(TestCase):
         pass
 
     def test_order_notes(self):
-        order_id = 2135735813
-        line_id = 3896443589
+        order_id = 4905209738
+        line_id = 9309669834
 
         store = ShopifyStoreFactory()
         order = utils.get_shopify_order(store, order_id)
@@ -433,7 +433,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')
         self.assertEqual(utils.get_domain('http://aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'aliexpress.com')
         self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919', full=True), 'www.ebay.com')
-        self.assertEqual(utils.get_domain('http://rank-engine.myshopify.com/admin/products/1234', full=True), 'rank-engine.myshopify.com')
+        self.assertEqual(utils.get_domain('http://shopified-app-ci.myshopify.com/admin/products/1234', full=True), 'shopified-app-ci.myshopify.com')
 
     def test_remove_link_query(self):
         self.assertEqual(
@@ -519,16 +519,16 @@ class UtilsTestCase(TestCase):
         self.assertFalse(utils.upload_from_url('http://attaker.com/files/g/RHIAAOSwQaJXRBkE/http%s/test.png' % aviary_url[0]))
 
     def test_get_shopify_id(self):
-        self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/5321947333'), 5321947333)
-        self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/5321947333/variants/16557264133'), 5321947333)
-        self.assertEqual(utils.get_shopify_id('https://rank-engine.myshopify.com/admin/products/'), 0)
+        self.assertEqual(utils.get_shopify_id('https://shopified-app-ci.myshopify.com/admin/products/5321947333'), 5321947333)
+        self.assertEqual(utils.get_shopify_id('https://shopified-app-ci.myshopify.com/admin/products/5321947333/variants/16557264133'), 5321947333)
+        self.assertEqual(utils.get_shopify_id('https://shopified-app-ci.myshopify.com/admin/products/'), 0)
         self.assertEqual(utils.get_shopify_id(None), 0)
 
     def test_get_shopify_store_by_url(self):
         user = utils.User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
         store = ShopifyStoreFactory(user_id=user.id)
 
-        url = 'http://rank-engine.myshopify.com/admin/products/1234'
+        url = 'http://shopified-app-ci.myshopify.com/admin/products/1234'
 
         self.assertEqual(utils.get_store_from_url(user, url), store)
 

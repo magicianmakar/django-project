@@ -1,9 +1,9 @@
 from django.test import TestCase
 from leadgalaxy.models import User, ShopifyStore
 
-MYSHOPIFY_DOMAIN = 'shopifiedapp.myshopify.com'
-PRIVATE_APP_URL = '32b331236477b9a27cf474f3b1dbe054:ccf393823cb7ee982b1698bc11c5dcea@%s' % MYSHOPIFY_DOMAIN
-SHOPIFY_APP_URL = ':9e678022a43c64fd6e1b54741972a030@%s' % MYSHOPIFY_DOMAIN
+MYSHOPIFY_DOMAIN = 'shopified-app-ci.myshopify.com'
+PRIVATE_APP_URL = '6bace8a67988e75c29279ac08f7b31bc:41973440f95ee4529b8c739df75aa1f6@%s' % MYSHOPIFY_DOMAIN
+SHOPIFY_APP_URL = ':88937df17024aa5126203507e2147f47@%s' % MYSHOPIFY_DOMAIN
 
 
 class StoreTestCase(TestCase):
@@ -23,8 +23,7 @@ class StoreTestCase(TestCase):
                                     version=2,
                                     shop=MYSHOPIFY_DOMAIN)
 
-    def test_animals_can_speak(self):
-        """Animals that can speak are correctly identified"""
+    def test_store_api_urls(self):
 
         for i in ['test1', 'test2', 'test3']:
             store = ShopifyStore.objects.get(title=i)
@@ -43,4 +42,4 @@ class StoreTestCase(TestCase):
 
             self.assertEqual(store.get_api_url(hide_keys=True), "https://*:*@%s" % MYSHOPIFY_DOMAIN)
 
-            self.assertEqual(store.get_info['name'], "Shopified App Test")
+            self.assertEqual(store.get_info['name'], "Shopified App CI")
