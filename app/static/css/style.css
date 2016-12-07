@@ -562,6 +562,9 @@ body.canvas-menu.mini-navbar nav.navbar-static-side {
   }
 }
 .btn {
+  border-radius: 3px;
+}
+.big-btn {
   border-radius: 25px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1764,8 +1767,8 @@ table.dataTable thead .sorting:after {
 .single-line {
   background-color: #FFFFFF;
   background-image: none;
-  border: 2px solid #ebebeb;
-  border-radius: 20px;
+  border: 1px solid #e5e6e7;
+  border-radius: 1px;
   color: inherit;
   display: block;
   padding: 6px 12px;
@@ -1773,6 +1776,12 @@ table.dataTable thead .sorting:after {
   width: 100%;
   font-size: 14px;
 }
+
+.form-control.new {
+  border: 2px solid #ebebeb;
+  border-radius: 20px;
+}
+
 .form-control:focus,
 .single-line:focus {
   border-color: #93c47d !important;

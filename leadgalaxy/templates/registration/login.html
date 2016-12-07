@@ -54,20 +54,20 @@
                 <input type="hidden" name="next" value="{{request.GET.next|default:'/'}}" />
 
                 <div class="form-group">
-                    {% render_field form.username class+="form-control input-lg" placeholder="Username or Email" %}
+                    {% render_field form.username class+="form-control new input-lg" placeholder="Username or Email" %}
                     {{ form.username.errors | safe }}
                 </div>
                 <div class="form-group">
-                    {% render_field form.password class+="form-control input-lg" placeholder="Password" %}
+                    {% render_field form.password class+="form-control new input-lg" placeholder="Password" %}
                     {{ form.password.errors | safe }}
                 </div>
                 <div style="text-align:center;">
-                    <button type="submit" class="btn btn-primary m-b">Login Now</button>
+                    <button type="submit" class="big-btn btn btn-primary m-b">Login Now</button>
                 </div>
 
                 <a href="/accounts/password/reset/" class="forgot-password">Forgot password?</a>
                 <p class="text-muted text-center no-account">Don't have an account yet?</p>
-                <a class="btn btn-info" href="{% url 'leadgalaxy.views.register' %}">Create an account</a>
+                <a class="big-btn btn btn-info" href="{% url 'leadgalaxy.views.register' %}">Create an account</a>
             </form>
             <div class="m-t copyright"><img width="110" height="25" src={% static 'Shopified-App2.png' %}> &copy; {% now "Y" %}</div>
         </div>
@@ -83,7 +83,7 @@
                 <img width="30" height="30" src={% static 'logo-element.png' %}>
             </h3>
             <p>
-                Need help? Visit our <a href="http://www.getshopifiedapp.com/training-videos/" title="Training Center" class="btn btn-info">Training Center</a> or create a ticket <a href="http://www.getshopifiedapp.com/support/" title="Support Center" class="btn btn-info">Support Center</a>
+                Need help? Visit our <a href="http://www.getshopifiedapp.com/training-videos/" title="Training Center" class="big-btn btn btn-info">Training Center</a> or create a ticket <a href="http://www.getshopifiedapp.com/support/" title="Support Center" class="big-btn btn btn-info">Support Center</a>
                 <a href="https://www.facebook.com/shopifiedapp/" target="_blank" title="Facebook" class="fa fa-facebook social"></a>
                 <a href="https://www.twitter.com/shopifiedapp" target="_blank" title="Twitter" class="fa fa-twitter social"></a>
             </p>
