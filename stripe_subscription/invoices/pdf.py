@@ -48,6 +48,7 @@ def draw_pdf(buffer, invoice):
     parts.append(Image(logo, width=150, height=37, hAlign='LEFT'))
     customer = StripeCustomer.objects.get(customer_id=invoice.customer)
     data = [[header_paragraph(invoice), '',],
+            [invoice_id_paragraph(invoice), '',],
             ['', ''],
             [invoicer_label(invoice), invoice_total_paragraph(invoice)],
             [invoicer_paragraph(invoice), invoice_due_paragraph(invoice)],
@@ -81,11 +82,19 @@ def draw_footer(canvas, doc):
 
 def header_paragraph(invoice):
     if invoice.paid:
-        source = invoice.charge.source
-        title = '<b>RECEIPT</b> %s %s' % (source.brand, source.last4)
+        title = '<b>RECEIPT</b>'
     else:
-        title = '<b>INVOICE</b> %s' % invoice.id
+        title = '<b>INVOICE</b>'
     return Paragraph(title, STYLES['header'])
+
+
+def invoice_id_paragraph(invoice):
+    if invoice.paid:
+        source = invoice.charge.source
+        title = 'Invoice ID: %s <br />Source: %s %s' % (invoice.id, source.brand, source.last4)
+    else:
+        title = 'Invoice ID: %s' % invoice.id
+    return Paragraph(title, STYLES['default'])
 
 
 def invoicer_label(invoice):
