@@ -1041,6 +1041,7 @@ function pixlrCheck(key) {
 
                     clearInterval(document.pixlrInterval);
                     document.pixlrInterval = null;
+                    document.pixlrPopup.close();
                 } else {
                     document.pixlrIntervalCount += 1;
                 }

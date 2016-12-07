@@ -211,7 +211,7 @@ AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 
 S3_STATIC_BUCKET = 'shopifiedapp-assets'
 S3_PRODUCT_FEED_BUCKET = 'shopifiedapp-feeds'
-S3_UPLOADS_BUCKET = 'shopifiedapp-uploads'
+S3_UPLOADS_BUCKET = os.environ.get('S3_UPLOADS_BUCKET', 'shopifiedapp-uploads')
 
 AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
 
