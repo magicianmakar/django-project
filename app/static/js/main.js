@@ -674,7 +674,6 @@ function versionCompare(left, right) {
 
 $(function() {
     setTimeout(function() {
-        console.log('setTimeout');
         var version = $('.extension-version').data('extension-version');
         if (version && window.extensionSendMessage) {
             window.extensionSendMessage({
@@ -683,8 +682,6 @@ $(function() {
             }, function(rep) {
                 var current_version = rep.version;
                 var comapre = versionCompare(version, current_version);
-
-                console.log('Current:', current_version, 'Comapre:', comapre);
 
                 if (comapre <= 0) {
                     $('#page-wrapper .footer').removeClass('fixed');
