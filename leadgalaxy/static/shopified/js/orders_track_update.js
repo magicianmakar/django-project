@@ -49,6 +49,13 @@
         }, 1000);
     });
 
+    $('#update-unfulfilled-only').on('change', function (e) {
+        if($('.aliexpress-sync-btn').prop('updated-version') &&
+            $('#modal-tracking-update').is(':visible')) {
+            syncTrackedOrders();
+        }
+    });
+
     function upgradeWarning() {
         swal('Upgrade Extension',
             'Please upgrade to a newer version of Shopified App Chrome Extension to use this feature.',
@@ -76,6 +83,7 @@
             data: {
                 store: btn.data('store'),
                 all: true,
+                unfulfilled_only: $('#update-unfulfilled-only').is(':checked'),
                 count_only: true
             }
         }).done(function(data) {
@@ -85,15 +93,7 @@
                 error: 0
             };
 
-            if (!data.pending) {
-                return swal({
-                    title: 'No Pending Order',
-                    text: 'No Order is awaiting Shipment',
-                    type: 'warning'
-                });
-            }
-
-            $('.pending-orders', modal).text(data.pending + ' ' + 'Orders');
+            $('.pending-orders', modal).text(data.pending + ' ' + 'Order' + (data.pending > 1 ? 's' : ''));
 
             disable_config_sync = true;
 
@@ -129,6 +129,8 @@
         $('.progress-bar-success', modal).css('width', '0');
         $('.progress-bar-danger', modal).css('width', '0');
 
+        $('#update-unfulfilled-only').prop('disabled', 'disabled');
+
         btn.hide();
         $('.stop-update-btn').show();
 
@@ -136,7 +138,8 @@
             url: '/api/order-fulfill',
             data: {
                 store: btn.data('store'),
-                all: true
+                all: true,
+                unfulfilled_only: $('#update-unfulfilled-only').is(':checked')
             }
         }).done(function(data) {
             updatePromise = P.map(data, checkOrder, {

@@ -1505,12 +1505,17 @@ def proccess_api(request, user, method, target, data):
         from django.core import serializers
 
         orders = []
+
         all_orders = data.get('all') == 'true'
+        unfulfilled_only = data.get('unfulfilled_only') != 'false'
+
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                                  .filter(source_tracking='') \
-                                                  .exclude(source_status='FINISH') \
-                                                  .exclude(hidden=True) \
                                                   .order_by('updated_at')
+
+        if unfulfilled_only:
+            shopify_orders = shopify_orders.filter(source_tracking='') \
+                                           .exclude(source_status='FINISH')
+
         if user.is_subuser:
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
 
