@@ -53,6 +53,7 @@ var pixlr = (function () {
 
                     var url = buildUrl(opt);
                     document.pixlrPopup = window.open(url, "_blank");
+                    console.log(document.pixlrPopup);
                     return true;
                     /*
                     div.setAttribute("id", "pixlr-background");
