@@ -7,7 +7,7 @@ import time
 import math
 import requests
 
-from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max
 from leadgalaxy.utils import get_shopify_order
 
@@ -163,12 +163,16 @@ class Command(BaseCommand):
 
             #bulk import order lines
             lines = []
+            shipping_lines = []
             for order in rep['orders']:
                 if order['id'] not in already_imported:
                     saved_order = self.get_saved_order(store, order['id'])
 
                     for line in self.prepare_lines(order, saved_order):
                         lines.append(line)
+
+                    for shipping_line in self.prepare_shipping_lines(order, saved_order):
+                        shipping_lines.append(shipping_line)
                 else:
                     self.stdout.write('Line Already Imported of order #{}'.format(order['id']), self.style.WARNING)
 
@@ -176,6 +180,11 @@ class Command(BaseCommand):
                 ShopifyOrderLine.objects.bulk_create(lines)
             else:
                 self.stdout.write('Empty Order Lines', self.style.WARNING)
+
+            if len(shipping_lines):
+                ShopifyOrderShippingLine.objects.bulk_create(shipping_lines)
+            else:
+                self.stdout.write('Empty Order Shipping Lines', self.style.WARNING)
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
 
@@ -257,6 +266,24 @@ class Command(BaseCommand):
                 fulfillment_status=line['fulfillment_status'],
                 product_id=self.products_map.get(safeInt(line['product_id'])),
                 track_id=self.tracking_map.get(safeInt(line['id']))
+            ))
+
+        return lines
+
+    def prepare_shipping_lines(self, data, order):
+        lines = []
+        for shipping_line in data.get('shipping_lines'):
+            lines.append(ShopifyOrderShippingLine(
+                store=order.store,
+                order=order,
+                shipping_line_id=shipping_line['id'],
+                price=shipping_line['price'],
+                title=shipping_line['title'],
+                code=shipping_line['code'],
+                source=shipping_line['source'],
+                phone=shipping_line['phone'],
+                carrier_identifier=shipping_line['carrier_identifier'],
+                requested_fulfillment_service_id=shipping_line['requested_fulfillment_service_id']
             ))
 
         return lines

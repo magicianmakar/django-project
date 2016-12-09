@@ -43,7 +43,7 @@ import tasks
 import utils
 
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
 
 from stripe_subscription.utils import (
     process_webhook_event,
@@ -3935,6 +3935,29 @@ def autocomplete(request, target):
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
+    elif target == 'shipping-method-name':
+        try:
+            store = ShopifyStore.objects.get(id=request.GET.get('store'))
+            request.user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except PermissionDenied as e:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Permission Denied'}, status=403)
+
+        shipping_methods = ShopifyOrderShippingLine.objects.only('title') \
+                                                           .distinct('title') \
+                                                           .filter(title__icontains=q) \
+                                                           .filter(store=store)
+
+        results = []
+        for shipping_method in shipping_methods:
+            results.append({'value': shipping_method.title})
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
@@ -4186,6 +4209,7 @@ def orders_view(request):
 
     product_filter = request.GET.get('product')
     supplier_filter = request.GET.get('supplier_name')
+    shipping_method_filter = request.GET.get('shipping_method_name')
 
     if request.GET.get('shop'):
         status, fulfillment, financial = ['any', 'any', 'any']
@@ -4278,6 +4302,9 @@ def orders_view(request):
 
         if supplier_filter:
             orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter)
+
+        if shipping_method_filter:
+            orders = orders.filter(shipping_lines__title=shipping_method_filter)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
@@ -4577,6 +4604,7 @@ def orders_view(request):
         'awaiting_order': awaiting_order,
         'product_filter': product_filter,
         'supplier_filter': supplier_filter,
+        'shipping_method_filter': shipping_method_filter,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,

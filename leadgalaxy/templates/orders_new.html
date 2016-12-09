@@ -117,6 +117,16 @@
 
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Shipping Method</span>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="shipping_method_name" id="shipping_method_name" value="{{shipping_method_filter|default:''}}" class="form-control"
+                                   placeholder="Shipping Method Name" data-store="{{store.id}}">
+                        </div>
+                    </div>
+
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Country</span>
                         </div>
                         <div class="col-md-4">
@@ -328,9 +338,14 @@
                                         <br> {{order.shipping_address.phone}}
                                         {% endif %}
 
-
-
                                         <br> <b>{{order.shipping_address.country}}</b>
+
+                                        {% if order.shipping_lines %}
+                                            <br /> Shipping:
+                                            {% for shipping_line in order.shipping_lines %}
+                                                {% if not forloop.first %}, {% endif %}{{ shipping_line.title }}
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-1 col-xs-1">
                                         {% if order.shipping_address.country_code %}

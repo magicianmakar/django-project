@@ -116,3 +116,19 @@ class ShopifyOrderLine(models.Model):
 
     def __unicode__(self):
         return u'{}'.format(self.variant_title)
+
+
+class ShopifyOrderShippingLine(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    order = models.ForeignKey(ShopifyOrder, related_name='shipping_lines')
+    shipping_line_id = models.BigIntegerField()
+    price = models.FloatField()
+    title = models.CharField(max_length=256, db_index=True)
+    code = models.CharField(max_length=256)
+    source = models.CharField(max_length=256)
+    phone = models.CharField(max_length=256, null=True, blank=True)
+    carrier_identifier = models.CharField(max_length=256, null=True, blank=True)
+    requested_fulfillment_service_id = models.CharField(max_length=256, null=True, blank=True)
+
+    def __unicode__(self):
+        return self.title
