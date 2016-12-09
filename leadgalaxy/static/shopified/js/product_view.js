@@ -866,6 +866,13 @@ function indexOfImages(images, link) {
 }
 
 function renderImages() {
+    // Pixlr Doesn't redirect to this page
+    pixlr.settings.exit = window.location.origin + '/pixlr/close';
+    pixlr.settings.method = 'POST';
+    pixlr.settings.referrer = 'Shopified App';
+    // setting to false saves the image but doesn't run the redirect script on pixlr.html
+    pixlr.settings.redirect = false;
+
     $('#var-images').empty();
     $.each(product.images, function (i, el) {
         if (i !== 0 && i % 4 === 0) {
@@ -877,9 +884,11 @@ function renderImages() {
             'image-url': el
         });
 
+        var imageId = 'product-image-' + i;
+        
         var img = $('<img>', {
             src: el,
-            'id': 'product-image-' + i,
+            'id': imageId,
             'class': 'var-image',
             'image-url': el,
             'image-id': i,
@@ -902,12 +911,31 @@ function renderImages() {
         }
 
         if (config.advanced_photo_editor) {
-            d.append($('<button data-toggle="tooltip" title="Advanced Image Editor" ' +
+            var hash = UUIDjs.create().hex.split('-').join(''),
+                imageUrl = el;
+
+            if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
+                imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: imageUrl});
+            }
+
+            var pixlrUrl = pixlr.url({
+                image: imageUrl,
+                title: imageId,
+                target: window.location.origin + '/upload/save_image_s3?' + $.param({
+                    key: hash,
+                    product: config.product_id,
+                    advanced: true,
+                    image_id: imageId
+                })
+            });
+
+            d.append($('<a data-toggle="tooltip" title="Advanced Image Editor" ' +
                 'class="btn btn-warning btn-xs advanced-edit-photo" ' +
                 'style="display:none;position:absolute;cursor:pointer;right:80px;'+
                 'top:5px;background-color:rgb(255, 245, 195);color:rgb(105, 30, 19);'+
-                'border-radius:5px;font-weight:bolder;">' +
-                '<i class="fa fa-picture-o"></i></button>'));
+                'border-radius:5px;font-weight:bolder;" target="_blank" '+
+                'href="'+pixlrUrl+'" data-hash="'+hash+'">' +
+                '<i class="fa fa-picture-o"></i></a>'));
         }
 
         d.find('.image-delete').click(imageClicked);
@@ -923,9 +951,11 @@ function renderImages() {
 
         d.mouseenter(function() {
             $(this).find('button').show();
+            $(this).find('.advanced-edit-photo').show();
         })
         .mouseleave(function() {
             $(this).find('button').fadeOut();
+            $(this).find('.advanced-edit-photo').fadeOut();
         });
 
         $('#var-images').append(d);
@@ -948,43 +978,23 @@ function launchEditor(id, src) {
 }
 
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
-    e.preventDefault();
-    var image = $(this).siblings('img');
-    var imageUrl = image.attr('src');
-    var imageId = image.attr('id');
-
-    if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
-        imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
-    }
-
     if (config.advanced_photo_editor) {
+        var image = $(this).siblings('img'),
+            imageUrl = image.attr('src'),
+            imageId = image.attr('id'),
+            imageHash = $(this).attr('data-hash');
+
+        if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
+            imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
+        }
+
         $.ajax({
             type: 'GET',
             url: '/api/pixlr-hash',
-            data: {'new': imageId},
+            data: {'new': imageId, 'random_hash': imageHash},
             success: function(result) {
                 if (result.status == 'new') {
-                    var pixlrKey = result.key;
-
-                    // Pixlr Doesn't redirect to this page
-                    pixlr.settings.exit = window.location.origin + '/pixlr/close';
-                    pixlr.settings.method = 'POST';
-                    pixlr.settings.referrer = 'Shopified App';
-                    // setting to false saves the image but doesn't run the redirect script on pixlr.html
-                    pixlr.settings.redirect = false;
-
-                    pixlr.overlay.show({
-                        image: imageUrl,
-                        title: image.attr('id'),
-                        target: window.location.origin + '/upload/save_image_s3?' + $.param({
-                            key: pixlrKey,
-                            product: config.product_id,
-                            advanced: true,
-                            image_id:imageId
-                        })
-                    });
-
-                    pixlrCheck(pixlrKey);
+                    pixlrCheck(imageHash);
                 } else {
                     displayAjaxError('Advanced Image Editor', result);
                 }
@@ -994,6 +1004,7 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
             }
         });
     } else {
+        e.preventDefault();
         swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
 });

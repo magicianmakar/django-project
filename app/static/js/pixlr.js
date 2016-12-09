@@ -52,7 +52,7 @@ var pixlr = (function () {
                         idiv = pixlr.overlay.idiv = document.createElement('div');
 
                     var url = buildUrl(opt);
-                    document.pixlrPopup = window.open(url, "_blank");
+                    // document.pixlrPopup = window.open(url, "_blank");
                     console.log(document.pixlrPopup);
                     return true;
                     /*
