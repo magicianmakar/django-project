@@ -486,7 +486,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'pixlr-hash':
         if 'new' in data:
-            random_hash = utils.random_hash()
+            random_hash = data.get('random_hash')
             pixlr_data = {'status': 'new', 'url': '', 'image_id': data.get('new'), 'key': random_hash}
             cache.set('pixlr_{}'.format(random_hash), pixlr_data, timeout=21600)  # 6 hours timeout
 
