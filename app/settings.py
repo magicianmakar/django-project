@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'stripe_subscription',
     'product_feed',
     'data_store',
+    'product_alerts',
 )
 
 MIDDLEWARE_CLASSES = (

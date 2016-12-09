@@ -20,6 +20,7 @@ from leadgalaxy.models import *
 from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
 from shopify_orders import utils as order_utils
+from product_alerts import events as product_alerts_events
 
 app = Celery('shopified')
 
@@ -532,7 +533,7 @@ def generate_feed(self, feed_id, nocache=False, by_fb=False):
 def product_change_alert(change_id):
     try:
         product_change = AliexpressProductChange.objects.get(pk=change_id)
-        product_change_event = utils.ProductChangeEvent(product_change)
+        product_change_event = product_alerts_events.ProductChangeEvent(product_change)
         product_change_event.take_action()
 
     except:
