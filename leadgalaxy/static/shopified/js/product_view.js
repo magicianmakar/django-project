@@ -221,12 +221,10 @@ $('#export-btn').click(function () {
         } else {
             $('#variants .variant').each(function (i, el) {
                 var vals = $(el).find('#product-variant-values').val().split(',');
-                if (vals.length>1) {
-                    api_data.product.options.push({
-                        'name': $(el).find('#product-variant-name').val(),
-                        'values': vals
-                    });
-                }
+                api_data.product.options.push({
+                    'name': $(el).find('#product-variant-name').val(),
+                    'values': vals
+                });
             });
 
             var vars_list = [];
