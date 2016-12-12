@@ -2950,11 +2950,7 @@ def product_image_download(request, pid, placement=None):
         from django.utils.text import slugify
 
 
-        filename = tempfile.mktemp(suffix='.zip', prefix='{}/'.format(product.id))
-
-        dir = os.path.dirname(filename)
-        if not os.path.exists(dir):
-            os.makedirs(dir)
+        filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
 
         with zipfile.ZipFile(filename, 'w') as images_zip:
             i = 0
