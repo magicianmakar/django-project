@@ -1000,6 +1000,19 @@ function launchEditor(id, src) {
     }
 }
 
+$('#download-images').on('click', function(e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: $(this).attr('href'),
+        type: 'get',
+        dataType: 'json',
+        success: function(result) {
+            window.location = result.url;
+        }
+    });
+});
+
 $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
     if (config.advanced_photo_editor) {
         var image = $(this).siblings('img'),
