@@ -183,12 +183,10 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
 
     } else {
         $(product.variants).each(function (i, el) {
-            if (el.values.length>1) {
-                api_data.product.options.push({
-                    'name': el.title,
-                    'values': el.values
-                });
-            }
+            api_data.product.options.push({
+                'name': el.title,
+                'values': el.values
+            });
         });
 
         var vars_list = [];
@@ -209,10 +207,24 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
 
                 if (typeof(vars_list[i]) == "string") {
                     vdata["option1"] = vars_list[i];
+
+                    if (product.variants_sku && product.variants_sku.hasOwnProperty(vars_list[i])) {
+                        vdata["sku"] = product.variants_sku[vars_list[i]];
+                    }
                 } else {
+                    var sku = [];
+
                     $.each(vars_list[i], function (j, va) {
                         vdata["option"+(j+1)] = va;
+
+                        if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {
+                            sku.push(product.variants_sku[va]);
+                        }
                     });
+
+                    if (sku.length) {
+                        vdata["sku"] = sku.join(';');
+                    }
                 }
 
                 if (product.compare_at_price) {
@@ -674,7 +686,6 @@ function versionCompare(left, right) {
 
 $(function() {
     setTimeout(function() {
-        console.log('setTimeout');
         var version = $('.extension-version').data('extension-version');
         if (version && window.extensionSendMessage) {
             window.extensionSendMessage({
@@ -683,8 +694,6 @@ $(function() {
             }, function(rep) {
                 var current_version = rep.version;
                 var comapre = versionCompare(version, current_version);
-
-                console.log('Current:', current_version, 'Comapre:', comapre);
 
                 if (comapre <= 0) {
                     $('#page-wrapper .footer').removeClass('fixed');

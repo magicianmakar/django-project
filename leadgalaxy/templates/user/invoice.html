@@ -2,9 +2,6 @@
 <div class="panel panel-default">
     <div class="panel-body">
         <img src="{% static 'Shopified-App2.png' %}" alt="Shopified App" style='width: 100%;'/>
-        <p class="text-center">
-            {{ invoice.id }}
-        </p>
         <h2 class="text-center">
             {% if invoice.paid %}
                 <strong>Receipt</strong>
@@ -12,6 +9,9 @@
                 <strong>Invoice</strong>
             {% endif %}
         </h2>
+        <p class="text-center">
+            <strong>Invoice ID:</strong> {{ invoice.id }}
+        </p>
         {% if invoice.charge.paid %}
             <p class="text-center">
                 {{ invoice.charge.source.brand }} {{ invoice.charge.source.last4 }}

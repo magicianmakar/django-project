@@ -309,7 +309,6 @@
         $('#modal-subscription-cancel .plan-name').text($(this).data('plan'));
         $('#modal-subscription-cancel .billing-end').text($(this).data('period-end'));
 
-        console.log('msg',$(this).data('status') );
         if ($(this).data('status') != 'active') {
             $('#modal-subscription-cancel .part-refund').hide();
             $('#modal-subscription-cancel .period-name').text('trial');
