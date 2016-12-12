@@ -501,7 +501,7 @@
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.shopify_order and item.shopify_order.source_tracking %}
-                                                            <a href="https://track.aftership.com/{{item.shopify_order.source_tracking}}" target="_blank">
+                                                            <a href="{{item.shopify_order.get_tracking_link}}" target="_blank">
                                                                 {{item.shopify_order.source_tracking}}
                                                             </a>
                                                             {% endif %}

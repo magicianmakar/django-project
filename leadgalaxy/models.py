@@ -1193,6 +1193,19 @@ class ShopifyOrderTrack(models.Model):
     def get_shopify_link(self):
         return self.store.get_link('/admin/orders/{}'.format(self.order_id))
 
+    def get_tracking_link(self):
+        aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
+
+        if type(self.user.get_config('aftership_domain')) is dict:
+            aftership_domain = self.user.get_config('aftership_domain').get(str(self.store_id), aftership_domain)
+
+            if '{{tracking_number}}' not in aftership_domain:
+                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
+            elif not aftership_domain.startswith('http'):
+                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
+
+        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
+
     def get_source_status(self):
         status_map = {
             "PLACE_ORDER_SUCCESS": "Awaiting Payment",

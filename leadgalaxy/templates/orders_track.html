@@ -125,7 +125,7 @@
                             <td>{{item.get_source_status|default:''}}</td>
                             <td>
                                 {% if item.source_tracking %}
-                                <a href="https://track.aftership.com/{{item.source_tracking}}" target="_blank">
+                                <a href="{{item.get_tracking_link}}" target="_blank">
                                     {{item.source_tracking}}
                                 </a>
                                 {% endif %}
