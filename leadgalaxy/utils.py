@@ -1596,6 +1596,7 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
     k = Key(bucket)
 
     if not mimetype:
+        import mimetypes
         mimetype = mimetypes.guess_type(filename)[0]
 
     k.key = filename
