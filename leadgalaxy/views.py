@@ -1238,6 +1238,15 @@ def proccess_api(request, user, method, target, data):
 
             config = named_config
 
+        # Auto Order Timeout
+        config['ot'] = {
+            #  Start Auto fulfill after `t` is elapsed
+            't': profile.get_config().get('_auto_order_timeout', 15000),
+
+            #  Debug Auto fulfill timeout
+            'd': 2
+        }
+
         return JsonResponse(config)
 
     if method == 'POST' and target == 'user-config':
