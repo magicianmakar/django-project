@@ -2926,6 +2926,8 @@ def product_image_download(request, pid, placement=None):
     request.user.can_view(product)
 
     images = json.loads(product.data)['images']
+    if not len(images):
+        raise Http404('No images to proccess')
 
     if placement is not None:
         import StringIO

@@ -1003,12 +1003,21 @@ function launchEditor(id, src) {
 $('#download-images').on('click', function(e) {
     e.preventDefault();
 
+    var btn = $(e.target);
+    btn.bootstrapBtn('loading');
+
     $.ajax({
         url: $(this).attr('href'),
         type: 'get',
         dataType: 'json',
         success: function(result) {
             window.location = result.url;
+        },
+        error: function(data) {
+            displayAjaxError('Images Download', data);
+        },
+        complete: function () {
+            btn.bootstrapBtn('reset');
         }
     });
 });
