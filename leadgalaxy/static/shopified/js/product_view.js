@@ -886,6 +886,8 @@ function renderImages() {
     pixlr.settings.redirect = false;
 
     $('#var-images').empty();
+
+    var downloadUrl = $('#download-images').attr('href');
     $.each(product.images, function (i, el) {
         if (i !== 0 && i % 4 === 0) {
             $('#var-images').append($('<div class="col-xs-12"></div>'));
@@ -910,13 +912,20 @@ function renderImages() {
 
         d.append($('<button data-toggle="tooltip" title="Delete Image" class="btn btn-danger ' +
             'btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;' +
-            'right: 25px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;' +
+            'right: 0px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;' +
             'border-radius: 5px;font-weight: bolder;">x</button>'));
+
+        d.append($('<a data-toggle="tooltip" title="Download Image" ' +
+            'class="btn btn-primary btn-xs download-image" ' +
+            'style="display:none;position:absolute;cursor:pointer;right:25px;'+
+            'top:5px;background-color:rgb(165, 255, 225);color:rgb(105, 30, 19);'+
+            'border-radius:5px;font-weight:bolder;" href="'+downloadUrl+'/'+i+'">' +
+            '<i class="fa fa-download"></i></a>'));
 
         if (config.photo_editor) {
             d.append($('<button data-toggle="tooltip" title="Simple Image Editor" ' +
                 'class="btn btn-primary btn-xs edit-photo" style="display:none;' +
-                'position:absolute;cursor:pointer;right:50px;top:5px;' +
+                'position:absolute;cursor:pointer;right:55px;top:5px;' +
                 'background-color:rgb(226, 255, 228);color: rgb(0, 105, 19);' +
                 'border-radius: 5px;font-weight: bolder;">' +
                 '<i class="fa fa-edit"></i></button>'));
@@ -943,7 +952,7 @@ function renderImages() {
 
             d.append($('<a data-toggle="tooltip" title="Advanced Image Editor" ' +
                 'class="btn btn-warning btn-xs advanced-edit-photo" ' +
-                'style="display:none;position:absolute;cursor:pointer;right:80px;'+
+                'style="display:none;position:absolute;cursor:pointer;right:85px;'+
                 'top:5px;background-color:rgb(255, 245, 195);color:rgb(105, 30, 19);'+
                 'border-radius:5px;font-weight:bolder;" target="_blank" '+
                 'href="'+pixlrUrl+'" data-hash="'+hash+'">' +
@@ -964,10 +973,12 @@ function renderImages() {
         d.mouseenter(function() {
             $(this).find('button').show();
             $(this).find('.advanced-edit-photo').show();
+            $(this).find('.download-image').show();
         })
         .mouseleave(function() {
             $(this).find('button').fadeOut();
             $(this).find('.advanced-edit-photo').fadeOut();
+            $(this).find('.download-image').fadeOut();
         });
 
         $('#var-images').append(d);
