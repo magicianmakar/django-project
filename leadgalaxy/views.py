@@ -2922,12 +2922,8 @@ def products_list(request, tpl='grid'):
 
 @login_required
 def product_image_download(request, pid, placement=None):
-    #  /AWS
-    if request.user.is_superuser:
-        product = get_object_or_404(ShopifyProduct, id=pid)
-    else:
-        product = get_object_or_404(ShopifyProduct, id=pid)
-        request.user.can_view(product)
+    product = get_object_or_404(ShopifyProduct, id=pid)
+    request.user.can_view(product)
 
     images = json.loads(product.data)['images']
 
