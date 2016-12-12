@@ -2945,8 +2945,6 @@ def product_image_download(request, pid, placement=None):
         import zipfile
         import os
 
-        from django.http import StreamingHttpResponse
-        from django.core.servers.basehttp import FileWrapper
         from django.utils.text import slugify
 
 
@@ -2959,12 +2957,10 @@ def product_image_download(request, pid, placement=None):
                 images_zip.writestr(image_name, requests.get(img_url).content)
                 i += 1
 
-        chunk_size = 8192
-        response = StreamingHttpResponse(FileWrapper(open(filename, 'rb'), chunk_size),
-                   content_type='application/zip')
-        response['Content-Length'] = os.path.getsize(filename)    
-        response['Content-Disposition'] = "attachment; filename=%s.zip" % slugify(product.title)
-        return response
+        s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(product.title)))
+        url = utils.aws_s3_upload(s3_path, input_filename=filename)
+
+        return JsonResponse({'url': url})
 
 
 @login_required
