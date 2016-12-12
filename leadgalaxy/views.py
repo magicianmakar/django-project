@@ -2921,6 +2921,57 @@ def products_list(request, tpl='grid'):
 
 
 @login_required
+def product_image_download(request, pid, placement=None):
+    #  /AWS
+    if request.user.is_superuser:
+        product = get_object_or_404(ShopifyProduct, id=pid)
+    else:
+        product = get_object_or_404(ShopifyProduct, id=pid)
+        request.user.can_view(product)
+
+    images = json.loads(product.data)['images']
+
+    if placement is not None:
+        import StringIO
+
+        img_url = images[0]
+
+        fp = StringIO.StringIO(requests.get(img_url).content)
+        response = HttpResponse(fp, content_type=utils.get_mimetype(img_url))
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(img_url.split('/')[-1])
+        return response
+    else:
+        import tempfile
+        import zipfile
+        import os
+
+        from django.http import StreamingHttpResponse
+        from django.core.servers.basehttp import FileWrapper
+        from django.utils.text import slugify
+
+
+        filename = tempfile.mktemp(suffix='.zip', prefix='{}/'.format(product.id))
+
+        dir = os.path.dirname(filename)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
+        with zipfile.ZipFile(filename, 'w') as images_zip:
+            i = 0
+            for img_url in images:
+                image_name = '{}-{}'.format(i, img_url.split('/')[-1])
+                images_zip.writestr(image_name, requests.get(img_url).content)
+                i += 1
+
+        chunk_size = 8192
+        response = StreamingHttpResponse(FileWrapper(open(filename, 'rb'), chunk_size),
+                   content_type='application/zip')
+        response['Content-Length'] = os.path.getsize(filename)    
+        response['Content-Disposition'] = "attachment; filename=%s.zip" % slugify(product.title)
+        return response
+
+
+@login_required
 def product_view(request, pid):
     #  AWS
     import base64
