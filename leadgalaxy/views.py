@@ -2934,7 +2934,7 @@ def product_image_download(request, pid, placement=None):
     if placement is not None:
         import StringIO
 
-        img_url = images[0]
+        img_url = images[placement]
 
         fp = StringIO.StringIO(requests.get(img_url).content)
         response = HttpResponse(fp, content_type=utils.get_mimetype(img_url))
