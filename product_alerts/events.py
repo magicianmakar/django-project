@@ -38,13 +38,19 @@ class ProductChangeEvent():
         if not len(self.variants_map.keys()):
             self.variants_map = None
 
-        product_config = self.product.get_config()
         self.config = {
-            'product_disappears': product_config.get('alert_product_disappears', '') or self.user.get_config('alert_product_disappears', 'notify'),
-            'variant_disappears': product_config.get('alert_variant_disappears', '') or self.user.get_config('alert_variant_disappears', 'notify'),
-            'quantity_change': product_config.get('alert_quantity_change', '') or self.user.get_config('alert_quantity_change', 'notify'),
-            'price_change': product_config.get('alert_price_change', '') or self.user.get_config('alert_price_change', 'notify'),
+            'product_disappears': self.get_config('alert_product_disappears'),
+            'variant_disappears': self.get_config('alert_variant_disappears'),
+            'quantity_change': self.get_config('alert_quantity_change'),
+            'price_change': self.get_config('alert_price_change'),
         }
+
+    def get_config(self, name, default='notify'):
+        value = self.product.get_config().get(name)
+        if value is None:
+            value = self.user.get_config(name, default)
+
+        return value
 
     def prepare_data_before(self, data):
         # Remember original price in case it changes
@@ -255,7 +261,8 @@ class ProductChangeEvent():
 
                     elif change['category'] == 'Price':
                         # take proper action with the found variant
-                        if self.config['price_change'] == 'update' or (self.config['price_change'] == 'update_for_increase' and change['new_value'] > change['old_value']):
+                        if self.config['price_change'] == 'update' or (self.config['price_change'] == 'update_for_increase' and
+                                                                       change['new_value'] > change['old_value']):
                             for found in found_variants:
                                 data['product']['variants'][found]['price'] = data['product']['variants'][found]['_original_price']
                                 selling_price = float(data['product']['variants'][found]['price'])
