@@ -10,6 +10,7 @@ from shopify_revision.models import ProductRevision
 
 from leadgalaxy.utils import send_email_from_template, get_variant_name
 
+
 class ProductChangeEvent():
 
     def __init__(self, product_change):
@@ -37,7 +38,7 @@ class ProductChangeEvent():
         if not len(self.variants_map.keys()):
             self.variants_map = None
 
-        product_config = self.product.get_config();
+        product_config = self.product.get_config()
         self.config = {
             'product_disappears': product_config.get('alert_product_disappears', '') or self.user.get_config('alert_product_disappears', 'notify'),
             'variant_disappears': product_config.get('alert_variant_disappears', '') or self.user.get_config('alert_variant_disappears', 'notify'),
