@@ -139,7 +139,11 @@ class Command(BaseCommand):
 
                     return False
 
-                raven_client.captureException(extra={'order_track': order.id, 'response': rep.text})
+                if "An error occurred, please try again" not in rep.text:
+                    raven_client.captureException(extra={
+                        'order_track': order.id,
+                        'response': rep.text
+                    })
 
             except:
                 raven_client.captureException()
@@ -153,7 +157,5 @@ class Command(BaseCommand):
             tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
 
             self.store_countdown[store.id] = countdown + 5
-        else:
-            raven_client.captureMessage('Order Was not fulfilled', extra={'order': order.id}, level='warning')
 
         return fulfilled
