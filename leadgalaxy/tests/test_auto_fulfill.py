@@ -92,6 +92,7 @@ class AutoFulfillTestCase(TestCase):
             order_id='5415135170',
             line_id='1654810',
             source_tracking='MA7565915257226HK',
+            store_id=self.store.id
         )
 
         track.status_updated_at = timezone.now() - timezone.timedelta(seconds=61)
@@ -108,6 +109,7 @@ class AutoFulfillTestCase(TestCase):
             order_id='5415135170',
             line_id='1654810',
             source_tracking='',
+            store_id=self.store.id
         )
 
         track.status_updated_at = timezone.now() - timezone.timedelta(seconds=61)
