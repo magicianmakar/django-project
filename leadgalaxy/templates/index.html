@@ -373,8 +373,7 @@
                                     <div class="col-sm-3">
                                         <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
                                             <option value="disable" {% if not config.auto_shopify_fulfill or config.auto_shopify_fulfill == 'disable' %}selected="selected"{% endif %}>Disable</option>
-                                            <option value="hourly" {% if config.auto_shopify_fulfill == 'hourly' %}selected="selected"{% endif %}>Hourly</option>
-                                            <option value="daily" {% if config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Daily</option>
+                                            <option value="enable" {% if config.auto_shopify_fulfill == 'enable' or config.auto_shopify_fulfill == 'hourly' or config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Enable</option>
                                         </select>
                                     </div>
                                 </div>
