@@ -18,7 +18,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     first_name = factory.fuzzy.FuzzyText()
     last_name = factory.fuzzy.FuzzyText()
     is_active = True
- 
+
     class Meta:
         model = settings.AUTH_USER_MODEL
 
@@ -53,14 +53,13 @@ class OrderExportFactory(factory.django.DjangoModelFactory):
     filters = factory.SubFactory('order_exports.tests.OrderExportFilterFactory')
     description = factory.fuzzy.FuzzyText()
     schedule = factory.fuzzy.FuzzyDateTime(timezone.now() - timedelta(hours=24),
-                                           timezone.now(), 
-                                           force_minute=0, 
+                                           timezone.now(),
+                                           force_minute=0,
                                            force_second=0)
     receiver = 'test@rank-engine.com'
     fields = '["id", "name", "total_price", "email"]'
     line_fields = '["name", "fulfillment_status"]'
     shipping_address = '[]'
-
 
     class Meta:
         model = OrderExport
@@ -129,4 +128,3 @@ class OrderExportTestCase(TestCase):
         post_data['fields'] = '[]'
         # response = self.client.post(reverse('order_exports_edit', kwargs={'order_export_id': self.order_export.id}), post_data)
         # self.assertEqual(response.status_code, 200)
-

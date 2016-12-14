@@ -50,45 +50,48 @@ DEFAULT_FIELDS_CHOICES = (('name', 'Order ID'),)
 
 
 DEFAULT_SHIPPING_ADDRESS = ('name', 'address1', 'address2', 'city', 'zip', 'province',
-    'prone', 'country')
-DEFAULT_SHIPPING_ADDRESS_CHOICES = (("name", "Name"), ("address1", "Address Line 1"), 
-    ("address2", "Address Line 2"), ("city", "City"), ("zip", "ZIP"), 
+                            'prone', 'country')
+DEFAULT_SHIPPING_ADDRESS_CHOICES = (
+    ("name", "Name"), ("address1", "Address Line 1"),
+    ("address2", "Address Line 2"), ("city", "City"), ("zip", "ZIP"),
     ("province", "Province"), ("phone", "Phone"), ("country", "Country"))
 
 
 DEFAULT_LINE_FIELDS = ('title', 'variant_title', 'sku', 'quantity')
 DEFAULT_LINE_FIELDS_CHOICES = (('title', 'Title'), ('variant_title', 'Variant Title'),
-    ('sku', 'SKU'), ('quantity', 'Quantity'))
+                               ('sku', 'SKU'), ('quantity', 'Quantity'))
 
 
-ORDER_FIELD_CHOICES = (('browser_ip', 'Browser IP'),
+ORDER_FIELD_CHOICES = (
+    ('browser_ip', 'Browser IP'),
     ('buyer_accepts_marketing', 'Buyer Accepts Marketing'), ('cart_token', 'Cart Token'),
     ('cancel_reason', 'Cancel Reason'), ('cancelled_at', 'Cancelled At'),
-    ('client_details', 'Client Details'), ('closed_at', 'Closed At'), 
+    ('client_details', 'Client Details'), ('closed_at', 'Closed At'),
     ('created_at', 'Created At'), ('currency', 'Currency'), ('customer', 'Customer'),
-    ('discount_codes', 'Discount Codes'), ('email', 'E-mail'), 
+    ('discount_codes', 'Discount Codes'), ('email', 'E-mail'),
     ('financial_status', 'Financial Status'), ('fulfillments', 'Fulfillments'),
     ('fulfillment_status', 'Fulfillment Status'), ('tags', 'Tags'), ('gateway', 'Gateway'),
     ('landing_site', 'Landing Site'), ('name', 'Order ID'), ('note', 'Note'),
     ('note_attributes', 'Note Attributes'), ('payment_gateway_names', 'Payment Gateway Names'),
     ('processed_at', 'Processed At'), ('processing_method', 'Processing Method'),
-    ('referring_site', 'Referring Site'), ('refunds', 'Refunds'), 
-    ('source_name', 'Source Name'), ('subtotal_price', 'Subtotal Price'), 
-    ('taxes_included', 'Taxes Included'), ('token', 'Token'), 
+    ('referring_site', 'Referring Site'), ('refunds', 'Refunds'),
+    ('source_name', 'Source Name'), ('subtotal_price', 'Subtotal Price'),
+    ('taxes_included', 'Taxes Included'), ('token', 'Token'),
     ('total_discounts', 'Total Discounts'), ('total_line_items_price', 'Total Line Items Price'),
     ('total_price', 'Total Price'), ('total_tax', 'Total Tax'), ('total_weight', 'Total Weight'),
     ('updated_at', 'Updated At'), ('order_status_url', 'Order Status Url')
 )
 
 
-ORDER_LINE_FIELD_CHOICES = (('fulfillable_quantity', 'Fulfillable Quantity'), 
-    ('fulfillment_service', 'Fulfillment Service'), ('grams', 'Grams'), 
-    ('fulfillment_status', 'Fulfillment Status'), ('vendor', 'Vendor'), 
-    ('id', 'ID'), ('price', 'Price'), ('product_id', 'Product ID'), 
-    ('quantity', 'Quantity'), ('requires_shipping', 'Requires Shipping'), 
-    ('sku', 'SKU'), ('title', 'Title'), ('variant_id', 'Variant ID'), 
-    ('variant_title', 'Variant Title'), ('tax_lines', 'Tax Lines'), 
-    ('name', 'Name'), ('gift_card', 'Gift Card'), ('properties', 'Properties'), 
+ORDER_LINE_FIELD_CHOICES = (
+    ('fulfillable_quantity', 'Fulfillable Quantity'),
+    ('fulfillment_service', 'Fulfillment Service'), ('grams', 'Grams'),
+    ('fulfillment_status', 'Fulfillment Status'), ('vendor', 'Vendor'),
+    ('id', 'ID'), ('price', 'Price'), ('product_id', 'Product ID'),
+    ('quantity', 'Quantity'), ('requires_shipping', 'Requires Shipping'),
+    ('sku', 'SKU'), ('title', 'Title'), ('variant_id', 'Variant ID'),
+    ('variant_title', 'Variant Title'), ('tax_lines', 'Tax Lines'),
+    ('name', 'Name'), ('gift_card', 'Gift Card'), ('properties', 'Properties'),
     ('taxable', 'Taxable'), ('total_discount', 'Total Discount')
 )
 
@@ -146,7 +149,7 @@ class OrderExportFilter(models.Model):
 
 class OrderExport(models.Model):
     RELATED_CHOICES = {
-        'fields': ORDER_FIELD_CHOICES, 
+        'fields': ORDER_FIELD_CHOICES,
         'line_fields': ORDER_LINE_FIELD_CHOICES,
         'shipping_address': ORDER_SHIPPING_ADDRESS_CHOICES
     }
@@ -169,7 +172,7 @@ class OrderExport(models.Model):
 
     progress = models.IntegerField(null=True, blank=True, default=0)
     vendor_user = models.ForeignKey(
-        OrderExportVendor, 
+        OrderExportVendor,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -239,7 +242,7 @@ class OrderExport(models.Model):
 
 class OrderExportQuery(models.Model):
     order_export = models.ForeignKey(OrderExport, related_name="queries")
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True)
     code = models.CharField(max_length=50, null=True, blank=True)
     params = models.TextField(default="")
     count = models.IntegerField(default=0)
@@ -262,7 +265,6 @@ class OrderExportLog(models.Model):
 
     started_by = models.DateTimeField(auto_now_add=True)
     finished_by = models.DateTimeField(blank=True, null=True)
-    
 
     order_export = models.ForeignKey(OrderExport, related_name="logs")
     successful = models.BooleanField(default=False)
@@ -286,4 +288,3 @@ def generate_reports(sender, order_export_pk, **kwargs):
         api.generate_sample_export()
     else:
         generate_order_export.delay(order_export_pk)
-

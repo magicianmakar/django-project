@@ -14,11 +14,7 @@ from django.http import JsonResponse
 
 from order_exports.api import ShopifyOrderExportAPI
 from order_exports.forms import OrderExportForm
-from order_exports.models import OrderExport, OrderExportFilter, OrderExportVendor, \
-    fix_fields, ORDER_FIELD_CHOICES, ORDER_LINE_FIELD_CHOICES, ORDER_STATUS, \
-    ORDER_FULFILLMENT_STATUS, ORDER_FINANCIAL_STATUS, ORDER_SHIPPING_ADDRESS_CHOICES, \
-    DEFAULT_FIELDS, DEFAULT_FIELDS_CHOICES, DEFAULT_SHIPPING_ADDRESS, \
-    DEFAULT_SHIPPING_ADDRESS_CHOICES, DEFAULT_LINE_FIELDS, DEFAULT_LINE_FIELDS_CHOICES
+from order_exports.models import *
 
 
 MAX_BREADCRUMB_TITLE = 50
@@ -32,11 +28,12 @@ def index(request):
     else:
         if not request.user.can('orders.view'):
             raise PermissionDenied()
+
         order_exports = OrderExport.objects.filter(store__user=request.user.pk)
         vendor_users = OrderExportVendor.objects.filter(owner=request.user.pk)
-    
+
     breadcrumbs = ['Order Exports']
-    
+
     return render(request, 'order_exports/index.html', {
         'order_exports': order_exports, 'page': "order_exports",
         'breadcrumbs': breadcrumbs, 'vendor_users': vendor_users
@@ -63,22 +60,22 @@ def add(request):
 
         fields = json.loads(request.POST.get('fields', '[]'))
         fields, fields_choices = fix_fields(
-            fields, 
-            ORDER_FIELD_CHOICES, 
+            fields,
+            ORDER_FIELD_CHOICES,
             prefix='fields_'
         )
 
         shipping_address = json.loads(request.POST.get('shipping_address', '[]'))
         shipping_address, shipping_address_choices = fix_fields(
-            shipping_address, 
-            ORDER_SHIPPING_ADDRESS_CHOICES, 
+            shipping_address,
+            ORDER_SHIPPING_ADDRESS_CHOICES,
             prefix='shipping_address_'
         )
 
         line_fields = json.loads(request.POST.get('line_fields', '[]'))
         line_fields, line_fields_choices = fix_fields(
-            line_fields, 
-            ORDER_LINE_FIELD_CHOICES, 
+            line_fields,
+            ORDER_LINE_FIELD_CHOICES,
             prefix='line_fields_'
         )
 
@@ -103,7 +100,7 @@ def add(request):
                 email = request.POST.get('vendor_email')
                 username = request.POST.get('vendor_username')
                 user = User.objects.create(email=email, username=username)
-                
+
                 vendor_user = OrderExportVendor(user=user, owner=request.user)
                 vendor_user.generate_password()
                 vendor_user.save()
@@ -128,7 +125,6 @@ def add(request):
                 vendor_user_id=vendor_user_id
             )
 
-
             order_export.save()
             order_export.send_done_signal()
 
@@ -138,36 +134,42 @@ def add(request):
     vendor_users = OrderExportVendor.objects.filter(owner_id=request.user.pk)
 
     return render(request, 'order_exports/add.html', {
-        'form': form, 'page': "order_exports", 'order_status': ORDER_STATUS, 
-        'order_fulfillment_status': ORDER_FULFILLMENT_STATUS, 
-        'order_financial_status': ORDER_FINANCIAL_STATUS, 
-        'order_fields': ORDER_FIELD_CHOICES, 
+        'form': form,
+        'page': "order_exports",
+        'order_status': ORDER_STATUS,
+        'order_fulfillment_status': ORDER_FULFILLMENT_STATUS,
+        'order_financial_status': ORDER_FINANCIAL_STATUS,
+        'order_fields': ORDER_FIELD_CHOICES,
         'order_line_fields': ORDER_LINE_FIELD_CHOICES,
-        'order_shipping_address': ORDER_SHIPPING_ADDRESS_CHOICES, 
-        'selected_fields': fields, 'fields_choices': fields_choices, 
-        'selected_shipping_address': shipping_address, 'shipping_address_choices': shipping_address_choices,
-        'selected_line_fields': line_fields, 'line_fields_choices': line_fields_choices,
-        'breadcrumbs': breadcrumbs, 'vendor_users': vendor_users
+        'order_shipping_address': ORDER_SHIPPING_ADDRESS_CHOICES,
+        'selected_fields': fields,
+        'fields_choices': fields_choices,
+        'selected_shipping_address': shipping_address,
+        'shipping_address_choices': shipping_address_choices,
+        'selected_line_fields': line_fields,
+        'line_fields_choices': line_fields_choices,
+        'breadcrumbs': breadcrumbs,
+        'vendor_users': vendor_users
     })
 
 
 @login_required
 def edit(request, order_export_id):
-    order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-        store__user_id=request.user.id)
+    order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                     store__user_id=request.user.id)
 
     if len(order_export.description) > MAX_BREADCRUMB_TITLE:
         title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
     else:
         title = order_export.description
     breadcrumbs = [
-        {'title': 'Order Exports', 'url': reverse('order_exports_index')}, 
-        {'title': title, 'url': reverse('order_exports_edit', kwargs={'order_export_id': order_export.id})}, 
+        {'title': 'Order Exports', 'url': reverse('order_exports_index')},
+        {'title': title, 'url': reverse('order_exports_edit', kwargs={'order_export_id': order_export.id})},
         'Edit'
     ]
-    
+
     form = OrderExportForm(initial={
-        "previous_day": order_export.previous_day, 
+        "previous_day": order_export.previous_day,
         "copy_me": order_export.copy_me,
         "vendor_user": order_export.vendor_user and order_export.vendor_user.pk or None
     })
@@ -184,22 +186,22 @@ def edit(request, order_export_id):
 
         fields = json.loads(request.POST.get('fields', '[]'))
         fields, fields_choices = fix_fields(
-            fields, 
-            ORDER_FIELD_CHOICES, 
+            fields,
+            ORDER_FIELD_CHOICES,
             prefix='fields_'
         )
 
         shipping_address = json.loads(request.POST.get('shipping_address', '[]'))
         shipping_address, shipping_address_choices = fix_fields(
-            shipping_address, 
-            ORDER_SHIPPING_ADDRESS_CHOICES, 
+            shipping_address,
+            ORDER_SHIPPING_ADDRESS_CHOICES,
             prefix='shipping_address_'
         )
 
         line_fields = json.loads(request.POST.get('line_fields', '[]'))
         line_fields, line_fields_choices = fix_fields(
-            line_fields, 
-            ORDER_LINE_FIELD_CHOICES, 
+            line_fields,
+            ORDER_LINE_FIELD_CHOICES,
             prefix='line_fields_'
         )
 
@@ -208,7 +210,7 @@ def edit(request, order_export_id):
                 email = request.POST.get('vendor_email')
                 username = request.POST.get('vendor_username')
                 user = User.objects.create(email=email, username=username)
-                
+
                 vendor_user = OrderExportVendor(user=user, owner=request.user)
                 vendor_user.generate_password()
                 vendor_user.save()
@@ -256,24 +258,31 @@ def edit(request, order_export_id):
 
     vendor_users = OrderExportVendor.objects.filter(owner=request.user.pk)
 
-    return render(request, 'order_exports/edit.html', {'order_export': order_export, 
-        'form': form, 'page': "order_exports", 'order_status': ORDER_STATUS, 
-        'order_fulfillment_status': ORDER_FULFILLMENT_STATUS, 
-        'order_financial_status': ORDER_FINANCIAL_STATUS, 
-        'order_fields': ORDER_FIELD_CHOICES, 
+    return render(request, 'order_exports/edit.html', {
+        'order_export': order_export,
+        'form': form,
+        'page': "order_exports",
+        'order_status': ORDER_STATUS,
+        'order_fulfillment_status': ORDER_FULFILLMENT_STATUS,
+        'order_financial_status': ORDER_FINANCIAL_STATUS,
+        'order_fields': ORDER_FIELD_CHOICES,
         'order_line_fields': ORDER_LINE_FIELD_CHOICES,
-        'order_shipping_address': ORDER_SHIPPING_ADDRESS_CHOICES, 
-        'selected_fields': fields, 'fields_choices': fields_choices, 
-        'selected_shipping_address': shipping_address, 'shipping_address_choices': shipping_address_choices,
-        'selected_line_fields': line_fields, 'line_fields_choices': line_fields_choices,
-        'breadcrumbs': breadcrumbs, 'vendor_users': vendor_users
+        'order_shipping_address': ORDER_SHIPPING_ADDRESS_CHOICES,
+        'selected_fields': fields,
+        'fields_choices': fields_choices,
+        'selected_shipping_address': shipping_address,
+        'shipping_address_choices': shipping_address_choices,
+        'selected_line_fields': line_fields,
+        'line_fields_choices': line_fields_choices,
+        'breadcrumbs': breadcrumbs,
+        'vendor_users': vendor_users
     })
 
 
 @login_required
 def delete(request, order_export_id):
-    order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-        store__user_id=request.user.id)
+    order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                     store__user_id=request.user.id)
     order_export.delete()
 
     return redirect('order_exports_index')
@@ -281,40 +290,45 @@ def delete(request, order_export_id):
 
 @login_required
 def logs(request, order_export_id):
-    order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-        store__user_id=request.user.id)
+    order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                     store__user_id=request.user.id)
     if len(order_export.description) > MAX_BREADCRUMB_TITLE:
         title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
     else:
         title = order_export.description
     breadcrumbs = [
-        {'title': 'Order Exports', 'url': reverse('order_exports_index')}, 
-        {'title': title, 'url': reverse('order_exports_logs', kwargs={'order_export_id': order_export.id})}, 
+        {'title': 'Order Exports', 'url': reverse('order_exports_index')},
+        {'title': title, 'url': reverse('order_exports_logs', kwargs={'order_export_id': order_export.id})},
         'Logs'
     ]
     logs = order_export.logs.all()
 
-    return render(request, 'order_exports/logs.html', {'logs': logs,
-        'page': "order_exports", 'breadcrumbs': breadcrumbs})
+    return render(request, 'order_exports/logs.html', {
+        'logs': logs,
+        'page': "order_exports",
+        'breadcrumbs': breadcrumbs
+    })
 
 
 @login_required
 def generated(request, order_export_id, code):
     if request.user.is_vendor:
-        order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-            vendor_user__user_id=request.user.id)
+        order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                         vendor_user__user_id=request.user.id)
     else:
-        order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-            store__user_id=request.user.id)
+        order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                         store__user_id=request.user.id)
+
     if len(order_export.description) > MAX_BREADCRUMB_TITLE:
         title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
     else:
         title = order_export.description
+
     breadcrumbs = [
-        {'title': 'Order Exports', 'url': reverse('order_exports_index')}, 
+        {'title': 'Order Exports', 'url': reverse('order_exports_index')},
         {'title': title, 'url': reverse('order_exports_generated', kwargs={
             'order_export_id': order_export.id, 'code': code
-        })}, 
+        })},
         'Generated Page'
     ]
 
@@ -325,15 +339,21 @@ def generated(request, order_export_id, code):
     info = api.get_query_info()
     data = api.get_data(page=page)
 
-    return render(request, 'order_exports/generated.html', {'info': info,
-        'data': data, 'page': "order_exports", 'breadcrumbs': breadcrumbs,
-        'current_page': page, 'order_export_id': order_export_id, 'code': code})
+    return render(request, 'order_exports/generated.html', {
+        'info': info,
+        'data': data,
+        'page': "order_exports",
+        'breadcrumbs': breadcrumbs,
+        'current_page': page,
+        'order_export_id': order_export_id,
+        'code': code
+    })
 
 
 @login_required
 def delete_vendor(request, vendor_id):
-    vendor_user = get_object_or_404(OrderExportVendor, pk=vendor_id, 
-        owner_id=request.user.id)
+    vendor_user = get_object_or_404(OrderExportVendor, pk=vendor_id,
+                                    owner_id=request.user.id)
     vendor_user.user.delete()
     vendor_user.delete()
 
@@ -343,11 +363,11 @@ def delete_vendor(request, vendor_id):
 @login_required
 def fulfill_order(request, order_export_id, code, order_id):
     if request.user.is_vendor:
-        order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-            vendor_user__user_id=request.user.id)
+        order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                         vendor_user__user_id=request.user.id)
     else:
-        order_export = get_object_or_404(OrderExport, pk=order_export_id, 
-            store__user_id=request.user.id)
+        order_export = get_object_or_404(OrderExport, pk=order_export_id,
+                                         store__user_id=request.user.id)
 
     api = ShopifyOrderExportAPI(order_export, code=code)
     tracking_number = request.POST.get('tracking_number')
@@ -355,5 +375,3 @@ def fulfill_order(request, order_export_id, code, order_id):
     success = api.fulfill(order_id, tracking_number, fulfillment_id)
 
     return JsonResponse({'success': success})
-
-

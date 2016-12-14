@@ -7,14 +7,14 @@ from django.core.validators import validate_email, ValidationError
 
 
 class OrderExportForm(forms.Form):
-    receiver = forms.CharField(required=False) # e-mails
+    receiver = forms.CharField(required=False)  # e-mails
 
     vendor = forms.CharField(required=False)
 
     status = forms.CharField(required=False)
     fulfillment_status = forms.CharField(required=False)
     financial_status = forms.CharField(required=False)
-    
+
     daterange = forms.CharField(required=False)
     schedule = forms.TimeField(required=False, input_formats=['%H:%M'])
     previous_day = forms.BooleanField(required=False, initial=True)
@@ -87,4 +87,3 @@ class OrderExportForm(forms.Form):
                 self.add_error('vendor_username', 'Username already exists.')
 
         return vendor_username
-

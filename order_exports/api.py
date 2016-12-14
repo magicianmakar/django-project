@@ -28,7 +28,7 @@ class ShopifyOrderExportAPI():
     def __init__(self, order_export, code=None):
         """Set order_export, store and base url for shopify endpoint URIs"""
         self.order_export = order_export
-        
+
         self.unique_code = code
         if self.unique_code:
             self.query = order_export.queries.get(code=self.unique_code)
@@ -65,7 +65,7 @@ class ShopifyOrderExportAPI():
         # check for response and log if error
         if not response.ok:
             logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
-                    response.url, response.text, response.status_code)
+                         response.url, response.text, response.status_code)
 
             if params is not None:
                 response = requests.get(request_url, params=params)
@@ -83,7 +83,7 @@ class ShopifyOrderExportAPI():
         # check for response and log if error
         if not response.ok:
             logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
-                    response.url, response.text, response.status_code)
+                         response.url, response.text, response.status_code)
 
             response = requests.post(request_url, json=data)
 
@@ -98,7 +98,7 @@ class ShopifyOrderExportAPI():
         # check for response and log if error
         if not response.ok:
             logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
-                    response.url, response.text, response.status_code)
+                         response.url, response.text, response.status_code)
 
             response = requests.put(request_url, json=data)
 
@@ -119,7 +119,7 @@ class ShopifyOrderExportAPI():
             if vendor != '' and item['vendor'] != vendor:
                 continue
             data['fulfillment']['line_items'].append({"id": item['id']})
-        
+
         return data
 
     def _post_fulfillment(self, data, order_id, fulfillment_id):
@@ -180,7 +180,7 @@ class ShopifyOrderExportAPI():
     @property
     def _get_unique_code(self):
         from order_exports.models import OrderExportQuery
-        
+
         if self.unique_code:
             return self.unique_code
 
@@ -207,7 +207,7 @@ class ShopifyOrderExportAPI():
             code=self._get_unique_code,
             count=self._get_orders_count(params)
         )
-        
+
         if self.order_export.previous_day:
             self.send_email(code=self._get_unique_code)
 
@@ -240,7 +240,7 @@ class ShopifyOrderExportAPI():
 
             count = self._get_orders_count(params)
             max_pages = int(ceil(float(count) / 250.0) + 1)
-            
+
             orders = []
             for page in range(1, max_pages):
                 if not self.order_export.previous_day:
@@ -306,7 +306,7 @@ class ShopifyOrderExportAPI():
             line = {'fields': {}, 'shipping_address': {}, 'line_items': []}
             if vendor != '':
                 vendor_found = [l for l in order['line_items'] if l['vendor'] == vendor]
-                if len(vendor_found) == 0: # vendor not found on line items
+                if len(vendor_found) == 0:  # vendor not found on line items
                     continue
 
             line['fields']['id'] = unicode(order['id']).encode("utf-8")
@@ -316,7 +316,7 @@ class ShopifyOrderExportAPI():
                         line['fields']['tracking_number'] = fulfillment.get('tracking_number') or ''
                         line['fields']['fulfillment_id'] = fulfillment['id']
                         break
-                
+
                 if line['fields'].get('tracking_number'):
                     break
 
@@ -334,7 +334,7 @@ class ShopifyOrderExportAPI():
                 for line_item in order['line_items']:
                     if vendor.strip() != '' and slugify(line_item['vendor']) != vendor:
                         continue
-                        
+
                     items = {}
                     for line_field in line_fields:
                         items[line_field[0]] = unicode(line_item[line_field[0]]).encode("utf-8")
@@ -364,7 +364,7 @@ class ShopifyOrderExportAPI():
             for order in orders:
                 if vendor != '':
                     vendor_found = [l for l in order['line_items'] if slugify(l['vendor']) == vendor]
-                    if len(vendor_found) == 0: # vendor not found on line items
+                    if len(vendor_found) == 0:  # vendor not found on line items
                         continue
 
                 line = {}
@@ -416,4 +416,3 @@ class ShopifyOrderExportAPI():
             data,
             nl2br=False
         )
-
