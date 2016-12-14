@@ -1,11 +1,11 @@
 from datetime import timedelta
 
-import factory
-import requests_mock
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
+
+import factory
 from factory import fuzzy
 
 from leadgalaxy.models import ShopifyStore
@@ -15,8 +15,8 @@ from order_exports.models import OrderExport, OrderExportFilter, ORDER_STATUS, \
 
 class UserFactory(factory.django.DjangoModelFactory):
     username = 'TestUser'
-    first_name = factory.fuzzy.FuzzyText()
-    last_name = factory.fuzzy.FuzzyText()
+    first_name = fuzzy.FuzzyText()
+    last_name = fuzzy.FuzzyText()
     is_active = True
 
     class Meta:
@@ -30,7 +30,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
     list_index = 0
     scope = None
     shop = None
-    title = factory.fuzzy.FuzzyText()
+    title = fuzzy.FuzzyText()
     user = factory.SubFactory('order_exports.tests.UserFactory')
     version = 1
 
@@ -39,7 +39,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 
 
 class OrderExportFilterFactory(factory.django.DjangoModelFactory):
-    vendor = factory.fuzzy.FuzzyText()
+    vendor = fuzzy.FuzzyText()
     status = ORDER_STATUS[0][0]
     fulfillment_status = ORDER_FULFILLMENT_STATUS[0][0]
     financial_status = ORDER_FINANCIAL_STATUS[0][0]
@@ -51,8 +51,8 @@ class OrderExportFilterFactory(factory.django.DjangoModelFactory):
 class OrderExportFactory(factory.django.DjangoModelFactory):
     store = factory.SubFactory('order_exports.tests.ShopifyStoreFactory')
     filters = factory.SubFactory('order_exports.tests.OrderExportFilterFactory')
-    description = factory.fuzzy.FuzzyText()
-    schedule = factory.fuzzy.FuzzyDateTime(timezone.now() - timedelta(hours=24),
+    description = fuzzy.FuzzyText()
+    schedule = fuzzy.FuzzyDateTime(timezone.now() - timedelta(hours=24),
                                            timezone.now(),
                                            force_minute=0,
                                            force_second=0)
@@ -65,7 +65,6 @@ class OrderExportFactory(factory.django.DjangoModelFactory):
         model = OrderExport
 
 
-@requests_mock.Mocker()
 class OrderExportTestCase(TestCase):
 
     def setUp(self):
@@ -82,8 +81,7 @@ class OrderExportTestCase(TestCase):
 
         self.client.post(reverse('login'), {'username': self.user.username, 'password': 'pass1'})
 
-    @override_settings(TESTING=True)
-    def test_add_order(self, mock):
+    def test_add_order(self):
         post_data = {
             'store': 1,
             'schedule': '12:00',
@@ -105,8 +103,7 @@ class OrderExportTestCase(TestCase):
         response = self.client.post(reverse('order_exports_add'), data=post_data)
         self.assertEqual(response.status_code, 200)
 
-    @override_settings(TESTING=True)
-    def test_edit_order(self, mock):
+    def test_edit_order(self):
         post_data = {
             'store': 1,
             'schedule': '12:00',
