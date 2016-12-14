@@ -878,16 +878,17 @@ function indexOfImages(images, link) {
 }
 
 function renderImages() {
-    // Pixlr Doesn't redirect to this page
-    pixlr.settings.exit = window.location.origin + '/pixlr/close';
-    pixlr.settings.method = 'POST';
-    pixlr.settings.referrer = 'Shopified App';
-    // setting to false saves the image but doesn't run the redirect script on pixlr.html
-    pixlr.settings.redirect = false;
-
     $('#var-images').empty();
 
-    var downloadUrl = $('#download-images').attr('href');
+    if (config.advanced_photo_editor) {
+        // Pixlr Doesn't redirect to this page
+        pixlr.settings.exit = window.location.origin + '/pixlr/close';
+        pixlr.settings.method = 'POST';
+        pixlr.settings.referrer = 'Shopified App';
+        // setting to false saves the image but doesn't run the redirect script on pixlr.html
+        pixlr.settings.redirect = false;
+    }
+
     $.each(product.images, function (i, el) {
         if (i !== 0 && i % 4 === 0) {
             $('#var-images').append($('<div class="col-xs-12"></div>'));
@@ -910,25 +911,26 @@ function renderImages() {
         });
         d.append(img);
 
-        d.append($('<button data-toggle="tooltip" title="Delete Image" class="btn btn-danger ' +
-            'btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;' +
-            'right: 0px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;' +
-            'border-radius: 5px;font-weight: bolder;">x</button>'));
+        d.append($('<button>', {
+            'title': "Delete",
+            'class': "btn btn-danger btn-xs itooltip image-delete",
+            'text': 'x'
+        }));
 
-        d.append($('<a data-toggle="tooltip" title="Download Image" ' +
-            'class="btn btn-primary btn-xs download-image" ' +
-            'style="display:none;position:absolute;cursor:pointer;right:25px;'+
-            'top:5px;background-color:rgb(165, 255, 225);color:rgb(105, 30, 19);'+
-            'border-radius:5px;font-weight:bolder;" href="'+downloadUrl+'/'+i+'">' +
-            '<i class="fa fa-download"></i></a>'));
+        d.append($('<a>', {
+            'title': "Download",
+            'class': "btn btn-info btn-xs itooltip download-image",
+            'href': el,
+            'download': i + '-' + cleanImageLink(el).split('/').pop(),
+            'html': '<i class="fa fa-download"></i>'
+        }));
 
         if (config.photo_editor) {
-            d.append($('<button data-toggle="tooltip" title="Simple Image Editor" ' +
-                'class="btn btn-primary btn-xs edit-photo" style="display:none;' +
-                'position:absolute;cursor:pointer;right:55px;top:5px;' +
-                'background-color:rgb(226, 255, 228);color: rgb(0, 105, 19);' +
-                'border-radius: 5px;font-weight: bolder;">' +
-                '<i class="fa fa-edit"></i></button>'));
+            d.append($('<button>', {
+                'title': "Simple Editor",
+                'class': "btn btn-primary btn-xs itooltip edit-photo",
+                'html': '<i class="fa fa-edit"></i>'
+            }));
         }
 
         if (config.advanced_photo_editor) {
@@ -950,13 +952,14 @@ function renderImages() {
                 })
             });
 
-            d.append($('<a data-toggle="tooltip" title="Advanced Image Editor" ' +
-                'class="btn btn-warning btn-xs advanced-edit-photo" ' +
-                'style="display:none;position:absolute;cursor:pointer;right:85px;'+
-                'top:5px;background-color:rgb(255, 245, 195);color:rgb(105, 30, 19);'+
-                'border-radius:5px;font-weight:bolder;" target="_blank" '+
-                'href="'+pixlrUrl+'" data-hash="'+hash+'">' +
-                '<i class="fa fa-picture-o"></i></a>'));
+            d.append($('<a>', {
+                'title': "Advanced Editor",
+                'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
+                'target': "_blank",
+                'href': pixlrUrl,
+                'data-hash': hash,
+                'html': '<i class="fa fa-picture-o"></i></a>'
+            }));
         }
 
         d.find('.image-delete').click(imageClicked);
@@ -985,7 +988,10 @@ function renderImages() {
     });
 
     matchImagesWithExtra();
-    $('[data-toggle="tooltip"]').bootstrapTooltip();
+
+    $('#var-images .itooltip').bootstrapTooltip({
+        container: 'body'
+    });
 }
 
 function launchEditor(id, src) {

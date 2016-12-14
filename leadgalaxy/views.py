@@ -2921,7 +2921,7 @@ def products_list(request, tpl='grid'):
 
 
 @login_required
-def product_image_download(request, pid, placement=None):
+def product_image_download(request, pid):
     product = get_object_or_404(ShopifyProduct, id=pid)
     request.user.can_view(product)
 
@@ -2929,36 +2929,25 @@ def product_image_download(request, pid, placement=None):
     if not len(images):
         raise Http404('No images to proccess')
 
-    if placement is not None:
-        import StringIO
+    import tempfile
+    import zipfile
+    import os
 
-        img_url = images[int(placement)]
+    from django.utils.text import slugify
 
-        fp = StringIO.StringIO(requests.get(img_url).content)
-        response = HttpResponse(fp, content_type=utils.get_mimetype(img_url))
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
-            utils.remove_link_query(img_url).split('/')[-1])
-        return response
-    else:
-        import tempfile
-        import zipfile
-        import os
+    filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
 
-        from django.utils.text import slugify
+    with zipfile.ZipFile(filename, 'w') as images_zip:
+        i = 0
+        for img_url in images:
+            image_name = '{}-{}'.format(i, utils.remove_link_query(img_url).split('/')[-1])
+            images_zip.writestr(image_name, requests.get(img_url).content)
+            i += 1
 
-        filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
+    s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(product.title)))
+    url = utils.aws_s3_upload(s3_path, input_filename=filename)
 
-        with zipfile.ZipFile(filename, 'w') as images_zip:
-            i = 0
-            for img_url in images:
-                image_name = '{}-{}'.format(i, utils.remove_link_query(img_url).split('/')[-1])
-                images_zip.writestr(image_name, requests.get(img_url).content)
-                i += 1
-
-        s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(product.title)))
-        url = utils.aws_s3_upload(s3_path, input_filename=filename)
-
-        return JsonResponse({'url': url})
+    return JsonResponse({'url': url})
 
 
 @login_required
