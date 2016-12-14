@@ -35,17 +35,25 @@ class Command(BaseCommand):
         except:
             raven_client.captureException()
 
+    def reset_stores(self, store_ids):
+        for store in store_ids:
+            self.write_success('Reset Store: {}'.format(store))
+            ShopifyOrder.objects.filter(store_id=store).delete()
+            ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0, pending_orders=None)
+            self.write_success('Done')
+
     def start_command(self, *args, **options):
         if options['reset']:
             if options['store_id']:
-                for store in options['store_id']:
-                    self.write_success('Reset Store: {}'.format(store))
-
-                    ShopifyOrder.objects.filter(store_id=store).delete()
-                    ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0, pending_orders=None)
-
-            self.write_success('Done')
+                self.reset_stores(options['store_id'])
             return
+
+        reset_store_ids = ShopifySyncStatus.objects.filter(store__in=options['store_id']) \
+                                                   .filter(sync_type=self.sync_type) \
+                                                   .filter(sync_status__in=[6]) \
+                                                   .values_list('store__id', flat=True)
+        if reset_store_ids:
+            self.reset_stores(reset_store_ids)
 
         if not options['sync_status']:
             options['sync_status'] = [0]

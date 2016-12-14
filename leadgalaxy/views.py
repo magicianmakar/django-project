@@ -43,7 +43,12 @@ import tasks
 import utils
 
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
+from shopify_orders.models import (
+    ShopifyOrder,
+    ShopifyOrderLine,
+    ShopifySyncStatus,
+    ShopifyOrderShippingLine,
+)
 
 from stripe_subscription.utils import (
     process_webhook_event,
@@ -1378,6 +1383,12 @@ def proccess_api(request, user, method, target, data):
                 bool_config.remove(key)
 
             else:
+                # Resets sync statuses if set to True for the first time
+                if key == 'shipping_method_filter':
+                    if key not in config:
+                        stores = request.user.models_user.shopifystore_set.all()
+                        ShopifySyncStatus.objects.filter(sync_type='orders', store__in=stores).update(sync_status=6)
+
                 if key != 'access_token':
                     config[key] = data[key]
 
@@ -4192,6 +4203,14 @@ def orders_view(request):
         messages.warning(
             request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
             '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
+
+    utc = arrow.utcnow()
+    if utc.datetime.hour < 18:
+        next_update = utc.replace(hour=18, minute=0, second=0)
+    else:
+        next_update = utc.replace(days=+1, hour=18, minute=0, second=0)
+
+    messages.info(request, 'Orders will be updated %s' % next_update.humanize())
 
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')

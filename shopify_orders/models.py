@@ -14,6 +14,7 @@ SYNC_STATUS = (
     (3, 'Unauthorized'),
     (4, 'Error'),
     (5, 'Disabled'),
+    (6, 'Reset'),
 )
 
 
