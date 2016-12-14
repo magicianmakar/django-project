@@ -17,6 +17,9 @@ window.OrderExportAdd = {
                 clockpickerInput.clockpicker('done');
             }
         });
+        clockpickerInput.on('change', function(e) {
+            $(this).val($(this).val().replace(/(\d\d):(\d\d)/, '$1:00'));
+        });
 
         $('input[name="daterange"]').daterangepicker();
     },

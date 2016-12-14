@@ -2,7 +2,6 @@
 import csv
 import logging
 import tempfile
-import StringIO
 import os
 import uuid
 import json
@@ -16,7 +15,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.utils import aws_s3_upload, send_email_from_template
+from leadgalaxy.utils import aws_s3_upload, send_email_from_template, order_track_fulfillment
 
 
 # Get an instance of a logger
@@ -105,20 +104,23 @@ class ShopifyOrderExportAPI():
 
         return response
 
-    def _create_fulfillment_params(self, tracking_number, line_items):
-        vendor = self.order_export.filters.vendor
-        items = []
+    def _create_fulfillment_params(self, order_id, tracking_number, line_items):
+        data = order_track_fulfillment(**{
+            'order_id': order_id,
+            'line_id': None,
+            'source_tracking': tracking_number,
+            'user_config': {}
+        })
+
+        # get all items from vendor to send tracking number
+        vendor = slugify(self.order_export.filters.vendor.strip())
+        data['fulfillment']['line_items'] = []
         for item in line_items:
-            if vendor.strip() != '' and item['vendor'] != vendor:
+            if vendor != '' and item['vendor'] != vendor:
                 continue
-            items.append({"id": item['id']})
+            data['fulfillment']['line_items'].append({"id": item['id']})
         
-        return {
-          "fulfillment": {
-            "tracking_number": tracking_number,
-            "line_items": items
-          }
-        }
+        return data
 
     def _post_fulfillment(self, data, order_id, fulfillment_id):
         if fulfillment_id:
@@ -195,7 +197,7 @@ class ShopifyOrderExportAPI():
 
         order = self._get_response_from_url(url, params=params).json()['order']
 
-        fulfillment_params = self._create_fulfillment_params(tracking_number, order['line_items'])
+        fulfillment_params = self._create_fulfillment_params(order_id, tracking_number, order['line_items'])
         return self._post_fulfillment(fulfillment_params, order_id, fulfillment_id)
 
     def generate_query(self):
@@ -344,7 +346,7 @@ class ShopifyOrderExportAPI():
 
     def create_csv(self, orders=[]):
         url = ''
-        vendor = slugify(self.order_export.filters.vendor)
+        vendor = slugify(self.order_export.filters.vendor.strip())
 
         with open(self.file_path, 'wr') as csv_file:
             fields = self.order_export.fields_choices
@@ -360,7 +362,7 @@ class ShopifyOrderExportAPI():
 
             writer.writeheader()
             for order in orders:
-                if vendor.strip() != '':
+                if vendor != '':
                     vendor_found = [l for l in order['line_items'] if slugify(l['vendor']) == vendor]
                     if len(vendor_found) == 0: # vendor not found on line items
                         continue
@@ -381,7 +383,7 @@ class ShopifyOrderExportAPI():
 
                 if len(line_fields) and 'line_items' in order:
                     for line_item in order['line_items']:
-                        if vendor.strip() != '' and slugify(line_item['vendor']) != vendor:
+                        if vendor != '' and slugify(line_item['vendor']) != vendor:
                             continue
 
                         line = {}
@@ -394,10 +396,7 @@ class ShopifyOrderExportAPI():
         return url
 
     def send_to_s3(self):
-        csv_file = open(self.file_path, 'r')
-        fp = StringIO.StringIO(csv_file.read())
-
-        url = aws_s3_upload(self._s3_path, fp=fp)
+        url = aws_s3_upload(self._s3_path, input_filename=self.file_path)
 
         os.remove(self.file_path)
 
