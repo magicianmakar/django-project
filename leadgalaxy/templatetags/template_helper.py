@@ -165,3 +165,12 @@ def render_markdown(text, render_help=True):
         )
 
     return mark_safe(text)
+
+
+@register.filter(name='money_format')
+def money_format(amount, store):
+    if store.currency_format:
+        currency_format = store.currency_format.replace('{{', '{').replace('}}', '}')
+        return currency_format.format(amount=amount)
+
+    return amount
