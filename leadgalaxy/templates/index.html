@@ -531,11 +531,16 @@
                         {% endif %}
 
 
-                        {% if user|can:'clippingmagic.use'|lower and user.is_stripe_customer %}
+                        {% if user|can:'clippingmagic.use' and not user.is_stripe_customer %}
                             <div class="setting-section" style="float: left;width: 98%;">
                                 <h3 class="setting-title">
                                     Clippingmagic API
-                                    <span class="pull-right" style="font-size: 12px"><strong>Note!</strong> You have consumed {{user.clippingmagic.downloaded_images}} credits.</span>
+                                    {% if user.clippingmagic.downloaded_images %}
+                                    <span class="pull-right" style="font-size: 12px">
+                                        <strong>Note:</strong>
+                                        You have consumed {{user.clippingmagic.downloaded_images}} credits
+                                    </span>
+                                    {% endif %}
                                 </h3>
                             </div>
                             <div id="tab-6" class="tab-pane">
