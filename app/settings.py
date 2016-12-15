@@ -304,3 +304,7 @@ PUSHER_SECRET = os.environ.get('PUSHER_SECRET')
 
 # StatusPage
 STATUSPAGE_API_KEY = os.environ.get('STATUSPAGE_API_KEY')
+
+# Clipping Magic
+CLIPPINGMAGIC_API_ID = os.environ.get('CLIPPINGMAGIC_API_ID')
+CLIPPINGMAGIC_API_SECRET = os.environ.get('CLIPPINGMAGIC_API_SECRET')

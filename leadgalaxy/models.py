@@ -1307,6 +1307,25 @@ class AppPermission(models.Model):
         return self.description
 
 
+class ClippingMagic(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.OneToOneField(User, related_name='clippingmagic')
+
+    api_id = models.CharField(max_length=100, default='', verbose_name='ClippingMagic API ID')
+    api_secret = models.CharField(max_length=255, default='', verbose_name='ClippingMagic API Secret')
+
+    allowed_images = models.IntegerField(default=-1)
+    downloaded_images = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return '%s:%s' % (self.api_id, self.api_secret)
+
+
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")

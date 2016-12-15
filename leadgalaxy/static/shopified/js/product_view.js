@@ -940,15 +940,22 @@ function renderImages() {
             'image-id': i,
             'style': 'cursor: default'
         });
+
         d.append(img);
 
-        d.append($('<button>', {
-            'title': "Delete",
-            'class': "btn btn-danger btn-xs itooltip image-delete",
-            'text': 'x'
+        d.append($('<div>', {
+            'class': "loader",
+            'html': '<i class="fa fa-spinner fa-spin fa-2x"></i>'
         }));
 
-        d.append($('<a>', {
+        var buttons = [];
+        buttons.push($('<button>', {
+            'title': "Delete",
+            'class': "btn btn-danger btn-xs itooltip image-delete",
+            'html': '<i class="fa fa-times"></i>'
+        }));
+
+        buttons.push($('<a>', {
             'title': "Download",
             'class': "btn btn-info btn-xs itooltip download-image",
             'href': el,
@@ -956,8 +963,16 @@ function renderImages() {
             'html': '<i class="fa fa-download"></i>'
         }));
 
+        if (config.clipping_magic && config.clipping_magic.clippingmagic_editor) {
+            buttons.push($('<button>', {
+                'title': "Remove Background",
+                'class': "btn btn-warning btn-xs itooltip remove-background-image-editor",
+                'html': '<i class="fa fa-scissors"></i></button>'
+            }));
+        }
+
         if (config.photo_editor) {
-            d.append($('<button>', {
+            buttons.push($('<button>', {
                 'title': "Simple Editor",
                 'class': "btn btn-primary btn-xs itooltip edit-photo",
                 'html': '<i class="fa fa-edit"></i>'
@@ -983,7 +998,7 @@ function renderImages() {
                 })
             });
 
-            d.append($('<a>', {
+            buttons.push($('<a>', {
                 'title': "Advanced Editor",
                 'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
                 'target': "_blank",
@@ -992,6 +1007,12 @@ function renderImages() {
                 'html': '<i class="fa fa-picture-o"></i></a>'
             }));
         }
+
+        $.each(buttons, function (i, el) {
+            d.append(el.css({
+                right: (i * 27) + 'px'
+            }));
+        });
 
         d.find('.image-delete').click(imageClicked);
 
