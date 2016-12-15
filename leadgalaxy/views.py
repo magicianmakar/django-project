@@ -1242,10 +1242,10 @@ def proccess_api(request, user, method, target, data):
         # Auto Order Timeout
         config['ot'] = {
             #  Start Auto fulfill after `t` is elapsed
-            't': profile.get_config().get('_auto_order_timeout', 15000),
+            't': profile.get_config().get('_auto_order_timeout', -1),
 
             #  Debug Auto fulfill timeout
-            'd': 2
+            'd': 0
         }
 
         return JsonResponse(config)
