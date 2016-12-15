@@ -551,13 +551,20 @@
                                                 <div class="form-group">
                                                     <label class="col-sm-3 control-label">ClippingMagic API ID</label>
                                                     <div class="col-sm-6">
-                                                        <input type="text" name="api_id" value="{{ user.clippingmagic.api_id }}" class="form-control api_id" placeholder="ClippingMagic API ID">
+                                                        <input type="text" name="api_id"
+                                                        value="{{ user.clippingmagic.api_id|default:"" }}"
+                                                        class="form-control api_id">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="col-sm-3 control-label">ClippingMagic API Key</label>
-                                                    <div class="col-sm-6">
-                                                        <input type="text" name="api_secret" value="{{ user.clippingmagic.api_secret }}" class="form-control api_key" placeholder="ClippingMagic API Key">
+                                                    <div class="col-sm-6" style="white-space: nowrap;">
+                                                        <input type="password" name="api_secret"
+                                                               value="{{ user.clippingmagic.api_secret|default:"" }}"
+                                                               class="form-control api_key"
+                                                               style="font-size: .8em; display: inline-block; margin-right: 10px;">
+
+                                                        <a class="show-clippingmagic-key-btn" href="#">Show</a>
                                                     </div>
                                                 </div>
                                             </div>
