@@ -693,6 +693,50 @@
 
 {% endverbatim %}
 
+<div id="modal-pick-variant" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Variant Type to Split By</h4>
+          </div>
+            <div class="modal-body">
+              <div class="dropdown m-b-sm">
+                  <button id="pick-variant-btn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" value="">
+                    Select Variant Type<span class="caret" style="margin-left:10px"></span>
+                  </button>
+                  <ul class="dropdown-menu">
+                  {% if shopify_product %}
+                    {% for option in shopify_product.options %}
+                      <li>
+                        <a type="button">{{ option.name }}</a>
+                      </li>
+                    {% endfor %}
+                  {% else %}
+                    {% for v in product.product.variants %}
+                      <li>
+                        <a type="button">{{ v.title }}</a>
+                      </li>
+                    {% endfor %}
+                  {% endif %}
+                  </ul>
+              </div>
+              <div>
+                <p class="m-b-sm">
+                  <strong>Products that will be splitted: </strong>
+                  <span id="split-variants-count">0</span>
+                </p>
+                <p class="font-bold">Variant Values: </p>
+                <p id="split-variants-values"></p>
+              </div>
+              <div class="text-center">
+                <button class="btn btn-success btn-submit full-width" type="button">Split</button>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extracss %}

@@ -1126,9 +1126,10 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-split-variants':
         product = ShopifyProduct.objects.get(id=data.get('product'))
+        split_factor = data.get('split_factor');
         user.can_view(product)
 
-        splitted_products = utils.split_product(product)
+        splitted_products = utils.split_product(product, split_factor)
 
         # if current product is connected, automatically connect splitted products.
         if product.shopify_id:
