@@ -31,6 +31,7 @@ import simplejson as json
 import requests
 import arrow
 import traceback
+import urllib2
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -832,6 +833,63 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'POST' and target == 'edit-image':
+        try:
+            img_url = ""
+            api_url = 'https://clippingmagic.com/api/v1/images'
+            plan = (user.profile.plan.title).replace('plan', '').strip().lower()
+            action = data.get('action', 'edit')
+            image_id = data.get('image_id', 0)
+            api_id = settings.CLIPPINGMAGIC_API_ID
+            api_secret = settings.CLIPPINGMAGIC_API_SECRET
+            api_response = {}
+
+
+            if user.is_stripe_customer():#if user.can('clippingmagic.use') and plan != 'lite' and plan != 'pro' and plan != 'elite' and plan != 'unlimited' and plan != 'basic':
+                api_id = data.get('api_id', 0)
+                api_secret = data.get('api_secret', 0)
+            elif plan != 'pro' and plan != 'elite':
+                JsonResponse({'error': 1, 'image_id': 0, 'api_id': 0, 'secret': 0, 'msg': 'You haven\'t subscribe for this feature.'})
+            else:
+                if user.clippingmagic.downloaded_images >= user.clippingmagic.allowed_images:
+                    JsonResponse({'status': 'KO', 'error': 1, 'image_id': 0, 'api_id': 0, 'secret': 0, 'msg': 'You have 0 credits left. Please re-subscribe for this feature.'})
+
+            if action == 'edit':
+                res = requests.post(api_url, files={'image': urllib2.urlopen(data.get('image_url', '')).read()},
+                              auth=(api_id, api_secret)).json()
+
+                api_response = res.get('image', {'id': 0, 'secret': 0})
+
+            elif action == 'done':
+                img_url = requests.get('%s/%s' % (api_url, image_id), auth=(api_id, api_secret)).url # 21594773
+                if img_url:
+                    # upload = UserUpload(user=request.user.models_user, product=data.get('product_id'), url=img_url)
+                    # upload.save()
+                    user.clippingmagic.downloaded_images = user.clippingmagic.downloaded_images + 1
+                    user.clippingmagic.save()
+
+            if api_response.get('id', 0) or img_url:
+                response = {
+                    'status': 'OK',
+                    'image_id': api_response.get('id', 0),
+                    'image_secret': api_response.get('secret', 0),
+                    'api_id': api_id,
+                    'image_url': img_url,
+                    'msg': 'Operation performed successfully.'
+                }
+            else:
+                error = res.get('error')
+                if error.get('code') == 1001:
+                    response = {'status': 'KO', 'error': 1, 'image_id': 0, 'api_id': 0, 'secret': 0, 'msg': 'Invalid API Id/API Key click <a href="/user/profile#clippingmagic">here</a> to update your API credentials.'}
+                elif error.get('code') == 1008:
+                    response = {'status': 'KO', 'error': 1, 'image_id': 0, 'api_id': 0, 'secret': 0, 'msg': 'Seems your trial is expired please upgrade your account at <a href="http://clippingmagic.com/api" target = "_blank">ClippingMagic</a>'}
+                else:
+                    response = {'status': 'KO', 'error': 1, 'image_id': 0, 'api_id': 0, 'secret': 0, 'msg': 'Something went wrong.'}
+        except Exception as e:
+            response = {'status': 'KO', 'error': 1, 'image_id': 0, 'api_id': 0, 'secret': 0, 'msg': 'Something went wrong.'}
+
+        return JsonResponse(response)
+
     if method == 'POST' and target == 'change-plan':
         if not user.is_superuser:
             raise PermissionDenied()
@@ -1303,6 +1361,12 @@ def proccess_api(request, user, method, target, data):
 
         profile.config = json.dumps(config)
         profile.save()
+
+        # add clipping magic keys
+        form = UserClippingMagicForm(data)
+        if form.is_valid():
+            default = {'api_id': form.cleaned_data['api_id'],'api_secret': form.cleaned_data['api_secret']}
+            ClippingMagic.objects.update_or_create(user=user,defaults=default)
 
         return JsonResponse({'status': 'ok'})
 
@@ -1868,6 +1932,14 @@ def proccess_api(request, user, method, target, data):
             })
         else:
             return JsonResponse({'error': form.errors})
+
+    if method == 'POST' and target == 'user-clippingmagic':
+        form = UserClippingMagicForm(data)
+        if form.is_valid():
+            default = {'api_id': form.cleaned_data['api_id'],'api_secret': form.cleaned_data['api_secret']}
+            ClippingMagic.objects.update_or_create(user=user,defaults=default)
+
+            return JsonResponse({'status': 'ok', 'reload': True})
 
     if method == 'GET' and target == 'shipping-aliexpress':
         aliexpress_id = data.get('id')
@@ -3976,6 +4048,16 @@ def save_image_s3(request):
         img_url = image.name
 
         fp = image
+
+    elif 'clippingmagic' in request.POST:
+        if not request.user.can('clippingmagic.use'):
+            return render(request, 'upgrade.html')
+
+        product_id = request.POST.get('product')
+        img_url = request.POST.get('url')
+        fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
+        img_url = '%s.png' % img_url
+
     else:
         # Aviary
         if not request.user.can('aviary_photo_editor.use'):

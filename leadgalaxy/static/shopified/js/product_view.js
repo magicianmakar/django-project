@@ -917,6 +917,11 @@ function renderImages() {
             'text': 'x'
         }));
 
+	d.append($('<div>', {
+	    'class': "loader"
+	    'html': '<span class="fa fa-spinner fa-spin"> </span>'
+	}));
+
         d.append($('<a>', {
             'title': "Download",
             'class': "btn btn-info btn-xs itooltip download-image",
@@ -924,6 +929,14 @@ function renderImages() {
             'download': i + '-' + cleanImageLink(el).split('/').pop(),
             'html': '<i class="fa fa-download"></i>'
         }));
+
+        if ( config.clipping_magic.clippingmagic_editor)
+            d.append($('<button data-toggle="tooltip" title="Remove Background Image Editor" ' +
+                'class="btn btn-warning btn-xs remove-background-image-editor" ' +
+                'style="display:none;position:absolute;cursor:pointer;right:110px;'+
+                'top:5px;background-color:#fff;color:rgb(105, 30, 19);'+
+                'border-radius:5px;font-weight:bolder;">' +
+                '<i class="fa fa-scissors"></i></button>'));
 
         if (config.photo_editor) {
             d.append($('<button>', {
