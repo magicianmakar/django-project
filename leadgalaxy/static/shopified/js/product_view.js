@@ -366,21 +366,49 @@ $('#export-btn').click(function () {
     });
 });
 
+$('#modal-pick-variant').on('show.bs.modal', function(e) {
+    $('#pick-variant-btn').html('Select Variant Type<span class="caret" style="margin-left:10px"></span>');
+    $('#pick-variant-btn').val('');
+    $('#split-variants-count').text('0');
+    $('#split-variants-values').text('');
+});
+
+$('#modal-pick-variant .dropdown-menu li a').click(function(e) {
+    var val = $(this).text();
+    $('#pick-variant-btn').html($(this).text() + '<span class="caret" style="margin-left:10px"></span>');
+    $('#pick-variant-btn').val(val);
+    if (config.shopify_options === null) {
+        var targetVariants = product.variants.filter(function(v) { return v.title === val; });
+        if (targetVariants.length > 0) {
+            $('#split-variants-count').text(targetVariants[0].values.length);
+            $('#split-variants-values').text(targetVariants[0].values.join(', '));
+        }
+    } else {
+        var targetVariants = config.shopify_options.filter(function(o) { return o.name === val; });
+        if (targetVariants.length > 0) {
+            $('#split-variants-count').text(targetVariants[0].values.length);
+            $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
+        }
+    }
+});
+
 $('#btn-split-variants').click(function (e) {
     e.preventDefault();
+    $('#modal-pick-variant').modal('show');
+});
 
-    if ($('#export-btn').attr('target') === 'shopify' && ($('#variants .variant #product-variant-values').length === 0 ||
-        $('#variants .variant #product-variant-values').val().split(',').length <= 1)) {
+$('#modal-pick-variant .btn-submit').click(function(e) {
+    var split_factor = $('#pick-variant-btn').val();
+    if (!split_factor) {
+        swal('Please specify a variant type for split.');
+        return;
+    }
+    if ($('#split-variants-count') === '0') {
         swal('There should be more than one variant to split it.');
         return;
     }
 
-    if ($('#export-btn').attr('target') === 'shopify-update' && $('#shopify-variants tr.shopify-variant').length <= 1) {
-        swal('There should be more than one variant to split it.');
-        return;
-    }
-
-    var product_id = $(this).attr('product-id');
+    var product_id = config.product_id;
 
     $(this).bootstrapBtn('loading');
 
@@ -388,7 +416,8 @@ $('#btn-split-variants').click(function (e) {
         url: '/api/product-split-variants',
         type: 'POST',
         data: {
-            product: product_id
+            product: product_id,
+            split_factor: split_factor,
         },
         context: {btn: $(this)},
         success: function (data) {
@@ -411,6 +440,8 @@ $('#btn-split-variants').click(function (e) {
             displayAjaxError('Split variants into separate products', data);
         }
     });
+
+    $('#modal-pick-variant').modal('hide');
 });
 
 $('#save-for-later-btn').click(function (e) {
@@ -900,7 +931,7 @@ function renderImages() {
         });
 
         var imageId = 'product-image-' + i;
-        
+
         var img = $('<img>', {
             src: el,
             'id': imageId,
