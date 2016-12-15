@@ -260,6 +260,9 @@ def proccess_api(request, user, method, target, data):
             if not store.title:
                 store.title = info['name']
 
+            if not store.currency_format:
+                store.currency_format = info['money_in_emails_format']
+
             ok, permissions = utils.verify_shopify_permissions(store)
             if not ok:
                 return JsonResponse({
