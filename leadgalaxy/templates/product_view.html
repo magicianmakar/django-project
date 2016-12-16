@@ -820,7 +820,7 @@ var config = {
     product_notes: '{{product.notes|default:''|escapejs}}',
 
     clipping_magic: {
-        stripe_customer: '{{ user.is_stripe_customer|lower}}',
+        stripe_customer: {{ user.is_stripe_customer|lower}},
         api_id: '{{user.clippingmagic.api_id|default:""}}',
         api_secret: '{{user.clippingmagic.api_secret|default:""}}',
         clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},

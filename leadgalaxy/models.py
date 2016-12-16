@@ -451,7 +451,7 @@ def user_get_boards(self):
 @add_to_class(User, 'is_stripe_customer')
 def user_stripe_customer(self):
     try:
-        return self.stripe_customer and self.stripe_customer.customer_id
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
     except:
         return False
 
