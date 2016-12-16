@@ -1382,15 +1382,19 @@ def proccess_api(request, user, method, target, data):
                 config[key] = bool(data.get(key))
                 bool_config.remove(key)
 
-            else:
-                # Resets sync statuses if set to True for the first time
-                if key == 'shipping_method_filter':
-                    if key not in config:
-                        stores = request.user.models_user.shopifystore_set.all()
-                        ShopifySyncStatus.objects.filter(sync_type='orders', store__in=stores).update(sync_status=6)
+            elif key == 'shipping_method_filter':
+                # Resets the store sync status the first time the filter is added to config
+                if key not in config:
+                    bool_config.append(key)
+                    stores = request.user.models_user.shopifystore_set.all()
+                    ShopifySyncStatus.objects.filter(sync_type='orders', store__in=stores).update(sync_status=6)
 
+            else:
                 if key != 'access_token':
                     config[key] = data[key]
+
+        if 'shipping_method_filter' in config:
+            bool_config.append('shipping_method_filter')
 
         for key in bool_config:
             config[key] = (key in data)

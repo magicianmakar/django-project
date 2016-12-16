@@ -48,15 +48,8 @@ class Command(BaseCommand):
                 self.reset_stores(options['store_id'])
             return
 
-        reset_store_ids = ShopifySyncStatus.objects.filter(store__in=options['store_id']) \
-                                                   .filter(sync_type=self.sync_type) \
-                                                   .filter(sync_status__in=[6]) \
-                                                   .values_list('store__id', flat=True)
-        if reset_store_ids:
-            self.reset_stores(reset_store_ids)
-
         if not options['sync_status']:
-            options['sync_status'] = [0]
+            options['sync_status'] = [0, 6]
 
         while True:
             try:
@@ -74,6 +67,9 @@ class Command(BaseCommand):
 
             except ShopifySyncStatus.DoesNotExist:
                 break
+
+            if order_sync.sync_status == 6:
+                self.reset_stores([order_sync.store.pk])
 
             order_sync.sync_status = 1
             order_sync.save()
@@ -179,8 +175,10 @@ class Command(BaseCommand):
                     for line in self.prepare_lines(order, saved_order):
                         lines.append(line)
 
-                    for shipping_line in self.prepare_shipping_lines(order, saved_order):
-                        shipping_lines.append(shipping_line)
+                    user_config = store.user.profile.get_config()
+                    if 'shipping_method_filter' in user_config:
+                        for shipping_line in self.prepare_shipping_lines(order, saved_order):
+                            shipping_lines.append(shipping_line)
                 else:
                     self.stdout.write('Line Already Imported of order #{}'.format(order['id']), self.style.WARNING)
 
