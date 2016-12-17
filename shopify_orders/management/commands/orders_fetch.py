@@ -96,6 +96,8 @@ class Command(BaseCommand):
         limit = 240
         count = store.get_orders_count(status='any', fulfillment='any', financial='any')
 
+        shipping_method_filter = store.user.get_config('shipping_method_filter')
+
         self.write_success(u'Import {} Order for: {}'.format(count, store.title))
         if not count:
             return
@@ -165,9 +167,10 @@ class Command(BaseCommand):
 
             self.load_saved_orders(store)
 
-            #bulk import order lines
+            # Bulk import order lines
             lines = []
             shipping_lines = []
+
             for order in rep['orders']:
                 if order['id'] not in already_imported:
                     saved_order = self.get_saved_order(store, order['id'])
@@ -175,8 +178,7 @@ class Command(BaseCommand):
                     for line in self.prepare_lines(order, saved_order):
                         lines.append(line)
 
-                    user_config = store.user.profile.get_config()
-                    if 'shipping_method_filter' in user_config:
+                    if shipping_method_filter:
                         for shipping_line in self.prepare_shipping_lines(order, saved_order):
                             shipping_lines.append(shipping_line)
                 else:
@@ -189,8 +191,6 @@ class Command(BaseCommand):
 
             if len(shipping_lines):
                 ShopifyOrderShippingLine.objects.bulk_create(shipping_lines)
-            else:
-                self.stdout.write('Empty Order Shipping Lines', self.style.WARNING)
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
 

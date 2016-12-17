@@ -1383,18 +1383,20 @@ def proccess_api(request, user, method, target, data):
                 bool_config.remove(key)
 
             elif key == 'shipping_method_filter':
+                config[key] = True
+
                 # Resets the store sync status the first time the filter is added to config
-                if key not in config:
-                    bool_config.append(key)
-                    stores = request.user.models_user.shopifystore_set.all()
-                    ShopifySyncStatus.objects.filter(sync_type='orders', store__in=stores).update(sync_status=6)
+                for store in user.models_user.shopifystore_set.all():
+                    try:
+                        if shopify_orders_utils.is_store_synced(store):  # Only reset if store is already imported
+                            ShopifySyncStatus.objects.filter(sync_type='orders', store=store) \
+                                                     .update(sync_status=6)
+                    except ShopifySyncStatus.DoesNotExist:
+                        pass
 
             else:
                 if key != 'access_token':
                     config[key] = data[key]
-
-        if 'shipping_method_filter' in config:
-            bool_config.append('shipping_method_filter')
 
         for key in bool_config:
             config[key] = (key in data)
@@ -4208,14 +4210,6 @@ def orders_view(request):
             request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
             '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
 
-    utc = arrow.utcnow()
-    if utc.datetime.hour < 18:
-        next_update = utc.replace(hour=18, minute=0, second=0)
-    else:
-        next_update = utc.replace(days=+1, hour=18, minute=0, second=0)
-
-    messages.info(request, 'Orders will be updated %s' % next_update.humanize())
-
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
@@ -4264,6 +4258,9 @@ def orders_view(request):
         current_page = paginator.page(page)
         page = current_page
     else:
+        if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
+            messages.info(request, 'Your Store Orders are being imported')
+
         orders = ShopifyOrder.objects.filter(user=request.user.models_user, store=store)
 
         if query_order:
@@ -4628,6 +4625,7 @@ def orders_view(request):
         'product_filter': product_filter,
         'supplier_filter': supplier_filter,
         'shipping_method_filter': shipping_method_filter,
+        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter'),
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
