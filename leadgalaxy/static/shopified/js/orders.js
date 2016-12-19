@@ -762,6 +762,15 @@ $(function () {
         }
     });
 
+    $('#shipping_method_name').autocomplete({
+        serviceUrl: '/autocomplete/shipping-method-name?' + $.param({store: $('#shipping_method_name').data('store')}),
+        minChars: 1,
+        deferRequestBy: 1000,
+        onSelect: function(suggestion) {
+            $('#shipping_method_name').val(suggestion.value);
+        }
+    });
+
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);

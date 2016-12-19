@@ -7,7 +7,7 @@ import time
 import math
 import requests
 
-from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max
 from leadgalaxy.utils import get_shopify_order
 
@@ -35,20 +35,21 @@ class Command(BaseCommand):
         except:
             raven_client.captureException()
 
+    def reset_stores(self, store_ids):
+        for store in store_ids:
+            self.write_success('Reset Store: {}'.format(store))
+            ShopifyOrder.objects.filter(store_id=store).delete()
+            ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0, pending_orders=None)
+            self.write_success('Done')
+
     def start_command(self, *args, **options):
         if options['reset']:
             if options['store_id']:
-                for store in options['store_id']:
-                    self.write_success('Reset Store: {}'.format(store))
-
-                    ShopifyOrder.objects.filter(store_id=store).delete()
-                    ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0, pending_orders=None)
-
-            self.write_success('Done')
+                self.reset_stores(options['store_id'])
             return
 
         if not options['sync_status']:
-            options['sync_status'] = [0]
+            options['sync_status'] = [0, 6]
 
         while True:
             try:
@@ -66,6 +67,9 @@ class Command(BaseCommand):
 
             except ShopifySyncStatus.DoesNotExist:
                 break
+
+            if order_sync.sync_status == 6:
+                self.reset_stores([order_sync.store.pk])
 
             order_sync.sync_status = 1
             order_sync.save()
@@ -91,6 +95,8 @@ class Command(BaseCommand):
     def fetch_orders(self, store):
         limit = 240
         count = store.get_orders_count(status='any', fulfillment='any', financial='any')
+
+        shipping_method_filter = store.user.get_config('shipping_method_filter')
 
         self.write_success(u'Import {} Order for: {}'.format(count, store.title))
         if not count:
@@ -161,14 +167,20 @@ class Command(BaseCommand):
 
             self.load_saved_orders(store)
 
-            #bulk import order lines
+            # Bulk import order lines
             lines = []
+            shipping_lines = []
+
             for order in rep['orders']:
                 if order['id'] not in already_imported:
                     saved_order = self.get_saved_order(store, order['id'])
 
                     for line in self.prepare_lines(order, saved_order):
                         lines.append(line)
+
+                    if shipping_method_filter:
+                        for shipping_line in self.prepare_shipping_lines(order, saved_order):
+                            shipping_lines.append(shipping_line)
                 else:
                     self.stdout.write('Line Already Imported of order #{}'.format(order['id']), self.style.WARNING)
 
@@ -176,6 +188,9 @@ class Command(BaseCommand):
                 ShopifyOrderLine.objects.bulk_create(lines)
             else:
                 self.stdout.write('Empty Order Lines', self.style.WARNING)
+
+            if len(shipping_lines):
+                ShopifyOrderShippingLine.objects.bulk_create(shipping_lines)
 
         self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
 
@@ -257,6 +272,24 @@ class Command(BaseCommand):
                 fulfillment_status=line['fulfillment_status'],
                 product_id=self.products_map.get(safeInt(line['product_id'])),
                 track_id=self.tracking_map.get(safeInt(line['id']))
+            ))
+
+        return lines
+
+    def prepare_shipping_lines(self, data, order):
+        lines = []
+        for shipping_line in data.get('shipping_lines'):
+            lines.append(ShopifyOrderShippingLine(
+                store=order.store,
+                order=order,
+                shipping_line_id=shipping_line['id'],
+                price=shipping_line['price'],
+                title=shipping_line['title'],
+                code=shipping_line['code'],
+                source=shipping_line['source'],
+                phone=shipping_line['phone'],
+                carrier_identifier=shipping_line['carrier_identifier'],
+                requested_fulfillment_service_id=shipping_line['requested_fulfillment_service_id']
             ))
 
         return lines

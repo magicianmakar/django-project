@@ -415,6 +415,26 @@
                             </div>
                         </div>
 
+                        {% if not config.shipping_method_filter %}
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="shipping_method_filter" class="col-sm-4 col-xs-8 control-label">
+                                        Shipment Method Filter {{config.shipping_method_filter}}
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input
+                                            id="shipping_method_filter"
+                                            name="shipping_method_filter"
+                                            type="checkbox"
+                                            class="js-switch" {% if config.shipping_method_filter %}checked{% endif %}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {% endwith %}
                         {% endif %}
 
@@ -522,14 +542,13 @@
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox"
-                                               class="js-switch all-variants-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
+                                               class="js-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {% endif %}
-
 
                         {% if user|can:'clippingmagic.use' and not user.is_stripe_customer %}
                             <div class="setting-section" style="float: left;width: 98%;">
