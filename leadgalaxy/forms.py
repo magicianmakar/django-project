@@ -108,6 +108,11 @@ class UserProfileForm(forms.Form):
     invoice_to_company = forms.BooleanField(required=False)
 
 
+class UserClippingMagicForm(forms.Form):
+    api_id = forms.CharField(max_length=100, required=False)
+    api_secret = forms.CharField(max_length=255, required=False)
+
+
 class UserProfileEmailForm(forms.Form):
     password = forms.CharField(label='Current Password')
     email = forms.EmailField(max_length=254)

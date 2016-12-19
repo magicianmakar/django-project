@@ -647,45 +647,45 @@ def duplicate_product(product, store=None):
     return product
 
 
-def split_product(product, store=None):
+def split_product(product, split_factor, store=None):
     data = json.loads(product.data)
     new_products = []
 
     if data['variants'] and len(data['variants']):
-        active_variant = data['variants'][0]
-        for idx, v in enumerate(active_variant['values']):
-            clone = ShopifyProduct.objects.get(id=product.id)
-            clone.pk = None
-            clone.parent_product = product
-            clone.shopify_id = 0
-            new_data = json.loads(clone.data)
-            new_data['images'] = data['images'][idx:idx + 1]
-            if not new_data['images']:
-                new_data['images'] = [data['images'][0]]
-            new_data['variants'] = [{'title': active_variant['title'], 'values': [v]}]
-            if new_data['variants_sku'] and v in new_data['variants_sku']:
-                new_data['variants_sku'] = { v: new_data['variants_sku'][v] }
-            else:
-                new_data['variants_sku'] = {}
-            new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
-            new_data['price_notification_id'] = 0
-            clone.data = json.dumps(new_data)
+        active_variant = None
+        filtered = [v for v in data['variants'] if v['title'] == split_factor]
+        if len(filtered) > 0:
+            active_variant = filtered[0];
+        if active_variant:
+            for idx, v in enumerate(active_variant['values']):
+                clone = ShopifyProduct.objects.get(id=product.id)
+                clone.pk = None
+                clone.parent_product = product
+                clone.shopify_id = 0
+                new_data = json.loads(clone.data)
+                # new_data['images'] = data['images'][idx:idx + 1]
+                # if not new_data['images']:
+                #     new_data['images'] = [data['images'][0]]
+                new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
+                new_data['variants'].append({'title': split_factor, 'values': [v]})
+                new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
+                clone.data = json.dumps(new_data)
 
-            if store is not None:
-                clone.store = store
+                if store is not None:
+                    clone.store = store
 
-            clone.save()
+                clone.save()
 
-            for i in product.productsupplier_set.all():
-                i.pk = None
-                i.product = clone
-                i.store = clone.store
-                i.save()
+                for i in product.productsupplier_set.all():
+                    i.pk = None
+                    i.product = clone
+                    i.store = clone.store
+                    i.save()
 
-                if i.is_default:
-                    clone.set_default_supplier(i, commit=True)
+                    if i.is_default:
+                        clone.set_default_supplier(i, commit=True)
 
-            new_products.append(clone)
+                new_products.append(clone)
 
     return new_products
 

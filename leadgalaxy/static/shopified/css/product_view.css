@@ -1,0 +1,140 @@
+.buttons {
+    margin-top: 20px;
+    margin-bottom: 25px;
+}
+
+.buttons .export, .buttons .view{
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.buttons .export {
+    border: 1px solid #A0E7A3;
+    background-color: rgb(213, 255, 213);
+}
+
+.buttons .view {
+    border: 1px solid #A0C9E7;
+    background-color: rgb(213, 255, 253);
+}
+
+
+.var-image, .add-var-image {
+    border: 1px solid #ccc;
+    padding: 5px;
+    width: 100px;
+    cursor: pointer;
+}
+
+.var-image:hover, .add-var-image:hover {
+    border: 1px solid #000;
+}
+
+.var-image-disabled {
+    opacity: 0.3;
+}
+
+.var-image-block, .add-var-image-block {
+    margin-top: 15px;
+}
+
+.var-image-block .image-delete {
+    background-color: rgb(247, 203, 203);
+    border-radius: 5px;
+    color: #B51B18;
+    cursor: pointer;
+    display: none;
+    font-weight: bolder;
+    position: absolute;
+    top: 5px;
+}
+
+.var-image-block .download-image {
+    border-radius: 5px;
+    cursor: pointer;
+    display: none;
+    font-weight: bolder;
+    position: absolute;
+    top: 5px;
+}
+
+.var-image-block .edit-photo {
+    background-color:rgb(226, 255, 228);
+    border-radius: 5px;
+    color: rgb(0, 105, 19);
+    cursor:pointer;
+    display:none;
+    font-weight: bolder;
+    position:absolute;
+    top:5px;
+}
+
+.var-image-block .advanced-edit-photo {
+    background-color: rgb(255, 245, 195);
+    border-radius: 5px;
+    color: rgb(105, 30, 19);
+    cursor: pointer;
+    display: none;
+    font-weight: bolder;
+    position: absolute;
+    top: 5px;
+}
+
+.var-image-block .remove-background-image-editor {
+    background-color:#fff;
+    border-radius:5px;
+    color:rgb(105, 30, 19);
+    cursor:pointer;
+    display:none;
+    font-weight:bolder;
+    position:absolute;
+    top:5px;
+}
+
+.var-image-block .loader {
+    position: absolute;
+    top: 0;
+    display: none;
+    bottom: 0;
+    right: 50px;
+    background-color: #636363;
+    opacity: 0.8;
+    width: 100px;
+}
+
+.var-image-block .loader i {
+    position: absolute;
+    top: 40%;
+    color: #fff;
+    left: 36px;
+}
+
+.var-input {
+    margin: 0px;
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-right: 0 none;
+    width:70px;
+}
+
+.var-input-title {
+    border-right: 1px solid #ddd;
+    width:100%;
+}
+
+.var-pad {
+    border: 1px solid #ddd;
+    padding: 10px 5px;
+    border-left: 0 none;
+    margin-left: -5px;
+}
+
+.table.no-border th, .table.no-border td {
+     border-top: none !important;
+ }
+
+ .shopify-variant td {
+    vertical-align: middle !important;
+ }

@@ -366,21 +366,49 @@ $('#export-btn').click(function () {
     });
 });
 
+$('#modal-pick-variant').on('show.bs.modal', function(e) {
+    $('#pick-variant-btn').html('Select Variant Type<span class="caret" style="margin-left:10px"></span>');
+    $('#pick-variant-btn').val('');
+    $('#split-variants-count').text('0');
+    $('#split-variants-values').text('');
+});
+
+$('#modal-pick-variant .dropdown-menu li a').click(function(e) {
+    var val = $(this).text();
+    $('#pick-variant-btn').html($(this).text() + '<span class="caret" style="margin-left:10px"></span>');
+    $('#pick-variant-btn').val(val);
+    if (config.shopify_options === null) {
+        var targetVariants = product.variants.filter(function(v) { return v.title === val; });
+        if (targetVariants.length > 0) {
+            $('#split-variants-count').text(targetVariants[0].values.length);
+            $('#split-variants-values').text(targetVariants[0].values.join(', '));
+        }
+    } else {
+        var targetVariants = config.shopify_options.filter(function(o) { return o.name === val; });
+        if (targetVariants.length > 0) {
+            $('#split-variants-count').text(targetVariants[0].values.length);
+            $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
+        }
+    }
+});
+
 $('#btn-split-variants').click(function (e) {
     e.preventDefault();
+    $('#modal-pick-variant').modal('show');
+});
 
-    if ($('#export-btn').attr('target') === 'shopify' && ($('#variants .variant #product-variant-values').length === 0 ||
-        $('#variants .variant #product-variant-values').val().split(',').length <= 1)) {
+$('#modal-pick-variant .btn-submit').click(function(e) {
+    var split_factor = $('#pick-variant-btn').val();
+    if (!split_factor) {
+        swal('Please specify a variant type for split.');
+        return;
+    }
+    if ($('#split-variants-count') === '0') {
         swal('There should be more than one variant to split it.');
         return;
     }
 
-    if ($('#export-btn').attr('target') === 'shopify-update' && $('#shopify-variants tr.shopify-variant').length <= 1) {
-        swal('There should be more than one variant to split it.');
-        return;
-    }
-
-    var product_id = $(this).attr('product-id');
+    var product_id = config.product_id;
 
     $(this).bootstrapBtn('loading');
 
@@ -388,7 +416,8 @@ $('#btn-split-variants').click(function (e) {
         url: '/api/product-split-variants',
         type: 'POST',
         data: {
-            product: product_id
+            product: product_id,
+            split_factor: split_factor,
         },
         context: {btn: $(this)},
         success: function (data) {
@@ -411,6 +440,8 @@ $('#btn-split-variants').click(function (e) {
             displayAjaxError('Split variants into separate products', data);
         }
     });
+
+    $('#modal-pick-variant').modal('hide');
 });
 
 $('#save-for-later-btn').click(function (e) {
@@ -906,16 +937,17 @@ function indexOfImages(images, link) {
 }
 
 function renderImages() {
-    // Pixlr Doesn't redirect to this page
-    pixlr.settings.exit = window.location.origin + '/pixlr/close';
-    pixlr.settings.method = 'POST';
-    pixlr.settings.referrer = 'Shopified App';
-    // setting to false saves the image but doesn't run the redirect script on pixlr.html
-    pixlr.settings.redirect = false;
-
     $('#var-images').empty();
 
-    var downloadUrl = $('#download-images').attr('href');
+    if (config.advanced_photo_editor) {
+        // Pixlr Doesn't redirect to this page
+        pixlr.settings.exit = window.location.origin + '/pixlr/close';
+        pixlr.settings.method = 'POST';
+        pixlr.settings.referrer = 'Shopified App';
+        // setting to false saves the image but doesn't run the redirect script on pixlr.html
+        pixlr.settings.redirect = false;
+    }
+
     $.each(product.images, function (i, el) {
         if (i !== 0 && i % 4 === 0) {
             $('#var-images').append($('<div class="col-xs-12"></div>'));
@@ -927,7 +959,7 @@ function renderImages() {
         });
 
         var imageId = 'product-image-' + i;
-        
+
         var img = $('<img>', {
             src: el,
             'id': imageId,
@@ -936,27 +968,43 @@ function renderImages() {
             'image-id': i,
             'style': 'cursor: default'
         });
+
         d.append(img);
 
-        d.append($('<button data-toggle="tooltip" title="Delete Image" class="btn btn-danger ' +
-            'btn-xs image-delete" style="display:none;position: absolute;cursor: pointer;' +
-            'right: 0px;top: 5px;background-color: rgb(247, 203, 203);color: #B51B18;' +
-            'border-radius: 5px;font-weight: bolder;">x</button>'));
+        d.append($('<div>', {
+            'class': "loader",
+            'html': '<i class="fa fa-spinner fa-spin fa-2x"></i>'
+        }));
 
-        d.append($('<a data-toggle="tooltip" title="Download Image" ' +
-            'class="btn btn-primary btn-xs download-image" ' +
-            'style="display:none;position:absolute;cursor:pointer;right:25px;'+
-            'top:5px;background-color:rgb(165, 255, 225);color:rgb(105, 30, 19);'+
-            'border-radius:5px;font-weight:bolder;" href="'+downloadUrl+'/'+i+'">' +
-            '<i class="fa fa-download"></i></a>'));
+        var buttons = [];
+        buttons.push($('<button>', {
+            'title': "Delete",
+            'class': "btn btn-danger btn-xs itooltip image-delete",
+            'html': '<i class="fa fa-times"></i>'
+        }));
+
+        buttons.push($('<a>', {
+            'title': "Download",
+            'class': "btn btn-info btn-xs itooltip download-image",
+            'href': el,
+            'download': i + '-' + cleanImageLink(el).split('/').pop(),
+            'html': '<i class="fa fa-download"></i>'
+        }));
+
+        if (config.clipping_magic && config.clipping_magic.clippingmagic_editor) {
+            buttons.push($('<button>', {
+                'title': "Remove Background",
+                'class': "btn btn-warning btn-xs itooltip remove-background-image-editor",
+                'html': '<i class="fa fa-scissors"></i></button>'
+            }));
+        }
 
         if (config.photo_editor) {
-            d.append($('<button data-toggle="tooltip" title="Simple Image Editor" ' +
-                'class="btn btn-primary btn-xs edit-photo" style="display:none;' +
-                'position:absolute;cursor:pointer;right:55px;top:5px;' +
-                'background-color:rgb(226, 255, 228);color: rgb(0, 105, 19);' +
-                'border-radius: 5px;font-weight: bolder;">' +
-                '<i class="fa fa-edit"></i></button>'));
+            buttons.push($('<button>', {
+                'title': "Simple Editor",
+                'class': "btn btn-primary btn-xs itooltip edit-photo",
+                'html': '<i class="fa fa-edit"></i>'
+            }));
         }
 
         if (config.advanced_photo_editor) {
@@ -978,14 +1026,21 @@ function renderImages() {
                 })
             });
 
-            d.append($('<a data-toggle="tooltip" title="Advanced Image Editor" ' +
-                'class="btn btn-warning btn-xs advanced-edit-photo" ' +
-                'style="display:none;position:absolute;cursor:pointer;right:85px;'+
-                'top:5px;background-color:rgb(255, 245, 195);color:rgb(105, 30, 19);'+
-                'border-radius:5px;font-weight:bolder;" target="_blank" '+
-                'href="'+pixlrUrl+'" data-hash="'+hash+'">' +
-                '<i class="fa fa-picture-o"></i></a>'));
+            buttons.push($('<a>', {
+                'title': "Advanced Editor",
+                'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
+                'target': "_blank",
+                'href': pixlrUrl,
+                'data-hash': hash,
+                'html': '<i class="fa fa-picture-o"></i></a>'
+            }));
         }
+
+        $.each(buttons, function (i, el) {
+            d.append(el.css({
+                right: (i * 27) + 'px'
+            }));
+        });
 
         d.find('.image-delete').click(imageClicked);
 
@@ -1013,7 +1068,10 @@ function renderImages() {
     });
 
     matchImagesWithExtra();
-    $('[data-toggle="tooltip"]').bootstrapTooltip();
+
+    $('#var-images .itooltip').bootstrapTooltip({
+        container: 'body'
+    });
 }
 
 function launchEditor(id, src) {

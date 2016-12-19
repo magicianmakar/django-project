@@ -451,7 +451,7 @@ def user_get_boards(self):
 @add_to_class(User, 'is_stripe_customer')
 def user_stripe_customer(self):
     try:
-        return self.stripe_customer and self.stripe_customer.customer_id
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
     except:
         return False
 
@@ -1311,6 +1311,25 @@ class AppPermission(models.Model):
 
     def __unicode__(self):
         return self.description
+
+
+class ClippingMagic(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.OneToOneField(User, related_name='clippingmagic')
+
+    api_id = models.CharField(max_length=100, default='', verbose_name='ClippingMagic API ID')
+    api_secret = models.CharField(max_length=255, default='', verbose_name='ClippingMagic API Secret')
+
+    allowed_images = models.IntegerField(default=-1)
+    downloaded_images = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return '%s:%s' % (self.api_id, self.api_secret)
 
 
 class GroupPlan(models.Model):

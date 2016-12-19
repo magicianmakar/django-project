@@ -357,7 +357,7 @@
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="auto_ordered_mark"
-                                               name="auto_ordered_mark" {% if config.auto_ordered_mark %}checked="checked"{% endif %}>
+                                               name="auto_ordered_mark" {% if config.auto_ordered_mark == None or config.auto_ordered_mark %}checked="checked"{% endif %}>
                                     </div>
                                 </div>
                             </div>
@@ -373,8 +373,7 @@
                                     <div class="col-sm-3">
                                         <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
                                             <option value="disable" {% if not config.auto_shopify_fulfill or config.auto_shopify_fulfill == 'disable' %}selected="selected"{% endif %}>Disable</option>
-                                            <option value="hourly" {% if config.auto_shopify_fulfill == 'hourly' %}selected="selected"{% endif %}>Hourly</option>
-                                            <option value="daily" {% if config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Daily</option>
+                                            <option value="enable" {% if config.auto_shopify_fulfill == 'enable' or config.auto_shopify_fulfill == 'hourly' or config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Enable</option>
                                         </select>
                                     </div>
                                 </div>
@@ -415,6 +414,26 @@
                                 </div>
                             </div>
                         </div>
+
+                        {% if not config.shipping_method_filter %}
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="shipping_method_filter" class="col-sm-4 col-xs-8 control-label">
+                                        Shipment Method Filter {{config.shipping_method_filter}}
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input
+                                            id="shipping_method_filter"
+                                            name="shipping_method_filter"
+                                            type="checkbox"
+                                            class="js-switch" {% if config.shipping_method_filter %}checked{% endif %}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
 
                         {% endwith %}
                         {% endif %}
@@ -524,7 +543,7 @@
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox"
-                                               class="js-switch all-variants-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
+                                               class="js-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
                                     </div>
                                 </div>
                             </div>
@@ -532,8 +551,50 @@
 
                         {% endif %}
 
-                        <div class="col-md-12"><hr /></div>
+                        {% if user|can:'clippingmagic.use' and not user.is_stripe_customer %}
+                            <div class="setting-section" style="float: left;width: 98%;">
+                                <h3 class="setting-title">
+                                    Clippingmagic API
+                                    {% if user.clippingmagic.downloaded_images %}
+                                    <span class="pull-right" style="font-size: 12px">
+                                        <strong>Note:</strong>
+                                        You have consumed {{user.clippingmagic.downloaded_images}} credits
+                                    </span>
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            <div id="tab-6" class="tab-pane">
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-sm-offset-1 col-sm-11">
+                                            <div class="form-group">
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">ClippingMagic API ID</label>
+                                                    <div class="col-sm-6">
+                                                        <input type="text" name="api_id"
+                                                        value="{{ user.clippingmagic.api_id|default:"" }}"
+                                                        class="form-control api_id">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">ClippingMagic API Key</label>
+                                                    <div class="col-sm-6" style="white-space: nowrap;">
+                                                        <input type="password" name="api_secret"
+                                                               value="{{ user.clippingmagic.api_secret|default:"" }}"
+                                                               class="form-control api_key"
+                                                               style="font-size: .8em; display: inline-block; margin-right: 10px;">
 
+                                                        <a class="show-clippingmagic-key-btn" href="#">Show</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                        <div class="col-md-12"><hr /></div>
                         <div class="form-group">
                             <div class="col-sm-offset-1 col-sm-10">
                                 <button data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>

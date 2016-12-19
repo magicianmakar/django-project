@@ -686,6 +686,40 @@
     </div>
 </div>
 
+<div id="modal-clippingmagic" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">ClippingMagic API Details</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row">
+                    <form id="user-clippingmagic" method="get" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">ClippingMagic API ID</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="api_id" value="{{ user.clippingmagic.api_id }}" class="form-control api_id" placeholder="ClippingMagic API ID">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">ClippingMagic API Key</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="api_secret" value="{{ user.clippingmagic.api_secret }}" class="form-control api_key" placeholder="ClippingMagic API Key">
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                    </form>
+
+                    <div class=" col-md-9 col-md-offset-2 ">
+                          <button id="save-clippingmagic" class="btn btn-primary"><i class="fa fa-save"></i> Save</button> Don't have API Credentials? <a target="_blank" href="https://clippingmagic.com/api">Click here.</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% verbatim %}
 
 <script id="product-select-template" type="text/x-handlebars-template">
@@ -767,102 +801,60 @@
 
 {% endverbatim %}
 
+<div id="modal-pick-variant" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Variant Type to Split By</h4>
+          </div>
+            <div class="modal-body">
+              <div class="dropdown m-b-sm">
+                  <button id="pick-variant-btn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" value="">
+                    Select Variant Type<span class="caret" style="margin-left:10px"></span>
+                  </button>
+                  <ul class="dropdown-menu">
+                  {% if shopify_product %}
+                    {% for option in shopify_product.options %}
+                      <li>
+                        <a type="button">{{ option.name }}</a>
+                      </li>
+                    {% endfor %}
+                  {% else %}
+                    {% for v in product.product.variants %}
+                      <li>
+                        <a type="button">{{ v.title }}</a>
+                      </li>
+                    {% endfor %}
+                  {% endif %}
+                  </ul>
+              </div>
+              <div>
+                <p class="m-b-sm">
+                  <strong>Products that will be splitted: </strong>
+                  <span id="split-variants-count">0</span>
+                </p>
+                <p class="font-bold">Variant Values: </p>
+                <p id="split-variants-values"></p>
+              </div>
+              <div class="text-center">
+                <button class="btn btn-success btn-submit full-width" type="button">Split</button>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extracss %}
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+
+{% compress css %}
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
-
-<style type="text/css">
-
-.setting-section {
-    margin-top: 15px;
-    border-left: 2px #eee solid;
-    padding-top: 5px;
-    margin-left: 20px;
-    margin-bottom: 15px;
-    padding-bottom: 5px;
-    background-color: rgb(250, 250, 250);
-    padding-left: 15px;
-}
-h3.setting-title {
-    padding: 0;
-    margin: 5px 0;
-}
-
-.buttons {
-    /*text-align: right;*/
-    margin-top: 20px;
-    margin-bottom: 25px;
-}
-
-.buttons .export, .buttons .view{
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.buttons .export {
-    border: 1px solid #A0E7A3;
-    background-color: rgb(213, 255, 213);
-}
-
-.buttons .view {
-    border: 1px solid #A0C9E7;
-    background-color: rgb(213, 255, 253);
-}
-
-
-.var-image, .add-var-image {
-    border: 1px solid #ccc;
-    padding: 5px;
-    width: 100px;
-    cursor: pointer;
-}
-
-.var-image:hover, .add-var-image:hover {
-    border: 1px solid #000;
-}
-
-.var-image-disabled {
-    opacity: 0.3;
-}
-
-.var-image-block, .add-var-image-block {
-    margin-top: 15px;
-}
-
-.var-input {
-    margin: 0px;
-    padding: 10px;
-    width: 100%;
-    border: 1px solid #ddd;
-    border-right: 0 none;
-    width:70px;
-}
-
-.var-input-title {
-    border-right: 1px solid #ddd;
-    width:100%;
-}
-
-.var-pad {
-    border: 1px solid #ddd;
-    padding: 10px 5px;
-    border-left: 0 none;
-    margin-left: -5px;
-}
-
-.table.no-border th, .table.no-border td {
-     border-top: none !important;
- }
-
- .shopify-variant td {
-    vertical-align: middle !important;
- }
-
-</style>
+<link href="{% static 'shopified/css/product_view.css' %}" rel="stylesheet">
+{% endcompress %}
 {% endblock %}
 
 
@@ -900,6 +892,13 @@ var config = {
     user_id: {{user.id}},
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
+
+    clipping_magic: {
+        stripe_customer: {{ user.is_stripe_customer|lower}},
+        api_id: '{{user.clippingmagic.api_id|default:""}}',
+        api_secret: '{{user.clippingmagic.api_secret|default:""}}',
+        clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
+    },
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
@@ -1056,6 +1055,8 @@ $(function() {
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/remove_img_background.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}
