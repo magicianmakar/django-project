@@ -361,7 +361,7 @@ def delete_vendor(request, vendor_id):
 
 
 @login_required
-def fulfill_order(request, order_export_id, code, order_id):
+def fulfill_order(request, order_export_id, code, order_id, line_item_id):
     if request.user.is_vendor:
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          vendor_user__user_id=request.user.id)
@@ -372,6 +372,6 @@ def fulfill_order(request, order_export_id, code, order_id):
     api = ShopifyOrderExportAPI(order_export, code=code)
     tracking_number = request.POST.get('tracking_number')
     fulfillment_id = request.POST.get('fulfillment_id')
-    success = api.fulfill(order_id, tracking_number, fulfillment_id)
+    success = api.fulfill(order_id, tracking_number, line_item_id, fulfillment_id)
 
     return JsonResponse({'success': success})

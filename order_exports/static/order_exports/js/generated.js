@@ -59,8 +59,10 @@ $('.send-tracking-number').on('click', function() {
         success: function(result) {
             if (result.success) {
                $(this).parents('.tracking-number').addClass('.has-success');
-                inputGroup.next('.sk-spinner').addClass('hide');
             }
+        },
+        complete: function() {
+            inputGroup.next('.sk-spinner').addClass('hide');
         }
     });
 });

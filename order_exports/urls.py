@@ -13,5 +13,5 @@ urlpatterns = patterns(
     url(r'^logs/(?P<order_export_id>[\d]+)/?$', order_exports.views.logs, name='order_exports_logs'),
     url(r'^generated/(?P<order_export_id>[\d]+)/(?P<code>[\w]+)/?$', order_exports.views.generated, name='order_exports_generated'),
     url(r'^delete/vendor/(?P<vendor_id>[\d]+)/?$', order_exports.views.delete_vendor, name='order_exports_delete_vendor'),
-    url(r'^fulfill/(?P<order_export_id>[\d]+)/(?P<code>[\w]+)/(?P<order_id>[\d]+)/?$', order_exports.views.fulfill_order, name='order_exports_fulfill_order')
+    url(r'^fulfill/(?P<order_export_id>[\d]+)/(?P<code>[\w]+)/(?P<order_id>[\d]+)/(?P<line_item_id>[\d]+)/?$', order_exports.views.fulfill_order, name='order_exports_fulfill_order')
 )

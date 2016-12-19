@@ -104,21 +104,21 @@ class ShopifyOrderExportAPI():
 
         return response
 
-    def _create_fulfillment_params(self, order_id, tracking_number, line_items):
+    def _create_fulfillment_params(self, order_id, tracking_number, line_item_id):
         data = order_track_fulfillment(**{
             'order_id': order_id,
-            'line_id': None,
+            'line_id': line_item_id,
             'source_tracking': tracking_number,
             'user_config': {}
         })
 
         # get all items from vendor to send tracking number
-        vendor = slugify(self.order_export.filters.vendor.strip())
-        data['fulfillment']['line_items'] = []
-        for item in line_items:
-            if vendor != '' and item['vendor'] != vendor:
-                continue
-            data['fulfillment']['line_items'].append({"id": item['id']})
+        # vendor = slugify(self.order_export.filters.vendor.strip())
+        # data['fulfillment']['line_items'] = []
+        # for item in line_items:
+        #     if vendor != '' and item['vendor'] != vendor:
+        #         continue
+        #     data['fulfillment']['line_items'].append({"id": item['id']})
 
         return data
 
@@ -191,13 +191,11 @@ class ShopifyOrderExportAPI():
 
         return self.unique_code
 
-    def fulfill(self, order_id, tracking_number, fulfillment_id=''):
+    def fulfill(self, order_id, tracking_number, line_item_id, fulfillment_id=''):
         url = '/admin/orders/{}.json'.format(order_id)
         params = {'fields': 'line_items'}
 
-        order = self._get_response_from_url(url, params=params).json()['order']
-
-        fulfillment_params = self._create_fulfillment_params(order_id, tracking_number, order['line_items'])
+        fulfillment_params = self._create_fulfillment_params(order_id, tracking_number, line_item_id)
         return self._post_fulfillment(fulfillment_params, order_id, fulfillment_id)
 
     def generate_query(self):
@@ -310,15 +308,6 @@ class ShopifyOrderExportAPI():
                     continue
 
             line['fields']['id'] = unicode(order['id']).encode("utf-8")
-            for fulfillment in order['fulfillments']:
-                for line_item in fulfillment['line_items']:
-                    if vendor == '' or slugify(line_item['vendor']) == vendor:
-                        line['fields']['tracking_number'] = fulfillment.get('tracking_number') or ''
-                        line['fields']['fulfillment_id'] = fulfillment['id']
-                        break
-
-                if line['fields'].get('tracking_number'):
-                    break
 
             if len(fields):
                 write = True
@@ -338,6 +327,18 @@ class ShopifyOrderExportAPI():
                     items = {}
                     for line_field in line_fields:
                         items[line_field[0]] = unicode(line_item[line_field[0]]).encode("utf-8")
+
+                    items['id'] = line_item['id']
+                    for fulfillment in order['fulfillments']:
+                        for line_item in fulfillment['line_items']:
+                            if items['id'] == line_item['id']:
+                                items['tracking_number'] = fulfillment.get('tracking_number') or ''
+                                items['fulfillment_id'] = fulfillment['id']
+                                break
+
+                        if items.get('tracking_number'):
+                            break
+
                     line['line_items'].append(items)
 
             lines.append(line)

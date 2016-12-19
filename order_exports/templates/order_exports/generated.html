@@ -31,7 +31,6 @@
                                 <th>{{ fieldname }}</th>
                                 {% endfor %}
                                 <th>
-                                    TrackIng Number
                                     <a href="#" class="pull-right collapse-info" data-counter="{{ forloop.counter }}">
                                         <i class="fa fa-chevron-down"></i>
                                     </a>
@@ -44,23 +43,7 @@
                                 {% for key, field in info.fieldnames.fields %}
                                 <td>{{ items.fields|key_value:key }}</td>
                                 {% endfor %}
-                                <td style="padding: 2px 8px;">
-                                    <div class="input-group pull-left tracking-number" style="max-width: 250px;">
-                                        <input  type="text" class="form-control" name="tracking_number" autocomplete="off" value="{{ items.fields|key_value:'tracking_number' }}">
-                                        <input type="hidden" name="fulfillment_id" value="{{ items.fields|key_value:'fulfillment_id' }}" />
-                                        <span class="input-group-btn"> 
-                                            <button type="button" class="btn btn-primary send-tracking-number" data-url="{% url 'order_exports_fulfill_order' order_export_id=order_export_id code=code order_id=items.fields|key_value:'id' %}">Send</button>
-                                        </span>
-                                    </div>
-
-                                    <div class="sk-spinner sk-spinner-wave pull-left hide">
-                                        <div class="sk-rect1"></div>
-                                        <div class="sk-rect2"></div>
-                                        <div class="sk-rect3"></div>
-                                        <div class="sk-rect4"></div>
-                                        <div class="sk-rect5"></div>
-                                    </div>
-
+                                <td>
                                     <a href="#" class="pull-right collapse-info" data-counter="{{ forloop.counter }}">
                                         <i class="fa fa-chevron-down"></i>
                                     </a>
@@ -89,8 +72,9 @@
                                                 <thead>
                                                     <tr>
                                                     {% for key, fieldname in info.fieldnames.line_items %}
-                                                        <td>{{ fieldname }}</td>
+                                                        <th>{{ fieldname }}</th>
                                                     {% endfor %}
+                                                        <th>TrackIng Number</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -99,6 +83,23 @@
                                                         {% for key, field in info.fieldnames.line_items %}
                                                         <td>{{ line_items|key_value:key }}</td>
                                                         {% endfor %}
+                                                        <td style="padding: 2px 8px;">
+                                                            <div class="input-group pull-left tracking-number" style="max-width: 250px;">
+                                                                <input  type="text" class="form-control" name="tracking_number" autocomplete="off" value="{{ line_items|key_value:'tracking_number' }}">
+                                                                <input type="hidden" name="fulfillment_id" value="{{ line_items|key_value:'fulfillment_id' }}" />
+                                                                <span class="input-group-btn"> 
+                                                                    <button type="button" class="btn btn-primary send-tracking-number" data-url="{% url 'order_exports_fulfill_order' order_export_id=order_export_id code=code order_id=items.fields|key_value:'id' line_item_id=line_items.id %}">Send</button>
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="sk-spinner sk-spinner-wave pull-left hide">
+                                                                <div class="sk-rect1"></div>
+                                                                <div class="sk-rect2"></div>
+                                                                <div class="sk-rect3"></div>
+                                                                <div class="sk-rect4"></div>
+                                                                <div class="sk-rect5"></div>
+                                                            </div>
+                                                        </td>
                                                     </tr>
                                                     {% endfor %}
                                                 </tbody>
