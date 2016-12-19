@@ -134,7 +134,7 @@ def is_store_synced(store, sync_type='orders'):
     ''' Return True if store orders have been synced '''
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
-        return sync_status.sync_status in [2, 5]
+        return sync_status.sync_status in [2, 5, 6]
     except ShopifySyncStatus.DoesNotExist:
         return False
 
@@ -144,7 +144,7 @@ def is_store_sync_enabled(store, sync_type='orders'):
 
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
-        return sync_status.sync_status == 2
+        return sync_status.sync_status in [2, 6]
     except ShopifySyncStatus.DoesNotExist:
         return False
 
@@ -154,7 +154,7 @@ def disable_store_sync(store):
         sync = ShopifySyncStatus.objects.get(store=store)
 
         # Disable only if import is Completed
-        if sync.sync_status == 2:
+        if sync.sync_status == 2 and sync.sync_status != 6:
             sync.sync_status = 5
             sync.save()
 
@@ -163,6 +163,18 @@ def disable_store_sync(store):
 
 
 def enable_store_sync(store):
+    try:
+        sync = ShopifySyncStatus.objects.get(store=store)
+
+        if sync.sync_status == 5:
+            sync.sync_status = 2
+            sync.save()
+
+    except:
+        pass
+
+
+def change_store_sync(store):
     try:
         sync = ShopifySyncStatus.objects.get(store=store)
 

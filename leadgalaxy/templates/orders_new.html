@@ -114,7 +114,17 @@
                                    placeholder="Supplier Name" data-store="{{store.id}}">
                         </div>
                     </div>
-
+                    {% if request.user.profile.get_config.shipping_method_filter %}
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Shipping Method</span>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="shipping_method_name" id="shipping_method_name" value="{{shipping_method_filter|default:''}}" class="form-control"
+                                   placeholder="Shipping Method Name" data-store="{{store.id}}">
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Country</span>
@@ -328,8 +338,6 @@
                                         <br> {{order.shipping_address.phone}}
                                         {% endif %}
 
-
-
                                         <br> <b>{{order.shipping_address.country}}</b>
                                     </div>
                                     <div class="col-md-1 col-xs-1">
@@ -344,6 +352,17 @@
                                     </div>
                                     <div class="col-md-2">
                                         $<b>{{order.total_price}}</b>
+                                        <div>
+                                            {% if shipping_method_filter_enabled %}
+                                                {% if order.shipping_lines %}
+                                                <ul class="shipping-method">
+                                                    {% for shipping_line in order.shipping_lines %}
+                                                        <li>{{ shipping_line.title }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     <div class="col-md-3 col-md-offset-3">
                                         <div class="note-panel panel panel-default hidden-sm hidden-xs">
@@ -732,6 +751,14 @@
     .table > thead > tr > td:first-child > img {
         /*border: 1px solid #eee;*/
         width:64px;
+    }
+    ul.shipping-method {
+        margin: 0;
+        padding: 0;
+        white-space: nowrap;
+        list-style: none;
+        margin-top: 5px;
+        font-weight: bold;
     }
 </style>
 
