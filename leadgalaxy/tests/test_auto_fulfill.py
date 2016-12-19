@@ -1,21 +1,12 @@
-import simplejson as json
-
-from django.core.cache import cache
-from django.test import TestCase, TransactionTestCase
-from django.contrib.auth.models import User
-from django.conf import settings
+from django.test import TestCase
 from django.utils import timezone
 from django.core.management import call_command
 
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy import utils
 from leadgalaxy.models import (
-    AliexpressProductChange,
     ShopifyOrderTrack,
-    ShopifyProduct,
-    ShopifyStore,
-    ShopifyProductExport,
-    UserProfile,
-    GroupPlan
+    ShopifyStore
 )
 
 import factory
@@ -40,7 +31,7 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = utils.ShopifyStore
+        model = ShopifyStore
         django_get_or_create = ['api_url']
 
     title = 'uncommonnow'
@@ -52,7 +43,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 class ShopifyOrderFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = utils.ShopifyOrder
+        model = ShopifyOrder
         django_get_or_create = ['order_id']
 
     order_id = '5415135175'
@@ -69,7 +60,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
 class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = utils.ShopifyOrderLine
+        model = ShopifyOrderLine
         django_get_or_create = ['line_id']
 
     line_id = '1654811'

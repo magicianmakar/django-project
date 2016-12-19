@@ -217,4 +217,3 @@ class PlanPaymentAdmin(admin.ModelAdmin):
             return '$ {}'.format(json.loads(obj.data)['jvzoo']['ctransamount'])
         except:
             return ''
-

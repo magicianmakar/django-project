@@ -1074,6 +1074,7 @@ class ShopifyProduct(models.Model):
 
         self.data = json.dumps(product_data)
 
+
 class ProductSupplier(models.Model):
     store = models.ForeignKey(ShopifyStore, null=True)
     product = models.ForeignKey(ShopifyProduct)

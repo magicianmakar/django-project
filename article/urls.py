@@ -1,8 +1,7 @@
-#-*- coding: utf-8 -*-
-
 from django.conf.urls import patterns, url
 
-urlpatterns = patterns('article.views',
+urlpatterns = patterns(
+    'article.views',
     url(r'^$', 'index'),
     url(r'^tagged/(?P<tag>[a-z-]+)$$', 'index', name="tagged"),
     url(r'^view/(?P<id_article>\d+)$', 'view'),

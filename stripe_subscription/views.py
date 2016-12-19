@@ -216,7 +216,7 @@ def subscription_cancel(request):
                             'amount': refound_amount,
                             'invoice': invoice.id,
                             'subscription': sub.id
-                            })
+                        })
                     else:
                         raven_client.captureMessage('Subscription Refund More Than Due', extra={
                             'amount': refound_amount,
@@ -275,4 +275,3 @@ def invoice_pay(request, invoice_id):
 
         else:
             return JsonResponse({'status': 'ok'}, status=200)
-

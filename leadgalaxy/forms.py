@@ -1,4 +1,3 @@
-from django.db import models
 from django import forms
 
 from django.contrib.auth.models import User
@@ -7,7 +6,7 @@ from django.forms.utils import ErrorList
 
 # for login with email
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
 
 from .models import UserProfile, SubuserPermission

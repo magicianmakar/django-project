@@ -81,7 +81,7 @@ class ShopifyOrder(models.Model):
     financial_status = models.CharField(max_length=32, blank=True, null=True, default='')
     fulfillment_status = models.CharField(max_length=32, blank=True, null=True, default='')
 
-    note = models.TextField(blank=True, null=True,  default='')
+    note = models.TextField(blank=True, null=True, default='')
     tags = models.TextField(blank=True, null=True, default='')
     city = models.CharField(max_length=64, blank=True, null=True, default='')
     zip_code = models.CharField(max_length=32, blank=True, null=True, default='')

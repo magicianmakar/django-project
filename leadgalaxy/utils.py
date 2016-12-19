@@ -18,8 +18,7 @@ from django.utils.crypto import get_random_string
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
-from shopify_revision.models import ProductRevision
+from shopify_orders.models import ShopifyOrderLine
 from shopify_orders.utils import get_datetime
 
 from django.conf import settings
@@ -69,8 +68,8 @@ def upload_from_url(url, stores=[]):
     allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
 
     can_pull = any([get_domain(url) in allowed_stores,
-                   get_domain(url, full=True) in allowed_domains,
-                   any([re.search(i, url) for i in allowed_paths])])
+                    get_domain(url, full=True) in allowed_domains,
+                    any([re.search(i, url) for i in allowed_paths])])
 
     mimetype = mimetypes.guess_type(remove_link_query(url))[0]
 
@@ -191,7 +190,7 @@ def get_api_user(request, data, assert_login=False):
                         'Different account login',
                         extra={'Request User': request.user, 'API User': user},
                         level='warning'
-                        )
+                    )
 
                 raise ApiLoginException('different_account_login')
 
@@ -655,20 +654,20 @@ def split_product(product, split_factor, store=None):
         active_variant = None
         filtered = [v for v in data['variants'] if v['title'] == split_factor]
         if len(filtered) > 0:
-            active_variant = filtered[0];
+            active_variant = filtered[0]
+
         if active_variant:
             for idx, v in enumerate(active_variant['values']):
                 clone = ShopifyProduct.objects.get(id=product.id)
                 clone.pk = None
                 clone.parent_product = product
                 clone.shopify_id = 0
+
                 new_data = json.loads(clone.data)
-                # new_data['images'] = data['images'][idx:idx + 1]
-                # if not new_data['images']:
-                #     new_data['images'] = [data['images'][0]]
                 new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
                 new_data['variants'].append({'title': split_factor, 'values': [v]})
                 new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
+
                 clone.data = json.dumps(new_data)
 
                 if store is not None:
@@ -733,8 +732,8 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
         if not count:
             return
 
-        pages = int(ceil(count/float(limit)))
-        for page in xrange(1, pages+1):
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
             rep = get_shopify_products(store=store, page=page, limit=limit,
                                        all_products=False, session=requests.session())
             for p in rep:
@@ -862,10 +861,13 @@ def set_shopify_order_note(store, order_id, note):
         }
     )
 
-    response_text = rep.text
+    response = rep.text
     rep.raise_for_status()
 
-    return rep.json()['order']['id']
+    if rep.ok:
+        response = rep.json()
+
+    return response['order']['id']
 
 
 def add_shopify_order_note(store, order_id, new_note, current_note=False):
@@ -1324,20 +1326,20 @@ def jvzoo_verify_post(params):
 
 
 def jvzoo_parse_post(params):
-        """Parse POST from JVZoo and extract information we need.
+    """Parse POST from JVZoo and extract information we need.
 
-        :param params: POST parameters sent by JVZoo Notification Service
-        :type params: dict """
+    :param params: POST parameters sent by JVZoo Notification Service
+    :type params: dict """
 
-        return {
-            'email': params['ccustemail'],
-            'fullname': params['ccustname'],
-            'firstname': params['ccustname'].split(' ')[0],
-            'lastname': ' '.join(params['ccustname'].split(' ')[1:]),
-            'product_id': params['cproditem'],
-            'affiliate': params['ctransaffiliate'],
-            'trans_type': params['ctransaction'],
-        }
+    return {
+        'email': params['ccustemail'],
+        'fullname': params['ccustname'],
+        'firstname': params['ccustname'].split(' ')[0],
+        'lastname': ' '.join(params['ccustname'].split(' ')[1:]),
+        'product_id': params['cproditem'],
+        'affiliate': params['ctransaffiliate'],
+        'trans_type': params['ctransaction'],
+    }
 
 
 def zaxaa_verify_post(params):
@@ -1358,20 +1360,20 @@ def zaxaa_verify_post(params):
 
 
 def zaxaa_parse_post(params):
-        """ Parse POST from Zaxaa and extract information we need.
+    """ Parse POST from Zaxaa and extract information we need.
 
-        :param params: POST parameters sent by Zaxaa Notification Service
-        :type params: dict """
+    :param params: POST parameters sent by Zaxaa Notification Service
+    :type params: dict """
 
-        return {
-            'email': params['cust_email'],
-            'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
-            'firstname': params['cust_firstname'],
-            'lastname': params['cust_lastname'],
-            'product_id': params['products[0][prod_number]'],
-            'affiliate': '',
-            'trans_type': params['trans_type'],
-        }
+    return {
+        'email': params['cust_email'],
+        'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
+        'firstname': params['cust_firstname'],
+        'lastname': params['cust_lastname'],
+        'product_id': params['products[0][prod_number]'],
+        'affiliate': '',
+        'trans_type': params['trans_type'],
+    }
 
 
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
@@ -1441,33 +1443,34 @@ def get_user_affiliate(user):
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
-        template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
-        template = Template(open(template_file).read())
+    template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
+    template = Template(open(template_file).read())
 
-        ctx = Context(data)
+    ctx = Context(data)
 
-        email_html = template.render(ctx)
+    email_html = template.render(ctx)
 
-        if nl2br:
-            email_plain = email_html
-            email_html = email_html.replace('\n', '<br />')
-        else:
-            from bleach import clean
+    if nl2br:
+        email_plain = email_html
+        email_html = email_html.replace('\n', '<br />')
+    else:
+        from bleach import clean
 
-            email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
-            email_plain = map(lambda l: l.strip(), email_plain)
-            email_plain = '\n'.join(email_plain)
+        email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
+        email_plain = map(lambda l: l.strip(), email_plain)
+        email_plain = '\n'.join(email_plain)
 
-        if type(recipient) is not list:
-            recipient = [recipient]
+    if type(recipient) is not list:
+        recipient = [recipient]
 
-        send_mail(subject=subject,
-                  recipient_list=recipient,
-                  from_email='"Shopified App" <support@shopifiedapp.com>',
-                  message=email_plain,
-                  html_message=email_html)
+    send_mail(subject=subject,
+              recipient_list=recipient,
+              from_email='"Shopified App" <support@shopifiedapp.com>',
+              message=email_plain,
+              html_message=email_html)
 
-        return email_html
+    return email_html
+
 
 def get_countries():
     country_names = pytz.country_names
@@ -1639,7 +1642,7 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         k.set_metadata('Content-Encoding', 'gzip')
         k.set_contents_from_filename(tmp_file.name)
 
-        #clean up the temp file
+        # Clean up the temp file
         os.unlink(tmp_file.name)
 
     k.make_public()
@@ -1651,9 +1654,11 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
     else:
         return upload_url
 
+
 # Helper Classes
 
 class TimezoneMiddleware(object):
+
     def process_request(self, request):
         tzname = request.session.get('django_timezone')
         if not tzname:
@@ -1681,7 +1686,7 @@ class SimplePaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page-5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page+5))
+        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -1740,7 +1745,7 @@ class ShopifyOrderPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
+        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -1826,7 +1831,7 @@ class ProductsCollectionPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
+        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
         if 1 not in pages:
             pages = [1, None] + pages
 

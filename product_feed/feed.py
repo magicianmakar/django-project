@@ -65,8 +65,8 @@ class ProductFeed():
         if not count:
             return
 
-        pages = int(ceil(count/float(limit)))
-        for page in xrange(1, pages+1):
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
             products = get_shopify_products(store=self.store, page=page, limit=limit, all_products=False)
             for p in products:
                 self.add_product(p)
