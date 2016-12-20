@@ -65,13 +65,16 @@ $(document).delegate("button#requires_shipping", "click", function(e){
             'store': $('#store-select').val(),
             'product': $(this).data('product'),
         },
+        dataType: "json",
         success: function (data) {
             window.location.reload();
         },
         error: function (data) {
             $(this.btn).bootstrapBtn('reset');
-            displayAjaxError('Shipping Status', data);
+
+            swal('Shipping Status', 'Server error', 'error');
         }
+
     });
 });
 
