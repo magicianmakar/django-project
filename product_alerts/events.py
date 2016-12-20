@@ -2,11 +2,11 @@ import simplejson as json
 import requests
 
 from django.core.cache import cache
+from django.template.defaultfilters import truncatewords
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopify_revision.models import ProductRevision
-
 from leadgalaxy.utils import send_email_from_template, get_variant_name
 
 
@@ -111,8 +111,6 @@ class ProductChangeEvent():
         if self.user.get_config('_product_change_notify') or cache.get(notify_key):
             # We already sent the user a notification for a product change
             return False
-
-        from django.template.defaultfilters import truncatewords
 
         product_name = truncatewords(self.product.get_product(), 5)
 
