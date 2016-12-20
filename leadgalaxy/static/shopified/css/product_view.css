@@ -147,3 +147,15 @@
     display: flex;
     align-items: center;
 }
+
+.product-original-link {
+    padding-right: 30px;
+}
+
+.product-original-link-loading {
+    display: none;
+    position: absolute;
+    right: 22px;
+    top: 32px;
+    font-size: 1.5em;
+}
