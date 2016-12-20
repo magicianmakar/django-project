@@ -4330,10 +4330,10 @@ def orders_view(request):
             orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if product_filter:
-            orders = orders.filter(shopifyorderline__product_id=product_filter)
+            orders = orders.filter(shopifyorderline__product_id=product_filter).distinct()
 
         if supplier_filter:
-            orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter)
+            orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter).distinct()
 
         if shipping_method_filter:
             orders = orders.filter(shipping_lines__title=shipping_method_filter)
