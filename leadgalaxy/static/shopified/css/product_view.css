@@ -138,3 +138,12 @@
  .shopify-variant td {
     vertical-align: middle !important;
  }
+
+#product-config-form {
+    margin-bottom: 25px;
+}
+
+#product-config-form .form-group {
+    display: flex;
+    align-items: center;
+}

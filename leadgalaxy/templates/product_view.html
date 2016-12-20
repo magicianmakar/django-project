@@ -525,19 +525,16 @@
         {% if request.user|can:'price_changes.use' %}
         <div id="tab-6" class="tab-pane">
             <div class="panel-body"  style="min-height:300px">
-                <form id="product-config-form" class="form-horizontal" role="form">
+                <form id="product-config-form" role="form">
                     <input type="hidden" name="product" value="{{product.id}}" />
                     <div class="setting-section">
                         <h3 class="setting-title pull-left">Settings</h3>
-                        <div class="text-right">
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-offset-1 col-sm-5">
+                        <div class="col-sm-11">
                             <div class="form-group">
-                                <label for="alert_price_change" class="col-sm-6 control-label">When the price changes</label>
-                                <div class="col-sm-4">
+                                <label for="alert_price_change" class="col-sm-4 text-right control-label">When the price changes</label>
+                                <div class="col-sm-6">
                                     <select id="alert_price_change" name="alert_price_change" class="form-control">
                                         <option value="">Use Global Default</option>
                                         <option value="notify" {% if product.alert_config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
@@ -548,11 +545,13 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="col-sm-5">
+                    <div class="row">
+                        <div class="col-sm-11">
                             <div class="form-group">
-                                <label for="alert_quantity_change" class="col-sm-6 control-label">When inventory changes</label>
-                                <div class="col-sm-4">
+                                <label for="alert_quantity_change" class="col-sm-4 text-right control-label">When inventory changes</label>
+                                <div class="col-sm-6">
                                     <select id="alert_quantity_change" name="alert_quantity_change" class="form-control">
                                         <option value="">Use Global Default</option>
                                         <option value="notify"{% if product.alert_config.alert_quantity_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
@@ -565,10 +564,10 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-offset-1 col-sm-5">
+                        <div class="col-sm-11">
                             <div class="form-group">
-                                <label for="alert_product_disappears" class="col-sm-6 control-label">When a product disappears</label>
-                                <div class="col-sm-4">
+                                <label for="alert_product_disappears" class="col-sm-4 text-right control-label">When a product disappears</label>
+                                <div class="col-sm-6">
                                     <select id="alert_product_disappears" name="alert_product_disappears" class="form-control">
                                         <option value="">Use Global Default</option>
                                         <option value="notify"{% if product.alert_config.alert_product_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
@@ -579,11 +578,13 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="col-sm-5">
+                    <div class="row">
+                        <div class="col-sm-11">
                             <div class="form-group">
-                                <label for="alert_variant_disappears" class="col-sm-6 control-label">When a variant disappears</label>
-                                <div class="col-sm-4">
+                                <label for="alert_variant_disappears" class="col-sm-4 text-right control-label">When a variant disappears</label>
+                                <div class="col-sm-6">
                                     <select id="alert_variant_disappears" name="alert_variant_disappears" class="form-control">
                                         <option value="">Use Global Default</option>
                                         <option value="notify"{% if product.alert_config.alert_variant_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
@@ -593,6 +594,12 @@
                                     </select>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-9 text-right">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                         </div>
                     </div>
                 </form>
