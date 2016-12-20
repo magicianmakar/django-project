@@ -84,12 +84,16 @@ class ProductChangeEvent():
                 self.send_shopify(data)
 
     def send_email(self, product_data):
+        image = product_data['product'].get('image')
+        if image and type(image) is dict:
+            image = image.get('src')
+
         data = {
             'username': self.user.username,
             'email': self.user.email,
             'events': self.notify_events,
             'product_title': self.product.title,
-            'product_image': product_data['product']['image']['src'],
+            'product_image': image,
             'shopify_link': self.product.store.get_link('/admin/products/{}'.format(
                 self.product.get_shopify_id())),
             'store_title': self.product.store.title,

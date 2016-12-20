@@ -23,8 +23,11 @@
 			The link for this product on your <a href="{{ store_link }}" target="_blank">{{ store_title }}</a> is: <br />
 			<a href="{{ shopify_link }}" target="_blank">{{ shopify_link }}</a>
 		</p>
-		<div>
-			<img src="{{ product_image }}" alt="product image" width="150" />
-		</div>
+
+        {% if product_image %}
+        <div>
+            <img src="{{ product_image }}" alt="product image" width="150" />
+        </div>
+        {% endif %}
 </body>
 </html>
