@@ -12,26 +12,23 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ('title', 'body')
     raw_id_fields = ('author',)
 
-    # Configuration du formulaire d'edition
     fieldsets = (
-        # Fieldset
         ('General', {
-            #'classes': ['collapse',],
             'fields': ('title', 'author', 'slug', 'stat', 'body_format')
         }),
-        # Fieldset
         ('Page content', {
-            'description':'HTML tags are accepeted',
+            'description': 'HTML tags are accepeted',
             'fields': ('body', )
         }),
         ('Page Style', {
-            'description':'CSS Style of this page',
+            'description': 'CSS Style of this page',
             'fields': ('style', )
         }),
     )
 
     def view_on_site(self, obj):
         return '/pages/{}'.format(obj.slug)
+
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'stat', 'created_at', 'updated_at',)
@@ -41,16 +38,12 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ('title', 'body')
     raw_id_fields = ('author', 'article')
 
-    # Configuration du formulaire d'edition
     fieldsets = (
-        # Fieldset
         ('General', {
-            #'classes': ['collapse',],
             'fields': ('title', 'author', 'stat', 'article', 'parent')
         }),
-        # Fieldset
         ('Blog content', {
-            'description':'HTML tags are accepeted',
+            'description': 'HTML tags are accepeted',
             'fields': ('body', )
         }),
     )

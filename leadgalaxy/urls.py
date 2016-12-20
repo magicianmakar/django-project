@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, url
 from leadgalaxy.forms import EmailAuthenticationForm
 from django.contrib.auth.views import password_reset
 
@@ -37,7 +37,8 @@ urlpatterns = patterns(
     url(r'^subusers$', leadgalaxy.views.subusers, name='subusers'),
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', leadgalaxy.views.subusers_perms, name='subusers_perms'),
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)/edit$', leadgalaxy.views.subuser_perms_edit, name='subuser_perms_edit'),
-    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$', leadgalaxy.views.subuser_store_permissions, name='subuser_store_permissions'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        leadgalaxy.views.subuser_store_permissions, name='subuser_store_permissions'),
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
@@ -57,9 +58,9 @@ urlpatterns = patterns(
         {'authentication_form': EmailAuthenticationForm}, name='login'),
     url(r'^accounts/password/reset/$', password_reset, {'template_name': 'registration/password_reset.html'}),
     url(r'^accounts/password_reset/done/$', 'django.contrib.auth.views.password_reset_done',
-        {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header':'Shopified App'}}),
+        {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header': 'Shopified App'}}),
     url(r'^accounts/password_change/done/$', 'django.contrib.auth.views.password_change_done',
-        {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header':'Shopified App'}}),
+        {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header': 'Shopified App'}}),
 
     url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
     url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),

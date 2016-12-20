@@ -199,7 +199,7 @@ def order_id_from_number(store, order_number):
         return None
 
     if order_number:
-        orders = orders.filter(order_number=(order_number-1000))
+        orders = orders.filter(order_number=(order_number - 1000))
 
         for i in orders:
             return i.order_id

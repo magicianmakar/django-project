@@ -1,5 +1,4 @@
 from django import template
-from django.template import Context, Template
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
@@ -90,13 +89,15 @@ def price_diff(context, from_, to_, reverse_colors=False):
 
     if from_ > to_:
         if to_ > 0:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (colors[0], (((to_ - from_) * 100.) / to_)))
+            return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (
+                colors[0], (((to_ - from_) * 100.) / to_)))
         else:
             return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0]))
 
     else:
         if from_ > 0:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_)))
+            return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (
+                colors[1], (((to_ - from_) * 100.) / from_)))
         else:
             return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i></span>' % (colors[1]))
 

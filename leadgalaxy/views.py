@@ -928,7 +928,6 @@ def proccess_api(request, user, method, target, data):
 
             return JsonResponse(response, status=500)
 
-
     if method == 'POST' and target == 'change-plan':
         if not user.is_superuser:
             raise PermissionDenied()
@@ -941,7 +940,7 @@ def proccess_api(request, user, method, target, data):
                 'error': ('Plan should be changed from Stripe Dashboard:\n'
                           'https://dashboard.stripe.com/customers/{}').format(
                     target_user.stripe_customer.customer_id)
-                }, status=422)
+            }, status=422)
         try:
             profile = target_user.profile
             target_user.profile.plan = plan
@@ -1221,7 +1220,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-split-variants':
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        split_factor = data.get('split_factor');
+        split_factor = data.get('split_factor')
         user.can_view(product)
 
         splitted_products = utils.split_product(product, split_factor)
@@ -1730,7 +1729,7 @@ def proccess_api(request, user, method, target, data):
 
         if not data.get('order_id') and not data.get('line_id'):
             ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                     .update(check_count=F('check_count')+1, updated_at=timezone.now())
+                                     .update(check_count=F('check_count') + 1, updated_at=timezone.now())
 
         return JsonResponse(orders, safe=False)
 
@@ -2210,7 +2209,7 @@ def proccess_api(request, user, method, target, data):
                 'title': 'Importing...',
                 'variants': [],
                 'original_url': supplier_url
-                })
+            })
         )
 
         user.can_add(product)
@@ -2266,7 +2265,7 @@ def webhook(request, provider, option):
                 'firstname': request.POST['payer_firstname'],
                 'payer_id': request.POST['payer_id'],
             }
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
 
             send_mail(subject='Shopified App: Webhook exception',
@@ -2320,7 +2319,7 @@ def webhook(request, provider, option):
 
                 return HttpResponse('ok')
 
-            except Exception as e:
+            except Exception:
                 raven_client.captureException()
 
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
@@ -2769,7 +2768,7 @@ def webhook(request, provider, option):
                     tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
 
                 return JsonResponse({'status': 'ok'})
 
@@ -2781,7 +2780,7 @@ def webhook(request, provider, option):
                 AliexpressProductChange.objects.filter(product=product).delete()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
 
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
@@ -2790,7 +2789,7 @@ def webhook(request, provider, option):
 
             elif topic == 'orders/create' or topic == 'orders/updated':
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
 
                 new_order = topic == 'orders/create'
                 queue = 'priority_high' if new_order else 'celery'
@@ -2800,10 +2799,10 @@ def webhook(request, provider, option):
                 countdown_key = 'eta_order__{}_{}_{}'.format(store.id, shopify_order['id'], topic.split('/').pop())
                 countdown_saved = cache.get(countdown_key)
                 if countdown_saved is None:
-                    cache.set(countdown_key, countdown, timeout=countdown*2)
+                    cache.set(countdown_key, countdown, timeout=countdown * 2)
                 else:
                     countdown = countdown_saved + random.randint(2, 5)
-                    cache.set(countdown_key, countdown, timeout=countdown*2)
+                    cache.set(countdown_key, countdown, timeout=countdown * 2)
 
                 tasks.update_shopify_order.apply_async(
                     args=[store.id, shopify_order['id']],
@@ -3707,7 +3706,7 @@ def acp_graph(request):
             products_cum.append({
                 'created_count': total_count,
                 'created': i['created']
-                })
+            })
         products = products_cum
 
         total_count = User.objects.all().count()
@@ -3717,7 +3716,7 @@ def acp_graph(request):
             users_cum.append({
                 'created_count': total_count,
                 'created': i['created']
-                })
+            })
         users = users_cum
 
         total_count = tracking_count['awaiting']
@@ -3727,7 +3726,7 @@ def acp_graph(request):
             tracking_awaiting_cum.append({
                 'updated_count': total_count,
                 'updated': i['updated']
-                })
+            })
         tracking_awaiting = tracking_awaiting_cum
 
         total_count = tracking_count['fulfilled']
@@ -3737,7 +3736,7 @@ def acp_graph(request):
             tracking_fulfilled_cum.append({
                 'updated_count': total_count,
                 'updated': i['updated']
-                })
+            })
         tracking_fulfilled = tracking_fulfilled_cum
 
         total_count = tracking_count['auto']
@@ -3747,7 +3746,7 @@ def acp_graph(request):
             tracking_auto_cum.append({
                 'updated_count': total_count,
                 'updated': i['updated']
-                })
+            })
         tracking_auto = tracking_auto_cum
 
         total_count = ShopifyOrder.objects.count()
@@ -3757,7 +3756,7 @@ def acp_graph(request):
             shopify_orders_cum.append({
                 'created_count': total_count,
                 'created': i['created']
-                })
+            })
         shopify_orders = shopify_orders_cum
 
     tracking_count['enabled_awaiting'] = tracking_count['awaiting'] - tracking_count['disabled']
@@ -3986,7 +3985,7 @@ def autocomplete(request, target):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        except PermissionDenied as e:
+        except PermissionDenied:
             raven_client.captureException()
             return JsonResponse({'error': 'Permission Denied'}, status=403)
 
@@ -4009,7 +4008,7 @@ def autocomplete(request, target):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        except PermissionDenied as e:
+        except PermissionDenied:
             raven_client.captureException()
             return JsonResponse({'error': 'Permission Denied'}, status=403)
 
@@ -4190,7 +4189,12 @@ def save_image_s3(request):
     product = ShopifyProduct.objects.get(id=product_id)
     request.user.can_edit(product)
 
-    upload_url = utils.aws_s3_upload(filename=img_name, fp=fp, mimetype=mimetype, bucket_name=settings.S3_UPLOADS_BUCKET)
+    upload_url = utils.aws_s3_upload(
+        filename=img_name,
+        fp=fp,
+        mimetype=mimetype,
+        bucket_name=settings.S3_UPLOADS_BUCKET
+    )
 
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
@@ -4274,7 +4278,8 @@ def orders_view(request):
         shopify_orders_utils.enable_store_sync(store)
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
-    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
+    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or
+                                                 request.GET.get('new'))
 
     if not store_sync_enabled:
         if ',' in fulfillment:
@@ -4313,7 +4318,7 @@ def orders_view(request):
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
-                orders = orders.filter(Q(order_number=(order_number-1000)) |
+                orders = orders.filter(Q(order_number=(order_number - 1000)) |
                                        Q(order_id=order_number) |
                                        Q(order_id__in=tracks))
 
@@ -4375,7 +4380,8 @@ def orders_view(request):
         open_orders = paginator.count
 
         if open_orders:
-            cache_key = 'saved_orders_%s' % utils.hash_list(['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
+            cache_list = ['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page]
+            cache_key = 'saved_orders_%s' % utils.hash_list(cache_list)
             shopify_orders = cache.get(cache_key)
             if shopify_orders is None or cache.get('saved_orders_clear_{}'.format(store.id)):
                 rep = requests.get(
@@ -4872,8 +4878,8 @@ def product_alerts(request):
         product_changes.append(change)
 
     if not show_hidden:
-        AliexpressProductChange.objects.filter(user=request.user.models_user,
-                                               id__in=[i['id'] for i in product_changes]) \
+        AliexpressProductChange.objects.filter(user=request.user.models_user) \
+                                       .filter(id__in=[i['id'] for i in product_changes]) \
                                        .update(seen=True)
 
     # Allow sending notification for new changes
@@ -5165,7 +5171,7 @@ def subuser_perms_edit(request, user_id):
             messages.success(request, 'Subuser permissions successfully updated')
             return redirect('leadgalaxy.views.subuser_perms_edit', user_id)
     else:
-        form  = SubuserPermissionsForm(initial=initial)
+        form = SubuserPermissionsForm(initial=initial)
 
     breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username]
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
@@ -5192,7 +5198,7 @@ def subuser_store_permissions(request, user_id, store_id):
             messages.success(request, 'Subuser permissions successfully updated')
             return redirect('leadgalaxy.views.subuser_store_permissions', user_id, store_id)
     else:
-        form  = SubuserPermissionsForm(initial=initial)
+        form = SubuserPermissionsForm(initial=initial)
 
     breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}

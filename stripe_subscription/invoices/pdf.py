@@ -17,21 +17,21 @@ STYLES['text-center'] = ParagraphStyle('text-center',
                                        alignment=TA_CENTER)
 
 STYLES['text-right'] = ParagraphStyle('text-right',
-                                       parent=STYLES['default'],
-                                       alignment=TA_RIGHT)
+                                      parent=STYLES['default'],
+                                      alignment=TA_RIGHT)
 
 STYLES['label'] = ParagraphStyle('label',
-                                  parent=STYLES['default'],
-                                  fontSize=8)
+                                 parent=STYLES['default'],
+                                 fontSize=8)
 
 STYLES['header'] = ParagraphStyle('header',
                                   parent=STYLES['default'],
                                   fontSize=12)
 
 STYLES['total'] = ParagraphStyle('total',
-                                  parent=STYLES['default'],
-                                  alignment=TA_CENTER,
-                                  fontSize=16)
+                                 parent=STYLES['default'],
+                                 alignment=TA_CENTER,
+                                 fontSize=16)
 
 # For table paragraphs
 styles = getSampleStyleSheet()
@@ -47,8 +47,8 @@ def draw_pdf(buffer, invoice):
     logo = os.path.join(settings.BASE_DIR2, 'static', 'Shopified-App2.png')
     parts.append(Image(logo, width=150, height=37, hAlign='LEFT'))
     customer = StripeCustomer.objects.get(customer_id=invoice.customer)
-    data = [[header_paragraph(invoice), '',],
-            [invoice_id_paragraph(invoice), '',],
+    data = [[header_paragraph(invoice), '', ],
+            [invoice_id_paragraph(invoice), '', ],
             ['', ''],
             [invoicer_label(invoice), invoice_total_paragraph(invoice)],
             [invoicer_paragraph(invoice), invoice_due_paragraph(invoice)],
@@ -179,7 +179,7 @@ def append_items_table(parts, invoice):
                     ('GRID', (0, 0), (-1, -2), 1, (0.9, 0.9, 0.9)),
                     ('GRID', (-2, -1), (-1, -1), 1, (0.9, 0.9, 0.9)),
                     ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-                    ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),])
+                    ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)), ])
     parts.append(table)
     return parts
 
@@ -231,6 +231,3 @@ def append_amount_paid_row(data, invoice):
     amount = '$' + str(invoice.total) + ' ' + invoice.currency.upper()
     amount = Paragraph('<b>' + amount + '</b>', styleN)
     data.append(['', label, amount])
-
-
-

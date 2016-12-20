@@ -22,3 +22,5 @@ apt-get install -y python-dev python-pip python-virtualenv libmysqld-dev libssl-
 if [ ! -d "venv" ]; then
     virtualenv venv
 fi
+
+pip install flake8

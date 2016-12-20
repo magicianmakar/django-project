@@ -1,9 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
-from django.db.models import Q
 
 from leadgalaxy.models import *
-from leadgalaxy import utils
 import simplejson as json
 import requests
 
@@ -12,8 +10,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
 SHOPIFIEDAPP_WEBHOOK_BASE = 'http://app.shopifiedapp.com/webhook/price-notification/product'
 
-# ALI_WEB_API_BASE = 'http://dev.aliwebapi.com/api'
-# SHOPIFIEDAPP_WEBHOOK_BASE = 'http://dev.shopifiedapp.com/webhook/price-notification/product'
 
 class Command(BaseCommand):
     help = 'Attach Shopify Webhooks to a specific Plan'
@@ -76,7 +72,6 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(pk=user_id)
                 products = ShopifyProduct.objects.filter(user=user)
-                # self.stdout.write(', '.join(map(lambda id: str(id), products.values_list('id', flat=True))))
                 self.handle_products(user, products, action, options)
 
             except ShopifyStore.DoesNotExist:
@@ -94,8 +89,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.MIGRATE_SUCCESS('Products Count: %d' % products_count))
 
         if products_count:
-            self.stdout.write(u'{} webhooks to {} product for user: {}'
-                .format(action.title(), products_count, user.username), self.style.HTTP_INFO)
+            self.stdout.write(u'{} webhooks to {} product for user: {}'.format(
+                action.title(), products_count, user.username), self.style.HTTP_INFO)
 
             count = 0
 
@@ -107,9 +102,8 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
     def handle_product(self, product, action):
-        # print 'product {} Action {}'.format(product.id, action)
-
         data = json.loads(product.data)
+
         try:
             if product.price_notification_id:
                 self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.'))
@@ -183,5 +177,7 @@ class Command(BaseCommand):
             product.save()
         except Exception as e:
             raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(product.id, repr(e), rep.text)))
+            self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
+                product.id, repr(e), rep.text)))
+
             return

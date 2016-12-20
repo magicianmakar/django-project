@@ -1,5 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
+from django.core.management.base import BaseCommand
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -118,8 +117,8 @@ class Command(BaseCommand):
 
         import_start = time.time()
 
-        pages = int(math.ceil(count/float(limit)))
-        for page in xrange(1, pages+1):
+        pages = int(math.ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
             if count > 1000:
                 imported_count = len(self.imported_orders)
                 self.stdout.write('Page {} ({:0.2f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(

@@ -5,8 +5,13 @@ from django.test import TestCase, TransactionTestCase
 from django.contrib.auth.models import User
 from django.conf import settings
 
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy import utils
-from leadgalaxy.models import AliexpressProductChange, ShopifyProduct, ShopifyStore, ShopifyProductExport, UserProfile, GroupPlan
+from leadgalaxy.models import (
+    AliexpressProductChange,
+    ShopifyOrderTrack
+)
+
 from product_alerts import events as product_alerts_events
 
 import factory
@@ -14,7 +19,7 @@ import factory
 
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = utils.ShopifyOrderTrack
+        model = ShopifyOrderTrack
         django_get_or_create = ['line_id', 'order_id', 'user_id']
 
     line_id = '1654811'
@@ -36,7 +41,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 
 class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = utils.ShopifyOrder
+        model = ShopifyOrder
         django_get_or_create = ['order_id']
 
     order_id = '5415135175'
@@ -52,7 +57,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
 
 class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = utils.ShopifyOrderLine
+        model = ShopifyOrderLine
         django_get_or_create = ['line_id']
 
     line_id = '1654811'

@@ -48,8 +48,8 @@ class CaptureFailure(Task):
 
 def retry_countdown(key, retries):
     retries = max(1, retries)
-    countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries*60) + (60 * retries)
-    cache.set(key, countdown+random.randint(5, 30), timeout=countdown+60)
+    countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries * 60) + (60 * retries)
+    cache.set(key, countdown + random.randint(5, 30), timeout=countdown + 60)
 
     return countdown
 
@@ -127,7 +127,7 @@ def export_product(req_data, target, user_id):
 
         if not user.can('import_from_any.use'):
             try:
-                if not 'free' in user.profile.plan.title.lower():
+                if 'free' not in user.profile.plan.title.lower():
                     print u'ERROR: STORE PERMISSION FOR [{}] [{}] [{}] User: {}'.format(
                         import_store, original_url, user.profile.plan.title, user.username)
             except:
@@ -200,7 +200,7 @@ def export_product(req_data, target, user_id):
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
             raven_client.captureException(extra={
                 'rep': r.text
-                })
+            })
 
             return {'error': 'Shopify API is not available, please try again.'}
 

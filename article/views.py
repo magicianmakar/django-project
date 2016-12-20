@@ -45,7 +45,7 @@ def view(request, id_article=None, slug_article=None):
 
     if not request.user.is_superuser:
         # Update this way so we don't change updated_at
-        Article.objects.filter(id=article.id).update(views=article.views+1)
+        Article.objects.filter(id=article.id).update(views=article.views + 1)
 
     comments = Comment.objects.filter(article=article)
 

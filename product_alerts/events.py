@@ -5,7 +5,6 @@ from django.core.cache import cache
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.models import *
 from shopify_revision.models import ProductRevision
 
 from leadgalaxy.utils import send_email_from_template, get_variant_name
