@@ -54,30 +54,6 @@ function showProductInfo(rproduct) {
     }
 }
 
-$(document).delegate("button#requires_shipping", "click", function(e){
-    e.preventDefault();
-
-    $(this).bootstrapBtn('loading');
-    $.ajax({
-        url: '/api/variant-requires-shipping',
-        type: 'POST',
-        data: {
-            'store': $('#store-select').val(),
-            'product': $(this).data('product'),
-        },
-        dataType: "json",
-        success: function (data) {
-            window.location.reload();
-        },
-        error: function (data) {
-            $(this.btn).bootstrapBtn('reset');
-
-            swal('Shipping Status', 'Server error', 'error');
-        }
-
-    });
-});
-
 $("a.add-variant").click(function (e) {
     e.preventDefault();
 

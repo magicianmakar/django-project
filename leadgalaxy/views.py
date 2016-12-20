@@ -806,29 +806,6 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
-    if method == 'POST' and target == 'variant-requires-shipping':
-        try:
-            store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
-
-        except ShopifyStore.DoesNotExist:
-            return JsonResponse({'error': 'Store not found'}, status=404)
-
-        product_id = data.get('product', 0)
-        shopify_product = utils.get_shopify_product(store, product_id)
-        if shopify_product:
-            for variant in shopify_product.get('variants', []):
-                variant['requires_shipping'] = 'true'
-
-            api_url = store.get_link('/admin/products/{}.json'.format(product_id), api=True)
-            requests.put(api_url, json={
-                'product':shopify_product
-            })
-
-            return JsonResponse({'status': 'ok'})
-        else:
-            return JsonResponse({'error': 'Invalid product'})
-
     if method == 'DELETE' and target == 'product-image':
         store = ShopifyStore.objects.get(id=data.get('store'))
         user.can_view(store)
