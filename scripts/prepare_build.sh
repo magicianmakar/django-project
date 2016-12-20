@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export DATABASE_URL="postgres://postgres:@postgres:5432/python-test-app"
-export DATA_STORE_DATABASE_URL="postgres://postgres:@postgres:5432/python-test-app"
+export DATABASE_URL="postgres://postgres:@postgres:5432/default-db"
+export DATA_STORE_DATABASE_URL="postgres://postgres:@postgres:5432/store-db"
 export DEBUG_APP="TRUE"
 export SENDGRID_PASSWORD=""
 export SENDGRID_USERNAME=""
