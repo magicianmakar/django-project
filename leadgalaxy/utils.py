@@ -1157,38 +1157,6 @@ def order_track_fulfillment(**kwargs):
     return data
 
 
-def product_change_notify(user):
-
-    notify_key = 'product_change_%d' % user.id
-    if user.get_config('_product_change_notify') or cache.get(notify_key):
-        # We already sent the user a notification for a product change
-        return
-
-    template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'product_change_notify.html')
-    template = Template(open(template_file).read())
-
-    data = {
-        'username': user.username,
-        'email': user.email,
-    }
-
-    ctx = Context(data)
-
-    email_html = template.render(ctx)
-    email_html = email_html.replace('\n', '<br />')
-
-    send_mail(subject='[Shopified App] AliExpress Product Alert',
-              recipient_list=[data['email']],
-              from_email='"Shopified App" <no-reply@shopifiedapp.com>',
-              message=email_html,
-              html_message=email_html)
-
-    user.set_config('_product_change_notify', True)
-
-    # Disable notification for a day
-    cache.set(notify_key, True, timeout=86400)
-
-
 def get_variant_name(variant):
     options = re.findall('#([^;:]+)', variant.get('variant_desc', ''))
     if len(options):

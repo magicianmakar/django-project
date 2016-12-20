@@ -84,6 +84,13 @@ class ProductChangeEvent():
                 self.send_shopify(data)
 
     def send_email(self, product_data):
+        notify_key = 'product_change_%d' % self.user.id
+        if self.user.get_config('_product_change_notify') or cache.get(notify_key):
+            # We already sent the user a notification for a product change
+            return
+
+        self.user.set_config('_product_change_notify', True)
+
         image = product_data['product'].get('image')
         if image and type(image) is dict:
             image = image.get('src')
@@ -107,6 +114,9 @@ class ProductChangeEvent():
             data,
             nl2br=False
         )
+
+        # Disable notification for a day
+        cache.set(notify_key, True, timeout=86400)
 
         cache.set('last_product_change_email', html_message, timeout=3600)
 
