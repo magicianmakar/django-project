@@ -5,6 +5,8 @@ from django.conf import settings
 import simplejson as json
 import re
 
+import arrow
+
 register = template.Library()
 
 
@@ -31,6 +33,11 @@ def date_humanize(context, date, html=True):
             date.format('YYYY/MM/DD HH:mm:ss'), date.humanize()))
     else:
         return date.humanize()
+
+
+@register.filter(name='get_datetime')
+def get_datetime(isodate):
+    return arrow.get(isodate).datetime
 
 
 @register.simple_tag(takes_context=True)

@@ -37,7 +37,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from shopify_orders.models import ShopifyOrderLine
-from shopify_orders.utils import get_datetime
 
 
 def safeInt(v, default=0):
@@ -1793,7 +1792,7 @@ class ProductsCollectionPaginator(Paginator):
             try:
                 rep = self._api_request()
                 self._count = rep.get('count', 0)
-                self._products = self.format_products_date(rep.get('products'))
+                self._products = rep.get('products')
             except:
                 raven_client.captureException()
                 self._count = 0
@@ -1801,12 +1800,6 @@ class ProductsCollectionPaginator(Paginator):
         return self._count
 
     count = property(_get_product_count)
-
-    def format_products_date(self, products):
-        for product in products:
-            product['created_at'] = get_datetime(product['created_at'])
-
-        return products
 
     def _api_request(self):
         params = {

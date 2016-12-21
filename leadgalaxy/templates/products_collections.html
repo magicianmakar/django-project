@@ -3,6 +3,7 @@
 {% load static %}
 {% load url_tools %}
 {% load perms_helper %}
+{% load template_helper %}
 {% load compress %}
 
 {% block main-container %}
@@ -56,7 +57,7 @@
                             <td><a href="?f=1&type={{item.category|urlencode}}">{{item.category}}</a></td>
                             <td>{{item.rating}}</td>
                             <td>{{item.orders_numbers}}</td>
-                            <td>{{item.created_at|date:"M d, Y"}}</td>
+                            <td>{{item.created_at|get_datetime|date:"M d, Y"}}</td>
                             <td><a href="{{item.store.url}}" target="_blank">{{item.store.name}}</a></td>
                             {# <td> <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button> </td> #}
                         </tr>
