@@ -74,7 +74,7 @@ def get_product_feed(request, store_id, revision=None):
         raise Http404('Feed not found')
 
     if not store.user.can('product_feeds.use'):
-        raise PermissionDenied('Product Feeds')
+        raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
 
