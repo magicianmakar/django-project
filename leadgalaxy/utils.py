@@ -1608,11 +1608,14 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
 def clean_url_path(url):
     return re.sub('#.*$', '', re.sub(r'\?.*$', '', url))
 
+
 def get_filename_from_url(url):
     return clean_url_path(url).split('/').pop()
 
+
 def get_fileext_from_url(url):
     return get_filename_from_url(url).split('.').pop()
+
 
 def hash_url_filename(s):
     url = clean_url_path(s)
@@ -1626,6 +1629,7 @@ def hash_url_filename(s):
         hashval = int(((hashval << 5) - hashval) + ch)
         hashval |= 0
     return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
+
 
 # Helper Classes
 
