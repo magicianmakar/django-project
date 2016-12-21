@@ -4,21 +4,22 @@
 <script src="//fast.appcues.com/widget-bundle.js"></script>
 
 <script>
-    {% with plan=user.profile.plan %}
-    var dataLayer = [{
-        userPlan: '{{plan.title}}',
-        monthlyPlan: {{plan.is_stripe|lower}},
-        pageCategory: 'webapp',
-
-        user_id: {{ user.id }},
-        name: "{{ user.get_full_name|default:user.username|escapejs }}",
-        email: "{{ user.email }}",
-        created_at: {{ user.date_joined|date:"U" }},
-        extension_version: '{{user.profile.get_config.extension_version}}',
-    }];
-    {% endwith %}
-
     {% if user.is_authenticated and not DEBUG %}
+
+        {% with plan=user.profile.plan %}
+        var dataLayer = [{
+            userPlan: '{{plan.title}}',
+            monthlyPlan: {{plan.is_stripe|lower}},
+            pageCategory: 'webapp',
+
+            user_id: {{ user.id }},
+            name: "{{ user.get_full_name|default:user.username|escapejs }}",
+            email: "{{ user.email }}",
+            created_at: {{ user.date_joined|date:"U" }},
+            extension_version: '{{user.profile.get_config.extension_version}}',
+        }];
+        {% endwith %}
+
         var currentUser = {
             id: {{ user.id }},
             username: '{{ user.username }}',
