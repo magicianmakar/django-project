@@ -2930,16 +2930,14 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         except:
             pass
 
-        store = ShopifyStore() if i.store is None else i.store
-
         p['price'] = '%.02f' % utils.safeFloat(p['product'].get('price'))
-        p['price'] = store.format_price(p['price'])
+        p['price'] = utils.format_price(p['price'], i.store)
 
         price_range = p['product'].get('price_range')
         if price_range and type(price_range) is list and len(price_range) == 2:
             p['price_range'] = '{} - {}'.format(
-                store.format_price('{:.02f}'.format(price_range[0])), 
-                store.format_price('{:.02f}'.format(price_range[1]))
+                utils.format_price('{:.02f}'.format(price_range[0], i.store)),
+                utils.format_price('{:.02f}'.format(price_range[1], i.store))
             )
 
         if 'images' not in p['product'] or not p['product']['images']:

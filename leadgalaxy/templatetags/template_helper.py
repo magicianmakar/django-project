@@ -177,8 +177,13 @@ def render_markdown(text, render_help=True):
 
 @register.filter(name='money_format')
 def money_format(amount, store):
-    if store and store.currency_format:
-        currency_format = store.currency_format.replace('{{', '{').replace('}}', '}')
-        return currency_format.format(amount=amount)
+    from leadgalaxy.utils import format_price
 
-    return '${}'.format(amount)
+    return format_price(amount, store)
+
+
+@register.filter(name='money_sign')
+def money_sign(store):
+    from leadgalaxy.utils import format_price
+
+    return format_price("", store, force=True)

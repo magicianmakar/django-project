@@ -76,14 +76,14 @@
             <div class="form-group col-xs-3">
                 <label for="product-price">Price</label>
                 <div class="input-group">
-                    <span class="input-group-addon">{{ ""|money_format:product.store }}</span>
+                    <span class="input-group-addon">{{ product.store|money_sign }}</span>
                     <input type="text" class="form-control" id="product-price">
                 </div>
             </div>
             <div class="form-group col-xs-3">
                 <label for="product-type">Compare at price</label>
                 <div class="input-group">
-                    <span class="input-group-addon">{{ ""|money_format:product.store }}</span>
+                    <span class="input-group-addon">{{ product.store|money_sign }}</span>
                     <input type="text" class="form-control" id="product-compare-at"
                            value="{{product.product.compare_at_price|default:''}}">
                 </div>
@@ -156,12 +156,12 @@
 
                                     <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
-                                        <span class="var-pad">{{ ""|money_format:product.store }}</span>
+                                        <span class="var-pad">{{ product.store|money_sign }}</span>
                                     </td>
 
                                     <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
-                                        <span class="var-pad">{{ ""|money_format:product.store }}</span>
+                                        <span class="var-pad">{{ product.store|money_sign }}</span>
                                     </td>
 
                                     <td style="white-space:nowrap">

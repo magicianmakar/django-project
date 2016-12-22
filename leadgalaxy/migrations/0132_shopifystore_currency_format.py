@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('leadgalaxy', '0129_shopifyproduct_original_data_key'),
+        ('leadgalaxy', '0131_shopifyproduct_config'),
     ]
 
     operations = [
