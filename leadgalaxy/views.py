@@ -1223,6 +1223,15 @@ def proccess_api(request, user, method, target, data):
 
                     variants.append(variant)
 
+                images = []
+                for i in data['images']:
+                    img = {'src': i}
+                    img_filename = utils.hash_url_filename(i)
+                    if data['variants_images'] and img_filename in data['variants_images']:
+                        img['filename'] = 'v-{}__{}'.format(data['variants_images'][img_filename], img_filename)
+
+                    images.append(img)
+
                 req_data = {
                     'product': splitted_product.id,
                     'store': splitted_product.store_id,
@@ -1236,7 +1245,7 @@ def proccess_api(request, user, method, target, data):
                             'tags': data['tags'],
                             'variants': variants,
                             'options': [{'name': v['title'], 'values': v['values']} for v in data['variants']],
-                            'images': [{'src': i} for i in data['images']]
+                            'images': images
                         }
                     })
                 }

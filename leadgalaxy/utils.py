@@ -14,6 +14,7 @@ import mimetypes
 import re
 import shutil
 import tempfile
+import ctypes
 from urlparse import urlparse
 from hashlib import sha256
 from math import ceil
@@ -664,8 +665,16 @@ def split_product(product, split_factor, store=None):
                 clone.shopify_id = 0
 
                 new_data = json.loads(clone.data)
+                new_images = []
+                for img in new_data['images']:
+                    hashval = hash_url_filename(img)
+                    if not (hashval in new_data['variants_images'] and new_data['variants_images'][hashval] in active_variant['values']):
+                        new_images.append(img)
+                    if hashval in new_data['variants_images'] and new_data['variants_images'][hashval] == v:
+                        new_images.insert(0, img)
+                new_data['images'] = new_images
                 new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
-                new_data['variants'].append({'title': split_factor, 'values': [v]})
+                # new_data['variants'].append({'title': split_factor, 'values': [v]})
                 new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
 
                 clone.data = json.dumps(new_data)
@@ -1689,6 +1698,32 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url, time.time() - upload_start
     else:
         return upload_url
+
+
+def clean_url_path(url):
+    return re.sub('#.*$', '', re.sub(r'\?.*$', '', url))
+
+
+def get_filename_from_url(url):
+    return clean_url_path(url).split('/').pop()
+
+
+def get_fileext_from_url(url):
+    return get_filename_from_url(url).split('.').pop()
+
+
+def hash_url_filename(s):
+    url = clean_url_path(s)
+    ext = get_fileext_from_url(s)
+
+    hashval = 0
+    if (len(url) == 0):
+        return hashval
+    for i in range(len(url)):
+        ch = ord(url[i])
+        hashval = int(((hashval << 5) - hashval) + ch)
+        hashval |= 0
+    return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
 
 
 # Helper Classes
