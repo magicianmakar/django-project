@@ -1,8 +1,6 @@
 import arrow
-from datetime import datetime, timedelta
 
-from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone
+from django.core.management.base import BaseCommand
 
 from order_exports.api import ShopifyOrderExportAPI
 from order_exports.models import OrderExport

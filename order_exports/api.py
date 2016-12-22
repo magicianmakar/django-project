@@ -5,8 +5,6 @@ import tempfile
 import os
 import uuid
 import json
-from json import loads, dumps
-from datetime import datetime, timedelta
 from math import ceil
 
 import requests
@@ -179,8 +177,6 @@ class ShopifyOrderExportAPI():
 
     @property
     def _get_unique_code(self):
-        from order_exports.models import OrderExportQuery
-
         if self.unique_code:
             return self.unique_code
 
@@ -192,10 +188,8 @@ class ShopifyOrderExportAPI():
         return self.unique_code
 
     def fulfill(self, order_id, tracking_number, line_item_id, fulfillment_id=''):
-        url = '/admin/orders/{}.json'.format(order_id)
-        params = {'fields': 'line_items'}
-
         fulfillment_params = self._create_fulfillment_params(order_id, tracking_number, line_item_id)
+
         return self._post_fulfillment(fulfillment_params, order_id, fulfillment_id)
 
     def generate_query(self):
@@ -225,7 +219,7 @@ class ShopifyOrderExportAPI():
             log.type = log.SAMPLE
             log.save()
 
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
             log.finished_by = timezone.now()
             log.save()
@@ -261,7 +255,7 @@ class ShopifyOrderExportAPI():
             log.type = log.COMPLETE
             log.save()
 
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
             log.finished_by = timezone.now()
             log.save()
@@ -277,7 +271,7 @@ class ShopifyOrderExportAPI():
                 'line_items': self.order_export.line_fields_choices,
             },
             'pages': range(1, max_pages),
-            'max_page': max_pages-1,
+            'max_page': max_pages - 1,
             'count': count
         }
 
@@ -289,15 +283,8 @@ class ShopifyOrderExportAPI():
         vendor = slugify(self.order_export.filters.vendor.strip())
 
         fields = self.order_export.fields_choices
-        fieldnames = self._get_fieldnames(fields)
-
         line_fields = self.order_export.line_fields_choices
-        fieldnames += self._get_fieldnames(line_fields, 'Line Field - ')
-
         shipping_address = self.order_export.shipping_address_choices
-        fieldnames += self._get_fieldnames(shipping_address, 'Shipping Address - ')
-
-        count_fieldnames = len(fieldnames)
 
         lines = []
         for order in orders:
@@ -310,12 +297,10 @@ class ShopifyOrderExportAPI():
             line['fields']['id'] = unicode(order['id']).encode("utf-8")
 
             if len(fields):
-                write = True
                 for field in fields:
                     line['fields'][field[0]] = unicode(order[field[0]]).encode("utf-8")
 
             if len(shipping_address) and 'shipping_address' in order:
-                write = True
                 for field in shipping_address:
                     line['shipping_address'][field[0]] = unicode(order['shipping_address'][field[0]]).encode("utf-8")
 
@@ -410,7 +395,7 @@ class ShopifyOrderExportAPI():
             }))
         }
 
-        html_message = send_email_from_template(
+        send_email_from_template(
             'order_export.html',
             '[Shopified App] Order Export',
             self.order_export.emails,

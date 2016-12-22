@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import re
 from datetime import datetime
 
 from django.core.exceptions import PermissionDenied
@@ -9,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.conf import settings
 from django.http import JsonResponse
 
 from order_exports.api import ShopifyOrderExportAPI

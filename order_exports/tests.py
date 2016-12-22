@@ -53,9 +53,9 @@ class OrderExportFactory(factory.django.DjangoModelFactory):
     filters = factory.SubFactory('order_exports.tests.OrderExportFilterFactory')
     description = fuzzy.FuzzyText()
     schedule = fuzzy.FuzzyDateTime(timezone.now() - timedelta(hours=24),
-                                           timezone.now(),
-                                           force_minute=0,
-                                           force_second=0)
+                                   timezone.now(),
+                                   force_minute=0,
+                                   force_second=0)
     receiver = 'test@rank-engine.com'
     fields = '["id", "name", "total_price", "email"]'
     line_fields = '["name", "fulfillment_status"]'

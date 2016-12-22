@@ -8,12 +8,9 @@ import time
 import base64
 import boto
 import datetime
-import gzip
 import hmac
 import mimetypes
 import re
-import shutil
-import tempfile
 import ctypes
 from urlparse import urlparse
 from hashlib import sha256
@@ -21,7 +18,6 @@ from math import ceil
 
 from tld import get_tld
 from bleach import clean
-from boto.s3.key import Key
 
 from django.conf import settings
 from django.core.mail import send_mail
