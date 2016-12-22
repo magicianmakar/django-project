@@ -11,6 +11,7 @@ before_script:
 
 test:
   script:
+    - flake8
     - python manage.py test
 
   cache:

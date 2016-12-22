@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect, Http404
 from django.core.cache import cache
 from django.utils import timezone
 from django.http import JsonResponse
@@ -74,7 +73,7 @@ def get_product_feed(request, store_id, revision=None):
         raise Http404('Feed not found')
 
     if not store.user.can('product_feeds.use'):
-        raise PermissionDenied('Product Feeds')
+        raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
 

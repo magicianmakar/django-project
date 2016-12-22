@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 from django.core.exceptions import PermissionDenied
@@ -16,6 +16,9 @@ import requests
 import textwrap
 import hashlib
 from urlparse import urlparse
+
+import arrow
+from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
@@ -117,13 +120,11 @@ class UserProfile(models.Model):
 
             expire = reg.get_data().get('expire_date')
             if expire:
-                import arrow
-                from django.utils import timezone
-                from leadgalaxy.utils import get_plan
-
                 expire = arrow.get(expire)  # expire is an ISO format date
 
                 if self.plan_expire_at is not None:
+                    from django.utils import timezone
+
                     delta = self.plan_expire_at - timezone.now()
                     if delta.days < 30:
                         # Purchase was made 30 days before the expire date (or after the expire date
@@ -134,6 +135,8 @@ class UserProfile(models.Model):
 
                 if self.plan_expire_at is None:
                     # Chane to Free Plan after expiration
+                    from leadgalaxy.utils import get_plan
+
                     self.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
                     self.plan_expire_at = expire.datetime
 
@@ -180,9 +183,6 @@ class UserProfile(models.Model):
 
     def create_stripe_customer(self):
         ''' Create a Stripe Customer for this a profile '''
-
-        from stripe_subscription.utils import update_customer
-
         try:
             customer = self.user.stripe_customer
         except:
@@ -195,6 +195,7 @@ class UserProfile(models.Model):
                 metadata={'user_id': self.user.id}
             )
 
+            from stripe_subscription.utils import update_customer
             update_customer(self.user, customer)
 
     def change_plan(self, plan):
@@ -451,7 +452,7 @@ def user_get_boards(self):
 @add_to_class(User, 'is_stripe_customer')
 def user_stripe_customer(self):
     try:
-        return self.stripe_customer and self.stripe_customer.customer_id
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
     except:
         return False
 
@@ -482,8 +483,6 @@ class ShopifyStore(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def save(self, *args, **kwargs):
-        from django.utils.crypto import get_random_string
-
         if not self.store_hash:
             self.store_hash = get_random_string(32, 'abcdef0123456789')
 
@@ -573,7 +572,6 @@ class ShopifyStore(models.Model):
 
     def is_sync_enabled(self):
         from shopify_orders.utils import is_store_synced, is_store_sync_enabled
-
         return is_store_synced(self) and is_store_sync_enabled(self)
 
     def connected_count(self):
@@ -598,10 +596,11 @@ class ShopifyStore(models.Model):
                                          .count()
 
     def pusher_trigger(self, event, data):
-        from django.conf import settings
-        from pusher import Pusher
+        pusher = Pusher(
+            app_id=settings.PUSHER_APP_ID,
+            key=settings.PUSHER_KEY,
+            secret=settings.PUSHER_SECRET)
 
-        pusher = Pusher(app_id=settings.PUSHER_APP_ID, key=settings.PUSHER_KEY, secret=settings.PUSHER_SECRET)
         pusher.trigger('order_{}'.format(self.get_short_hash()), event, data)
 
     def format_price(self, amount):
@@ -638,6 +637,7 @@ class ShopifyProduct(models.Model):
     original_data = models.TextField(default='', blank=True)
     original_data_key = models.CharField(max_length=32, null=True, blank=True)
 
+    config = models.TextField(null=True, blank=True)
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
@@ -719,6 +719,12 @@ class ShopifyProduct(models.Model):
             self.price = 0.0
 
         super(ShopifyProduct, self).save(*args, **kwargs)
+
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def is_connected(self):
         return bool(self.get_shopify_id())
@@ -935,7 +941,6 @@ class ShopifyProduct(models.Model):
     def get_shopify_exports(self):
         shopify_id = self.get_shopify_id()
         if shopify_id:
-            from django.db.models import Q
             return ShopifyProductExport.objects.filter(
                 Q(shopify_id=self.shopify_export.shopify_id, store__user=self.user) |
                 Q(product=self))
@@ -1316,6 +1321,25 @@ class AppPermission(models.Model):
         return self.description
 
 
+class ClippingMagic(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.OneToOneField(User, related_name='clippingmagic')
+
+    api_id = models.CharField(max_length=100, default='', verbose_name='ClippingMagic API ID')
+    api_secret = models.CharField(max_length=255, default='', verbose_name='ClippingMagic API Secret')
+
+    allowed_images = models.IntegerField(default=-1)
+    downloaded_images = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return '%s:%s' % (self.api_id, self.api_secret)
+
+
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
@@ -1338,8 +1362,6 @@ class GroupPlan(models.Model):
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
 
     def save(self, *args, **kwargs):
-        from django.utils.crypto import get_random_string
-
         if not self.register_hash:
             self.register_hash = get_random_string(32, 'abcdef0123456789')
 
@@ -1394,8 +1416,6 @@ class FeatureBundle(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     def save(self, *args, **kwargs):
-        from django.utils.crypto import get_random_string
-
         if not self.register_hash:
             self.register_hash = get_random_string(32, 'abcdef0123456789')
 
@@ -1444,8 +1464,6 @@ class PlanRegistration(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def save(self, *args, **kwargs):
-        from django.utils.crypto import get_random_string
-
         if not self.register_hash:
             self.register_hash = get_random_string(32, 'abcdef0123456789')
 

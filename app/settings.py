@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 import dj_database_url
 
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -58,6 +59,7 @@ INSTALLED_APPS = (
     'stripe_subscription',
     'product_feed',
     'data_store',
+    'product_alerts',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -304,3 +306,7 @@ PUSHER_SECRET = os.environ.get('PUSHER_SECRET')
 
 # StatusPage
 STATUSPAGE_API_KEY = os.environ.get('STATUSPAGE_API_KEY')
+
+# Clipping Magic
+CLIPPINGMAGIC_API_ID = os.environ.get('CLIPPINGMAGIC_API_ID')
+CLIPPINGMAGIC_API_SECRET = os.environ.get('CLIPPINGMAGIC_API_SECRET')

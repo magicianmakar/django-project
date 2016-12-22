@@ -322,6 +322,14 @@ $('input[name="order_phone_number"]').on('keyup', function() {
 
 $('input[name="order_phone_number"]').trigger('keyup');
 
+
+$('.show-clippingmagic-key-btn').click(function (e) {
+    e.preventDefault();
+
+    $(this).prev().attr('type', 'text').css('font-size', '1.0em');
+    $(this).hide();
+});
+
 $(function () {
     showDescriptionHelp();
     $('#auto_shopify_fulfill').trigger('change');

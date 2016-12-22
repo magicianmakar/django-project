@@ -522,9 +522,90 @@
             </div>
         </div>
 
-        {% if request.user|can:'price_changes.use' %}
+        {% if request.user|can:'price_change_options.use' %}
         <div id="tab-6" class="tab-pane">
             <div class="panel-body"  style="min-height:300px">
+                <form id="product-config-form" role="form">
+                    <input type="hidden" name="product" value="{{product.id}}" />
+                    <div class="setting-section">
+                        <h3 class="setting-title pull-left">Settings</h3>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_price_change" class="col-sm-4 text-right control-label">When the price changes</label>
+                                <div class="col-sm-6">
+                                    <select id="alert_price_change" name="alert_price_change" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify" {% if product.alert_config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="update" {% if product.alert_config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update with the same margin</option>
+                                        <option value="update_for_increase" {% if product.alert_config.alert_price_change == 'update_for_increase' %} selected="selected"{% endif %}>Update only when price goes up</option>
+                                        <option value="none" {% if product.alert_config.alert_price_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_quantity_change" class="col-sm-4 text-right control-label">When inventory changes</label>
+                                <div class="col-sm-6">
+                                    <select id="alert_quantity_change" name="alert_quantity_change" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify"{% if product.alert_config.alert_quantity_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="update"{% if product.alert_config.alert_quantity_change == 'update' %} selected="selected"{% endif %}>Update automatically</option>
+                                        <option value="none"{% if product.alert_config.alert_quantity_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_product_disappears" class="col-sm-4 text-right control-label">When a product disappears</label>
+                                <div class="col-sm-6">
+                                    <select id="alert_product_disappears" name="alert_product_disappears" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify"{% if product.alert_config.alert_product_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="unpublish"{% if product.alert_config.alert_product_disappears == 'unpublish' %} selected="selected"{% endif %}>Unpublish product</option>
+                                        <option value="zero_quantity"{% if product.alert_config.alert_product_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                        <option value="none"{% if product.alert_config.alert_product_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_variant_disappears" class="col-sm-4 text-right control-label">When a variant disappears</label>
+                                <div class="col-sm-6">
+                                    <select id="alert_variant_disappears" name="alert_variant_disappears" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify"{% if product.alert_config.alert_variant_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="remove"{% if product.alert_config.alert_variant_disappears == 'remove' %} selected="selected"{% endif %}>Remove the variant</option>
+                                        <option value="zero_quantity"{% if product.alert_config.alert_variant_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                        <option value="none"{% if product.alert_config.alert_variant_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-9 text-right">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="setting-section">
+                    <h3 class="setting-title">Alerts History</h3>
+                </div>
                 <div class="product-alerts-loading text-center" style="display:none">
                     <i class='fa fa-circle-o-notch'></i>
                 </div>
@@ -612,6 +693,40 @@
     </div>
 </div>
 
+<div id="modal-clippingmagic" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">ClippingMagic API Details</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row">
+                    <form id="user-clippingmagic" method="get" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">ClippingMagic API ID</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="api_id" value="{{ user.clippingmagic.api_id }}" class="form-control api_id" placeholder="ClippingMagic API ID">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">ClippingMagic API Key</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="api_secret" value="{{ user.clippingmagic.api_secret }}" class="form-control api_key" placeholder="ClippingMagic API Key">
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                    </form>
+
+                    <div class=" col-md-9 col-md-offset-2 ">
+                          <button id="save-clippingmagic" class="btn btn-primary"><i class="fa fa-save"></i> Save</button> Don't have API Credentials? <a target="_blank" href="https://clippingmagic.com/api">Click here.</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% verbatim %}
 
 <script id="product-select-template" type="text/x-handlebars-template">
@@ -652,6 +767,7 @@
             <div class="form-group col-xs-12">
                 <label>Original Product link:</label>
                 <input type="text" class="form-control product-original-link" value="{{original.url}}">
+                <i class="fa fa-spinner fa-spin product-original-link-loading"></i>
             </div>
             <div class="form-group col-xs-12 col-md-5">
                 <label>Supplier Name:</label>
@@ -784,6 +900,13 @@ var config = {
     user_id: {{user.id}},
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
+
+    clipping_magic: {
+        stripe_customer: {{ user.is_stripe_customer|lower}},
+        api_id: '{{user.clippingmagic.api_id|default:""}}',
+        api_secret: '{{user.clippingmagic.api_secret|default:""}}',
+        clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
+    },
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
@@ -940,6 +1063,8 @@ $(function() {
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/remove_img_background.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}

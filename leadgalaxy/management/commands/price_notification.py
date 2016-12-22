@@ -1,9 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
-from django.db.models import Q
 
 from leadgalaxy.models import *
-from leadgalaxy import utils
 import simplejson as json
 import requests
 
@@ -74,7 +72,6 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(pk=user_id)
                 products = ShopifyProduct.objects.filter(user=user)
-
                 self.handle_products(user, products, action, options)
 
             except ShopifyStore.DoesNotExist:
@@ -92,8 +89,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.MIGRATE_SUCCESS('Products Count: %d' % products_count))
 
         if products_count:
-            self.stdout.write(u'{} webhooks to {} product for user: {}'
-                .format(action.title(), products_count, user.username), self.style.HTTP_INFO)
+            self.stdout.write(u'{} webhooks to {} product for user: {}'.format(
+                action.title(), products_count, user.username), self.style.HTTP_INFO)
 
             count = 0
 
@@ -105,9 +102,8 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
     def handle_product(self, product, action):
-        # print 'product {} Action {}'.format(product.id, action)
-
         data = json.loads(product.data)
+
         try:
             if product.price_notification_id:
                 self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.'))
@@ -152,14 +148,19 @@ class Command(BaseCommand):
         notification_api_url = '{}/product/add'.format(ALI_WEB_API_BASE)
 
         try:
+            product_json = json.loads(product.data)
+            post_data = {
+                'product_id': product_id,
+                'store_id': store_id,
+                'webhook': webhook_url,
+                'user_id': product.user_id,
+            }
+            # if product is variant-splitted product, pass its value.
+            if product_json['variants_sku'] and len(product_json['variants_sku']) == 1:
+                post_data['variant_value'] = product_json['variants_sku'].values()[0]
             rep = requests.post(
                 url=notification_api_url,
-                data={
-                    'product_id': product_id,
-                    'store_id': store_id,
-                    'webhook': webhook_url,
-                    'user_id': product.user_id
-                }
+                data=post_data
             )
         except Exception as e:
             raven_client.captureException()
@@ -176,5 +177,7 @@ class Command(BaseCommand):
             product.save()
         except Exception as e:
             raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(product.id, repr(e), rep.text)))
+            self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
+                product.id, repr(e), rep.text)))
+
             return

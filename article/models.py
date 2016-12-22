@@ -1,5 +1,3 @@
-# -*- coding:utf8 -*-
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
@@ -22,6 +20,7 @@ ARTICLE_FORMAT = (
 
 
 class Article(models.Model):
+
     class Meta:
         verbose_name = "Page"
         verbose_name_plural = "Pages"
@@ -70,7 +69,9 @@ class Article(models.Model):
 
         super(Article, self).save()
 
+
 class ArticleTag(models.Model):
+
     class Meta:
         verbose_name = "Page Tag"
         verbose_name_plural = "Page Tags"
@@ -87,7 +88,9 @@ class ArticleTag(models.Model):
     def __str__(self):
         return self.title
 
+
 class SidebarLink(models.Model):
+
     class Meta:
         verbose_name = "Sidebar Link"
         verbose_name_plural = "Sidebar Links"
@@ -114,20 +117,19 @@ class Comment(models.Model):
     title = models.CharField(max_length=140)
     body = models.TextField()
     votes = models.IntegerField(default=0)
-    stat = models.IntegerField(choices=PUBLISH_STAT, 
-                                default=0,
-                                verbose_name='Publish stat')
+    stat = models.IntegerField(choices=PUBLISH_STAT, default=0, verbose_name='Publish stat')
 
     parent = models.IntegerField(default=0, verbose_name='Parent comment')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')  
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     author = models.ForeignKey(User)
     article = models.ForeignKey(Article)
 
     def __unicode__(self):
         return self.title
+
 
 class CommentVote(models.Model):
     article = models.ForeignKey(Article)
@@ -137,7 +139,7 @@ class CommentVote(models.Model):
     vote_value = models.IntegerField(verbose_name='Vore Value')
 
     def __unicode__(self):
-        return "%s: %s" %(('Up' if self.vote_value>0 else 'Down'), self.article.title)
+        return "%s: %s" % (('Up' if self.vote_value > 0 else 'Down'), self.article.title)
 
 
 # Signals Handling
