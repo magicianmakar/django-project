@@ -22,6 +22,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.cache.utils import make_template_fragment_key
 from django.db import transaction
 from django.conf import settings
+from django.core import serializers
 
 from unidecode import unidecode
 
@@ -31,18 +32,33 @@ import simplejson as json
 import requests
 import arrow
 import traceback
+import base64
+import hmac
+import mimetypes
+import StringIO
+import time
+import urllib
+import urllib2
+import zlib
+from hashlib import sha1
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import *
 from .forms import *
 from .province_helper import load_uk_provincess, missing_province
+from .templatetags.template_helper import shopify_image_thumb
 
 import tasks
 import utils
 
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import (
+    ShopifyOrder,
+    ShopifyOrderLine,
+    ShopifySyncStatus,
+    ShopifyOrderShippingLine,
+)
 
 from stripe_subscription.utils import (
     process_webhook_event,
@@ -793,36 +809,6 @@ def proccess_api(request, user, method, target, data):
             'status': 'ok'
         })
 
-    if method == 'POST' and target == 'variant-requires-shipping':
-        try:
-            store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
-
-        except ShopifyStore.DoesNotExist:
-            return JsonResponse({'error': 'Store not found'}, status=404)
-
-        product_id = data.get('product')
-        shopify_product = utils.get_shopify_product(store, product_id)
-        if shopify_product:
-            api_data = {
-                'product': {
-                    'variants': []
-                }
-            }
-
-            for variant in shopify_product['variants']:
-                api_data['product']['variants'].append({
-                    'id': variant['id'],
-                    'requires_shipping': True
-                })
-
-            api_url = store.get_link('/admin/products/{}.json'.format(product_id), api=True)
-            requests.put(api_url, json=api_data)
-
-            return JsonResponse({'status': 'ok'})
-        else:
-            return JsonResponse({'error': 'Invalid product'})
-
     if method == 'DELETE' and target == 'product-image':
         store = ShopifyStore.objects.get(id=data.get('store'))
         user.can_view(store)
@@ -834,6 +820,86 @@ def proccess_api(request, user, method, target, data):
         ShopifyProductImage.objects.filter(store=store, product=product).delete()
 
         return JsonResponse({'status': 'ok'})
+
+    if method == 'POST' and target == 'clippingmagic-clean-image':
+        img_url = ""
+        api_url = 'https://clippingmagic.com/api/v1/images'
+        plan = user.profile.plan.title.replace('plan', '').strip().lower()
+        action = data.get('action', 'edit')
+        image_id = data.get('image_id', 0)
+        api_id = settings.CLIPPINGMAGIC_API_ID
+        api_secret = settings.CLIPPINGMAGIC_API_SECRET
+        api_response = {}
+
+        if not user.is_stripe_customer():
+            api_id = data.get('api_id')
+            api_secret = data.get('api_secret')
+
+        elif plan == 'pro' and plan == 'elite':
+            return JsonResponse({
+                'error': "You are not subscribed to this feature"
+            }, status=403)
+
+        else:
+            if user.clippingmagic.downloaded_images >= user.clippingmagic.allowed_images:
+                return JsonResponse({
+                    'error': "You don't have enough credits left. Please re-subscribe for this feature"
+                }, status=403)
+
+        if action == 'edit':
+            res = requests.post(
+                api_url,
+                files={
+                    'image': urllib2.urlopen(data.get('image_url', '')).read()
+                },
+                auth=(api_id, api_secret)
+            ).json()
+
+            api_response = res.get('image', {'id': 0, 'secret': 0})
+
+        elif action == 'done':
+            img_url = requests.get('{}/{}'.format(api_url, image_id), auth=(api_id, api_secret)).url
+            if img_url:
+                UserUpload.objects.create(
+                    user=request.user.models_user,
+                    product=data.get('product_id'),
+                    url=img_url
+                )
+
+                user.clippingmagic.downloaded_images = user.clippingmagic.downloaded_images + 1
+                user.clippingmagic.save()
+        else:
+            return JsonResponse({
+                'error': 'Action is not defined'
+            }, status=500)
+
+        if api_response.get('id') or img_url:
+            return JsonResponse({
+                'status': 'ok',
+                'image_id': api_response.get('id', 0),
+                'image_secret': api_response.get('secret', 0),
+                'api_id': api_id,
+                'image_url': img_url
+            })
+        else:
+            error = res.get('error')
+
+            if error.get('code') == 1001:
+                response = {'error': 'Invalid API Keys click '
+                            '<a href="/user/profile#clippingmagic">here</a> to '
+                            'update your API credentials.'}
+
+            elif error.get('code') == 1008:
+                response = {'error': 'Seems your trial is expired please upgrade '
+                            'your account at <a href="http://clippingmagic.com/api" '
+                            'target = "_blank">ClippingMagic</a>'}
+
+            else:
+                response = {'error': 'ClippingMagic API Error'}
+
+            raven_client.captureMessage('ClippingMagic API Error', level='warning', extra=res)
+
+            return JsonResponse(response, status=500)
 
     if method == 'POST' and target == 'change-plan':
         if not user.is_superuser:
@@ -847,7 +913,7 @@ def proccess_api(request, user, method, target, data):
                 'error': ('Plan should be changed from Stripe Dashboard:\n'
                           'https://dashboard.stripe.com/customers/{}').format(
                     target_user.stripe_customer.customer_id)
-                }, status=422)
+            }, status=422)
         try:
             profile = target_user.profile
             target_user.profile.plan = plan
@@ -887,8 +953,6 @@ def proccess_api(request, user, method, target, data):
         })
 
     if target == 'shopify-products':
-        from .templatetags.template_helper import shopify_image_thumb
-
         store = utils.safeInt(data.get('store'))
         if not store:
             return JsonResponse({'error': 'No Store was selected'}, status=404)
@@ -1129,7 +1193,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'POST' and target == 'product-split-variants':
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        split_factor = data.get('split_factor');
+        split_factor = data.get('split_factor')
         user.can_view(product)
 
         splitted_products = utils.split_product(product, split_factor)
@@ -1245,10 +1309,10 @@ def proccess_api(request, user, method, target, data):
         # Auto Order Timeout
         config['ot'] = {
             #  Start Auto fulfill after `t` is elapsed
-            't': profile.get_config().get('_auto_order_timeout', 15000),
+            't': profile.get_config().get('_auto_order_timeout', -1),
 
             #  Debug Auto fulfill timeout
-            'd': 2
+            'd': 0
         }
 
         return JsonResponse(config)
@@ -1298,6 +1362,18 @@ def proccess_api(request, user, method, target, data):
                 config[key] = bool(data.get(key))
                 bool_config.remove(key)
 
+            elif key == 'shipping_method_filter':
+                config[key] = True
+
+                # Resets the store sync status the first time the filter is added to config
+                for store in user.models_user.shopifystore_set.all():
+                    try:
+                        if shopify_orders_utils.is_store_synced(store):  # Only reset if store is already imported
+                            ShopifySyncStatus.objects.filter(sync_type='orders', store=store) \
+                                                     .update(sync_status=6)
+                    except ShopifySyncStatus.DoesNotExist:
+                        pass
+
             else:
                 if key != 'access_token':
                     config[key] = data[key]
@@ -1307,6 +1383,61 @@ def proccess_api(request, user, method, target, data):
 
         profile.config = json.dumps(config)
         profile.save()
+
+        # add clipping magic keys
+        form = UserClippingMagicForm(data)
+        if form.is_valid():
+            ClippingMagic.objects.update_or_create(
+                user=user,
+                defaults={
+                    'api_id': form.cleaned_data['api_id'],
+                    'api_secret': form.cleaned_data['api_secret']
+                }
+            )
+
+        return JsonResponse({'status': 'ok'})
+
+    if method == 'GET' and target == 'product-config':
+        if not user.can('price_changes.use'):
+            raise PermissionDenied()
+
+        product = request.GET.get('product')
+        if product:
+            product = get_object_or_404(ShopifyProduct, id=product)
+            request.user.can_view(product)
+        else:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
+
+        return JsonResponse(config)
+
+    if method == 'POST' and target == 'product-config':
+        if not user.can('price_changes.use'):
+            raise PermissionDenied()
+
+        product = data.get('product')
+        if product:
+            product = get_object_or_404(ShopifyProduct, id=product)
+            request.user.can_edit(product)
+        else:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
+
+        for key in data:
+            if key == 'product':
+                continue
+            config[key] = data[key]
+
+        product.config = json.dumps(config)
+        product.save()
 
         return JsonResponse({'status': 'ok'})
 
@@ -1432,7 +1563,6 @@ def proccess_api(request, user, method, target, data):
         image = utils.get_shopify_variant_image(store, data.get('product'), data.get('variant'))
 
         if image and request.GET.get('thumb') == '1':
-            from .templatetags.template_helper import shopify_image_thumb
             image = shopify_image_thumb(image)
 
         if image and request.GET.get('redirect') == '1':
@@ -1475,8 +1605,6 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'suppliers-mapping':
-        from django.db import transaction
-
         product = ShopifyProduct.objects.get(id=data.get('product'))
         user.can_edit(product)
 
@@ -1515,7 +1643,6 @@ def proccess_api(request, user, method, target, data):
             raise Http404('Not found')
 
         # Get Orders marked as Ordered
-        from django.core import serializers
 
         orders = []
 
@@ -1575,7 +1702,7 @@ def proccess_api(request, user, method, target, data):
 
         if not data.get('order_id') and not data.get('line_id'):
             ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                     .update(check_count=F('check_count')+1, updated_at=timezone.now())
+                                     .update(check_count=F('check_count') + 1, updated_at=timezone.now())
 
         return JsonResponse(orders, safe=False)
 
@@ -1873,6 +2000,16 @@ def proccess_api(request, user, method, target, data):
         else:
             return JsonResponse({'error': form.errors})
 
+    if method == 'POST' and target == 'user-clippingmagic':
+        form = UserClippingMagicForm(data)
+        if form.is_valid():
+            ClippingMagic.objects.update_or_create(user=user, defaults={
+                'api_id': form.cleaned_data['api_id'],
+                'api_secret': form.cleaned_data['api_secret']
+            })
+
+            return JsonResponse({'status': 'ok'})
+
     if method == 'GET' and target == 'shipping-aliexpress':
         aliexpress_id = data.get('id')
 
@@ -2045,7 +2182,7 @@ def proccess_api(request, user, method, target, data):
                 'title': 'Importing...',
                 'variants': [],
                 'original_url': supplier_url
-                })
+            })
         )
 
         user.can_add(product)
@@ -2101,7 +2238,7 @@ def webhook(request, provider, option):
                 'firstname': request.POST['payer_firstname'],
                 'payer_id': request.POST['payer_id'],
             }
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
 
             send_mail(subject='Shopified App: Webhook exception',
@@ -2155,7 +2292,7 @@ def webhook(request, provider, option):
 
                 return HttpResponse('ok')
 
-            except Exception as e:
+            except Exception:
                 raven_client.captureException()
 
                 send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
@@ -2604,7 +2741,7 @@ def webhook(request, provider, option):
                     tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
 
                 return JsonResponse({'status': 'ok'})
 
@@ -2616,7 +2753,7 @@ def webhook(request, provider, option):
                 AliexpressProductChange.objects.filter(product=product).delete()
 
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
 
                 ShopifyProductImage.objects.filter(store=store,
                                                    product=shopify_product['id']).delete()
@@ -2625,7 +2762,7 @@ def webhook(request, provider, option):
 
             elif topic == 'orders/create' or topic == 'orders/updated':
                 ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count')+1, updated_at=timezone.now())
+                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
 
                 new_order = topic == 'orders/create'
                 queue = 'priority_high' if new_order else 'celery'
@@ -2635,10 +2772,10 @@ def webhook(request, provider, option):
                 countdown_key = 'eta_order__{}_{}_{}'.format(store.id, shopify_order['id'], topic.split('/').pop())
                 countdown_saved = cache.get(countdown_key)
                 if countdown_saved is None:
-                    cache.set(countdown_key, countdown, timeout=countdown*2)
+                    cache.set(countdown_key, countdown, timeout=countdown * 2)
                 else:
                     countdown = countdown_saved + random.randint(2, 5)
-                    cache.set(countdown_key, countdown, timeout=countdown*2)
+                    cache.set(countdown_key, countdown, timeout=countdown * 2)
 
                 tasks.update_shopify_order.apply_async(
                     args=[store.id, shopify_order['id']],
@@ -2963,9 +3100,6 @@ def product_image_download(request, pid):
 @login_required
 def product_view(request, pid):
     #  AWS
-    import base64
-    import hmac
-    from hashlib import sha1
 
     aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
 
@@ -3004,6 +3138,11 @@ def product_view(request, pid):
         product = get_object_or_404(ShopifyProduct, id=pid)
         request.user.can_view(product)
 
+    try:
+        alert_config = json.loads(product.config)
+    except:
+        alert_config = {}
+
     p = {
         'qelem': product,
         'id': product.id,
@@ -3013,6 +3152,7 @@ def product_view(request, pid):
         'updated_at': product.updated_at,
         'product': json.loads(product.data),
         'notes': product.notes,
+        'alert_config': alert_config
     }
 
     if 'images' not in p['product'] or not p['product']['images']:
@@ -3545,7 +3685,7 @@ def acp_graph(request):
             products_cum.append({
                 'created_count': total_count,
                 'created': i['created']
-                })
+            })
         products = products_cum
 
         total_count = User.objects.all().count()
@@ -3555,7 +3695,7 @@ def acp_graph(request):
             users_cum.append({
                 'created_count': total_count,
                 'created': i['created']
-                })
+            })
         users = users_cum
 
         total_count = tracking_count['awaiting']
@@ -3565,7 +3705,7 @@ def acp_graph(request):
             tracking_awaiting_cum.append({
                 'updated_count': total_count,
                 'updated': i['updated']
-                })
+            })
         tracking_awaiting = tracking_awaiting_cum
 
         total_count = tracking_count['fulfilled']
@@ -3575,7 +3715,7 @@ def acp_graph(request):
             tracking_fulfilled_cum.append({
                 'updated_count': total_count,
                 'updated': i['updated']
-                })
+            })
         tracking_fulfilled = tracking_fulfilled_cum
 
         total_count = tracking_count['auto']
@@ -3585,7 +3725,7 @@ def acp_graph(request):
             tracking_auto_cum.append({
                 'updated_count': total_count,
                 'updated': i['updated']
-                })
+            })
         tracking_auto = tracking_auto_cum
 
         total_count = ShopifyOrder.objects.count()
@@ -3595,7 +3735,7 @@ def acp_graph(request):
             shopify_orders_cum.append({
                 'created_count': total_count,
                 'created': i['created']
-                })
+            })
         shopify_orders = shopify_orders_cum
 
     tracking_count['enabled_awaiting'] = tracking_count['awaiting'] - tracking_count['disabled']
@@ -3718,8 +3858,6 @@ def acp_groups_install(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
-    from django.db import transaction
-
     plan = GroupPlan.objects.get(id=request.GET.get('default'))
     vip_plan = GroupPlan.objects.get(id=request.GET.get('vip'))
     users = User.objects.filter(profile__plan=None)
@@ -3826,7 +3964,7 @@ def autocomplete(request, target):
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
 
-        except PermissionDenied as e:
+        except PermissionDenied:
             raven_client.captureException()
             return JsonResponse({'error': 'Permission Denied'}, status=403)
 
@@ -3841,18 +3979,35 @@ def autocomplete(request, target):
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
+    elif target == 'shipping-method-name':
+        try:
+            store = ShopifyStore.objects.get(id=request.GET.get('store'))
+            request.user.can_view(store)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except PermissionDenied:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Permission Denied'}, status=403)
+
+        shipping_methods = ShopifyOrderShippingLine.objects.only('title') \
+                                                           .distinct('title') \
+                                                           .filter(title__icontains=q) \
+                                                           .filter(store=store)
+
+        results = []
+        for shipping_method in shipping_methods:
+            results.append({'value': shipping_method.title})
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
 
 @login_required
 def upload_file_sign(request):
-    import time
-    import base64
-    import hmac
-    import urllib
-    from hashlib import sha1
-
     if not request.user.can('image_uploader.use'):
         return JsonResponse({'error': 'You don\'t have access to this feature.'})
 
@@ -3953,8 +4108,6 @@ def pixlr_serve_image(request):
     if not request.user.can('pixlr_photo_editor.use'):
         raise PermissionDenied()
 
-    import StringIO
-
     img_url = request.GET.get('image')
     if not img_url:
         raise Http404
@@ -3971,10 +4124,6 @@ def pixlr_serve_image(request):
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
 
-    import StringIO
-    import mimetypes
-    import urllib2
-
     if 'advanced' in request.GET:
         # Pixlr
         if not request.user.can('pixlr_photo_editor.use'):
@@ -3986,6 +4135,16 @@ def save_image_s3(request):
         img_url = image.name
 
         fp = image
+
+    elif 'clippingmagic' in request.POST:
+        if not request.user.can('clippingmagic.use'):
+            return render(request, 'upgrade.html')
+
+        product_id = request.POST.get('product')
+        img_url = request.POST.get('url')
+        fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
+        img_url = '%s.png' % img_url
+
     else:
         # Aviary
         if not request.user.can('aviary_photo_editor.use'):
@@ -4009,7 +4168,12 @@ def save_image_s3(request):
     product = ShopifyProduct.objects.get(id=product_id)
     request.user.can_edit(product)
 
-    upload_url = utils.aws_s3_upload(filename=img_name, fp=fp, mimetype=mimetype, bucket_name=settings.S3_UPLOADS_BUCKET)
+    upload_url = utils.aws_s3_upload(
+        filename=img_name,
+        fp=fp,
+        mimetype=mimetype,
+        bucket_name=settings.S3_UPLOADS_BUCKET
+    )
 
     upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
     upload.save()
@@ -4082,6 +4246,7 @@ def orders_view(request):
 
     product_filter = request.GET.get('product')
     supplier_filter = request.GET.get('supplier_name')
+    shipping_method_filter = request.GET.get('shipping_method_name')
 
     if request.GET.get('shop'):
         status, fulfillment, financial = ['any', 'any', 'any']
@@ -4092,7 +4257,8 @@ def orders_view(request):
         shopify_orders_utils.enable_store_sync(store)
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
-    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
+    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or
+                                                 request.GET.get('new'))
 
     if not store_sync_enabled:
         if ',' in fulfillment:
@@ -4113,6 +4279,9 @@ def orders_view(request):
         current_page = paginator.page(page)
         page = current_page
     else:
+        if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
+            messages.info(request, 'Your Store Orders are being imported')
+
         orders = ShopifyOrder.objects.filter(user=request.user.models_user, store=store)
 
         if query_order:
@@ -4128,7 +4297,7 @@ def orders_view(request):
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
-                orders = orders.filter(Q(order_number=(order_number-1000)) |
+                orders = orders.filter(Q(order_number=(order_number - 1000)) |
                                        Q(order_id=order_number) |
                                        Q(order_id__in=tracks))
 
@@ -4170,10 +4339,13 @@ def orders_view(request):
             orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if product_filter:
-            orders = orders.filter(shopifyorderline__product_id=product_filter)
+            orders = orders.filter(shopifyorderline__product_id=product_filter).distinct()
 
         if supplier_filter:
-            orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter)
+            orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter).distinct()
+
+        if shipping_method_filter:
+            orders = orders.filter(shipping_lines__title=shipping_method_filter)
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
@@ -4187,9 +4359,8 @@ def orders_view(request):
         open_orders = paginator.count
 
         if open_orders:
-            import zlib
-
-            cache_key = 'saved_orders_%s' % utils.hash_list(['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page])
+            cache_list = ['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page]
+            cache_key = 'saved_orders_%s' % utils.hash_list(cache_list)
             shopify_orders = cache.get(cache_key)
             if shopify_orders is None or cache.get('saved_orders_clear_{}'.format(store.id)):
                 rep = requests.get(
@@ -4473,6 +4644,8 @@ def orders_view(request):
         'awaiting_order': awaiting_order,
         'product_filter': product_filter,
         'supplier_filter': supplier_filter,
+        'shipping_method_filter': shipping_method_filter,
+        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter'),
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
@@ -4684,8 +4857,8 @@ def product_alerts(request):
         product_changes.append(change)
 
     if not show_hidden:
-        AliexpressProductChange.objects.filter(user=request.user.models_user,
-                                               id__in=[i['id'] for i in product_changes]) \
+        AliexpressProductChange.objects.filter(user=request.user.models_user) \
+                                       .filter(id__in=[i['id'] for i in product_changes]) \
                                        .update(seen=True)
 
     # Allow sending notification for new changes
@@ -4977,7 +5150,7 @@ def subuser_perms_edit(request, user_id):
             messages.success(request, 'Subuser permissions successfully updated')
             return redirect('leadgalaxy.views.subuser_perms_edit', user_id)
     else:
-        form  = SubuserPermissionsForm(initial=initial)
+        form = SubuserPermissionsForm(initial=initial)
 
     breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username]
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
@@ -5004,7 +5177,7 @@ def subuser_store_permissions(request, user_id, store_id):
             messages.success(request, 'Subuser permissions successfully updated')
             return redirect('leadgalaxy.views.subuser_store_permissions', user_id, store_id)
     else:
-        form  = SubuserPermissionsForm(initial=initial)
+        form = SubuserPermissionsForm(initial=initial)
 
     breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}

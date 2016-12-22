@@ -138,7 +138,7 @@ def callback(request):
             extra={'Current': request.GET.get('state'),
                    'ShouldBe': request.session.get('shopify_state')})
 
-        #raise PermissionDenied('State not matching')
+        # raise PermissionDenied('State not matching')
 
     shop = request.GET['shop']
 

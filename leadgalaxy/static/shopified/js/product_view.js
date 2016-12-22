@@ -54,27 +54,6 @@ function showProductInfo(rproduct) {
     }
 }
 
-$(document).delegate("button#requires_shipping", "click", function(e){
-    e.preventDefault();
-
-    $(this).bootstrapBtn('loading');
-    $.ajax({
-        url: '/api/variant-requires-shipping',
-        type: 'POST',
-        data: {
-            'store': $('#store-select').val(),
-            'product': $(this).data('product'),
-        },
-        success: function (data) {
-            window.location.reload();
-        },
-        error: function (data) {
-            $(this.btn).bootstrapBtn('reset');
-            displayAjaxError('Shipping Status', data);
-        }
-    });
-});
-
 $("a.add-variant").click(function (e) {
     e.preventDefault();
 
@@ -774,6 +753,38 @@ function bindExportEvents(target) {
             }
         });
     });
+
+    $('.product-original-link', target).bindWithDelay('keyup', function (e) {
+
+        var input = $(e.target);
+        var parent = input.parents('.export');
+        var product_url = input.val().trim();
+
+        if(!product_url.length || !(/aliexpress.com/i).test(product_url)) {
+            return;
+        }
+
+        var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
+        if(product_id.length != 2) {
+            return;
+        } else {
+            product_id = product_id[1];
+        }
+
+        $('.product-original-link-loading', parent).show();
+
+        window.extensionSendMessage({
+            subject: 'ProductStoreInfo',
+            product: product_id,
+        }, function(rep) {
+            $('.product-original-link-loading', parent).hide();
+
+            if (rep && rep.name) {
+                $('.product-supplier-name', parent).val(rep.name);
+                $('.product-supplier-link', parent).val(rep.url);
+            }
+        });
+    }, 200);
 }
 
 $('#modal-add-image').on('show.bs.modal', function (e) {
@@ -895,6 +906,34 @@ $('.product-alerts-tab').click(function () {
     }
 });
 
+$('form#product-config-form').submit(function (e) {
+    e.preventDefault();
+
+    var data = $(this).serialize();
+
+    $.ajax({
+        url: '/api/product-config',
+        type: 'POST',
+        data: data,
+        context: {form: $(this)},
+        success: function (data) {
+            if (data.status == 'ok') {
+                toastr.success('Saved.','User Config');
+
+            } else {
+                displayAjaxError('Product Config', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Product Config', data);
+        },
+        complete: function () {
+        }
+    });
+
+    return false;
+});
+
 function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {
@@ -940,15 +979,22 @@ function renderImages() {
             'image-id': i,
             'style': 'cursor: default'
         });
+
         d.append(img);
 
-        d.append($('<button>', {
-            'title': "Delete",
-            'class': "btn btn-danger btn-xs itooltip image-delete",
-            'text': 'x'
+        d.append($('<div>', {
+            'class': "loader",
+            'html': '<i class="fa fa-spinner fa-spin fa-2x"></i>'
         }));
 
-        d.append($('<a>', {
+        var buttons = [];
+        buttons.push($('<button>', {
+            'title': "Delete",
+            'class': "btn btn-danger btn-xs itooltip image-delete",
+            'html': '<i class="fa fa-times"></i>'
+        }));
+
+        buttons.push($('<a>', {
             'title': "Download",
             'class': "btn btn-info btn-xs itooltip download-image",
             'href': el,
@@ -956,8 +1002,16 @@ function renderImages() {
             'html': '<i class="fa fa-download"></i>'
         }));
 
+        if (config.clipping_magic && config.clipping_magic.clippingmagic_editor) {
+            buttons.push($('<button>', {
+                'title': "Remove Background",
+                'class': "btn btn-warning btn-xs itooltip remove-background-image-editor",
+                'html': '<i class="fa fa-scissors"></i></button>'
+            }));
+        }
+
         if (config.photo_editor) {
-            d.append($('<button>', {
+            buttons.push($('<button>', {
                 'title': "Simple Editor",
                 'class': "btn btn-primary btn-xs itooltip edit-photo",
                 'html': '<i class="fa fa-edit"></i>'
@@ -983,7 +1037,7 @@ function renderImages() {
                 })
             });
 
-            d.append($('<a>', {
+            buttons.push($('<a>', {
                 'title': "Advanced Editor",
                 'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
                 'target': "_blank",
@@ -992,6 +1046,12 @@ function renderImages() {
                 'html': '<i class="fa fa-picture-o"></i></a>'
             }));
         }
+
+        $.each(buttons, function (i, el) {
+            d.append(el.css({
+                right: (i * 27) + 'px'
+            }));
+        });
 
         d.find('.image-delete').click(imageClicked);
 

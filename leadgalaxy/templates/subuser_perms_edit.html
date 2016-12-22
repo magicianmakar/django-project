@@ -20,6 +20,10 @@
                 <h5>General Permissions</h5>
             </div>
             <div class="ibox-content" style="display:block">
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    The general permissions are not related to a specific store and will affect the account no matter what store this user is assigned to.
+                </div>
                 {% for error in form.permissions.errors %}
                     <p class="text-danger">{{ error }}</p>
                 {% endfor %}
@@ -43,11 +47,14 @@
                 <h5>Store Permissions</h5>
             </div>
             <div class="ibox-content" style="display:block">
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    Store permissions are assigned on a per store basis. To assign permissions, click Edit next to the store. Make sure to do this for each store. If you do not see the store listed, go back to the previous screen and make sure you have assigned the user to the store.
+                </div>
                 {% for store in subuser.profile.subuser_stores.all %}
                     <p>
-                        <a href="{% url 'subuser_store_permissions' subuser.id store.id %}">
-                            <i class="fa fa-th-large"></i> {{ store.title }}
-                        </a>
+                        {{ store.title }} &nbsp;
+                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url 'subuser_store_permissions' subuser.id store.id %}">Edit</a>
                     </p>
                 {% empty %}
                     <p class="text-center">
