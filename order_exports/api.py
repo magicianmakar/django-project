@@ -200,7 +200,8 @@ class ShopifyOrderExportAPI():
             count=self._get_orders_count(params)
         )
 
-        if self.order_export.previous_day:
+        orders = self._get_orders(params=self.query.params_dict, page=1, limit=1)
+        if len(orders) > 0 and self.order_export.previous_day:
             self.send_email(code=self._get_unique_code)
 
     def generate_sample_export(self):
