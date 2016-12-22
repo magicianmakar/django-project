@@ -14,7 +14,7 @@ import mimetypes
 import re
 import shutil
 import tempfile
-from urlparse import urlparse, parse_qs
+from urlparse import urlparse
 from hashlib import sha256
 from math import ceil
 
@@ -1367,7 +1367,10 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         if len(r['result']['promotionUrls']):
             promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
             if promotion_url and '/deep_link.htm' in promotion_url:
-                promotion_url = parse_qs(urlparse(promotion_url).query)['dl_target_url'].pop()
+                rep = requests.get(promotion_url, allow_redirects=False)
+                rep.raise_for_status()
+
+                promotion_url = rep.headers.get('location')
 
             cache.set(promotion_key, promotion_url, timeout=43200)
 
