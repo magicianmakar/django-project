@@ -169,8 +169,4 @@ def render_markdown(text, render_help=True):
 
 @register.filter(name='money_format')
 def money_format(amount, store):
-    if store.currency_format:
-        currency_format = store.currency_format.replace('{{', '{').replace('}}', '}')
-        return currency_format.format(amount=amount)
-
-    return amount
+    return store.format_price(amount)

@@ -604,6 +604,14 @@ class ShopifyStore(models.Model):
         pusher = Pusher(app_id=settings.PUSHER_APP_ID, key=settings.PUSHER_KEY, secret=settings.PUSHER_SECRET)
         pusher.trigger('order_{}'.format(self.get_short_hash()), event, data)
 
+    def format_price(self, amount):
+        if self.currency_format:
+            currency_format = self.currency_format.replace('{{', '{').replace('}}', '}')
+            return currency_format.format(amount=amount)
+
+        return '${}'.format(amount)
+
+
 
 class AccessToken(models.Model):
     class Meta:
