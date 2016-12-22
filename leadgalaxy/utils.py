@@ -5,24 +5,39 @@ import hashlib
 import pytz
 import collections
 import time
+import base64
+import boto
+import datetime
+import gzip
+import hmac
+import mimetypes
+import re
+import shutil
+import tempfile
+import ctypes
 from urlparse import urlparse
-from tld import get_tld
+from hashlib import sha256
+from math import ceil
 
+from tld import get_tld
+from bleach import clean
+from boto.s3.key import Key
+
+from django.conf import settings
 from django.core.mail import send_mail
 from django.template import Context, Template
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.utils.crypto import get_random_string
+from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from django.shortcuts import get_object_or_404
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
-from shopify_revision.models import ProductRevision
-from shopify_orders.utils import get_datetime
-
-from django.conf import settings
+from shopify_orders.models import ShopifyOrderLine
 
 
 def safeInt(v, default=0):
@@ -57,8 +72,6 @@ def get_domain(url, full=False):
 
 
 def upload_from_url(url, stores=[]):
-    import mimetypes
-
     # Domains are taken from allowed stores plus store's CDN
     allowed_stores = stores + ['alicdn', 'aliimg', 'ebayimg', 'sunfrogshirts']
     allowed_paths = [r'^https?://s3.amazonaws.com/feather(-client)?-files-aviary-prod-us-east-1/']  # Aviary
@@ -69,8 +82,8 @@ def upload_from_url(url, stores=[]):
     allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
 
     can_pull = any([get_domain(url) in allowed_stores,
-                   get_domain(url, full=True) in allowed_domains,
-                   any([re.search(i, url) for i in allowed_paths])])
+                    get_domain(url, full=True) in allowed_domains,
+                    any([re.search(i, url) for i in allowed_paths])])
 
     mimetype = mimetypes.guess_type(remove_link_query(url))[0]
 
@@ -88,8 +101,6 @@ def remove_link_query(link):
 
 
 def get_mimetype(url):
-    import mimetypes
-
     return mimetypes.guess_type(remove_link_query(url))[0]
 
 
@@ -191,7 +202,7 @@ def get_api_user(request, data, assert_login=False):
                         'Different account login',
                         extra={'Request User': request.user, 'API User': user},
                         level='warning'
-                        )
+                    )
 
                 raise ApiLoginException('different_account_login')
 
@@ -202,8 +213,6 @@ def get_api_user(request, data, assert_login=False):
 
 
 def login_attempts_exceeded(username):
-    from django.core.cache import cache
-
     tries_key = 'login_attempts_{}'.format(hash_text(username.lower()))
     tries = cache.get(tries_key)
     if tries is None:
@@ -224,8 +233,6 @@ def login_attempts_exceeded(username):
 
 
 def unlock_account_email(username):
-    from django.core.urlresolvers import reverse
-
     try:
         if '@' in username:
             user = User.objects.get(email__iexact=username)
@@ -469,10 +476,6 @@ def verify_shopify_permissions(store):
 
 
 def verify_shopify_webhook(store, request):
-    import hmac
-    import base64
-    from hashlib import sha256
-
     api_secret = store.get_api_credintals().get('api_secret')
     webhook_hash = hmac.new(api_secret.encode(), request.body, sha256).digest()
     webhook_hash = base64.encodestring(webhook_hash).strip()
@@ -554,9 +557,6 @@ def get_store_from_request(request):
     """
     Return ShopifyStore from based on `store` value or last saved store
     """
-
-    from django.core.exceptions import PermissionDenied
-    from django.shortcuts import get_object_or_404
 
     store = None
     stores = request.user.profile.get_active_stores()
@@ -647,40 +647,53 @@ def duplicate_product(product, store=None):
     return product
 
 
-def split_product(product, store=None):
+def split_product(product, split_factor, store=None):
     data = json.loads(product.data)
     new_products = []
 
     if data['variants'] and len(data['variants']):
-        active_variant = data['variants'][0]
-        for idx, v in enumerate(active_variant['values']):
-            clone = ShopifyProduct.objects.get(id=product.id)
-            clone.pk = None
-            clone.parent_product = product
-            clone.shopify_id = 0
-            new_data = json.loads(clone.data)
-            new_data['images'] = data['images'][idx:idx + 1]
-            if not new_data['images']:
-                new_data['images'] = [data['images'][0]]
-            new_data['variants'] = [{'title': active_variant['title'], 'values': [v]}]
-            new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
-            clone.data = json.dumps(new_data)
+        active_variant = None
+        filtered = [v for v in data['variants'] if v['title'] == split_factor]
+        if len(filtered) > 0:
+            active_variant = filtered[0]
 
-            if store is not None:
-                clone.store = store
+        if active_variant:
+            for idx, v in enumerate(active_variant['values']):
+                clone = ShopifyProduct.objects.get(id=product.id)
+                clone.pk = None
+                clone.parent_product = product
+                clone.shopify_id = 0
 
-            clone.save()
+                new_data = json.loads(clone.data)
+                new_images = []
+                for img in new_data['images']:
+                    hashval = hash_url_filename(img)
+                    if not (hashval in new_data['variants_images'] and new_data['variants_images'][hashval] in active_variant['values']):
+                        new_images.append(img)
+                    if hashval in new_data['variants_images'] and new_data['variants_images'][hashval] == v:
+                        new_images.insert(0, img)
+                new_data['images'] = new_images
+                new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
+                # new_data['variants'].append({'title': split_factor, 'values': [v]})
+                new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
 
-            for i in product.productsupplier_set.all():
-                i.pk = None
-                i.product = clone
-                i.store = clone.store
-                i.save()
+                clone.data = json.dumps(new_data)
 
-                if i.is_default:
-                    clone.set_default_supplier(i, commit=True)
+                if store is not None:
+                    clone.store = store
 
-            new_products.append(clone)
+                clone.save()
+
+                for i in product.productsupplier_set.all():
+                    i.pk = None
+                    i.product = clone
+                    i.store = clone.store
+                    i.save()
+
+                    if i.is_default:
+                        clone.set_default_supplier(i, commit=True)
+
+                new_products.append(clone)
 
     return new_products
 
@@ -720,16 +733,14 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
         for p in rep['products']:
             yield p
     else:
-        from math import ceil
-
         limit = 200
         count = get_shopify_products_count(store)
 
         if not count:
             return
 
-        pages = int(ceil(count/float(limit)))
-        for page in xrange(1, pages+1):
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
             rep = get_shopify_products(store=store, page=page, limit=limit,
                                        all_products=False, session=requests.session())
             for p in rep:
@@ -769,16 +780,6 @@ def link_product_images(product):
                     product['variants'][idx]['image_src'] = i['src']
 
     return product
-
-
-def check_requires_shipping(product):
-    requires_shipping = True
-    for variant in product.get('variants', []):
-        if not variant.get('requires_shipping', False):
-            requires_shipping = False
-            break
-
-    return requires_shipping
 
 
 def get_shopify_variant_image(store, product_id, variant_id):
@@ -857,10 +858,13 @@ def set_shopify_order_note(store, order_id, note):
         }
     )
 
-    response_text = rep.text
+    response = rep.text
     rep.raise_for_status()
 
-    return rep.json()['order']['id']
+    if rep.ok:
+        response = rep.json()
+
+    return response['order']['id']
 
 
 def add_shopify_order_note(store, order_id, new_note, current_note=False):
@@ -1058,6 +1062,97 @@ def is_chinese_carrier(tarcking_number):
     return tarcking_number and re.search('(CN|SG|HK)$', tarcking_number) is not None
 
 
+def shipping_carrier(tracking_number):
+    patterns = [{
+        'name': "Royal Mail",
+        'pattern': "^([A-Z]{2}\\d{9}GB)$"
+    }, {
+        'name': "UPS",
+        'pattern': "^(1Z)|^(K\\d{10}$)|^(T\\d{10}$)"
+    }, {
+        'name': "Canada Post",
+        'pattern': "((CA)$|^\\d{16}$)"
+    }, {
+        'name': "China Post",
+        'pattern': "^(R|CP|E|L)\\w+CN$"
+    }, {
+        'name': "FedEx",
+        'pattern': "^(\\d{12}$)|^(\\d{15}$)|^(96\\d{20}$)"
+    }, {
+        'name': "Post Danmark",
+        'pattern': "\\d{3}5705983\\d{10}|DK$"
+    }, {
+        'name': "USPS",
+        'pattern': "^((?:94001|92055|94073|93033|92701|94055|92088|92021|92001|94108|"
+                   "93612|94701|94058|94490)\\d{17}|7\\d{19}|03\\d{18}|8\\d{9}|420"
+                   "\\d{23,27}|10169\\d{11}|[A-Z]{2}\\d{9}US|(?:EV|CX)\\d{9}CN|LK\\d{9}HK)$"
+    }, {
+        'name': "FedEx UK",
+        'pattern': None
+    }, {
+        'name': "DHL",
+        'pattern': "^(\\d{10,11}$)"
+    }, {
+        'name': "DHL eCommerce",
+        'pattern': "^(GM\\d{16,18}$)|^([A-Z0-9]{14}$)|^(\\d{22}$)"
+    }, {
+        'name': "DHL eCommerce Asia",
+        'pattern': "^P[A-Z0-9]{14}$"
+    }, {
+        'name': "Eagle",
+        'pattern': None
+    }, {
+        'name': "Purolator",
+        'pattern': "^[A-Z]{3}\\d{9}$"
+    }, {
+        'name': "TNT",
+        'pattern': None
+    }, {
+        'name': "Australia Post",
+        'pattern': "^([A-Z]{2}\\d{9}AU)$"
+    }, {
+        'name': "New Zealand Post",
+        'pattern': "^[A-Z]{2}\\d{9}NZ$"
+    }, {
+        'name': "TNT Post",
+        'pattern': "^\\w{13}$"
+    }, {
+        'name': "4PX",
+        'pattern': "^RF\\d{9}SG$|^RT\\d{9}HK$|^7\\d{10}$|^P0{4}\\d{8}$|^JJ\\d{9}GB$|^MS\\d{8}XSG$"
+    }, {
+        'name': "APC",
+        'pattern': "^PF\\d{11}$|^\\d{13}$"
+    }, {
+        'name': "FSC",
+        'pattern': "^((?:LS|LM|RW|RS|RU|RX)\\d{9}(?:CN|CH|DE)|(?:WU\\d{13})|(?:\\w{10}$|\\d{22}))$"
+    }, {
+        'name': "Globegistics",
+        'pattern': "^JJ\\d{9}GB$|^(LM|CJ|LX|UM|LJ|LN)\\d{9}US$|^(GAMLABNY|"
+                   "BAIBRATX|SIMGLODE)\\d{10}$|^\\d{10}$"
+    }, {
+        'name': "Amazon Logistics US",
+        'pattern': "^TBA\\d{12,13}$"
+    }, {
+        'name': "Amazon Logistics UK",
+        'pattern': "^Q\\d{11,13}$"
+    }, {
+        'name': "Bluedart",
+        'pattern': "^\\d{9,11}$"
+    }, {
+        'name': "Delhivery",
+        'pattern': "^\\d{11,12}$"
+    }, {
+        'name': "Japan Post",
+        'pattern': "^[a-z]{2}\\d{9}JP|^\\d{11}$"
+    }]
+
+    for p in patterns:
+        if p['pattern'] and re.search(p['pattern'], tracking_number):
+            return p['name']
+
+    return None
+
+
 def order_track_fulfillment(**kwargs):
     ''' Get Tracking Carrier and Url for Shopify Order Fulfillment
         order_id:        Shopify Order ID
@@ -1093,7 +1188,8 @@ def order_track_fulfillment(**kwargs):
                 order__store_id=store_id,
                 order__order_id=order_id)
 
-            is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
+            is_usps = (is_chinese_carrier(source_tracking) or shipping_carrier(source_tracking) == 'USPS') \
+                and line.order.country_code == 'US'
 
     except ShopifyOrderLine.DoesNotExist:
         pass
@@ -1127,8 +1223,9 @@ def order_track_fulfillment(**kwargs):
             data['fulfillment']['tracking_company'] = "Other"
             data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
-    if user_config.get('validate_tracking_number', True) and \
-            not is_valide_tracking_number(source_tracking):
+    if user_config.get('validate_tracking_number', True) \
+            and not is_valide_tracking_number(source_tracking) \
+            and not is_usps:
         notify_customer = 'no'
     else:
         notify_customer = user_config.get('send_shipping_confirmation', 'default')
@@ -1149,38 +1246,6 @@ def order_track_fulfillment(**kwargs):
         data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
 
     return data
-
-
-def product_change_notify(user):
-
-    notify_key = 'product_change_%d' % user.id
-    if user.get_config('_product_change_notify') or cache.get(notify_key):
-        # We already sent the user a notification for a product change
-        return
-
-    template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'product_change_notify.html')
-    template = Template(open(template_file).read())
-
-    data = {
-        'username': user.username,
-        'email': user.email,
-    }
-
-    ctx = Context(data)
-
-    email_html = template.render(ctx)
-    email_html = email_html.replace('\n', '<br />')
-
-    send_mail(subject='[Shopified App] AliExpress Product Alert',
-              recipient_list=[data['email']],
-              from_email='"Shopified App" <no-reply@shopifiedapp.com>',
-              message=email_html,
-              html_message=email_html)
-
-    user.set_config('_product_change_notify', True)
-
-    # Disable notification for a day
-    cache.set(notify_key, True, timeout=86400)
 
 
 def get_variant_name(variant):
@@ -1319,20 +1384,20 @@ def jvzoo_verify_post(params):
 
 
 def jvzoo_parse_post(params):
-        """Parse POST from JVZoo and extract information we need.
+    """Parse POST from JVZoo and extract information we need.
 
-        :param params: POST parameters sent by JVZoo Notification Service
-        :type params: dict """
+    :param params: POST parameters sent by JVZoo Notification Service
+    :type params: dict """
 
-        return {
-            'email': params['ccustemail'],
-            'fullname': params['ccustname'],
-            'firstname': params['ccustname'].split(' ')[0],
-            'lastname': ' '.join(params['ccustname'].split(' ')[1:]),
-            'product_id': params['cproditem'],
-            'affiliate': params['ctransaffiliate'],
-            'trans_type': params['ctransaction'],
-        }
+    return {
+        'email': params['ccustemail'],
+        'fullname': params['ccustname'],
+        'firstname': params['ccustname'].split(' ')[0],
+        'lastname': ' '.join(params['ccustname'].split(' ')[1:]),
+        'product_id': params['cproditem'],
+        'affiliate': params['ctransaffiliate'],
+        'trans_type': params['ctransaction'],
+    }
 
 
 def zaxaa_verify_post(params):
@@ -1353,25 +1418,25 @@ def zaxaa_verify_post(params):
 
 
 def zaxaa_parse_post(params):
-        """ Parse POST from Zaxaa and extract information we need.
+    """ Parse POST from Zaxaa and extract information we need.
 
-        :param params: POST parameters sent by Zaxaa Notification Service
-        :type params: dict """
+    :param params: POST parameters sent by Zaxaa Notification Service
+    :type params: dict """
 
-        return {
-            'email': params['cust_email'],
-            'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
-            'firstname': params['cust_firstname'],
-            'lastname': params['cust_lastname'],
-            'product_id': params['products[0][prod_number]'],
-            'affiliate': '',
-            'trans_type': params['trans_type'],
-        }
+    return {
+        'email': params['cust_email'],
+        'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
+        'firstname': params['cust_firstname'],
+        'lastname': params['cust_lastname'],
+        'product_id': params['products[0][prod_number]'],
+        'affiliate': '',
+        'trans_type': params['trans_type'],
+    }
 
 
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
 
-    promotion_key = 'promotion_links2_{}'.format(hash_text(urls))
+    promotion_key = 'promotion_links3_{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
 
     if promotion_url is not None:
@@ -1403,8 +1468,11 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
 
         if len(r['result']['promotionUrls']):
             promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
-            if promotion_url:
-                promotion_url = promotion_url.replace('https://', 'http://')
+            if promotion_url and '/deep_link.htm' in promotion_url:
+                rep = requests.get(promotion_url, allow_redirects=False)
+                rep.raise_for_status()
+
+                promotion_url = rep.headers.get('location')
 
             cache.set(promotion_key, promotion_url, timeout=43200)
 
@@ -1436,33 +1504,32 @@ def get_user_affiliate(user):
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
-        template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
-        template = Template(open(template_file).read())
+    template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
+    template = Template(open(template_file).read())
 
-        ctx = Context(data)
+    ctx = Context(data)
 
-        email_html = template.render(ctx)
+    email_html = template.render(ctx)
 
-        if nl2br:
-            email_plain = email_html
-            email_html = email_html.replace('\n', '<br />')
-        else:
-            from bleach import clean
+    if nl2br:
+        email_plain = email_html
+        email_html = email_html.replace('\n', '<br />')
+    else:
+        email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
+        email_plain = map(lambda l: l.strip(), email_plain)
+        email_plain = '\n'.join(email_plain)
 
-            email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
-            email_plain = map(lambda l: l.strip(), email_plain)
-            email_plain = '\n'.join(email_plain)
+    if type(recipient) is not list:
+        recipient = [recipient]
 
-        if type(recipient) is not list:
-            recipient = [recipient]
+    send_mail(subject=subject,
+              recipient_list=recipient,
+              from_email='"Shopified App" <support@shopifiedapp.com>',
+              message=email_plain,
+              html_message=email_html)
 
-        send_mail(subject=subject,
-                  recipient_list=recipient,
-                  from_email='"Shopified App" <support@shopifiedapp.com>',
-                  message=email_plain,
-                  html_message=email_html)
+    return email_html
 
-        return email_html
 
 def get_countries():
     country_names = pytz.country_names
@@ -1473,9 +1540,6 @@ def get_countries():
 
 
 def get_timezones(country=None):
-    import datetime
-    import re
-
     if country:
         zones = pytz.country_timezones(country)
     else:
@@ -1558,8 +1622,6 @@ def set_orders_filter(user, filters, default=None):
 
 
 def aws_s3_get_key(filename, bucket_name=None):
-    import boto
-
     if bucket_name is None:
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
@@ -1597,7 +1659,6 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
     k = Key(bucket)
 
     if not mimetype:
-        import mimetypes
         mimetype = mimetypes.guess_type(filename)[0]
 
     k.key = filename
@@ -1635,7 +1696,7 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         k.set_metadata('Content-Encoding', 'gzip')
         k.set_contents_from_filename(tmp_file.name)
 
-        #clean up the temp file
+        # Clean up the temp file
         os.unlink(tmp_file.name)
 
     k.make_public()
@@ -1648,263 +1709,36 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url
 
 
-class ProductChangeEvent():
+def clean_url_path(url):
+    return re.sub('#.*$', '', re.sub(r'\?.*$', '', url))
 
-    def __init__(self, product_change):
-        self.revision = ProductRevision(
-            store=product_change.product.store,
-            product=product_change.product,
-            product_change=product_change,
-            shopify_id=product_change.product.get_shopify_id()
-        )
-        self.save_revision = False
-        self.notify_events = []
-        self.base_product_url = 'https://app.shopifiedapp.com/product'
 
-        events = json.loads(product_change.data)
-        self.product_changes = events['changes']['product']
-        if 'variants' in events['changes']:
-            self.variants_changes = events['changes']['variants']
-        else:
-            self.variants_changes = []
+def get_filename_from_url(url):
+    return clean_url_path(url).split('/').pop()
 
-        self.product = product_change.product
-        self.user = product_change.user
 
-        self.variants_map = self.product.get_variant_mapping()
-        if not len(self.variants_map.keys()):
-            self.variants_map = None
+def get_fileext_from_url(url):
+    return get_filename_from_url(url).split('.').pop()
 
-        self.config = {
-            'product_disappears': self.user.get_config('alert_product_disappears', 'notify'),
-            'variant_disappears': self.user.get_config('alert_variant_disappears', 'notify'),
-            'quantity_change': self.user.get_config('alert_quantity_change', 'notify'),
-            'price_change': self.user.get_config('alert_price_change', 'notify'),
-        }
 
-    def prepare_data_before(self, data):
-        # Remember original price in case it changes
-        for variant in data['product']['variants']:
-            variant['_original_price'] = variant['price']
+def hash_url_filename(s):
+    url = clean_url_path(s)
+    ext = get_fileext_from_url(s)
 
-        return data
-
-    def prepare_data_after(self, data):
-        # Remove new key original_price before sending to shopify
-        for variant in data['product']['variants']:
-            del variant['_original_price']
-
-        return data
-
-    def take_action(self):
-        if self.notify():
-            self.send_email()
-
-        data = self.get_shopify_product()
-        self.revision.data = data
-
-        if data is not None:
-            data = self.prepare_data_before(data)
-            data = self.product_actions(data)
-            data = self.variants_actions(data)
-
-            if self.save_revision:
-                self.revision.save()
-
-                data = self.prepare_data_after(data)
-                self.send_shopify(data)
-
-    def send_email(self):
-        data = {
-            'username': self.user.username,
-            'email': self.user.email,
-            'events': self.notify_events,
-        }
-
-        html_message = send_email_from_template(
-            'product_change_notify.html',
-            '[Shopified App] AliExpress Product Alert',
-            self.user.email,
-            data,
-            nl2br=False
-        )
-
-        cache.set('last_product_change_email', html_message, timeout=3600)
-
-    def notify(self):
-        notify_key = 'product_change_%d' % self.user.id
-        if self.user.get_config('_product_change_notify') or cache.get(notify_key):
-            # We already sent the user a notification for a product change
-            return False
-
-        from django.template.defaultfilters import truncatewords
-
-        product_name = truncatewords(self.product.get_product(), 5)
-
-        for product_change in self.product_changes:
-            if product_change['category'] == 'Vendor' and self.config['product_disappears'] == 'notify':
-                availability = "Online" if not product_change['new_value'] else "Offline"
-                self.notify_events.append(
-                    u'Product <a href="{}/{}">{}</a> is {}.'.format(
-                        self.base_product_url, self.product.id, product_name, availability))
-
-        for variant in self.variants_changes:
-            variant_name = get_variant_name(variant)
-            for change in variant['changes']:
-                if self.config['variant_disappears'] == 'notify' and change['category'] == 'removed':
-                    self.notify_events.append(
-                        u'Variant <a href="{}/{}">{}</a> were removed.'.format(
-                            self.base_product_url, self.product.id, variant_name))
-
-                elif self.config['price_change'] == 'notify' and change['category'] == 'Price':
-                    self.notify_events.append(
-                        u'Variants <a href="{}/{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
-                            self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
-
-                elif self.config['quantity_change'] == 'notify' and change['category'] == 'Availability':
-                    self.notify_events.append(
-                        u'Variants <a href="{}/{}">{}</a> has its Availability changed from {} to {}.'.format(
-                            self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
-
-        self.notify_events = list(set(self.notify_events))
-
-        if len(self.notify_events):
-            # Disable notification for a day
-            cache.set(notify_key, True, timeout=86400)
-
-            return True
-        else:
-            return False
-
-    def get_previous_product_revision(self, event_name, new_value):
-        found_revision = None
-        for revision in ProductRevision.objects.select_related('product_change').filter(product_id=self.product.id):
-            change_data = json.loads(revision.product_change.data)
-            for product_change in change_data['changes']['product']:
-                if product_change['category'] == event_name and product_change['new_value'] == new_value:
-                    found_revision = revision
-                    break
-            if found_revision is not None:
-                break
-        return found_revision
-
-    def get_shopify_product(self):
-        """Get product from shopify using link from ShopifyStore Model"""
-        url = self.product.store.get_link('/admin/products/{}.json'.format(
-            self.product.get_shopify_id()), api=True)
-        response = requests.get(url)
-
-        if response.ok:
-            return response.json()
-        else:
-            return None
-
-    def send_shopify(self, data):
-        update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
-            self.product.get_shopify_id()), api=True)
-        try:
-            response = requests.put(update_endpoint, json=data)
-            response.raise_for_status()
-        except:
-            raven_client.captureException()
-
-    def product_actions(self, data):
-        for product_change in self.product_changes:
-            if product_change['category'] == 'Vendor':
-                if self.config['product_disappears'] == 'unpublish':
-                    data['product']['published'] = not product_change['new_value']
-                    self.save_revision = True
-
-                elif self.config['product_disappears'] == 'zero_quantity':
-                    if product_change['new_value'] is True:
-                        for variant in data['product']['variants']:
-                            variant['inventory_quantity'] = 0
-                            self.save_revision = True
-                    else:
-                        # Try to find variants from previous revision
-                        revision = self.get_previous_product_revision('Vendor', True)
-                        revision_variants = []
-                        if revision is not None:
-                            revision_variants = json.loads(revision.data)['product']['variants']
-
-                        for variant in data['product']['variants']:
-                            # look for previous revision variant or use old_inventory_quantity
-                            inventory = variant['old_inventory_quantity']
-                            for revision_variant in revision_variants:
-                                if revision_variant['id'] == variant['id']:
-                                    inventory = revision_variants['inventory_quantity']
-                                    break
-
-                            variant['inventory_quantity'] = inventory
-                            self.save_revision = True
-        return data
-
-    def get_found_variant(self, variant, data):
-        # try to find the alerted variants
-        found = []
-        search = get_variant_name(variant).split(' / ')
-
-        if search:
-            if self.variants_map is not None:
-                found_map = []
-                for key, variant in self.variants_map.items():
-                    if not isinstance(variant, basestring):
-                        variant = str(variant)
-
-                    match = [x for x in search if x.lower() in variant.lower()]
-                    if len(match) == len(search):
-                        found_map.append(key)
-
-                for key, variant in enumerate(data['product']['variants']):
-                    if str(variant['id']) in found_map:
-                        found.append(key)
-            else:
-                for key, variant in enumerate(data['product']['variants']):
-                    match = [x for x in search if x.lower() in variant['title'].lower()]
-                    if len(match) == len(search):
-                        found.append(key)
-
-        return found
-
-    def variants_actions(self, data):
-        for variant in self.variants_changes:
-            found_variants = self.get_found_variant(variant, data)
-
-            for change in variant['changes']:
-                if len(found_variants) > 0:
-                    if change['category'] == 'removed':
-                        # take proper action with the found variant
-                        if self.config['variant_disappears'] == 'remove':
-                            for found in found_variants[::-1]:
-                                del data['product']['variants'][found]
-                                self.save_revision = True
-
-                        elif self.config['variant_disappears'] == 'zero_quantity':
-                            for found in found_variants:
-                                data['product']['variants'][found]['inventory_quantity'] = 0
-                                self.save_revision = True
-
-                    elif change['category'] == 'Price':
-                        # take proper action with the found variant
-                        if self.config['price_change'] == 'update':
-                            for found in found_variants:
-                                data['product']['variants'][found]['price'] = data['product']['variants'][found]['_original_price']
-                                selling_price = float(data['product']['variants'][found]['price'])
-                                old_price = change['old_value']
-                                data['product']['variants'][found]['price'] = change['new_value'] + (selling_price - old_price)
-                                self.save_revision = True
-
-                    elif change['category'] == 'Availability':
-                        if self.config['quantity_change'] == 'update':
-                            for found in found_variants:
-                                data['product']['variants'][found]['inventory_quantity'] = change['new_value']
-                                self.save_revision = True
-        return data
+    hashval = 0
+    if (len(url) == 0):
+        return hashval
+    for i in range(len(url)):
+        ch = ord(url[i])
+        hashval = int(((hashval << 5) - hashval) + ch)
+        hashval |= 0
+    return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
 
 
 # Helper Classes
 
 class TimezoneMiddleware(object):
+
     def process_request(self, request):
         tzname = request.session.get('django_timezone')
         if not tzname:
@@ -1932,7 +1766,7 @@ class SimplePaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page-5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page+5))
+        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -1991,7 +1825,7 @@ class ShopifyOrderPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
+        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -2077,7 +1911,7 @@ class ProductsCollectionPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page-5), self.current_page)+range(self.current_page, min(page_count + 1, self.current_page+5))
+        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -2098,7 +1932,7 @@ class ProductsCollectionPaginator(Paginator):
             try:
                 rep = self._api_request()
                 self._count = rep.get('count', 0)
-                self._products = self.format_products_date(rep.get('products'))
+                self._products = rep.get('products')
             except:
                 raven_client.captureException()
                 self._count = 0
@@ -2106,12 +1940,6 @@ class ProductsCollectionPaginator(Paginator):
         return self._count
 
     count = property(_get_product_count)
-
-    def format_products_date(self, products):
-        for product in products:
-            product['created_at'] = get_datetime(product['created_at'])
-
-        return products
 
     def _api_request(self):
         params = {

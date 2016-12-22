@@ -1,10 +1,11 @@
 from django import template
-from django.template import Context, Template
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
 import simplejson as json
 import re
+
+import arrow
 
 register = template.Library()
 
@@ -37,6 +38,11 @@ def date_humanize(context, date, html=True):
             date.format('YYYY/MM/DD HH:mm:ss'), date.humanize()))
     else:
         return date.humanize()
+
+
+@register.filter(name='get_datetime')
+def get_datetime(isodate):
+    return arrow.get(isodate).datetime
 
 
 @register.simple_tag(takes_context=True)
@@ -95,13 +101,15 @@ def price_diff(context, from_, to_, reverse_colors=False):
 
     if from_ > to_:
         if to_ > 0:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (colors[0], (((to_ - from_) * 100.) / to_)))
+            return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (
+                colors[0], (((to_ - from_) * 100.) / to_)))
         else:
             return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0]))
 
     else:
         if from_ > 0:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (colors[1], (((to_ - from_) * 100.) / from_)))
+            return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (
+                colors[1], (((to_ - from_) * 100.) / from_)))
         else:
             return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i></span>' % (colors[1]))
 

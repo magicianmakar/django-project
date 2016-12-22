@@ -14,6 +14,7 @@ SYNC_STATUS = (
     (3, 'Unauthorized'),
     (4, 'Error'),
     (5, 'Disabled'),
+    (6, 'Reset'),
 )
 
 
@@ -80,7 +81,7 @@ class ShopifyOrder(models.Model):
     financial_status = models.CharField(max_length=32, blank=True, null=True, default='')
     fulfillment_status = models.CharField(max_length=32, blank=True, null=True, default='')
 
-    note = models.TextField(blank=True, null=True,  default='')
+    note = models.TextField(blank=True, null=True, default='')
     tags = models.TextField(blank=True, null=True, default='')
     city = models.CharField(max_length=64, blank=True, null=True, default='')
     zip_code = models.CharField(max_length=32, blank=True, null=True, default='')
@@ -116,3 +117,19 @@ class ShopifyOrderLine(models.Model):
 
     def __unicode__(self):
         return u'{}'.format(self.variant_title)
+
+
+class ShopifyOrderShippingLine(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    order = models.ForeignKey(ShopifyOrder, related_name='shipping_lines')
+    shipping_line_id = models.BigIntegerField()
+    price = models.FloatField()
+    title = models.CharField(max_length=256, db_index=True)
+    code = models.CharField(max_length=256)
+    source = models.CharField(max_length=256)
+    phone = models.CharField(max_length=256, null=True, blank=True)
+    carrier_identifier = models.CharField(max_length=256, null=True, blank=True)
+    requested_fulfillment_service_id = models.CharField(max_length=256, null=True, blank=True)
+
+    def __unicode__(self):
+        return self.title

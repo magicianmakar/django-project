@@ -121,5 +121,4 @@ def intercom(request):
                                              str(request.user.id),
                                              hashlib.sha256).hexdigest()
 
-
     return ctx

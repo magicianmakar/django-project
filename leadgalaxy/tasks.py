@@ -13,13 +13,20 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
+from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
 from raven.contrib.celery import register_signal
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
+
 from shopify_orders import utils as order_utils
+from product_alerts import events as product_alerts_events
+
+from product_feed.feed import generate_product_feed
+from product_feed.models import FeedStatus
+
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
 
@@ -44,8 +51,8 @@ class CaptureFailure(Task):
 
 def retry_countdown(key, retries):
     retries = max(1, retries)
-    countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries*60) + (60 * retries)
-    cache.set(key, countdown+random.randint(5, 30), timeout=countdown+60)
+    countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries * 60) + (60 * retries)
+    cache.set(key, countdown + random.randint(5, 30), timeout=countdown + 60)
 
     return countdown
 
@@ -123,7 +130,7 @@ def export_product(req_data, target, user_id):
 
         if not user.can('import_from_any.use'):
             try:
-                if not 'free' in user.profile.plan.title.lower():
+                if 'free' not in user.profile.plan.title.lower():
                     print u'ERROR: STORE PERMISSION FOR [{}] [{}] [{}] User: {}'.format(
                         import_store, original_url, user.profile.plan.title, user.username)
             except:
@@ -196,7 +203,7 @@ def export_product(req_data, target, user_id):
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
             raven_client.captureException(extra={
                 'rep': r.text
-                })
+            })
 
             return {'error': 'Shopify API is not available, please try again.'}
 
@@ -515,9 +522,6 @@ def invite_user_to_slack(slack_teams, data):
 
 @app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
 def generate_feed(self, feed_id, nocache=False, by_fb=False):
-    from product_feed.feed import generate_product_feed
-    from product_feed.models import FeedStatus
-
     try:
         feed = FeedStatus.objects.get(id=feed_id)
         generate_product_feed(feed, nocache=nocache)
@@ -534,7 +538,7 @@ def generate_feed(self, feed_id, nocache=False, by_fb=False):
 def product_change_alert(change_id):
     try:
         product_change = AliexpressProductChange.objects.get(pk=change_id)
-        product_change_event = utils.ProductChangeEvent(product_change)
+        product_change_event = product_alerts_events.ProductChangeEvent(product_change)
         product_change_event.take_action()
 
     except:
@@ -544,8 +548,6 @@ def product_change_alert(change_id):
 @app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def bulk_edit_products(self, store, products):
     """ Bulk Edit Connected products """
-
-    from django.template.defaultfilters import truncatewords
 
     store = ShopifyStore.objects.get(id=store)
 

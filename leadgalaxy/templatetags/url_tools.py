@@ -23,7 +23,7 @@ def query_toggle(context, field, values):
     except:
         index = -1
 
-    index = (index+1) % len(values)
+    index = (index + 1) % len(values)
 
     dict_[field] = values[index]
 
@@ -55,7 +55,7 @@ def url_toggle(context, field, values):
     except:
         index = -1
 
-    index = (index+1) % len(values)
+    index = (index + 1) % len(values)
 
     query_dict[field] = values[index]
 

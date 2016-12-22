@@ -53,77 +53,10 @@
 
     {% block extracss %}{% endblock %}
 
+    {% include "partial/custom_tags.html" %}
+
   </head>
   <body class="fixed-sidebar">
-    <script>
-
-    {% with plan=user.profile.plan %}
-      var dataLayer = [{
-        userPlan: '{{plan.title}}',
-        monthlyPlan: {{plan.is_stripe|lower}},
-        pageCategory: 'webapp',
-
-        user_id: {{ user.id }},
-        name: "{{ user.get_full_name|default:user.username|escapejs }}",
-        email: "{{ user.email }}",
-        created_at: {{ user.date_joined|date:"U" }},
-        extension_version: '{{user.profile.get_config.extension_version}}',
-      }];
-    {% endwith %}
-
-      {% if user.is_authenticated and not DEBUG %}
-      var currentUser = {
-        id: {{ user.id }},
-        username: '{{ user.username }}',
-        email: '{{ user.email }}'
-      };
-
-      {% if not request.session.is_hijacked_user %}
-
-      window.intercomSettings = {
-        app_id: "{{INTERCOM_APP_ID}}",
-        user_id: {{ user.id }},
-        {% if INTERCOM_USER_HASH %}user_hash: '{{INTERCOM_USER_HASH}}',{% endif %}
-        name: dataLayer[0].name,
-        email: dataLayer[0].email,
-        created_at: dataLayer[0].created_at,
-        plan: dataLayer[0].userPlan,
-        extension_version: dataLayer[0].extension_version,
-
-        stores_count: {{user.profile.get_active_stores.count}},
-
-       {% cache 3600 total_orders user.id %}
-        total_orders: {{user.models_user.shopifyorder_set.count}},
-       {% endcache %}
-
-        {% if user.is_subuser %}
-            parent_plan: '{{user.models_user.profile.plan.title}}',
-        {% endif %}
-
-
-        {% if not user.is_stripe_customer %}
-            bundles: '{{user.profile.bundles_list|join:","}}',
-        {% endif %}
-
-        widget: {
-            activator: '.navbar-default a[href="#support"]',
-        }
-      };
-
-      {% endif %}
-
-      {% endif %}
-    </script>
-
-    <!-- Google Tag Manager -->
-    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-TPLKSQ"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-TPLKSQ');</script>
-    <!-- End Google Tag Manager -->
 
     <div id="wrapper">
     {{ request|hijackNotification }}
@@ -518,9 +451,6 @@
     {% endcompress %}
 
     {% block extrajs %}{% endblock %}
-
-    <script src="//fast.appcues.com/20262.js"></script>
-    <script src="//fast.appcues.com/widget-bundle.js"></script>
 
     <script type="text/javascript" src="https://static.leaddyno.com/js"></script>
     <script>
