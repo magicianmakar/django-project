@@ -343,7 +343,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-md-2">
-                                        $<b>{{order.total_price}}</b>
+                                        <b>{{order.total_price|money_format:store}}</b>
                                     </div>
                                     <div class="col-md-3 col-md-offset-3">
                                         <div class="note-panel panel panel-default hidden-sm hidden-xs">
@@ -478,7 +478,7 @@
                                                                 {{item.quantity}}
                                                             </span>
                                                             &times;
-                                                            $<b>{{item.price}}</b>
+                                                            <b>{{item.price|money_format:store}}</b>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% include 'partial/place_order_btn.html' %}

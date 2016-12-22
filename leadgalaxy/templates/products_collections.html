@@ -52,7 +52,7 @@
                             <td>
                                 <a href="http://aliexpress.com/item/-/{{item.product_id}}.html" target="_blank">{{item.title}}</a>
                             </td>
-                            <td>${{item.price|floatformat:2}}</td>
+                            <td>{{item.price|floatformat:2|money_format:item.store}}</td>
                             <td><a href="?f=1&type={{item.category|urlencode}}">{{item.category}}</a></td>
                             <td>{{item.rating}}</td>
                             <td>{{item.orders_numbers}}</td>
