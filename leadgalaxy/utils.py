@@ -14,7 +14,7 @@ import mimetypes
 import re
 import shutil
 import tempfile
-from urlparse import urlparse
+from urlparse import urlparse, parse_qs
 from hashlib import sha256
 from math import ceil
 
@@ -1334,7 +1334,7 @@ def zaxaa_parse_post(params):
 
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
 
-    promotion_key = 'promotion_links2_{}'.format(hash_text(urls))
+    promotion_key = 'promotion_links3_{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
 
     if promotion_url is not None:
@@ -1366,8 +1366,8 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
 
         if len(r['result']['promotionUrls']):
             promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
-            if promotion_url:
-                promotion_url = promotion_url.replace('https://', 'http://')
+            if promotion_url and '/deep_link.htm' in promotion_url:
+                promotion_url = parse_qs(urlparse(promotion_url).query)['dl_target_url'].pop()
 
             cache.set(promotion_key, promotion_url, timeout=43200)
 

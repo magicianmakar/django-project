@@ -4442,7 +4442,7 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-    disable_affiliate = not request.session.get('is_hijacked_user')
+    disable_affiliate = models_user.get_config('_disable_affiliate', False)
     api_key, tracking_id = utils.get_user_affiliate(models_user)
 
     for index, order in enumerate(page):
