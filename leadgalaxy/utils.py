@@ -1053,6 +1053,97 @@ def is_chinese_carrier(tarcking_number):
     return tarcking_number and re.search('(CN|SG|HK)$', tarcking_number) is not None
 
 
+def shipping_carrier(tracking_number):
+    patterns = [{
+        'name': "Royal Mail",
+        'pattern': "^([A-Z]{2}\\d{9}GB)$"
+    }, {
+        'name': "UPS",
+        'pattern': "^(1Z)|^(K\\d{10}$)|^(T\\d{10}$)"
+    }, {
+        'name': "Canada Post",
+        'pattern': "((CA)$|^\\d{16}$)"
+    }, {
+        'name': "China Post",
+        'pattern': "^(R|CP|E|L)\\w+CN$"
+    }, {
+        'name': "FedEx",
+        'pattern': "^(\\d{12}$)|^(\\d{15}$)|^(96\\d{20}$)"
+    }, {
+        'name': "Post Danmark",
+        'pattern': "\\d{3}5705983\\d{10}|DK$"
+    }, {
+        'name': "USPS",
+        'pattern': "^((?:94001|92055|94073|93033|92701|94055|92088|92021|92001|94108|"
+                   "93612|94701|94058|94490)\\d{17}|7\\d{19}|03\\d{18}|8\\d{9}|420"
+                   "\\d{23,27}|10169\\d{11}|[A-Z]{2}\\d{9}US|(?:EV|CX)\\d{9}CN|LK\\d{9}HK)$"
+    }, {
+        'name': "FedEx UK",
+        'pattern': None
+    }, {
+        'name': "DHL",
+        'pattern': "^(\\d{10,11}$)"
+    }, {
+        'name': "DHL eCommerce",
+        'pattern': "^(GM\\d{16,18}$)|^([A-Z0-9]{14}$)|^(\\d{22}$)"
+    }, {
+        'name': "DHL eCommerce Asia",
+        'pattern': "^P[A-Z0-9]{14}$"
+    }, {
+        'name': "Eagle",
+        'pattern': None
+    }, {
+        'name': "Purolator",
+        'pattern': "^[A-Z]{3}\\d{9}$"
+    }, {
+        'name': "TNT",
+        'pattern': None
+    }, {
+        'name': "Australia Post",
+        'pattern': "^([A-Z]{2}\\d{9}AU)$"
+    }, {
+        'name': "New Zealand Post",
+        'pattern': "^[A-Z]{2}\\d{9}NZ$"
+    }, {
+        'name': "TNT Post",
+        'pattern': "^\\w{13}$"
+    }, {
+        'name': "4PX",
+        'pattern': "^RF\\d{9}SG$|^RT\\d{9}HK$|^7\\d{10}$|^P0{4}\\d{8}$|^JJ\\d{9}GB$|^MS\\d{8}XSG$"
+    }, {
+        'name': "APC",
+        'pattern': "^PF\\d{11}$|^\\d{13}$"
+    }, {
+        'name': "FSC",
+        'pattern': "^((?:LS|LM|RW|RS|RU|RX)\\d{9}(?:CN|CH|DE)|(?:WU\\d{13})|(?:\\w{10}$|\\d{22}))$"
+    }, {
+        'name': "Globegistics",
+        'pattern': "^JJ\\d{9}GB$|^(LM|CJ|LX|UM|LJ|LN)\\d{9}US$|^(GAMLABNY|"
+                   "BAIBRATX|SIMGLODE)\\d{10}$|^\\d{10}$"
+    }, {
+        'name': "Amazon Logistics US",
+        'pattern': "^TBA\\d{12,13}$"
+    }, {
+        'name': "Amazon Logistics UK",
+        'pattern': "^Q\\d{11,13}$"
+    }, {
+        'name': "Bluedart",
+        'pattern': "^\\d{9,11}$"
+    }, {
+        'name': "Delhivery",
+        'pattern': "^\\d{11,12}$"
+    }, {
+        'name': "Japan Post",
+        'pattern': "^[a-z]{2}\\d{9}JP|^\\d{11}$"
+    }]
+
+    for p in patterns:
+        if p['pattern'] and re.search(p['pattern'], tracking_number):
+            return p['name']
+
+    return None
+
+
 def order_track_fulfillment(**kwargs):
     ''' Get Tracking Carrier and Url for Shopify Order Fulfillment
         order_id:        Shopify Order ID
@@ -1088,7 +1179,8 @@ def order_track_fulfillment(**kwargs):
                 order__store_id=store_id,
                 order__order_id=order_id)
 
-            is_usps = is_chinese_carrier(source_tracking) and line.order.country_code == 'US'
+            is_usps = (is_chinese_carrier(source_tracking) or shipping_carrier(source_tracking) == 'USPS') \
+                and line.order.country_code == 'US'
 
     except ShopifyOrderLine.DoesNotExist:
         pass
@@ -1122,8 +1214,9 @@ def order_track_fulfillment(**kwargs):
             data['fulfillment']['tracking_company'] = "Other"
             data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
-    if user_config.get('validate_tracking_number', True) and \
-            not is_valide_tracking_number(source_tracking):
+    if user_config.get('validate_tracking_number', True) \
+            and not is_valide_tracking_number(source_tracking) \
+            and not is_usps:
         notify_customer = 'no'
     else:
         notify_customer = user_config.get('send_shipping_confirmation', 'default')
