@@ -16,6 +16,7 @@ from django.http import JsonResponse
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.utils.text import slugify
 from django.core.cache import cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
@@ -27,6 +28,7 @@ from django.core import serializers
 from unidecode import unidecode
 
 import re
+import os
 import random
 import simplejson as json
 import requests
@@ -40,7 +42,13 @@ import time
 import urllib
 import urllib2
 import zlib
+import tempfile
+import zipfile
 from hashlib import sha1
+from urlparse import urlparse, parse_qs
+
+from urllib import urlencode
+from io import BytesIO
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -2145,8 +2153,6 @@ def proccess_api(request, user, method, target, data):
             return JsonResponse({'error': 'Supplier URL is missing'}, status=422)
 
         if '/deep_link.htm' in supplier_url.lower():
-            from urlparse import urlparse, parse_qs
-
             supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
             supplier_url = utils.remove_link_query(supplier_url)
 
@@ -3067,12 +3073,6 @@ def product_image_download(request, pid):
     if not len(images):
         raise Http404('No images to proccess')
 
-    import tempfile
-    import zipfile
-    import os
-
-    from django.utils.text import slugify
-
     filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
 
     with zipfile.ZipFile(filename, 'w') as images_zip:
@@ -3516,8 +3516,6 @@ def get_shipping_info(request):
         return JsonResponse(shippement_data, safe=False)
 
     if not request.user.is_authenticated():
-        from urllib import urlencode
-
         return HttpResponseRedirect('%s?%s' % (reverse('django.contrib.auth.views.login'),
                                                urlencode({'next': request.get_full_path()})))
 
@@ -5102,7 +5100,6 @@ def user_invoices(request, invoice_id):
 
 @login_required
 def user_invoices_download(request, invoice_id):
-    from io import BytesIO
     from stripe_subscription.invoices.pdf import draw_pdf
 
     if not request.user.is_stripe_customer():
