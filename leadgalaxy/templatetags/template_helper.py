@@ -182,7 +182,14 @@ def money_format(amount=None, store=None):
     if store and store.currency_format:
         currency_format = store.currency_format
 
-    if type(amount) is not str:
-        amount = str(amount) if amount else ''
+    if amount is not None:
+        if type(amount) is not float:
+            amount = float(amount)
+
+        amount = '{:.2f}'.format(amount)
+
+    else:
+        amount = ''
+
 
     return currency_format.replace('{{amount}}', amount).strip()
