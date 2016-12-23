@@ -53,7 +53,7 @@
                             <td>
                                 <a href="http://aliexpress.com/item/-/{{item.product_id}}.html" target="_blank">{{item.title}}</a>
                             </td>
-                            <td>{{item.price|money_format:None}}</td>
+                            <td>{% money_format item.price None %}</td>
                             <td><a href="?f=1&type={{item.category|urlencode}}">{{item.category}}</a></td>
                             <td>{{item.rating}}</td>
                             <td>{{item.orders_numbers}}</td>

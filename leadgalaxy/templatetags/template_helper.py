@@ -175,7 +175,7 @@ def render_markdown(text, render_help=True):
     return mark_safe(text)
 
 
-@register.filter(name='money_format')
+@register.simple_tag
 def money_format(amount=None, store=None):
     currency_format = '${{amount}}'
 
