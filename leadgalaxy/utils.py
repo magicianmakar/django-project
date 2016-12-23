@@ -1818,14 +1818,3 @@ class ProductsCollectionPaginator(Paginator):
         )
 
         return rep.json()
-
-
-def format_price(amount=None, store=None, force=False):
-    if not amount and not force:
-        return ''
-
-    if store and store.currency_format:
-        currency_format = store.currency_format.replace('{{', '{').replace('}}', '}')
-        return currency_format.format(amount=amount)
-
-    return '${}'.format(amount)
