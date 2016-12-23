@@ -17,12 +17,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--threshold', dest='threshold', action='store', type=int,
+            '--threshold', dest='threshold', action='store', type=int, default=60,
             help='Fulfill orders updated before threshold (seconds)')
 
         parser.add_argument(
             '--store', dest='store', action='store', type=int,
             help='Fulfill orders for the given store')
+
+        parser.add_argument(
+            '--max', dest='max', action='store', type=int, default=500,
+            help='Fulfill orders count limit')
+
+        parser.add_argument(
+            '--uptime', dest='uptime', action='store', type=float, default=8,
+            help='Maximuim task uptime (minutes)')
 
     def handle(self, *args, **options):
         try:
@@ -36,9 +44,8 @@ class Command(BaseCommand):
     def start_command(self, *args, **options):
         threshold = options.get('threshold')
         fulfill_store = options.get('store')
-
-        if threshold is None:
-            threshold = 60
+        fulfill_max = options.get('max')
+        uptime = options.get('uptime')
 
         time_threshold = timezone.now() - timezone.timedelta(seconds=threshold)
         orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled') \
@@ -52,7 +59,9 @@ class Command(BaseCommand):
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
 
-        self.write('Auto Fulfill %d Orders' % orders.count(), self.style.HTTP_INFO)
+        fulfill_max = min(fulfill_max, orders.count()) if fulfill_max else orders.count()
+
+        self.write('Auto Fulfill {}/{} Orders'.format(fulfill_max, orders.count()), self.style.HTTP_INFO)
 
         counter = {
             'fulfilled': 0,
@@ -60,8 +69,10 @@ class Command(BaseCommand):
         }
 
         self.store_countdown = {}
+        self.start_at = timezone.now()
+        self.fulfill_threshold = timezone.now() - timezone.timedelta(seconds=threshold * 60)
 
-        for order in orders:
+        for order in orders[fulfill_max]:
             try:
                 counter['need_fulfill'] += 1
 
@@ -74,6 +85,13 @@ class Command(BaseCommand):
                     if counter['fulfilled'] % 50 == 0:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
 
+                if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
+                    raven_client.captureMessage(
+                        'Auto fulfill taking too long',
+                        level="warning",
+                        extra={'delta': (timezone.now() - start_at).total_seconds()})
+
+                    break
             except:
                 raven_client.captureException()
 
