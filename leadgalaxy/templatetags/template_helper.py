@@ -182,7 +182,7 @@ def money_format(amount=None, store=None):
     if store and store.currency_format:
         currency_format = store.currency_format
 
-    if amount is not None:
+    if amount is not None and amount != '':
         if type(amount) is not float:
             try:
                 amount = float(amount)

@@ -57,10 +57,11 @@ class TagsTestCase(TestCase):
         self.assertEqual(template_helper.money_format(0, store), '$0.00')
         self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
         self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
-        self.assertEqual(template_helper.money_format('', store), '$0.00')
 
         self.assertEqual(template_helper.money_format(None, store), '$')
         self.assertEqual(template_helper.money_format(None, None), '$')
+        self.assertEqual(template_helper.money_format('', None), '$')
+        self.assertEqual(template_helper.money_format('', store), '$')
 
     def test_money_format_euro(self):
         store = Mock()
