@@ -351,7 +351,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-md-2">
-                                        $<b>{{order.total_price}}</b>
+                                        <b>{{order.total_price|money_format:store}}</b>
                                         <div>
                                             {% if shipping_method_filter_enabled %}
                                                 {% if order.shipping_lines %}
@@ -497,7 +497,7 @@
                                                                 {{item.quantity}}
                                                             </span>
                                                             &times;
-                                                            $<b>{{item.price}}</b>
+                                                            <b>{{item.price|money_format:store}}</b>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% include 'partial/place_order_btn.html' %}

@@ -55,7 +55,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from .models import *
 from .forms import *
 from .province_helper import load_uk_provincess, missing_province
-from .templatetags.template_helper import shopify_image_thumb
+from .templatetags.template_helper import shopify_image_thumb, money_format
 
 import tasks
 import utils
@@ -283,6 +283,8 @@ def proccess_api(request, user, method, target, data):
             info = store.get_info
             if not store.title:
                 store.title = info['name']
+
+            store.currency_format = info['money_in_emails_format']
 
             ok, permissions = utils.verify_shopify_permissions(store)
             if not ok:
@@ -2816,6 +2818,7 @@ def webhook(request, provider, option):
             elif topic == 'shop/update':
                 if shop_data.get('name'):
                     store.title = shop_data.get('name')
+                    store.currency_format = shop_data.get('money_in_emails_format')
                     store.save()
 
                     return JsonResponse({'status': 'ok'})
@@ -2942,11 +2945,15 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         except:
             pass
 
-        p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
+        p['price'] = '%.02f' % utils.safeFloat(p['product'].get('price'))
+        p['price'] = money_format(p['price'], i.store)
 
         price_range = p['product'].get('price_range')
         if price_range and type(price_range) is list and len(price_range) == 2:
-            p['price_range'] = '${:.02f} - ${:.02f}'.format(price_range[0], price_range[1])
+            p['price_range'] = '{} - {}'.format(
+                money_format('{:.02f}'.format(price_range[0], i.store)),
+                money_format('{:.02f}'.format(price_range[1], i.store))
+            )
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []

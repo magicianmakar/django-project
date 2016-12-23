@@ -76,14 +76,14 @@
             <div class="form-group col-xs-3">
                 <label for="product-price">Price</label>
                 <div class="input-group">
-                    <span class="input-group-addon">$</span>
+                    <span class="input-group-addon">{{ ''|money_format:product.store }}</span>
                     <input type="text" class="form-control" id="product-price">
                 </div>
             </div>
             <div class="form-group col-xs-3">
                 <label for="product-type">Compare at price</label>
                 <div class="input-group">
-                    <span class="input-group-addon">$</span>
+                    <span class="input-group-addon">{{ ''|money_format:product.store }}</span>
                     <input type="text" class="form-control" id="product-compare-at"
                            value="{{product.product.compare_at_price|default:''}}">
                 </div>
@@ -156,12 +156,12 @@
 
                                     <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
-                                        <span class="var-pad">$</span>
+                                        <span class="var-pad">{{ ''|money_format:product.store }}</span>
                                     </td>
 
                                     <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
-                                        <span class="var-pad">$</span>
+                                        <span class="var-pad">{{ ''|money_format:product.store }}</span>
                                     </td>
 
                                     <td style="white-space:nowrap">
@@ -347,7 +347,7 @@
             <div class="col-xs-4">
                 <dl>
                     <dt>Price</dt>
-                    <dd>${{original.price}}</dd>
+                    <dd>{{original.price|money_format:product.store}}</dd>
                 </dl>
             </div>
         </div>
@@ -378,7 +378,7 @@
                     <div class="col-xs-6">
                         <dl>
                             <dt>Compare at price</dt>
-                            <dd>${{original.compare_at_price}}</dd>
+                            <dd>{{original.compare_at_price|money_format:product.store}}</dd>
                         </dl>
                     </div>
                 </div>

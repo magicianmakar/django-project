@@ -173,3 +173,16 @@ def render_markdown(text, render_help=True):
         )
 
     return mark_safe(text)
+
+
+@register.filter(name='money_format')
+def money_format(amount=None, store=None):
+    currency_format = '${{amount}}'
+
+    if store and store.currency_format:
+        currency_format = store.currency_format
+
+    if type(amount) is not str:
+        amount = str(amount) if amount else ''
+
+    return currency_format.replace('{{amount}}', amount).strip()
