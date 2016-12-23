@@ -72,7 +72,7 @@ class Command(BaseCommand):
         self.start_at = timezone.now()
         self.fulfill_threshold = timezone.now() - timezone.timedelta(seconds=threshold * 60)
 
-        for order in orders[fulfill_max]:
+        for order in orders[:fulfill_max]:
             try:
                 counter['need_fulfill'] += 1
 
