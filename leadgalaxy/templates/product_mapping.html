@@ -19,6 +19,10 @@
                 <a href="{% url 'mapping_supplier' product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
             </li>
             {% endif %}
+
+            <li>
+                <a href="{% url 'mapping_bundle' product.id %}"><i class="fa fa-database"></i> Bundle Mapping</a>
+            </li>
        </ul>
        <div class="tab-content">
            <div id="tab-1" class="tab-pane active">

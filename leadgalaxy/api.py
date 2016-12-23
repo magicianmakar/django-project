@@ -2,6 +2,7 @@
 
 import traceback
 import urlparse
+import copy
 
 from django.contrib.auth import authenticate, login
 from django.core import serializers
@@ -1500,6 +1501,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_bundles_mapping(self, request, user, data):
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        print json.dumps(data, indent=4)
+
+        product.set_bundle_mapping(data.get('mapping'))
+        product.save()
+
+        return self.api_success()
+
     def get_order_fulfill(self, request, user, data):
         if int(data.get('count', 0)) >= 30:
             raise Http404('Not found')
@@ -1561,7 +1573,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if all_orders:
                 fields['created_at'] = arrow.get(fields['created_at']).humanize()
 
-            orders.append(fields)
+            if fields['source_id'] and ',' in fields['source_id']:
+                for j in fields['source_id'].split(','):
+                    order_fields = copy.deepcopy(fields)
+                    order_fields['source_id'] = j
+                    order_fields['bundle'] = True
+                    orders.append(order_fields)
+            else:
+                orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):
             ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
@@ -1588,10 +1607,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         try:
             assert len(source_id) > 0, 'Empty Order ID'
             assert utils.safeInt(order_id), 'Order ID is not a numbers'
-            assert utils.safeInt(source_id), 'Aliexpress ID is not a numbers'
-            assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
+            # assert utils.safeInt(source_id), 'Aliexpress ID is not a numbers'
+            # assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
 
-            source_id = int(source_id)
+            # source_id = int(source_id)
 
         except AssertionError as e:
             raven_client.captureMessage('Non valid Aliexpress Order ID')
@@ -1689,6 +1708,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
                 profile = user.models_user.profile
 
+                # TODO: Handle mullti values in source_id
                 if profile.get_config_value('aliexpress_as_notes', True):
                     order_updater.mark_as_ordered_note(line_id, source_id)
 
@@ -1747,7 +1767,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         permissions.user_can_edit(user, order)
 
-        new_tracking_number = (tracking_number and order.source_tracking != tracking_number)
+        new_tracking_number = (tracking_number and tracking_number not in order.source_tracking)
 
         order.source_status = data.get('status')
         order.source_tracking = tracking_number
@@ -1766,6 +1786,20 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
         except:
             pass
+
+        if data.get('bundle'):
+            if not order_data.get('bundle'):
+                order_data['bundle'] = {}
+
+            if not order_data['bundle'].get(data.get('source_id')):
+                order_data['bundle'][data.get('source_id')] = {}
+
+            order_data['bundle'][data.get('source_id')] = {
+                'source_status': data.get('status'),
+                'source_tracking': data.get('tracking_number'),
+                'end_reason': data.get('end_reason'),
+                'order_details': json.loads(data.get('order_details')),
+            }
 
         order.data = json.dumps(order_data)
 

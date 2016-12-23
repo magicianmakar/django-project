@@ -683,6 +683,7 @@ class ShopifyProduct(models.Model):
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
+    bundle_map = models.TextField(null=True, blank=True)
     mapping_config = models.TextField(null=True, blank=True)
 
     notes = models.TextField(default='', blank=True)
@@ -1133,6 +1134,24 @@ class ShopifyProduct(models.Model):
 
         return mapping
 
+    def get_bundle_mapping(self, variant=None, default=[]):
+        try:
+            bundle_map = json.loads(self.bundle_map)
+        except:
+            bundle_map = {}
+
+        if variant:
+            return bundle_map.get(str(variant), default)
+        else:
+            return bundle_map
+
+    #
+    def set_bundle_mapping(self, mapping):
+        bundle_map = self.get_bundle_mapping()
+        bundle_map.update(mapping)
+
+        self.bundle_map = json.dumps(bundle_map)
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -1268,7 +1287,7 @@ class ShopifyOrderTrack(models.Model):
     shopify_status = models.CharField(max_length=128, blank=True, null=True, default='',
                                       verbose_name="Shopify Fulfillment Status")
 
-    source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
+    source_id = models.CharField(max_length=512, blank=True, default='', verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
     source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
@@ -1286,9 +1305,32 @@ class ShopifyOrderTrack(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+            data = json.loads(self.data)
         except:
-            pass
+            data = None
+
+        if data:
+            if data.get('bundle'):
+                status = []
+                source_tracking = []
+                end_reasons = []
+
+                for key, val in data.get('bundle').items():
+                    if val.get('source_status'):
+                        status.append(val.get('source_status'))
+
+                    if val.get('source_tracking'):
+                        source_tracking.append(val.get('source_tracking'))
+
+                    if val.get('end_reason'):
+                        end_reasons.append(val.get('end_reason'))
+
+                self.source_status = ','.join(status)
+                self.source_tracking = ','.join(source_tracking)
+                self.source_status_details = ','.join(end_reasons)
+
+            else:
+                self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
 
         super(ShopifyOrderTrack, self).save(*args, **kwargs)
 
@@ -1327,7 +1369,15 @@ class ShopifyOrderTrack(models.Model):
             "IN_PRESELL_PROMOTION": "Promotion is on",
         }
 
-        return status_map.get(self.source_status)
+        if self.source_status and ',' in self.source_status:
+            source_status = []
+            for i in self.source_status.split(','):
+                source_status.append(status_map.get(i))
+
+            return ', '.join(set(source_status))
+
+        else:
+            return status_map.get(self.source_status)
 
     get_source_status.admin_order_field = 'source_status'
 
@@ -1344,6 +1394,10 @@ class ShopifyOrderTrack(models.Model):
             return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
             return None
+
+    def get_source_ids(self):
+        if self.source_id:
+            return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)

@@ -917,7 +917,7 @@ def products_list(request, tpl='grid'):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
+        'post_per_page': utils.safeInt(request.GET.get('ppp'), 24),
         'sort': request.GET.get('sort'),
         'store': store,
         'load_boards': (tpl is None or tpl == 'grid'),
@@ -1199,7 +1199,7 @@ def product_mapping(request, product_id):
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
-            {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
+            {'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
             'Variants Mapping',
         ]
@@ -1265,6 +1265,50 @@ def mapping_supplier(request, product_id):
             {'title': product.store.title, 'url': '/product/?store={}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
             'Advanced Mapping',
+        ]
+    })
+
+
+@login_required
+def mapping_bundle(request, product_id):
+    product = get_object_or_404(ShopifyProduct, id=product_id)
+    permissions.user_can_edit(request.user, product)
+
+    shopify_id = product.get_shopify_id()
+    if not shopify_id:
+        raise Http404("Product doesn't exists on Shopify Store.")
+
+    shopify_product = utils.get_shopify_product(product.store, shopify_id)
+    if not shopify_product:
+        messages.error(request, 'Product not found in Shopify')
+        return HttpResponseRedirect('/')
+
+    images = {}
+
+    for i in shopify_product['images']:
+        for var in i['variant_ids']:
+            images[var] = i['src']
+
+    bundle_mapping = []
+
+    for i, v in enumerate(shopify_product['variants']):
+        v['image'] = images.get(v['id']) or shopify_product.get('image', {}).get('src')
+        v['products'] = product.get_bundle_mapping(v['id'], default=[])
+
+        bundle_mapping.append(v)
+
+    return render(request, 'mapping_bundle.html', {
+        'store': product.store,
+        'product_id': product_id,
+        'product': product,
+        'shopify_product': shopify_product,
+        'bundle_mapping': bundle_mapping,
+        'page': 'product',
+        'breadcrumbs': [
+            {'title': 'Products', 'url': '/product'},
+            {'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)},
+            {'title': product.title, 'url': '/product/{}'.format(product.id)},
+            'Bundle Mapping',
         ]
     })
 
@@ -1922,6 +1966,40 @@ def autocomplete(request, target):
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
+    elif target == 'variants':
+        try:
+            store = ShopifyStore.objects.get(id=request.GET.get('store'))
+            permissions.user_can_view(request.user, store)
+
+            product = ShopifyProduct.objects.get(id=request.GET.get('product'))
+            permissions.user_can_edit(request.user, product)
+
+            shopify_product = utils.get_shopify_product(store, product.shopify_id, raise_for_status=True)
+
+            images = {}
+            for i in shopify_product['images']:
+                for var in i['variant_ids']:
+                    images[var] = i['src']
+
+            for i, v in enumerate(shopify_product['variants']):
+                shopify_product['variants'][i]['image'] = images.get(v['id']) or shopify_product.get('image', {}).get('src')
+
+            results = []
+            for v in shopify_product['variants']:
+                results.append({
+                    'value': v['title'],
+                    'data': v['id'],
+                    'image': v.get('image')
+                })
+
+            return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except ShopifyProduct.DoesNotExist:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
@@ -2501,19 +2579,16 @@ def orders_view(request):
             if shopify_order or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
                 order['placed_orders'] += 1
 
-            supplier = None
-            if product and product.have_supplier():
-                original_info = product.get_original_info()
-                if not original_info:
-                    original_info = {}
+            country_code = order.get('shipping_address', {}).get('country_code')
+            if not country_code:
+                country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
 
+            supplier = None
+            bundle_data = []
+            if product and product.have_supplier():
                 variant_id = product.get_real_variant_id(variant_id)
                 supplier = product.get_suppier_for_variant(variant_id)
                 if supplier:
-                    country_code = order.get('shipping_address', {}).get('country_code')
-                    if not country_code:
-                        country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
-
                     shipping_method = product.get_shipping_for_variant(
                         supplier_id=supplier.id,
                         variant_id=variant_id,
@@ -2524,6 +2599,48 @@ def orders_view(request):
                 order['line_items'][i]['product'] = product
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
+
+                bundles = product.get_bundle_mapping(variant_id)
+                if bundles:
+                    product_bundles = []
+                    for idx, b in enumerate(bundles):
+                        print b
+                        b_product = ShopifyProduct.objects.get(id=b['id'])
+                        b_variant_id = b_product.get_real_variant_id(b['variant_id'])
+                        b_supplier = b_product.get_suppier_for_variant(variant_id)
+                        if b_supplier:
+                            b_shipping_method = b_product.get_shipping_for_variant(
+                                supplier_id=b_supplier.id,
+                                variant_id=b_variant_id,
+                                country_code=country_code)
+                        else:
+                            b_shipping_method = None
+
+                        b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
+                        if variant_id and b_variant_mapping:
+                            b_variants = b_variant_mapping
+                        else:
+                            b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
+
+                        product_bundles.append({
+                            'product': b_product,
+                            'supplier': b_supplier,
+                            'shipping_method': b_shipping_method,
+                            'quantity': b['quantity'],
+                            'data': b
+                        })
+
+                        bundle_data.append({
+                            'quantity': b['quantity'],
+                            'product_id': b_product.id,
+                            'source_id': b_supplier.get_source_id(),
+                            'variants': b_variants,
+                            'shipping_method': b_shipping_method,
+                            'country_code': country_code,
+                        })
+
+                    order['line_items'][i]['bundles'] = product_bundles
+                    order['line_items'][i]['is_bundle'] = len(bundle_data) > 0
 
                 order['connected_lines'] += 1
 
@@ -2601,7 +2718,9 @@ def orders_view(request):
                             'note': order_custom_note,
                             'epacket': epacket_shipping,
                             'auto_mark': auto_ordered_mark,  # Auto mark as Ordered
-                        }
+                        },
+                        'products': bundle_data,
+                        'is_bundle': len(bundle_data) > 0
                     }
 
                     if order_custom_line_attr and el.get('properties'):
@@ -2624,6 +2743,9 @@ def orders_view(request):
 
                         order['line_items'][i]['order_data'] = order_data
                 except:
+                    if settings.DEBUG:
+                        traceback.print_exc()
+
                     raven_client.captureException()
 
         all_orders.append(order)

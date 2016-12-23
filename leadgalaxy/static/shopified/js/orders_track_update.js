@@ -262,7 +262,8 @@
                 // Got Aliexpress order info
                 if (data.order.source_status == data.source.orderStatus &&
                     data.order.source_tracking == data.source.tracking_number &&
-                    $('#update-unfulfilled-only').is(':checked')) {
+                    $('#update-unfulfilled-only').is(':checked') &&
+                    !data.order.bundle) {
                     // Order info hasn't changed
                     orders.success += 1;
                     addOrderUpdateItem(data.order, data.source);
@@ -290,6 +291,8 @@
                 'end_reason': source.endReason,
                 'tracking_number': source.tracking_number,
                 'order_details': JSON.stringify(source.order_details || {}),
+                'bundle': order.bundle,
+                'source_id': order.source_id,
             }
         }).done(function(data) {
             orders.success += 1;

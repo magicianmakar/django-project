@@ -487,7 +487,7 @@
                                                         source-order-id="{{item.shopify_order.source_id}}"
                                                         order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
-                                                        title="View Order Details">#{{item.shopify_order.source_id}}</a>
+                                                        title="View Order Details">{{item.shopify_order.get_source_ids}}</a>
                                                 {% else %}
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
                                                 {% endif %}
@@ -532,6 +532,7 @@
                                                 <thead>
                                                     <tr>
                                                         <td class="product-preview">
+                                                            {% if not item.is_bundle %}
                                                             <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
 
                                                             <img class="product-img cached-img no-img no-img-sm unveil"
@@ -543,6 +544,7 @@
                                                                 {% else %}
                                                                     data-src="/api/product-variant-image?store={{store.id}}&product={{image.product}}&variant={{image.variant}}&redirect=1"
                                                                 {% endif %} />
+                                                            {% endif %}
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
@@ -578,10 +580,14 @@
                                                             <b>{% money_format item.price store %}</b>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% include 'partial/place_order_btn.html' %}
+                                                            {% if item.is_bundle %}
+                                                                <span class="badge badge-primary">Bundle</span>
+                                                            {% else %}
+                                                                {% include 'partial/place_order_btn.html' %}
+                                                            {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% if not item.fulfillment_status %}
+                                                            {% if not item.is_bundle and not item.fulfillment_status %}
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
@@ -592,7 +598,7 @@
                                                                         </ul>
                                                                     </div>
                                                             {% else %}
-                                                                <span class="label label-success">{{item.fulfillment_status|title}}</span>
+                                                                <span class="badge badge-info">{{item.fulfillment_status|default:'Unfulfilled'|title}}</span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
@@ -605,6 +611,41 @@
                                                     </tr>
                                                 </thead>
                                             </table>
+
+                                            {% if item.is_bundle %}
+                                            <div class="well">
+                                                {% for bundle in item.bundles %}
+                                                <div class="m-t-xs" style="display:flex">
+                                                    <div>
+                                                        <img class="product-img cached-img no-img no-img-sm unveil"
+                                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+
+                                                            {% if bundle.data.variant_image %}
+                                                                src="{% shopify_image_thumb bundle.data.variant_image '32x32' 'center' %}"
+                                                            {% elif bundle.data.image %}
+                                                                src="{% shopify_image_thumb bundle.data.image '32x32' 'center' %}"
+                                                            {% endif %} />
+                                                    </div>
+
+                                                    <div>
+                                                        <a href="/product/{{bundle.product.id}}" target="_blank" title="{{bundle.product.title}}">
+                                                            {{bundle.product.title|truncatewords:9}}
+                                                        </a>
+                                                    </div>
+
+                                                    <div>
+                                                        <span class="badge">{{bundle.quantity}} &times; {{bundle.data.variant_title}}</span>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+
+                                                <button class="btn btn-success btn-xs order-bundle-btn"
+                                                        store-type="shopify"
+                                                        style="position:absolute;right:25px;top:50px;"
+                                                        >Order Bundle</button>
+                                            </div>
+                                            {% endif %}
+
                                             </div>
                                         </div>
                                     </div>
@@ -660,6 +701,19 @@
     </div>
 </div>
 
+<div id="bundle-order-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Choose Shipping Method</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
 {% include "partial/shopify_product_selector.html" %}
 
 {% endblock %}
@@ -670,195 +724,8 @@
 {% compress css %}
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
-<style type="text/css">
+<link href="{% static 'shopified/css/orders.css' %}" rel="stylesheet">
 
-    .no-padding {
-        padding: 0 !important;
-    }
-    .filter-label {
-        /* width: 150px; */
-        /* margin-right: 0; */
-        /* padding-right: 0; */
-        /* display: flex; */
-        /* align-items: center !important; */
-        /* align-content: center !important; */
-        padding: 7px 12px;
-        font-weight: bold;
-        text-align: right;
-    }
-    .filter-label select {
-        padding: 6px 8px !important;
-    }
-    .filter-order-status {
-        /*width: 150px;*/
-    }
-    .filter-row {
-        padding-bottom: 5px;
-    }
-    .filter-buttons {
-        padding-right: 0;
-        margin-right: 0;
-    }
-    .orders .row {
-        margin: 0 !important;
-    }
-    .filter-form {
-        background-color: rgb(243, 243, 244)
-        border-radius: 5px;
-        border: 1px solid rgb(215, 218, 215);
-        box-shadow: rgb(215, 218, 215) 0px 0px 10px 0px;
-        margin: 10px 5px 0px;
-        padding: 15px 0px 20px 15px;
-    }
-    .orders {
-        margin:  20px 5px;
-    }
-    .orders .order {
-        border: 1px solid #eee;
-        margin: 10px 0 30px 0;
-        border-radius: 4px;
-        box-shadow: 0px 0px 10px 0px rgb(204, 204, 204);
-    }
-    .orders .order .header {
-        padding: 15px 5px;
-        border-bottom: 1px solid #eee;
-
-    }
-    .orders .order .details {
-        padding: 0;
-    }
-    .orders .order .details .shipping-info {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-    .orders .order .details .line {
-        padding: 0;
-        margin: 0;
-    }
-    .orders .order .details .line.multi-lines {
-        border-top: 1px solid #eee;
-    }
-    .orders .order .details .line .source-order {
-        padding: 7px 0;
-        border-bottom: 1px solid #eee;
-    }
-    .orders .order .details .line .item {
-    }
-    .orders .order .details .line .table{
-        margin: 0;
-    }
-    .orders .order .details .line.excluded {
-        opacity: 0.5;
-    }
-    .orders .order .details .panel {
-        margin: 0;
-    }
-    .orders .order .details .panel .panel-heading {
-        font-weight: bold;
-        padding: 2px 0px 0px 5px;
-        background: none;
-        border-bottom: 0;
-    }
-    .orders .order .details .panel .panel-body {
-        padding: 0px 0px 0px 5px;
-    }
-    .note-panel {
-        cursor: pointer !important;
-        position: absolute !important;
-        top: 0px !important;
-        right: 0px !important;
-        width: 300px !important;
-        z-index: 999 !important;
-        padding: 0 !important;
-        margin-top: -11px !important;
-        margin-right: -11px !important;
-        border-bottom: 0px solid #eee !important;
-        border-radius: 0 !important;
-        border-color: #eee !important;
-    }
-    .note-panel .panel-body {
-        border: 0px solid #eee !important;
-    }
-    .note-panel .edit-note{
-        display: none;
-    }
-    .note-panel .edit-note .note {
-        width: 99%;
-        height: 250px;
-        padding-bottom: 35px;
-    }
-    .note-panel .edit-note .note-edit-save {
-        position: absolute;
-        bottom: 7px;
-        right: 25px;
-        z-index: 1300;
-    }
-    .note-panel .edit-note .note-edit-cancel {
-        position: absolute;
-        bottom: 7px;
-        right: 80px;
-    }
-
-    .order {
-        background-color: white !important;
-    }
-    .gray-panel {
-        background-color: #f3f3f4 !important;
-    }
-
-    .icheckbox_square-blue {
-        position: relative !important;
-    }
-    .chosen-container-multi .chosen-choices li.search-field input[type="text"] {
-        width: 125px !important;
-        font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-        color: #989898 !important;
-    }
-    .order-status span {
-        width: 15px;
-        height: 15px;
-    }
-    .table > thead > tr > td {
-        vertical-align: middle;
-        padding: 5px;
-        /*border-right: 1px solid #eee;*/
-    }
-    .table > thead > tr > th {
-        text-align: center;
-        white-space: nowrap;
-        /*padding: 0;*/
-        /*border-right: 1px solid #eee;*/
-    }
-    .table > thead > tr > td:first-child {
-        padding: 3px 3px 3px 5px;
-        width:64px;
-    }
-    .table > thead > tr > td:first-child > img {
-        /*border: 1px solid #eee;*/
-        width:64px;
-    }
-    ul.shipping-method {
-        margin: 0;
-        padding: 0;
-        white-space: nowrap;
-        list-style: none;
-        margin-top: 5px;
-        font-weight: bold;
-    }
-    .select2-results .select2-results__options .select2-results__option {
-        min-height: 51px;
-        padding: 0;
-        border-bottom: 1px solid #ccc;
-    }
-    .select2-results .select2-results__options .select2-results__option img {
-        width: 50px;
-        float: left;
-        margin-right: 5px;
-    }
-    .select2.select2-container.select2-container--default {
-        width: 100% !important;
-    }
-</style>
 {% endcompress %}
 
 {% endblock %}
@@ -879,6 +746,12 @@
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",
     };
+
+    $('.order-bundle-btn').on('ext.click', function (e) {
+    })
+
+    window.addEventListener("message", function(event) {
+    });
 </script>
 
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>

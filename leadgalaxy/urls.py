@@ -17,6 +17,7 @@ urlpatterns = patterns(
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', leadgalaxy.views.variants_edit, name='variants_edit'),
     url(r'^product/mapping/(?P<product_id>[0-9]+)$', leadgalaxy.views.product_mapping, name='product_mapping'),
     url(r'^product/mapping/supplier/(?P<product_id>[0-9]+)$', leadgalaxy.views.mapping_supplier, name='mapping_supplier'),
+    url(r'^product/mapping/bundle/(?P<product_id>[0-9]+)$', leadgalaxy.views.mapping_bundle, name='mapping_bundle'),
     url(r'^boards/list$', leadgalaxy.views.boards_list, name='boards_list'),
     url(r'^boards/(?P<board_id>[0-9]+)$', leadgalaxy.views.boards, name='boards'),
     url(r'^shipping/info$', leadgalaxy.views.get_shipping_info, name='get_shipping_info'),
