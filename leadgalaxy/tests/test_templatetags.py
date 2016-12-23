@@ -52,9 +52,13 @@ class TagsTestCase(TestCase):
         store = Mock()
         store.currency_format = "${{amount}}"
 
+        self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+
         self.assertEqual(template_helper.money_format(0, store), '$0.00')
         self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
-        self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+        self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
+        self.assertEqual(template_helper.money_format('', store), '$0.00')
+
         self.assertEqual(template_helper.money_format(None, store), '$')
         self.assertEqual(template_helper.money_format(None, None), '$')
 
