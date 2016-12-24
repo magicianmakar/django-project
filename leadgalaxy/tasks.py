@@ -365,7 +365,7 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             return
 
         if shopify_product is None:
-            shopify_product = cache.get('webhook_order_{}_{}'.format(store_id, shopify_id))
+            shopify_product = cache.get('webhook_product_{}_{}'.format(store_id, shopify_id))
 
         if shopify_product is None:
             shopify_product = utils.get_shopify_product(store, shopify_id)
