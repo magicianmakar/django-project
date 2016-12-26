@@ -156,7 +156,7 @@ class Command(BaseCommand):
                 'user_id': product.user_id,
             }
             # if product is variant-splitted product, pass its value.
-            if product_json['variants_sku'] and len(product_json['variants_sku']) == 1:
+            if product_json.get('variants_sku') and len(product_json['variants_sku']) == 1:
                 post_data['variant_value'] = product_json['variants_sku'].values()[0]
             rep = requests.post(
                 url=notification_api_url,
