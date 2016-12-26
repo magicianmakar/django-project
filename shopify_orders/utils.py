@@ -55,8 +55,8 @@ def update_shopify_order(store, data, sync_check=True):
                 sync_status.add_pending_order(data['id'])
                 return
 
-            elif sync_status.sync_status not in [2, 5]:
-                # Retrn if not Completed or Disabled
+            elif sync_status.sync_status not in [2, 5, 6]:
+                # Retrn if not Completed, Disabled or in Reset
                 return
 
         except ShopifySyncStatus.DoesNotExist:
