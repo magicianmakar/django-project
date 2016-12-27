@@ -94,11 +94,14 @@ def index_view(request):
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_active_stores().count() >= 1
 
+    templates = DescriptionTemplate.objects.filter(user=request.user)
+
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
         'extra_stores': extra_stores,
+        'templates': templates,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
@@ -2311,6 +2314,41 @@ def proccess_api(request, user, method, target, data):
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
         return JsonResponse({'status': 'ok', 'product': product.id})
+
+    if method == 'GET' and target == 'description-templates':
+        templates = user.descriptiontemplate_set.all()
+        templates_dict = serializers.serialize('python', templates)
+
+        return JsonResponse({'status': 'ok', 'description_templates': templates_dict}, status=200)
+
+    if method == 'POST' and target == 'description-templates':
+        """
+        Add or edit description templates
+        """
+        from django.forms.models import model_to_dict
+
+        # Get if exists or create if not
+        if data.get('id') != '':
+            id = int(data.get('id'))
+            template = get_object_or_404(DescriptionTemplate, id=id, user=user)
+        else:
+            template = DescriptionTemplate()
+            template.user = user
+
+        template.title = data.get('title', '')
+        template.text = data.get('description', '')
+        template.save()
+
+        template_dict = model_to_dict(template)
+
+        return JsonResponse({'status': 'ok', 'template': template_dict}, status=200)
+
+    if method == 'DELETE' and target == 'description-templates':
+        id = int(data.get('id'))
+        template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
+        template.delete()
+
+        return JsonResponse({'status': 'ok'}, status=200)
 
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)

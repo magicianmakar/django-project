@@ -592,6 +592,58 @@
                             </div>
                             {% endif %}
 
+                        <div class="setting-section">
+                            <h3 class="setting-title">Description Templates</h3>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-10">
+                                <table class="table table-ligthborder" id="description-template-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="vertical-align: middle; min-width: 100px;">Title</th>
+                                            <th style="vertical-align: middle; min-width: 100px;">Text</th>
+                                            <th style="width: 150px;">
+                                                <a data-toggle="modal" data-target="#template-modal" class="btn btn-success pull-right" style="margin: 0;">
+                                                    <i class="fa fa-plus"></i> Create New Template
+                                                </a>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr data-template-id="" class="hidden clone template-row">
+                                            <td class="template-title"></td>
+                                            <td class="template-text"></td>
+                                            <td>
+                                                <a href="#" class="edit-template" title="Edit" style="padding: 8px;" data-id="" data-toggle="modal" data-target="#template-modal">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <a href="#" class="delete-template" data-id="" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;">
+                                                    <i class="fa fa-remove"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% for template in templates %}
+                                        <tr data-template-id="{{ template.id }}" class="template-row">
+                                            <td class="template-title">{{ template.title }}</td>
+                                            <td class="template-text" data-value="{{ template.text }}">
+                                                {{ template.text }}
+                                            </td>
+                                            <td>
+                                                <a href="#" class="edit-template" title="Edit" style="padding: 8px;" data-id="{{ template.id }}" data-toggle="modal" data-target="#template-modal">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <a href="#" class="delete-template" data-id="{{ template.id }}" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;">
+                                                    <i class="fa fa-remove"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <div class="col-md-12"><hr /></div>
                         <div class="form-group">
                             <div class="col-sm-offset-1 col-sm-10">
@@ -634,6 +686,37 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
+</div>
+
+<div id="template-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add Description Template</h3>
+
+                        <form role="form" action="" method="post" id="add-template-form">
+                            <input type="hidden" name="id" value="">
+                            <div class="form-group">
+                                <label>Title</label> 
+                                <input type="text" name="title" placeholder="Template title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="description" placeholder="Description for template" class="form-control" autocomplete="off"></textarea>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Save</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -715,7 +798,7 @@
     table .label .num {
         font-weight: 600 !important;
     }
-    table td:first-child {
+    table.store-tables td:first-child {
         width: 100%;
     }
     .table > tbody > tr > td {
@@ -729,6 +812,7 @@
 
 {% block extrajs %}
 {% compress js %}
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>

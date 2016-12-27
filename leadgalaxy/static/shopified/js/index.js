@@ -1,4 +1,5 @@
 /* global $, toastr, swal, displayAjaxError */
+/* global setup_full_editor, setup_admin_editor */
 
 (function() {
 'use strict';
@@ -380,6 +381,102 @@ $(function () {
 
         $('.order-handle').toggle();
     });
+});
+
+setup_full_editor('description');
+
+$('#template-modal').on('show.bs.modal', function (event) {
+    $('#add-template-form input').val('');
+    $('#add-template-form textarea').val('');
+    document.editor.setData('');
+
+    var button = $(event.relatedTarget);
+    if (button.hasClass('edit-template')) {
+        var td = button.parent('td');
+
+        $('#add-template-form input[name="id"]').val(button.attr('data-id'));
+        $('#add-template-form input[name="title"]').val(td.siblings('.template-title').text());
+
+        var text = td.siblings('.template-text').attr('data-value');
+        $('#add-template-form textarea[name="description"]').val(text);
+        setTimeout(function() {
+            document.editor.setData(text);
+        }, 1000);
+    }
+});
+
+$('#template-modal').on('hide.bs.modal', function (e) {
+    $('#add-template-form input').val('');
+    $('#add-template-form textarea').val('');
+    document.editor.setData('');
+});
+
+$('#add-template-form').on('submit', function(e) {
+    e.preventDefault();
+    
+    $('#add-template-form textarea[name="description"]').val(document.editor.getData());
+    $.ajax({
+        url: '/api/description-templates',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function (result) {
+            $('#template-modal').modal('hide');
+
+            var tr = $('#description-template-table tr[data-template-id="'+result.template.id+'"]');
+            if (tr.length == 0) {
+                tr = $('#description-template-table tbody .clone').clone();
+                tr.removeClass('hidden clone');
+                $('#description-template-table tbody').append(tr);
+            }
+
+            tr.attr('data-template-id', result.template.id);
+            tr.find('.template-title').text(result.template.title);
+            tr.find('.template-text').text(result.template.text);
+            tr.find('.template-text').attr('data-value', result.template.text);
+            tr.find('.edit-template').attr('data-id', result.template.id);
+            tr.find('.delete-template').attr('data-id', result.template.id);
+            tr.find('.delete-template').attr('href', result.template.delete_url);
+        }
+    });
+});
+
+$('#description-template-table').on('click', '.delete-template', function(e) {
+    e.preventDefault();
+    var btn = $(this);
+
+    swal(
+        {
+            title: "Delete Description Template",
+            text: "This will remove the description template permanently. Are you sure you want to remove it?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Remove Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) { 
+            if (isConfirmed) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/description-templates?' + $.param({
+                        id: btn.attr('data-id')
+                    }),
+                    success: function(data) {
+                        btn.parents('.template-row').remove();
+
+                        swal.close();
+                        toastr.success("The template description has been deleted.", "Deleted!");
+                    },
+                    error: function(data) {
+                        displayAjaxError('Delete Template Description', data);
+                    }
+                });
+            }
+        }
+    );
 });
 
 })();

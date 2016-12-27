@@ -1567,6 +1567,15 @@ class PlanPayment(models.Model):
         return u'{} | {}'.format(self.provider, self.payment_id)
 
 
+class DescriptionTemplate(models.Model):
+    user = models.ForeignKey(User)
+    title = models.CharField(max_length=255)
+    text = models.TextField()
+
+    def __unicode__(self):
+        return self.title
+
+
 def user_is_subsuser(self):
     return self.profile.is_subuser
 
