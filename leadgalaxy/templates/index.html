@@ -415,7 +415,6 @@
                             </div>
                         </div>
 
-                        {% if not config.shipping_method_filter %}
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
@@ -427,13 +426,12 @@
                                             id="shipping_method_filter"
                                             name="shipping_method_filter"
                                             type="checkbox"
-                                            class="js-switch" {% if config.shipping_method_filter %}checked{% endif %}
+                                            class="js-switch" {% if config.shipping_method_filter %}checked disabled{% endif %}
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {% endif %}
 
                         {% endwith %}
                         {% endif %}
