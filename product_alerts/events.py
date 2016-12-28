@@ -67,8 +67,8 @@ class ProductChangeEvent():
 
     def take_action(self):
         data = self.get_shopify_product()
-
-        self.notify(data)
+        # emails will be queued and sent as batch via management command with cron on regular basis. e.g. 24 hrs
+        # self.notify(data)
 
         self.revision.data = data
 

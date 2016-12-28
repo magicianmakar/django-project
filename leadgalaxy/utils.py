@@ -1565,10 +1565,12 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
     template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
-    template = Template(open(template_file).read())
+    try:
+        template = Template(open(template_file).read())
+    except Exception as e:
+        print e
 
     ctx = Context(data)
-
     email_html = template.render(ctx)
 
     if nl2br:
