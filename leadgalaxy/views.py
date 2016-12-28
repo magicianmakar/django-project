@@ -2059,13 +2059,43 @@ def proccess_api(request, user, method, target, data):
         if not user.can('sub_users.use'):
             raise PermissionDenied('Sub User Invite')
 
-        if not EmailForm({'email': data.get('email')}).is_valid():
+        subuser_email = data.get('email', '').strip()
+
+        if not EmailForm({'email': subuser_email}).is_valid():
             return JsonResponse({'error': 'Email is not valid'}, status=501)
 
-        if User.objects.filter(email__iexact=data.get('email')).count():
+        users = User.objects.filter(email__iexact=subuser_email)
+        if users.count():
+            if users.count() == 1:
+                subuser = users.first()
+                if subuser.profile.plan.is_free and not user.get_config('_limit_subusers_invite'):
+                    plan = utils.get_plan(plan_slug='subuser-plan')
+                    reg = utils.generate_plan_registration(plan=plan, sender=user, data={
+                        'email': subuser_email,
+                        'auto': True
+                    })
+
+                    subuser.profile.apply_registration(reg)
+
+                    data = {
+                        'sender': user,
+                    }
+
+                    utils.send_email_from_template(
+                        tpl='subuser_added.html',
+                        subject='Invitation to join Shopified App',
+                        recipient=subuser_email,
+                        data=data,
+                    )
+
+                    return JsonResponse({
+                        'status': 'ok',
+                        'hash': reg.register_hash
+                    })
+
             return JsonResponse({'error': 'Email is is already registered to an account'}, status=501)
 
-        if PlanRegistration.objects.filter(email__iexact=data.get('email')).count():
+        if PlanRegistration.objects.filter(email__iexact=subuser_email).count():
             return JsonResponse({'error': 'An Invitation is already sent to this email'}, status=501)
 
         if user.get_config('_limit_subusers_invite'):
@@ -2074,11 +2104,11 @@ def proccess_api(request, user, method, target, data):
 
         plan = utils.get_plan(plan_slug='subuser-plan')
         reg = utils.generate_plan_registration(plan=plan, sender=user, data={
-            'email': data.get('email')
+            'email': subuser_email
         })
 
         data = {
-            'email': data.get('email'),
+            'email': subuser_email,
             'sender': user,
             'reg_hash': reg.register_hash
         }
@@ -2086,7 +2116,7 @@ def proccess_api(request, user, method, target, data):
         utils.send_email_from_template(
             tpl='subuser_invite.html',
             subject='Invitation to join Shopified App',
-            recipient=data['email'],
+            recipient=subuser_email,
             data=data,
         )
 

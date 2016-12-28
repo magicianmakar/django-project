@@ -1388,7 +1388,7 @@ class GroupPlan(models.Model):
 
     @property
     def is_free(self):
-        return self.slug in ['free-stripe-plan']
+        return self.slug in ['free-stripe-plan', 'free-plan']
 
     @property
     def large_badge_image(self):
