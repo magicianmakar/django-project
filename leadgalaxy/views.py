@@ -4735,7 +4735,7 @@ def orders_track(request):
 
         orders = orders.filter(Q(order_id=utils.clean_query_id(query)) |
                                Q(source_id=utils.clean_query_id(query)) |
-                               Q(source_tracking=query))
+                               Q(source_tracking__icontains=query))
 
     if tracking_filter == '0':
         orders = orders.filter(source_tracking='')
