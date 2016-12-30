@@ -76,6 +76,8 @@ from stripe_subscription.utils import (
     get_stripe_invoice_list,
 )
 
+from analytic_events.models import RegistrationEvent
+
 
 @login_required
 def index_view(request):
@@ -5315,6 +5317,8 @@ def register(request, registration=None, subscribe_plan=None):
                                     password=form.cleaned_data['password1'])
 
             login(request, new_user)
+
+            RegistrationEvent.objects.create(user=request.user)
 
             if new_user.profile.plan.is_free:
                 return HttpResponseRedirect("/user/profile?w=1#plan")

@@ -11,6 +11,8 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import GroupPlan
 from leadgalaxy.models import ClippingMagic, ClippingMagicPlan
 
+from analytic_events.models import PlanSelectionEvent, BillingInformationEntryEvent
+
 from .models import StripeSubscription
 from .stripe_api import stripe
 from .utils import (
@@ -61,6 +63,9 @@ def customer_source(request):
         cus.coupon = settings.STRIP_TRIAL_DISCOUNT_COUPON
         user.stripe_customer.stripe_save(cus)
 
+    source = user.stripe_customer.source
+    BillingInformationEntryEvent.objects.create(user=request.user, source=str(source))
+
     return JsonResponse({'status': 'ok'})
 
 
@@ -99,6 +104,8 @@ def subscription_trial(request):
         return JsonResponse({'error': 'Plan is not valid'}, status=403)
 
     user.profile.apply_subscription(plan)
+
+    PlanSelectionEvent.objects.create(user=request.user)
 
     stripe_customer = user.stripe_customer
     stripe_customer.can_trial = False
@@ -146,6 +153,8 @@ def subscription_plan(request):
             profile.plan = plan
             profile.save()
 
+            PlanSelectionEvent.objects.create(user=request.user)
+
             return JsonResponse({'status': 'ok'})
         else:
             return JsonResponse({
@@ -177,6 +186,8 @@ def subscription_plan(request):
         profile = user.profile
         profile.plan = plan
         profile.save()
+
+        PlanSelectionEvent.objects.create(user=request.user)
 
     return JsonResponse({'status': 'ok'})
 
