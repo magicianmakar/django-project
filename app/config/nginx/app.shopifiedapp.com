@@ -10,10 +10,6 @@ upstream http_backend  {
     server shopifytools.herokuapp.com;
 }
 
-upstream https_backend  {
-    server miyazaki-35268.herokussl.com:443;
-}
-
 upstream ali_node  {
   server 127.0.0.1:9000;
 }

@@ -10,10 +10,6 @@ upstream http_backend  {
   server 127.0.0.1:8000;
 }
 
-upstream https_backend  {
-  server 127.0.0.1:8000;
-}
-
 upstream ali_node  {
   server 127.0.0.1:9000;
 }
@@ -116,6 +112,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Proxy-Protocol $scheme;
 
-        proxy_pass  http://https_backend;
+        proxy_pass  http://http_backend;
     }
 }
