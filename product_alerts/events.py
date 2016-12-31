@@ -167,10 +167,8 @@ class ProductChangeEvent():
             self.product.get_shopify_id()), api=True)
         response = requests.get(url)
 
-        if response.ok:
-            return response.json()
-        else:
-            return None
+        response.raise_for_status()
+        return response.json()
 
     def send_shopify(self, data):
         update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
