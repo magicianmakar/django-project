@@ -4897,13 +4897,12 @@ def product_alerts(request):
                                        .update(seen=True)
 
     # Allow sending notification for new changes
-    request.user.set_config('_product_change_notify', False)
-
-    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
+    cache.delete('product_change_%d' % request.user.models_user.id)
 
     # Delete sidebar alert info cache
     cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
 
+    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
     return render(request, tpl, {
         'product_changes': product_changes,
         'show_hidden': show_hidden,
