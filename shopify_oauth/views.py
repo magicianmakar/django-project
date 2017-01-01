@@ -183,8 +183,9 @@ def callback(request):
         user.can_add(store)
 
         try:
-            info = store.get_info
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
+
+            info = store.get_info
             store.title = info['name']
             store.currency_format = info['money_in_emails_format']
 
