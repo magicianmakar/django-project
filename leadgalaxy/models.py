@@ -209,7 +209,7 @@ class UserProfile(models.Model):
             return False
 
     def get_active_stores(self, flat=False):
-        if self.user.is_subuser:
+        if self.is_subuser:
             stores = self.subuser_stores.filter(is_active=True)
         else:
             stores = self.user.shopifystore_set.filter(is_active=True)
@@ -238,7 +238,7 @@ class UserProfile(models.Model):
     def import_stores(self):
         ''' Return Stores the User can import products from '''
 
-        if self.subuser_parent is not None:
+        if self.is_subuser:
             return self.subuser_parent.profile.import_stores()
 
         stores = []
@@ -254,7 +254,7 @@ class UserProfile(models.Model):
             codename = perm_name[:-4]
             return self.has_subuser_permission(codename, store)
 
-        if self.subuser_parent is not None:
+        if self.is_subuser:
             return self.subuser_parent.profile.can(perm_name)
 
         perm_name = perm_name.lower()
@@ -322,7 +322,7 @@ class UserProfile(models.Model):
     def can_add_store(self):
         """ Check if the user plan allow him to add a new store """
 
-        if self.user.is_subuser:
+        if self.is_subuser:
             return self.subuser_parent.profile.can_add_store()
 
         user_stores = int(self.stores)
@@ -346,7 +346,7 @@ class UserProfile(models.Model):
     def can_add_product(self):
         """ Check if the user plan allow one more product saving """
 
-        if self.user.is_subuser:
+        if self.is_subuser:
             return self.subuser_parent.profile.can_add_product()
 
         user_products = int(self.products)
@@ -365,7 +365,7 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def can_add_board(self):
-        if self.user.is_subuser:
+        if self.is_subuser:
             return self.subuser_parent.profile.can_add_board()
 
         user_boards = int(self.boards)
@@ -383,8 +383,12 @@ class UserProfile(models.Model):
 
         return can_add, total_allowed, user_count
 
+    @property
+    def is_subuser(self):
+        return self.subuser_parent is not None
+
     def has_subuser_permission(self, codename, store=None):
-        if self.subuser_parent is not None:
+        if self.is_subuser:
             permission = self.subuser_permissions.filter(codename=codename)
             if store:
                 if not self.subuser_stores.filter(pk=store.id).exists():
@@ -1564,11 +1568,11 @@ class PlanPayment(models.Model):
 
 
 def user_is_subsuser(self):
-    return self.profile.subuser_parent is not None
+    return self.profile.is_subuser
 
 
 def user_models_user(self):
-    if not self.is_subuser:
+    if not self.profile.is_subuser:
         return self
     else:
         return self.profile.subuser_parent
