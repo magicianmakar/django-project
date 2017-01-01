@@ -183,8 +183,9 @@ def callback(request):
         user.can_add(store)
 
         try:
+            info = store.get_info
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-            store.title = store.get_info['name']
+            store.title = info['name']
             store.currency_format = info['money_in_emails_format']
 
             owner = info.get('shop_owner')
@@ -194,6 +195,7 @@ def callback(request):
                 user.save()
 
         except:
+            raven_client.captureException()
             return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
         store.save()
