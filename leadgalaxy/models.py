@@ -1677,7 +1677,7 @@ User.add_to_class("can_delete", user_can_delete)
 def invalidate_acp_users(sender, instance, created, **kwargs):
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
 
-    if not created:
+    if not created and not instance.is_subuser:
         instance.get_active_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
 
 
