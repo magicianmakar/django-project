@@ -330,6 +330,8 @@ $('.show-clippingmagic-key-btn').click(function (e) {
     $(this).hide();
 });
 
+setup_full_editor('default_desc', false, 'default_desc');
+
 $(function () {
     showDescriptionHelp();
     $('#auto_shopify_fulfill').trigger('change');

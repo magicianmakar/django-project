@@ -348,7 +348,7 @@ function waitForTask(task_id, product, data, callback, callback_data) {
     }, 1000);
 }
 
-function setup_full_editor(textarea_name, include_css) {
+function setup_full_editor(textarea_name, include_css, editor_variable) {
     include_css = typeof(include_css) === undefined ? false : include_css;
 
     var styles = ['body { padding: 15px; }'];
@@ -361,7 +361,7 @@ function setup_full_editor(textarea_name, include_css) {
         ];
     }
 
-    document.editor = CKEDITOR.replace( textarea_name,
+    var editor = CKEDITOR.replace( textarea_name,
     {
         contentsCss: styles,
         // Remove unused plugins.
@@ -385,6 +385,12 @@ function setup_full_editor(textarea_name, include_css) {
             { name: 'links', items : [ 'Link','Unlink','Anchor', 'SpecialChar' ] },
         ],
     });
+
+    if (editor_variable) {
+        document[editor_variable] = editor;
+    } else {
+        document.editor = editor;
+    }
 }
 
 function setup_admin_editor(textarea_name, include_css) {
