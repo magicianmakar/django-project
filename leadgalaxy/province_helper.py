@@ -5,7 +5,15 @@ from django.core.cache import cache
 from django.conf import settings
 
 
+uk_provinces = None
+
+
 def load_uk_provincess():
+    global uk_provinces
+
+    if uk_provinces:
+        return uk_provinces
+
     for i in ['uk_provinces2.csv', 'uk_provinces.csv']:
         data_file = os.path.join(settings.BASE_DIR, 'app', 'data', i)
         uk_provinces = {}
