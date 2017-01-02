@@ -54,6 +54,7 @@ function showProductInfo(rproduct) {
     }
 }
 
+
 $("a.add-variant").click(function (e) {
     e.preventDefault();
 
@@ -1360,7 +1361,12 @@ $('#modal-shopify-product .shopify-find-product').trigger('keyup');
     }, 2000);
 
     $(".tag-it").tagit({
-        allowSpaces: true
+        allowSpaces: true,
+        autocomplete: {
+            source: '/autocomplete/tags',
+            delay: 500, 
+            minLength: 1
+        }
     });
 
     $.each(config.exports, function () {

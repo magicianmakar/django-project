@@ -3950,6 +3950,9 @@ def autocomplete(request, target):
 
     q = request.GET.get('query', '').strip()
     if not q:
+        q = request.GET.get('term', '').strip()
+
+    if not q:
         return JsonResponse({'query': q, 'suggestions': []}, safe=False)
 
     if target == 'types':
@@ -3977,7 +3980,10 @@ def autocomplete(request, target):
                     if q.lower() in i.lower():
                         tags.append(i)
 
-        return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
+        if 'term' in request.GET:
+            return JsonResponse(tags, safe=False)
+        else:
+            return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
 
     elif target == 'title':
         results = []
