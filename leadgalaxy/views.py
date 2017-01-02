@@ -4595,8 +4595,9 @@ def orders_view(request):
             if shopify_order:
                 order['placed_orders'] += 1
 
+            variant_id = el['variant_id']
             if not el['product_id']:
-                if el['variant_id']:
+                if variant_id:
                     product = ShopifyProduct.objects.filter(store=store, title=el['title'], shopify_id__gt=0).first()
                 else:
                     product = None
@@ -4611,11 +4612,12 @@ def orders_view(request):
                 if not original_info:
                     original_info = {}
 
-                supplier = product.get_suppier_for_variant(el['variant_id'])
+                variant_id = product.get_real_variant_id(variant_id)
+                supplier = product.get_suppier_for_variant(variant_id)
                 if supplier:
                     shipping_method = product.get_shipping_for_variant(
                         supplier_id=supplier.id,
-                        variant_id=el['variant_id'],
+                        variant_id=variant_id,
                         country_code=order.get('shipping_address', {}).get('country_code'))
                 else:
                     shipping_method = None
@@ -4695,8 +4697,8 @@ def orders_view(request):
                     }
 
                     if product:
-                        mapped = product.get_variant_mapping(name=el['variant_id'], for_extension=True, mapping_supplier=True)
-                        if el['variant_id'] and mapped:
+                        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                        if variant_id and mapped:
                             order_data['variant'] = mapped
                         else:
                             order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''

@@ -943,6 +943,17 @@ class ShopifyProduct(models.Model):
         else:
             return ShopifyProductExport.objects.filter(product=self)
 
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
+
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
 
