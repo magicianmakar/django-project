@@ -1570,7 +1570,7 @@ class PlanPayment(models.Model):
 class DescriptionTemplate(models.Model):
     user = models.ForeignKey(User)
     title = models.CharField(max_length=255)
-    text = models.TextField()
+    description = models.TextField()
 
     def __unicode__(self):
         return self.title

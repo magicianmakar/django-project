@@ -24,6 +24,7 @@ from django.core.cache.utils import make_template_fragment_key
 from django.db import transaction
 from django.conf import settings
 from django.core import serializers
+from django.forms.models import model_to_dict
 
 from unidecode import unidecode
 
@@ -2316,28 +2317,45 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok', 'product': product.id})
 
     if method == 'GET' and target == 'description-templates':
-        templates = user.descriptiontemplate_set.all()
-        templates_dict = serializers.serialize('python', templates)
+        templates = DescriptionTemplate.objects.filter(user=user.models_user)
+        if data.get('id'):
+            templates = templates.filter(id=data.get('id'))
 
-        return JsonResponse({'status': 'ok', 'description_templates': templates_dict}, status=200)
+        templates_dict = []
+        for i in templates:
+            templates_dict.append(model_to_dict(i))
+
+        return JsonResponse({
+            'status': 'ok',
+            'description_templates': templates_dict
+        }, status=200)
 
     if method == 'POST' and target == 'description-templates':
         """
         Add or edit description templates
         """
-        from django.forms.models import model_to_dict
 
-        # Get if exists or create if not
-        if data.get('id') != '':
-            id = int(data.get('id'))
-            template = get_object_or_404(DescriptionTemplate, id=id, user=user)
+        if not data.get('title', '').strip():
+            return JsonResponse({'error': 'Description Title is not set'}, status=422)
+
+        if not data.get('description', '').strip():
+            return JsonResponse({'error': 'Description is empty'}, status=422)
+
+        if data.get('id'):
+            template, created = DescriptionTemplate.objects.update_or_create(
+                id=data.get('id'),
+                user=user,
+                defaults={
+                    'title': data.get('title'),
+                    'description': data.get('description')
+                }
+            )
         else:
-            template = DescriptionTemplate()
-            template.user = user
-
-        template.title = data.get('title', '')
-        template.text = data.get('description', '')
-        template.save()
+            template = DescriptionTemplate.objects.create(
+                user=user,
+                title=data.get('title'),
+                description=data.get('description')
+            )
 
         template_dict = model_to_dict(template)
 
