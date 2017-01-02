@@ -1880,6 +1880,70 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method in ['GET', 'POST'] and target == 'order-info':
+
+        aliexpress_ids = data.get('aliexpress_id')
+        if aliexpress_ids:
+            aliexpress_ids = aliexpress_ids.split(',')
+        else:
+            try:
+                aliexpress_ids = json.loads(request.body)['aliexpress_id']
+                if type(aliexpress_ids) is not list:
+                    aliexpress_ids = []
+            except:
+                pass
+
+        if not len(aliexpress_ids):
+            return JsonResponse({'error': 'Aliexpress ID not set'}, status=422)
+
+        aliexpress_ids = [int(j) for j in aliexpress_ids]
+        orders = {}
+
+        for chunk_ids in [aliexpress_ids[x:x + 100] for x in xrange(0, len(aliexpress_ids), 100)]:
+            # Proccess 100 max order at a time
+
+            tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
+                                              .filter(source_id__in=chunk_ids) \
+                                              .order_by('store')
+
+            if tracks.count():
+                stores = {}
+                # tracks = utils.get_tracking_orders(tracks[0].store, tracks)
+
+                for track in tracks:
+                    if track.store in stores:
+                        stores[track.store].append(track)
+                    else:
+                        stores[track.store] = [track]
+
+                tracks = []
+
+                for store, store_tracks in stores.iteritems():
+                    for track in utils.get_tracking_orders(store, store_tracks):
+                        tracks.append(track)
+
+            for track in tracks:
+                info = {
+                    'aliexpress_id': track.source_id,
+                    'shopify_order': track.order_id,
+                    'shopify_number': track.order['name'],
+                    'shopify_status': track.order['fulfillment_status'],
+                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
+                    'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
+                    'tracking_number': track.source_tracking,
+                }
+
+                if track.source_id in orders:
+                    orders[track.source_id].append(info)
+                else:
+                    orders[track.source_id] = [info]
+
+        for i in aliexpress_ids:
+            if i not in orders:
+                orders[i] = None
+
+        return HttpResponse(json.dumps(orders, indent=4), content_type='text/plain')
+
     if method == 'POST' and target == 'order-add-note':
         # Append to the Order note
         store = ShopifyStore.objects.get(id=data.get('store'))
