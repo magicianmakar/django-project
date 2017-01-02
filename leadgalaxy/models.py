@@ -1317,6 +1317,16 @@ class AppPermission(models.Model):
         return self.description
 
 
+class ClippingMagicPlan(models.Model):
+
+    allowed_credits = models.BigIntegerField(default=0)
+    amount = models.BigIntegerField(default=0)
+    default = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return u'{} | {}'.format(self.allowed_credits, self.amount)
+
+
 class ClippingMagic(models.Model):
     class Meta:
         ordering = ['-created_at']
@@ -1326,9 +1336,10 @@ class ClippingMagic(models.Model):
     api_id = models.CharField(max_length=100, default='', verbose_name='ClippingMagic API ID')
     api_secret = models.CharField(max_length=255, default='', verbose_name='ClippingMagic API Secret')
 
-    allowed_images = models.IntegerField(default=-1)
-    downloaded_images = models.IntegerField(default=0)
+    allowed_credits = models.BigIntegerField(default=-1)
+    remaining_credits = models.BigIntegerField(default=0)
 
+    clippingmagic_plan = models.ForeignKey(ClippingMagicPlan, null=True, blank=True, related_name='clippingmagic_plan')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
@@ -1393,6 +1404,10 @@ class GroupPlan(models.Model):
     @property
     def is_free(self):
         return self.slug in ['free-stripe-plan', 'free-plan']
+
+    @property
+    def is_lite(self):
+        return self.slug in ['lite-stripe-plan', 'lite-plan']
 
     @property
     def large_badge_image(self):

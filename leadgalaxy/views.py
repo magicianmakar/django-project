@@ -842,16 +842,22 @@ def proccess_api(request, user, method, target, data):
             api_id = data.get('api_id')
             api_secret = data.get('api_secret')
 
-        elif plan == 'pro' and plan == 'elite':
-            return JsonResponse({
-                'error': "You are not subscribed to this feature"
-            }, status=403)
-
         else:
-            if user.clippingmagic.downloaded_images >= user.clippingmagic.allowed_images:
-                return JsonResponse({
-                    'error': "You don't have enough credits left. Please re-subscribe for this feature"
-                }, status=403)
+            try:
+                clippingmagic = ClippingMagic.objects.get(user=user)
+            except ClippingMagic.DoesNotExist:
+                clippingmagic_plan = ClippingMagicPlan.objects.get(default=1)
+                default = {
+                   'allowed_credits': clippingmagic_plan.allowed_credits,
+                   'remaining_credits': clippingmagic_plan.allowed_credits,
+                   'clippingmagic_plan': clippingmagic_plan
+                }
+                ClippingMagic.objects.update_or_create(user=request.user,defaults=default)
+
+                if user.clippingmagic.remaining_credits <= 0:
+                        return JsonResponse({
+                            'error': "You don't have enough credits left. Please re-subscribe for this feature"
+                        }, status=403)
 
         if action == 'edit':
             res = requests.post(
@@ -873,12 +879,12 @@ def proccess_api(request, user, method, target, data):
                     url=img_url
                 )
 
-                user.clippingmagic.downloaded_images = user.clippingmagic.downloaded_images + 1
+                user.clippingmagic.remaining_credits = user.clippingmagic.remaining_credits - 1
                 user.clippingmagic.save()
-        else:
-            return JsonResponse({
-                'error': 'Action is not defined'
-            }, status=500)
+            else:
+                return JsonResponse({
+                    'error': 'Action is not defined'
+                }, status=500)
 
         if api_response.get('id') or img_url:
             return JsonResponse({
@@ -4095,6 +4101,15 @@ def user_profile(request):
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 
+    clippingmagic_sub = ClippingMagicPlan.objects.all()
+    if not request.user.profile.plan.is_free:
+        try:
+            clippingmagic = ClippingMagic.objects.get(user=request.user)
+        except Exception as e:
+            clippingmagic = ""
+    else:
+        clippingmagic = ""
+
     stripe_customer = request.user.is_stripe_customer() or request.user.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
@@ -4107,6 +4122,8 @@ def user_profile(request):
         'bundles': bundles,
         'stripe_plans': stripe_plans,
         'stripe_customer': stripe_customer,
+        'clippingmagic_sub': clippingmagic_sub,
+        'clippingmagic':clippingmagic,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })

@@ -984,7 +984,7 @@ function renderImages() {
 
         d.append($('<div>', {
             'class': "loader",
-            'html': '<i class="fa fa-spinner fa-spin fa-2x"></i>'
+            'html': '<i class="fa fa-spinner fa-spin fa-2x" style="display:none;"></i>'
         }));
 
         var buttons = [];

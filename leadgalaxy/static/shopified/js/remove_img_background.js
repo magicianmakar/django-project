@@ -10,7 +10,7 @@
                 $('#modal-clippingmagic').modal('show');
                 return;
             }
-        } else {
+        } else if ( !config.clipping_magic.clippingmagic_editor ) {
             swal('Clipping Magic', "You haven't subscribe for this feature", 'error');
             return;
         }
@@ -26,7 +26,10 @@
                 action: 'edit',
             }
         }).done(function(data) {
-            edit_image(data, image);
+                if ( data.status == 'ok' )
+                    edit_image( data, image )
+                else
+                    swal({title: "Error", text: data.msg, type: "error", html: true, closeOnConfirm: true, animation: false, confirmButtonText: "Ok"});
         }).fail(function(data) {
             displayAjaxError('Clipping Magic', data);
         });

@@ -136,3 +136,24 @@ $('#save-email').click(function () {
         }
     });
 });
+
+
+$('#renew_clippingmagic').click( function() {
+    var amount = $(this).parent().parent().find("#clippingmagic_plan option:selected").val();
+    $.ajax({
+        url: '/subscription/clippingmagic_subscription',
+        type: 'POST',
+        data: {'amount':amount},
+        success: function (data) {
+            if(data.status == 'ok'){
+                toastr.success(data.msg,'Clippingmagic Subscription');
+                window.location.reload();
+            }else{
+               toastr.warning(data.msg,'Clippingmagic Subscription');
+            }
+        },
+        error: function (data) {
+            toastr.warning(data.msg,'Clippingmagic Subscription');
+        }
+    });
+});
