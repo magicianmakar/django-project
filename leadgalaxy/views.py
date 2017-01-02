@@ -4746,7 +4746,7 @@ def orders_view(request):
         'product_filter': product_filter,
         'supplier_filter': supplier_filter,
         'shipping_method_filter': shipping_method_filter,
-        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter'),
+        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter') and store_order_synced,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
