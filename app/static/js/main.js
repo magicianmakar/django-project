@@ -349,7 +349,8 @@ function waitForTask(task_id, product, data, callback, callback_data) {
 }
 
 function setup_full_editor(textarea_name, include_css, editor_variable) {
-    include_css = typeof(include_css) === undefined ? false : include_css;
+    include_css = typeof(include_css) !== 'undefined' ? include_css : false;
+    editor_variable = typeof(editor_variable) !== 'undefined' ? editor_variable : 'editor';
 
     var styles = ['body { padding: 15px; }'];
     if (include_css) {
@@ -361,8 +362,7 @@ function setup_full_editor(textarea_name, include_css, editor_variable) {
         ];
     }
 
-    var editor = CKEDITOR.replace( textarea_name,
-    {
+    document[editor_variable] = CKEDITOR.replace(textarea_name, {
         contentsCss: styles,
         // Remove unused plugins.
         removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,templates',
@@ -385,16 +385,11 @@ function setup_full_editor(textarea_name, include_css, editor_variable) {
             { name: 'links', items : [ 'Link','Unlink','Anchor', 'SpecialChar' ] },
         ],
     });
-
-    if (editor_variable) {
-        document[editor_variable] = editor;
-    } else {
-        document.editor = editor;
-    }
 }
 
-function setup_admin_editor(textarea_name, include_css) {
-    include_css = typeof(include_css) === undefined ? false : include_css;
+function setup_admin_editor(textarea_name, include_css, editor_variable) {
+    include_css = typeof(include_css) === 'undefined' ? false : include_css;
+    editor_variable = typeof(editor_variable) !== 'undefined' ? editor_variable : 'editor';
 
     var styles = ['body { padding: 15px; }'];
     if (include_css) {
@@ -406,9 +401,19 @@ function setup_admin_editor(textarea_name, include_css) {
         ];
     }
 
-    document.editor = CKEDITOR.replace( textarea_name, {
+    document[editor_variable] = CKEDITOR.replace( textarea_name, {
         contentsCss: styles,
         allowedContent : true,
+    });
+}
+
+function editor_sync_content() {
+    CKEDITOR.on('instanceReady', function(event) {
+        var editor = event.editor;
+
+        editor.on('change', function(event) {
+            this.updateElement();
+        });
     });
 }
 

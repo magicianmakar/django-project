@@ -512,8 +512,9 @@ $(function () {
     });
 
     setTimeout(function() {
+        editor_sync_content();
         setup_full_editor('default_desc', false, 'default_desc');
-    });
+    }, 1000);
 });
 
 })();
