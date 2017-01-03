@@ -94,6 +94,12 @@
                             </a>
                         </li>
 
+                        <li>
+                            <a store-id="{{item.id}}" class="change-tracking-url btn-success btn-outline">
+                                <i class="fa fa-chain"></i> Custom Tracking URL
+                            </a>
+                        </li>
+
                         {% if item.version == 1 %}
                         <li>
                             <a class="edit-store  " store-id="{{item.id}}"
@@ -757,7 +763,8 @@
                         <form role="form">
                             <div class="form-group">
                                 <label for="shop-url">Enter your store's URL:</label>
-                                <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com" class="form-control">
+                                <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com"
+                                       class="form-control" autocorrect="off" spellcheck="false">
                             </div>
                             <p><em>Note: You don't need to create a Private App any more!</em></p>
                         </form>
@@ -773,6 +780,56 @@
     </div>
 </div>
 
+<div id="modal-store-tracking-url" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Custom Tracking URL</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="shop-url">Enter your custom tracking URL:</label>
+                                <input type="text" id="custom-tracking-url-input" class="form-control" autocorrect="off" spellcheck="false">
+                            </div>
+
+                            <p>
+                                <em>Exmaples:</em>
+
+                                {% verbatim %}
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="http://track.aftership.com/{{tracking_number}}">Aftership</a>,</em>
+
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="http://17track.net/?nums={{tracking_number}}">17Track</a>,</em>
+
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="http://global.cainiao.com/detail.htm?mailNoList={{tracking_number}}">Cainiao</a>,</em>
+
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="https://tools.usps.com/go/TrackConfirmAction.action?tLabels={{tracking_number}}">USPS</a></em>
+                                {% endverbatim %}
+                            </p>
+
+                            <p>
+                            <em>Keep the input field empty to use the default tracking url</em>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+                <button id="save-custom-tracking-btn" class="btn btn-primary" type="button"><i class="fa fa-save"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extracss %}

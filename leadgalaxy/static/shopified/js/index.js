@@ -315,6 +315,67 @@ $('.verify-api-url').click(function (e) {
     });
 });
 
+$('.change-tracking-url').click(function(e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: '/api/custom-tracking-url',
+        type: 'GET',
+        data: {
+            store: $(this).attr('store-id')
+        },
+        success: function(data) {
+            $('#custom-tracking-url-input').val(data.tracking_url);
+            $('#custom-tracking-url-input').attr('store', data.store);
+        },
+        error: function(data) {
+            displayAjaxError('Custom Tracking URL', data);
+        }
+    });
+
+    $("#modal-store-tracking-url").modal('show');
+});
+
+$('#save-custom-tracking-btn').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(this);
+    btn.button('loading');
+
+    var tracking_url = $('#custom-tracking-url-input').val().trim();
+    var store = $('#custom-tracking-url-input').attr('store');
+
+    if (tracking_url.length && tracking_url.indexOf('{{tracking_number}}') == -1) {
+        swal('Tracking URL', 'Tracking url must include {{tracking_number}}\nsee the example below custom url entry field.', 'error');
+        return;
+    }
+
+    $.ajax({
+        url: '/api/custom-tracking-url',
+        type: 'POST',
+        data: {
+            store: store,
+            tracking_url: tracking_url
+        },
+        success: function(data) {
+            toastr.success('URL saved!', 'Custom Tracking URL');
+            $("#modal-store-tracking-url").modal('hide');
+        },
+        error: function(data) {
+            displayAjaxError('Custom Tracking URL', data);
+        },
+        complete: function () {
+            btn.button('reset');
+        }
+    });
+});
+
+$('.tracking-url-example').click(function (e) {
+    e.preventDefault();
+
+    $('#custom-tracking-url-input').val($(this).data('url'));
+});
+
 $('input[name="order_phone_number"]').on('keyup', function() {
     var value = $(this).val();
 

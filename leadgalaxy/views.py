@@ -387,6 +387,44 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method == 'GET' and target == 'custom-tracking-url':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
+
+        custom_tracking = None
+        aftership_domain = user.models_user.get_config('aftership_domain')
+        if aftership_domain and type(aftership_domain) is dict:
+            custom_tracking = aftership_domain.get(str(store.id))
+
+        return JsonResponse({
+            'status': 'ok',
+            'tracking_url': custom_tracking,
+            'store': store.id
+        })
+
+    if method == 'POST' and target == 'custom-tracking-url':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_edit(store)
+
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        aftership_domain = user.models_user.get_config('aftership_domain')
+        if not aftership_domain:
+            aftership_domain = {}
+        elif type(aftership_domain) is not dict:
+            raise Exception('Custom domains is not a dict')
+
+        if data.get('tracking_url'):
+            aftership_domain[str(store.id)] = data.get('tracking_url')
+        else:
+            if str(store.id) in aftership_domain:
+                del aftership_domain[str(store.id)]
+
+        user.models_user.set_config('aftership_domain', aftership_domain)
+
+        return JsonResponse({'status': 'ok'})
+
     if method == 'POST' and target == 'store-order':
         for store, idx in data.iteritems():
             store = ShopifyStore.objects.get(id=store)
