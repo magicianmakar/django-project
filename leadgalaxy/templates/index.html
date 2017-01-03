@@ -281,6 +281,18 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="make_visisble" class="col-sm-4 col-xs-8 control-label">
+                                        <a class="edit-custom-templates-btn" href="#">Custom Product Descriptions...</a>
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {% if user|can:'auto_order.view' %}
                         {% with can_use=user|can:'auto_order.use' %}
                         <div class="setting-section">
@@ -638,6 +650,99 @@
     </div>
 </div>
 
+<div id="product-template-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Description Template</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form" action="" method="post" id="add-template-form">
+                            <input type="hidden" name="id" value="">
+                            <div class="form-group">
+                                <label>Title</label> 
+                                <input type="text" name="title" placeholder="Template title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="description" placeholder="Description for template" class="form-control" autocomplete="off"></textarea>
+                            </div>
+                            <div class="m-t-n-xs">
+                                <button type="submit" class="btn btn-sm btn-primary pull-right">Save</button>
+                                <button type="button" data-dismiss="modal" class="btn btn-sm btn-default pull-left">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="product-templates-list-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Product Custom Descriptions</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table class="table table-ligthborder" id="description-template-table">
+                            <thead>
+                                <tr>
+                                    <th style="vertical-align: middle; min-width: 100px;">Title</th>
+                                    <th style="width: 150px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-template-id="" class="hidden clone template-row">
+                                    <td class="template-title"></td>
+                                    <td>
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;" data-id="" data-toggle="modal" data-target="#product-template-modal">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" data-id="" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% for template in templates %}
+                                <tr data-template-id="{{ template.id }}" class="template-row">
+                                    <td class="template-title">{{ template.title }}</td>
+                                    <td class="no-wrap">
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;" data-id="{{ template.id }}" data-toggle="modal" data-target="#product-template-modal">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" data-id="{{ template.id }}" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <a data-toggle="modal" data-target="#product-template-modal" class="btn btn-success btn-sm" style="margin: 0;">
+                            <i class="fa fa-plus"></i> Add New Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="modal-install-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -729,6 +834,7 @@
 
 {% block extrajs %}
 {% compress js %}
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>

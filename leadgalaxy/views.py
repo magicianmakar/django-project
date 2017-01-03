@@ -24,6 +24,7 @@ from django.core.cache.utils import make_template_fragment_key
 from django.db import transaction
 from django.conf import settings
 from django.core import serializers
+from django.forms.models import model_to_dict
 
 from unidecode import unidecode
 
@@ -94,11 +95,14 @@ def index_view(request):
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_active_stores().count() >= 1
 
+    templates = DescriptionTemplate.objects.filter(user=request.user)
+
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
         'extra_stores': extra_stores,
+        'templates': templates,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
@@ -2311,6 +2315,58 @@ def proccess_api(request, user, method, target, data):
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
         return JsonResponse({'status': 'ok', 'product': product.id})
+
+    if method == 'GET' and target == 'description-templates':
+        templates = DescriptionTemplate.objects.filter(user=user.models_user)
+        if data.get('id'):
+            templates = templates.filter(id=data.get('id'))
+
+        templates_dict = []
+        for i in templates:
+            templates_dict.append(model_to_dict(i))
+
+        return JsonResponse({
+            'status': 'ok',
+            'description_templates': templates_dict
+        }, status=200)
+
+    if method == 'POST' and target == 'description-templates':
+        """
+        Add or edit description templates
+        """
+
+        if not data.get('title', '').strip():
+            return JsonResponse({'error': 'Description Title is not set'}, status=422)
+
+        if not data.get('description', '').strip():
+            return JsonResponse({'error': 'Description is empty'}, status=422)
+
+        if data.get('id'):
+            template, created = DescriptionTemplate.objects.update_or_create(
+                id=data.get('id'),
+                user=user,
+                defaults={
+                    'title': data.get('title'),
+                    'description': data.get('description')
+                }
+            )
+        else:
+            template = DescriptionTemplate.objects.create(
+                user=user,
+                title=data.get('title'),
+                description=data.get('description')
+            )
+
+        template_dict = model_to_dict(template)
+
+        return JsonResponse({'status': 'ok', 'template': template_dict}, status=200)
+
+    if method == 'DELETE' and target == 'description-templates':
+        id = int(data.get('id'))
+        template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
+        template.delete()
+
+        return JsonResponse({'status': 'ok'}, status=200)
 
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
