@@ -890,8 +890,10 @@
 {% endblock %}
 
 {% block extrajs %}
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+
 {% compress js %}
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
