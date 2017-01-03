@@ -184,9 +184,19 @@ def callback(request):
 
         try:
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-            store.title = store.get_info['name']
+
+            info = store.get_info
+            store.title = info['name']
+            store.currency_format = info['money_in_emails_format']
+
+            owner = info.get('shop_owner')
+            if owner and not user.first_name and not user.last_name:
+                fullname = owner.split(' ')
+                user.first_name, user.last_name = fullname[0], ' '.join(fullname[1:])
+                user.save()
 
         except:
+            raven_client.captureException()
             return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
         store.save()

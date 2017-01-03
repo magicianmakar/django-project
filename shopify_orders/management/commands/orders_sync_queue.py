@@ -11,6 +11,7 @@ class Command(BaseCommand):
     help = 'Sync Shopify Orders For a stores with a permission or within a Plan'
 
     synced_store = []
+    queued_store = []
     sync_type = 'orders'
 
     def add_arguments(self, parser):
@@ -92,7 +93,7 @@ class Command(BaseCommand):
                         for store in profile.get_active_stores():
                             self.handle_store(store)
 
-        self.write_success('Total Queued Store: {}'.format(len(self.synced_store)))
+        self.write_success('Total Queued Store: {}/{}'.format(len(self.queued_store), len(self.synced_store)))
 
     def handle_store(self, store):
         if store.id in self.synced_store or not store.is_active:
@@ -101,13 +102,21 @@ class Command(BaseCommand):
         try:
             ShopifySyncStatus.objects.get(store=store, sync_type=self.sync_type)
         except ShopifySyncStatus.DoesNotExist:
-            self.write_success(u'Sync Store: {}'.format(store.title))
+                self.write_success(u'Sync Store: {}'.format(store.title))
+                sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
 
-            webhooks = utils.attach_webhooks(store)
-            self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
+                try:
+                    sync.orders_count = store.get_orders_count(all_orders=True)
 
-            sync = ShopifySyncStatus(store=store, sync_type=self.sync_type, orders_count=store.get_orders_count(all_orders=True))
-            sync.save()
+                    webhooks = utils.attach_webhooks(store)
+                    self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
+
+                    self.queued_store.append(store.id)
+                except:
+                    sync.sync_status = 4
+                    raven_client.captureException()
+
+                sync.save()
 
         self.synced_store.append(store.id)
 

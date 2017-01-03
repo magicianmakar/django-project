@@ -1,4 +1,5 @@
 /* global $, toastr, swal, displayAjaxError */
+/* global setup_full_editor, setup_admin_editor */
 
 (function() {
 'use strict';
@@ -330,7 +331,134 @@ $('.show-clippingmagic-key-btn').click(function (e) {
     $(this).hide();
 });
 
-setup_full_editor('default_desc', false, 'default_desc');
+
+$('.edit-custom-templates-btn').click(function (e) {
+    e.preventDefault();
+
+    if (!document.editor) {
+        setup_full_editor('description');
+    }
+
+    $('#product-templates-list-modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+});
+
+$('#product-template-modal').on('show.bs.modal', function(event) {
+    $('#product-templates-list-modal').modal('hide');
+
+    $('#add-template-form input').val('');
+    $('#add-template-form textarea').val('');
+
+    document.editor.setData('');
+
+    var button = $(event.relatedTarget);
+    if (button.hasClass('edit-template')) {
+        $.ajax({
+            url: '/api/description-templates',
+            data: {
+                'id': button.attr('data-id')
+            },
+            success: function(data) {
+                var description = data.description_templates.pop();
+
+                $('#add-template-form input[name="id"]').val(description.id);
+                $('#add-template-form input[name="title"]').val(description.title);
+
+                setTimeout(function() {
+                    document.editor.setData(description.description);
+                }, 100);
+            },
+            error: function(data) {
+                displayAjaxError('Custom Description', data);
+            }
+        });
+    }
+});
+
+$('#product-template-modal').on('hide.bs.modal', function (e) {
+    $('#product-templates-list-modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    $('#add-template-form input').val('');
+    $('#add-template-form textarea').val('');
+    document.editor.setData('');
+});
+
+$('#add-template-form').on('submit', function(e) {
+    e.preventDefault();
+
+    $('#add-template-form textarea[name="description"]').val(document.editor.getData());
+
+    $.ajax({
+        url: '/api/description-templates',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function (result) {
+            $('#product-template-modal').modal('hide');
+
+            var template = result.template;
+            var tr = $('#description-template-table tr[data-template-id="'+template.id+'"]');
+            if (tr.length === 0) {
+                tr = $('#description-template-table tbody .clone').clone();
+                tr.removeClass('hidden clone');
+                $('#description-template-table tbody').append(tr);
+            }
+
+            tr.attr('data-template-id', template.id);
+            tr.find('.template-title').text(template.title);
+            tr.find('.template-text').text(template.description);
+            tr.find('.edit-template').attr('data-id', template.id);
+            tr.find('.delete-template').attr('data-id', template.id);
+            tr.find('.delete-template').attr('href', template.delete_url);
+        },
+        error: function (data) {
+            displayAjaxError('Custom Description', data);
+        }
+    });
+
+});
+
+$('#description-template-table .delete-template').click(function(e) {
+    e.preventDefault();
+    var btn = $(this);
+
+    swal({
+            title: "Delete Description Template",
+            text: "This will remove the description template permanently. Are you sure you want to remove it?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Remove Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) {
+            if (isConfirmed) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/description-templates?' + $.param({
+                        id: btn.attr('data-id')
+                    }),
+                    success: function(data) {
+                        btn.parents('.template-row').remove();
+
+                        swal.close();
+                        toastr.success("The template description has been deleted.", "Deleted!");
+                    },
+                    error: function(data) {
+                        displayAjaxError('Delete Template Description', data);
+                    }
+                });
+            }
+        }
+    );
+});
 
 $(function () {
     showDescriptionHelp();
@@ -381,6 +509,10 @@ $(function () {
         e.preventDefault();
 
         $('.order-handle').toggle();
+    });
+
+    setTimeout(function() {
+        setup_full_editor('default_desc', false, 'default_desc');
     });
 });
 

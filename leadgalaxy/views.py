@@ -24,6 +24,7 @@ from django.core.cache.utils import make_template_fragment_key
 from django.db import transaction
 from django.conf import settings
 from django.core import serializers
+from django.forms.models import model_to_dict
 
 from unidecode import unidecode
 
@@ -94,11 +95,14 @@ def index_view(request):
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_active_stores().count() >= 1
 
+    templates = DescriptionTemplate.objects.filter(user=request.user)
+
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
         'extra_stores': extra_stores,
+        'templates': templates,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
@@ -340,7 +344,7 @@ def proccess_api(request, user, method, target, data):
                         .raise_for_status()
 
             except requests.exceptions.HTTPError as e:
-                if e.response.status_code not in [401, 404]:
+                if e.response.status_code not in [401, 402, 403, 404]:
                     raise
         else:
             utils.detach_webhooks(store, delete_too=True)
@@ -1880,6 +1884,70 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse({'status': 'ok'})
 
+    if method in ['GET', 'POST'] and target == 'order-info':
+
+        aliexpress_ids = data.get('aliexpress_id')
+        if aliexpress_ids:
+            aliexpress_ids = aliexpress_ids.split(',')
+        else:
+            try:
+                aliexpress_ids = json.loads(request.body)['aliexpress_id']
+                if type(aliexpress_ids) is not list:
+                    aliexpress_ids = []
+            except:
+                pass
+
+        if not len(aliexpress_ids):
+            return JsonResponse({'error': 'Aliexpress ID not set'}, status=422)
+
+        aliexpress_ids = [int(j) for j in aliexpress_ids]
+        orders = {}
+
+        for chunk_ids in [aliexpress_ids[x:x + 100] for x in xrange(0, len(aliexpress_ids), 100)]:
+            # Proccess 100 max order at a time
+
+            tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
+                                              .filter(source_id__in=chunk_ids) \
+                                              .order_by('store')
+
+            if tracks.count():
+                stores = {}
+                # tracks = utils.get_tracking_orders(tracks[0].store, tracks)
+
+                for track in tracks:
+                    if track.store in stores:
+                        stores[track.store].append(track)
+                    else:
+                        stores[track.store] = [track]
+
+                tracks = []
+
+                for store, store_tracks in stores.iteritems():
+                    for track in utils.get_tracking_orders(store, store_tracks):
+                        tracks.append(track)
+
+            for track in tracks:
+                info = {
+                    'aliexpress_id': track.source_id,
+                    'shopify_order': track.order_id,
+                    'shopify_number': track.order['name'],
+                    'shopify_status': track.order['fulfillment_status'],
+                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
+                    'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
+                    'tracking_number': track.source_tracking,
+                }
+
+                if track.source_id in orders:
+                    orders[track.source_id].append(info)
+                else:
+                    orders[track.source_id] = [info]
+
+        for i in aliexpress_ids:
+            if i not in orders:
+                orders[i] = None
+
+        return HttpResponse(json.dumps(orders, indent=4), content_type='text/plain')
+
     if method == 'POST' and target == 'order-add-note':
         # Append to the Order note
         store = ShopifyStore.objects.get(id=data.get('store'))
@@ -2247,6 +2315,58 @@ def proccess_api(request, user, method, target, data):
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
         return JsonResponse({'status': 'ok', 'product': product.id})
+
+    if method == 'GET' and target == 'description-templates':
+        templates = DescriptionTemplate.objects.filter(user=user.models_user)
+        if data.get('id'):
+            templates = templates.filter(id=data.get('id'))
+
+        templates_dict = []
+        for i in templates:
+            templates_dict.append(model_to_dict(i))
+
+        return JsonResponse({
+            'status': 'ok',
+            'description_templates': templates_dict
+        }, status=200)
+
+    if method == 'POST' and target == 'description-templates':
+        """
+        Add or edit description templates
+        """
+
+        if not data.get('title', '').strip():
+            return JsonResponse({'error': 'Description Title is not set'}, status=422)
+
+        if not data.get('description', '').strip():
+            return JsonResponse({'error': 'Description is empty'}, status=422)
+
+        if data.get('id'):
+            template, created = DescriptionTemplate.objects.update_or_create(
+                id=data.get('id'),
+                user=user,
+                defaults={
+                    'title': data.get('title'),
+                    'description': data.get('description')
+                }
+            )
+        else:
+            template = DescriptionTemplate.objects.create(
+                user=user,
+                title=data.get('title'),
+                description=data.get('description')
+            )
+
+        template_dict = model_to_dict(template)
+
+        return JsonResponse({'status': 'ok', 'template': template_dict}, status=200)
+
+    if method == 'DELETE' and target == 'description-templates':
+        id = int(data.get('id'))
+        template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
+        template.delete()
+
+        return JsonResponse({'status': 'ok'}, status=200)
 
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
@@ -3122,13 +3242,11 @@ def product_image_download(request, pid):
     filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
 
     with zipfile.ZipFile(filename, 'w') as images_zip:
-        i = 0
-        for img_url in images:
-            image_name = '{}-{}'.format(i, utils.remove_link_query(img_url).split('/')[-1])
+        for i, img_url in enumerate(images):
+            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url))
             images_zip.writestr(image_name, requests.get(img_url).content)
-            i += 1
 
-    s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(product.title)))
+    s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
     url = utils.aws_s3_upload(s3_path, input_filename=filename)
 
     return JsonResponse({'url': url})
@@ -4537,8 +4655,9 @@ def orders_view(request):
             if shopify_order:
                 order['placed_orders'] += 1
 
+            variant_id = el['variant_id']
             if not el['product_id']:
-                if el['variant_id']:
+                if variant_id:
                     product = ShopifyProduct.objects.filter(store=store, title=el['title'], shopify_id__gt=0).first()
                 else:
                     product = None
@@ -4553,11 +4672,12 @@ def orders_view(request):
                 if not original_info:
                     original_info = {}
 
-                supplier = product.get_suppier_for_variant(el['variant_id'])
+                variant_id = product.get_real_variant_id(variant_id)
+                supplier = product.get_suppier_for_variant(variant_id)
                 if supplier:
                     shipping_method = product.get_shipping_for_variant(
                         supplier_id=supplier.id,
-                        variant_id=el['variant_id'],
+                        variant_id=variant_id,
                         country_code=order.get('shipping_address', {}).get('country_code'))
                 else:
                     shipping_method = None
@@ -4637,8 +4757,8 @@ def orders_view(request):
                     }
 
                     if product:
-                        mapped = product.get_variant_mapping(name=el['variant_id'], for_extension=True, mapping_supplier=True)
-                        if el['variant_id'] and mapped:
+                        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                        if variant_id and mapped:
                             order_data['variant'] = mapped
                         else:
                             order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''
@@ -4686,7 +4806,7 @@ def orders_view(request):
         'product_filter': product_filter,
         'supplier_filter': supplier_filter,
         'shipping_method_filter': shipping_method_filter,
-        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter'),
+        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter') and store_order_synced,
         'user_filter': utils.get_orders_filter(request),
         'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
@@ -4741,7 +4861,7 @@ def orders_track(request):
 
         orders = orders.filter(Q(order_id=utils.clean_query_id(query)) |
                                Q(source_id=utils.clean_query_id(query)) |
-                               Q(source_tracking=query))
+                               Q(source_tracking__icontains=query))
 
     if tracking_filter == '0':
         orders = orders.filter(source_tracking='')
@@ -4903,13 +5023,12 @@ def product_alerts(request):
                                        .update(seen=True)
 
     # Allow sending notification for new changes
-    request.user.set_config('_product_change_notify', False)
-
-    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
+    cache.delete('product_change_%d' % request.user.models_user.id)
 
     # Delete sidebar alert info cache
     cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
 
+    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
     return render(request, tpl, {
         'product_changes': product_changes,
         'show_hidden': show_hidden,

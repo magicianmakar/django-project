@@ -67,8 +67,8 @@ class ProductChangeEvent():
 
     def take_action(self):
         data = self.get_shopify_product()
-        if self.notify():
-            self.send_email(data)
+
+        self.notify(data)
 
         self.revision.data = data
 
@@ -84,13 +84,6 @@ class ProductChangeEvent():
                 self.send_shopify(data)
 
     def send_email(self, product_data):
-        notify_key = 'product_change_%d' % self.user.id
-        if self.user.get_config('_product_change_notify') or cache.get(notify_key):
-            # We already sent the user a notification for a product change
-            return
-
-        self.user.set_config('_product_change_notify', True)
-
         image = product_data['product'].get('image')
         if image and type(image) is dict:
             image = image.get('src')
@@ -115,16 +108,13 @@ class ProductChangeEvent():
             nl2br=False
         )
 
-        # Disable notification for a day
-        cache.set(notify_key, True, timeout=86400)
-
         cache.set('last_product_change_email', html_message, timeout=3600)
 
-    def notify(self):
+    def notify(self, product_data):
         notify_key = 'product_change_%d' % self.user.id
-        if self.user.get_config('_product_change_notify') or cache.get(notify_key):
+        if cache.get(notify_key):
             # We already sent the user a notification for a product change
-            return False
+            return
 
         product_name = truncatewords(self.product.get_product(), 5)
 
@@ -157,10 +147,7 @@ class ProductChangeEvent():
         if len(self.notify_events):
             # Disable notification for a day
             cache.set(notify_key, True, timeout=86400)
-
-            return True
-        else:
-            return False
+            self.send_email(product_data)
 
     def get_previous_product_revision(self, event_name, new_value):
         found_revision = None
@@ -180,10 +167,8 @@ class ProductChangeEvent():
             self.product.get_shopify_id()), api=True)
         response = requests.get(url)
 
-        if response.ok:
-            return response.json()
-        else:
-            return None
+        response.raise_for_status()
+        return response.json()
 
     def send_shopify(self, data):
         update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
