@@ -340,7 +340,7 @@ def proccess_api(request, user, method, target, data):
                         .raise_for_status()
 
             except requests.exceptions.HTTPError as e:
-                if e.response.status_code not in [401, 404]:
+                if e.response.status_code not in [401, 402, 403, 404]:
                     raise
         else:
             utils.detach_webhooks(store, delete_too=True)
