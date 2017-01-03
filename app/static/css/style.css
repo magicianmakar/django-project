@@ -3198,6 +3198,7 @@ body.boxed-layout #wrapper {
 }
 a {
   cursor: pointer;
+  color: #6288A2;
 }
 a:hover,
 a:focus {
