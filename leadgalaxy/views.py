@@ -3186,11 +3186,9 @@ def product_image_download(request, pid):
     filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
 
     with zipfile.ZipFile(filename, 'w') as images_zip:
-        i = 0
-        for img_url in images:
-            image_name = u'{}-{}'.format(i, unidecode(utils.remove_link_query(img_url).split('/')[-1]))
+        for i, img_url in enumerate(images):
+            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url))
             images_zip.writestr(image_name, requests.get(img_url).content)
-            i += 1
 
     s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
     url = utils.aws_s3_upload(s3_path, input_filename=filename)
