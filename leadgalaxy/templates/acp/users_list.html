@@ -196,11 +196,11 @@
 {% endcache %}
 
         $(document).ready(function() {
-            $('.dataTables').on('draw.dt', function (e) {
+            function handleEvents() {
                 $('.change-plan-btn').unbind('click').click(changePlan);
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.clear-access-tokens').unbind('click').click(clearAccessToken);
-            });
+            }
 
             {% if users_count > 1 %}
             $('.dataTables').dataTable({
@@ -214,6 +214,9 @@
                     sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }
             });
+
+            $('.dataTables').on('draw.dt', handleEvents);
+
             {% endif %}
 
             $('#change-plan-apply').click(function (e) {
@@ -270,6 +273,8 @@
 
                 window.open('https://app.intercom.io/a/apps/k9cb5frr/users/segments/all:' + btoa(JSON.stringify(data)), '_blank');
             });
+
+            handleEvents();
         });
     </script>
 {% endblock %}
