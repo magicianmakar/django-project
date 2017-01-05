@@ -1122,7 +1122,7 @@ class ProductSupplier(models.Model):
         source_id = self.get_source_id()
         if source_id:
             if 'aliexpress.com' in self.product_url.lower():
-                return u'http://www.aliexpress.com/item//{}.html'.format(source_id)
+                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
 
         return self.product_url
 
