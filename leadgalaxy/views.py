@@ -1905,7 +1905,7 @@ def proccess_api(request, user, method, target, data):
         user.can_edit(order)
 
         order.source_status = data.get('status')
-        order.source_tracking = data.get('tracking_number')
+        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
         order.status_updated_at = timezone.now()
 
         try:
