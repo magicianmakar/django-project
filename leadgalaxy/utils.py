@@ -1434,7 +1434,7 @@ def zaxaa_parse_post(params):
     }
 
 
-def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
+def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls', deep_link=False):
 
     promotion_key = 'promotion_links3_{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
@@ -1468,7 +1468,7 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
 
         if len(r['result']['promotionUrls']):
             promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
-            if promotion_url and '/deep_link.htm' in promotion_url:
+            if promotion_url and '/deep_link.htm' in promotion_url and not deep_link:
                 rep = requests.get(promotion_url, allow_redirects=False)
                 rep.raise_for_status()
 
