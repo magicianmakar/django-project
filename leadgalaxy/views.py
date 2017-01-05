@@ -3037,14 +3037,33 @@ def webhook(request, provider, option):
         product_id = request.GET['product']
         try:
             product = ShopifyProduct.objects.get(id=product_id)
+            shopify_product = utils.get_shopify_product(
+                product.store,
+                product.get_shopify_id(),
+                raise_for_status=True
+            )
+
+            cache.set('alert_product_{}'.format(product.id), shopify_product)
+
         except ShopifyProduct.DoesNotExist:
             return JsonResponse({'error': 'Product Not Found'}, status=404)
 
-        product_change = AliexpressProductChange(product=product, user=product.user, data=request.body)
-        product_change.save()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code in [401, 402, 403, 404]:
+                product.price_notification_id = -4
+                product.save()
+
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
+            else:
+                raven_client.captureException(leve='warning')
 
         if product.user.can('price_changes.use') and product.is_connected():
-            # TODO: Remove from the ali-web server if user doesn't have permission
+            product_change = AliexpressProductChange.objects.create(
+                product=product,
+                user=product.user,
+                data=request.body
+            )
+
             tasks.product_change_alert.delay(product_change.pk)
         else:
             product.price_notification_id = 0

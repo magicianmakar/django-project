@@ -748,9 +748,13 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
                 yield p
 
 
-def get_shopify_product(store, product_id):
+def get_shopify_product(store, product_id, raise_for_status=False):
     if store:
         rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True))
+
+        if raise_for_status:
+            rep.raise_for_status()
+
         return rep.json().get('product')
     else:
         return None

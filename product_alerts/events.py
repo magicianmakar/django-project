@@ -162,7 +162,14 @@ class ProductChangeEvent():
         return found_revision
 
     def get_shopify_product(self):
-        """Get product from shopify using link from ShopifyStore Model"""
+        """ Get product from shopify using link from ShopifyStore Model """
+
+        cache_key = 'alert_product_{}'.format(self.product.id)
+        shopify_product = cache.get(cache_key)
+        if shopify_product is not None:
+            cache.delete(cache_key)
+            return {'product': shopify_product}
+
         url = self.product.store.get_link('/admin/products/{}.json'.format(
             self.product.get_shopify_id()), api=True)
         response = requests.get(url)
