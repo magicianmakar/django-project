@@ -4330,7 +4330,6 @@ def pixlr_serve_image(request):
 
     if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
         raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-        raise PermissionDenied()
 
     fp = StringIO.StringIO(requests.get(img_url).content)
     return HttpResponse(fp, content_type=utils.get_mimetype(img_url))
@@ -4371,7 +4370,6 @@ def save_image_s3(request):
 
         if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-            return JsonResponse({'error': 'URL is not accepted'}, status=403)
 
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
