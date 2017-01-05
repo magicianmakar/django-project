@@ -3821,37 +3821,43 @@ def acp_graph(request):
         .extra({'created': 'date(created_at)'}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
-        .order_by('-created')
+        .order_by('-created_at')
 
     users = User.objects.all() \
         .extra({'created': 'date(date_joined)'}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
-        .order_by('-created')
+        .order_by('-date_joined')
 
     tracking_awaiting = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
         .extra({'updated': 'date(updated_at)'}) \
         .values('updated') \
         .annotate(updated_count=Count('id')) \
-        .order_by('-updated')
+        .order_by('-updated_at')
 
     tracking_fulfilled = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled') \
         .extra({'updated': 'date(updated_at)'}) \
         .values('updated') \
         .annotate(updated_count=Count('id')) \
-        .order_by('-updated')
+        .order_by('-updated_at')
 
     tracking_auto = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True) \
         .extra({'updated': 'date(updated_at)'}) \
         .values('updated') \
         .annotate(updated_count=Count('id')) \
-        .order_by('-updated')
+        .order_by('-updated_at')
+
+    tracking_all = ShopifyOrderTrack.objects.all() \
+        .extra({'created': 'date(created_at)'}) \
+        .values('created') \
+        .annotate(created_count=Count('id')) \
+        .order_by('-created_at')
 
     shopify_orders = ShopifyOrder.objects.all() \
         .extra({'created': 'date(created_at)'}) \
         .values('created') \
         .annotate(created_count=Count('id')) \
-        .order_by('-created')
+        .order_by('-created_at')
 
     if time_threshold:
         products = products.filter(created_at__gt=time_threshold)
@@ -3859,6 +3865,7 @@ def acp_graph(request):
         tracking_awaiting = tracking_awaiting.filter(updated_at__gt=time_threshold)
         tracking_fulfilled = tracking_fulfilled.filter(updated_at__gt=time_threshold)
         tracking_auto = tracking_auto.filter(updated_at__gt=time_threshold)
+        tracking_all = tracking_all.filter(created_at__gt=time_threshold)
         shopify_orders = shopify_orders.filter(created_at__gt=time_threshold)
 
     stores_count = ShopifyStore.objects.count()
@@ -3866,6 +3873,7 @@ def acp_graph(request):
 
     if time_threshold:
         tracking_count = {
+            'all': ShopifyOrderTrack.objects.filter(created_at__gt=time_threshold).count(),
             'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
                                                  .filter(updated_at__gt=time_threshold).count(),
             'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled')
@@ -3874,17 +3882,21 @@ def acp_graph(request):
                                              .filter(updated_at__gt=time_threshold).count(),
             'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
                                                  .filter(updated_at__gt=time_threshold)
-                                                 .exclude(Q(store__auto_fulfill='hourly') | Q(store__auto_fulfill='daily'))
-                                                 .count()
+                                                 .exclude(Q(store__auto_fulfill='hourly') |
+                                                          Q(store__auto_fulfill='daily') |
+                                                          Q(store__auto_fulfill='enable')).count()
         }
     else:
         tracking_count = {
+            'all': ShopifyOrderTrack.objects.count(),
             'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='').count(),
             'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled').count(),
             'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True).count(),
             'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
-                                                 .exclude(Q(store__auto_fulfill='hourly') | Q(store__auto_fulfill='daily'))
-                                                 .count()
+                                                 .exclude(Q(store__auto_fulfill='hourly') |
+                                                          Q(store__auto_fulfill='daily') |
+                                                          Q(store__auto_fulfill='enable')).count()
+
         }
 
     if request.GET.get('cum'):
@@ -3938,6 +3950,16 @@ def acp_graph(request):
             })
         tracking_auto = tracking_auto_cum
 
+        total_count = tracking_count['all']
+        tracking_all_cum = []
+        for i in tracking_all:
+            total_count -= i['created_count']
+            tracking_all_cum.append({
+                'created_count': total_count,
+                'created': i['created']
+            })
+        tracking_all = tracking_all_cum
+
         total_count = ShopifyOrder.objects.count()
         shopify_orders_cum = []
         for i in shopify_orders:
@@ -3958,6 +3980,7 @@ def acp_graph(request):
         'tracking_awaiting': tracking_awaiting,
         'tracking_fulfilled': tracking_fulfilled,
         'tracking_auto': tracking_auto,
+        'tracking_all': tracking_all,
         'tracking_count': tracking_count,
         'shopify_orders': shopify_orders,
         'page': 'acp_graph',

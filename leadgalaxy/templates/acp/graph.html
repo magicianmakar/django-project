@@ -124,6 +124,13 @@
                 {% endfor %}
             ];
 
+            // All placed orders
+            var tracking_all = [
+                {% for item in tracking_all %}
+                    [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
+                {% endfor %}
+            ];
+
             var shopify_orders = [
                 {% for item in shopify_orders %}
                     [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
@@ -147,7 +154,7 @@
                     timeformat: "%Y/%m/%d",
                     minTickSize: [1, "day"]
                 },
-                colors: ['#357EBD', '#0000ff', '#00FF00']
+                COLORS: ['#357EBD', '#0000FF', '#00FF00', '#FF0000']
             };
 
             $.plot("#products_graph",
@@ -200,6 +207,9 @@
                     },{
                         label: "Auto Fulfilled Orders",
                         data: tracking_auto
+                    },{
+                        label: "Placed Orders",
+                        data: tracking_all
                     },
                 ],
                 options
