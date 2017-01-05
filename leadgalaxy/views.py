@@ -4957,7 +4957,7 @@ def orders_place(request):
 
     redirect_url = None
     if not disable_affiliate and api_key and tracking_id:
-        affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product, deep_link=request.session.get('is_hijacked_user'))
+        affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product)
 
         if affiliate_link:
             redirect_url = utils.affiliate_link_set_query(affiliate_link, 'SAPlaceOrder', data)
