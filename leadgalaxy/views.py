@@ -4960,14 +4960,14 @@ def orders_place(request):
         affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product, deep_link=request.session.get('is_hijacked_user'))
 
         if affiliate_link:
-            redirect_url = '{}&SAPlaceOrder={}'.format(affiliate_link, data)
+            redirect_url = utils.affiliate_link_set_query(affiliate_link, 'SAPlaceOrder', data)
 
     if not redirect_url:
-        redirect_url = '{}?SAPlaceOrder={}'.format(product, data)
+        redirect_url = utils.affiliate_link_set_query(product, 'SAPlaceOrder', data)
 
     for k in request.GET.keys():
         if k.startswith('SA') and k not in redirect_url:
-            redirect_url = '{}&{}={}'.format(redirect_url, k, request.GET[k])
+            redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
 
     return HttpResponseRedirect(redirect_url)
 

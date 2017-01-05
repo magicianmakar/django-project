@@ -15,7 +15,8 @@ import re
 import shutil
 import tempfile
 import ctypes
-from urlparse import urlparse
+from urlparse import urlparse, parse_qs, urlsplit, urlunsplit
+from urllib import urlencode
 from hashlib import sha256
 from math import ceil
 
@@ -1432,6 +1433,28 @@ def zaxaa_parse_post(params):
         'affiliate': '',
         'trans_type': params['trans_type'],
     }
+
+
+def set_url_query(url, param_name, param_value):
+    """
+    Given a URL, set or replace a query parameter and return the modified URL.
+    """
+
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+    query_params[param_name] = [param_value]
+    new_query_string = urlencode(query_params, doseq=True)
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+
+
+def affiliate_link_set_query(url, name, value):
+    if '/deep_link.htm' in url:
+        dl_target_url = parse_qs(urlparse(url).query)['dl_target_url'].pop()
+        dl_target_url = set_url_query(dl_target_url, name, value)
+
+        return set_url_query(url, 'dl_target_url', dl_target_url)
+    else:
+        return set_url_query(url, name, value)
 
 
 def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls', deep_link=False):
