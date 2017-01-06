@@ -3879,6 +3879,7 @@ def acp_graph(request):
 
     data.stores_count = ShopifyStore.objects.count()
     data.products_count = ShopifyProduct.objects.count()
+    data.users_count = User.objects.all().count()
 
     if graph_type == 'tracking':
         if time_threshold:
@@ -3914,7 +3915,7 @@ def acp_graph(request):
 
     if request.GET.get('cum'):
         if 'products' in data:
-            total_count = products_count
+            total_count = data.products_count
             products_cum = []
             for i in data.products:
                 total_count -= i['created_count']
@@ -3925,7 +3926,7 @@ def acp_graph(request):
             data.products = products_cum
 
         if 'users' in data:
-            total_count = User.objects.all().count()
+            total_count = data.users_count
             users_cum = []
             for i in data.users:
                 total_count -= i['created_count']
@@ -4819,6 +4820,7 @@ def orders_view(request):
                         'line_id': el['id'],
                         'product_id': product.id if product else None,
                         'source_id': supplier.get_source_id() if supplier else None,
+                        'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
                             'phone': phone,
