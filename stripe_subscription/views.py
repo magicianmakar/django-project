@@ -10,7 +10,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import GroupPlan
 from leadgalaxy.models import ClippingMagicPlan
-from leadgalaxy.models import ClippingMagic
 
 from .models import StripeSubscription
 from .stripe_api import stripe
@@ -179,6 +178,7 @@ def subscription_plan(request):
 
     return JsonResponse({'status': 'ok'})
 
+
 @login_required
 @csrf_protect
 def clippingmagic_subscription(request):
@@ -186,9 +186,9 @@ def clippingmagic_subscription(request):
     amount = data.get('amount')
     try:
         charge = stripe.Charge.create(
-          amount=amount, # in cents
-          currency="usd",
-          customer=request.user.stripe_customer.customer_id
+            amount=amount,
+            plan="usd",
+            metadata=request.user.stripe_customer.customer_id
         )
 
         if charge.status == 'succeeded':
@@ -198,9 +198,9 @@ def clippingmagic_subscription(request):
             request.user.clippingmagic.save()
 
     except stripe.error.CardError as e:
-        return JsonResponse({'status': 'ko','msg':e.message})
+        return JsonResponse({'status': 'ko', 'msg': e.message})
 
-    return JsonResponse({'status': 'ok','msg':"Your Clippingmagic Subscription has been updated"})
+    return JsonResponse({'status': 'ok', 'msg': "Your Clippingmagic Subscription has been updated"})
 
 
 @login_required

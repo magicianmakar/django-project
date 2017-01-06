@@ -904,9 +904,9 @@ var config = {
     clipping_magic: {
         stripe_customer: {{ user.is_stripe_customer|lower}},
         {% if not user.is_stripe_customer %}
-			api_id: '{{user.clippingmagic.api_id|default:""}}',
-			api_secret: '{{user.clippingmagic.api_secret|default:""}}',
-		{% endif %}
+	    api_id: '{{user.clippingmagic.api_id|default:""}}',
+	    api_secret: '{{user.clippingmagic.api_secret|default:""}}',
+	{% endif %}
         clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
     },
 

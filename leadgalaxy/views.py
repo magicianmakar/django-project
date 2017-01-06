@@ -844,15 +844,15 @@ def proccess_api(request, user, method, target, data):
 
         else:
             try:
-                clippingmagic = ClippingMagic.objects.get(user=user)
+                ClippingMagic.objects.get(user=user)
             except ClippingMagic.DoesNotExist:
                 clippingmagic_plan = ClippingMagicPlan.objects.get(default=1)
                 default = {
-                   'allowed_credits': clippingmagic_plan.allowed_credits,
-                   'remaining_credits': clippingmagic_plan.allowed_credits,
-                   'clippingmagic_plan': clippingmagic_plan
+                    'allowed_credits': clippingmagic_plan.allowed_credits,
+                    'remaining_credits': clippingmagic_plan.allowed_credits,
+                    'clippingmagic_plan': clippingmagic_plan
                 }
-                ClippingMagic.objects.update_or_create(user=request.user,defaults=default)
+                ClippingMagic.objects.update_or_create(user=request.user, defaults=default)
 
                 if user.clippingmagic.remaining_credits <= 0:
                         return JsonResponse({
@@ -4105,7 +4105,7 @@ def user_profile(request):
     if not request.user.profile.plan.is_free:
         try:
             clippingmagic = ClippingMagic.objects.get(user=request.user)
-        except Exception as e:
+        except:
             clippingmagic = ""
     else:
         clippingmagic = ""
@@ -4123,7 +4123,7 @@ def user_profile(request):
         'stripe_plans': stripe_plans,
         'stripe_customer': stripe_customer,
         'clippingmagic_sub': clippingmagic_sub,
-        'clippingmagic':clippingmagic,
+        'clippingmagic': clippingmagic,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })

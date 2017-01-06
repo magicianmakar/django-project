@@ -9,6 +9,7 @@ USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 admin.site.register(ClippingMagicPlan)
 
+
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'payment_gateway', 'description', 'permissions_count')
