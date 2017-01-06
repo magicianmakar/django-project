@@ -135,7 +135,7 @@
         $(document).ready(function() {
 
             {% if products %}
-            var produucts_data = [
+            var products_data = [
                 {% for item in products %}
                     [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
                 {% endfor %}
@@ -216,12 +216,12 @@
                 colors: ['#D2AE40', '#6868C5', '#40AB00', '#4BACCB']
             };
 
-            if (typeof(produucts_data) !== 'undefined') {
+            if (typeof(products_data) !== 'undefined') {
                 $.plot("#products_graph",
                     [
                         {
                             label: "Shopify Saved Products",
-                            data: produucts_data
+                            data: products_data
                         },
                     ],
                     options

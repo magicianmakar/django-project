@@ -3832,40 +3832,40 @@ def acp_graph(request):
             .extra({'created': 'date(created_at)'}) \
             .values('created') \
             .annotate(created_count=Count('id')) \
-            .order_by('-created_at')
+            .order_by('-created')
 
     if graph_type == 'users':
         data.users = User.objects.all() \
             .extra({'created': 'date(date_joined)'}) \
             .values('created') \
             .annotate(created_count=Count('id')) \
-            .order_by('-date_joined')
+            .order_by('-created')
 
     if graph_type == 'tracking':
         data.tracking_fulfilled = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled') \
             .extra({'updated': 'date(updated_at)'}) \
             .values('updated') \
             .annotate(updated_count=Count('id')) \
-            .order_by('-updated_at')
+            .order_by('-updated')
 
         data.tracking_auto = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True) \
             .extra({'updated': 'date(updated_at)'}) \
             .values('updated') \
             .annotate(updated_count=Count('id')) \
-            .order_by('-updated_at')
+            .order_by('-updated')
 
         data.tracking_all = ShopifyOrderTrack.objects.all() \
             .extra({'created': 'date(created_at)'}) \
             .values('created') \
             .annotate(created_count=Count('id')) \
-            .order_by('-created_at')
+            .order_by('-created')
 
     if graph_type == 'orders':
         data.shopify_orders = ShopifyOrder.objects.all() \
             .extra({'created': 'date(created_at)'}) \
             .values('created') \
             .annotate(created_count=Count('id')) \
-            .order_by('-created_at')
+            .order_by('-created')
 
     if time_threshold:
         for key, val in dict(products='created_at__gt',
