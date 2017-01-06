@@ -877,8 +877,15 @@ class ShopifyProduct(models.Model):
         if type(mapping) is int:
             mapping = str(mapping)
 
-        if for_extension and type(mapping) in [str, unicode]:
-            mapping = mapping.split(',')
+        if for_extension:
+            if type(mapping) in [str, unicode]:
+                mapping = mapping.split(',')
+            elif type(mapping) is dict:
+                try:
+                    # Try to move Shipping Method at the top of variants list
+                    mapping = sorted(mapping, key=lambda v: -1 if v.get('title', '').lower() in ['china', 'united states'] else 0)
+                except:
+                    pass
 
         return mapping
 
