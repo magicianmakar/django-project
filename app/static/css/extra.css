@@ -245,6 +245,10 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
    color: #fff ;
 }
 
+.toast-success {
+    background-color: #93c47d !important;
+}
+
 @media only screen and (max-width: 760px) {
     .extension-version {
         display: none;
