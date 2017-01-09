@@ -54,7 +54,7 @@ class Command(BaseCommand):
                                           .filter(status_updated_at__lt=time_threshold) \
                                           .filter(store__is_active=True) \
                                           .filter(store__auto_fulfill__in=['hourly', 'daily', 'enable']) \
-                                          .order_by('id')
+                                          .order_by('-id')
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
