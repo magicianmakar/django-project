@@ -89,7 +89,7 @@ class Command(BaseCommand):
                     raven_client.captureMessage(
                         'Auto fulfill taking too long',
                         level="warning",
-                        extra={'delta': (timezone.now() - start_at).total_seconds()})
+                        extra={'delta': (timezone.now() - self.start_at).total_seconds()})
 
                     break
             except:
