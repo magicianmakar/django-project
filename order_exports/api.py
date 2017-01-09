@@ -107,7 +107,7 @@ class ShopifyOrderExportAPI():
             'order_id': order_id,
             'line_id': line_item_id,
             'source_tracking': tracking_number,
-            'user_config': {}
+            'user_config': self.store.user.get_config()
         })
 
         # get all items from vendor to send tracking number
