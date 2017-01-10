@@ -6,79 +6,30 @@ map $uri $redirect_https {
     default               1;
 }
 
-upstream http_backend  {
+upstream shopifiedapp_backend  {
     server shopifytools.herokuapp.com;
 }
 
-upstream ali_node  {
+upstream shopifiedhelper_backend  {
   server 127.0.0.1:9000;
 }
 
 server {
-
     listen 80;
     listen [::]:80;
 
-    server_name app.shopifiedapp.com;
-
-    server_tokens off;
-    client_max_body_size 10m;
-
-    access_log            /var/log/nginx/shopified.access.log;
-    error_log            /var/log/nginx/shopified.error.log;
-
-    #if ($redirect_https = 1) {
-    #   return 301 https://$server_name$request_uri;
-    #}
-
-    location ~ ^/(robots\.txt|favicon\.png|favicon\.ico|crossdomain\.xml) {
-        root /usr/share/nginx/app.shopifiedapp.com;
-
-        access_log off;
-        error_log off;
-
-        try_files $uri $uri/ =404;
-    }
-
-    location /api/ali {
-        access_log  /var/log/nginx/helperapp.access.log;
-        error_log   /var/log/nginx/helperapp.error.log;
-
-        proxy_set_header Host app.shopifiedapp.com;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Proxy-Protocol $scheme;
-
-        proxy_pass  http://ali_node;
-    }
-
-    location / {
-
-        proxy_set_header Host app.shopifiedapp.com;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Proxy-Protocol $scheme;
-
-        proxy_pass  http://http_backend;
-    }
-}
-
-server {
-
-    listen 443;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
 
     server_name app.shopifiedapp.com;
 
+    ssl_prefer_server_ciphers on;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers EECDH+CHACHA20:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
     ssl_certificate           /etc/nginx/ssl/cert.crt;
     ssl_certificate_key       /etc/nginx/ssl/cert.key;
-
-    ssl on;
-    ssl_session_cache  builtin:1000  shared:SSL:10m;
-    ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-    ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
-    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
 
     server_tokens off;
     client_max_body_size 10m;
@@ -95,27 +46,32 @@ server {
         try_files $uri $uri/ =404;
     }
 
-    location /api/ali {
+    location /api/ali/ {
         access_log  /var/log/nginx/helperapp.access.log;
         error_log   /var/log/nginx/helperapp.error.log;
 
-        proxy_set_header Host app.shopifiedapp.com;
+        proxy_set_header Host $server_name;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Proxy-Protocol $scheme;
 
-        proxy_pass  http://ali_node;
+        proxy_pass  http://shopifiedhelper_backend;
     }
 
-    location / {
+    #location /static {
+    #    root ~/shopify-app/staticfiles;
+    #}
 
-        proxy_set_header Host app.shopifiedapp.com;
+    location / {
+        rewrite /terms-of-service /pages/terms-of-service  break;
+
+        proxy_set_header Host $server_name;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Proxy-Protocol $scheme;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-        proxy_pass  http://http_backend;
+        proxy_pass  http://shopifiedapp_backend;
     }
 }

@@ -1,4 +1,5 @@
 /* global $, toastr, swal, displayAjaxError */
+/* global setup_full_editor, setup_admin_editor */
 
 (function() {
 'use strict';
@@ -314,6 +315,67 @@ $('.verify-api-url').click(function (e) {
     });
 });
 
+$('.change-tracking-url').click(function(e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: '/api/custom-tracking-url',
+        type: 'GET',
+        data: {
+            store: $(this).attr('store-id')
+        },
+        success: function(data) {
+            $('#custom-tracking-url-input').val(data.tracking_url);
+            $('#custom-tracking-url-input').attr('store', data.store);
+        },
+        error: function(data) {
+            displayAjaxError('Custom Tracking URL', data);
+        }
+    });
+
+    $("#modal-store-tracking-url").modal('show');
+});
+
+$('#save-custom-tracking-btn').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(this);
+    btn.button('loading');
+
+    var tracking_url = $('#custom-tracking-url-input').val().trim();
+    var store = $('#custom-tracking-url-input').attr('store');
+
+    if (tracking_url.length && tracking_url.indexOf('{{tracking_number}}') == -1) {
+        swal('Tracking URL', 'Tracking url must include {{tracking_number}}\nsee the example below custom url entry field.', 'error');
+        return;
+    }
+
+    $.ajax({
+        url: '/api/custom-tracking-url',
+        type: 'POST',
+        data: {
+            store: store,
+            tracking_url: tracking_url
+        },
+        success: function(data) {
+            toastr.success('URL saved!', 'Custom Tracking URL');
+            $("#modal-store-tracking-url").modal('hide');
+        },
+        error: function(data) {
+            displayAjaxError('Custom Tracking URL', data);
+        },
+        complete: function () {
+            btn.button('reset');
+        }
+    });
+});
+
+$('.tracking-url-example').click(function (e) {
+    e.preventDefault();
+
+    $('#custom-tracking-url-input').val($(this).data('url'));
+});
+
 $('input[name="order_phone_number"]').on('keyup', function() {
     var value = $(this).val();
 
@@ -330,6 +392,135 @@ $('.show-clippingmagic-key-btn').click(function (e) {
     $(this).hide();
 });
 
+
+$('.edit-custom-templates-btn').click(function (e) {
+    e.preventDefault();
+
+    if (!document.editor) {
+        setup_full_editor('description');
+    }
+
+    $('#product-templates-list-modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+});
+
+$('#product-template-modal').on('show.bs.modal', function(event) {
+    $('#product-templates-list-modal').modal('hide');
+
+    $('#add-template-form input').val('');
+    $('#add-template-form textarea').val('');
+
+    document.editor.setData('');
+
+    var button = $(event.relatedTarget);
+    if (button.hasClass('edit-template')) {
+        $.ajax({
+            url: '/api/description-templates',
+            data: {
+                'id': button.attr('data-id')
+            },
+            success: function(data) {
+                var description = data.description_templates.pop();
+
+                $('#add-template-form input[name="id"]').val(description.id);
+                $('#add-template-form input[name="title"]').val(description.title);
+
+                setTimeout(function() {
+                    document.editor.setData(description.description);
+                }, 100);
+            },
+            error: function(data) {
+                displayAjaxError('Custom Description', data);
+            }
+        });
+    }
+});
+
+$('#product-template-modal').on('hide.bs.modal', function (e) {
+    $('#product-templates-list-modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    $('#add-template-form input').val('');
+    $('#add-template-form textarea').val('');
+    document.editor.setData('');
+});
+
+$('#add-template-form').on('submit', function(e) {
+    e.preventDefault();
+
+    $('#add-template-form textarea[name="description"]').val(document.editor.getData());
+
+    $.ajax({
+        url: '/api/description-templates',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function (result) {
+            $('#product-template-modal').modal('hide');
+
+            var template = result.template;
+            var tr = $('#description-template-table tr[data-template-id="'+template.id+'"]');
+            if (tr.length === 0) {
+                tr = $('#description-template-table tbody .clone').clone();
+                tr.removeClass('hidden clone');
+                $('#description-template-table tbody').append(tr);
+            }
+
+            tr.attr('data-template-id', template.id);
+            tr.find('.template-title').text(template.title);
+            tr.find('.template-text').text(template.description);
+            tr.find('.edit-template').attr('data-id', template.id);
+            tr.find('.delete-template').attr('data-id', template.id);
+            tr.find('.delete-template').attr('href', template.delete_url);
+        },
+        error: function (data) {
+            displayAjaxError('Custom Description', data);
+        }
+    });
+
+});
+
+$('#description-template-table .delete-template').click(function(e) {
+    e.preventDefault();
+    var btn = $(this);
+
+    swal({
+            title: "Delete Description Template",
+            text: "This will remove the description template permanently. Are you sure you want to remove it?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Remove Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) {
+            if (isConfirmed) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/description-templates?' + $.param({
+                        id: btn.attr('data-id')
+                    }),
+                    success: function(data) {
+                        btn.parents('.template-row').remove();
+
+                        swal.close();
+                        toastr.success("The template description has been deleted.", "Deleted!");
+                    },
+                    error: function(data) {
+                        displayAjaxError('Delete Template Description', data);
+                    }
+                });
+            }
+        }
+    );
+});
+
 $(function () {
     showDescriptionHelp();
     $('#auto_shopify_fulfill').trigger('change');
@@ -337,7 +528,7 @@ $(function () {
     var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
     elems.forEach(function(html) {
         var switchery = new Switchery(html, {
-            color: '#1AB394',
+            color: '#93c47d',
             size: 'small'
         });
     });
@@ -380,6 +571,11 @@ $(function () {
 
         $('.order-handle').toggle();
     });
+
+    setTimeout(function() {
+        editor_sync_content();
+        setup_full_editor('default_desc', false, 'default_desc');
+    }, 1000);
 });
 
 })();

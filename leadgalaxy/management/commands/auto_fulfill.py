@@ -54,7 +54,7 @@ class Command(BaseCommand):
                                           .filter(status_updated_at__lt=time_threshold) \
                                           .filter(store__is_active=True) \
                                           .filter(store__auto_fulfill__in=['hourly', 'daily', 'enable']) \
-                                          .order_by('id')
+                                          .order_by('-id')
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
@@ -89,7 +89,7 @@ class Command(BaseCommand):
                     raven_client.captureMessage(
                         'Auto fulfill taking too long',
                         level="warning",
-                        extra={'delta': (timezone.now() - start_at).total_seconds()})
+                        extra={'delta': (timezone.now() - self.start_at).total_seconds()})
 
                     break
             except:

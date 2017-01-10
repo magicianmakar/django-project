@@ -577,7 +577,14 @@ $('.auto-shipping-btn').click(function (e) {
             .click(function (e) {
                 e.preventDefault();
 
-                var url = $('#shipping-modal').prop('data-href');
+                var url = $('#shipping-modal').prop('data-href').trim();
+                if (url.indexOf('?') !== -1) {
+                    if (!url.match(/[\\?&]$/)) {
+                        url += '&';
+                    }
+                } else {
+                        url += '?';
+                }
 
                 url = url + $.param({
                     SAPlaceOrder: $('#shipping-modal').prop('data-order'),

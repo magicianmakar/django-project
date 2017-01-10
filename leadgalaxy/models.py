@@ -943,6 +943,17 @@ class ShopifyProduct(models.Model):
         else:
             return ShopifyProductExport.objects.filter(product=self)
 
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
+
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
 
@@ -1111,7 +1122,7 @@ class ProductSupplier(models.Model):
         source_id = self.get_source_id()
         if source_id:
             if 'aliexpress.com' in self.product_url.lower():
-                return u'http://www.aliexpress.com/item//{}.html'.format(source_id)
+                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
 
         return self.product_url
 
@@ -1580,6 +1591,15 @@ class PlanPayment(models.Model):
 
     def __unicode__(self):
         return u'{} | {}'.format(self.provider, self.payment_id)
+
+
+class DescriptionTemplate(models.Model):
+    user = models.ForeignKey(User)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+
+    def __unicode__(self):
+        return self.title
 
 
 def user_is_subsuser(self):
