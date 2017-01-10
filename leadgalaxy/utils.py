@@ -1471,7 +1471,7 @@ def affiliate_link_set_query(url, name, value):
 
 
 def get_admitad_affiliate_url(url):
-    site_id = '1e8d114494c09fee990016525dc3e8'
+    site_id = '1e8d114494c02ea3d6a016525dc3e8'
     api_url = 'https://alitems.com/g/{}/'.format(site_id)
 
     return affiliate_link_set_query(api_url, 'ulp', url)
