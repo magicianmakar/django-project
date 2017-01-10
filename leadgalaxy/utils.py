@@ -15,7 +15,6 @@ import re
 import shutil
 import tempfile
 import ctypes
-import random
 from urlparse import urlparse, parse_qs, urlsplit, urlunsplit
 from urllib import urlencode
 from hashlib import sha256
