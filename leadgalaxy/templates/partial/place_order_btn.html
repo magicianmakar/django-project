@@ -5,11 +5,7 @@
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
-            {% if aliexpress_affiliate %}
-                 href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
-            {% else %}
-                 href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
-            {% endif %}
+             href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
             target="_blank"
             style="border-right:1px solid #66a8cc"
             >
@@ -40,37 +36,19 @@
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
-                   {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
-                   {% else %}
-                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
-                   {% endif %}
+                    href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    >Step By Step Order</a></li>
                <li><a class="place-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
-                   {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
-                   {% else %}
-                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
-                   {% endif %}
+                    href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
                    >Add To Cart</a></li>
             <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
-                   {% if aliexpress_affiliate %}
-                        href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
-                   {% else %}
-                        href="{{item.supplier.short_product_url}}?SAPlaceOrder={{ item.order_data_id|urlencode }}"
-                   {% endif %}
+                    href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    >Auto Place Order</a></li>
             <li><a class="place-order-btn auto-shipping-btn" target="_blank"
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping_address.country_code}}"
                     href="#"
-
-                {% if aliexpress_affiliate %}
-                    data-href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&"
-                {% else %}
-                    data-href="{{item.supplier.short_product_url}}?"
-                {% endif %}
-
+                    data-href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}

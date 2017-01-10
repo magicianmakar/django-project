@@ -15,6 +15,7 @@ import re
 import shutil
 import tempfile
 import ctypes
+import random
 from urlparse import urlparse, parse_qs, urlsplit, urlunsplit
 from urllib import urlencode
 from hashlib import sha256
@@ -1457,12 +1458,26 @@ def affiliate_link_set_query(url, name, value):
         dl_target_url = set_url_query(dl_target_url, name, value)
 
         return set_url_query(url, 'dl_target_url', dl_target_url)
+    elif 'alitems.com' in url:
+        if name != 'ulp':
+            ulp = parse_qs(urlparse(url).query)['ulp'].pop()
+            ulp = set_url_query(ulp, name, value)
+
+            return set_url_query(url, 'ulp', ulp)
+        else:
+            return set_url_query(url, name, value)
     else:
         return set_url_query(url, name, value)
 
 
-def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
+def get_admitad_affiliate_url(url):
+    site_id = '1e8d114494c09fee990016525dc3e8'
+    api_url = 'https://alitems.com/g/{}/'.format(site_id)
 
+    return affiliate_link_set_query(api_url, 'ulp', url)
+
+
+def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
     promotion_key = 'promotion_links_{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
 
@@ -1475,7 +1490,7 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         r = requests.get(
             url='http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/{}'.format(appkey),
             params={
-                'fields': fields,
+                'fields': 'publisherId,trackingId,promotionUrls',
                 'trackingId': trackingID,
                 'urls': urls
 
@@ -1508,21 +1523,6 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
-
-
-def get_user_affiliate(user):
-    if user.can('aliexpress_affiliate.use'):
-        api_key, tracking_id = user.get_config([
-            'aliexpress_affiliate_key',
-            'aliexpress_affiliate_tracking'
-        ])
-    else:
-        api_key, tracking_id = (None, None)
-
-    if not api_key or not tracking_id:
-        api_key, tracking_id = ['37954', 'shopifiedapp']
-
-    return api_key, tracking_id
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):

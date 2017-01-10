@@ -4698,9 +4698,6 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-    disable_affiliate = models_user.get_config('_disable_affiliate', False)
-    api_key, tracking_id = utils.get_user_affiliate(models_user)
-
     for index, order in enumerate(page):
         created_at = arrow.get(order['created_at'])
         try:
@@ -4897,7 +4894,6 @@ def orders_view(request):
         'shipping_method_filter': shipping_method_filter,
         'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter') and store_order_synced,
         'user_filter': utils.get_orders_filter(request),
-        'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
         'countries': countries,
@@ -4996,25 +4992,43 @@ def orders_track(request):
 @login_required
 def orders_place(request):
     try:
+        assert request.GET['product']
+        assert request.GET['SAPlaceOrder']
+
         product = request.GET['product']
-        data = request.GET['SAPlaceOrder']
     except:
+        raven_client.captureException()
         raise Http404("Product or Order not set")
 
-    # Check for Aliexpress Affiliate Program
-    api_key, tracking_id = utils.get_user_affiliate(request.user.models_user)
+    # Check is current user have Aliexpress Affiliate keys
+    have_affiliate = True
+
+    if request.user.can('aliexpress_affiliate.use'):
+        api_key, tracking_id = request.user.get_config([
+            'aliexpress_affiliate_key',
+            'aliexpress_affiliate_tracking'
+        ])
+    else:
+        api_key, tracking_id = (None, None)
+
+    if not api_key or not tracking_id:
+        have_affiliate = False
+        api_key, tracking_id = ['37954', 'shopifiedapp']
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
-    redirect_url = None
-    if not disable_affiliate and api_key and tracking_id:
-        affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product)
+    redirect_url = False
+    services = ['ali', 'admitad']
+    if not disable_affiliate:
+        service = 'ali' if have_affiliate else random.choice(services)
 
-        if affiliate_link:
-            redirect_url = utils.affiliate_link_set_query(affiliate_link, 'SAPlaceOrder', data)
+        if service == 'ali' and api_key and tracking_id:
+            redirect_url = utils.get_aliexpress_affiliate_url(api_key, tracking_id, product)
+        elif service == 'admitad':
+            redirect_url = utils.get_admitad_affiliate_url(product)
 
     if not redirect_url:
-        redirect_url = utils.affiliate_link_set_query(product, 'SAPlaceOrder', data)
+        redirect_url = product
 
     for k in request.GET.keys():
         if k.startswith('SA') and k not in redirect_url:
