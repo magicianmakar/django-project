@@ -48,7 +48,7 @@
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping_address.country_code}}"
                     href="#"
-                    data-href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}"
+                    data-href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}
