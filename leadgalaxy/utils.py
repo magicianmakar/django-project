@@ -1477,7 +1477,7 @@ def get_admitad_affiliate_url(url):
 
 
 def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
-    promotion_key = 'promotion_links_{}'.format(hash_text(urls))
+    promotion_key = 'promotion_links__{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
 
     if promotion_url is not None:
@@ -1503,7 +1503,7 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
         errorCode = r['errorCode']
         if errorCode != 20010000:
             raven_client.captureMessage('Aliexpress Promotion Error',
-                                        extra={'errorCode': errorCode},
+                                        extra={'errorCode': errorCode, 'response': r},
                                         level='warning')
             return None
 
@@ -1514,6 +1514,10 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
 
             return promotion_url
         else:
+            raven_client.captureMessage('Aliexpress Promotion Not Found',
+                                        extra={'response': r, 'product': urls},
+                                        level='warning')
+
             cache.set(promotion_key, False, timeout=3600)
             return None
 
