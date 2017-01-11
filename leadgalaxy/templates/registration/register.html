@@ -53,31 +53,44 @@
             </p>
             <form class="m-t" role="form" method="post" action="{{request.get_full_path}}">
                 {% csrf_token %}
+                {% if form.errors and not form.non_field_errors %}
+                    <p class="errorlist">
+                        Please correct the errors below.
+                    </p>
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                    <ul class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
 
                 <div class="row">
                     <div class="form-group col-md-12">
-                        {% render_field form.username class+="form-control new input-lg" placeholder="Username" %}
+                        {% render_field form.username class+="form-control new input-lg" placeholder="Username" required="" %}
                         {{ form.username.errors | safe }}
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="form-group col-md-12">
-                        {% render_field form.email class+="form-control new input-lg" placeholder="Email" %}
+                        {% render_field form.email class+="form-control new input-lg" placeholder="Email" required="" %}
                         {{ form.email.errors | safe }}
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="form-group col-md-12">
-                        {% render_field form.password1 class+="form-control new input-lg" placeholder="Password" %}
+                        {% render_field form.password1 class+="form-control new input-lg" placeholder="Password" required="" %}
                         {{ form.password1.errors | safe }}
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="form-group col-md-12">
-                        {% render_field form.password2 class+="form-control new input-lg" placeholder="Password verification" %}
+                        {% render_field form.password2 class+="form-control new input-lg" placeholder="Password verification" required="" %}
                         {{ form.password2.errors | safe }}
                     </div>
                 </div>
@@ -85,7 +98,7 @@
                 <div class="row">
                     <div class="form-group col-md-12">
                         <label for="accept_terms">
-                            {% render_field form.accept_terms %}
+                            {% render_field form.accept_terms required="" %}
                             I agree to the
                             <a href="https://app.shopifiedapp.com/pages/terms-of-service" target="_blank">
                                 Terms &amp; Conditions
