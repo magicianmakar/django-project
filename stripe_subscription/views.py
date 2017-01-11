@@ -136,6 +136,8 @@ def subscription_plan(request):
 
             if not still_in_trial:
                 sub.trial_end = 'now'
+            else:
+                sub.trial_end = arrow.get(sub.trial_end).timestamp
 
             sub.save()
 
