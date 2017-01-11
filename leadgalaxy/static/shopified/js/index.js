@@ -37,6 +37,12 @@ $('.add-store-btn').click(function (e) {
     $('#modal-install-form').modal('show');
 });
 
+$('#shop-url').on('keypress', function(e) {
+    if (e.which == 13) {
+        $('#install-store').trigger('click');
+    }
+});
+
 $('#install-store').click(function (e) {
     var shop = $('#shop-url').val().trim().match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^/\.]+)(?:\.myshopify\.com)?/);
     if (!shop || shop.length != 2) {
