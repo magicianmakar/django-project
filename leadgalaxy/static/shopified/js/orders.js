@@ -604,6 +604,77 @@ $('.auto-shipping-btn').click(function (e) {
 
 });
 
+/* Connect Product */
+$('.add-supplier-btn').click(function (e) {
+    e.preventDefault();
+
+    $('#modal-supplier-link').prop('shopify-store', $(this).attr('store-id'));
+    $('#modal-supplier-link').prop('shopify-product', $(this).attr('shopify-product'));
+
+    $('#modal-supplier-link').modal('show');
+});
+
+
+$('.product-original-link').bindWithDelay('keyup', function (e) {
+    var input = $(e.target);
+    var parent = input.parents('.product-export-form');
+    var product_url = input.val().trim();
+
+    if(!product_url.length || !(/aliexpress.com/i).test(product_url)) {
+        return;
+    }
+
+    var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
+    if(product_id.length != 2) {
+        return;
+    } else {
+        product_id = product_id[1];
+    }
+
+    $('.product-original-link-loading', parent).show();
+
+    window.extensionSendMessage({
+        subject: 'ProductStoreInfo',
+        product: product_id,
+    }, function(rep) {
+        $('.product-original-link-loading', parent).hide();
+
+        if (rep && rep.name) {
+            $('.product-supplier-name', parent).val(rep.name);
+            $('.product-supplier-link', parent).val(rep.url);
+        }
+    });
+}, 200);
+
+$('.add-supplier-info-btn').click(function (e) {
+    e.preventDefault();
+
+    $.ajax({
+            url: '/api/import-product',
+            type: 'POST',
+            data: {
+                store: $('#modal-supplier-link').prop('shopify-store'),
+                supplier: $('.product-original-link').val(),
+                vendor_name: $('.product-supplier-name').val(),
+                vendor_url: $('.product-supplier-link').val(),
+                product: $('#modal-supplier-link').prop('shopify-product'),
+            },
+        }).done(function (data) {
+            toastr.success('Product is Connected!', 'Product Connect');
+
+            $('#modal-supplier-link').modal('hide');
+
+            setTimeout(function() {
+                window.location.reload();
+            }, 1500);
+        }).fail(function(data) {
+            displayAjaxError('Product Connect', data);
+        }).always(function() {
+        });
+});
+
+/* /Connect Product */
+
 $('.cached-img').error(function() {
     $.ajax({
         url: '/api/product-image?' + $.param({

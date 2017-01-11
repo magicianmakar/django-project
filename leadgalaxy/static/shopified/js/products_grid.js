@@ -375,6 +375,80 @@ $("#product-filter-form").submit(function() {
 });
 
 
+$('.shopify-product-import-btn').click(function (e) {
+    e.preventDefault();
+
+    $('#modal-shopify-product .shopify-store').val($(this).attr('store')).trigger('change');
+    $('#modal-shopify-product').modal('show');
+});
+
+window.shopifyProductSelected = function (store, shopify_id) {
+    $('#modal-shopify-product').modal('hide');
+
+    $('#modal-supplier-link').prop('shopify-store', $('#modal-shopify-product .shopify-store').val());
+    $('#modal-supplier-link').prop('shopify-product', shopify_id);
+
+    $('#modal-supplier-link').modal('show');
+};
+
+$('.product-original-link').bindWithDelay('keyup', function (e) {
+    var input = $(e.target);
+    var parent = input.parents('.product-export-form');
+    var product_url = input.val().trim();
+
+    if(!product_url.length || !(/aliexpress.com/i).test(product_url)) {
+        return;
+    }
+
+    var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
+    if(product_id.length != 2) {
+        return;
+    } else {
+        product_id = product_id[1];
+    }
+
+    $('.product-original-link-loading', parent).show();
+
+    window.extensionSendMessage({
+        subject: 'ProductStoreInfo',
+        product: product_id,
+    }, function(rep) {
+        $('.product-original-link-loading', parent).hide();
+
+        if (rep && rep.name) {
+            $('.product-supplier-name', parent).val(rep.name);
+            $('.product-supplier-link', parent).val(rep.url);
+        }
+    });
+}, 200);
+
+$('.add-supplier-info-btn').click(function (e) {
+    e.preventDefault();
+
+    $.ajax({
+            url: '/api/import-product',
+            type: 'POST',
+            data: {
+                store: $('#modal-supplier-link').prop('shopify-store'),
+                supplier: $('.product-original-link').val(),
+                vendor_name: $('.product-supplier-name').val(),
+                vendor_url: $('.product-supplier-link').val(),
+                product: $('#modal-supplier-link').prop('shopify-product'),
+            },
+        }).done(function (data) {
+            toastr.success('Product is imported!', 'Product Import');
+
+            $('#modal-supplier-link').modal('hide');
+
+            setTimeout(function() {
+                window.location.href = '/product/' + data.product;
+            }, 1500);
+        }).fail(function(data) {
+            displayAjaxError('Product Import', data);
+        }).always(function() {
+        });
+});
+
 $(function() {
     setupContextMenus();
 
