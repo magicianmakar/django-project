@@ -37,10 +37,10 @@ $('.add-store-btn').click(function (e) {
     $('#modal-install-form').modal('show');
 });
 
-$('#shop-url').on('keypress', function(e) {
-    if (e.which == 13) {
-        $('#install-store').trigger('click');
-    }
+$('#install-store-form').on('submit', function(e) {
+    $('#install-store').trigger('click');
+
+    return false;
 });
 
 $('#install-store').click(function (e) {
