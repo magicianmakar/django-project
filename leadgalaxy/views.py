@@ -4790,7 +4790,7 @@ def orders_view(request):
                             shipping_address_asci[k] = shipping_address[k]
 
                     if not shipping_address_asci[u'province']:
-                        if shipping_address_asci[u'country'] == u'United Kingdom':
+                        if shipping_address_asci[u'country'] == u'United Kingdom' and shipping_address_asci['city']:
                             if not uk_provinces:
                                 uk_provinces = load_uk_provincess()
 
