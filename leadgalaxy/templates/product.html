@@ -47,9 +47,9 @@
                 <div class="panel-body">
 {% if products %}
         <div class="row m-b-lg">
-            <div class="col-md-8">
-                <label for="selected-actions">Selected Items:</label>
-                <select class="form-control" name="selected-actions" id="selected-actions" style="padding-top: 2px;display: inline-block; width: 191px; ">
+            <div class="col-md-8 filter-col">
+                <label for="selected-actions" class="filter-col-item">Selected Items:</label>
+                <select class="form-control filter-col-item" name="selected-actions" id="selected-actions">
                     <option value=""></option>
                     {% if request.GET.store != 'c' and user|can:'myshopify_integration.use' %}
                     <option value="edit">Edit...</option>
@@ -60,16 +60,23 @@
                     {% endif %}
                     <option value="delete">Delete</option>
                 </select>
-                <button id="apply-btn" class="btn btn-primary">Apply</button>
-                <button class="btn btn-default btn-outline select-all-btn">Select All</button>
+                <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
+                <button class="btn btn-default btn-outline select-all-btn filter-col-item">Select All</button>
                 {% if request.user|can:'product_filters.view' %}
-                    <button class="btn btn-success btn-outline filter-btn">Filter</button>
+                    <button class="btn btn-success btn-outline filter-btn filter-col-item">Filter</button>
                     {% if filter_products %}
-                    <a href="/product" class="btn btn-outline btn-default">Clear Filter</a>
+                    <a href="/product" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
                     {% endif %}
                 {% endif %}
+
+                {% if store.id %}
+                <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
+                    <i class="fa fa-plus"></i> Import From Shopify
+                </a>
+                {% endif %}
             </div>
-            <div class="col-md-1 pull-right text-right">
+
+            <div class="col-md-1 pull-right text-right" style="padding:6px  5px">
                 <a href="{% url_path '/product/table' %}" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
                 <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
             </div>
@@ -187,6 +194,32 @@
 
 {% include 'partial/filter_modal.html' %}
 
+{% include "partial/shopify_product_selector.html" %}
+
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+
+.filter-col {
+    display: flex;
+    align-items: center;
+}
+
+.filter-col .filter-col-item {
+    margin-right: 5px;
+}
+
+.filter-col .shopify-product-import-btn {
+    margin-left: 15px;
+}
+
+#selected-actions {
+    padding-top: 2px;
+    display: inline-block;
+    width: 191px;
+}
+</style>
 {% endblock %}
 
 {% block extrajs %}
@@ -201,7 +234,10 @@
     };
 </script>
 
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+
 {% compress js %}
+<script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
 <script type="text/javascript" src="{% static 'shopified/js/products_grid.js' %}"></script>
 {% endcompress %}
 

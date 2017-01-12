@@ -64,5 +64,5 @@ td.variant-image .thumb {
 .supplier-config td {
   padding-top: 25px !important; }
   .supplier-config td .supplier-config-select {
-    width: 35%;
+    width: auto;
     max-width: 200px; }

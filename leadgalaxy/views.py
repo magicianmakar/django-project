@@ -2316,39 +2316,43 @@ def proccess_api(request, user, method, target, data):
                          % (total_allowed, user_count)
             }, status=401)
 
+        shopify_product = utils.safeInt(data.get('product'))
         supplier_url = data.get('supplier')
+
+        if shopify_product:
+            if user.models_user.shopifyproduct_set.filter(shopify_id=shopify_product).count():
+                return JsonResponse({'error': 'Product is already import/connected'}, status=422)
+        else:
+            return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
+
         if not supplier_url:
             return JsonResponse({'error': 'Supplier URL is missing'}, status=422)
 
-        if '/deep_link.htm' in supplier_url.lower():
-            supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
+        if utils.get_domain(supplier_url) == 'aliexpress':
+            if '/deep_link.htm' in supplier_url.lower():
+                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
+
+            if 's.aliexpress.com' in supplier_url.lower():
+                rep = requests.get(supplier_url, allow_redirects=False)
+                rep.raise_for_status()
+
+                supplier_url = rep.headers.get('location')
+
+                if '/deep_link.htm' in location_url:
+                    raven_client.captureMessage(
+                        'Deep link in redirection',
+                        level='warning',
+                        extra={
+                            'location': location_url,
+                            'supplier_url': data.get('supplier')
+                        })
+
             supplier_url = utils.remove_link_query(supplier_url)
-
-        if 's.aliexpress.com' in supplier_url.lower():
-
-            rep = requests.get(supplier_url, allow_redirects=False)
-            rep.raise_for_status()
-
-            location_url = rep.headers.get('location')
-
-            if '/deep_link.htm' in location_url:
-                raven_client.captureMessage(
-                    'Deep link in redirection',
-                    level='warning',
-                    extra={
-                        'location': location_url,
-                        'supplier_url': supplier_url
-                    })
-
-            supplier_url = utils.remove_link_query(location_url)
-
-        if not utils.safeInt(data.get('product')):
-            return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
 
         product = ShopifyProduct(
             store=store,
             user=user.models_user,
-            shopify_id=data.get('product'),
+            shopify_id=shopify_product,
             data=json.dumps({
                 'title': 'Importing...',
                 'variants': [],
@@ -4807,7 +4811,7 @@ def orders_view(request):
                             shipping_address_asci[k] = shipping_address[k]
 
                     if not shipping_address_asci[u'province']:
-                        if shipping_address_asci[u'country'] == u'United Kingdom':
+                        if shipping_address_asci[u'country'] == u'United Kingdom' and shipping_address_asci['city']:
                             if not uk_provinces:
                                 uk_provinces = load_uk_provincess()
 
