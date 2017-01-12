@@ -583,6 +583,8 @@
     </div>
 </div>
 
+{% include "partial/shopify_product_selector.html" %}
+
 {% endblock %}
 
 
@@ -785,6 +787,7 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
 

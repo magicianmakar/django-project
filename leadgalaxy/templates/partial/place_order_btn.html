@@ -54,6 +54,13 @@
             {% endif %}
         </ul>
     </div>
+
+{% elif item.product_id %}
+    <button class="btn btn-xs btn-info add-supplier-btn"
+            store-id="{{store.id}}" shopify-product="{{item.product_id}}">
+        <i class="fa fa-plus"></i> Add Supplier
+    </button>
+
 {% else %}
     <span class="label label-warning">Not Tracked</span>
 {% endif %}

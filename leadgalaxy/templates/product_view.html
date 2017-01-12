@@ -653,46 +653,6 @@
     </div>
 </div>
 
-<div id="modal-shopify-product" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">Select Product</h4>
-          </div>
-            <div class="modal-body">
-                <div class="row">
-                    {% with stores=user.profile.get_active_stores.count %}
-
-                    <div class="col-sm-8" style="padding-right:0">
-                        <input type="text" class="form-control input-md shopify-find-product" placeholder="Find product..." data-store="{{product.qelem.store_id}}">
-                    </div>
-
-                    <div class="form-group col-sm-4" style="padding-left:5px">
-                        <select class="form-control shopify-store">
-                        {% for i in user.profile.get_active_stores %}
-                            <option value="{{i.id}}" {% if i == product.store or stores == 1 %}selected{% endif %}>
-                                {{i.title}}
-                            </option>
-                        {% endfor %}
-                        </select>
-                    </div>
-
-                    {% endwith %}
-                </div>
-                <div class="row">
-                    <div class="col-sm-12 text-center m-t-lg shopify-find-loading" style="position:absolute;display:none">
-                        <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
-                    </div>
-                    <div class="col-sm-12">
-                        <div class="shopify-products ative-scroll"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div id="modal-clippingmagic" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -727,22 +687,7 @@
     </div>
 </div>
 
-{% verbatim %}
-
-<script id="product-select-template" type="text/x-handlebars-template">
-    <div class="product-item row">
-        <div class="product-thumb col-md-1">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}">
-                <img src="{{product.image.src}}">
-            </a>
-        </div>
-        <div class="col-md-11">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}">{{product.title}}</a>
-        </div>
-    </div>
-</script>
-
-{% endverbatim %}
+{% include "partial/shopify_product_selector.html" %}
 
 {% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
@@ -1062,9 +1007,10 @@ $(function() {
 </script>
 
     {% compress js %}
-    <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/remove_img_background.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}
