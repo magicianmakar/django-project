@@ -2310,7 +2310,15 @@ def proccess_api(request, user, method, target, data):
                          % (total_allowed, user_count)
             }, status=401)
 
+        shopify_product = utils.safeInt(data.get('product'))
         supplier_url = data.get('supplier')
+
+        if shopify_product:
+            if user.models_user.shopifyproduct_set.filter(shopify_id=shopify_product).count():
+                return JsonResponse({'error': 'Product is already import/connected'}, status=422)
+        else:
+            return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
+
         if not supplier_url:
             return JsonResponse({'error': 'Supplier URL is missing'}, status=422)
 
@@ -2342,7 +2350,7 @@ def proccess_api(request, user, method, target, data):
         product = ShopifyProduct(
             store=store,
             user=user.models_user,
-            shopify_id=data.get('product'),
+            shopify_id=shopify_product,
             data=json.dumps({
                 'title': 'Importing...',
                 'variants': [],
