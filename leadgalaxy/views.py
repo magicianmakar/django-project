@@ -266,7 +266,7 @@ def proccess_api(request, user, method, target, data):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
-            if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
+            if user.profile.plan.is_free and (not user.is_recurring_customer() or user.stripe_customer.can_trial):
                 return JsonResponse({
                     'error': (
                         'Please Activate your account first by visiting:\n{}'
@@ -871,35 +871,22 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'clippingmagic-clean-image':
-        img_url = ""
+        img_url = None
         api_url = 'https://clippingmagic.com/api/v1/images'
         plan = user.profile.plan.title.replace('plan', '').strip().lower()
         action = data.get('action', 'edit')
         image_id = data.get('image_id', 0)
-        api_id = settings.CLIPPINGMAGIC_API_ID
-        api_secret = settings.CLIPPINGMAGIC_API_SECRET
         api_response = {}
 
-        if not user.is_stripe_customer():
-            api_id = data.get('api_id')
-            api_secret = data.get('api_secret')
+        try:
+            ClippingMagic.objects.get(user=user)
+        except ClippingMagic.DoesNotExist:
+            ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
-        else:
-            try:
-                ClippingMagic.objects.get(user=user)
-            except ClippingMagic.DoesNotExist:
-                clippingmagic_plan = ClippingMagicPlan.objects.get(default=1)
-                default = {
-                    'allowed_credits': clippingmagic_plan.allowed_credits,
-                    'remaining_credits': clippingmagic_plan.allowed_credits,
-                    'clippingmagic_plan': clippingmagic_plan
-                }
-                ClippingMagic.objects.update_or_create(user=request.user, defaults=default)
-
-                if user.clippingmagic.remaining_credits <= 0:
-                        return JsonResponse({
-                            'error': "You don't have enough credits left. Please re-subscribe for this feature"
-                        }, status=403)
+        if user.clippingmagic.remaining_credits <= 0:
+                return JsonResponse({
+                    'error': "You don't have enough credits left. Please re-subscribe for this feature"
+                }, status=403)
 
         if action == 'edit':
             res = requests.post(
@@ -907,13 +894,17 @@ def proccess_api(request, user, method, target, data):
                 files={
                     'image': urllib2.urlopen(data.get('image_url', '')).read()
                 },
-                auth=(api_id, api_secret)
+                auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()
 
             api_response = res.get('image', {'id': 0, 'secret': 0})
 
         elif action == 'done':
-            img_url = requests.get('{}/{}'.format(api_url, image_id), auth=(api_id, api_secret)).url
+            img_url = requests.get(
+                '{}/{}'.format(api_url, image_id),
+                auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
+            ).url
+
             if img_url:
                 UserUpload.objects.create(
                     user=request.user.models_user,
@@ -921,7 +912,7 @@ def proccess_api(request, user, method, target, data):
                     url=img_url
                 )
 
-                user.clippingmagic.remaining_credits = user.clippingmagic.remaining_credits - 1
+                user.clippingmagic.remaining_credits -= 1
                 user.clippingmagic.save()
             else:
                 return JsonResponse({
@@ -933,7 +924,7 @@ def proccess_api(request, user, method, target, data):
                 'status': 'ok',
                 'image_id': api_response.get('id', 0),
                 'image_secret': api_response.get('secret', 0),
-                'api_id': api_id,
+                'api_id': settings.CLIPPINGMAGIC_API_ID,
                 'image_url': img_url
             })
         else:
@@ -963,7 +954,7 @@ def proccess_api(request, user, method, target, data):
         target_user = User.objects.get(id=data.get('user'))
         plan = GroupPlan.objects.get(id=data.get('plan'))
 
-        if target_user.is_stripe_customer():
+        if target_user.is_recurring_customer():
             return JsonResponse({
                 'error': ('Plan should be changed from Stripe Dashboard:\n'
                           'https://dashboard.stripe.com/customers/{}').format(
@@ -1447,17 +1438,6 @@ def proccess_api(request, user, method, target, data):
 
         profile.config = json.dumps(config)
         profile.save()
-
-        # add clipping magic keys
-        form = UserClippingMagicForm(data)
-        if form.is_valid():
-            ClippingMagic.objects.update_or_create(
-                user=user,
-                defaults={
-                    'api_id': form.cleaned_data['api_id'],
-                    'api_secret': form.cleaned_data['api_secret']
-                }
-            )
 
         return JsonResponse({'status': 'ok'})
 
@@ -2142,16 +2122,6 @@ def proccess_api(request, user, method, target, data):
             })
         else:
             return JsonResponse({'error': form.errors})
-
-    if method == 'POST' and target == 'user-clippingmagic':
-        form = UserClippingMagicForm(data)
-        if form.is_valid():
-            ClippingMagic.objects.update_or_create(user=user, defaults={
-                'api_id': form.cleaned_data['api_id'],
-                'api_secret': form.cleaned_data['api_secret']
-            })
-
-            return JsonResponse({'status': 'ok'})
 
     if method == 'GET' and target == 'shipping-aliexpress':
         aliexpress_id = data.get('id')
@@ -4319,16 +4289,15 @@ def user_profile(request):
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 
-    clippingmagic_sub = ClippingMagicPlan.objects.all()
+    clippingmagic_plans = ClippingMagicPlan.objects.all()
+    clippingmagic = None
     if not request.user.profile.plan.is_free:
         try:
             clippingmagic = ClippingMagic.objects.get(user=request.user)
-        except:
-            clippingmagic = ""
-    else:
-        clippingmagic = ""
+        except ClippingMagic.DoesNotExist:
+            pass
 
-    stripe_customer = request.user.is_stripe_customer() or request.user.profile.plan.is_free
+    stripe_customer = request.user.profile.plan.is_stripe or request.user.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
@@ -4340,7 +4309,7 @@ def user_profile(request):
         'bundles': bundles,
         'stripe_plans': stripe_plans,
         'stripe_customer': stripe_customer,
-        'clippingmagic_sub': clippingmagic_sub,
+        'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
@@ -5372,7 +5341,7 @@ def register(request, registration=None, subscribe_plan=None):
 @require_http_methods(['GET'])
 @login_required
 def user_profile_invoices(request):
-    if request.is_ajax() and request.user.is_stripe_customer():
+    if request.is_ajax() and request.user.have_stripe_billing():
         invoices = get_stripe_invoice_list(request.user.stripe_customer)
         return render(request, 'payments/invoice_table.html', {'invoices': invoices})
     raise Http404
@@ -5380,7 +5349,7 @@ def user_profile_invoices(request):
 
 @login_required
 def user_invoices(request, invoice_id):
-    if not request.user.is_stripe_customer():
+    if not request.user.have_stripe_billing():
         raise Http404
 
     invoice = get_stripe_invoice(invoice_id, expand=['charge'])
@@ -5397,7 +5366,7 @@ def user_invoices(request, invoice_id):
 def user_invoices_download(request, invoice_id):
     from stripe_subscription.invoices.pdf import draw_pdf
 
-    if not request.user.is_stripe_customer():
+    if not request.user.have_stripe_billing():
         raise Http404
 
     invoice = get_stripe_invoice(invoice_id, expand=['charge'])

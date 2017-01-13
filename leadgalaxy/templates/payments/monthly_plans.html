@@ -28,7 +28,7 @@
                         <p class="cta">
                             {% if current_plan == item %}
                                 <button class="btn btn-primary">Selected</button>
-                            {% elif not user.is_stripe_customer or user.stripe_customer.can_trial %}
+                            {% elif not user.is_recurring_customer or user.stripe_customer.can_trial %}
                                 <button class="btn btn-primary start-plan-trial" >
                                     Try for {{item.stripe_plan.trial_period_days}} days</button>
                             {% elif not user.stripe_customer.can_trial and not user.stripe_customer.source and not current_plan.is_stripe %}

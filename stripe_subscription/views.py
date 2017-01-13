@@ -184,25 +184,50 @@ def subscription_plan(request):
 @login_required
 @csrf_protect
 def clippingmagic_subscription(request):
-    data = request.POST
-    amount = data.get('amount')
+    user = request.user
+
     try:
-        charge = stripe.Charge.create(
-            amount=amount,
-            plan="usd",
-            metadata=request.user.stripe_customer.customer_id
+        clippingmagic_plan = ClippingMagicPlan.objects.get(id=request.POST.get('plan'))
+
+        stripe.Charge.create(
+            amount=clippingmagic_plan.amount * 100,
+            currency="usd",
+            customer=user.stripe_customer.customer_id,
+            metadata={
+                'user': user.id,
+                'clippingmagic_plan': clippingmagic_plan.id
+            }
         )
 
-        if charge.status == 'succeeded':
-            clippingmagic = ClippingMagicPlan.objects.get(amount=amount)
-            request.user.clippingmagic.allowed_credits = clippingmagic.allowed_credits
-            request.user.clippingmagic.remaining_credits = clippingmagic.allowed_credits
-            request.user.clippingmagic.save()
+        user.clippingmagic.remaining_credits += clippingmagic_plan.allowed_credits
+        user.clippingmagic.clippingmagic.save()
 
-    except stripe.error.CardError as e:
-        return JsonResponse({'status': 'ko', 'msg': e.message})
+    except ClippingMagicPlan.DoesNotExist:
+        raven_client.captureException(level='warning')
 
-    return JsonResponse({'status': 'ok', 'msg': "Your Clippingmagic Subscription has been updated"})
+        return JsonResponse({
+            'error': 'Selected Credit not found'
+        }, status=500)
+
+    except stripe.CardError as e:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error: {}'.format(e.message)
+        }, status=500)
+
+    except stripe.InvalidRequestError as e:
+        raven_client.captureException(level='warning')
+        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+    except:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error, Please try again'
+        }, status=500)
+
+    return JsonResponse({'status': 'ok'})
 
 
 @login_required
@@ -271,7 +296,7 @@ def invoice_pay(request, invoice_id):
         return JsonResponse({'error': 'Bad Request'}, status=500)
 
     response_404 = JsonResponse({'error': 'Page not found'}, status=404)
-    if not request.user.is_stripe_customer():
+    if not request.user.is_recurring_customer():
         return response_404
 
     invoice = get_stripe_invoice(invoice_id)

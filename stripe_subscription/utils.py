@@ -49,7 +49,7 @@ def update_customer(user, customer):
 
 
 def sync_subscription(user):
-    if not user.is_stripe_customer():
+    if not user.is_recurring_customer():
         return False
 
     for sub in user.stripesubscription_set.all():

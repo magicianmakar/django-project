@@ -461,6 +461,22 @@ def user_stripe_customer(self):
         return False
 
 
+@add_to_class(User, 'have_stripe_billing')
+def user_have_stripe_billing(self):
+    try:
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
+    except:
+        return False
+
+
+@add_to_class(User, 'is_recurring_customer')
+def user_recurring_customer(self):
+    try:
+        return self.profile.plan.is_stripe()
+    except:
+        return False
+
+
 class ShopifyStore(models.Model):
     class Meta:
         ordering = ['list_index', '-created_at']
@@ -1329,13 +1345,11 @@ class AppPermission(models.Model):
 
 
 class ClippingMagicPlan(models.Model):
-
-    allowed_credits = models.BigIntegerField(default=0)
-    amount = models.BigIntegerField(default=0)
-    default = models.IntegerField(default=0)
+    allowed_credits = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0, verbose_name='In USD')
 
     def __unicode__(self):
-        return u'{} | {}'.format(self.allowed_credits, self.amount)
+        return u'{} / {}'.format(self.allowed_credits, self.amount)
 
 
 class ClippingMagic(models.Model):
@@ -1344,18 +1358,13 @@ class ClippingMagic(models.Model):
 
     user = models.OneToOneField(User, related_name='clippingmagic')
 
-    api_id = models.CharField(max_length=100, default='', verbose_name='ClippingMagic API ID')
-    api_secret = models.CharField(max_length=255, default='', verbose_name='ClippingMagic API Secret')
-
-    allowed_credits = models.BigIntegerField(default=-1)
     remaining_credits = models.BigIntegerField(default=0)
 
-    clippingmagic_plan = models.ForeignKey(ClippingMagicPlan, null=True, blank=True, related_name='clippingmagic_plan')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return '%s:%s' % (self.api_id, self.api_secret)
+        return u'{} / {} Credits'.format(self.user.username, self.remaining_credits)
 
 
 class GroupPlan(models.Model):
@@ -1730,7 +1739,7 @@ def userprofile_creation(sender, instance, created, **kwargs):
 
         UserProfile.objects.create(user=instance, plan=plan)
 
-    if not created and instance.is_stripe_customer():
+    if not created and instance.have_stripe_billing():
         try:
             customer = instance.stripe_customer
             email = json.loads(customer.data).get('email')

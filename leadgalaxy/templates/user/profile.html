@@ -3,6 +3,7 @@
 {% load static %}
 {% load compress %}
 {% load template_helper %}
+{% load perms_helper %}
 
 {% block main-container %}
 <div class="row">
@@ -28,17 +29,13 @@
                 </li>
                 {% endif %}
 
-                {% if stripe_customer %}
                 <li class="billing-tab">
                     <a data-toggle="tab" href="#tab-4" data-auto-hash="billing" data-auto-click="true" aria-expanded="false">Billing</a>
                 </li>
-                {% endif %}
 
-                {% if stripe_customer %}
                 <li class="invoices-tab">
                     <a data-toggle="tab" href="#tab-5" data-auto-hash="invoices" data-auto-click="true" aria-expanded="false">Invoices</a>
                 </li>
-                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -275,61 +272,49 @@
 
                                     </div>
                                 {% endif %}
-                                {% if user.is_stripe_customer %}
-                                    {% if not user.profile.plan.is_free and not user.profile.plan.is_lite %}
+                                {% if user|can:'clippingmagic.use' %}
                                         <div class="panel panel-default">
                                             <div class="panel-heading">
                                                 Manage ClippingMagic Subscription
                                             </div>
                                             <div class="panel-body">
-                                                <ul class="list-group">
-                                                    <li class="list-group-item" style="border:0 none">
-                                                        {% for item in clippingmagic_sub %}
-                                                            {% if item.default == 1  %}
-                                                            <span class="col-md-3">
-                                                                <b>
-                                                                    Total Credits:
-                                                                </b>
-                                                                <span>
-                                                                    {% if clippingmagic.allowed_credits%}
-                                                                        {{clippingmagic.allowed_credits}}
-                                                                    {% else %}
-                                                                        {{ item.allowed_credits }}
-                                                                    {% endif %}
-                                                                </span>
-                                                            </span>
-                                                            <span class="col-md-3">
-                                                                <b>
-                                                                    Remaining Credits:
-                                                                </b>
-                                                                <span>
-                                                                    {% if clippingmagic.remaining_credits or clippingmagic.remaining_credits == 0%}
-                                                                        {{clippingmagic.remaining_credits}}
-                                                                    {% else %}
-                                                                        {{item.allowed_credits}}
-                                                                    {% endif %}
-                                                                </span>
-                                                            </span>
-                                                           {% endif %}
-                                                        {% endfor %}
-                                                        {% if not clippingmagic = '' and clippingmagic.remaining_credits <= 0 %}
-                                                            <span class="col-md-3 form-group">
-                                                                <select class="form-control" id="clippingmagic_plan" name="clippingmagic_plan">
-                                                                    <option value="0">Select Credits</option>
-                                                                    {% for item in clippingmagic_sub %}
-                                                                        <option value="{{item.amount}}">{{item.allowed_credits}}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </span>
-                                                            <span class="col-md-3">
-                                                                <button class="btn btn-primary" id="renew_clippingmagic">Renew</button>
-                                                            </span>
-                                                        {% endif %}
-                                                    </li>
-                                                </ul>
+                                                <div class="row">
+                                                    <div class="col-md-3" >
+                                                        <span class="">
+                                                            <b>Remaining Credits:</b>
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="col-md-3" >
+                                                        <span>
+                                                            <b>{{clippingmagic.remaining_credits|default:"0"}}</b>
+                                                            Credit{{ clippingmagic.remaining_credits|pluralize }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row m-t flex-group">
+                                                    <div class="col-md-3 ">
+                                                        <label for="clippingmagic_plan">Purchase Credits:</label>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <select class="form-control" id="clippingmagic_plan"
+                                                                name="clippingmagic_plan">
+                                                            <option value="">Select Credits</option>
+                                                            {% for item in clippingmagic_plans %}
+                                                                <option value="{{item.id}}">
+                                                                    {{item.allowed_credits}} Credits / {% money_format item.amount %}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3" >
+                                                        <button class="btn btn-primary" id="renew_clippingmagic">Purchase</button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    {% endif %}
                                 {% endif %}
                             </div>
 
@@ -382,7 +367,6 @@
                 </div>
                 {% endif %}
 
-                {% if stripe_customer %}
                 <div id="tab-4" class="tab-pane">
                     <div class="panel-body">
                         {% with source=user.stripe_customer.source %}
@@ -434,8 +418,7 @@
                         {% endwith %}
                     </div>
                 </div>
-                {% endif %}
-                {% if stripe_customer %}
+
                 <div id="tab-5" class="tab-pane">
                     <div class="panel-body">
                         <div class="row">
@@ -445,17 +428,14 @@
                         </div>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-{% if stripe_customer %}
-    {% include 'payments/billing_modal.html' %}
-    {% include 'payments/pay_now_modal.html' %}
-    {% include 'payments/subscription_cancel.html' %}
-{% endif %}
+{% include 'payments/billing_modal.html' %}
+{% include 'payments/pay_now_modal.html' %}
+{% include 'payments/subscription_cancel.html' %}
 
 {% endblock %}
 
@@ -469,7 +449,6 @@
     <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
 
 <script type="text/javascript">
-{% if stripe_customer %}
     var config = {
         'customer_source': '{% url "stripe_subscription.views.customer_source" %}',
         'customer_source_delete': '{% url "stripe_subscription.views.customer_source_delete" %}',
@@ -479,9 +458,6 @@
 
         'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
     };
-{% else %}
-    var config = {};
-{% endif %}
 </script>
 
 {% compress js %}

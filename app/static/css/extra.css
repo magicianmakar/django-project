@@ -270,3 +270,15 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
         margin-left: 0 !important;
     }
 }
+
+@media (min-width: 768px) {
+    .flex-group {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+    .form-horizontal .flex-group .control-label {
+        padding-top: 0;
+    }
+}

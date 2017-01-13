@@ -985,7 +985,7 @@ function renderImages() {
 
         d.append($('<div>', {
             'class': "loader",
-            'html': '<i class="fa fa-spinner fa-spin fa-2x" style="display:none;"></i>'
+            'html': '<i class="fa fa-spinner fa-spin fa-2x"></i>'
         }));
 
         var buttons = [];
@@ -1003,7 +1003,7 @@ function renderImages() {
             'html': '<i class="fa fa-download"></i>'
         }));
 
-        if (config.clipping_magic && config.clipping_magic.clippingmagic_editor) {
+        if (config.clipping_magic.clippingmagic_editor) {
             buttons.push($('<button>', {
                 'title': "Remove Background",
                 'class': "btn btn-warning btn-xs itooltip remove-background-image-editor",
@@ -1063,6 +1063,12 @@ function renderImages() {
                 img.attr('id'),
                 img.attr('src')
             );
+        });
+
+        d.find('.remove-background-image-editor').click(function(e) {
+            e.preventDefault();
+
+            initClippingMagic($(this));
         });
 
         d.mouseenter(function() {
@@ -1275,6 +1281,88 @@ $('.product-connection-disconnect').click(function (e) {
         }
     });
 });
+
+$('.remove-background-image-editor').click(function(e) {
+    e.preventDefault();
+
+    initClippingMagic($(this));
+});
+
+function initClippingMagic(el) {
+
+    var image = $(el).siblings('img');
+    if (config.clipping_magic.clippingmagic_editor) {
+    } else {
+        swal('Clipping Magic', "You haven't subscribe for this feature", 'error');
+        return;
+    }
+
+    $.ajax({
+        url: '/api/clippingmagic-clean-image',
+        type: 'POST',
+        data: {
+            image_url: image.attr('src'),
+            product_id: config.product_id,
+            action: 'edit',
+        }
+    }).done(function(data) {
+        clippingmagicEditImage(data, image);
+    }).fail(function(data) {
+        displayAjaxError('Clipping Magic', data);
+    });
+}
+
+function clippingmagicEditImage(data, image) {
+    var errorsArray = ClippingMagic.initialize({
+        apiId: parseInt(data.api_id, 10)
+    });
+
+    if (errorsArray.length > 0) {
+        swal('Clipping Magic', "Your browser is missing some required features:\n\n" +
+            errorsArray.join("\n "), 'error');
+    }
+
+    image.siblings(".loader").show();
+    ClippingMagic.edit({
+        "image": {
+            "id": parseInt(data.image_id, 10),
+            "secret": data.image_secret
+        },
+        "locale": "en-US"
+    }, function(response) {
+        if (response.event == 'result-generated') {
+            $.ajax({
+                url: '/api/clippingmagic-clean-image',
+                type: 'POST',
+                data: {
+                    image_id: response.image.id,
+                    product: config.product_id,
+                    action: 'done',
+                }
+            }).done(function(data) {
+                $.ajax({
+                    url: '/upload/save_image_s3',
+                    type: 'POST',
+                    data: {
+                        product: config.product_id,
+                        url: data.image_url,
+                        clippingmagic: true,
+                    }
+                }).done(function(data) {
+                    image.attr('src', data.url).siblings(".loader").hide();
+                    product.images[parseInt(image.attr('image-id'), 10)] = data.url;
+                }).fail(function(data) {
+                    displayAjaxError('Clipping Magic', data);
+                });
+            }).fail(function(data) {
+                displayAjaxError('Clipping Magic', data);
+            });
+        } else {
+            image.siblings(".loader").hide();
+            swal('Clipping Magic', response.error.message, 'error');
+        }
+    });
+}
 
 (function() {
     setup_full_editor('product-description');

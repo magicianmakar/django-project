@@ -109,7 +109,7 @@ def install(request, store):
     can_add, total_allowed, user_count = user.profile.can_add_store()
 
     if not can_add:
-        if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
+        if user.profile.plan.is_free and (not user.is_recurring_customer() or user.stripe_customer.can_trial):
             messages.error(request, 'Please Activate your account first by visiting <a href="{}">Profile page</a>'.format(
                 request.build_absolute_uri('/user/profile#plan')))
         else:
@@ -162,7 +162,7 @@ def callback(request):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
-            if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
+            if user.profile.plan.is_free and (not user.is_recurring_customer() or user.stripe_customer.can_trial):
                 messages.error(
                     request,
                     'Please Activate your account first by visiting:\n{}').format(
