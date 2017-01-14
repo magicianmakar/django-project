@@ -1214,7 +1214,7 @@ class ShopifyOrderTrack(models.Model):
     def save(self, *args, **kwargs):
         try:
             self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
-        except User.DoesNotExist:
+        except:
             pass
 
         super(ShopifyOrderTrack, self).save(*args, **kwargs)
