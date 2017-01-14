@@ -5004,32 +5004,25 @@ def orders_place(request):
         raven_client.captureException()
         raise Http404("Product or Order not set")
 
-    # Check is current user have Aliexpress Affiliate keys
-    have_affiliate = True
-
-    if request.user.can('aliexpress_affiliate.use'):
-        api_key, tracking_id = request.user.get_config([
-            'aliexpress_affiliate_key',
-            'aliexpress_affiliate_tracking'
-        ])
-    else:
-        api_key, tracking_id = (None, None)
-
-    if not api_key or not tracking_id:
-        have_affiliate = False
-        api_key, tracking_id = ['37954', 'shopifiedapp']
+    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user)
+    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user)
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
     redirect_url = False
     services = ['ali', 'admitad']
     if not disable_affiliate:
-        service = 'ali' if have_affiliate else random.choice(services)
+        if user_admitad_credentials:
+            service = 'admitad'
+        elif user_ali_credentials:
+            service = 'ali'
+        else:
+            service = random.choice(services)
 
-        if service == 'ali' and api_key and tracking_id:
-            redirect_url = utils.get_aliexpress_affiliate_url(api_key, tracking_id, product)
+        if service == 'ali' and ali_api_key and ali_tracking_id:
+            redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
         elif service == 'admitad':
-            redirect_url = utils.get_admitad_affiliate_url(product)
+            redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
 
     if not redirect_url:
         redirect_url = product

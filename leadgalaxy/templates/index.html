@@ -454,8 +454,8 @@
                         {% endwith %}
                         {% endif %}
 
-                        {% if user|can:'aliexpress_affiliate.use' and not user.is_superuser %}
-
+                        {% if not user.is_superuser %}
+                        {% if user|can:'aliexpress_affiliate.use' and not user|can:'admitad_affiliate.use' %}
                         <div class="setting-section">
                             <h3 class="setting-title">Aliexpress Affiliate Program</h3>
                         </div>
@@ -481,6 +481,21 @@
                             </div>
                         </div>
 
+                        {% elif user|can:'admitad_affiliate.use' %}
+                        <div class="setting-section">
+                            <h3 class="setting-title">Admitad Affiliate Program</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="admitad_site_id" class="col-sm-2 control-label">Site ID</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control col-sm-2" id="admitad_site_id" name="admitad_site_id" value="{{config.admitad_site_id}}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         {% endif %}
 
                         {% if user|can:'price_change_options.use' %}
