@@ -1961,6 +1961,8 @@ def proccess_api(request, user, method, target, data):
                 tracks = []
 
                 for store, store_tracks in stores.iteritems():
+                    user.can_view(store)
+
                     for track in utils.get_tracking_orders(store, store_tracks):
                         tracks.append(track)
 
