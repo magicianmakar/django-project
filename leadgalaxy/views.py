@@ -1968,9 +1968,9 @@ def proccess_api(request, user, method, target, data):
 
             for track in tracks:
                 shopify_summary = [
-                    'Shopify Order: {}'.format(track.order['name']),
-                    'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
-                    'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
+                    u'Shopify Order: {}'.format(track.order['name']),
+                    u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
+                    u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
                 ]
 
                 for line in track.order['line_items']:
