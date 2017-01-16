@@ -116,18 +116,72 @@
             swal.close();
         });
     });
+
     $('.show-order').click(function(e) {
         hideOrder($(this).attr('order-id'), false);
     });
-
 
     $('.filter-btn').click(function(e) {
         $('.filter-form').toggle('fade');
     });
 
+    $('.delete-order-id-btn').click(function(e) {
+        var tracks = $.map($('.order-track').filter(function(i, el) {
+            return el.checked;
+        }), function(el) {
+            return {
+                el: $(el).parents('tr'),
+                order: $(el).attr('order_id'),
+                line: $(el).attr('line_id'),
+            };
+        });
+
+        if (!tracks.length) {
+            return swal('Bulk Actions', 'Please select an order first', 'warning');
+        }
+
+        swal({
+            title: 'Delete Order IDs',
+            text: 'Do you want to delete the select Order IDs?',
+            type: 'warning',
+            html: true,
+            animation: false,
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Delete",
+            cancelButtonText: "Cancel",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
+            }
+
+            P.map(tracks, function(track) {
+                return $.ajax({
+                    url: '/api/order-fulfill' + '?' + $.param({
+                        'order_id': track.order,
+                        'line_id': track.line,
+                    }),
+                    type: 'DELETE',
+                }).done(function (data) {
+                    $(track.el).fadeOut();
+                });
+            }, {
+                concurrency: 2
+            }).then(function() {
+                swal.close();
+            });
+        });
+    });
+
+
     $(".filter-form").submit(function() {
         $(this).find(":input").filter(function() {
             return ((this.name == 'tracking' && this.value === '') ||
+                (this.name == 'reason' && this.value === '') ||
                 (this.name == 'hidden' && this.value == '0') ||
                 (this.name == 'fulfillment' && this.value == '2') ||
                 (this.name == 'query' && this.value.trim().length === 0));

@@ -26,7 +26,20 @@
                             {# <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span> #}
                         </div>
 
-                        <div class="col-md-2 col-md-offset-6 text-right">
+                        <div class="col-md-4 col-md-offset-4 text-right">
+                            <div class="btn-group ">
+                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle" aria-expanded="false">
+                                    <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
+                                            <i class="fa fa-times"></i> Delete Order IDs
+                                        </a>
+                                    </li>
+                                    </ul>
+                            </div>
+
                             <button class="btn btn-success btn-rounded btn-outline btn-sm aliexpress-sync-btn" data-store="{{store.id}}">
                                 <i class="fa fa-refresh"></i> Sync with Aliexpress</button>
                         </div>
@@ -61,6 +74,47 @@
                                 <option {% if not request.GET.fulfillment  or request.GET.fulfillment = '2' %}selected="selected"{% endif %} value="2">Any</option>
                                 <option {% if request.GET.fulfillment == '1' %}selected="selected"{% endif %} value="1">Fulfilled</option>
                                 <option {% if request.GET.fulfillment == '0' %}selected="selected"{% endif %} value="0">Not Fulfilled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Aliexpress Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="reason" class="form-control" style="padding: 6px 0px">
+                                <option {% if not request.GET.reason %}selected="selected"{% endif %} value="">Any</option>
+
+                                <option {% if request.GET.reason == 'buyer_pay_timeout' %}selected="selected"{% endif %}
+                                        value="buyer_pay_timeout">Order Pay Timeout</option>
+
+                                <option {% if request.GET.reason == 'risk_reject_closed' %}selected="selected"{% endif %}
+                                        value="risk_reject_closed">Rejected By Risk Control</option>
+
+                                <option {% if request.GET.reason == 'buyer_accept_goods_timeout' %}selected="selected"{% endif %}
+                                        value="buyer_accept_goods_timeout">Buyer Accept Goods Timeout</option>
+
+                                <option {% if request.GET.reason == 'buyer_cancel_notpay_order' %}selected="selected"{% endif %}
+                                        value="buyer_cancel_notpay_order">Buyer Cancel or Doesn't Pay Order</option>
+
+                                <option {% if request.GET.reason == 'cancel_order_close_trade' %}selected="selected"{% endif %}
+                                        value="cancel_order_close_trade">Cancel Order Close Trade</option>
+
+                                <option {% if request.GET.reason == 'seller_send_goods_timeout' %}selected="selected"{% endif %}
+                                        value="seller_send_goods_timeout">Seller Send Goods Timeout</option>
+
+                                <option {% if request.GET.reason == 'buyer_cancel_order_in_risk' %}selected="selected"{% endif %}
+                                        value="buyer_cancel_order_in_risk">Buyer Cancel Order In Risk</option>
+
+                                <option {% if request.GET.reason == 'buyer_accept_goods' %}selected="selected"{% endif %}
+                                        value="buyer_accept_goods">Buyer Accept Goods</option>
+
+                                <option {% if request.GET.reason == 'seller_accept_issue_no_goods_return' %}selected="selected"{% endif %}
+                                        value="seller_accept_issue_no_goods_return">Seller Accept Issue No Goods Return</option>
+
+                                <option {% if request.GET.reason == 'seller_response_issue_timeout' %}selected="selected"{% endif %}
+                                        value="seller_response_issue_timeout">Seller Response Issue Timeout</option>
                             </select>
                         </div>
                     </div>
@@ -106,17 +160,23 @@
                       <tbody>
                         {% for item in orders %}
                         <tr id="{{item.id}}">
-                            <td>
-                                <img class="no-img no-img-sm unveil"
-                                    store="{{item.store_id}}" product="{{item.line.product_id}}" variant="{{item.line.variant_id}}"
-                                    src="{% static 'img/blank.gif' %}"
-                                    data-src="/api/product-variant-image?store={{item.store_id}}&product={{item.line.product_id}}&variant={{item.line.variant_id}}&redirect=1&thumb=1"
-                                    style="width:64px" />
+                            <td style="min-width:30px">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <img class="no-img no-img-sm unveil visible-md-inline visible-lg-inline"
+                                            store="{{item.store_id}}" product="{{item.line.product_id}}" variant="{{item.line.variant_id}}"
+                                            src="{% static 'img/blank.gif' %}"
+                                            data-src="/api/product-variant-image?store={{item.store_id}}&product={{item.line.product_id}}&variant={{item.line.variant_id}}&redirect=1&thumb=1"
+                                            style="width:64px" />
+                                            <input type="checkbox" class="icheck order-track" name="track"
+                                                   value="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 <a class="itooltip" href="{{item.get_shopify_link}}" target="_blank" title="{{item.line.title}}">
                                     <span class="badge badge-primary">{{item.order.name}}</span>
-                                    <span class="m-l-xs">
+                                    <span class="m-l-xs visible-lg-inline">
                                         {{item.line.title|truncatewords:10}}
                                     </span>
                                 </a>
@@ -191,6 +251,12 @@
     .icheckbox_square-blue {
         position: initial !important;
         margin: 0 !important;
+    }
+
+    table .icheckbox_square-blue {
+        position: absolute !important;
+        top: 0px;
+        left: 15px;
     }
 </style>
 {% endblock %}

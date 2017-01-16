@@ -4922,6 +4922,7 @@ def orders_track(request):
         'status': 'source_status',
         'tracking': 'source_tracking',
         'add': 'created_at',
+        'reason': 'source_status_details',
         'update': 'status_updated_at',
     }
 
@@ -4939,6 +4940,7 @@ def orders_track(request):
     fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
     completed = request.GET.get('completed')
+    source_reason = request.GET.get('reason')
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -4974,6 +4976,9 @@ def orders_track(request):
 
     if completed == '1':
         orders = orders.exclude(source_status='FINISH')
+
+    if source_reason:
+        orders = orders.filter(source_status_details=source_reason)
 
     orders = orders.order_by(sorting)
 
