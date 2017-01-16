@@ -1432,6 +1432,9 @@ def proccess_api(request, user, method, target, data):
                     except ShopifySyncStatus.DoesNotExist:
                         pass
 
+            elif key == 'admitad_site_id':
+                if data[key].startswith('http'):
+                    config[key] = utils.remove_link_query(data[key]).split('/').pop()
             else:
                 if key != 'access_token':
                     config[key] = data[key]
