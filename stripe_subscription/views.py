@@ -9,7 +9,7 @@ import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import GroupPlan
-from leadgalaxy.models import ClippingMagicPlan
+from leadgalaxy.models import ClippingMagic, ClippingMagicPlan
 
 from .models import StripeSubscription
 from .stripe_api import stripe
