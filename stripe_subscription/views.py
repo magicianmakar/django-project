@@ -199,8 +199,16 @@ def clippingmagic_subscription(request):
             }
         )
 
-        user.clippingmagic.remaining_credits += clippingmagic_plan.allowed_credits
-        user.clippingmagic.clippingmagic.save()
+        try:
+            clippingmagic = ClippingMagic.objects.get(user=user)
+            clippingmagic.remaining_credits += clippingmagic_plan.allowed_credits
+            clippingmagic.save()
+
+        except ClippingMagic.DoesNotExist:
+            ClippingMagic.objects.create(
+                user=user,
+                remaining_credits=clippingmagic_plan.allowed_credits
+            )
 
     except ClippingMagicPlan.DoesNotExist:
         raven_client.captureException(level='warning')
