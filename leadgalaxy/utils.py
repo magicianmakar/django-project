@@ -1469,8 +1469,40 @@ def affiliate_link_set_query(url, name, value):
         return set_url_query(url, name, value)
 
 
-def get_admitad_affiliate_url(url):
-    site_id = '1e8d114494c02ea3d6a016525dc3e8'
+def get_aliexpress_credentials(user):
+    user_credentials = True
+
+    if user.can('aliexpress_affiliate.use'):
+        api_key, tracking_id = user.get_config([
+            'aliexpress_affiliate_key',
+            'aliexpress_affiliate_tracking'
+        ])
+    else:
+        api_key, tracking_id = (None, None)
+
+    if not api_key or not tracking_id:
+        user_credentials = False
+        api_key, tracking_id = ['37954', 'shopifiedapp']
+
+    return api_key, tracking_id, user_credentials
+
+
+def get_admitad_credentials(user):
+    user_credentials = True
+
+    if user.can('admitad_affiliate.use'):
+        site_id = user.get_config('admitad_site_id')
+    else:
+        site_id = None
+
+    if not site_id:
+        user_credentials = False
+        site_id = '1e8d114494c02ea3d6a016525dc3e8'
+
+    return site_id, user_credentials
+
+
+def get_admitad_affiliate_url(site_id, url):
     api_url = 'https://alitems.com/g/{}/'.format(site_id)
 
     return affiliate_link_set_query(api_url, 'ulp', url)

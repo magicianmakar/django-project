@@ -1214,15 +1214,26 @@ class ShopifyOrderTrack(models.Model):
     source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
+    source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
+
     hidden = models.BooleanField(default=False)
-    auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
+    auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
     check_count = models.IntegerField(default=0)
+
     data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def save(self, *args, **kwargs):
+        try:
+            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+        except:
+            pass
+
+        super(ShopifyOrderTrack, self).save(*args, **kwargs)
 
     def encoded(self):
         return json.dumps(self.data).encode('base64')

@@ -1429,6 +1429,9 @@ def proccess_api(request, user, method, target, data):
                     except ShopifySyncStatus.DoesNotExist:
                         pass
 
+            elif key == 'admitad_site_id':
+                if data[key].startswith('http'):
+                    config[key] = utils.remove_link_query(data[key]).split('/').pop()
             else:
                 if key != 'access_token':
                     config[key] = data[key]
@@ -1947,14 +1950,16 @@ def proccess_api(request, user, method, target, data):
                 tracks = []
 
                 for store, store_tracks in stores.iteritems():
+                    user.can_view(store)
+
                     for track in utils.get_tracking_orders(store, store_tracks):
                         tracks.append(track)
 
             for track in tracks:
                 shopify_summary = [
-                    'Shopify Order: {}'.format(track.order['name']),
-                    'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
-                    'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
+                    u'Shopify Order: {}'.format(track.order['name']),
+                    u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
+                    u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
                 ]
 
                 for line in track.order['line_items']:
@@ -4903,6 +4908,7 @@ def orders_track(request):
         'status': 'source_status',
         'tracking': 'source_tracking',
         'add': 'created_at',
+        'reason': 'source_status_details',
         'update': 'status_updated_at',
     }
 
@@ -4920,6 +4926,7 @@ def orders_track(request):
     fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
     completed = request.GET.get('completed')
+    source_reason = request.GET.get('reason')
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -4956,6 +4963,9 @@ def orders_track(request):
     if completed == '1':
         orders = orders.exclude(source_status='FINISH')
 
+    if source_reason:
+        orders = orders.filter(source_status_details=source_reason)
+
     orders = orders.order_by(sorting)
 
     paginator = utils.SimplePaginator(orders, post_per_page)
@@ -4990,32 +5000,25 @@ def orders_place(request):
         raven_client.captureException()
         raise Http404("Product or Order not set")
 
-    # Check is current user have Aliexpress Affiliate keys
-    have_affiliate = True
-
-    if request.user.can('aliexpress_affiliate.use'):
-        api_key, tracking_id = request.user.get_config([
-            'aliexpress_affiliate_key',
-            'aliexpress_affiliate_tracking'
-        ])
-    else:
-        api_key, tracking_id = (None, None)
-
-    if not api_key or not tracking_id:
-        have_affiliate = False
-        api_key, tracking_id = ['37954', 'shopifiedapp']
+    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user)
+    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user)
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
     redirect_url = False
     services = ['ali', 'admitad']
     if not disable_affiliate:
-        service = 'ali' if have_affiliate else random.choice(services)
+        if user_admitad_credentials:
+            service = 'admitad'
+        elif user_ali_credentials:
+            service = 'ali'
+        else:
+            service = random.choice(services)
 
-        if service == 'ali' and api_key and tracking_id:
-            redirect_url = utils.get_aliexpress_affiliate_url(api_key, tracking_id, product)
+        if service == 'ali' and ali_api_key and ali_tracking_id:
+            redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
         elif service == 'admitad':
-            redirect_url = utils.get_admitad_affiliate_url(product)
+            redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
 
     if not redirect_url:
         redirect_url = product
