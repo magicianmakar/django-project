@@ -122,3 +122,9 @@ def intercom(request):
                                              hashlib.sha256).hexdigest()
 
     return ctx
+
+
+def facebook_pixel(request):
+    return {
+        'FACEBOOK_PIXEL_ID': settings.FACEBOOK_PIXEL_ID
+    }

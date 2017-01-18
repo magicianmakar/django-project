@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'storages',
     'django_extensions',
     'test_without_migrations',
+    'polymorphic',
 
     'article',
     'leadgalaxy',
@@ -60,6 +61,7 @@ INSTALLED_APPS = (
     'product_feed',
     'data_store',
     'product_alerts',
+    'analytic_events',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -93,6 +95,8 @@ TEMPLATES = [
                 'leadgalaxy.context_processors.extra_bundles',
                 'leadgalaxy.context_processors.extension_release',
                 'leadgalaxy.context_processors.intercom',
+                'leadgalaxy.context_processors.facebook_pixel',
+                'analytic_events.context_processors.analytic_events',
             ],
         },
     },
@@ -310,3 +314,5 @@ STATUSPAGE_API_KEY = os.environ.get('STATUSPAGE_API_KEY')
 # Clipping Magic
 CLIPPINGMAGIC_API_ID = os.environ.get('CLIPPINGMAGIC_API_ID')
 CLIPPINGMAGIC_API_SECRET = os.environ.get('CLIPPINGMAGIC_API_SECRET')
+
+FACEBOOK_PIXEL_ID = os.environ.get('FACEBOOK_PIXEL_ID')

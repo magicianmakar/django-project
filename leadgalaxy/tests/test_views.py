@@ -3,6 +3,7 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
+from django.contrib.auth.models import User
 
 from mock import patch, Mock
 
@@ -10,6 +11,8 @@ import factories as f
 
 from stripe_subscription.tests.factories import StripeCustomerFactory
 from stripe_subscription.models import StripeCustomer
+
+from analytic_events.models import RegistrationEvent
 
 from leadgalaxy.views import get_product
 
@@ -429,3 +432,27 @@ class AffiliateTestCase(TestCase):
         # Use Admitad only when user have both Aliexpress and Admitad
         get_aliexpress_affiliate_url.assert_not_called()
         random_choice.assert_not_called()
+
+
+class RegisterTestCase(TestCase):
+    def setUp(self):
+        self.credentials = {'username': 'johndoe',
+                            'password1': 'test',
+                            'password2': 'test',
+                            'email': 'fake@fake.com',
+                            'accept_terms': True}
+
+    def test_can_register(self):
+        r = self.client.post('/accounts/register', self.credentials, follow=True)
+        self.assertTrue(r.status_code, 200)
+
+    def test_register_event_is_fired(self):
+        self.client.post('/accounts/register', self.credentials)
+        user = User.objects.get(username=self.credentials['username'])
+        register_event = RegistrationEvent.objects.get(user=user)
+        r = self.client.get('/')
+        self.assertContains(r, register_event.fire())
+
+    def test_events_are_removed_after_fire(self):
+        self.client.post('/accounts/register', self.credentials, follow=True)
+        self.assertEquals(RegistrationEvent.objects.count(), 0)
