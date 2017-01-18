@@ -109,7 +109,13 @@ def install(request, store):
     can_add, total_allowed, user_count = user.profile.can_add_store()
 
     if not can_add:
-        if user.profile.plan.is_free and (not user.is_recurring_customer() or user.stripe_customer.can_trial):
+        if user.profile.plan.is_free:
+            raven_client.captureMessage(
+                'Activate your account first',
+                level='warning',
+                extra={'user': user.email, 'store': store}
+            )
+
             messages.error(request, 'Please Activate your account first by visiting <a href="{}">Profile page</a>'.format(
                 request.build_absolute_uri('/user/profile#plan')))
         else:
@@ -162,7 +168,13 @@ def callback(request):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
-            if user.profile.plan.is_free and (not user.is_recurring_customer() or user.stripe_customer.can_trial):
+            if user.profile.plan.is_free:
+                raven_client.captureMessage(
+                    'Activate your account first',
+                    level='warning',
+                    extra={'user': user.email, 'store': store, 'pos': 2}
+                )
+
                 messages.error(
                     request,
                     'Please Activate your account first by visiting:\n{}').format(
