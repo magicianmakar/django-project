@@ -4299,8 +4299,9 @@ def user_profile(request):
     if not request.user.profile.plan.is_free:
         try:
             clippingmagic = ClippingMagic.objects.get(user=request.user)
+
         except ClippingMagic.DoesNotExist:
-            pass
+            clippingmagic = ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
     stripe_customer = request.user.profile.plan.is_stripe or request.user.profile.plan.is_free
 
