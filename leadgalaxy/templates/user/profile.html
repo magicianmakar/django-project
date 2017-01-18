@@ -320,7 +320,7 @@
 
                             {% if user|can:'clippingmagic.use' %}
                             <div class="col-md-12">
-                                {% include "payments/clippingmagic_plans.html" with current_plan=user.profile.plan %}
+                                {% include "payments/clippingmagic_plans.html" %}
                             </div>
                             {% endif %}
                         </div>
