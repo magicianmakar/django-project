@@ -4303,7 +4303,7 @@ def user_profile(request):
         except ClippingMagic.DoesNotExist:
             clippingmagic = ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
-    stripe_customer = request.user.profile.plan.is_stripe or request.user.profile.plan.is_free
+    stripe_customer = u.profile.plan.is_stripe() or u.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
