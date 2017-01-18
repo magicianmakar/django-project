@@ -1291,8 +1291,7 @@ $('.remove-background-image-editor').click(function(e) {
 function initClippingMagic(el) {
 
     var image = $(el).siblings('img');
-    if (config.clipping_magic.clippingmagic_editor) {
-    } else {
+    if (!config.clipping_magic.clippingmagic_editor) {
         swal('Clipping Magic', "You haven't subscribe for this feature", 'error');
         return;
     }
@@ -1308,7 +1307,26 @@ function initClippingMagic(el) {
     }).done(function(data) {
         clippingmagicEditImage(data, image);
     }).fail(function(data) {
-        displayAjaxError('Clipping Magic', data);
+        if (data.status == 402) {
+            swal({
+                title: 'Clipping Magic Credits',
+                text: 'Looks like your credits have run out.\nClick below to add more credits.',
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: true,
+                confirmButtonColor: "#93c47d",
+                confirmButtonText: "Add Credits",
+                cancelButtonText: "No Thanks"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    window.open('/user/profile', '_blank');
+                }
+            });
+        } else {
+            displayAjaxError('Clipping Magic', data);
+        }
     });
 }
 

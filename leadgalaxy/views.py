@@ -885,8 +885,8 @@ def proccess_api(request, user, method, target, data):
 
         if user.clippingmagic.remaining_credits <= 0:
                 return JsonResponse({
-                    'error': "You don't have enough credits left. Please re-subscribe for this feature"
-                }, status=403)
+                    'error': "Looks like your credits have run out"
+                }, status=402)
 
         if action == 'edit':
             res = requests.post(
