@@ -189,9 +189,17 @@ def money_format(amount=None, store=None):
             except:
                 amount = 0.0
 
-        amount = '{:.2f}'.format(amount)
+        amount_no_decimals = '{:,.0f}'.format(round(amount))
+        amount = '{:,.2f}'.format(amount)
 
     else:
         amount = ''
 
-    return currency_format.replace('{{amount}}', amount).strip()
+    currency_format = currency_format.replace('{{amount}}', amount)
+
+    if 'amount_' in currency_format:
+        currency_format = currency_format.replace('{{amount_no_decimals}}', amount_no_decimals)
+        currency_format = currency_format.replace('{{amount_with_comma_separator}}', amount)
+        currency_format = currency_format.replace('{{amount_no_decimals_with_comma_separator}}', amount_no_decimals)
+
+    return currency_format.strip()

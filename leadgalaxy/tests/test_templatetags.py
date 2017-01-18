@@ -53,6 +53,7 @@ class TagsTestCase(TestCase):
         store.currency_format = "${{amount}}"
 
         self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+        self.assertEqual(template_helper.money_format(1000.10, store), '$1,000.10')
 
         self.assertEqual(template_helper.money_format(0, store), '$0.00')
         self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
@@ -67,3 +68,24 @@ class TagsTestCase(TestCase):
         store = Mock()
         store.currency_format = u"\u20ac {{amount}}"
         self.assertEqual(template_helper.money_format(12.34, store), u'\u20ac 12.34')
+
+    def test_money_format_amount_no_decimals(self):
+        store = Mock()
+        store.currency_format = "${{amount_no_decimals}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12')
+        self.assertEqual(template_helper.money_format(12.64, store), '$13')
+        self.assertEqual(template_helper.money_format(1200.00, store), '$1,200')
+
+    def test_money_format_amount_with_comma_separator(self):
+        store = Mock()
+        store.currency_format = "${{amount_with_comma_separator}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+
+    def test_money_format_amount_no_decimals_with_comma_separator(self):
+        store = Mock()
+        store.currency_format = "${{amount_no_decimals_with_comma_separator}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12')
+        self.assertEqual(template_helper.money_format(12.64, store), '$13')
