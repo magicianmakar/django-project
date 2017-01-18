@@ -268,7 +268,7 @@ def proccess_api(request, user, method, target, data):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
-            if user.profile.plan.is_free and (not user.is_recurring_customer() or user.stripe_customer.can_trial):
+            if user.profile.plan.is_free or user.can_trial():
                 return JsonResponse({
                     'error': (
                         'Please Activate your account first by visiting:\n{}'

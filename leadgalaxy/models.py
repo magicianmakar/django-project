@@ -477,6 +477,14 @@ def user_recurring_customer(self):
         return False
 
 
+@add_to_class(User, 'can_trial')
+def user_can_trial(self):
+    try:
+        return self.stripe_customer.can_trial
+    except:
+        return False
+
+
 class ShopifyStore(models.Model):
     class Meta:
         ordering = ['list_index', '-created_at']
