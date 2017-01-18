@@ -481,8 +481,9 @@ def user_recurring_customer(self):
 def user_can_trial(self):
     try:
         return self.stripe_customer.can_trial
-    except:
-        return False
+    except User.stripe_customer.RelatedObjectDoesNotExist:
+        # If the customer object is not created yet, that mean the user didn't chose a Stripe plan yet
+        return True
 
 
 class ShopifyStore(models.Model):
