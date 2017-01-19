@@ -477,6 +477,14 @@ def user_recurring_customer(self):
         return False
 
 
+@add_to_class(User, 'have_billing_info')
+def user_have_billing_info(self):
+    try:
+        return bool(self.stripe_customer.source)
+    except:
+        return False
+
+
 @add_to_class(User, 'can_trial')
 def user_can_trial(self):
     try:

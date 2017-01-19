@@ -137,28 +137,70 @@ $('#save-email').click(function () {
     });
 });
 
+$('#renew_clippingmagic').click(function() {
+    var option = $("#clippingmagic_plan option:selected");
+    var plan = option.val();
+    var have_billing_info = $(this).data('cc');
 
-$('#renew_clippingmagic').click( function() {
-    var plan = $("#clippingmagic_plan option:selected").val();
     if (!plan) {
-        swal('Clippingmagic Credits', 'Please select a credit to purchase first.', 'warning');
+        swal('ClippingMagic Credits', 'Please select a credit to purchase first.', 'warning');
         return;
     }
-    $.ajax({
-        url: '/subscription/clippingmagic_subscription',
-        type: 'POST',
-        data: {
-            'plan': plan
-        },
-        success: function (data) {
-            toastr.success('Credit Purchase Complete!', 'Clippingmagic Credits');
 
-            setTimeout(function() {
-                window.location.reload();
-            }, 1000);
+    if(!have_billing_info) {
+        swal({
+            title: "ClippingMagic Credits",
+            text: "Add your credit card to purchase credits.",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: true,
+            animation: false,
+            confirmButtonColor: "#93c47d",
+            confirmButtonText: "Add Credit Card",
+            cancelButtonText: "No Thanks"
         },
-        error: function (data) {
-            displayAjaxError('Clippingmagic Credits', data);
+        function(isConfirmed) {
+            if (isConfirmed) {
+                $('a[data-auto-hash="billing"]').trigger('click');
+                $('.add-cc-btn').trigger('click');
+            }
+        });
+
+        return;
+    }
+
+    swal({
+        title: "Purchase " + option.data('credits') + " Credits",
+        text: "Your Credit Card will be charged " + option.data('amount') + '\nContinue with the purchase?',
+        type: "info",
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: false,
+        showLoaderOnConfirm: true,
+        confirmButtonColor: "#93c47d",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No Thanks"
+    },
+    function(isConfirmed) {
+        if (isConfirmed) {
+            $.ajax({
+                url: '/subscription/clippingmagic_subscription',
+                type: 'POST',
+                data: {
+                    'plan': plan
+                },
+                success: function(data) {
+                    toastr.success('Credit Purchase Complete!', 'ClippingMagic Credits');
+                    swal.close();
+
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                },
+                error: function(data) {
+                    displayAjaxError('ClippingMagic Credits', data);
+                }
+            });
         }
     });
 });
