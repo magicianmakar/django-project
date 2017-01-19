@@ -258,66 +258,6 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse(stores, safe=False)
 
-    if method == 'POST' and target == 'add-store':
-        name = data.get('name').strip()
-        url = data.get('url')
-
-        if user.is_subuser:
-            return JsonResponse({'error': 'Sub-Users can not add new stores.'})
-
-        can_add, total_allowed, user_count = user.profile.can_add_store()
-
-        if not can_add:
-            if user.profile.plan.is_free or user.can_trial():
-                return JsonResponse({
-                    'error': (
-                        'Please Activate your account first by visiting:\n{}'
-                    ).format(request.build_absolute_uri('/user/profile#plan'))
-                })
-            else:
-                return JsonResponse({
-                    'error': (
-                        'Your plan does not support connecting another Shopify store. '
-                        'Please contact support@shopifiedapp.com to learn how to connect more stores.'
-                    )
-                })
-
-        store = ShopifyStore(title=name, api_url=url, user=user.models_user)
-        user.can_add(store)
-
-        try:
-            info = store.get_info
-            if not store.title:
-                store.title = info['name']
-
-            store.currency_format = info['money_in_emails_format']
-
-            ok, permissions = utils.verify_shopify_permissions(store)
-            if not ok:
-                return JsonResponse({
-                    'error': 'The following permissions are missing: \n{}\n\n'
-                             'You can find instructions to fix this issue here:\n'
-                             'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
-                             .format('\n'.join(permissions))
-                }, status=403)
-
-        except:
-            return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
-
-        store.save()
-
-        utils.attach_webhooks(store)
-
-        stores = []
-        for i in user.profile.get_active_stores():
-            stores.append({
-                'id': i.id,
-                'name': i.title,
-                'url': i.get_api_url(hide_keys=True)
-            })
-
-        return JsonResponse(stores, safe=False)
-
     if method == 'POST' and target == 'delete-store':
         store_id = data.get('store')
 
