@@ -47,8 +47,10 @@
                                 <label class="pull-left" for="product_{{item.id}}"></label>
                             </td> -->
                             <td>
-                                <img style="width: 64px; height: 64px;" class="media-object unveil" data-src="{{item.images|first}}" alt="">
-
+                                <img style="width: 64px; height: 64px;"
+                                     class="media-object unveil"
+                                     src="{% static 'img/blank.gif' %}"
+                                     data-src="{{item.images|first}}_100x100.jpg" alt="">
                             </td>
                             <td>
                                 <a href="http://aliexpress.com/item/-/{{item.product_id}}.html" target="_blank">{{item.title}}</a>
