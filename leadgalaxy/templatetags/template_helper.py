@@ -194,6 +194,7 @@ def money_format(amount=None, store=None):
 
     else:
         amount = ''
+        amount_no_decimals = ''
 
     currency_format = currency_format.replace('{{amount}}', amount)
 
