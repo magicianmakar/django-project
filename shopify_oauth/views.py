@@ -160,7 +160,7 @@ def install(request, store):
                     'user': user.email,
                     'store': store,
                     'plan': user.profile.plan.title,
-                    'stores': user.get_active_stores().count()
+                    'stores': user.profile.get_active_stores().count()
                 }
             )
 
