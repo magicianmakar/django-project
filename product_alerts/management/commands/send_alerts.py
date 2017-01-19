@@ -138,6 +138,10 @@ class Command(BaseCommand):
                         'increase': max(new_quantities) > max(old_quantities)
                     }, **common_data))
 
+        self.send_email(user, changes_map)
+        return changes_map
+
+    def send_email(self, user, changes_map):
         # send changes_map to email template
         data = {
             'username': user.username,
