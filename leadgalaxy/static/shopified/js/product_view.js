@@ -1312,6 +1312,7 @@ function initClippingMagic(el) {
                 title: 'Clipping Magic Credits',
                 text: 'Looks like your credits have run out.\nClick below to add more credits.',
                 type: "warning",
+                animation: false,
                 showCancelButton: true,
                 closeOnCancel: true,
                 closeOnConfirm: true,
@@ -1321,7 +1322,13 @@ function initClippingMagic(el) {
             },
             function(isConfirmed) {
                 if (isConfirmed) {
-                    window.open('/user/profile', '_blank');
+                    window.onbeforeunload = function(e) {
+                      return true;
+                    };
+
+                    setTimeout(function() {
+                        window.location.href = '/user/profile#billing';
+                    }, 500);
                 }
             });
         } else {
