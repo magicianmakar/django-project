@@ -177,6 +177,9 @@
         });
     });
 
+    $('.check-all').on('ifChanged', function (e) {
+        $('.order-track').iCheck(e.target.checked ? 'check' : 'uncheck');
+    });
 
     $(".filter-form").submit(function() {
         $(this).find(":input").filter(function() {
