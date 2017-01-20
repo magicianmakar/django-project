@@ -395,7 +395,8 @@
                                     {% with image=item.image original=item.product.get_original_info %}
 
                                     <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}" line-id="{{item.id}}"
-                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}">
+                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}"
+                                         fulfillment-status="{{item.fulfillment_status}}">
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
@@ -432,7 +433,7 @@
                                             </div>
                                             <div class="col-xs-3 line-ordered">
                                                 <span class="badge badge-{% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
-                                                {% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}
+                                                {% if item.shopify_order %}
                                                     <span class="ordered-status"
                                                     {% if item.shopify_order.source_id %}
                                                         title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}"
@@ -446,7 +447,7 @@
                                                         {% endif %}
                                                     </span>
                                                 {% elif item.fulfillment_status == 'fulfilled' %}
-                                                    <span class="ordered-status">Fulfilled</span>
+                                                    <span class="ordered-status">Fulfilled in Shopify</span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}

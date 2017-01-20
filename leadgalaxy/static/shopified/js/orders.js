@@ -457,7 +457,7 @@ function updateOrderedStatus(line) {
     var order = $(line).parents('.order');
 
     var ordered = order.find('.line').filter(function (i, el) {
-      return $(el).attr('line-track');
+      return $(el).attr('line-track') || $(el).attr('fulfillment-status') == 'fulfilled';
     }).length;
 
     var order_items = order.find('.line').length;

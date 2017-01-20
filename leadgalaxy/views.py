@@ -4675,7 +4675,7 @@ def orders_view(request):
             shopify_order = orders_list.get('{}-{}'.format(order['id'], el['id']))
             order['line_items'][i]['shopify_order'] = shopify_order
 
-            if shopify_order:
+            if shopify_order or el['fulfillment_status'] == 'fulfilled':
                 order['placed_orders'] += 1
 
             variant_id = el['variant_id']
