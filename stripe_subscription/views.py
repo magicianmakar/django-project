@@ -204,6 +204,7 @@ def clippingmagic_subscription(request):
             amount=clippingmagic_plan.amount * 100,
             currency="usd",
             customer=user.stripe_customer.customer_id,
+            description="Clipping Magic - {} Credits".format(clippingmagic_plan.allowed_credits),
             metadata={
                 'user': user.id,
                 'clippingmagic_plan': clippingmagic_plan.id
