@@ -3542,7 +3542,7 @@ def mapping_supplier(request, product_id):
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
-            {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
+            {'title': product.store.title, 'url': '/product/?store={}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
             'Advanced Mapping',
         ]
