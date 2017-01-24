@@ -2301,9 +2301,14 @@ def proccess_api(request, user, method, target, data):
         if data.get('id'):
             templates = templates.filter(id=data.get('id'))
 
-        templates_dict = []
+        templates_dict = [{
+            'id': 0,
+            'title': 'Default',
+            'description': user.models_user.get_config('default_desc', '')
+        }]
+
         for i in templates:
-            templates_dict.append(model_to_dict(i))
+            templates_dict.append(model_to_dict(i, fields='id,title,description'))
 
         return JsonResponse({
             'status': 'ok',
