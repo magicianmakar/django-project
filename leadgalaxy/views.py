@@ -1803,7 +1803,7 @@ def proccess_api(request, user, method, target, data):
                 'source_id': source_id,
             })
 
-            cache.set(note_delay_key, note_delay + 5)
+            cache.set(note_delay_key, note_delay + 5, timeout=5)
 
         return JsonResponse({'status': 'ok'})
 
