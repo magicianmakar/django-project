@@ -1189,7 +1189,7 @@ def proccess_api(request, user, method, target, data):
         # if current product is connected, automatically connect splitted products.
         if product.shopify_id:
             for splitted_product in splitted_products:
-                data = json.loads(product.data)
+                data = json.loads(splitted_product.data)
 
                 variants = []
                 for v in data['variants']:
