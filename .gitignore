@@ -1,11 +1,11 @@
-venv
+.env.dev
 *.pyc
-staticfiles
-.env
 *.sqlite3
 *.sublime-*
+.sass-cache
+.DS_Store
+staticfiles
+venv
 docs
 node_modules
 app/static/libs/bower_components
-.sass-cache
-.DS_Store
