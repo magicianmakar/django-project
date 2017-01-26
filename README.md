@@ -60,7 +60,6 @@ python manage.py createsuperuser
 ### Autoenv
 Each time we enter shopified-webapp folder, `autoenv` will run the `.env` file, that will give us access to the following aliases:
 ```
-dj-deactivate: Activate the virtual envirement
 dj-run: Run web application server
 dj-migrate: Run django Migrations on both databases
 dj-makemigrations: python manage.py makemigrations
