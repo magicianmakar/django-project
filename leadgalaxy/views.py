@@ -1729,7 +1729,9 @@ def proccess_api(request, user, method, target, data):
             if line:
                 order_lines = str(line['id'])
 
-        note_delay = 0
+        note_delay_key = 'store_{}_order_{}'.format(store.id, order_id)
+        note_delay = cache.get(note_delay_key, 0)
+
         for line_id in order_lines.split(','):
             if not line_id:
                 return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
@@ -1801,7 +1803,7 @@ def proccess_api(request, user, method, target, data):
                 'source_id': source_id,
             })
 
-            note_delay += 5
+            cache.set(note_delay_key, note_delay + 5)
 
         return JsonResponse({'status': 'ok'})
 
