@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load compress %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-md-12">
+         <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Exports</a></li>
+                <li><a data-toggle="tab" href="#tab-2" aria-expanded="true">Vendor Logins</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div id="tab-2" class="tab-pane">
+                    <div class="panel-body">
+                         <div class="row">
+                            <div class="col-md-12">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Password</th>
+                                            <th>Exports</th>
+                                            {% if not request.user.is_vendor %}
+                                            <th></th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for vendor_user in vendor_users %}
+                                        <tr class="vendor-user-row">
+                                            <td>{{ vendor_user.user.username }}</td>
+                                            <td>{{ vendor_user.raw_password }}</td>
+                                            <td>
+                                                {% for export in vendor_user.exports.all %}
+                                                    <span class="label label-success">{{ export.description }}</span>
+                                                {% empty %}
+                                                    -
+                                                {% endfor %}
+                                            </td>
+                                            {% if not request.user.is_vendor %}
+                                            <td>
+                                                <a href="{% url 'order_exports_delete_vendor' vendor_id=vendor_user.pk %}" data-toggle="tooltip" data-placement="top" title="Delete Vendor" style="padding: 8px;" class="delete-vendor">
+                                                    <i class="fa fa-eraser"></i>
+                                                </a>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-1" class="tab-pane active">
+                    <div class="panel-body">
+                        <div class="ibox">
+                            <div class="ibox-title" style="border-top: 0 none;">
+                                <h5>List<small></small></h5>
+                                <div class="ibox-tools">
+                                    <a href="{% url 'order_exports_add' %}">
+                                        <i class="fa fa-plus"></i>
+                                    </a>
+                                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                </div>
+                            </div>
+
+                            <div class="ibox-content">
+                                 <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th>Schedule</th>
+                                                    <th>Receiver</th>
+                                                    <th>Store</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for export in order_exports %}
+                                                <tr class="order-export-row">
+                                                    <td>{{ export.description }}</td>
+                                                    <td>
+                                                        {% if export.previous_day %}
+                                                            {{ export.schedule|date:"H:i" }}
+                                                        {% else %}
+                                                            {% if export.progress < 100 %}
+                                                                Loading... {{ export.progress|default:"0" }}%
+                                                            {% else %}
+                                                                Generated
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if export.previous_day %}
+                                                            {{ export.receiver }}
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ export.store.title }}</td>
+                                                    <td>
+                                                {% if not request.user.is_vendor %}
+                                                        <a href="{% url 'order_exports_edit' export.id %}" data-toggle="tooltip" data-placement="top" title="Edit" style="padding: 8px;">
+                                                            <i class="fa fa-pencil"></i>
+                                                        </a>
+                                                        <a href="{% url 'order_exports_delete' export.id %}" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;" class="delete-order">
+                                                            <i class="fa fa-eraser"></i>
+                                                        </a>
+                                                        <a href="{% url 'order_exports_logs' export.id %}" data-toggle="tooltip" data-placement="top" title="Logs" style="padding: 8px;">
+                                                            <i class="fa fa-file-code-o"></i>
+                                                        </a>
+                                                    {% if export.previous_day %}
+                                                        {% if export.sample_url %}
+                                                        <a href="{{ export.sample_url }}" data-toggle="tooltip" data-placement="top" title="Download sample file" style="margin-left: 5px; padding: 8px;">
+                                                            <i class="fa fa-download"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if export.url %}
+                                                        <a href="{{ export.url }}" data-toggle="tooltip" data-placement="top" title="Download complete file" style="margin-left: 5px; padding: 8px;">
+                                                            <i class="fa fa-download"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                                        {% if export.query %}
+                                                        <a href="{% url 'order_exports_generated' order_export_id=export.id code=export.query.code %}" data-toggle="tooltip" data-placement="top" title="Generated Page" style="padding: 8px;">
+                                                            <i class="fa fa-list-ul"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    $('[data-toggle="tooltip"]').tooltip();
+
+    $('.delete-order').click(function(e) {
+        e.preventDefault();
+        var btn = $(this);
+
+        swal(
+            {
+                title: "Delete Order Export",
+                text: "This will remove the order export permanently. Are you sure you want to remove it?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                showLoaderOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Remove Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) { 
+                if (isConfirmed) {
+                    console.log(isConfirmed);
+                    $.ajax({
+                        url: btn.attr('href'),
+                        type: 'GET',
+                        success: function(data) {
+                            btn.parents('.order-export-row').remove();
+
+                            swal.close();
+                            toastr.success("The order export has been deleted.", "Deleted!");
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Order Export', data);
+                        }
+                    });
+                }
+            }
+        );
+    });
+
+    $('.delete-vendor').click(function(e) {
+        e.preventDefault();
+        var btn = $(this);
+
+        swal(
+            {
+                title: "Delete Vendor User",
+                text: "This will remove the vendor user permanently. Are you sure you want to remove it?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                showLoaderOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Remove Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) { 
+                if (isConfirmed) {
+                    console.log(isConfirmed);
+                    $.ajax({
+                        url: btn.attr('href'),
+                        type: 'GET',
+                        success: function(data) {
+                            btn.parents('.vendor-user-row').remove();
+
+                            swal.close();
+                            toastr.success("The vendor user has been deleted.", "Deleted!");
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Vendor User', data);
+                        }
+                    });
+                }
+            }
+        );
+    });
+</script>
+{% endblock %}

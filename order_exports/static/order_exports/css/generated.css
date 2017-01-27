@@ -1,0 +1,45 @@
+.dl-horizontal.col-md-4 dt {
+    width: 100px;
+}
+
+.dl-horizontal.col-md-4 dd {
+    margin-left: 112px;
+}
+
+.dl-horizontal .shipping-item {
+    float: left;
+    width: 50%;
+}
+
+.table.line-items thead tr > *{
+    white-space: nowrap;
+}
+
+.table tbody .order-export-row > td {
+    border-top: 1px solid black;
+}
+
+.table thead tr > th {
+    border-bottom: 1px solid black;
+}
+
+.table tbody .order-export-row .collapse-info,
+.table thead tr .collapse-info {
+    height: 31px;
+    line-height: 31px;
+    outline: 0 none;
+    padding: 0 5px;
+}
+
+.table thead tr .collapse-info {
+    height: 18px;
+    line-height: 18px;
+}
+
+.table tbody .order-info {
+    padding: 0;
+}
+
+.table tbody .order-info .order-info-wrapper {
+    padding: 8px;
+}

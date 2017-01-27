@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load template_helper %}
+{% load perms_helper %}
+{% load compress %}
+
+{% block extrajs %}
+    <script src="{% static 'order_exports/js/generated.js' %}"></script>
+{% endblock %}
+
+{% block extracss %}
+    <link href="{% static 'order_exports/css/generated.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block main-container %}
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Orders<small></small></h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+            </div>
+        </div>
+        <div class="ibox-content">
+             <div class="row">
+                <div class="col-md-12">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                {% for key, fieldname in info.fieldnames.fields %}
+                                <th>{{ fieldname }}</th>
+                                {% endfor %}
+                                <th>
+                                    <a href="#" class="pull-right collapse-info" data-counter="{{ forloop.counter }}">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </a>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for items in data %}
+                            <tr class="order-export-row">
+                                {% for key, field in info.fieldnames.fields %}
+                                <td>{{ items.fields|key_value:key }}</td>
+                                {% endfor %}
+                                <td>
+                                    <a href="#" class="pull-right collapse-info" data-counter="{{ forloop.counter }}">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% if items.line_items|length or items.shipping_address|length %}
+                            <tr id="info-{{ forloop.counter }}" class="order-info-row">
+                                <td class="order-info" colspan="99" style="border-top: 0 none;">
+                                    <div class="order-info-wrapper">
+                                        {% if items.shipping_address|length %}
+                                        <dl class="dl-horizontal well col-md-{% if items.line_items|length %}4{% else %}12{% endif %}">
+                                        {% for key, field in info.fieldnames.shipping_address %}
+                                            {% if items.shipping_address|key_value:key %}
+                                            <div class="shipping-item">
+                                                <dt class="pull-left">{{ field }}</dt>
+                                                <dd class="">{{ items.shipping_address|key_value:key }}</dd>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </dl>
+                                        {% endif %}
+
+                                        {% if items.line_items|length %}
+                                        <div class="col-md-{% if items.shipping_address|length %}8{% else %}12{% endif %}">
+                                            <table class="table line-items">
+                                                <thead>
+                                                    <tr>
+                                                    {% for key, fieldname in info.fieldnames.line_items %}
+                                                        <th>{{ fieldname }}</th>
+                                                    {% endfor %}
+                                                        <th>TrackIng Number</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for line_items in items.line_items %}
+                                                    <tr>
+                                                        {% for key, field in info.fieldnames.line_items %}
+                                                        <td>{{ line_items|key_value:key }}</td>
+                                                        {% endfor %}
+                                                        <td style="padding: 2px 8px;">
+                                                            <div class="input-group pull-left tracking-number" style="max-width: 250px;">
+                                                                <input  type="text" class="form-control" name="tracking_number" autocomplete="off" value="{{ line_items|key_value:'tracking_number' }}">
+                                                                <input type="hidden" name="fulfillment_id" value="{{ line_items|key_value:'fulfillment_id' }}" />
+                                                                <span class="input-group-btn"> 
+                                                                    <button type="button" class="btn btn-primary send-tracking-number" data-url="{% url 'order_exports_fulfill_order' order_export_id=order_export_id code=code order_id=items.fields|key_value:'id' line_item_id=line_items.id %}">Send</button>
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="sk-spinner sk-spinner-wave pull-left hide">
+                                                                <div class="sk-rect1"></div>
+                                                                <div class="sk-rect2"></div>
+                                                                <div class="sk-rect3"></div>
+                                                                <div class="sk-rect4"></div>
+                                                                <div class="sk-rect5"></div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <nav style="text-align: center;">
+                        <ul class="pagination pagination-lg">
+                            {% if current_page > 1 %}
+                            <li>
+                                <a href="?page={{ current_page|add:'-1' }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                        {% for page in info.pages %}
+                            {% if page == current_page %}
+                            <li class="active"><span>{{ page }}</span></li>
+                            {% else %}
+                            <li><a href="?page={{ page }}">{{ page }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                            {% if current_page < info.max_page %}
+                            <li>
+                                <a href="?page={{ current_page|add:'1' }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

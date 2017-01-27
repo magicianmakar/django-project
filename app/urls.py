@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^hijack/', include('hijack.urls')),
+    url(r'^order/exports/', include('order_exports.urls')),
 )
 
 

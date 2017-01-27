@@ -14,6 +14,9 @@
     "bluebird": "^3.4.6",
     "vue": "^2.0.3",
     "pusher-websocket-iso": "pusher#^3.2.1",
+    "bootstrap-daterangepicker": "^2.1.24",
+    "clockpicker": "^0.0.7",
+    "nestable-fork": "^1.0.3",
     "uuid-js": "^0.7.5"
   },
   "devDependencies": {}

@@ -27,6 +27,9 @@ from product_alerts.events import ProductChangeEvent
 from product_feed.feed import generate_product_feed
 from product_feed.models import FeedStatus
 
+from order_exports.models import OrderExport
+from order_exports.api import ShopifyOrderExportAPI
+
 app = Celery('shopified')
 
 # Using a string here means the worker will not have to
@@ -568,3 +571,16 @@ def bulk_edit_products(self, store, products):
         'task': self.request.id,
         'errors': errors
     })
+
+
+@app.task(bind=True, base=CaptureFailure)
+def generate_order_export(self, order_export_id):
+    try:
+        order_export = OrderExport.objects.get(pk=order_export_id)
+
+        api = ShopifyOrderExportAPI(order_export)
+        api.generate_export()
+    except Exception as exc:
+        raven_client.captureException()
+
+        raise self.retry(exc=exc, countdown=5, max_retries=3)

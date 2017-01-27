@@ -27,6 +27,11 @@
                             <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
                         </div>
                         <div class="col-md-8 text-right">
+                            {% if request.user|can:'orders_export.use' %}
+                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
+                                title="Export Orders"
+                                href="{% url 'order_exports_index' %}"><i class="fa fa-upload"></i> Export</a>
+                            {% endif %}
 
                             {% if store_order_synced %}
                                 {% if store_sync_enabled %}

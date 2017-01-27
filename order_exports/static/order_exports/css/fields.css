@@ -1,0 +1,73 @@
+.field-wrapper {
+    display: inline;
+}
+.chosen-choices .search-choice {
+    display: none;
+}
+.unselect {
+    font-size: 17px;
+}
+.popover.bottom > .arrow::after {
+    margin-left: -11px;
+}
+.popover > .arrow::after {
+    border-width: 11px;
+}
+
+.icheckbox_square-blue {
+    position: relative;
+}
+label.icheck {
+    margin-right: 10px;
+}
+.dd-item {
+    display: inline-block;
+    margin: 0 5px;
+}
+.dd-placeholder {
+    display: inline-block;
+    height: 34px !important;
+    line-height: 34px;
+    margin: -13px 10px;
+    min-height: 10px;
+    min-width: 100px;
+    padding: 0;
+}
+.dd-item .dd-handle {
+    padding: 0 10px 0 7px;
+    margin: 0 0 10px;
+}
+.dd-handle .icheck {
+    font-weight: 400;
+    margin: 0;
+    max-width: none;
+}
+.dd-dragel {
+    opacity: 0.7;
+}
+.dd.nestable {
+    width: 100%;
+    display: inline-block;
+}
+.dd.nestable .dd-list {
+    float: left;
+}
+
+a.edit {
+    line-height: 35px;
+    padding: 0 10px 0 15px;
+    outline: none;
+}
+
+.icheck.no-margin {
+    margin: 0 20px 0 0;
+}
+
+.icheck.no-margin .icheckbox_square-blue {
+    margin: 0;
+}
+
+#title {
+    margin: 0; 
+    line-height: 18px;
+}
