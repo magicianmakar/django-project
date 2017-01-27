@@ -7,40 +7,70 @@
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="selected-actions">Graph:</label>
+                            <select class="form-control selected-actions" name="t" style="display: inline-block; width: 170px; ">
+                                <option value="users" {% if request.GET.t == 'users' %}selected{% endif %}>Users</option>
+                                <option value="products" {% if request.GET.t == 'products' %}selected{% endif %}>Products</option>
+                                <option value="tracking" {% if request.GET.t == 'tracking' %}selected{% endif %}>Auto Fulfill</option>
+                                <option value="orders" {% if request.GET.t == 'orders' %}selected{% endif %}>Orders</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="selected-actions">Range:</label>
+                            <select class="form-control selected-actions" name="days" style="display: inline-block; width: 180px; ">
+                                <option value="" {% if not request.GET.days %}selected{% endif %}>All time</option>
+                                <option value="7" {% if request.GET.days == '7' %}selected{% endif %}>Past 7 days</option>
+                                <option value="30" {% if request.GET.days == '30' %}selected{% endif %}>Past 30 days</option>
+                                <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Past 90 days</option>
+                                <option value="365" {% if request.GET.days == '365' %}selected{% endif %}>Past Year</option>
+                            </select>
 
+                            <button type="submit" class="btn btn-primary apply-btn m-l">Apply</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if products %}
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
              <div class="ibox-title">
-                <h5>Shopify Products<small></small></h5>
-                <div class="ibox-tools">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
-                        <i class="fa fa-wrench"></i>
-                    </a>
-
-                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                </div>
+                <h5>Shopify Products <small>[<b>{{products_count}}</b> Productss in <b>{{stores_count}}</b> Stores</small>]</h5>
             </div>
 
             <div class="ibox-content">
                 <div id="products_graph" style="height:300px"></div>
-                <p>Products count: <b>{{products_count}}</b> in <b>{{stores_count}}</b> Stores</p>
             </div>
         </div>
     </div>
+    {% endif %}
+
+    {% if users %}
     <div class="col-md-12">
         <div class="ibox float-e-margins">
-
              <div class="ibox-title">
-                <h5>Users Registration<small></small></h5>
-                <div class="ibox-tools">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
-                        <i class="fa fa-wrench"></i>
-                    </a>
-
-                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                </div>
+                <h5>Users Registration <small>[{{users_count}} Users]</small></h5>
             </div>
 
             <div class="ibox-content">
                 <div id="users_graph" style="height:300px"></div>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+
+    {% if tracking_fulfilled or tracking_auto or tracking_all %}
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+             <div class="ibox-title">
+                <h5>Auto Order</h5>
             </div>
 
             <div class="ibox-content">
@@ -50,12 +80,24 @@
                     ({{tracking_count.disabled}} Orders are disabled out of {{tracking_count.awaiting}})<br>
                 <p>Fulfilled Orders: <b>{{tracking_count.fulfilled}}</b><br>
             </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if shopify_orders %}
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+             <div class="ibox-title">
+                <h5>Shopify Orders</h5>
+            </div>
 
             <div class="ibox-content">
                 <div id="shopify_orders" style="height:300px"></div>
             </div>
         </div>
     </div>
+    {% endif %}
+
 </div>
 
 {% endblock %}
@@ -91,44 +133,67 @@
 
         $(document).ready(function() {
 
-            var d1 = [
+            {% if products %}
+            var products_data = [
                 {% for item in products %}
                     [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
                 {% endfor %}
             ];
+            {% endif %}
 
-            var d2 = [
+            {% if users %}
+            var users_data = [
                 {% for item in users %}
                     [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
                 {% endfor %}
             ];
+            {% endif %}
 
-            // Orders awaiting to be fulfilled
-            var tracking_awaiting = [
-                {% for item in tracking_awaiting %}
-                    [gd({{item.updated|date:"Y, m, d"}}), {{item.updated_count}}],
-                {% endfor %}
-            ];
+            var tracking_data = [];
 
+            {% if tracking_fulfilled %}
             // Fulfilled Order
-            var tracking_fulfilled = [
-                {% for item in tracking_fulfilled %}
+            tracking_data.push({
+                label: "All Fulfilled Orders",
+                data: [
+                    {% for item in tracking_fulfilled %}
                     [gd({{item.updated|date:"Y, m, d"}}), {{item.updated_count}}],
-                {% endfor %}
-            ];
+                    {% endfor %}
+                ]
+            });
+            {% endif %}
 
+            {% if tracking_auto %}
             // Auto Fulfilled Order
-            var tracking_auto = [
-                {% for item in tracking_auto %}
+            tracking_data.push({
+                label: "Auto Fulfilled Orders",
+                data: [
+                    {% for item in tracking_auto %}
                     [gd({{item.updated|date:"Y, m, d"}}), {{item.updated_count}}],
-                {% endfor %}
-            ];
+                    {% endfor %}
+                ]
+            });
+            {% endif %}
 
+            {% if tracking_all %}
+            // Auto Placed Orders
+            tracking_data.push({
+                label: "Placed Orders",
+                data: [
+                    {% for item in tracking_all %}
+                    [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
+                    {% endfor %}
+                ]
+            });
+            {% endif %}
+
+            {% if shopify_orders %}
             var shopify_orders = [
                 {% for item in shopify_orders %}
                     [gd({{item.created|date:"Y, m, d"}}), {{item.created_count}}],
                 {% endfor %}
             ];
+            {% endif %}
 
             var options = {
                 series: {
@@ -147,63 +212,48 @@
                     timeformat: "%Y/%m/%d",
                     minTickSize: [1, "day"]
                 },
-                colors: ['#357EBD', '#0000ff', '#00FF00']
+                colors: ['#D2AE40', '#6868C5', '#40AB00', '#4BACCB']
             };
 
-            $.plot("#products_graph",
-                [
-                    {
-                        label: "Shopify Saved Products",
-                        data: d1
-                    },
-                ],
-                options
-            );
-            $.plot("#users_graph",
-                [
-                    {
-                        label: "New Users Per Day",
-                        data: d2
-                    },
-                ],
-                options
-            );
+            if (typeof(products_data) !== 'undefined') {
+                $.plot("#products_graph",
+                    [
+                        {
+                            label: "Shopify Saved Products",
+                            data: products_data
+                        },
+                    ],
+                    options
+                );
+            }
 
-            $.plot("#tracking_graph",
-                [
-                    {
-                        label: "Auto Fulfilled",
-                        data: d2
-                    },
-                ],
-                options
-            );
+            if (typeof(users_data) !== 'undefined') {
+                $.plot("#users_graph",
+                    [
+                        {
+                            label: "New Users Per Day",
+                            data: users_data
+                        },
+                    ],
+                    options
+                );
+            }
 
-            $.plot("#shopify_orders",
-                [
-                    {
-                        label: "Shopify Orders",
-                        data: shopify_orders
-                    },
-                ],
-                options
-            );
+            if (typeof(shopify_orders) !== 'undefined') {
+                $.plot("#shopify_orders",
+                    [
+                        {
+                            label: "Shopify Orders",
+                            data: shopify_orders
+                        },
+                    ],
+                    options
+                );
+            }
 
-            $.plot("#tracking_graph",
-                [
-                    {
-                        label: "Orders awaiting to be fulfilled",
-                        data: tracking_awaiting
-                    },{
-                        label: "All Fulfilled Orders",
-                        data: tracking_fulfilled
-                    },{
-                        label: "Auto Fulfilled Orders",
-                        data: tracking_auto
-                    },
-                ],
-                options
-            );
+            if(tracking_data.length) {
+                $.plot("#tracking_graph", tracking_data, options);
+            }
 
             $("#tracking_graph, #products_graph, #users_graph, #shopify_orders").bind("plothover", function (event, pos, item) {
                 if (item) {

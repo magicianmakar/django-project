@@ -12,7 +12,7 @@ from requests_oauthlib import OAuth2Session
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.models import ShopifyStore, UserProfile
+from leadgalaxy.models import ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
@@ -59,6 +59,46 @@ def verify_shopify_webhook(request):
 
 def have_subusers(user):
     return UserProfile.objects.filter(subuser_parent=user).exists()
+
+
+def subscribe_user_to_default_plan(user):
+    from stripe_subscription.models import StripeSubscription
+    from stripe_subscription.stripe_api import stripe
+    from stripe_subscription.utils import (
+        SubscriptionException,
+        subscription_end_trial,
+        update_subscription,
+    )
+
+    # Default plan is Elite Plan
+    plan = GroupPlan.objects.get(slug='elite')
+
+    user.profile.create_stripe_customer()
+
+    sub = stripe.Subscription.create(
+        customer=user.stripe_customer.customer_id,
+        plan=plan.stripe_plan.stripe_id,
+        metadata={'plan_id': plan.id, 'user_id': user.id}
+    )
+
+    update_subscription(user, plan, sub)
+
+    if not user.stripe_customer.can_trial:
+        try:
+            subscription_end_trial(user, raven_client, delete_on_error=True)
+
+        except SubscriptionException:
+            raven_client.captureException()
+            StripeSubscription.objects.filter(subscription_id=sub.id).delete()
+            raise
+
+        except:
+            raven_client.captureException()
+            raise
+
+    profile = user.profile
+    profile.plan = plan
+    profile.save()
 
 
 def index(request):
@@ -109,16 +149,27 @@ def install(request, store):
     can_add, total_allowed, user_count = user.profile.can_add_store()
 
     if not can_add:
-        if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
-            messages.error(request, 'Please Activate your account first by visiting <a href="{}">Profile page</a>'.format(
-                request.build_absolute_uri('/user/profile#plan')))
+        if user.profile.plan.is_free and user.can_trial():
+            subscribe_user_to_default_plan(user)
+
         else:
+            raven_client.captureMessage(
+                'Add Extra Store',
+                level='warning',
+                extra={
+                    'user': user.email,
+                    'store': store,
+                    'plan': user.profile.plan.title,
+                    'stores': user.profile.get_active_stores().count()
+                }
+            )
+
             messages.error(
                 request,
                 'Your plan does not support connecting another Shopify store. '
                 'Please <a href="mailto:support@shopifiedapp.com">contact support</a> to learn how to connect more stores.')
 
-        return HttpResponseRedirect('/')
+            return HttpResponseRedirect('/')
 
     state = get_random_string(16)
     request.session['shopify_state'] = state
@@ -162,7 +213,13 @@ def callback(request):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
-            if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
+            if user.profile.plan.is_free:
+                raven_client.captureMessage(
+                    'Activate your account first',
+                    level='warning',
+                    extra={'user': user.email, 'store': store, 'pos': 2}
+                )
+
                 messages.error(
                     request,
                     'Please Activate your account first by visiting:\n{}').format(
@@ -184,9 +241,19 @@ def callback(request):
 
         try:
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-            store.title = store.get_info['name']
+
+            info = store.get_info
+            store.title = info['name']
+            store.currency_format = info['money_in_emails_format']
+
+            owner = info.get('shop_owner')
+            if owner and not user.first_name and not user.last_name:
+                fullname = owner.split(' ')
+                user.first_name, user.last_name = fullname[0], ' '.join(fullname[1:])
+                user.save()
 
         except:
+            raven_client.captureException()
             return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
 
         store.save()

@@ -209,7 +209,7 @@ class UserProfile(models.Model):
             return False
 
     def get_active_stores(self, flat=False):
-        if self.user.is_subuser:
+        if self.is_subuser:
             stores = self.subuser_stores.filter(is_active=True)
         else:
             stores = self.user.shopifystore_set.filter(is_active=True)
@@ -238,7 +238,7 @@ class UserProfile(models.Model):
     def import_stores(self):
         ''' Return Stores the User can import products from '''
 
-        if self.subuser_parent is not None:
+        if self.is_subuser:
             return self.subuser_parent.profile.import_stores()
 
         stores = []
@@ -254,7 +254,7 @@ class UserProfile(models.Model):
             codename = perm_name[:-4]
             return self.has_subuser_permission(codename, store)
 
-        if self.subuser_parent is not None:
+        if self.is_subuser:
             return self.subuser_parent.profile.can(perm_name)
 
         perm_name = perm_name.lower()
@@ -322,7 +322,7 @@ class UserProfile(models.Model):
     def can_add_store(self):
         """ Check if the user plan allow him to add a new store """
 
-        if self.user.is_subuser:
+        if self.is_subuser:
             return self.subuser_parent.profile.can_add_store()
 
         user_stores = int(self.stores)
@@ -346,7 +346,7 @@ class UserProfile(models.Model):
     def can_add_product(self):
         """ Check if the user plan allow one more product saving """
 
-        if self.user.is_subuser:
+        if self.is_subuser:
             return self.subuser_parent.profile.can_add_product()
 
         user_products = int(self.products)
@@ -365,7 +365,7 @@ class UserProfile(models.Model):
         return can_add, total_allowed, user_count
 
     def can_add_board(self):
-        if self.user.is_subuser:
+        if self.is_subuser:
             return self.subuser_parent.profile.can_add_board()
 
         user_boards = int(self.boards)
@@ -383,8 +383,12 @@ class UserProfile(models.Model):
 
         return can_add, total_allowed, user_count
 
+    @property
+    def is_subuser(self):
+        return self.subuser_parent is not None
+
     def has_subuser_permission(self, codename, store=None):
-        if self.subuser_parent is not None:
+        if self.is_subuser:
             permission = self.subuser_permissions.filter(codename=codename)
             if store:
                 if not self.subuser_stores.filter(pk=store.id).exists():
@@ -457,11 +461,45 @@ def user_stripe_customer(self):
         return False
 
 
+@add_to_class(User, 'have_stripe_billing')
+def user_have_stripe_billing(self):
+    try:
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
+    except:
+        return False
+
+
+@add_to_class(User, 'is_recurring_customer')
+def user_recurring_customer(self):
+    try:
+        return self.profile.plan.is_stripe()
+    except:
+        return False
+
+
+@add_to_class(User, 'have_billing_info')
+def user_have_billing_info(self):
+    try:
+        return bool(self.stripe_customer.source)
+    except:
+        return False
+
+
+@add_to_class(User, 'can_trial')
+def user_can_trial(self):
+    try:
+        return self.stripe_customer.can_trial
+    except User.stripe_customer.RelatedObjectDoesNotExist:
+        # If the customer object is not created yet, that mean the user didn't chose a Stripe plan yet
+        return True
+
+
 class ShopifyStore(models.Model):
     class Meta:
         ordering = ['list_index', '-created_at']
 
     title = models.CharField(max_length=512, blank=True, default='')
+    currency_format = models.CharField(max_length=50, blank=True, null=True)
     api_url = models.CharField(max_length=512)
 
     # For OAuth App
@@ -938,6 +976,17 @@ class ShopifyProduct(models.Model):
         else:
             return ShopifyProductExport.objects.filter(product=self)
 
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
+
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
 
@@ -1106,7 +1155,7 @@ class ProductSupplier(models.Model):
         source_id = self.get_source_id()
         if source_id:
             if 'aliexpress.com' in self.product_url.lower():
-                return u'http://www.aliexpress.com/item//{}.html'.format(source_id)
+                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
 
         return self.product_url
 
@@ -1182,15 +1231,26 @@ class ShopifyOrderTrack(models.Model):
     source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
+    source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
+
     hidden = models.BooleanField(default=False)
-    auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
+    auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
     check_count = models.IntegerField(default=0)
+
     data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def save(self, *args, **kwargs):
+        try:
+            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+        except:
+            pass
+
+        super(ShopifyOrderTrack, self).save(*args, **kwargs)
 
     def encoded(self):
         return json.dumps(self.data).encode('base64')
@@ -1312,23 +1372,27 @@ class AppPermission(models.Model):
         return self.description
 
 
+class ClippingMagicPlan(models.Model):
+    allowed_credits = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0, verbose_name='In USD')
+
+    def __unicode__(self):
+        return u'{} / {}'.format(self.allowed_credits, self.amount)
+
+
 class ClippingMagic(models.Model):
     class Meta:
         ordering = ['-created_at']
 
     user = models.OneToOneField(User, related_name='clippingmagic')
 
-    api_id = models.CharField(max_length=100, default='', verbose_name='ClippingMagic API ID')
-    api_secret = models.CharField(max_length=255, default='', verbose_name='ClippingMagic API Secret')
-
-    allowed_images = models.IntegerField(default=-1)
-    downloaded_images = models.IntegerField(default=0)
+    remaining_credits = models.BigIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
-        return '%s:%s' % (self.api_id, self.api_secret)
+        return u'{} / {} Credits'.format(self.user.username, self.remaining_credits)
 
 
 class GroupPlan(models.Model):
@@ -1387,7 +1451,11 @@ class GroupPlan(models.Model):
 
     @property
     def is_free(self):
-        return self.slug in ['free-stripe-plan']
+        return self.slug in ['free-stripe-plan', 'free-plan']
+
+    @property
+    def is_lite(self):
+        return self.slug in ['lite-stripe-plan', 'lite-plan']
 
     @property
     def large_badge_image(self):
@@ -1562,12 +1630,21 @@ class PlanPayment(models.Model):
         return u'{} | {}'.format(self.provider, self.payment_id)
 
 
+class DescriptionTemplate(models.Model):
+    user = models.ForeignKey(User)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+
+    def __unicode__(self):
+        return self.title
+
+
 def user_is_subsuser(self):
-    return self.profile.subuser_parent is not None
+    return self.profile.is_subuser
 
 
 def user_models_user(self):
-    if not self.is_subuser:
+    if not self.profile.is_subuser:
         return self
     else:
         return self.profile.subuser_parent
@@ -1672,7 +1749,7 @@ User.add_to_class("can_delete", user_can_delete)
 def invalidate_acp_users(sender, instance, created, **kwargs):
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
 
-    if not created:
+    if not created and not instance.is_subuser:
         instance.get_active_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
 
 
@@ -1690,7 +1767,7 @@ def userprofile_creation(sender, instance, created, **kwargs):
 
         UserProfile.objects.create(user=instance, plan=plan)
 
-    if not created and instance.is_stripe_customer():
+    if not created and instance.have_stripe_billing():
         try:
             customer = instance.stripe_customer
             email = json.loads(customer.data).get('email')

@@ -24,6 +24,7 @@ from django.core.cache.utils import make_template_fragment_key
 from django.db import transaction
 from django.conf import settings
 from django.core import serializers
+from django.forms.models import model_to_dict
 
 from unidecode import unidecode
 
@@ -55,7 +56,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from .models import *
 from .forms import *
 from .province_helper import load_uk_provincess, missing_province
-from .templatetags.template_helper import shopify_image_thumb
+from .templatetags.template_helper import shopify_image_thumb, money_format
 
 import tasks
 import utils
@@ -74,6 +75,8 @@ from stripe_subscription.utils import (
     get_stripe_invoice,
     get_stripe_invoice_list,
 )
+
+from analytic_events.models import RegistrationEvent
 
 
 @login_required
@@ -94,11 +97,14 @@ def index_view(request):
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_active_stores().count() >= 1
 
+    templates = DescriptionTemplate.objects.filter(user=request.user)
+
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
         'extra_stores': extra_stores,
+        'templates': templates,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
@@ -252,64 +258,6 @@ def proccess_api(request, user, method, target, data):
 
         return JsonResponse(stores, safe=False)
 
-    if method == 'POST' and target == 'add-store':
-        name = data.get('name').strip()
-        url = data.get('url')
-
-        if user.is_subuser:
-            return JsonResponse({'error': 'Sub-Users can not add new stores.'})
-
-        can_add, total_allowed, user_count = user.profile.can_add_store()
-
-        if not can_add:
-            if user.profile.plan.is_free and (not user.is_stripe_customer() or user.stripe_customer.can_trial):
-                return JsonResponse({
-                    'error': (
-                        'Please Activate your account first by visiting:\n{}'
-                    ).format(request.build_absolute_uri('/user/profile#plan'))
-                })
-            else:
-                return JsonResponse({
-                    'error': (
-                        'Your plan does not support connecting another Shopify store. '
-                        'Please contact support@shopifiedapp.com to learn how to connect more stores.'
-                    )
-                })
-
-        store = ShopifyStore(title=name, api_url=url, user=user.models_user)
-        user.can_add(store)
-
-        try:
-            info = store.get_info
-            if not store.title:
-                store.title = info['name']
-
-            ok, permissions = utils.verify_shopify_permissions(store)
-            if not ok:
-                return JsonResponse({
-                    'error': 'The following permissions are missing: \n{}\n\n'
-                             'You can find instructions to fix this issue here:\n'
-                             'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
-                             .format('\n'.join(permissions))
-                }, status=403)
-
-        except:
-            return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
-
-        store.save()
-
-        utils.attach_webhooks(store)
-
-        stores = []
-        for i in user.profile.get_active_stores():
-            stores.append({
-                'id': i.id,
-                'name': i.title,
-                'url': i.get_api_url(hide_keys=True)
-            })
-
-        return JsonResponse(stores, safe=False)
-
     if method == 'POST' and target == 'delete-store':
         store_id = data.get('store')
 
@@ -338,7 +286,7 @@ def proccess_api(request, user, method, target, data):
                         .raise_for_status()
 
             except requests.exceptions.HTTPError as e:
-                if e.response.status_code not in [401, 404]:
+                if e.response.status_code not in [401, 402, 403, 404]:
                     raise
         else:
             utils.detach_webhooks(store, delete_too=True)
@@ -378,6 +326,44 @@ def proccess_api(request, user, method, target, data):
 
         if api_url_changes:
             utils.attach_webhooks(store)
+
+        return JsonResponse({'status': 'ok'})
+
+    if method == 'GET' and target == 'custom-tracking-url':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_view(store)
+
+        custom_tracking = None
+        aftership_domain = user.models_user.get_config('aftership_domain')
+        if aftership_domain and type(aftership_domain) is dict:
+            custom_tracking = aftership_domain.get(str(store.id))
+
+        return JsonResponse({
+            'status': 'ok',
+            'tracking_url': custom_tracking,
+            'store': store.id
+        })
+
+    if method == 'POST' and target == 'custom-tracking-url':
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        user.can_edit(store)
+
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        aftership_domain = user.models_user.get_config('aftership_domain')
+        if not aftership_domain:
+            aftership_domain = {}
+        elif type(aftership_domain) is not dict:
+            raise Exception('Custom domains is not a dict')
+
+        if data.get('tracking_url'):
+            aftership_domain[str(store.id)] = data.get('tracking_url')
+        else:
+            if str(store.id) in aftership_domain:
+                del aftership_domain[str(store.id)]
+
+        user.models_user.set_config('aftership_domain', aftership_domain)
 
         return JsonResponse({'status': 'ok'})
 
@@ -827,29 +813,22 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse({'status': 'ok'})
 
     if method == 'POST' and target == 'clippingmagic-clean-image':
-        img_url = ""
+        img_url = None
         api_url = 'https://clippingmagic.com/api/v1/images'
         plan = user.profile.plan.title.replace('plan', '').strip().lower()
         action = data.get('action', 'edit')
         image_id = data.get('image_id', 0)
-        api_id = settings.CLIPPINGMAGIC_API_ID
-        api_secret = settings.CLIPPINGMAGIC_API_SECRET
         api_response = {}
 
-        if not user.is_stripe_customer():
-            api_id = data.get('api_id')
-            api_secret = data.get('api_secret')
+        try:
+            ClippingMagic.objects.get(user=user)
+        except ClippingMagic.DoesNotExist:
+            ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
-        elif plan == 'pro' and plan == 'elite':
-            return JsonResponse({
-                'error': "You are not subscribed to this feature"
-            }, status=403)
-
-        else:
-            if user.clippingmagic.downloaded_images >= user.clippingmagic.allowed_images:
+        if user.clippingmagic.remaining_credits <= 0:
                 return JsonResponse({
-                    'error': "You don't have enough credits left. Please re-subscribe for this feature"
-                }, status=403)
+                    'error': "Looks like your credits have run out"
+                }, status=402)
 
         if action == 'edit':
             res = requests.post(
@@ -857,13 +836,17 @@ def proccess_api(request, user, method, target, data):
                 files={
                     'image': urllib2.urlopen(data.get('image_url', '')).read()
                 },
-                auth=(api_id, api_secret)
+                auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()
 
             api_response = res.get('image', {'id': 0, 'secret': 0})
 
         elif action == 'done':
-            img_url = requests.get('{}/{}'.format(api_url, image_id), auth=(api_id, api_secret)).url
+            img_url = requests.get(
+                '{}/{}'.format(api_url, image_id),
+                auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
+            ).url
+
             if img_url:
                 UserUpload.objects.create(
                     user=request.user.models_user,
@@ -871,19 +854,19 @@ def proccess_api(request, user, method, target, data):
                     url=img_url
                 )
 
-                user.clippingmagic.downloaded_images = user.clippingmagic.downloaded_images + 1
+                user.clippingmagic.remaining_credits -= 1
                 user.clippingmagic.save()
-        else:
-            return JsonResponse({
-                'error': 'Action is not defined'
-            }, status=500)
+            else:
+                return JsonResponse({
+                    'error': 'Action is not defined'
+                }, status=500)
 
         if api_response.get('id') or img_url:
             return JsonResponse({
                 'status': 'ok',
                 'image_id': api_response.get('id', 0),
                 'image_secret': api_response.get('secret', 0),
-                'api_id': api_id,
+                'api_id': settings.CLIPPINGMAGIC_API_ID,
                 'image_url': img_url
             })
         else:
@@ -913,7 +896,7 @@ def proccess_api(request, user, method, target, data):
         target_user = User.objects.get(id=data.get('user'))
         plan = GroupPlan.objects.get(id=data.get('plan'))
 
-        if target_user.is_stripe_customer():
+        if target_user.is_recurring_customer():
             return JsonResponse({
                 'error': ('Plan should be changed from Stripe Dashboard:\n'
                           'https://dashboard.stripe.com/customers/{}').format(
@@ -1206,7 +1189,7 @@ def proccess_api(request, user, method, target, data):
         # if current product is connected, automatically connect splitted products.
         if product.shopify_id:
             for splitted_product in splitted_products:
-                data = json.loads(product.data)
+                data = json.loads(splitted_product.data)
 
                 variants = []
                 for v in data['variants']:
@@ -1388,6 +1371,9 @@ def proccess_api(request, user, method, target, data):
                     except ShopifySyncStatus.DoesNotExist:
                         pass
 
+            elif key == 'admitad_site_id':
+                if data[key].startswith('http'):
+                    config[key] = utils.remove_link_query(data[key]).strip('/ ').split('/').pop()
             else:
                 if key != 'access_token':
                     config[key] = data[key]
@@ -1397,17 +1383,6 @@ def proccess_api(request, user, method, target, data):
 
         profile.config = json.dumps(config)
         profile.save()
-
-        # add clipping magic keys
-        form = UserClippingMagicForm(data)
-        if form.is_valid():
-            ClippingMagic.objects.update_or_create(
-                user=user,
-                defaults={
-                    'api_id': form.cleaned_data['api_id'],
-                    'api_secret': form.cleaned_data['api_secret']
-                }
-            )
 
         return JsonResponse({'status': 'ok'})
 
@@ -1754,7 +1729,9 @@ def proccess_api(request, user, method, target, data):
             if line:
                 order_lines = str(line['id'])
 
-        note_delay = 0
+        note_delay_key = 'store_{}_order_{}'.format(store.id, order_id)
+        note_delay = cache.get(note_delay_key, 0)
+
         for line_id in order_lines.split(','):
             if not line_id:
                 return JsonResponse({'error': 'Order Line Was Not Found.'}, status=501)
@@ -1779,6 +1756,11 @@ def proccess_api(request, user, method, target, data):
 
             elif tracks_count == 1:
                 saved_track = tracks.first()
+
+                if order_line_sku and saved_track.fulfillment_status == 'fulfilled':
+                    # Line is already fulfilled
+                    return JsonResponse({'status': 'ok'})
+
                 if saved_track.source_id and source_id != saved_track.source_id:
                     delta = timezone.now() - saved_track.created_at
                     if delta.days < 1:
@@ -1826,7 +1808,7 @@ def proccess_api(request, user, method, target, data):
                 'source_id': source_id,
             })
 
-            note_delay += 5
+            cache.set(note_delay_key, note_delay + 5, timeout=5)
 
         return JsonResponse({'status': 'ok'})
 
@@ -1861,7 +1843,7 @@ def proccess_api(request, user, method, target, data):
         user.can_edit(order)
 
         order.source_status = data.get('status')
-        order.source_tracking = data.get('tracking_number')
+        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
         order.status_updated_at = timezone.now()
 
         try:
@@ -1877,6 +1859,87 @@ def proccess_api(request, user, method, target, data):
         order.save()
 
         return JsonResponse({'status': 'ok'})
+
+    if method in ['GET', 'POST'] and target == 'order-info':
+
+        aliexpress_ids = data.get('aliexpress_id')
+        if aliexpress_ids:
+            aliexpress_ids = aliexpress_ids.split(',')
+        else:
+            try:
+                aliexpress_ids = json.loads(request.body)['aliexpress_id']
+                if type(aliexpress_ids) is not list:
+                    aliexpress_ids = []
+            except:
+                pass
+
+        if not len(aliexpress_ids):
+            return JsonResponse({'error': 'Aliexpress ID not set'}, status=422)
+
+        aliexpress_ids = [int(j) for j in aliexpress_ids]
+        orders = {}
+
+        for chunk_ids in [aliexpress_ids[x:x + 100] for x in xrange(0, len(aliexpress_ids), 100)]:
+            # Proccess 100 max order at a time
+
+            tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
+                                              .filter(source_id__in=chunk_ids) \
+                                              .order_by('store')
+
+            if tracks.count():
+                stores = {}
+                # tracks = utils.get_tracking_orders(tracks[0].store, tracks)
+
+                for track in tracks:
+                    if track.store in stores:
+                        stores[track.store].append(track)
+                    else:
+                        stores[track.store] = [track]
+
+                tracks = []
+
+                for store, store_tracks in stores.iteritems():
+                    user.can_view(store)
+
+                    for track in utils.get_tracking_orders(store, store_tracks):
+                        tracks.append(track)
+
+            for track in tracks:
+                shopify_summary = [
+                    u'Shopify Order: {}'.format(track.order['name']),
+                    u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
+                    u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
+                ]
+
+                for line in track.order['line_items']:
+                    shopify_summary.append(u'<br><b>{}x {}</b> {} - {}'.format(
+                        line['quantity'],
+                        money_format(line['price'], track.store),
+                        truncatewords(line['title'], 10),
+                        truncatewords(line['variant_title'] or '', 5)
+                    ).rstrip('- ').replace(' ...', '...'))
+
+                info = {
+                    'aliexpress_id': track.source_id,
+                    'shopify_order': track.order_id,
+                    'shopify_number': track.order['name'],
+                    'shopify_status': track.order['fulfillment_status'],
+                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
+                    'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
+                    'shopify_summary': "<br>".join(shopify_summary),
+                    'tracking_number': track.source_tracking,
+                }
+
+                if track.source_id in orders:
+                    orders[track.source_id].append(info)
+                else:
+                    orders[track.source_id] = [info]
+
+        for i in aliexpress_ids:
+            if i not in orders:
+                orders[i] = None
+
+        return HttpResponse(json.dumps(orders, indent=4), content_type='text/plain')
 
     if method == 'POST' and target == 'order-add-note':
         # Append to the Order note
@@ -2014,16 +2077,6 @@ def proccess_api(request, user, method, target, data):
         else:
             return JsonResponse({'error': form.errors})
 
-    if method == 'POST' and target == 'user-clippingmagic':
-        form = UserClippingMagicForm(data)
-        if form.is_valid():
-            ClippingMagic.objects.update_or_create(user=user, defaults={
-                'api_id': form.cleaned_data['api_id'],
-                'api_secret': form.cleaned_data['api_secret']
-            })
-
-            return JsonResponse({'status': 'ok'})
-
     if method == 'GET' and target == 'shipping-aliexpress':
         aliexpress_id = data.get('id')
 
@@ -2057,13 +2110,43 @@ def proccess_api(request, user, method, target, data):
         if not user.can('sub_users.use'):
             raise PermissionDenied('Sub User Invite')
 
-        if not EmailForm({'email': data.get('email')}).is_valid():
+        subuser_email = data.get('email', '').strip()
+
+        if not EmailForm({'email': subuser_email}).is_valid():
             return JsonResponse({'error': 'Email is not valid'}, status=501)
 
-        if User.objects.filter(email__iexact=data.get('email')).count():
+        users = User.objects.filter(email__iexact=subuser_email)
+        if users.count():
+            if users.count() == 1:
+                subuser = users.first()
+                if subuser.profile.plan.is_free and not user.get_config('_limit_subusers_invite'):
+                    plan = utils.get_plan(plan_slug='subuser-plan')
+                    reg = utils.generate_plan_registration(plan=plan, sender=user, data={
+                        'email': subuser_email,
+                        'auto': True
+                    })
+
+                    subuser.profile.apply_registration(reg)
+
+                    data = {
+                        'sender': user,
+                    }
+
+                    utils.send_email_from_template(
+                        tpl='subuser_added.html',
+                        subject='Invitation to join Shopified App',
+                        recipient=subuser_email,
+                        data=data,
+                    )
+
+                    return JsonResponse({
+                        'status': 'ok',
+                        'hash': reg.register_hash
+                    })
+
             return JsonResponse({'error': 'Email is is already registered to an account'}, status=501)
 
-        if PlanRegistration.objects.filter(email__iexact=data.get('email')).count():
+        if PlanRegistration.objects.filter(email__iexact=subuser_email).count():
             return JsonResponse({'error': 'An Invitation is already sent to this email'}, status=501)
 
         if user.get_config('_limit_subusers_invite'):
@@ -2072,11 +2155,11 @@ def proccess_api(request, user, method, target, data):
 
         plan = utils.get_plan(plan_slug='subuser-plan')
         reg = utils.generate_plan_registration(plan=plan, sender=user, data={
-            'email': data.get('email')
+            'email': subuser_email
         })
 
         data = {
-            'email': data.get('email'),
+            'email': subuser_email,
             'sender': user,
             'reg_hash': reg.register_hash
         }
@@ -2084,7 +2167,7 @@ def proccess_api(request, user, method, target, data):
         utils.send_email_from_template(
             tpl='subuser_invite.html',
             subject='Invitation to join Shopified App',
-            recipient=data['email'],
+            recipient=subuser_email,
             data=data,
         )
 
@@ -2157,39 +2240,43 @@ def proccess_api(request, user, method, target, data):
                          % (total_allowed, user_count)
             }, status=401)
 
+        shopify_product = utils.safeInt(data.get('product'))
         supplier_url = data.get('supplier')
+
+        if shopify_product:
+            if user.models_user.shopifyproduct_set.filter(shopify_id=shopify_product).count():
+                return JsonResponse({'error': 'Product is already import/connected'}, status=422)
+        else:
+            return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
+
         if not supplier_url:
             return JsonResponse({'error': 'Supplier URL is missing'}, status=422)
 
-        if '/deep_link.htm' in supplier_url.lower():
-            supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
+        if utils.get_domain(supplier_url) == 'aliexpress':
+            if '/deep_link.htm' in supplier_url.lower():
+                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
+
+            if 's.aliexpress.com' in supplier_url.lower():
+                rep = requests.get(supplier_url, allow_redirects=False)
+                rep.raise_for_status()
+
+                supplier_url = rep.headers.get('location')
+
+                if '/deep_link.htm' in location_url:
+                    raven_client.captureMessage(
+                        'Deep link in redirection',
+                        level='warning',
+                        extra={
+                            'location': location_url,
+                            'supplier_url': data.get('supplier')
+                        })
+
             supplier_url = utils.remove_link_query(supplier_url)
-
-        if 's.aliexpress.com' in supplier_url.lower():
-
-            rep = requests.get(supplier_url, allow_redirects=False)
-            rep.raise_for_status()
-
-            location_url = rep.headers.get('location')
-
-            if '/deep_link.htm' in location_url:
-                raven_client.captureMessage(
-                    'Deep link in redirection',
-                    level='warning',
-                    extra={
-                        'location': location_url,
-                        'supplier_url': supplier_url
-                    })
-
-            supplier_url = utils.remove_link_query(location_url)
-
-        if not utils.safeInt(data.get('product')):
-            return JsonResponse({'error': 'Shopify Product ID is missing'}, status=422)
 
         product = ShopifyProduct(
             store=store,
             user=user.models_user,
-            shopify_id=data.get('product'),
+            shopify_id=shopify_product,
             data=json.dumps({
                 'title': 'Importing...',
                 'variants': [],
@@ -2215,6 +2302,63 @@ def proccess_api(request, user, method, target, data):
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
         return JsonResponse({'status': 'ok', 'product': product.id})
+
+    if method == 'GET' and target == 'description-templates':
+        templates = DescriptionTemplate.objects.filter(user=user.models_user)
+        if data.get('id'):
+            templates = templates.filter(id=data.get('id'))
+
+        templates_dict = [{
+            'id': 0,
+            'title': 'Default',
+            'description': user.models_user.get_config('default_desc', '')
+        }]
+
+        for i in templates:
+            templates_dict.append(model_to_dict(i, fields='id,title,description'))
+
+        return JsonResponse({
+            'status': 'ok',
+            'description_templates': templates_dict
+        }, status=200)
+
+    if method == 'POST' and target == 'description-templates':
+        """
+        Add or edit description templates
+        """
+
+        if not data.get('title', '').strip():
+            return JsonResponse({'error': 'Description Title is not set'}, status=422)
+
+        if not data.get('description', '').strip():
+            return JsonResponse({'error': 'Description is empty'}, status=422)
+
+        if data.get('id'):
+            template, created = DescriptionTemplate.objects.update_or_create(
+                id=data.get('id'),
+                user=user,
+                defaults={
+                    'title': data.get('title'),
+                    'description': data.get('description')
+                }
+            )
+        else:
+            template = DescriptionTemplate.objects.create(
+                user=user,
+                title=data.get('title'),
+                description=data.get('description')
+            )
+
+        template_dict = model_to_dict(template)
+
+        return JsonResponse({'status': 'ok', 'template': template_dict}, status=200)
+
+    if method == 'DELETE' and target == 'description-templates':
+        id = int(data.get('id'))
+        template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
+        template.delete()
+
+        return JsonResponse({'status': 'ok'}, status=200)
 
     raven_client.captureMessage('Non-handled endpoint')
     return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
@@ -2816,6 +2960,7 @@ def webhook(request, provider, option):
             elif topic == 'shop/update':
                 if shop_data.get('name'):
                     store.title = shop_data.get('name')
+                    store.currency_format = shop_data.get('money_in_emails_format')
                     store.save()
 
                     return JsonResponse({'status': 'ok'})
@@ -2846,14 +2991,33 @@ def webhook(request, provider, option):
         product_id = request.GET['product']
         try:
             product = ShopifyProduct.objects.get(id=product_id)
+            shopify_product = utils.get_shopify_product(
+                product.store,
+                product.get_shopify_id(),
+                raise_for_status=True
+            )
+
+            cache.set('alert_product_{}'.format(product.id), shopify_product)
+
         except ShopifyProduct.DoesNotExist:
             return JsonResponse({'error': 'Product Not Found'}, status=404)
 
-        product_change = AliexpressProductChange(product=product, user=product.user, data=request.body)
-        product_change.save()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code in [401, 402, 403, 404]:
+                product.price_notification_id = -4
+                product.save()
+
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
+            else:
+                raven_client.captureException(leve='warning')
 
         if product.user.can('price_changes.use') and product.is_connected():
-            # TODO: Remove from the ali-web server if user doesn't have permission
+            product_change = AliexpressProductChange.objects.create(
+                product=product,
+                user=product.user,
+                data=request.body
+            )
+
             tasks.product_change_alert.delay(product_change.pk)
         else:
             product.price_notification_id = 0
@@ -2942,11 +3106,15 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         except:
             pass
 
-        p['price'] = '$%.02f' % utils.safeFloat(p['product'].get('price'))
+        p['price'] = '%.02f' % utils.safeFloat(p['product'].get('price'))
+        p['price'] = money_format(p['price'], i.store)
 
         price_range = p['product'].get('price_range')
         if price_range and type(price_range) is list and len(price_range) == 2:
-            p['price_range'] = '${:.02f} - ${:.02f}'.format(price_range[0], price_range[1])
+            p['price_range'] = '{} - {}'.format(
+                money_format('{:.02f}'.format(price_range[0], i.store)),
+                money_format('{:.02f}'.format(price_range[1], i.store))
+            )
 
         if 'images' not in p['product'] or not p['product']['images']:
             p['product']['images'] = []
@@ -3085,13 +3253,11 @@ def product_image_download(request, pid):
     filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
 
     with zipfile.ZipFile(filename, 'w') as images_zip:
-        i = 0
-        for img_url in images:
-            image_name = '{}-{}'.format(i, utils.remove_link_query(img_url).split('/')[-1])
+        for i, img_url in enumerate(images):
+            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url))
             images_zip.writestr(image_name, requests.get(img_url).content)
-            i += 1
 
-    s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(product.title)))
+    s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
     url = utils.aws_s3_upload(s3_path, input_filename=filename)
 
     return JsonResponse({'url': url})
@@ -3383,7 +3549,7 @@ def mapping_supplier(request, product_id):
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
-            {'title': product.store.title, 'url': '/store/{}'.format(product.store.id)},
+            {'title': product.store.title, 'url': '/product/?store={}'.format(product.store.id)},
             {'title': product.title, 'url': '/product/{}'.format(product.id)},
             'Advanced Mapping',
         ]
@@ -3600,157 +3766,175 @@ def acp_graph(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
 
+    from munch import Munch
+
+    graph_type = request.GET.get('t', 'users')
+
     if request.GET.get('days'):
         time_threshold = timezone.now() - timezone.timedelta(days=int(request.GET.get('days')))
     else:
         time_threshold = None
 
-    products = ShopifyProduct.objects.all() \
-        .extra({'created': 'date(created_at)'}) \
-        .values('created') \
-        .annotate(created_count=Count('id')) \
-        .order_by('-created')
-
-    users = User.objects.all() \
-        .extra({'created': 'date(date_joined)'}) \
-        .values('created') \
-        .annotate(created_count=Count('id')) \
-        .order_by('-created')
-
-    tracking_awaiting = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='') \
-        .extra({'updated': 'date(updated_at)'}) \
-        .values('updated') \
-        .annotate(updated_count=Count('id')) \
-        .order_by('-updated')
-
-    tracking_fulfilled = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled') \
-        .extra({'updated': 'date(updated_at)'}) \
-        .values('updated') \
-        .annotate(updated_count=Count('id')) \
-        .order_by('-updated')
-
-    tracking_auto = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True) \
-        .extra({'updated': 'date(updated_at)'}) \
-        .values('updated') \
-        .annotate(updated_count=Count('id')) \
-        .order_by('-updated')
-
-    shopify_orders = ShopifyOrder.objects.all() \
-        .extra({'created': 'date(created_at)'}) \
-        .values('created') \
-        .annotate(created_count=Count('id')) \
-        .order_by('-created')
-
-    if time_threshold:
-        products = products.filter(created_at__gt=time_threshold)
-        users = users.filter(date_joined__gt=time_threshold)
-        tracking_awaiting = tracking_awaiting.filter(updated_at__gt=time_threshold)
-        tracking_fulfilled = tracking_fulfilled.filter(updated_at__gt=time_threshold)
-        tracking_auto = tracking_auto.filter(updated_at__gt=time_threshold)
-        shopify_orders = shopify_orders.filter(created_at__gt=time_threshold)
-
-    stores_count = ShopifyStore.objects.count()
-    products_count = ShopifyProduct.objects.count()
-
-    if time_threshold:
-        tracking_count = {
-            'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
-                                                 .filter(updated_at__gt=time_threshold).count(),
-            'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled')
-                                                  .filter(updated_at__gt=time_threshold).count(),
-            'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True)
-                                             .filter(updated_at__gt=time_threshold).count(),
-            'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
-                                                 .filter(updated_at__gt=time_threshold)
-                                                 .exclude(Q(store__auto_fulfill='hourly') | Q(store__auto_fulfill='daily'))
-                                                 .count()
-        }
-    else:
-        tracking_count = {
-            'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='').count(),
-            'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled').count(),
-            'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True).count(),
-            'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
-                                                 .exclude(Q(store__auto_fulfill='hourly') | Q(store__auto_fulfill='daily'))
-                                                 .count()
-        }
-
-    if request.GET.get('cum'):
-        total_count = products_count
-        products_cum = []
-        for i in products:
-            total_count -= i['created_count']
-            products_cum.append({
-                'created_count': total_count,
-                'created': i['created']
-            })
-        products = products_cum
-
-        total_count = User.objects.all().count()
-        users_cum = []
-        for i in users:
-            total_count -= i['created_count']
-            users_cum.append({
-                'created_count': total_count,
-                'created': i['created']
-            })
-        users = users_cum
-
-        total_count = tracking_count['awaiting']
-        tracking_awaiting_cum = []
-        for i in tracking_awaiting:
-            total_count -= i['updated_count']
-            tracking_awaiting_cum.append({
-                'updated_count': total_count,
-                'updated': i['updated']
-            })
-        tracking_awaiting = tracking_awaiting_cum
-
-        total_count = tracking_count['fulfilled']
-        tracking_fulfilled_cum = []
-        for i in tracking_fulfilled:
-            total_count -= i['updated_count']
-            tracking_fulfilled_cum.append({
-                'updated_count': total_count,
-                'updated': i['updated']
-            })
-        tracking_fulfilled = tracking_fulfilled_cum
-
-        total_count = tracking_count['auto']
-        tracking_auto_cum = []
-        for i in tracking_auto:
-            total_count -= i['updated_count']
-            tracking_auto_cum.append({
-                'updated_count': total_count,
-                'updated': i['updated']
-            })
-        tracking_auto = tracking_auto_cum
-
-        total_count = ShopifyOrder.objects.count()
-        shopify_orders_cum = []
-        for i in shopify_orders:
-            total_count -= i['created_count']
-            shopify_orders_cum.append({
-                'created_count': total_count,
-                'created': i['created']
-            })
-        shopify_orders = shopify_orders_cum
-
-    tracking_count['enabled_awaiting'] = tracking_count['awaiting'] - tracking_count['disabled']
-
-    return render(request, 'acp/graph.html', {
-        'products': products,
-        'products_count': products_count,
-        'users': users,
-        'stores_count': stores_count,
-        'tracking_awaiting': tracking_awaiting,
-        'tracking_fulfilled': tracking_fulfilled,
-        'tracking_auto': tracking_auto,
-        'tracking_count': tracking_count,
-        'shopify_orders': shopify_orders,
+    data = Munch({
+        'graph_type': graph_type,
         'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
+
+    if graph_type == 'products':
+        data.products = ShopifyProduct.objects.all() \
+            .extra({'created': 'date(created_at)'}) \
+            .values('created') \
+            .annotate(created_count=Count('id')) \
+            .order_by('-created')
+
+    if graph_type == 'users':
+        data.users = User.objects.all() \
+            .extra({'created': 'date(date_joined)'}) \
+            .values('created') \
+            .annotate(created_count=Count('id')) \
+            .order_by('-created')
+
+    if graph_type == 'tracking':
+        data.tracking_fulfilled = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled') \
+            .extra({'updated': 'date(updated_at)'}) \
+            .values('updated') \
+            .annotate(updated_count=Count('id')) \
+            .order_by('-updated')
+
+        data.tracking_auto = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True) \
+            .extra({'updated': 'date(updated_at)'}) \
+            .values('updated') \
+            .annotate(updated_count=Count('id')) \
+            .order_by('-updated')
+
+        data.tracking_all = ShopifyOrderTrack.objects.all() \
+            .extra({'created': 'date(created_at)'}) \
+            .values('created') \
+            .annotate(created_count=Count('id')) \
+            .order_by('-created')
+
+    if graph_type == 'orders':
+        data.shopify_orders = ShopifyOrder.objects.all() \
+            .extra({'created': 'date(created_at)'}) \
+            .values('created') \
+            .annotate(created_count=Count('id')) \
+            .order_by('-created')
+
+    if time_threshold:
+        for key, val in dict(products='created_at__gt',
+                             users='date_joined__gt',
+                             tracking_fulfilled='updated_at__gt',
+                             tracking_auto='updated_at__gt',
+                             tracking_all='created_at__gt',
+                             shopify_orders='created_at__gt').iteritems():
+            if key in data:
+                data[key] = data[key].filter(**{val: time_threshold})
+
+    data.stores_count = ShopifyStore.objects.count()
+    data.products_count = ShopifyProduct.objects.count()
+    data.users_count = User.objects.all().count()
+
+    if graph_type == 'tracking':
+        if time_threshold:
+            tracking_count = {
+                'all': ShopifyOrderTrack.objects.filter(created_at__gt=time_threshold).count(),
+                'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+                                                     .filter(updated_at__gt=time_threshold).count(),
+                'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled')
+                                                      .filter(updated_at__gt=time_threshold).count(),
+                'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True)
+                                                 .filter(updated_at__gt=time_threshold).count(),
+                'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+                                                     .filter(updated_at__gt=time_threshold)
+                                                     .exclude(Q(store__auto_fulfill='hourly') |
+                                                              Q(store__auto_fulfill='daily') |
+                                                              Q(store__auto_fulfill='enable')).count()
+            }
+        else:
+            tracking_count = {
+                'all': ShopifyOrderTrack.objects.count(),
+                'awaiting': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='').count(),
+                'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled').count(),
+                'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True).count(),
+                'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
+                                                     .exclude(Q(store__auto_fulfill='hourly') |
+                                                              Q(store__auto_fulfill='daily') |
+                                                              Q(store__auto_fulfill='enable')).count()
+
+            }
+
+        tracking_count['enabled_awaiting'] = tracking_count['awaiting'] - tracking_count['disabled']
+        data.tracking_count = tracking_count
+
+    if request.GET.get('cum'):
+        if 'products' in data:
+            total_count = data.products_count
+            products_cum = []
+            for i in data.products:
+                total_count -= i['created_count']
+                products_cum.append({
+                    'created_count': total_count,
+                    'created': i['created']
+                })
+            data.products = products_cum
+
+        if 'users' in data:
+            total_count = data.users_count
+            users_cum = []
+            for i in data.users:
+                total_count -= i['created_count']
+                users_cum.append({
+                    'created_count': total_count,
+                    'created': i['created']
+                })
+            data.users = users_cum
+
+        if 'tracking_fulfilled' in data:
+            total_count = tracking_count['fulfilled']
+            tracking_fulfilled_cum = []
+            for i in data.tracking_fulfilled:
+                total_count -= i['updated_count']
+                tracking_fulfilled_cum.append({
+                    'updated_count': total_count,
+                    'updated': i['updated']
+                })
+            data.tracking_fulfilled = tracking_fulfilled_cum
+
+        if 'tracking_auto' in data:
+            total_count = tracking_count['auto']
+            tracking_auto_cum = []
+            for i in data.tracking_auto:
+                total_count -= i['updated_count']
+                tracking_auto_cum.append({
+                    'updated_count': total_count,
+                    'updated': i['updated']
+                })
+            data.tracking_auto = tracking_auto_cum
+
+        if 'tracking_all' in data:
+            total_count = tracking_count['all']
+            tracking_all_cum = []
+            for i in data.tracking_all:
+                total_count -= i['created_count']
+                tracking_all_cum.append({
+                    'created_count': total_count,
+                    'created': i['created']
+                })
+            data.tracking_all = tracking_all_cum
+
+        if 'shopify_orders' in data:
+            total_count = ShopifyOrder.objects.count()
+            shopify_orders_cum = []
+            for i in data.shopify_orders:
+                total_count -= i['created_count']
+                shopify_orders_cum.append({
+                    'created_count': total_count,
+                    'created': i['created']
+                })
+            data.shopify_orders = shopify_orders_cum
+
+    return render(request, 'acp/graph.html', data.toDict())
 
 
 @login_required
@@ -3913,6 +4097,9 @@ def autocomplete(request, target):
 
     q = request.GET.get('query', '').strip()
     if not q:
+        q = request.GET.get('term', '').strip()
+
+    if not q:
         return JsonResponse({'query': q, 'suggestions': []}, safe=False)
 
     if target == 'types':
@@ -3940,7 +4127,10 @@ def autocomplete(request, target):
                     if q.lower() in i.lower():
                         tags.append(i)
 
-        return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
+        if 'term' in request.GET:
+            return JsonResponse(tags, safe=False)
+        else:
+            return JsonResponse({'query': q, 'suggestions': [{'value': j, 'data': j} for j in tags]}, safe=False)
 
     elif target == 'title':
         results = []
@@ -4058,7 +4248,16 @@ def user_profile(request):
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 
-    stripe_customer = request.user.is_stripe_customer() or request.user.profile.plan.is_free
+    clippingmagic_plans = ClippingMagicPlan.objects.all()
+    clippingmagic = None
+    if not request.user.profile.plan.is_free:
+        try:
+            clippingmagic = ClippingMagic.objects.get(user=request.user)
+
+        except ClippingMagic.DoesNotExist:
+            clippingmagic = ClippingMagic.objects.create(user=request.user, remaining_credits=5)
+
+    stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
@@ -4070,6 +4269,8 @@ def user_profile(request):
         'bundles': bundles,
         'stripe_plans': stripe_plans,
         'stripe_customer': stripe_customer,
+        'clippingmagic_plans': clippingmagic_plans,
+        'clippingmagic': clippingmagic,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
@@ -4112,7 +4313,6 @@ def pixlr_serve_image(request):
 
     if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
         raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-        raise PermissionDenied()
 
     fp = StringIO.StringIO(requests.get(img_url).content)
     return HttpResponse(fp, content_type=utils.get_mimetype(img_url))
@@ -4153,7 +4353,6 @@ def save_image_s3(request):
 
         if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-            return JsonResponse({'error': 'URL is not accepted'}, status=403)
 
         fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
 
@@ -4449,9 +4648,6 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-    disable_affiliate = models_user.get_config('_disable_affiliate', False)
-    api_key, tracking_id = utils.get_user_affiliate(models_user)
-
     for index, order in enumerate(page):
         created_at = arrow.get(order['created_at'])
         try:
@@ -4491,11 +4687,12 @@ def orders_view(request):
             shopify_order = orders_list.get('{}-{}'.format(order['id'], el['id']))
             order['line_items'][i]['shopify_order'] = shopify_order
 
-            if shopify_order:
+            if shopify_order or el['fulfillment_status'] == 'fulfilled':
                 order['placed_orders'] += 1
 
+            variant_id = el['variant_id']
             if not el['product_id']:
-                if el['variant_id']:
+                if variant_id:
                     product = ShopifyProduct.objects.filter(store=store, title=el['title'], shopify_id__gt=0).first()
                 else:
                     product = None
@@ -4510,11 +4707,12 @@ def orders_view(request):
                 if not original_info:
                     original_info = {}
 
-                supplier = product.get_suppier_for_variant(el['variant_id'])
+                variant_id = product.get_real_variant_id(variant_id)
+                supplier = product.get_suppier_for_variant(variant_id)
                 if supplier:
                     shipping_method = product.get_shipping_for_variant(
                         supplier_id=supplier.id,
-                        variant_id=el['variant_id'],
+                        variant_id=variant_id,
                         country_code=order.get('shipping_address', {}).get('country_code'))
                 else:
                     shipping_method = None
@@ -4542,7 +4740,7 @@ def orders_view(request):
                             shipping_address_asci[k] = shipping_address[k]
 
                     if not shipping_address_asci[u'province']:
-                        if shipping_address_asci[u'country'] == u'United Kingdom':
+                        if shipping_address_asci[u'country'] == u'United Kingdom' and shipping_address_asci['city']:
                             if not uk_provinces:
                                 uk_provinces = load_uk_provincess()
 
@@ -4584,6 +4782,7 @@ def orders_view(request):
                         'line_id': el['id'],
                         'product_id': product.id if product else None,
                         'source_id': supplier.get_source_id() if supplier else None,
+                        'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
                             'phone': phone,
@@ -4594,8 +4793,8 @@ def orders_view(request):
                     }
 
                     if product:
-                        mapped = product.get_variant_mapping(name=el['variant_id'], for_extension=True, mapping_supplier=True)
-                        if el['variant_id'] and mapped:
+                        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                        if variant_id and mapped:
                             order_data['variant'] = mapped
                         else:
                             order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''
@@ -4643,9 +4842,8 @@ def orders_view(request):
         'product_filter': product_filter,
         'supplier_filter': supplier_filter,
         'shipping_method_filter': shipping_method_filter,
-        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter'),
+        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter') and store_order_synced,
         'user_filter': utils.get_orders_filter(request),
-        'aliexpress_affiliate': (api_key and tracking_id and not disable_affiliate),
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
         'countries': countries,
@@ -4665,6 +4863,7 @@ def orders_track(request):
         'status': 'source_status',
         'tracking': 'source_tracking',
         'add': 'created_at',
+        'reason': 'source_status_details',
         'update': 'status_updated_at',
     }
 
@@ -4682,6 +4881,7 @@ def orders_track(request):
     fulfillment_filter = request.GET.get('fulfillment')
     hidden_filter = request.GET.get('hidden')
     completed = request.GET.get('completed')
+    source_reason = request.GET.get('reason')
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -4698,7 +4898,7 @@ def orders_track(request):
 
         orders = orders.filter(Q(order_id=utils.clean_query_id(query)) |
                                Q(source_id=utils.clean_query_id(query)) |
-                               Q(source_tracking=query))
+                               Q(source_tracking__icontains=query))
 
     if tracking_filter == '0':
         orders = orders.filter(source_tracking='')
@@ -4717,6 +4917,9 @@ def orders_track(request):
 
     if completed == '1':
         orders = orders.exclude(source_status='FINISH')
+
+    if source_reason:
+        orders = orders.filter(source_status_details=source_reason)
 
     orders = orders.order_by(sorting)
 
@@ -4744,29 +4947,40 @@ def orders_track(request):
 @login_required
 def orders_place(request):
     try:
+        assert request.GET['product']
+        assert request.GET['SAPlaceOrder']
+
         product = request.GET['product']
-        data = request.GET['SAPlaceOrder']
     except:
+        raven_client.captureException()
         raise Http404("Product or Order not set")
 
-    # Check for Aliexpress Affiliate Program
-    api_key, tracking_id = utils.get_user_affiliate(request.user.models_user)
+    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user)
+    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user)
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
-    redirect_url = None
-    if not disable_affiliate and api_key and tracking_id:
-        affiliate_link = utils.get_aliexpress_promotion_links(api_key, tracking_id, product)
+    redirect_url = False
+    services = ['ali', 'admitad']
+    if not disable_affiliate:
+        if user_admitad_credentials:
+            service = 'admitad'
+        elif user_ali_credentials:
+            service = 'ali'
+        else:
+            service = random.choice(services)
 
-        if affiliate_link:
-            redirect_url = '{}&SAPlaceOrder={}'.format(affiliate_link, data)
+        if service == 'ali' and ali_api_key and ali_tracking_id:
+            redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+        elif service == 'admitad':
+            redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
 
     if not redirect_url:
-        redirect_url = '{}?SAPlaceOrder={}'.format(product, data)
+        redirect_url = product
 
     for k in request.GET.keys():
         if k.startswith('SA') and k not in redirect_url:
-            redirect_url = '{}&{}={}'.format(redirect_url, k, request.GET[k])
+            redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
 
     return HttpResponseRedirect(redirect_url)
 
@@ -4860,13 +5074,12 @@ def product_alerts(request):
                                        .update(seen=True)
 
     # Allow sending notification for new changes
-    request.user.set_config('_product_change_notify', False)
-
-    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
+    cache.delete('product_change_%d' % request.user.models_user.id)
 
     # Delete sidebar alert info cache
     cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
 
+    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
     return render(request, tpl, {
         'product_changes': product_changes,
         'show_hidden': show_hidden,
@@ -5058,6 +5271,8 @@ def register(request, registration=None, subscribe_plan=None):
 
             login(request, new_user)
 
+            RegistrationEvent.objects.create(user=request.user)
+
             if new_user.profile.plan.is_free:
                 return HttpResponseRedirect("/user/profile?w=1#plan")
             else:
@@ -5086,7 +5301,7 @@ def register(request, registration=None, subscribe_plan=None):
 @require_http_methods(['GET'])
 @login_required
 def user_profile_invoices(request):
-    if request.is_ajax() and request.user.is_stripe_customer():
+    if request.is_ajax() and request.user.have_stripe_billing():
         invoices = get_stripe_invoice_list(request.user.stripe_customer)
         return render(request, 'payments/invoice_table.html', {'invoices': invoices})
     raise Http404
@@ -5094,7 +5309,7 @@ def user_profile_invoices(request):
 
 @login_required
 def user_invoices(request, invoice_id):
-    if not request.user.is_stripe_customer():
+    if not request.user.have_stripe_billing():
         raise Http404
 
     invoice = get_stripe_invoice(invoice_id, expand=['charge'])
@@ -5111,7 +5326,7 @@ def user_invoices(request, invoice_id):
 def user_invoices_download(request, invoice_id):
     from stripe_subscription.invoices.pdf import draw_pdf
 
-    if not request.user.is_stripe_customer():
+    if not request.user.have_stripe_billing():
         raise Http404
 
     invoice = get_stripe_invoice(invoice_id, expand=['charge'])

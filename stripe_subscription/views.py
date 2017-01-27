@@ -9,6 +9,9 @@ import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import GroupPlan
+from leadgalaxy.models import ClippingMagic, ClippingMagicPlan
+
+from analytic_events.models import PlanSelectionEvent, BillingInformationEntryEvent
 
 from .models import StripeSubscription
 from .stripe_api import stripe
@@ -60,6 +63,9 @@ def customer_source(request):
         cus.coupon = settings.STRIP_TRIAL_DISCOUNT_COUPON
         user.stripe_customer.stripe_save(cus)
 
+    source = user.stripe_customer.source
+    BillingInformationEntryEvent.objects.create(user=request.user, source=str(source))
+
     return JsonResponse({'status': 'ok'})
 
 
@@ -99,6 +105,8 @@ def subscription_trial(request):
 
     user.profile.apply_subscription(plan)
 
+    PlanSelectionEvent.objects.create(user=request.user)
+
     stripe_customer = user.stripe_customer
     stripe_customer.can_trial = False
     stripe_customer.save()
@@ -136,12 +144,16 @@ def subscription_plan(request):
 
             if not still_in_trial:
                 sub.trial_end = 'now'
+            else:
+                sub.trial_end = arrow.get(sub.trial_end).timestamp
 
             sub.save()
 
             profile = user.profile
             profile.plan = plan
             profile.save()
+
+            PlanSelectionEvent.objects.create(user=request.user)
 
             return JsonResponse({'status': 'ok'})
         else:
@@ -174,6 +186,66 @@ def subscription_plan(request):
         profile = user.profile
         profile.plan = plan
         profile.save()
+
+        PlanSelectionEvent.objects.create(user=request.user)
+
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@csrf_protect
+def clippingmagic_subscription(request):
+    user = request.user
+
+    try:
+        clippingmagic_plan = ClippingMagicPlan.objects.get(id=request.POST.get('plan'))
+
+        stripe.Charge.create(
+            amount=clippingmagic_plan.amount * 100,
+            currency="usd",
+            customer=user.stripe_customer.customer_id,
+            description="Clipping Magic - {} Credits".format(clippingmagic_plan.allowed_credits),
+            metadata={
+                'user': user.id,
+                'clippingmagic_plan': clippingmagic_plan.id
+            }
+        )
+
+        try:
+            clippingmagic = ClippingMagic.objects.get(user=user)
+            clippingmagic.remaining_credits += clippingmagic_plan.allowed_credits
+            clippingmagic.save()
+
+        except ClippingMagic.DoesNotExist:
+            ClippingMagic.objects.create(
+                user=user,
+                remaining_credits=clippingmagic_plan.allowed_credits
+            )
+
+    except ClippingMagicPlan.DoesNotExist:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Selected Credit not found'
+        }, status=500)
+
+    except stripe.CardError as e:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error: {}'.format(e.message)
+        }, status=500)
+
+    except stripe.InvalidRequestError as e:
+        raven_client.captureException(level='warning')
+        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+    except:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error, Please try again'
+        }, status=500)
 
     return JsonResponse({'status': 'ok'})
 
@@ -244,7 +316,7 @@ def invoice_pay(request, invoice_id):
         return JsonResponse({'error': 'Bad Request'}, status=500)
 
     response_404 = JsonResponse({'error': 'Page not found'}, status=404)
-    if not request.user.is_stripe_customer():
+    if not request.user.is_recurring_customer():
         return response_404
 
     invoice = get_stripe_invoice(invoice_id)

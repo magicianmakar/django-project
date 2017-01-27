@@ -178,3 +178,34 @@ def render_markdown(text, render_help=True):
         )
 
     return mark_safe(text)
+
+
+@register.simple_tag
+def money_format(amount=None, store=None):
+    currency_format = '${{amount}}'
+
+    if store and store.currency_format:
+        currency_format = store.currency_format
+
+    if amount is not None and amount != '':
+        if type(amount) is not float:
+            try:
+                amount = float(amount)
+            except:
+                amount = 0.0
+
+        amount_no_decimals = '{:,.0f}'.format(round(amount))
+        amount = '{:,.2f}'.format(amount)
+
+    else:
+        amount = ''
+        amount_no_decimals = ''
+
+    currency_format = currency_format.replace('{{amount}}', amount)
+
+    if 'amount_' in currency_format:
+        currency_format = currency_format.replace('{{amount_no_decimals}}', amount_no_decimals)
+        currency_format = currency_format.replace('{{amount_with_comma_separator}}', amount)
+        currency_format = currency_format.replace('{{amount_no_decimals_with_comma_separator}}', amount_no_decimals)
+
+    return currency_format.strip()

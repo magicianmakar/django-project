@@ -76,14 +76,14 @@
             <div class="form-group col-xs-3">
                 <label for="product-price">Price</label>
                 <div class="input-group">
-                    <span class="input-group-addon">$</span>
+                    <span class="input-group-addon">{% money_format None product.store  %}</span>
                     <input type="text" class="form-control" id="product-price">
                 </div>
             </div>
             <div class="form-group col-xs-3">
                 <label for="product-type">Compare at price</label>
                 <div class="input-group">
-                    <span class="input-group-addon">$</span>
+                    <span class="input-group-addon">{% money_format None product.store  %}</span>
                     <input type="text" class="form-control" id="product-compare-at"
                            value="{{product.product.compare_at_price|default:''}}">
                 </div>
@@ -156,12 +156,12 @@
 
                                     <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
-                                        <span class="var-pad">$</span>
+                                        <span class="var-pad">{% money_format None product.store  %}</span>
                                     </td>
 
                                     <td style="white-space:nowrap">
                                         <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
-                                        <span class="var-pad">$</span>
+                                        <span class="var-pad">{% money_format None product.store  %}</span>
                                     </td>
 
                                     <td style="white-space:nowrap">
@@ -347,7 +347,7 @@
             <div class="col-xs-4">
                 <dl>
                     <dt>Price</dt>
-                    <dd>${{original.price}}</dd>
+                    <dd>{% money_format original.price product.store %}</dd>
                 </dl>
             </div>
         </div>
@@ -378,7 +378,7 @@
                     <div class="col-xs-6">
                         <dl>
                             <dt>Compare at price</dt>
-                            <dd>${{original.compare_at_price}}</dd>
+                            <dd>{% money_format original.compare_at_price product.store %}</dd>
                         </dl>
                     </div>
                 </div>
@@ -653,96 +653,7 @@
     </div>
 </div>
 
-<div id="modal-shopify-product" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">Select Product</h4>
-          </div>
-            <div class="modal-body">
-                <div class="row">
-                    {% with stores=user.profile.get_active_stores.count %}
-
-                    <div class="col-sm-8" style="padding-right:0">
-                        <input type="text" class="form-control input-md shopify-find-product" placeholder="Find product..." data-store="{{product.qelem.store_id}}">
-                    </div>
-
-                    <div class="form-group col-sm-4" style="padding-left:5px">
-                        <select class="form-control shopify-store">
-                        {% for i in user.profile.get_active_stores %}
-                            <option value="{{i.id}}" {% if i == product.store or stores == 1 %}selected{% endif %}>
-                                {{i.title}}
-                            </option>
-                        {% endfor %}
-                        </select>
-                    </div>
-
-                    {% endwith %}
-                </div>
-                <div class="row">
-                    <div class="col-sm-12 text-center m-t-lg shopify-find-loading" style="position:absolute;display:none">
-                        <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
-                    </div>
-                    <div class="col-sm-12">
-                        <div class="shopify-products ative-scroll"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="modal-clippingmagic" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">ClippingMagic API Details</h4>
-          </div>
-            <div class="modal-body">
-                <div class="row">
-                    <form id="user-clippingmagic" method="get" class="form-horizontal">
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">ClippingMagic API ID</label>
-                            <div class="col-sm-6">
-                                <input type="text" name="api_id" value="{{ user.clippingmagic.api_id }}" class="form-control api_id" placeholder="ClippingMagic API ID">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">ClippingMagic API Key</label>
-                            <div class="col-sm-6">
-                                <input type="text" name="api_secret" value="{{ user.clippingmagic.api_secret }}" class="form-control api_key" placeholder="ClippingMagic API Key">
-                            </div>
-                        </div>
-                        <div class="hr-line-dashed"></div>
-                    </form>
-
-                    <div class=" col-md-9 col-md-offset-2 ">
-                          <button id="save-clippingmagic" class="btn btn-primary"><i class="fa fa-save"></i> Save</button> Don't have API Credentials? <a target="_blank" href="https://clippingmagic.com/api">Click here.</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% verbatim %}
-
-<script id="product-select-template" type="text/x-handlebars-template">
-    <div class="product-item row">
-        <div class="product-thumb col-md-1">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}">
-                <img src="{{product.image.src}}">
-            </a>
-        </div>
-        <div class="col-md-11">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}">{{product.title}}</a>
-        </div>
-    </div>
-</script>
-
-{% endverbatim %}
+{% include "partial/shopify_product_selector.html" %}
 
 {% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
@@ -902,9 +813,7 @@ var config = {
     product_notes: '{{product.notes|default:''|escapejs}}',
 
     clipping_magic: {
-        stripe_customer: {{ user.is_stripe_customer|lower}},
-        api_id: '{{user.clippingmagic.api_id|default:""}}',
-        api_secret: '{{user.clippingmagic.api_secret|default:""}}',
+	    api_id: '{{user.clippingmagic.api_id|default:""}}',
         clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
     },
 
@@ -1062,9 +971,9 @@ $(function() {
 </script>
 
     {% compress js %}
-    <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/remove_img_background.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}

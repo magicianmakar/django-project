@@ -107,7 +107,13 @@
                             <td>
                                 <a href="/product/{{item.id}}">{{item.product.title}}</a>
                             </td>
-                            <td>${{item.product.price|floatformat:2}}</td>
+                            <td class="no-wrap">
+                                {% if item.price_range %}
+                                    {{item.price_range}}
+                                {% else %}
+                                    {{item.price}}
+                                {% endif %}
+                            </td>
                             <td>{{item.product.type}}</td>
                             <td>{{item.product.tags}}</td>
                             <td>{{item.created_at|date}}</td>

@@ -12,7 +12,8 @@ import hmac
 import mimetypes
 import re
 import ctypes
-from urlparse import urlparse
+from urlparse import urlparse, parse_qs, urlsplit, urlunsplit
+from urllib import urlencode
 from hashlib import sha256
 from math import ceil
 
@@ -743,9 +744,13 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
                 yield p
 
 
-def get_shopify_product(store, product_id):
+def get_shopify_product(store, product_id, raise_for_status=False):
     if store:
         rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True))
+
+        if raise_for_status:
+            rep.raise_for_status()
+
         return rep.json().get('product')
     else:
         return None
@@ -1430,9 +1435,77 @@ def zaxaa_parse_post(params):
     }
 
 
-def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId,trackingId,promotionUrls'):
+def set_url_query(url, param_name, param_value):
+    """
+    Given a URL, set or replace a query parameter and return the modified URL.
+    """
 
-    promotion_key = 'promotion_links3_{}'.format(hash_text(urls))
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+    query_params[param_name] = [param_value]
+    new_query_string = urlencode(query_params, doseq=True)
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+
+
+def affiliate_link_set_query(url, name, value):
+    if '/deep_link.htm' in url:
+        dl_target_url = parse_qs(urlparse(url).query)['dl_target_url'].pop()
+        dl_target_url = set_url_query(dl_target_url, name, value)
+
+        return set_url_query(url, 'dl_target_url', dl_target_url)
+    elif 'alitems.com' in url:
+        if name != 'ulp':
+            ulp = parse_qs(urlparse(url).query)['ulp'].pop()
+            ulp = set_url_query(ulp, name, value)
+
+            return set_url_query(url, 'ulp', ulp)
+        else:
+            return set_url_query(url, name, value)
+    else:
+        return set_url_query(url, name, value)
+
+
+def get_aliexpress_credentials(user):
+    user_credentials = True
+
+    if user.can('aliexpress_affiliate.use'):
+        api_key, tracking_id = user.get_config([
+            'aliexpress_affiliate_key',
+            'aliexpress_affiliate_tracking'
+        ])
+    else:
+        api_key, tracking_id = (None, None)
+
+    if not api_key or not tracking_id:
+        user_credentials = False
+        api_key, tracking_id = ['37954', 'shopifiedapp']
+
+    return api_key, tracking_id, user_credentials
+
+
+def get_admitad_credentials(user):
+    user_credentials = True
+
+    if user.can('admitad_affiliate.use'):
+        site_id = user.models_user.get_config('admitad_site_id')
+    else:
+        site_id = None
+
+    if not site_id:
+        user_credentials = False
+        site_id = '1e8d114494c02ea3d6a016525dc3e8'
+
+    return site_id, user_credentials
+
+
+def get_admitad_affiliate_url(site_id, url):
+    api_url = 'https://alitems.com/g/{}/'.format(site_id)
+
+    return affiliate_link_set_query(api_url, 'ulp', url)
+
+
+def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
+    promotion_key = 'promotion_links__{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)
 
     if promotion_url is not None:
@@ -1444,7 +1517,7 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         r = requests.get(
             url='http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/{}'.format(appkey),
             params={
-                'fields': fields,
+                'fields': 'publisherId,trackingId,promotionUrls',
                 'trackingId': trackingID,
                 'urls': urls
 
@@ -1458,22 +1531,21 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         errorCode = r['errorCode']
         if errorCode != 20010000:
             raven_client.captureMessage('Aliexpress Promotion Error',
-                                        extra={'errorCode': errorCode},
+                                        extra={'errorCode': errorCode, 'response': r},
                                         level='warning')
             return None
 
         if len(r['result']['promotionUrls']):
             promotion_url = r['result']['promotionUrls'][0]['promotionUrl']
-            if promotion_url and '/deep_link.htm' in promotion_url:
-                rep = requests.get(promotion_url, allow_redirects=False)
-                rep.raise_for_status()
-
-                promotion_url = rep.headers.get('location')
-
-            cache.set(promotion_key, promotion_url, timeout=43200)
+            if promotion_url:
+                cache.set(promotion_key, promotion_url, timeout=43200)
 
             return promotion_url
         else:
+            raven_client.captureMessage('Aliexpress Promotion Not Found',
+                                        extra={'response': r, 'product': urls},
+                                        level='warning')
+
             cache.set(promotion_key, False, timeout=3600)
             return None
 
@@ -1482,21 +1554,6 @@ def get_aliexpress_promotion_links(appkey, trackingID, urls, fields='publisherId
         raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
-
-
-def get_user_affiliate(user):
-    if user.can('aliexpress_affiliate.use'):
-        api_key, tracking_id = user.get_config([
-            'aliexpress_affiliate_key',
-            'aliexpress_affiliate_tracking'
-        ])
-    else:
-        api_key, tracking_id = (None, None)
-
-    if not api_key or not tracking_id:
-        api_key, tracking_id = ['37954', 'shopifiedapp']
-
-    return api_key, tracking_id
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
@@ -1705,12 +1762,8 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url
 
 
-def clean_url_path(url):
-    return re.sub('#.*$', '', re.sub(r'\?.*$', '', url))
-
-
 def get_filename_from_url(url):
-    return clean_url_path(url).split('/').pop()
+    return remove_link_query(url).split('/').pop()
 
 
 def get_fileext_from_url(url):
@@ -1718,7 +1771,7 @@ def get_fileext_from_url(url):
 
 
 def hash_url_filename(s):
-    url = clean_url_path(s)
+    url = remove_link_query(s)
     ext = get_fileext_from_url(s)
 
     hashval = 0

@@ -21,13 +21,13 @@
             </div>
 
             <div class="ibox-content">
-                <table class="table table-bordered dataTables">
+                <table class="table  dataTables">
                     <thead>
                         <tr>
                             <th>Username</th>
                             <th>Email</th>
                             <th>Plan</th>
-                            {% if request.GET.products %}
+                            {% if users_count == 1 %}
                             <th>Stores</th>
                             <th>Products</th>
                             {% endif %}
@@ -41,7 +41,18 @@
                         <tr>
                             <td><a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
                             <td>{{item.email}}</td>
+                            {% if users_count == 1 %}
+                            <td>
+                                {{item.profile.plan.title}}
+                                {% if item.is_subuser %}
+                                - {{item.profile.subuser_parent.profile.plan.title}}
+                                {% endif %}
+                            </td>
+                            <td>{{item.profile.get_active_stores.count}}</td>
+                            <td>{{item.shopifyproduct_set.count}}</td>
+                            {% else %}
                             <td>{{item.profile.plan.title}}</td>
+                            {% endif %}
                             <td>{{item.date_joined|date}}</td>
                             <td>
                                 <a href="#" class="btn btn-primary btn-outline btn-xs user-profile-btn" user-id="{{item.id}}">Profile</a>
@@ -53,12 +64,16 @@
                                         </a>
                                         <ul class="dropdown-menu dropdown-user">
                                             <li><a href="/admin/leadgalaxy/planregistration/?q={{item.email|urlencode}}" target="_blank">Registration Links</a></li>
-                                            <li><a href="/admin/leadgalaxy/planpayment/?q={{item.email|urlencode}}" target="_blank">Payements</a></li>
+                                            <li><a href="/admin/leadgalaxy/planpayment/?q={{item.email|urlencode}}" target="_blank">Payments</a></li>
+                                            <li><a href="/admin/leadgalaxy/shopifystore/?q={{item.email|urlencode}}" target="_blank">Stores</a></li>
+                                            <li><a href="/admin/stripe_subscription/extrastore/?q={{item.email|urlencode}}" target="_blank">Extra Stores</a></li>
+                                            <li class="divider"></li>
                                             <li><a href="https://dashboard.stripe.com/search?query={{item.email|urlencode}}" target="_blank">Stripe</a></li>
                                             <li><a href="#" class="intercom-btn" data-email="{{item.email}}" target="_blank">Intercom</a></li>
                                             <li class="divider"></li>
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
                                             <li class="divider"></li>
+                                            <li><a href="text-danger" class="clear-sessions btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Sessions</a></li>
                                             <li><a href="text-danger" class="clear-access-tokens btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Access Tokens</a></li>
                                         </ul>
                                     </div>
@@ -181,13 +196,14 @@
 {% endcache %}
 
         $(document).ready(function() {
-            $('.dataTables').on('draw.dt', function (e) {
+            function handleEvents() {
                 $('.change-plan-btn').unbind('click').click(changePlan);
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.clear-access-tokens').unbind('click').click(clearAccessToken);
-            });
+            }
 
-            var table = $('.dataTables').dataTable({
+            {% if users_count > 1 %}
+            $('.dataTables').dataTable({
                 responsive: true,
                 autoWidth: false,
                 dom: 'T<"clear">lfrtip',
@@ -198,6 +214,10 @@
                     sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }
             });
+
+            $('.dataTables').on('draw.dt', handleEvents);
+
+            {% endif %}
 
             $('#change-plan-apply').click(function (e) {
                 var btn = $(this);
@@ -253,6 +273,8 @@
 
                 window.open('https://app.intercom.io/a/apps/k9cb5frr/users/segments/all:' + btoa(JSON.stringify(data)), '_blank');
             });
+
+            handleEvents();
         });
     </script>
 {% endblock %}

@@ -40,8 +40,8 @@
                 {% endif %}
                         <div class="row">
                             <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
-                            <div class="col-md-3">{{change.old_value}}</div>
-                            <div class="col-md-3">{{change.new_value}}</div>
+                            <div class="col-md-3">{% money_format change.old_value store %}</div>
+                            <div class="col-md-3">{% money_format change.new_value store %}</div>
                         </div>
                 {% if forloop.last %}
                     </td>
@@ -68,8 +68,8 @@
                 {% endif %}
                         <div class="row">
                             <div class="col-md-offset-3 col-md-3">{{change.variant_desc}}</div>
-                            <div class="col-md-3">{{change.old_value}}</div>
-                            <div class="col-md-3">{{change.new_value}}</div>
+                            <div class="col-md-3">{% money_format change.old_value store %}</div>
+                            <div class="col-md-3">{% money_format change.new_value store %}</div>
                         </div>
                 {% if forloop.last %}
                     </td>

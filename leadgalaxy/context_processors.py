@@ -35,7 +35,7 @@ def extra_bundles(request):
                 'title': 'Upgrade To All Drop Shipping Features'
             }
 
-        elif profile.plan.is_stripe() and request.user.is_stripe_customer():
+        elif profile.plan.is_stripe() and request.user.have_stripe_billing():
             from stripe_subscription.utils import eligible_for_trial_coupon, trial_coupon_offer_end
             customer = request.user.stripe_customer
             if not customer.have_source() and eligible_for_trial_coupon(customer.get_data()):
@@ -83,7 +83,7 @@ def extra_bundles(request):
 
                         cache.set(extra_cache_key, extra_bundle, timeout=3600)
 
-        elif profile.plan.is_free and (not request.user.is_stripe_customer() or request.user.stripe_customer.can_trial):
+        elif profile.plan.is_free and request.user.can_trial():
             extra_bundle = {
                 'url': '/user/profile#plan',
                 'title': 'Start Your 14 Days Free Trial!',
@@ -122,3 +122,9 @@ def intercom(request):
                                              hashlib.sha256).hexdigest()
 
     return ctx
+
+
+def facebook_pixel(request):
+    return {
+        'FACEBOOK_PIXEL_ID': settings.FACEBOOK_PIXEL_ID
+    }

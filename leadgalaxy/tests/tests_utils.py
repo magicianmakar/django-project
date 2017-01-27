@@ -1,4 +1,5 @@
 import simplejson as json
+from mock import patch
 
 from django.core.cache import cache
 from django.test import TestCase, TransactionTestCase
@@ -12,7 +13,7 @@ from leadgalaxy.models import (
     ShopifyOrderTrack
 )
 
-from product_alerts import events as product_alerts_events
+from product_alerts.events import ProductChangeEvent
 
 import factory
 
@@ -432,6 +433,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.get_domain('http://www.aliexpress.com'), 'aliexpress')
         self.assertEqual(utils.get_domain('www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
         self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
+        self.assertEqual(utils.get_domain('http://s.aliexpress.com/seeplink.html?id=32213964945'), 'aliexpress')
         self.assertEqual(utils.get_domain('www.ebay.com/itm/131696353919'), 'ebay')
         self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919'), 'ebay')
         self.assertEqual(utils.get_domain('www.amazon.co.uk'), 'amazon')
@@ -558,6 +560,7 @@ class UtilsTestCase(TestCase):
     def test_ensure_title_unicode(self):
         self.assertEqual(utils.ensure_title(u'vari\xe9t\xe9'), u'vari\xe9t\xe9')
 
+
 class ProductChangeAlertTestCase(TransactionTestCase):
     fixtures = ['product_changes.json']
 
@@ -565,11 +568,13 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user = User.objects.get(pk=1)
 
         product_change = AliexpressProductChange.objects.get(pk=1)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
         self.data = event.get_shopify_product()
         self.data = event.prepare_data_before(self.data)
 
-    def test_notification_fired(self):
+    @patch.object(ProductChangeEvent, 'send_shopify', None)
+    @patch.object(ProductChangeEvent, 'send_email')
+    def test_notification_fired(self, send_email):
         self.user.profile.config = json.dumps({
             'alert_product_disappears': 'notify',
             'alert_variant_disappears': 'notify',
@@ -582,26 +587,33 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         cache.delete('product_change_%d' % self.user.id)
 
         product_change = AliexpressProductChange.objects.get(pk=1)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
+        event.take_action()
 
-        self.assertTrue(event.notify())
+        self.assertTrue(send_email.called)
+
+        # Assert notification is sent only in a time span
+        event = ProductChangeEvent(product_change)
+        event.take_action()
+
+        send_email.assert_called_once()
 
     def test_get_found_variant(self):
         product_change = AliexpressProductChange.objects.get(pk=2)
         change_events = json.loads(product_change.data)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
         found = event.get_found_variant(change_events['changes']['variants'][0], self.data)
 
         self.assertIsNotNone(found)
 
     def test_get_previous_product_revision(self):
         product_change = AliexpressProductChange.objects.get(pk=1)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
         event.revision.data = self.data
         event.revision.save()
 
         product_change = AliexpressProductChange.objects.get(pk=5)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
         previous_revision = event.get_previous_product_revision('Vendor', True)
 
         self.assertIsNotNone(previous_revision)
@@ -612,7 +624,7 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user.profile.save()
 
         product_change = AliexpressProductChange.objects.get(pk=1)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
         new_data = event.product_actions(self.data)
 
         for variant in new_data['product']['variants']:
@@ -623,7 +635,7 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user.profile.save()
 
         product_change = AliexpressProductChange.objects.get(pk=1)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
         new_data = event.product_actions(self.data)
 
         self.assertFalse(new_data['product']['published'])
@@ -634,7 +646,7 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user.profile.save()
 
         product_change = AliexpressProductChange.objects.get(pk=4)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
 
         # get variant_id for both checks
         change_events = json.loads(product_change.data)
@@ -651,7 +663,7 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user.profile.save()
 
         product_change = AliexpressProductChange.objects.get(pk=4)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
 
         change_events = json.loads(product_change.data)
         found = event.get_found_variant(change_events['changes']['variants'][0], self.data)[0]
@@ -666,7 +678,7 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user.profile.save()
 
         product_change = AliexpressProductChange.objects.get(pk=2)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
 
         change_events = json.loads(product_change.data)
         variant_event = change_events['changes']['variants'][0]
@@ -685,7 +697,7 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         self.user.profile.save()
 
         product_change = AliexpressProductChange.objects.get(pk=3)
-        event = product_alerts_events.ProductChangeEvent(product_change)
+        event = ProductChangeEvent(product_change)
 
         change_events = json.loads(product_change.data)
         variant_event = change_events['changes']['variants'][0]

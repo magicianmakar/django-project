@@ -51,7 +51,7 @@
                     stripeToken: token,
                 },
                 success: function(data) {
-                    toastr.success("Billing Details has been updated.", "Billing Details");
+                    toastr.success("Billing Details have been updated.", "Billing Details");
                     $('#modal-billing').modal('hide');
 
                     setTimeout(function() {

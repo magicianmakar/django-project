@@ -240,6 +240,15 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     white-space: nowrap;
 }
 
+#side-menu li .label-info {
+   background-color: #7eabc3 ;
+   color: #fff ;
+}
+
+.toast-success {
+    background-color: #93c47d !important;
+}
+
 @media only screen and (max-width: 760px) {
     .extension-version {
         display: none;
@@ -259,5 +268,17 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
 
     .setting-section {
         margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .flex-group {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+    .form-horizontal .flex-group .control-label {
+        padding-top: 0;
     }
 }

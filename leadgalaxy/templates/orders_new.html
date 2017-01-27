@@ -116,7 +116,7 @@
                     </div>
                     {% if request.user.profile.get_config.shipping_method_filter %}
                     <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
+                        <div class="col-md-2 filter-label">
                             <span>Shipping Method</span>
                         </div>
                         <div class="col-md-4">
@@ -351,7 +351,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-md-2">
-                                        $<b>{{order.total_price}}</b>
+                                        <b>{% money_format order.total_price store %}</b>
                                         <div>
                                             {% if shipping_method_filter_enabled %}
                                                 {% if order.shipping_lines %}
@@ -395,7 +395,8 @@
                                     {% with image=item.image original=item.product.get_original_info %}
 
                                     <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}" line-id="{{item.id}}"
-                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}">
+                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}"
+                                         fulfillment-status="{{item.fulfillment_status}}">
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
@@ -432,7 +433,7 @@
                                             </div>
                                             <div class="col-xs-3 line-ordered">
                                                 <span class="badge badge-{% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
-                                                {% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}
+                                                {% if item.shopify_order %}
                                                     <span class="ordered-status"
                                                     {% if item.shopify_order.source_id %}
                                                         title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}"
@@ -446,7 +447,7 @@
                                                         {% endif %}
                                                     </span>
                                                 {% elif item.fulfillment_status == 'fulfilled' %}
-                                                    <span class="ordered-status">Fulfilled</span>
+                                                    <span class="ordered-status">Fulfilled in Shopify</span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
@@ -497,7 +498,7 @@
                                                                 {{item.quantity}}
                                                             </span>
                                                             &times;
-                                                            $<b>{{item.price}}</b>
+                                                            <b>{% money_format item.price store %}</b>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% include 'partial/place_order_btn.html' %}
@@ -582,6 +583,8 @@
         </div>
     </div>
 </div>
+
+{% include "partial/shopify_product_selector.html" %}
 
 {% endblock %}
 
@@ -785,6 +788,7 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
 

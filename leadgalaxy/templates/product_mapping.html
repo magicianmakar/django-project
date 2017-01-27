@@ -33,7 +33,7 @@
                             <label class="control-label ">Choose The Supplier To Map:</label>
                         </div>
                         <div class="col-md-3">
-                            <select class="supplier-select form-control" data-variant="{{variant.id}}">
+                            <select class="supplier-select form-control" data-variant="{{variant.id}}" style="width:auto">
                                 {% for item in product.get_suppliers %}
                                 <option value="{{item.id}}"
                                         {% if current_supplier.id == item.id %}selected{% endif %}>

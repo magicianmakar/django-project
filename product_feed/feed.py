@@ -79,7 +79,7 @@ class ProductFeed():
                 self.add_product(p)
 
     def add_product(self, product):
-        if len(product['variants']):
+        if len(product['variants']) and product.get('published_at'):
             # Add the first variant with Product ID
             self._add_variant(product, product['variants'][0], variant_id=product['id'])
 

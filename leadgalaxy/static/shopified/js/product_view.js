@@ -54,6 +54,7 @@ function showProductInfo(rproduct) {
     }
 }
 
+
 $("a.add-variant").click(function (e) {
     e.preventDefault();
 
@@ -1002,7 +1003,7 @@ function renderImages() {
             'html': '<i class="fa fa-download"></i>'
         }));
 
-        if (config.clipping_magic && config.clipping_magic.clippingmagic_editor) {
+        if (config.clipping_magic.clippingmagic_editor) {
             buttons.push($('<button>', {
                 'title': "Remove Background",
                 'class': "btn btn-warning btn-xs itooltip remove-background-image-editor",
@@ -1062,6 +1063,12 @@ function renderImages() {
                 img.attr('id'),
                 img.attr('src')
             );
+        });
+
+        d.find('.remove-background-image-editor').click(function(e) {
+            e.preventDefault();
+
+            initClippingMagic($(this));
         });
 
         d.mouseenter(function() {
@@ -1275,78 +1282,112 @@ $('.product-connection-disconnect').click(function (e) {
     });
 });
 
-function shopifyProductSearch (e) {
-    var loadingContainer = $('#modal-shopify-product .shopify-find-loading');
-    var productsContainer = $('#modal-shopify-product .shopify-products');
+$('.remove-background-image-editor').click(function(e) {
+    e.preventDefault();
 
-    var store = $('#modal-shopify-product .shopify-store').val();
-    var query = $('#modal-shopify-product .shopify-find-product').val().trim();
+    initClippingMagic($(this));
+});
 
+function initClippingMagic(el) {
 
-    if (!$(this).prop('page')) {
-        loadingContainer.show();
-        productsContainer.empty();
-    } else {
-        $(this).bootstrapBtn('loading');
+    var image = $(el).siblings('img');
+    if (!config.clipping_magic.clippingmagic_editor) {
+        swal('Clipping Magic', "You haven't subscribe for this feature", 'error');
+        return;
     }
 
     $.ajax({
-        url: '/api/shopify-products',
+        url: '/api/clippingmagic-clean-image',
         type: 'POST',
         data: {
-            store: store,
-            query: query,
-            page: $(this).prop('page')
-        },
-        context: {
-            store: store
-        },
-        success: function (data) {
-            var product_template = Handlebars.compile($("#product-select-template").html());
+            image_url: image.attr('src'),
+            product_id: config.product_id,
+            action: 'edit',
+        }
+    }).done(function(data) {
+        clippingmagicEditImage(data, image);
+    }).fail(function(data) {
+        if (data.status == 402) {
+            swal({
+                title: 'Clipping Magic Credits',
+                text: 'Looks like your credits have run out.\nClick below to add more credits.',
+                type: "warning",
+                animation: false,
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: true,
+                confirmButtonColor: "#93c47d",
+                confirmButtonText: "Add Credits",
+                cancelButtonText: "No Thanks"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    window.onbeforeunload = function(e) {
+                      return true;
+                    };
 
-            if (data.products.length === 0) {
-                productsContainer.append($('<div class="text-center"><h3>No Product found with the given search query</h3></div>'));
-            }
-
-            var store = this.store;
-            $.each(data.products, function () {
-                var el = $(product_template({product: this}));
-
-                $('a.shopify-product', el).click(function () {
-                    if (window.shopifyProductSelected) {
-                        window.shopifyProductSelected(store, $(this).data('product-id'));
-                    }
-                });
-
-                productsContainer.append(el);
+                    setTimeout(function() {
+                        window.location.href = '/user/profile#billing';
+                    }, 500);
+                }
             });
-
-            productsContainer.find('.load-more-btn').remove();
-
-            if (data.next) {
-                var moreBtn = $('<button class="btn btn-outline btn-default btn-block ' +
-                    'load-more-btn" data-loading-text="<i class=\'fa fa-circle-o-notch fa-spin\'>' +
-                    '</i> Loading"><i class="fa fa-plus"></i> Load More</button>');
-
-                moreBtn.prop('page', data.next);
-                moreBtn.click(shopifyProductSearch);
-
-                productsContainer.append(moreBtn);
-            }
-        },
-        error: function (data) {
-            productsContainer.append($('<div class="text-center"><h3>' +
-                'Error occurred while searching for products</h3></div>'));
-        },
-        complete: function () {
-            loadingContainer.hide();
+        } else {
+            displayAjaxError('Clipping Magic', data);
         }
     });
 }
 
-$('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopifyProductSearch, 500);
-$('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
-$('#modal-shopify-product .shopify-find-product').trigger('keyup');
+function clippingmagicEditImage(data, image) {
+    var errorsArray = ClippingMagic.initialize({
+        apiId: parseInt(data.api_id, 10)
+    });
+
+    if (errorsArray.length > 0) {
+        swal('Clipping Magic', "Your browser is missing some required features:\n\n" +
+            errorsArray.join("\n "), 'error');
+    }
+
+    image.siblings(".loader").show();
+    ClippingMagic.edit({
+        "image": {
+            "id": parseInt(data.image_id, 10),
+            "secret": data.image_secret
+        },
+        "locale": "en-US"
+    }, function(response) {
+        if (response.event == 'result-generated') {
+            $.ajax({
+                url: '/api/clippingmagic-clean-image',
+                type: 'POST',
+                data: {
+                    image_id: response.image.id,
+                    product: config.product_id,
+                    action: 'done',
+                }
+            }).done(function(data) {
+                $.ajax({
+                    url: '/upload/save_image_s3',
+                    type: 'POST',
+                    data: {
+                        product: config.product_id,
+                        url: data.image_url,
+                        clippingmagic: true,
+                    }
+                }).done(function(data) {
+                    image.attr('src', data.url).siblings(".loader").hide();
+                    product.images[parseInt(image.attr('image-id'), 10)] = data.url;
+                }).fail(function(data) {
+                    displayAjaxError('Clipping Magic', data);
+                });
+            }).fail(function(data) {
+                displayAjaxError('Clipping Magic', data);
+            });
+        } else {
+            image.siblings(".loader").hide();
+            swal('Clipping Magic', response.error.message, 'error');
+        }
+    });
+}
 
 (function() {
     setup_full_editor('product-description');
@@ -1360,7 +1401,12 @@ $('#modal-shopify-product .shopify-find-product').trigger('keyup');
     }, 2000);
 
     $(".tag-it").tagit({
-        allowSpaces: true
+        allowSpaces: true,
+        autocomplete: {
+            source: '/autocomplete/tags',
+            delay: 500, 
+            minLength: 1
+        }
     });
 
     $.each(config.exports, function () {

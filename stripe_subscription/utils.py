@@ -17,6 +17,7 @@ from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore
 from .stripe_api import stripe
 
 from leadgalaxy.models import GroupPlan, UserProfile
+from analytic_events.models import SuccessfulPaymentEvent
 
 
 class SubscriptionException(Exception):
@@ -49,7 +50,7 @@ def update_customer(user, customer):
 
 
 def sync_subscription(user):
-    if not user.is_stripe_customer():
+    if not user.is_recurring_customer():
         return False
 
     for sub in user.stripesubscription_set.all():
@@ -430,6 +431,19 @@ def process_webhook_event(request, event_id, raven_client):
             return HttpResponse('Customer Not Found')
 
         clear_invoice_cache(stripe_customer)
+
+    elif event.type == 'charge.succeeded':
+        charge = event.data.object
+
+        try:
+            user = User.objects.get(stripe_customer__customer_id=charge.customer)
+        except User.DoesNotExist:
+            return HttpResponse('User Not Found')
+
+        SuccessfulPaymentEvent.objects.create(user=user, charge=str(charge))
+
+        return HttpResponse('ok')
+
     else:
         return HttpResponse('Ignore Event')
 

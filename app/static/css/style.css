@@ -3198,6 +3198,7 @@ body.boxed-layout #wrapper {
 }
 a {
   cursor: pointer;
+  color: #6288A2;
 }
 a:hover,
 a:focus {
@@ -5145,7 +5146,7 @@ del {
   font-size: 14px;
   font-weight: 600;
   color: #ffffff;
-  background-color: #1ab394;
+  background-color: #93c47d;
   padding: 6px 12px;
   position: absolute;
   top: -32px;

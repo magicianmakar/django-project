@@ -57,6 +57,9 @@
 
   </head>
   <body class="fixed-sidebar">
+    {% for event in analytic_events %}
+        {{ event.fire|safe }}
+    {% endfor %}
 
     <div id="wrapper">
     {{ request|hijackNotification }}

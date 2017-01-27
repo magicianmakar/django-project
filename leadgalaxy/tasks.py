@@ -22,7 +22,7 @@ from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
 
 from shopify_orders import utils as order_utils
-from product_alerts import events as product_alerts_events
+from product_alerts.events import ProductChangeEvent
 
 from product_feed.feed import generate_product_feed
 from product_feed.models import FeedStatus
@@ -368,7 +368,7 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             return
 
         if shopify_product is None:
-            shopify_product = cache.get('webhook_order_{}_{}'.format(store_id, shopify_id))
+            shopify_product = cache.get('webhook_product_{}_{}'.format(store_id, shopify_id))
 
         if shopify_product is None:
             shopify_product = utils.get_shopify_product(store, shopify_id)
@@ -538,7 +538,7 @@ def generate_feed(self, feed_id, nocache=False, by_fb=False):
 def product_change_alert(change_id):
     try:
         product_change = AliexpressProductChange.objects.get(pk=change_id)
-        product_change_event = product_alerts_events.ProductChangeEvent(product_change)
+        product_change_event = ProductChangeEvent(product_change)
         product_change_event.take_action()
 
     except:

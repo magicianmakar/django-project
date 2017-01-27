@@ -1,5 +1,7 @@
 from django.test import TestCase
 
+from mock import Mock
+
 from leadgalaxy.templatetags import template_helper
 
 
@@ -45,3 +47,45 @@ class TagsTestCase(TestCase):
         self.assertEqual(template_helper.shopify_image_thumb(
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='64x64', crop='center'),
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_64x64_crop_center.jpg?v=1445304129')
+
+    def test_money_format(self):
+        store = Mock()
+        store.currency_format = "${{amount}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+        self.assertEqual(template_helper.money_format(1000.10, store), '$1,000.10')
+
+        self.assertEqual(template_helper.money_format(0, store), '$0.00')
+        self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
+        self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
+
+        self.assertEqual(template_helper.money_format(None, store), '$')
+        self.assertEqual(template_helper.money_format(None, None), '$')
+        self.assertEqual(template_helper.money_format('', None), '$')
+        self.assertEqual(template_helper.money_format('', store), '$')
+
+    def test_money_format_euro(self):
+        store = Mock()
+        store.currency_format = u"\u20ac {{amount}}"
+        self.assertEqual(template_helper.money_format(12.34, store), u'\u20ac 12.34')
+
+    def test_money_format_amount_no_decimals(self):
+        store = Mock()
+        store.currency_format = "${{amount_no_decimals}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12')
+        self.assertEqual(template_helper.money_format(12.64, store), '$13')
+        self.assertEqual(template_helper.money_format(1200.00, store), '$1,200')
+
+    def test_money_format_amount_with_comma_separator(self):
+        store = Mock()
+        store.currency_format = "${{amount_with_comma_separator}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+
+    def test_money_format_amount_no_decimals_with_comma_separator(self):
+        store = Mock()
+        store.currency_format = "${{amount_no_decimals_with_comma_separator}}"
+
+        self.assertEqual(template_helper.money_format(12.34, store), '$12')
+        self.assertEqual(template_helper.money_format(12.64, store), '$13')

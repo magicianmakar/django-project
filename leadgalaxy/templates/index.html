@@ -94,6 +94,12 @@
                             </a>
                         </li>
 
+                        <li>
+                            <a store-id="{{item.id}}" class="change-tracking-url btn-success btn-outline">
+                                <i class="fa fa-chain"></i> Custom Tracking URL
+                            </a>
+                        </li>
+
                         {% if item.version == 1 %}
                         <li>
                             <a class="edit-store  " store-id="{{item.id}}"
@@ -126,7 +132,7 @@
             <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
                 Add Store</a>
 
-            Need a new Shopify store?  <a href="http://bit.ly/sashopifyspecial" class="itooltip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="21 day free trial with 10% off Shopify for Life">Get your Free Trial here</a>
+            Need a new Shopify store?  <a href="http://bit.ly/2k0FdOI" class="itooltip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="21 day free trial with 10% off Shopify for 1 Year">Get your Free Trial here</a>
         {% endif %}
 
             <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
@@ -281,6 +287,18 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="make_visisble" class="col-sm-4 col-xs-8 control-label">
+                                        <a class="edit-custom-templates-btn" href="#">Custom Product Descriptions...</a>
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {% if user|can:'auto_order.view' %}
                         {% with can_use=user|can:'auto_order.use' %}
                         <div class="setting-section">
@@ -415,31 +433,29 @@
                             </div>
                         </div>
 
-                        {% if not config.shipping_method_filter %}
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
                                     <label for="shipping_method_filter" class="col-sm-4 col-xs-8 control-label">
-                                        Shipment Method Filter {{config.shipping_method_filter}}
+                                        Shipment Method Filter
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input
                                             id="shipping_method_filter"
                                             name="shipping_method_filter"
                                             type="checkbox"
-                                            class="js-switch" {% if config.shipping_method_filter %}checked{% endif %}
+                                            class="js-switch" {% if config.shipping_method_filter %}checked disabled{% endif %}
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {% endif %}
 
                         {% endwith %}
                         {% endif %}
 
-                        {% if user|can:'aliexpress_affiliate.use' and not user.is_superuser %}
-
+                        {% if not user.is_superuser %}
+                        {% if user|can:'aliexpress_affiliate.use' and not user|can:'admitad_affiliate.use' %}
                         <div class="setting-section">
                             <h3 class="setting-title">Aliexpress Affiliate Program</h3>
                         </div>
@@ -465,6 +481,23 @@
                             </div>
                         </div>
 
+                        {% elif user|can:'admitad_affiliate.use' %}
+                        <div class="setting-section">
+                            <h3 class="setting-title">Admitad Affiliate Program</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="admitad_site_id" class="col-sm-2 control-label">
+                                        Site ID or Deeplink {% include 'partial/help_tooltip.html' with help="<a href='https://help.admitad.com/en/topic/118-what-is-deeplink/' target='_blank'>How to find my Deeplink?</a>" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control col-sm-2" id="admitad_site_id" name="admitad_site_id" value="{{config.admitad_site_id}}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         {% endif %}
 
                         {% if user|can:'price_change_options.use' %}
@@ -551,49 +584,6 @@
 
                         {% endif %}
 
-                        {% if user|can:'clippingmagic.use' and not user.is_stripe_customer %}
-                            <div class="setting-section" style="float: left;width: 98%;">
-                                <h3 class="setting-title">
-                                    Clippingmagic API
-                                    {% if user.clippingmagic.downloaded_images %}
-                                    <span class="pull-right" style="font-size: 12px">
-                                        <strong>Note:</strong>
-                                        You have consumed {{user.clippingmagic.downloaded_images}} credits
-                                    </span>
-                                    {% endif %}
-                                </h3>
-                            </div>
-                            <div id="tab-6" class="tab-pane">
-                                <div class="panel-body">
-                                    <div class="row">
-                                        <div class="col-sm-offset-1 col-sm-11">
-                                            <div class="form-group">
-                                                <div class="form-group">
-                                                    <label class="col-sm-3 control-label">ClippingMagic API ID</label>
-                                                    <div class="col-sm-6">
-                                                        <input type="text" name="api_id"
-                                                        value="{{ user.clippingmagic.api_id|default:"" }}"
-                                                        class="form-control api_id">
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="col-sm-3 control-label">ClippingMagic API Key</label>
-                                                    <div class="col-sm-6" style="white-space: nowrap;">
-                                                        <input type="password" name="api_secret"
-                                                               value="{{ user.clippingmagic.api_secret|default:"" }}"
-                                                               class="form-control api_key"
-                                                               style="font-size: .8em; display: inline-block; margin-right: 10px;">
-
-                                                        <a class="show-clippingmagic-key-btn" href="#">Show</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-
                         <div class="col-md-12"><hr /></div>
                         <div class="form-group">
                             <div class="col-sm-offset-1 col-sm-10">
@@ -640,6 +630,99 @@
     </div>
 </div>
 
+<div id="product-template-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Description Template</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form" action="" method="post" id="add-template-form">
+                            <input type="hidden" name="id" value="">
+                            <div class="form-group">
+                                <label>Title</label> 
+                                <input type="text" name="title" placeholder="Template title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="description" placeholder="Description for template" class="form-control" autocomplete="off"></textarea>
+                            </div>
+                            <div class="m-t-n-xs">
+                                <button type="submit" class="btn btn-sm btn-primary pull-right">Save</button>
+                                <button type="button" data-dismiss="modal" class="btn btn-sm btn-default pull-left">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="product-templates-list-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Product Custom Descriptions</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table class="table table-ligthborder" id="description-template-table">
+                            <thead>
+                                <tr>
+                                    <th style="vertical-align: middle; min-width: 100px;">Title</th>
+                                    <th style="width: 150px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-template-id="" class="hidden clone template-row">
+                                    <td class="template-title"></td>
+                                    <td>
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;" data-id="" data-toggle="modal" data-target="#product-template-modal">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" data-id="" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% for template in templates %}
+                                <tr data-template-id="{{ template.id }}" class="template-row">
+                                    <td class="template-title">{{ template.title }}</td>
+                                    <td class="no-wrap">
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;" data-id="{{ template.id }}" data-toggle="modal" data-target="#product-template-modal">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" data-id="{{ template.id }}" data-toggle="tooltip" data-placement="top" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <a data-toggle="modal" data-target="#product-template-modal" class="btn btn-success btn-sm" style="margin: 0;">
+                            <i class="fa fa-plus"></i> Add New Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="modal-install-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -651,10 +734,11 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-sm-12">
-                        <form role="form">
+                        <form id="install-store-form" role="form">
                             <div class="form-group">
                                 <label for="shop-url">Enter your store's URL:</label>
-                                <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com" class="form-control">
+                                <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com"
+                                       class="form-control" autocorrect="off" spellcheck="false">
                             </div>
                             <p><em>Note: You don't need to create a Private App any more!</em></p>
                         </form>
@@ -670,6 +754,56 @@
     </div>
 </div>
 
+<div id="modal-store-tracking-url" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Custom Tracking URL</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="shop-url">Enter your custom tracking URL:</label>
+                                <input type="text" id="custom-tracking-url-input" class="form-control" autocorrect="off" spellcheck="false">
+                            </div>
+
+                            <p>
+                                <em>Exmaples:</em>
+
+                                {% verbatim %}
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="http://track.aftership.com/{{tracking_number}}">Aftership</a>,</em>
+
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="http://17track.net/?nums={{tracking_number}}">17Track</a>,</em>
+
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="http://global.cainiao.com/detail.htm?mailNoList={{tracking_number}}">Cainiao</a>,</em>
+
+                                <em><a href="#" class="tracking-url-example"
+                                       data-url="https://tools.usps.com/go/TrackConfirmAction.action?tLabels={{tracking_number}}">USPS</a></em>
+                                {% endverbatim %}
+                            </p>
+
+                            <p>
+                            <em>Keep the input field empty to use the default tracking url</em>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+                <button id="save-custom-tracking-btn" class="btn btn-primary" type="button"><i class="fa fa-save"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extracss %}
@@ -730,6 +864,9 @@
 {% endblock %}
 
 {% block extrajs %}
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+
 {% compress js %}
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
@@ -745,7 +882,7 @@
                 element: '.add-store-btn',
                 title: 'Step One: Connect your store',
                 content: 'The first thing you’ll need to do is connect your Shopify Store to Shopified App.' + '<br />' +
-                        'If you don’t have a Shopify store yet, get your <a href="http://bit.ly/sashopifyspecial">21 day free trial with 10% off Shopify for Life</a>.' + '<br />' +
+                        'If you don’t have a Shopify store yet, get your <a href="http://bit.ly/2k0FdOI">21 day free trial with 10% off Shopify for Year</a>.' + '<br />' +
                         'To connect your store, watch the videos on the <a href="http://www.shopifiedapp.com/start">Getting Started</a> page.'
             }, {
                 element: '.extension-link',

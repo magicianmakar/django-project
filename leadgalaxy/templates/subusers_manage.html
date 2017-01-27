@@ -329,6 +329,10 @@
                                 text: msg,
                                 type: 'success',
                                 html: true,
+                            }, function(r) {
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 500);
                             });
                         } else {
                             displayAjaxError('Add Sub User', data);
