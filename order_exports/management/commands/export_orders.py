@@ -9,6 +9,12 @@ from order_exports.models import OrderExport
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
+        try:
+            self.start_command(*args, **options)
+        except:
+            raven_client.captureException()
+
+    def start_command(self, *args, **options):
         start, end = self.get_scheduled_time()
         for order_export in OrderExport.objects.filter(schedule__gte=start, schedule__lte=end):
             api = ShopifyOrderExportAPI(order_export)
