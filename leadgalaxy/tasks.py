@@ -583,4 +583,4 @@ def generate_order_export(self, order_export_id):
     except Exception as exc:
         raven_client.captureException()
 
-        raise self.retry(exc=exc, countdown=5)
+        raise self.retry(exc=exc, countdown=5, max_retries=3)
