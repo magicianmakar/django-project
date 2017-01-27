@@ -2262,12 +2262,12 @@ def proccess_api(request, user, method, target, data):
 
                 supplier_url = rep.headers.get('location')
 
-                if '/deep_link.htm' in location_url:
+                if '/deep_link.htm' in supplier_url:
                     raven_client.captureMessage(
                         'Deep link in redirection',
                         level='warning',
                         extra={
-                            'location': location_url,
+                            'location': supplier_url,
                             'supplier_url': data.get('supplier')
                         })
 
