@@ -5,6 +5,8 @@ from django.core.management.base import BaseCommand
 from order_exports.api import ShopifyOrderExportAPI
 from order_exports.models import OrderExport
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 
 class Command(BaseCommand):
 
