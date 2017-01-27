@@ -1756,6 +1756,11 @@ def proccess_api(request, user, method, target, data):
 
             elif tracks_count == 1:
                 saved_track = tracks.first()
+
+                if order_line_sku and saved_track.fulfillment_status == 'fulfilled':
+                    # Line is already fulfilled
+                    return JsonResponse({'status': 'ok'})
+
                 if saved_track.source_id and source_id != saved_track.source_id:
                     delta = timezone.now() - saved_track.created_at
                     if delta.days < 1:
