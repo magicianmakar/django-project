@@ -52,55 +52,16 @@ class ShopifyOrderExportAPI():
         })
 
     def _get_response_from_url(self, url, params=None):
-        """Access any given url and return the corresponding response"""
-        # concatenate the URL to be requested with the base url and do the request
         request_url = self.base_url + url
-        if params is not None:
-            response = requests.get(request_url, params=params)
-        else:
-            response = requests.get(request_url)
-
-        # check for response and log if error
-        if not response.ok:
-            logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
-                         response.url, response.text, response.status_code)
-
-            if params is not None:
-                response = requests.get(request_url, params=params)
-            else:
-                response = requests.get(request_url)
-
-        return response
+        return requests.get(request_url, params=params)
 
     def _post_response_from_url(self, url, data):
-        """Access any given url and return the corresponding response"""
-        # concatenate the URL to be requested with the base url and do the request
         request_url = self.base_url + url
-        response = requests.post(request_url, json=data)
-
-        # check for response and log if error
-        if not response.ok:
-            logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
-                         response.url, response.text, response.status_code)
-
-            response = requests.post(request_url, json=data)
-
-        return response
+        return requests.post(request_url, json=data)
 
     def _put_response_from_url(self, url, data):
-        """Access any given url and return the corresponding response"""
-        # concatenate the URL to be requested with the base url and do the request
         request_url = self.base_url + url
-        response = requests.put(request_url, json=data)
-
-        # check for response and log if error
-        if not response.ok:
-            logger.error("Error accessing Shopify url %s: \n%s\n Status code: \n%s\n\n RETRYING",
-                         response.url, response.text, response.status_code)
-
-            response = requests.put(request_url, json=data)
-
-        return response
+        return requests.put(request_url, json=data)
 
     def _create_fulfillment_params(self, order_id, tracking_number, line_item_id):
         data = order_track_fulfillment(**{
@@ -109,14 +70,6 @@ class ShopifyOrderExportAPI():
             'source_tracking': tracking_number,
             'user_config': self.store.user.get_config()
         })
-
-        # get all items from vendor to send tracking number
-        # vendor = slugify(self.order_export.filters.vendor.strip())
-        # data['fulfillment']['line_items'] = []
-        # for item in line_items:
-        #     if vendor != '' and item['vendor'] != vendor:
-        #         continue
-        #     data['fulfillment']['line_items'].append({"id": item['id']})
 
         return data
 
