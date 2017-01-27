@@ -6,7 +6,7 @@
     <style>
       body { color: #848585; background-color: #ececec; font-family: Georgia, sans-serif; }
 			p { margin: 1px 0; }
-			a { text-decoration: none; }
+			a { text-decoration: none !important; }
 			a img { vertical-align: middle; }
 			table { border-collapse: collapse; }
 			table, th, td { border: 1px solid #e5e5e5; }
@@ -154,7 +154,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for product in changes_map.quanty %}
+              {% for product in changes_map.removed %}
                 <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
                   <td class="image">
                     <img class="product-image" src="{{product.image}}" alt="product image" />
@@ -200,7 +200,7 @@
 		<div class="footer">
 			<p>
 				<span class="green">&copy;</span>
-				&nbsp;2015-2016 Shopified App, All Rights Reserved. <br />
+				&nbsp;2015-2017 Shopified App, All Rights Reserved. <br />
 				4595 Clubview Drive • Bessemer, AL 35022 USA
 			</p>
 			<div class="links">
