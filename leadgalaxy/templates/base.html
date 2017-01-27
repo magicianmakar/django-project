@@ -166,7 +166,8 @@
                     </a>
                 </li>
                 {% endif %}
-                {% if request.user|can:'orders.view' or request.user.is_vendor %}
+
+                {% if request.user.is_vendor %}
                 <li {% if page == 'order_exports' %}class="active"{% endif %}>
                     <a href="{% url 'order_exports_index' %}" class="">
                         <i class="fa fa-file-pdf-o"></i>
@@ -174,6 +175,7 @@
                     </a>
                 </li>
                 {% endif %}
+
                 {% if request.user|can:'orders.view' %}
                 <li {% if page == 'orders_track' %}class="active"{% endif %}>
                     <a href="{% url 'orders_track' %}" class="">
