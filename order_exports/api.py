@@ -38,7 +38,7 @@ class ShopifyOrderExportAPI():
 
         # create the base url for accessing Shopify with basic http auth
         self.base_url = self.store.get_link('/', api=True)
-        self.file_path = tempfile.mktemp(suffix='.csv', prefix='%d/' % self.order_export.id)
+        self.file_path = tempfile.mktemp(suffix='.csv', prefix='export_%d_' % self.order_export.id)
 
         file_name = self.file_path.split('/')[-1]
         self._s3_path = os.path.join('order-exports', str(self.order_export.id), file_name)
