@@ -33,6 +33,12 @@
                                 href="{% url 'order_exports_index' %}"><i class="fa fa-upload"></i> Export</a>
                             {% endif %}
 
+                            {% if request.user|can:'order_imports.use' %}
+                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r"
+                                title="Import Orders"
+                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
+                            {% endif %}
+
                             {% if store_order_synced %}
                                 {% if store_sync_enabled %}
                                     <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
@@ -48,9 +54,6 @@
                             {% if not store_sync_enabled %}
                             <button class="btn btn-primary btn-rounded btn-sm hide-non-connected-btn">Hide Non Connected</button>
                             <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
-                            {% endif %}
-                            {% if request.user|can:'order_imports.use' %}
-                            <a href="{% url 'order_imports_index' %}" class="btn btn-success btn-rounded btn-sm">Order Imports</a>
                             {% endif %}
                         </div>
                     </div>
