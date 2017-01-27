@@ -14,6 +14,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^hijack/', include('hijack.urls')),
     url(r'^order/exports/', include('order_exports.urls')),
+    url(r'^order/imports/', include('order_imports.urls')),
 )
 
 

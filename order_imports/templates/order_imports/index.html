@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block extrajs %}
+    <script src="{% static 'libs/bower_components/dropzone/dist/min/dropzone.min.js' %}"></script>
+    <script src="{% static 'order_imports/js/index.js' %}"></script>
+{% endblock %}
+
+{% block extracss %}
+    <link href="{% static 'libs/bower_components/dropzone/dist/min/basic.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/dropzone/dist/min/dropzone.min.css' %}" rel="stylesheet">
+    <style type="text/css">
+        .dropzone {
+            min-height: 140px;
+            border: 1px dashed #1ab394;
+            background: white;
+            padding: 20px 20px;
+            text-align: center;
+        }
+        .dropzone .dz-message {
+            font-size: 16px;
+        }
+        .fa-check {
+            color: #93c47d;
+        }
+        .fa-times {
+            color: #ed5565;
+        }
+    </style>
+{% endblock %}
+
+{% block main-container %}
+<div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Order Imports</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link">
+                <i class="fa fa-chevron-up"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-1 control-label">Store</label>
+                <div class="col-sm-11">
+                    <select class="form-control m-b" name="stores" autocomplete="off">
+                        {% for store in stores %}
+                        <option value="{% url 'order_imports_upload' store_id=store.id %}">{{ store.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <form action="#" class="dropzone" id="dropzoneForm">
+            <div class="fallback">
+                <input name="file" type="file" />
+            </div>
+        </form>
+
+        <br>
+
+        <form action="{% url 'order_imports_approve' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="data" value="">
+            <div class="form-group">
+                <button class="btn btn-primary pull-right" type="submit">Approve</button>
+            </div>
+        </form>
+
+        <br>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order Id #</th>
+                    <th>Line Item ID / Line Item SKU</th>
+                    <th>Tracking Number</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="clone hidden">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

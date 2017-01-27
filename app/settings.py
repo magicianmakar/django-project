@@ -63,6 +63,7 @@ INSTALLED_APPS = (
     'product_alerts',
     'analytic_events',
     'order_exports',
+    'order_imports',
 )
 
 MIDDLEWARE_CLASSES = (
