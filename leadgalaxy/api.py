@@ -1132,9 +1132,26 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_success()
 
         if form_webapp:
-            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha', 'validate_tracking_number']
+            bool_config = [
+                'make_visisble',
+                'epacket_shipping',
+                'auto_ordered_mark',
+                'aliexpress_captcha',
+                'validate_tracking_number',
+                'aliexpress_as_notes',
+                'aliexpress_as_order_tag',
+                'aliexpress_as_custom_note',
+            ]
         else:
-            bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha']
+            bool_config = [
+                'make_visisble',
+                'epacket_shipping',
+                'auto_ordered_mark',
+                'aliexpress_captcha',
+                'aliexpress_as_notes',
+                'aliexpress_as_order_tag',
+                'aliexpress_as_custom_note',
+            ]
 
         bool_config += ['order_custom_line_attr']
 
@@ -1642,10 +1659,23 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ).update(track=track)
 
             if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
-                # TODO: make this done with one api call
-                tasks.mark_as_ordered_note.apply_async(
-                    args=[store.id, order_id, line_id, source_id],
-                    countdown=note_delay)
+                profile = user.models_user.profile
+
+                if profile.get_config_value('aliexpress_as_notes'):
+                    # TODO: make this done with one api call
+                    tasks.mark_as_ordered_note.apply_async(
+                        args=[store.id, order_id, line_id, source_id],
+                        countdown=note_delay)
+
+                if profile.get_config_value('aliexpress_as_custom_note'):
+                    args = [store.id, order_id, source_id]
+                    countdown = note_delay
+                    tasks.mark_as_ordered_note_attributes.apply_async(args=args, countdown=countdown)
+
+                if profile.get_config_value('aliexpress_as_order_tag'):
+                    args = [store.id, order_id, str(source_id)]
+                    countdown = note_delay
+                    tasks.mark_as_ordered_add_tag.apply_async(args=args, countdown=countdown)
 
             store.pusher_trigger('order-source-id-add', {
                 'track': track.id,

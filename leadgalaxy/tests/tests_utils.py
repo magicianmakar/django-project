@@ -1,5 +1,5 @@
 import simplejson as json
-from mock import patch
+from mock import patch, Mock
 
 from django.core.cache import cache
 from django.test import TestCase, TransactionTestCase
@@ -14,6 +14,8 @@ from leadgalaxy.models import (
 )
 
 from product_alerts.events import ProductChangeEvent
+
+import shopify_orders.tests.factories as order_factories
 
 import factory
 
@@ -727,3 +729,12 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         new_data = event.variants_actions(self.data)
 
         self.assertEqual(new_data['product']['variants'][found]['inventory_quantity'], variant_change['new_value'])
+
+
+class AddShopifyOrderTagTestCase(TestCase):
+    @patch('leadgalaxy.utils.set_shopify_order_tags')
+    @patch('leadgalaxy.utils.get_shopify_order_tags', Mock(return_value='foo,bar'))
+    def test_must_add_tag_to_order(self, set_shopify_order_tags):
+        order = order_factories.ShopifyOrderFactory()
+        utils.add_shopify_order_tag(order.store, order.order_id, 'baz')
+        set_shopify_order_tags.assert_called_with(order.store, order.order_id, 'foo,bar,baz')

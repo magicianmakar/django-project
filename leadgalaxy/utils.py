@@ -747,6 +747,16 @@ def get_shopify_order_note(store, order_id):
     return order['note']
 
 
+def get_shopify_order_note_attributes(store, order_id):
+    order = get_shopify_order(store, order_id)
+    return order['note_attributes']
+
+
+def get_shopify_order_tags(store, order_id):
+    order = get_shopify_order(store, order_id)
+    return order['tags']
+
+
 def set_shopify_order_note(store, order_id, note):
     rep = requests.put(
         url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
@@ -754,6 +764,46 @@ def set_shopify_order_note(store, order_id, note):
             'order': {
                 'id': order_id,
                 'note': note[:5000]
+            }
+        }
+    )
+
+    response = rep.text
+    rep.raise_for_status()
+
+    if rep.ok:
+        response = rep.json()
+
+    return response['order']['id']
+
+
+def set_shopify_order_note_attributes(store, order_id, note_attributes):
+    rep = requests.put(
+        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+        json={
+            'order': {
+                'id': order_id,
+                'note_attributes': note_attributes
+            }
+        }
+    )
+
+    response = rep.text
+    rep.raise_for_status()
+
+    if rep.ok:
+        response = rep.json()
+
+    return response['order']['id']
+
+
+def set_shopify_order_tags(store, order_id, tags):
+    rep = requests.put(
+        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+        json={
+            'order': {
+                'id': order_id,
+                'tags': tags
             }
         }
     )
@@ -779,6 +829,19 @@ def add_shopify_order_note(store, order_id, new_note, current_note=False):
         note = new_note
 
     return set_shopify_order_note(store, order_id, note)
+
+
+def add_shopify_order_tag(store, order_id, tag):
+    tags = get_shopify_order_tags(store, order_id)
+    tag_list = tags.split(',')
+
+    if tag not in tag_list:
+        tag_list.append(tag)
+        tags = ','.join(tag_list)
+
+        return set_shopify_order_tags(store, order_id, tags)
+
+    return order_id
 
 
 def get_shopify_order_tags(store, order_id):
