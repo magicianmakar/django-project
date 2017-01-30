@@ -4961,14 +4961,13 @@ def orders_place(request):
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
     redirect_url = False
-    services = ['ali', 'admitad']
     if not disable_affiliate:
         if user_admitad_credentials:
             service = 'admitad'
         elif user_ali_credentials:
             service = 'ali'
         else:
-            service = random.choice(services)
+            service = 'admitad'
 
         if service == 'ali' and ali_api_key and ali_tracking_id:
             redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
