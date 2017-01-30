@@ -1,32 +1,25 @@
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 
 from leadgalaxy.models import AliexpressProductChange
-from leadgalaxy.utils import send_email_from_template, get_variant_name, get_shopify_product
+from leadgalaxy.utils import send_email_from_template, get_variant_name
 import simplejson as json
 from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
-
-STATIC_URL_BASE = 'http://dev.shopifiedapp.com/static/'
-PRODUCT_URL_BASE = 'http://dev.shopifiedapp.com/product'
-
-if not settings.DEBUG:
-    STATIC_URL_BASE = 'https:{}'.format(settings.STATIC_URL)
-    PRODUCT_URL_BASE = 'https://app.shopifiedapp.com/product'
 
 
 class Command(BaseCommand):
     help = 'Send product change alerts per every given hours'
 
     def add_arguments(self, parser):
-        parser.add_argument('-f',
-                            '--frequency',
-                            dest='frequency',
-                            default=24,
-                            help='Given a frequency, in hours, send product change alerts via email'
-                            )
+        parser.add_argument(
+            '-f',
+            '--frequency',
+            dest='frequency',
+            default=24,
+            help='Given a frequency, in hours, send product change alerts via email'
+        )
 
     def handle(self, *args, **options):
         try:
@@ -40,6 +33,7 @@ class Command(BaseCommand):
         now = timezone.now()
         earlier = now - timezone.timedelta(hours=frequency)
         all_changes = AliexpressProductChange.objects.filter(created_at__range=(earlier, now))
+
         changes_by_user = {}
 
         for c in all_changes:
@@ -65,13 +59,15 @@ class Command(BaseCommand):
                 'quantity_change': self.get_config('alert_quantity_change', change.product, user),
                 'price_change': self.get_config('alert_price_change', change.product, user),
             }
+
             common_data = {
-                'image': change.product.get_images()[0],  # self.get_shopify_product_image(change.product),
+                'image': change.product.get_images()[0],
                 'title': change.product.title,
-                'url': '{}/{}'.format(PRODUCT_URL_BASE, change.product.id),
+                'url': 'https://app.shopifiedapp.com/product/{}'.format(change.product.id),
                 'shopify_url': change.product.store.get_link('/admin/products/{}'.format(change.product.get_shopify_id())),
                 'open_orders': change.orders_count()
             }
+
             events = json.loads(change.data)
             product_changes = events['changes']['product']
             variants_changes = []
@@ -116,9 +112,12 @@ class Command(BaseCommand):
                 new_prices = list(set(new_prices))
                 old_prices = list(set(old_prices))
                 if len(new_prices):
+                    from_range = '${:.02f} - ${:.02f}'.format(min(old_prices), max(old_prices))
+                    to_range = '${:.02f} - ${:.02f}'.format(min(new_prices), max(new_prices))
+
                     changes_map['price'].append(dict({
-                        'from': '${}'.format(old_prices[0]) if len(old_prices) == 1 else '${} -> ${}'.format(min(old_prices), max(old_prices)),
-                        'to': '${}'.format(new_prices[0]) if len(new_prices) == 1 else '${} -> ${}'.format(min(new_prices), max(new_prices)),
+                        'from': '${:.02f}'.format(old_prices[0]) if len(old_prices) == 1 else from_range,
+                        'to': '${:.02f}'.format(new_prices[0]) if len(new_prices) == 1 else to_range,
                         'increase': max(new_prices) > max(old_prices)
                     }, **common_data))
 
@@ -127,11 +126,11 @@ class Command(BaseCommand):
                 old_quantities = list(set(old_quantities))
                 if len(new_quantities):
                     changes_map['quantity'].append(dict({
-                        'from': '{}'.format(old_quantities[0]) if len(old_quantities) == 1 else '{} -> {}'.format(
+                        'from': '{}'.format(old_quantities[0]) if len(old_quantities) == 1 else '{} - {}'.format(
                             min(old_quantities),
                             max(old_quantities)
                         ),
-                        'to': '{}'.format(new_quantities[0]) if len(new_quantities) == 1 else '{} -> {}'.format(
+                        'to': '{}'.format(new_quantities[0]) if len(new_quantities) == 1 else '{} - {}'.format(
                             min(new_quantities),
                             max(new_quantities)
                         ),
@@ -146,8 +145,8 @@ class Command(BaseCommand):
         data = {
             'username': user.username,
             'changes_map': changes_map,
-            'static_url_base': STATIC_URL_BASE
         }
+
         send_email_from_template(
             'product_change_notify.html',
             '[Shopified App] AliExpress Product Alert',
@@ -162,12 +161,3 @@ class Command(BaseCommand):
             value = user.get_config(name, default)
 
         return value
-
-    def get_shopify_product_image(self, product):
-        shopify_product = get_shopify_product(product.store, product.get_shopify_id())
-        if shopify_product:
-            image = shopify_product.get('image')
-            if image and type(image) is dict:
-                return image.get('src')
-
-        return None
