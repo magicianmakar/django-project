@@ -4955,8 +4955,8 @@ def orders_place(request):
         raven_client.captureException()
         raise Http404("Product or Order not set")
 
-    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user)
-    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user)
+    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user.models_user)
+    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 

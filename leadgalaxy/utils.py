@@ -1491,7 +1491,7 @@ def get_admitad_credentials(user):
     user_credentials = True
 
     if user.can('admitad_affiliate.use'):
-        site_id = user.models_user.get_config('admitad_site_id')
+        site_id = user.get_config('admitad_site_id')
     else:
         site_id = None
 
