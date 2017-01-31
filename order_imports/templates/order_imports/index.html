@@ -6,7 +6,7 @@
 {% block main-container %}
 <div class="ibox float-e-margins">
     <div class="ibox-title">
-        <h5>Order Imports</h5>
+        <h5>Import Tracking #'s</h5>
         <div class="ibox-tools">
             <a class="collapse-link">
                 <i class="fa fa-chevron-up"></i>
@@ -16,8 +16,8 @@
     <div class="ibox-content">
         <div class="form-horizontal">
             <div class="form-group">
-                <label class="col-sm-1 control-label">Store</label>
-                <div class="col-sm-11">
+                <label class="col-sm-3 control-label">Step 1: Select Your Store</label>
+                <div class="col-sm-4">
                     <select class="form-control m-b" name="stores" autocomplete="off">
                         {% for store in stores %}
                         <option value="{% url 'order_imports_upload' store_id=store.id %}">{{ store.title }}</option>

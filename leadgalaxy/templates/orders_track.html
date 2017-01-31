@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load template_helper %}
+{% load perms_helper %}
 {% load url_tools %}
 {% load compress %}
 
@@ -20,13 +21,13 @@
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                    <div class="row">
+                    <div class="row m-b">
                         <div class="col-md-4">
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter</button>
                             <span class="btn btn-white btn-rounded btn-sm">Tracking count: {{paginator.count}} </span>
                         </div>
 
-                        <div class="col-md-4 col-md-offset-4 text-right">
+                        <div class="col-md-6 col-md-offset-2 text-right">
                             <div class="btn-group ">
                                 <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle" aria-expanded="false">
                                     <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
@@ -39,6 +40,12 @@
                                     </li>
                                     </ul>
                             </div>
+
+                            {% if request.user|can:'order_imports.use' %}
+                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r"
+                                title="Import Tracking IDs"
+                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
+                            {% endif %}
 
                             <button class="btn btn-success btn-rounded btn-outline btn-sm aliexpress-sync-btn" data-store="{{store.id}}">
                                 <i class="fa fa-refresh"></i> Sync with Aliexpress</button>

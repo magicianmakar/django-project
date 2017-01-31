@@ -8,7 +8,8 @@ window.OrderImportsIndex = {
             paramName: "file", // The name that will be used to transfer the file
             maxFilesize: 2, // MB
             uploadMultiple: false,
-            dictDefaultMessage: "<strong>Drop files here or click to upload. </strong></br> (After the file is dropped or selected, it will be sent to the server.)",
+            dictDefaultMessage: "<strong>Step 2: Drop files here or click to upload</strong></br>" +
+                                "(After the file is dropped or selected, it will be sent to the server.)",
             acceptedFiles: '.csv',
             init: function() {
                 this.on("processing", function(file) {
