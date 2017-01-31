@@ -313,40 +313,48 @@ class AffiliateTestCase(TestCase):
             'SAPlaceOrder': '1_123_123'
         }
 
-    @patch('random.choice', Mock(return_value='ali'))
+    @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
-    def test_user_without_affiliate_aliexpress(self, affiliate_url):
-        affiliate_url.return_value = (
+    def test_user_without_affiliate(self, aliexpress_url, admitad_url):
+        aliexpress_url.return_value = (
             r'http://s.click.aliexpress.com/deep_link.htm?'
             r'aff_short_key=qJIMbIe&dl_target_url=https%3A%2F%2Fwww.aliexpress.com%2F'
             r'item%2F-%2F32735736988.html'
         )
 
+        admitad_url.return_value = (
+            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
+        )
+
         r = self.client.get('/orders/place', self.place_order_data)
 
-        affiliate_url.assert_called_with(
-            '37954', 'shopifiedapp', self.place_order_data['product']
-        )
+        self.assertTrue(aliexpress_url.called or admitad_url.called)
+        if aliexpress_url.called:
+            aliexpress_url.assert_called_with(
+                '37954', 'shopifiedapp', self.place_order_data['product']
+            )
+        elif admitad_url.called:
+            admitad_url.assert_called_with(
+                '1e8d114494c02ea3d6a016525dc3e8', self.place_order_data['product']
+            )
 
         # Ensure extra query are well encoded
         self.assertIn(r'%3FSAPlaceOrder%3D{}'.format(self.place_order_data['SAPlaceOrder']), r['location'])
 
-    @patch('random.choice')
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
-    def test_user_disable_affiliate(self, get_aliexpress_affiliate_url, get_admitad_affiliate_url, random_choice):
+    def test_user_disable_affiliate(self, get_aliexpress_affiliate_url, get_admitad_affiliate_url):
         self.user.set_config('_disable_affiliate', True)
 
         r = self.client.get('/orders/place', self.place_order_data)
 
         get_admitad_affiliate_url.assert_not_called()
         get_aliexpress_affiliate_url.assert_not_called()
-        random_choice.assert_not_called()
 
         self.assertIn(r'SAPlaceOrder={}'.format(self.place_order_data['SAPlaceOrder']), r['location'])
 
-    @patch('random.choice', Mock(return_value='admitad'))
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     def test_user_without_affiliate_admitad(self, affiliate_url):
         affiliate_url.return_value = (
@@ -363,10 +371,9 @@ class AffiliateTestCase(TestCase):
         # Ensure extra query are well encoded
         self.assertIn(r'%3FSAPlaceOrder%3D{}'.format(self.place_order_data['SAPlaceOrder']), r['location'])
 
-    @patch('random.choice')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
-    def test_user_with_affiliate_aliexpress(self, affiliate_url, random_choice):
+    def test_user_with_affiliate_aliexpress(self, affiliate_url):
         self.user.set_config('aliexpress_affiliate_key', '12345678')
         self.user.set_config('aliexpress_affiliate_tracking', 'abcdef')
 
@@ -384,13 +391,9 @@ class AffiliateTestCase(TestCase):
             self.place_order_data['product']
         )
 
-        # Always use Aliexpress
-        random_choice.assert_not_called()
-
-    @patch('random.choice')
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
-    def test_user_with_affiliate_admitad(self, affiliate_url, random_choice):
+    def test_user_with_affiliate_admitad(self, affiliate_url):
         self.user.set_config('admitad_site_id', '987654321')
 
         affiliate_url.return_value = (
@@ -405,14 +408,10 @@ class AffiliateTestCase(TestCase):
             self.place_order_data['product']
         )
 
-        # Always use Aliexpress
-        random_choice.assert_not_called()
-
-    @patch('random.choice')
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
-    def test_user_with_both_affiliates(self, get_aliexpress_affiliate_url, get_admitad_affiliate_url, random_choice):
+    def test_user_with_both_affiliates(self, get_aliexpress_affiliate_url, get_admitad_affiliate_url):
         self.user.set_config('aliexpress_affiliate_key', '12345678')
         self.user.set_config('aliexpress_affiliate_tracking', 'abcdef')
         self.user.set_config('admitad_site_id', '987654321')
@@ -431,7 +430,6 @@ class AffiliateTestCase(TestCase):
 
         # Use Admitad only when user have both Aliexpress and Admitad
         get_aliexpress_affiliate_url.assert_not_called()
-        random_choice.assert_not_called()
 
 
 class RegisterTestCase(TestCase):
