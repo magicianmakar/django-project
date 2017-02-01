@@ -825,6 +825,7 @@ var ravenOptions = {
     // CDNJS
     /cdn\/js\//,
     /ajax\/libs\//,
+    /frame.[^\.]{8}.js/,
   ]
 };
 
