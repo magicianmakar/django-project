@@ -164,10 +164,18 @@ def install(request, store):
                 }
             )
 
-            messages.error(
-                request,
-                'Your plan does not support connecting another Shopify store. '
-                'Please <a href="mailto:support@shopifiedapp.com">contact support</a> to learn how to connect more stores.')
+            plans_url = request.build_absolute_uri('/user/profile#plan')
+            if user.profile.plan.is_free:
+                messages.error(
+                    request,
+                    'Please Activate your account first by visiting '
+                    '<a href="{}">Profile page</a>'.format(plans_url))
+            else:
+                messages.error(
+                    request,
+                    'Your plan does not support connecting another Shopify store. '
+                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@shopifiedapp.com">'
+                    'contact support</a> to learn how to connect more stores'.format(plans_url))
 
             return HttpResponseRedirect('/')
 
@@ -213,6 +221,8 @@ def callback(request):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         if not can_add:
+            plans_url = request.build_absolute_uri('/user/profile#plan')
+
             if user.profile.plan.is_free:
                 raven_client.captureMessage(
                     'Activate your account first',
@@ -222,13 +232,14 @@ def callback(request):
 
                 messages.error(
                     request,
-                    'Please Activate your account first by visiting:\n{}').format(
-                    request.build_absolute_uri('/user/profile#plan'))
+                    'Please Activate your account first by visiting: '
+                    '<a href="{}">Your Profile page</a>'.format(plans_url))
             else:
                 messages.error(
                     request,
                     'Your plan does not support connecting another Shopify store. '
-                    'Please contact support@shopifiedapp.com to learn how to connect more stores.')
+                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@shopifiedapp.com">'
+                    'contact support</a> to learn how to connect more stores'.format(plans_url))
 
             return HttpResponseRedirect('/')
 
