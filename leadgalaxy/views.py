@@ -1757,7 +1757,7 @@ def proccess_api(request, user, method, target, data):
             elif tracks_count == 1:
                 saved_track = tracks.first()
 
-                if order_line_sku and saved_track.fulfillment_status == 'fulfilled':
+                if order_line_sku and saved_track.shopify_status == 'fulfilled':
                     # Line is already fulfilled
                     return JsonResponse({'status': 'ok'})
 
