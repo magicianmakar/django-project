@@ -75,13 +75,23 @@ class PlanSelectionEvent(Event):
                         self.mixpanel_script])
 
     def get_data(self):
+        plan = self.user.profile.plan
+        stripe_plan = getattr(plan, 'stripe_plan', None)
+        amount = float(stripe_plan.amount) if stripe_plan else 0
+
         return {'username': self.user.username,
                 'email': self.user.email,
-                'plan': self.user.profile.plan.title}
+                'plan': plan.title,
+                'amount': amount}
 
     @cached_property
     def facebook_script(self):
-        return "<script>fbq('trackCustom', 'PlanSelection', %s);</script>" % json.dumps(self.get_data())
+        event_data = self.get_data()
+        data = {'value': event_data['amount'],
+                'currency': 'USD',
+                'content_name': event_data['plan']}
+
+        return "<script>fbq('track', 'AddToCart', %s);</script>" % json.dumps(data)
 
     @cached_property
     def google_analytics_script(self):
