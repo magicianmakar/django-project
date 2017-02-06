@@ -218,7 +218,7 @@ AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 
 S3_STATIC_BUCKET = os.environ.get('S3_BUCKET_NAME', 'shopifiedapp-assets')
-S3_PRODUCT_FEED_BUCKET = 'shopifiedapp-feeds'
+S3_PRODUCT_FEED_BUCKET = os.environ.get('S3_PRODUCT_FEED_BUCKET', 'shopifiedapp-feeds')
 S3_UPLOADS_BUCKET = os.environ.get('S3_UPLOADS_BUCKET', 'shopifiedapp-uploads')
 
 AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
@@ -228,7 +228,7 @@ if not DEBUG:
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_URL_PROTOCOL = ''
-    AWS_S3_CUSTOM_DOMAIN = 'd2kadg5e284yn4.cloudfront.net'
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', 'd2kadg5e284yn4.cloudfront.net')
 
     AWS_IS_GZIPPED = True
     AWS_HEADERS = {
