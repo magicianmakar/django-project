@@ -161,7 +161,7 @@ DATABASE_ROUTERS = [
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_PROXY_PROTOCOL', 'https')
 
-SECURE_SSL_REDIRECT = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG and not os.environ.get('DISABLE_SSL_REDIRECT')
 SECURE_REDIRECT_EXEMPT = [
     '^webhook/',
     '^marketing/feeds/',
