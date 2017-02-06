@@ -193,9 +193,8 @@ def export_product(req_data, target, user_id):
                                       ).format(shopify_error)}
                 elif 'Exceeded maximum number of variants allowed' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
-                                      'Shopify will only allow 100 variant combinations per product.\n'
-                                      'Please delete some of the Color, Size or an other '
-                                      'variant options to meet Shopify\'s requirements.'
+                                      'Please reduce the number of variants to 100 or less by '
+                                      'removing some variant choices to meet Shopify\'s requirements.'
                                       ).format(shopify_error)}
                 else:
                     return {'error': u'Shopify Error: {}'.format(shopify_error)}
