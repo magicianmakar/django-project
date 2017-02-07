@@ -102,8 +102,6 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
     def handle_product(self, product, action):
-        data = json.loads(product.data)
-
         try:
             if product.price_notification_id:
                 self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.'))
@@ -117,9 +115,8 @@ class Command(BaseCommand):
                 return
 
             try:
-                store = data.get('store')
-                store_id = store.get('url')
-                store_id = int(re.findall('/([0-9]+)', store_id)[0])
+                supplier = product.default_supplier
+                store_id = int(re.findall('/([0-9]+)', supplier.supplier_url).pop())
             except Exception as e:
                 product.price_notification_id = -2
                 product.save()
