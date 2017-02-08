@@ -186,3 +186,34 @@ class ExtraStoreTestCase(TestCase):
 
             self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
             self.assertEqual(self.user.extrastore_set.last().status, 'disabled')
+
+    def test_unlimited_plans(self):
+        plan = GroupPlan.objects.create(
+            title='Unlimited', slug='unlimited', stores=-1,
+            payment_gateway=1)
+
+        plan.is_stripe = MagicMock(return_value=True)
+
+        self.user.profile.change_plan(plan)
+
+        self.assertEqual(self.user.profile.plan, plan)
+
+        self.assertTrue(self.user.profile.plan.is_stripe())
+        self.assertFalse(have_extra_stores(self.user))
+
+        can_add, total_allowed, user_count = self.user.profile.can_add_store()
+        self.assertTrue(can_add)
+        self.assertEqual(total_allowed, self.user.profile.plan.stores)
+        self.assertEqual(user_count, self.user.profile.get_active_stores().count())
+
+        self.assertEqual(self.user.extrastore_set.count(), 0)
+
+        for i in range(10):
+            ShopifyStore.objects.create(
+                user=self.user, title="test%s" % i, api_url=SHOPIFY_APP_URL,
+                version=2, shop=MYSHOPIFY_DOMAIN)
+
+        self.assertTrue(self.user.profile.get_active_stores().count() >= 10)
+
+        self.assertFalse(have_extra_stores(self.user))
+        self.assertEqual(self.user.extrastore_set.count(), 0)

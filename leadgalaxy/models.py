@@ -326,8 +326,8 @@ class UserProfile(models.Model):
             return self.subuser_parent.profile.can_add_store()
 
         user_stores = int(self.stores)
-        if user_stores == -2:
-            total_allowed = self.plan.stores  # -1 mean unlimited
+        if user_stores == -2:  # Use GroupPlan.stores limit (default)
+            total_allowed = self.plan.stores  # if equal -1 that mean user can add unlimited store
         else:
             total_allowed = user_stores
 
