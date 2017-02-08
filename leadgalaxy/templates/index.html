@@ -514,6 +514,7 @@
                                             <option value="notify" {% if config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="update" {% if config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update with the same margin</option>
                                             <option value="update_for_increase" {% if config.alert_price_change == 'update_for_increase' %} selected="selected"{% endif %}>Update only when price goes up</option>
+                                            <option value="none" {% if config.alert_price_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -526,6 +527,7 @@
                                         <select id="alert_quantity_change" name="alert_quantity_change" class="form-control">
                                             <option value="notify"{% if config.alert_quantity_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="update"{% if config.alert_quantity_change == 'update' %} selected="selected"{% endif %}>Update automatically</option>
+                                            <option value="none" {% if config.alert_quantity_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -541,6 +543,7 @@
                                             <option value="notify"{% if config.alert_product_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="unpublish"{% if config.alert_product_disappears == 'unpublish' %} selected="selected"{% endif %}>Unpublish product</option>
                                             <option value="zero_quantity"{% if config.alert_product_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                            <option value="none" {% if config.alert_product_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -554,6 +557,7 @@
                                             <option value="notify"{% if config.alert_variant_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="remove"{% if config.alert_variant_disappears == 'remove' %} selected="selected"{% endif %}>Remove the variant</option>
                                             <option value="zero_quantity"{% if config.alert_variant_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                            <option value="none" {% if config.alert_variant_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
