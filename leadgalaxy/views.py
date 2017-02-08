@@ -3053,8 +3053,13 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     user_stores = request.user.profile.get_active_stores(flat=True)
     res = ShopifyProduct.objects.select_related('store') \
                                 .defer('variants_map', 'shipping_map', 'notes') \
-                                .filter(user=models_user) \
-                                .filter(Q(store__in=user_stores) | Q(store=None))
+                                .filter(user=models_user)
+
+    if request.user.is_subuser:
+        res = res.filter(store__in=user_stores)
+    else:
+        res = res.filter(Q(store__in=user_stores) | Q(store=None))
+
     if store:
         if store == 'c':  # connected
             res = res.exclude(shopify_id=0)
