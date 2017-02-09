@@ -1115,7 +1115,13 @@ class ShopifyProduct(models.Model):
         if type(data) is not dict:
             data = json.loads(data)
 
-        product_data = json.loads(self.data)
+        if data.get('weight_unit') == 'lbs':
+            data['weight_unit'] = 'lb'
+
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
 
         product_data.update(data)
 

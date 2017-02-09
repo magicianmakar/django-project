@@ -180,7 +180,8 @@ def export_product(req_data, target, user_id):
                         shopify_error, store, store.get_link('/admin/products.json', api=True)
                     ).encode('utf-8')
                 else:
-                    print u'SHOPIFY EXPORT: {} - Store: {}'.format(shopify_error, store).encode('utf-8')
+                    print u'SHOPIFY EXPORT: {} - Store: {} - Product: {}'.format(
+                        shopify_error, store, req_data.get('product')).encode('utf-8')
 
                 if 'requires write_products scope' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
@@ -292,8 +293,9 @@ def export_product(req_data, target, user_id):
                 }
 
             product.update_data(data)
-
             product.store = store
+
+            product.save()
 
         else:  # New product to save
 
@@ -307,31 +309,32 @@ def export_product(req_data, target, user_id):
             is_active = req_data.get('activate', True)
 
             try:
-                product = ShopifyProduct(store=store, user=user.models_user, data=data, is_active=is_active)
+                product = ShopifyProduct(store=store, user=user.models_user, is_active=is_active)
                 product.set_original_data(original_data)
+                product.update_data(data)
                 product.notes = req_data.get('notes', '')
 
                 user.can_add(product)
 
                 product.save()
 
-                supplier = product.get_supplier_info()
-                product.default_supplier = ProductSupplier.objects.create(
+                supplier_info = product.get_supplier_info()
+                supplier = ProductSupplier.objects.create(
                     store=store,
                     product=product,
                     product_url=original_url,
-                    supplier_name=supplier.get('name'),
-                    supplier_url=supplier.get('url'),
+                    supplier_name=supplier_info.get('name'),
+                    supplier_url=supplier_info.get('url'),
                     is_default=True
                 )
+
+                product.set_default_supplier(supplier, commit=True)
 
             except PermissionDenied as e:
                 raven_client.captureException()
                 return {
                     'error': "Add Product: {}".format(e.message)
                 }
-
-        product.save()
 
         utils.smart_board_by_product(user.models_user, product)
 
