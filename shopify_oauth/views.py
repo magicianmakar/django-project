@@ -210,11 +210,19 @@ def callback(request):
         code=request.GET['code'])
 
     try:
-        store = ShopifyStore.objects.get(user=user, shop=shop, version=2, is_active=True)
+        try:
+            store = ShopifyStore.objects.get(user=user, shop=shop, version=2)
+
+        except ShopifyStore.MultipleObjectsReturned:
+            store = ShopifyStore.objects.filter(user=user, shop=shop, version=2).order_by('-id').first()
 
         store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
         store.access_token = token['access_token']
         store.scope = token['access_token'][0]
+
+        store.is_active = True
+        store.uninstalled_at = None
+
         store.save()
 
     except ShopifyStore.DoesNotExist:

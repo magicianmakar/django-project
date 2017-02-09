@@ -2967,15 +2967,8 @@ def webhook(request, provider, option):
 
             elif topic == 'app/uninstalled':
                 store.is_active = False
+                store.uninstalled_at = timezone.now()
                 store.save()
-
-                AliexpressProductChange.objects.filter(product__store=store).delete()
-
-                # Make all products related to this store non-connected
-                store.shopifyproduct_set.update(store=None, shopify_id=0)
-
-                # Change Suppliers store
-                ProductSupplier.objects.filter(store=store).update(store=None)
 
                 utils.detach_webhooks(store, delete_too=True)
 

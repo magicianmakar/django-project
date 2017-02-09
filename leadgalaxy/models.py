@@ -516,8 +516,9 @@ class ShopifyStore(models.Model):
 
     user = models.ForeignKey(User)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    uninstalled_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
