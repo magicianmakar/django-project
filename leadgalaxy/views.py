@@ -264,6 +264,7 @@ def proccess_api(request, user, method, target, data):
 
         store.is_active = False
         store.uninstalled_at = timezone.now()
+        store.save()
 
         if store.version == 2:
             try:
