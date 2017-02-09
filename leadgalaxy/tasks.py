@@ -309,10 +309,9 @@ def export_product(req_data, target, user_id):
             is_active = req_data.get('activate', True)
 
             try:
-                product = ShopifyProduct(store=store, user=user.models_user, is_active=is_active)
-                product.set_original_data(original_data)
+                product = ShopifyProduct(store=store, user=user.models_user, notes=req_data.get('notes', ''), is_active=is_active)
                 product.update_data(data)
-                product.notes = req_data.get('notes', '')
+                product.set_original_data(original_data, commit=False)
 
                 user.can_add(product)
 
