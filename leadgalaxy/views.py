@@ -259,21 +259,11 @@ def proccess_api(request, user, method, target, data):
         return JsonResponse(stores, safe=False)
 
     if method == 'POST' and target == 'delete-store':
-        store_id = data.get('store')
-
-        store = ShopifyStore.objects.get(id=store_id, user=user)
-        user.can_delete(store)
-
-        # Sub users can't reach here
+        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        user.can_delete(store)  # Sub users can't delete a store
 
         store.is_active = False
-        store.save()
-
-        # Make all products related to this store non-connected
-        store.shopifyproduct_set.update(store=None, shopify_id=0)
-
-        # Change Suppliers store
-        ProductSupplier.objects.filter(store=store).update(store=None)
+        store.uninstalled_at = timezone.now()
 
         if store.version == 2:
             try:

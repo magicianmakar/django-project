@@ -214,7 +214,8 @@ def callback(request):
             store = ShopifyStore.objects.get(user=user, shop=shop, version=2)
 
         except ShopifyStore.MultipleObjectsReturned:
-            store = ShopifyStore.objects.filter(user=user, shop=shop, version=2).order_by('-id').first()
+            store = ShopifyStore.objects.filter(user=user, shop=shop, version=2) \
+                                        .order_by('-id', '-uninstalled_at').first()
 
         store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
         store.access_token = token['access_token']
