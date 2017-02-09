@@ -245,7 +245,7 @@ def callback(request):
             return HttpResponseRedirect('/')
 
         store = ShopifyStore.objects.filter(user=user, shop=shop, version=2, is_active=False) \
-                                    .order_by('-uninstalled_at', '-id').first()
+                                    .order_by('uninstalled_at', '-id').first()
         if store:
             store.is_active = True
             store.uninstalled_at = None
