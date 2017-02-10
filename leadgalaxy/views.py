@@ -887,11 +887,9 @@ def proccess_api(request, user, method, target, data):
         target_user = User.objects.get(id=data.get('user'))
 
         if data.get('allow_trial'):
-            if user.is_recurring_customer():
-                user.stripe_customer.can_trial = True
-                return JsonResponse({'status': 'ok'})
-            else:
-                return JsonResponse({'error': 'Not a Recurring Customer'}, status=500)
+            user.stripe_customer.can_trial = True
+            user.stripe_customer.save()
+            return JsonResponse({'status': 'ok'})
 
         plan = GroupPlan.objects.get(id=data.get('plan'))
 
