@@ -5028,7 +5028,10 @@ def orders_place(request):
             'cart': 'SACart' in request.GET
         })
 
-        keen.add_event("auto_fulfill", event_data)
+        try:
+            keen.add_event("auto_fulfill", event_data)
+        except:
+            raven_client.captureException(level='warning')
 
     return HttpResponseRedirect(redirect_url)
 
