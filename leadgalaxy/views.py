@@ -5007,11 +5007,16 @@ def orders_place(request):
 
     order = cache.get(order_key)
     if order and settings.KEEN_PROJECT_ID:
+        plan = request.user.models_user.profile.plan
+
         event_data.update({
             'user': store.user.username,
             'user_id': store.user_id,
             'store': store.title,
             'store_id': store.id,
+            'plan': plan.title,
+            'plan_id': plan.id,
+            'sub_user': request.user.is_subuser,
             'total': order['total'],
             'quantity': order['quantity'],
             'cart': 'SACart' in request.GET
