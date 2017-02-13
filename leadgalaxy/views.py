@@ -5008,6 +5008,11 @@ def orders_place(request):
     order = cache.get(order_key)
     if order and settings.KEEN_PROJECT_ID:
         plan = request.user.models_user.profile.plan
+        affiliate = 'ShopifiedApp'
+        if user_admitad_credentials:
+            affiliate = 'UserAdmitad'
+        elif user_ali_credentials:
+            affiliate = 'UserAliexpress'
 
         event_data.update({
             'user': store.user.username,
@@ -5016,6 +5021,7 @@ def orders_place(request):
             'store_id': store.id,
             'plan': plan.title,
             'plan_id': plan.id,
+            'affiliate': affiliate,
             'sub_user': request.user.is_subuser,
             'total': order['total'],
             'quantity': order['quantity'],
