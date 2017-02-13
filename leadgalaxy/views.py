@@ -52,6 +52,7 @@ from urllib import urlencode
 from io import BytesIO
 
 from raven.contrib.django.raven_compat.models import client as raven_client
+import keen
 
 from .models import *
 from .forms import *
@@ -4981,6 +4982,42 @@ def orders_place(request):
     for k in request.GET.keys():
         if k.startswith('SA') and k not in redirect_url:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
+
+    # Save Auto fulfill event
+    event_data = {}
+    order_key = request.GET['SAPlaceOrder']
+
+    if not order_key.startswith('order_'):
+        order_key = 'order_{}'.format(order_key)
+
+    prefix, store, order, line = order_key.split('_')
+    try:
+        store = ShopifyStore.objects.get(id=store)
+        request.user.can_view(store)
+    except ShopifyStore.DoesNotExist:
+        raise Http404('Store not found')
+
+    for k in request.GET.keys():
+        if k == 'SAPlaceOrder':
+            pass
+        elif k == 'product':
+            event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])[0]
+        elif k.startswith('SA'):
+            event_data[k[2:].lower()] = request.GET[k]
+
+    order = cache.get(order_key)
+    if order and settings.KEEN_PROJECT_ID:
+        event_data.update({
+            'user': store.user.username,
+            'user_id': store.user_id,
+            'store': store.title,
+            'store_id': store.id,
+            'total': order['total'],
+            'quantity': order['quantity'],
+            'cart': 'SACart' in request.GET
+        })
+
+        keen.add_event("auto_fulfill", event_data)
 
     return HttpResponseRedirect(redirect_url)
 

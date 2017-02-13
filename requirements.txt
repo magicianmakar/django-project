@@ -38,6 +38,7 @@ idna==2.2
 ipaddress==1.0.17
 itsdangerous==0.24
 Jinja2==2.8
+keen==0.3.28
 kombu==3.0.37
 lockfile==0.10.2
 loxun==2.0
@@ -66,7 +67,7 @@ queuelib==1.4.2
 raven==5.32.0
 redis==2.10.5
 reportlab==3.3.0
-requests==2.12.4
+requests==2.10.0
 requests-mock==1.1.0
 requests-oauthlib==0.6.2
 rsa==3.4.2
