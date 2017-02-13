@@ -1851,6 +1851,12 @@ def proccess_api(request, user, method, target, data):
             order_data = {'aliexpress': {}}
 
         order_data['aliexpress']['end_reason'] = data.get('end_reason')
+
+        try:
+            order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
+        except:
+            pass
+
         order.data = json.dumps(order_data)
 
         order.save()
