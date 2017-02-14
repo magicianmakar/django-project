@@ -1,6 +1,3 @@
-/* global $, toastr, swal, displayAjaxError */
-/* global setup_full_editor, setup_admin_editor */
-
 (function() {
 'use strict';
 
@@ -390,7 +387,7 @@ $('.edit-custom-templates-btn').click(function (e) {
     e.preventDefault();
 
     if (!document.editor) {
-        setup_full_editor('description');
+        setup_full_editor('description', false, 'editor', true);
     }
 
     $('#product-templates-list-modal').modal({
@@ -567,7 +564,7 @@ $(function () {
 
     setTimeout(function() {
         editor_sync_content();
-        setup_full_editor('default_desc', false, 'default_desc');
+        setup_full_editor('default_desc', false, 'default_desc', true);
     }, 1000);
 });
 

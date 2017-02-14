@@ -348,9 +348,10 @@ function waitForTask(task_id, product, data, callback, callback_data) {
     }, 1000);
 }
 
-function setup_full_editor(textarea_name, include_css, editor_variable) {
+function setup_full_editor(textarea_name, include_css, editor_variable, custom_tags) {
     include_css = typeof(include_css) !== 'undefined' ? include_css : false;
     editor_variable = typeof(editor_variable) !== 'undefined' ? editor_variable : 'editor';
+    custom_tags = typeof(custom_tags) !== 'undefined' ? custom_tags : false;
 
     var styles = ['body { padding: 15px; }'];
     if (include_css) {
@@ -362,12 +363,61 @@ function setup_full_editor(textarea_name, include_css, editor_variable) {
         ];
     }
 
+    CKEDITOR.plugins.add('customtags', {
+        requires: ['richcombo'], //, 'styles' ],
+        init: function(editor) {
+            var config = editor.config,
+                lang = editor.lang.format;
+
+            // Gets the list of tags from the settings.
+            var tags = []; //new Array();
+            //this.add('value', 'drop_text', 'drop_label');
+            tags.push(["{{title}}", "Title", "Title"]);
+            tags.push(["{{description_full}}", "Full Description", "Full Description"]);
+            tags.push(["{{description_simplified}}", "Simplified Description", "Simplified Description"]);
+            tags.push(["{{price}}", "Price", "Price"]);
+            tags.push(["{{compare_at_price}}", "Compare At Price", "Compare At Price"]);
+            tags.push(["{{weight}}", "Weight", "Weight"]);
+            tags.push(["{{vendor}}", "Vendor", "Vendor"]);
+            tags.push(["{{type}}", "Type", "Type"]);
+
+            // Create style objects for all defined styles.
+
+            editor.ui.addRichCombo('CustomTags', {
+                label: "Custom Tags",
+                title: "Custom Tags",
+                className: '',
+                multiSelect: false,
+                panel: {
+                    css: ['https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/skins/moono/editor.css?t=F969'],
+                    voiceLabel: lang.panelVoiceLabel
+                },
+
+                init: function() {
+                    this.startGroup("Tokens");
+                    //this.add('value', 'drop_text', 'drop_label');
+                    for (var this_tag in tags) {
+                        this.add(tags[this_tag][0], tags[this_tag][1], tags[this_tag][2]);
+                    }
+                },
+
+                onClick: function(value) {
+                    editor.focus();
+                    editor.fire('saveSnapshot');
+                    editor.insertHtml(value);
+                    editor.fire('saveSnapshot');
+                }
+            });
+        }
+    });
+
     document[editor_variable] = CKEDITOR.replace(textarea_name, {
         contentsCss: styles,
         // Remove unused plugins.
         removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,templates',
         // Disabled any kind of filtering
         allowedContent : true,
+        extraPlugins: (custom_tags ? 'customtags' : ''),
         toolbar :
         [
             { name: 'document', items : [ 'Source','Maximize' ] },
@@ -382,7 +432,7 @@ function setup_full_editor(textarea_name, include_css, editor_variable) {
             '/',
             { name: 'styles', items : [ 'Format','Font','FontSize' ] },
             { name: 'colors', items : [ 'TextColor','BGColor' ] },
-            { name: 'links', items : [ 'Link','Unlink','Anchor', 'SpecialChar' ] },
+            { name: 'links', items : [ 'Link','Unlink','Anchor', 'SpecialChar', (custom_tags ? 'CustomTags' : '')] },
         ],
     });
 }
