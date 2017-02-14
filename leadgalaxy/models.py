@@ -634,6 +634,9 @@ class ShopifyStore(models.Model):
                                          .count()
 
     def pusher_trigger(self, event, data):
+        if not settings.PUSHER_APP_ID:
+            return
+
         pusher = Pusher(
             app_id=settings.PUSHER_APP_ID,
             key=settings.PUSHER_KEY,
