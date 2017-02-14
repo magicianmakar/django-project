@@ -888,8 +888,8 @@ def proccess_api(request, user, method, target, data):
         target_user = User.objects.get(id=data.get('user'))
 
         if data.get('allow_trial'):
-            user.stripe_customer.can_trial = True
-            user.stripe_customer.save()
+            target_user.stripe_customer.can_trial = True
+            target_user.stripe_customer.save()
             return JsonResponse({'status': 'ok'})
 
         plan = GroupPlan.objects.get(id=data.get('plan'))
