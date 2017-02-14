@@ -169,13 +169,16 @@ def get_api_user(request, data, assert_login=False):
 
     authorization = request.META.get('HTTP_AUTHORIZATION')
     if authorization:
-        authorization = authorization.split(' ')
-        if len(authorization) == 2:
-            authorization = authorization[1]
-        else:
+        if 'undefined' in authorization:
             authorization = None
+        else:
+            authorization = authorization.split(' ')
+            if len(authorization) == 2:
+                authorization = authorization[1]
+            else:
+                authorization = None
 
-    if authorization or 'access_token' in data:
+    if authorization or data.get('access_token'):
         token = authorization if authorization else data.get('access_token')
         user = get_user_from_token(token)
 
