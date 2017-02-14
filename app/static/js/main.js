@@ -363,7 +363,8 @@ function setup_full_editor(textarea_name, include_css, editor_variable, custom_t
         ];
     }
 
-    CKEDITOR.plugins.add('customtags', {
+    if(!CKEDITOR.plugins.registered.hasOwnProperty('customtags')){
+        CKEDITOR.plugins.add('customtags', {
         requires: ['richcombo'], //, 'styles' ],
         init: function(editor) {
             var config = editor.config,
@@ -394,7 +395,7 @@ function setup_full_editor(textarea_name, include_css, editor_variable, custom_t
                 },
 
                 init: function() {
-                    this.startGroup("Tokens");
+                    this.startGroup("Custom Tags");
                     //this.add('value', 'drop_text', 'drop_label');
                     for (var this_tag in tags) {
                         this.add(tags[this_tag][0], tags[this_tag][1], tags[this_tag][2]);
@@ -409,7 +410,8 @@ function setup_full_editor(textarea_name, include_css, editor_variable, custom_t
                 }
             });
         }
-    });
+        });
+    }
 
     document[editor_variable] = CKEDITOR.replace(textarea_name, {
         contentsCss: styles,
