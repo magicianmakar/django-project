@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'analytic_events',
     'order_exports',
     'order_imports',
+    'commercehq_core',
 )
 
 MIDDLEWARE_CLASSES = (
