@@ -287,6 +287,8 @@ $('#export-btn').click(function () {
                     }
 
                     variant_data[att] = att_val;
+                } else {
+                    variant_data[att] = '';
                 }
             });
 
