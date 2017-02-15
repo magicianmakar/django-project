@@ -1448,9 +1448,9 @@ class GroupPlan(models.Model):
 
         stores = []
         for i in self.permissions.all():
-            if i.name.endswith('_import.use'):
+            if i.name.endswith('_import.use') and 'pinterest' not in i.name:
                 name = i.name.split('_')[0]
-                stores.append(name)
+                stores.append(name.title())
 
         return stores
 
