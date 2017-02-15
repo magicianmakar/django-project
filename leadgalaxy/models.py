@@ -1162,6 +1162,13 @@ class ProductSupplier(models.Model):
         except:
             return None
 
+    def get_store_id(self):
+        try:
+            if 'aliexpress.com' in self.supplier_url.lower():
+                return int(re.findall('/([0-9]+)', self.supplier_url).pop())
+        except:
+            return None
+
     def short_product_url(self):
         source_id = self.get_source_id()
         if source_id:

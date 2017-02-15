@@ -108,28 +108,28 @@ class Command(BaseCommand):
 
         try:
             supplier = product.default_supplier
-            assert 'aliexpress.com' in supplier.product_url.lower()
-        except:
-            #  Ignore, not connected or not Aliexpress product
-            product.price_notification_id = -1
-            product.save()
-            return
 
-        try:
-            supplier = product.default_supplier
-            store_id = int(re.findall('/([0-9]+)', supplier.supplier_url).pop())
-        except:
-            # Product doesn't have Source Store ID
-            product.price_notification_id = -2
-            product.save()
-            return
+            if 'aliexpress.com' not in supplier.product_url.lower():
+                #  Not connected or not an Aliexpress product
+                product.price_notification_id = -1
+                product.save()
+                return
 
-        try:
-            supplier = product.default_supplier
+            store_id = supplier.get_store_id()
+            if not store_id:
+                # Product doesn't have Source Store ID
+                product.price_notification_id = -2
+                product.save()
+                return
+
             product_id = supplier.get_source_id()
+            if not product_id:
+                # Product doesn't have Source Product ID
+                product.price_notification_id = -3
+                product.save()
+                return
         except:
-            # Product doesn't have Source Product ID
-            product.price_notification_id = -3
+            product.price_notification_id = -5
             product.save()
             return
 
