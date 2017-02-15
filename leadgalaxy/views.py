@@ -4986,6 +4986,7 @@ def orders_place(request):
     # Save Auto fulfill event
     event_data = {}
     order_key = request.GET['SAPlaceOrder']
+    event_key = 'keen_event_'.format(request.GET['SAPlaceOrder'])
 
     if not order_key.startswith('order_'):
         order_key = 'order_{}'.format(order_key)
@@ -5006,7 +5007,7 @@ def orders_place(request):
             event_data[k[2:].lower()] = request.GET[k]
 
     order = cache.get(order_key)
-    if order and settings.KEEN_PROJECT_ID:
+    if order and settings.KEEN_PROJECT_ID and not cache.get(event_key):
         plan = request.user.models_user.profile.plan
         affiliate = 'ShopifiedApp'
         if user_admitad_credentials:
@@ -5030,6 +5031,7 @@ def orders_place(request):
 
         try:
             keen.add_event("auto_fulfill", event_data)
+            cache.set(event_key, True, timeout=3600)
         except:
             raven_client.captureException(level='warning')
 
