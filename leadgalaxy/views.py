@@ -1909,6 +1909,9 @@ def proccess_api(request, user, method, target, data):
                         tracks.append(track)
 
             for track in tracks:
+                if not track.order:
+                    continue
+
                 shopify_summary = [
                     u'Shopify Order: {}'.format(track.order['name']),
                     u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
