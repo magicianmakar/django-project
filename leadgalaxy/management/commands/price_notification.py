@@ -102,35 +102,35 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
 
     def handle_product(self, product, action):
+        if product.price_notification_id:
+            self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.'))
+            return
+
         try:
-            if product.price_notification_id:
-                self.stdout.write(self.style.HTTP_INFO('Ignore, already registred.'))
-                return
+            supplier = product.default_supplier
+            assert 'aliexpress.com' in supplier.product_url.lower()
+        except:
+            #  Ignore, not connected or not Aliexpress product
+            product.price_notification_id = -1
+            product.save()
+            return
 
-            origin = product.get_original_info()
-            if not origin or 'aliexpress.com' not in origin.get('url').lower():
-                # self.stdout.write(self.style.HTTP_INFO('Ignore, not connected or not Aliexpress product.'))
-                product.price_notification_id = -1
-                product.save()
-                return
+        try:
+            supplier = product.default_supplier
+            store_id = int(re.findall('/([0-9]+)', supplier.supplier_url).pop())
+        except:
+            # Product doesn't have Source Store ID
+            product.price_notification_id = -2
+            product.save()
+            return
 
-            try:
-                supplier = product.default_supplier
-                store_id = int(re.findall('/([0-9]+)', supplier.supplier_url).pop())
-            except Exception as e:
-                product.price_notification_id = -2
-                product.save()
-                # self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Store ID'.format(product.id)))
-                return
-
-            product_id = product.get_source_id()
-            if not product_id:
-                raven_client.captureException()
-                self.stdout.write(self.style.ERROR(' * Product {} doesn\'t have Source Product ID'.format(product.id)))
-                return
-        except Exception as e:
-            raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * Excpetion: {} - Product: {}'.format(repr(e), product.id)))
+        try:
+            supplier = product.default_supplier
+            product_id = supplier.get_source_id()
+        except:
+            # Product doesn't have Source Product ID
+            product.price_notification_id = -3
+            product.save()
             return
 
         self.attach_product(product, product_id, store_id)
