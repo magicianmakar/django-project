@@ -8,7 +8,8 @@ from .models import CommerceHQProduct, CommerceHQCollection
 
 def fetch_resource(store, path):
     session = requests.Session()
-    # Send an unauthorized request first or API will return a 500
+    # Send an unauthorized request first or API will return a 500.
+    # This could be related to a bug on the API side.
     session.head(path)
     session.auth = store.api_key, store.password
     response = session.get(path)
