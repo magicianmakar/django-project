@@ -1416,11 +1416,12 @@ class ClippingMagic(models.Model):
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
-
-    stores = models.IntegerField(default=0)
-    products = models.IntegerField(default=0)
-    boards = models.IntegerField(default=0)
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
+
+    stores = models.IntegerField(default=0, verbose_name="Stores Limit")
+    products = models.IntegerField(default=0, verbose_name="Products Limit")
+    boards = models.IntegerField(default=0, verbose_name="Boards Limit")
+    auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
@@ -1460,6 +1461,10 @@ class GroupPlan(models.Model):
                 stores.append(name.title())
 
         return stores
+
+    def have_feature(self, perm_name):
+        permission = AppPermission.objects.filter(name_iexact=perm_name)
+        return permission and permission.groupplan_set.filter(id=permission.id).exists()
 
     def is_stripe(self):
         try:

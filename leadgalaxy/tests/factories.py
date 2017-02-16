@@ -77,3 +77,11 @@ class GroupPlanFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'leadgalaxy.GroupPlan'
+
+
+class ShopifyOrderTrackFactory(factory.DjangoModelFactory):
+    order_id = factory.fuzzy.FuzzyInteger(999)
+    line_id = factory.fuzzy.FuzzyInteger(999)
+
+    class Meta:
+        model = 'leadgalaxy.ShopifyOrderTrack'

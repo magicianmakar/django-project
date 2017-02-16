@@ -115,8 +115,8 @@ def price_diff(context, from_, to_, reverse_colors=False):
 
 
 @register.simple_tag
-def plan_limit(plan, name):
-    limit = getattr(plan, name)
+def plan_limit(plan, name, attr_name=None):
+    limit = getattr(plan, attr_name if attr_name else name)
 
     if limit == -1:
         limit = 'Unlimited'

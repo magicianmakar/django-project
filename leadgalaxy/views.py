@@ -4986,6 +4986,17 @@ def orders_place(request):
         if k.startswith('SA') and k not in redirect_url:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
 
+    # Verify if the user didn't pass order limit
+    parent_user = request.user.models_user
+    plan = parent_user.profile.plan
+    if plan.auto_fulfill_limit != -1:
+        month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
+        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start).count()
+
+        if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+            messages.error(request, "You have reached your plan auto fulfill limit")
+            return HttpResponseRedirect('/')
+
     # Save Auto fulfill event
     event_data = {}
     order_key = request.GET['SAPlaceOrder']
@@ -4994,24 +5005,24 @@ def orders_place(request):
     if not order_key.startswith('order_'):
         order_key = 'order_{}'.format(order_key)
 
+    order_data = cache.get(order_key)
     prefix, store, order, line = order_key.split('_')
-    try:
-        store = ShopifyStore.objects.get(id=store)
-        request.user.can_view(store)
-    except ShopifyStore.DoesNotExist:
-        raise Http404('Store not found')
 
-    for k in request.GET.keys():
-        if k == 'SAPlaceOrder':
-            pass
-        elif k == 'product':
-            event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])[0]
-        elif k.startswith('SA'):
-            event_data[k[2:].lower()] = request.GET[k]
+    if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):
+        try:
+            store = ShopifyStore.objects.get(id=store)
+            request.user.can_view(store)
+        except ShopifyStore.DoesNotExist:
+            raise Http404('Store not found')
 
-    order = cache.get(order_key)
-    if order and settings.KEEN_PROJECT_ID and not cache.get(event_key):
-        plan = request.user.models_user.profile.plan
+        for k in request.GET.keys():
+            if k == 'SAPlaceOrder':
+                pass
+            elif k == 'product':
+                event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])[0]
+            elif k.startswith('SA'):
+                event_data[k[2:].lower()] = request.GET[k]
+
         affiliate = 'ShopifiedApp'
         if user_admitad_credentials:
             affiliate = 'UserAdmitad'
@@ -5027,8 +5038,8 @@ def orders_place(request):
             'plan_id': plan.id,
             'affiliate': affiliate,
             'sub_user': request.user.is_subuser,
-            'total': order['total'],
-            'quantity': order['quantity'],
+            'total': order_data['total'],
+            'quantity': order_data['quantity'],
             'cart': 'SACart' in request.GET
         })
 

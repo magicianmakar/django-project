@@ -18,3 +18,8 @@ def can(user, perm_name):
             return user.can(perm_name)
 
     return False
+
+
+@register.filter
+def plan_have_feature(plan, perm_name):
+    return plan.permissions.filter(name__iexact=perm_name).exists()

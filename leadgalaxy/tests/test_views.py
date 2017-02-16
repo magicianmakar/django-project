@@ -432,6 +432,71 @@ class AffiliateTestCase(TestCase):
         get_aliexpress_affiliate_url.assert_not_called()
 
 
+class AutoFulfillLimitsTestCase(TestCase):
+    def setUp(self):
+        self.user = f.UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.client.login(username=self.user.username, password=self.password)
+
+        self.plan = self.user.profile.plan
+        self.place_order_data = {
+            'product': 'https://www.aliexpress.com/item/-/32735736988.html',
+            'SAPlaceOrder': '1_123_123'
+        }
+
+    @patch('django.contrib.messages')
+    def test_unlimited_orders(self, messages):
+        r = self.client.get('/orders/place', self.place_order_data)
+
+        self.plan.auto_fulfill_limit = -1
+        self.plan.save()
+
+        messages.assert_not_called()
+        self.assertIn('aliexpress', r['location'])
+
+    @patch('django.contrib.messages.error')
+    def test_plan_without_orders(self, messages):
+        plan = self.user.profile.plan
+        self.plan.auto_fulfill_limit = 0
+        self.plan.save()
+
+        r = self.client.get('/orders/place', self.place_order_data)
+
+        messages.assert_called()
+        self.assertNotIn('aliexpress', r['location'])
+
+    @patch('django.contrib.messages.error')
+    def test_plan_order_within_limit(self, messages):
+        plan = self.user.profile.plan
+        self.plan.auto_fulfill_limit = 10
+        self.plan.save()
+
+        for i in range(9):
+            f.ShopifyOrderTrackFactory(user=self.user)
+
+        r = self.client.get('/orders/place', self.place_order_data)
+
+        messages.assert_not_called()
+        self.assertIn('aliexpress', r['location'])
+
+    @patch('django.contrib.messages.error')
+    def test_plan_order_pass_limit(self, messages):
+        plan = self.user.profile.plan
+        self.plan.auto_fulfill_limit = 10
+        self.plan.save()
+
+        for i in range(10):
+            f.ShopifyOrderTrackFactory(user=self.user)
+
+        r = self.client.get('/orders/place', self.place_order_data)
+
+        messages.assert_called()
+        self.assertNotIn('aliexpress', r['location'])
+
+
 class RegisterTestCase(TestCase):
     def setUp(self):
         self.credentials = {'username': 'johndoe',

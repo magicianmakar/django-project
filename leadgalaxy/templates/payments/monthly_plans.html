@@ -1,4 +1,5 @@
 {% load template_helper %}
+{% load perms_helper %}
 
 <div class="panel panel-default">
     <div class="panel-heading">
@@ -50,6 +51,14 @@
                         class="plan-feature {% if current_plan == item %}selected{% endif %}">
                         <p class="plan-feature">
                             {% plan_limit item 'stores' %}
+                        </p>
+
+                        <p class="plan-feature">
+                        {% if item|plan_have_feature:'orders.use' %}
+                            {% plan_limit item 'orders' 'auto_fulfill_limit' %}
+                        {% else %}
+                            <i>Auto Fulfill Unavailable</i>
+                        {% endif %}
                         </p>
 
                         <p class="plan-feature">
