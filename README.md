@@ -1,4 +1,5 @@
-hopified App Website #
+Shopified App [![build status](https://gitlab.com/shopifiedapp/shopified-webapp/badges/master/build.svg)](https://gitlab.com/shopifiedapp/shopified-webapp/commits/master)
+===================
 
 [app.shopifiedapp.com](https://app.shopifiedapp.com)
 
