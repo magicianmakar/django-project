@@ -5000,7 +5000,7 @@ def orders_place(request):
     # Save Auto fulfill event
     event_data = {}
     order_key = request.GET['SAPlaceOrder']
-    event_key = 'keen_event_'.format(request.GET['SAPlaceOrder'])
+    event_key = 'keen_event_{}'.format(request.GET['SAPlaceOrder'])
 
     if not order_key.startswith('order_'):
         order_key = 'order_{}'.format(order_key)

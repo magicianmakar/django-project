@@ -447,7 +447,7 @@ class AutoFulfillLimitsTestCase(TestCase):
             'SAPlaceOrder': '1_123_123'
         }
 
-    @patch('django.contrib.messages')
+    @patch('django.contrib.messages.error')
     def test_unlimited_orders(self, messages):
         r = self.client.get('/orders/place', self.place_order_data)
 
