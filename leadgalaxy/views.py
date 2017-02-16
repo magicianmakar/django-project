@@ -3363,6 +3363,12 @@ def product_view(request, pid):
             p['product']['description'] = shopify_product['body_html']
             p['product']['published'] = shopify_product['published_at'] is not None
 
+            if arrow.get(shopify_product['updated_at']).datetime > p['qelem'].updated_at and not settings.DEBUG:
+                messages.info(request, 'Product syncing with Shopify in progress...')
+                tasks.update_shopify_product.apply_async(
+                    args=[product.store.id, product.shopify_id],
+                    kwarg={'shopify_product': shopify_product, 'product_id': p['qelem'].id})
+
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 
     if product.store_id:
