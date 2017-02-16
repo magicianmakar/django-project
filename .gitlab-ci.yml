@@ -1,8 +1,8 @@
-image: ubuntu:14.04
+image: ubuntu:16.04
 
 services:
-  - postgres:9.4.9
-  - redis:latest
+  - postgres:9.5.4
+  - redis:3.0.3
 
 before_script:
   - source ./scripts/prepare_build.sh
