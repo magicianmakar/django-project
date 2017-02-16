@@ -185,7 +185,6 @@ class ExtraStoreTestCase(TestCase):
             extra.save()
 
             self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
-            self.assertEqual(self.user.extrastore_set.last().status, 'disabled')
 
     def test_unlimited_plans(self):
         plan = GroupPlan.objects.create(
