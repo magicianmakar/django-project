@@ -1,8 +1,8 @@
-from urlparse import urlparse
-
-import requests
-
 from django.db import models
+from django.contrib.auth.models import User
+
+import textwrap
+from urlparse import urlparse
 
 
 class CommerceHQStore(models.Model):
@@ -19,58 +19,47 @@ class CommerceHQStore(models.Model):
 
 
 class CommerceHQProduct(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
     store = models.ForeignKey('CommerceHQStore', related_name='products')
-    product_id = models.BigIntegerField()
-    title = models.CharField(max_length=300)
+    user = models.ForeignKey(User)
+
+    data = models.TextField(default='{}', blank=True)
+    notes = models.TextField(null=True, blank=True)
+
+    title = models.CharField(max_length=300, db_index=True)
+    price = models.FloatField(blank=True, null=True, db_index=True)
+    product_type = models.CharField(max_length=300, db_index=True)
+    tags = models.TextField(blank=True, default='', db_index=True)
     is_multi = models.BooleanField(default=False)
-    product_type = models.CharField(max_length=300)
-    collections = models.ManyToManyField('CommerceHQCollection', blank=True)
-    textareas = models.TextField(blank=True, default='')
-    shipping_weight = models.FloatField(blank=True, default=0.0)
-    auto_fulfillment = models.BooleanField(default=False)
-    track_inventory = models.BooleanField(default=False)
-    vendor = models.ForeignKey('CommerceHQProductSupplier', null=True, blank=True)
-    tags = models.TextField(blank=True, default='')
-    sku = models.CharField(max_length=200, blank=True, default='')
-    seo_meta = models.TextField(blank=True, default='')
-    seo_title = models.TextField()
-    seo_url = models.URLField(blank=True, default='')
-    is_template = models.BooleanField(default=False)
-    template_name = models.CharField(max_length=300, blank=True, default='')
-    is_draft = models.BooleanField(default=False)
 
-    # For single variant
-    price = models.FloatField(blank=True, null=True)
-    compare_price = models.FloatField(blank=True, null=True)
+    parent_product = models.ForeignKey(
+        'CommerceHQProduct', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='Dupliacte of product')
 
-    # For multi variant
-    options = models.TextField(blank=True, null=True)
-    variants = models.TextField(blank=True, null=True)
+    source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='CommerceHQ Product ID')
+    default_supplier = models.ForeignKey('CommerceHQSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
     def __unicode__(self):
-        return self.title
+        try:
+            title = self.title
+            if len(title) > 79:
+                return u'{}...'.format(textwrap.wrap(title, width=79)[0])
+            elif title:
+                return title
+            else:
+                return u'<CommerceHQProduct: %d>' % self.id
+        except:
+            return u'<CommerceHQProduct: %d>' % self.id
 
 
-class CommerceHQProductSupplier(models.Model):
+class CommerceHQSupplier(models.Model):
     store = models.ForeignKey('CommerceHQStore', related_name='suppliers')
     supplier_name = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.supplier_name
-
-
-class CommerceHQCollection(models.Model):
-    store = models.ForeignKey('CommerceHQStore', related_name='collections')
-    collection_id = models.BigIntegerField()
-    title = models.CharField(max_length=100)
-    is_auto = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return self.collection_id
-
-
-
-
