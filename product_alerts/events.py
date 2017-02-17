@@ -197,6 +197,8 @@ class ProductChangeEvent():
                     if product_change['new_value'] is True:
                         for variant in data['product']['variants']:
                             variant['inventory_quantity'] = 0
+                            variant['inventory_management'] = 'blank'
+                            variant['inventory_policy'] = 'deny'
                             self.save_revision = True
                     else:
                         # Try to find variants from previous revision
@@ -214,6 +216,8 @@ class ProductChangeEvent():
                                     break
 
                             variant['inventory_quantity'] = inventory
+                            variant['inventory_management'] = 'blank' if inventory == 0 else 'shopify'
+                            variant['inventory_policy'] = 'deny' if inventory == 0 else 'continue'
                             self.save_revision = True
         return data
 
@@ -260,6 +264,8 @@ class ProductChangeEvent():
                         elif self.config['variant_disappears'] == 'zero_quantity':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = 0
+                                data['product']['variants'][found]['inventory_management'] = 'blank'
+                                data['product']['variants'][found]['inventory_policy'] = 'deny'
                                 self.save_revision = True
 
                     elif change['category'] == 'Price':
@@ -277,5 +283,7 @@ class ProductChangeEvent():
                         if self.config['quantity_change'] == 'update':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = change['new_value']
+                                data['product']['variants'][found]['inventory_management'] = 'blank' if change['new_value'] == 0 else 'shopify'
+                                data['product']['variants'][found]['inventory_policy'] = 'deny' if change['new_value'] == 0 else 'continue'
                                 self.save_revision = True
         return data
