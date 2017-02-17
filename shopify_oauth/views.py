@@ -110,7 +110,7 @@ def index(request):
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
         if request.user.is_authenticated():
-            if not request.user.profile.get_active_stores(flat=True).filter(shop=request.GET['shop']).exists():
+            if not request.user.profile.get_shopify_stores(flat=True).filter(shop=request.GET['shop']).exists():
                 messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
 
             return HttpResponseRedirect('/')
@@ -122,7 +122,7 @@ def index(request):
         return HttpResponseRedirect('/accounts/login/')
 
     if request.user.is_authenticated():
-        if store.id not in request.user.profile.get_active_stores(flat=True):
+        if store.id not in request.user.profile.get_shopify_stores(flat=True):
             messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
 
         return HttpResponseRedirect('/')
@@ -160,7 +160,7 @@ def install(request, store):
                     'user': user.email,
                     'store': store,
                     'plan': user.profile.plan.title,
-                    'stores': user.profile.get_active_stores().count()
+                    'stores': user.profile.get_shopify_stores().count()
                 }
             )
 

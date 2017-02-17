@@ -208,7 +208,7 @@ class UserProfile(models.Model):
         else:
             return False
 
-    def get_active_stores(self, flat=False):
+    def get_shopify_stores(self, flat=False):
         if self.is_subuser:
             stores = self.subuser_stores.filter(is_active=True)
         else:
@@ -1666,7 +1666,7 @@ def user_can_add(self, obj):
                 store = None
 
             if store:
-                stores = self.profile.get_active_stores(flat=True)
+                stores = self.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to edit this store.")
 
@@ -1690,7 +1690,7 @@ def user_can_view(self, obj):
                 store = None
 
             if store:
-                stores = self.profile.get_active_stores(flat=True)
+                stores = self.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
@@ -1713,7 +1713,7 @@ def user_can_edit(self, obj):
                 store = None
 
             if store:
-                stores = self.profile.get_active_stores(flat=True)
+                stores = self.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
@@ -1750,7 +1750,7 @@ def invalidate_acp_users(sender, instance, created, **kwargs):
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
 
     if not created and not instance.is_subuser:
-        instance.get_active_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
+        instance.get_shopify_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
 
 
 @receiver(post_save, sender=ShopifyOrderTrack)

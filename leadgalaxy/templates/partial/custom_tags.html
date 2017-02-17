@@ -37,7 +37,7 @@
                 plan: dataLayer[0].userPlan,
                 extension_version: dataLayer[0].extension_version,
 
-                stores_count: {{user.profile.get_active_stores.count}},
+                stores_count: {{user.profile.get_shopify_stores.count}},
 
                 {% cache 3600 total_orders user.id %}
                 total_orders: {{user.models_user.shopifyorder_set.count}},

@@ -160,7 +160,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
             # restrict role queryset to those related to this instance:
             if self.instance.subuser_parent is not None:
-                kwargs['queryset'] = self.instance.subuser_parent.profile.get_active_stores()
+                kwargs['queryset'] = self.instance.subuser_parent.profile.get_shopify_stores()
             else:
                 kwargs['queryset'] = ShopifyStore.objects.none()
 

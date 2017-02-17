@@ -560,7 +560,7 @@ def get_store_from_request(request):
     """
 
     store = None
-    stores = request.user.profile.get_active_stores()
+    stores = request.user.profile.get_shopify_stores()
 
     if request.GET.get('shop'):
         try:
@@ -591,7 +591,7 @@ def get_store_from_request(request):
 
 def get_myshopify_link(user, default_store, link):
     stores = [default_store, ]
-    for i in user.profile.get_active_stores():
+    for i in user.profile.get_shopify_stores():
         if i not in stores:
             stores.append(i)
 

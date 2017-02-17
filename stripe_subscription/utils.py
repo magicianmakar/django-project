@@ -162,7 +162,7 @@ def resubscribe_customer(customer_id):
 
 
 def have_extra_stores(user):
-    return user.profile.get_active_stores().count() > user.profile.plan.stores
+    return user.profile.get_shopify_stores().count() > user.profile.plan.stores
 
 
 def extra_store_invoice(store, extra=None):
@@ -206,7 +206,7 @@ def invoice_extra_stores():
             extra.save()
             ignore = True
 
-        if extra.user.profile.get_active_stores().count() <= 1:
+        if extra.user.profile.get_shopify_stores().count() <= 1:
             extra.user.extrastore_set.all().update(status='disabled')
             ignore = True
 

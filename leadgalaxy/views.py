@@ -81,7 +81,7 @@ from analytic_events.models import RegistrationEvent
 
 @login_required
 def index_view(request):
-    stores = request.user.profile.get_active_stores()
+    stores = request.user.profile.get_shopify_stores()
     config = request.user.models_user.profile.get_config()
 
     first_visit = config.get('_first_visit', True)
@@ -95,7 +95,7 @@ def index_view(request):
     can_add, total_allowed, user_count = request.user.profile.can_add_store()
 
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
-        request.user.profile.get_active_stores().count() >= 1
+        request.user.profile.get_shopify_stores().count() >= 1
 
     templates = DescriptionTemplate.objects.filter(user=request.user)
 
@@ -249,7 +249,7 @@ def proccess_api(request, user, method, target, data):
 
     if method == 'GET' and target == 'stores':
         stores = []
-        for i in user.profile.get_active_stores():
+        for i in user.profile.get_shopify_stores():
             stores.append({
                 'id': i.id,
                 'name': i.title,
@@ -292,7 +292,7 @@ def proccess_api(request, user, method, target, data):
             utils.detach_webhooks(store, delete_too=True)
 
         stores = []
-        for i in user.profile.get_active_stores():
+        for i in user.profile.get_shopify_stores():
             stores.append({
                 'id': i.id,
                 'name': i.title,
@@ -1291,7 +1291,7 @@ def proccess_api(request, user, method, target, data):
         can_add, total_allowed, user_count = user.profile.can_add_store()
 
         extra_stores = can_add and user.profile.plan.is_stripe() and \
-            user.profile.get_active_stores().count() >= 1
+            user.profile.get_shopify_stores().count() >= 1
 
         config['extra_stores'] = extra_stores
 
@@ -1646,7 +1646,7 @@ def proccess_api(request, user, method, target, data):
                                            .exclude(source_status='FINISH')
 
         if user.is_subuser:
-            shopify_orders = shopify_orders.filter(store__in=user.profile.get_active_stores(flat=True))
+            shopify_orders = shopify_orders.filter(store__in=user.profile.get_shopify_stores(flat=True))
 
         if data.get('store'):
             shopify_orders = shopify_orders.filter(store=data.get('store'))
@@ -3050,7 +3050,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     page = request.GET.get('page', 1)
     models_user = request.user.models_user
     user = request.user
-    user_stores = request.user.profile.get_active_stores(flat=True)
+    user_stores = request.user.profile.get_shopify_stores(flat=True)
     res = ShopifyProduct.objects.select_related('store') \
                                 .defer('variants_map', 'shipping_map', 'notes') \
                                 .filter(user=models_user) \
@@ -3223,7 +3223,7 @@ def products_list(request, tpl='grid'):
 
     in_store = utils.safeInt(request.GET.get('in'))
     if in_store:
-        in_store = get_object_or_404(request.user.profile.get_active_stores(), id=in_store)
+        in_store = get_object_or_404(request.user.profile.get_shopify_stores(), id=in_store)
     elif store:
         in_store = store
 
@@ -4112,7 +4112,7 @@ def autocomplete(request, target):
 
     if target == 'vendor':
         suppliers = []
-        for supplier in ProductSupplier.objects.filter(store__in=request.user.profile.get_active_stores(), supplier_name__icontains=q)[:10]:
+        for supplier in ProductSupplier.objects.filter(store__in=request.user.profile.get_shopify_stores(), supplier_name__icontains=q)[:10]:
             if supplier.supplier_name and supplier.supplier_name not in suppliers:
                 suppliers.append(supplier.supplier_name)
 
