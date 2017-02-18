@@ -36,6 +36,7 @@ from django.views.decorators.http import require_http_methods
 
 from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
+import keen
 
 from analytic_events.models import RegistrationEvent
 from shopify_orders import utils as shopify_orders_utils
@@ -693,15 +694,8 @@ def webhook(request, provider, option):
 
             elif topic == 'app/uninstalled':
                 store.is_active = False
+                store.uninstalled_at = timezone.now()
                 store.save()
-
-                AliexpressProductChange.objects.filter(product__store=store).delete()
-
-                # Make all products related to this store non-connected
-                store.shopifyproduct_set.update(store=None, shopify_id=0)
-
-                # Change Suppliers store
-                ProductSupplier.objects.filter(store=store).update(store=None)
 
                 utils.detach_webhooks(store, delete_too=True)
 
@@ -779,8 +773,13 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     user_stores = request.user.profile.get_shopify_stores(flat=True)
     res = ShopifyProduct.objects.select_related('store') \
                                 .defer('variants_map', 'shipping_map', 'notes') \
-                                .filter(user=models_user) \
-                                .filter(Q(store__in=user_stores) | Q(store=None))
+                                .filter(user=models_user)
+
+    if request.user.is_subuser:
+        res = res.filter(store__in=user_stores)
+    else:
+        res = res.filter(Q(store__in=user_stores) | Q(store=None))
+
     if store:
         if store == 'c':  # connected
             res = res.exclude(shopify_id=0)
@@ -1083,6 +1082,12 @@ def product_view(request, pid):
 
             p['product']['description'] = shopify_product['body_html']
             p['product']['published'] = shopify_product['published_at'] is not None
+
+            if arrow.get(shopify_product['updated_at']).datetime > p['qelem'].updated_at and not settings.DEBUG:
+                messages.info(request, 'Product syncing with Shopify in progress...')
+                tasks.update_shopify_product.apply_async(
+                    args=[product.store.id, product.shopify_id],
+                    kwarg={'shopify_product': shopify_product, 'product_id': p['qelem'].id})
 
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 
@@ -2706,6 +2711,69 @@ def orders_place(request):
     for k in request.GET.keys():
         if k.startswith('SA') and k not in redirect_url:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
+
+    # Verify if the user didn't pass order limit
+    parent_user = request.user.models_user
+    plan = parent_user.profile.plan
+    if plan.auto_fulfill_limit != -1:
+        month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
+        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start).count()
+
+        if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+            messages.error(request, "You have reached your plan auto fulfill limit")
+            return HttpResponseRedirect('/')
+
+    # Save Auto fulfill event
+    event_data = {}
+    order_key = request.GET['SAPlaceOrder']
+    event_key = 'keen_event_{}'.format(request.GET['SAPlaceOrder'])
+
+    if not order_key.startswith('order_'):
+        order_key = 'order_{}'.format(order_key)
+
+    order_data = cache.get(order_key)
+    prefix, store, order, line = order_key.split('_')
+
+    if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):
+        try:
+            store = ShopifyStore.objects.get(id=store)
+            request.user.can_view(store)
+        except ShopifyStore.DoesNotExist:
+            raise Http404('Store not found')
+
+        for k in request.GET.keys():
+            if k == 'SAPlaceOrder':
+                pass
+            elif k == 'product':
+                event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])[0]
+            elif k.startswith('SA'):
+                event_data[k[2:].lower()] = request.GET[k]
+
+        affiliate = 'ShopifiedApp'
+        if user_admitad_credentials:
+            affiliate = 'UserAdmitad'
+        elif user_ali_credentials:
+            affiliate = 'UserAliexpress'
+
+        event_data.update({
+            'user': store.user.username,
+            'user_id': store.user_id,
+            'store': store.title,
+            'store_id': store.id,
+            'plan': plan.title,
+            'plan_id': plan.id,
+            'affiliate': affiliate,
+            'sub_user': request.user.is_subuser,
+            'total': order_data['total'],
+            'quantity': order_data['quantity'],
+            'cart': 'SACart' in request.GET
+        })
+
+        try:
+            keen.add_event("auto_fulfill", event_data)
+            cache.set(event_key, True, timeout=3600)
+        except:
+            raven_client.captureException(level='warning')
 
     return HttpResponseRedirect(redirect_url)
 

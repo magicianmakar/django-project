@@ -162,7 +162,7 @@ def resubscribe_customer(customer_id):
 
 
 def have_extra_stores(user):
-    return user.profile.get_shopify_stores().count() > user.profile.plan.stores
+    return user.profile.plan.stores != -1 and user.profile.get_active_stores().count() > user.profile.plan.stores
 
 
 def extra_store_invoice(store, extra=None):
@@ -195,6 +195,8 @@ def invoice_extra_stores():
     """
 
     extra_stores = ExtraStore.objects.filter(status__in=['pending', 'active']) \
+                                     .exclude(store__is_active=False) \
+                                     .exclude(user__profile__plan__stores=-1) \
                                      .filter(Q(period_end__lte=arrow.utcnow().datetime) |
                                              Q(period_end=None))
 

@@ -131,8 +131,8 @@
         }), function(el) {
             return {
                 el: $(el).parents('tr'),
-                order: $(el).attr('order_id'),
-                line: $(el).attr('line_id'),
+                order: $(el).attr('order-id'),
+                line: $(el).attr('line-id'),
             };
         });
 
@@ -171,6 +171,7 @@
                 });
             }, {
                 concurrency: 2
+            }).catch(function() {
             }).then(function() {
                 swal.close();
             });

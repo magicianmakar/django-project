@@ -338,8 +338,8 @@ class UserProfile(models.Model):
             return self.subuser_parent.profile.can_add_store()
 
         user_stores = int(self.stores)
-        if user_stores == -2:
-            total_allowed = self.plan.stores  # -1 mean unlimited
+        if user_stores == -2:  # Use GroupPlan.stores limit (default)
+            total_allowed = self.plan.stores  # if equal -1 that mean user can add unlimited store
         else:
             total_allowed = user_stores
 
@@ -528,8 +528,9 @@ class ShopifyStore(models.Model):
 
     user = models.ForeignKey(User)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    uninstalled_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
@@ -645,6 +646,9 @@ class ShopifyStore(models.Model):
                                          .count()
 
     def pusher_trigger(self, event, data):
+        if not settings.PUSHER_APP_ID:
+            return
+
         pusher = Pusher(
             app_id=settings.PUSHER_APP_ID,
             key=settings.PUSHER_KEY,
@@ -721,7 +725,7 @@ class ShopifyProduct(models.Model):
             return data_store.data
         return getattr(self, 'original_data', '{}')
 
-    def set_original_data(self, value, clear_original=False):
+    def set_original_data(self, value, clear_original=False, commit=True):
         if self.original_data_key:
             data_store = DataStore.objects.get(key=self.original_data_key)
             data_store.data = value
@@ -743,7 +747,8 @@ class ShopifyProduct(models.Model):
                     if clear_original:
                         self.original_data = ''
 
-                    self.save()
+                    if commit:
+                        self.save()
 
                     break
 
@@ -1127,7 +1132,13 @@ class ShopifyProduct(models.Model):
         if type(data) is not dict:
             data = json.loads(data)
 
-        product_data = json.loads(self.data)
+        if data.get('weight_unit') == 'lbs':
+            data['weight_unit'] = 'lb'
+
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
 
         product_data.update(data)
 
@@ -1160,6 +1171,13 @@ class ProductSupplier(models.Model):
         try:
             if 'aliexpress.com' in self.product_url.lower():
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+        except:
+            return None
+
+    def get_store_id(self):
+        try:
+            if 'aliexpress.com' in self.supplier_url.lower():
+                return int(re.findall('/([0-9]+)', self.supplier_url).pop())
         except:
             return None
 
@@ -1410,11 +1428,12 @@ class ClippingMagic(models.Model):
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
-
-    stores = models.IntegerField(default=0)
-    products = models.IntegerField(default=0)
-    boards = models.IntegerField(default=0)
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
+
+    stores = models.IntegerField(default=0, verbose_name="Stores Limit")
+    products = models.IntegerField(default=0, verbose_name="Products Limit")
+    boards = models.IntegerField(default=0, verbose_name="Boards Limit")
+    auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
@@ -1449,11 +1468,15 @@ class GroupPlan(models.Model):
 
         stores = []
         for i in self.permissions.all():
-            if i.name.endswith('_import.use'):
+            if i.name.endswith('_import.use') and 'pinterest' not in i.name:
                 name = i.name.split('_')[0]
-                stores.append(name)
+                stores.append(name.title())
 
         return stores
+
+    def have_feature(self, perm_name):
+        permission = AppPermission.objects.filter(name_iexact=perm_name)
+        return permission and permission.groupplan_set.filter(id=permission.id).exists()
 
     def is_stripe(self):
         try:

@@ -215,6 +215,7 @@ def callback(request):
         store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
         store.access_token = token['access_token']
         store.scope = token['access_token'][0]
+
         store.save()
 
     except ShopifyStore.DoesNotExist:
@@ -243,10 +244,16 @@ def callback(request):
 
             return HttpResponseRedirect('/')
 
-        store = ShopifyStore(
-            user=user, shop=shop, version=2,
-            access_token=token['access_token'],
-            scope=token['access_token'][0])
+        store = ShopifyStore.objects.filter(user=user, shop=shop, version=2, is_active=False) \
+                                    .order_by('uninstalled_at', '-id').first()
+        if store:
+            store.is_active = True
+            store.uninstalled_at = None
+        else:
+            store = ShopifyStore(
+                user=user, shop=shop, version=2,
+                access_token=token['access_token'],
+                scope=token['access_token'][0])
 
         user.can_add(store)
 

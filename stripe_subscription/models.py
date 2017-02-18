@@ -309,7 +309,9 @@ def add_store_signal(sender, instance, created, **kwargs):
         except User.DoesNotExist:
             return
 
-        if instance.user.profile.plan.is_stripe() and total_allowed < instance.user.shopifystore_set.count():
+        if instance.user.profile.plan.is_stripe() \
+                and total_allowed > -1 \
+                and total_allowed < instance.user.shopifystore_set.count():
             ExtraStore.objects.create(
                 user=instance.user,
                 store=instance,
