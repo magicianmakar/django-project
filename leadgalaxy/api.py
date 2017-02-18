@@ -20,6 +20,8 @@ from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.exceptions import ApiLoginException
+from shopified_core.mixins import ApiResponseMixin
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrderLine,
@@ -33,16 +35,8 @@ from .models import *
 from .templatetags.template_helper import shopify_image_thumb, money_format
 
 
-class ShopifyStoreApi(View):
+class ShopifyStoreApi(ApiResponseMixin, View):
     http_method_names = ['get', 'post', 'delete']
-    response = None
-
-    def api_error(self, description, status=500):
-        self.response = JsonResponse({
-            'error': description
-        }, status=status)
-
-        return self.response
 
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() not in self.http_method_names:
@@ -66,7 +60,7 @@ class ShopifyStoreApi(View):
         raven_client.context.merge(raven_client.get_data_from_request(request))
 
         try:
-            user = utils.get_api_user(request, data, assert_login=assert_login)
+            user = self.get_user(request, assert_login=assert_login)
             if user:
                 raven_client.user_context({
                     'id': user.id,
@@ -78,7 +72,7 @@ class ShopifyStoreApi(View):
                 if extension_version:
                     user.set_config('extension_version', extension_version)
 
-            method_name = '{}_{}'.format(request.method.lower(), target.lower().replace('-', '_'))
+            method_name = self.method_name(request.method, target)
             handler = getattr(self, method_name, None)
 
             if not handler:
@@ -108,7 +102,7 @@ class ShopifyStoreApi(View):
             raven_client.captureException()
             res = self.api_error('API Request Timeout', status=501)
 
-        except utils.ApiLoginException as e:
+        except ApiLoginException as e:
             if e.message == 'unvalid_access_token':
                 res = self.api_error((
                     'Unvalide Access Token.\nMake sure you are logged-in '
@@ -284,7 +278,7 @@ class ShopifyStoreApi(View):
         if api_url_changes:
             utils.attach_webhooks(store)
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def get_custom_tracking_url(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
@@ -295,8 +289,7 @@ class ShopifyStoreApi(View):
         if aftership_domain and type(aftership_domain) is dict:
             custom_tracking = aftership_domain.get(str(store.id))
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'tracking_url': custom_tracking,
             'store': store.id
         })
@@ -322,7 +315,7 @@ class ShopifyStoreApi(View):
 
         user.models_user.set_config('aftership_domain', aftership_domain)
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_store_order(self, request, user, data):
         for store, idx in data.iteritems():
@@ -332,7 +325,7 @@ class ShopifyStoreApi(View):
             store.list_index = utils.safeInt(idx, 0)
             store.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def get_store_verify(self, request, user, data):
         try:
@@ -354,7 +347,7 @@ class ShopifyStoreApi(View):
                         'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
                         .format('\n'.join(permissions)), status=403)
 
-            return JsonResponse({'status': 'ok', 'store': info['name']})
+            return self.api_success({'store': info['name']})
 
         except:
             if settings.DEBUG:
@@ -388,7 +381,7 @@ class ShopifyStoreApi(View):
     def post_shopify(self, request, user, data):
         req_data = json.loads(request.body)
 
-        user = utils.get_api_user(request, req_data, assert_login=True)
+        user = self.get_user(request, data=req_data, assert_login=True)
 
         if req_data.get('store'):
             store = ShopifyStore.objects.get(pk=req_data['store'])
@@ -408,10 +401,7 @@ class ShopifyStoreApi(View):
         else:
             task = tasks.export_product.apply_async(args=[req_data, self.target, user.id], expires=60)
 
-            return JsonResponse({
-                'status': 'ok',
-                'id': str(task.id)
-            })
+            return self.api_success({'id': str(task.id)})
 
     def post_shopify_update(self, request, user, data):
         return self.post_shopify(request, user, data)
@@ -439,8 +429,7 @@ class ShopifyStoreApi(View):
             return self.api_error('Export Error', status=500)
 
         if not task.ready():
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'ready': False
             })
         else:
@@ -448,8 +437,7 @@ class ShopifyStoreApi(View):
             data = utils.fix_product_url(data, request)
 
             if 'product' in data:
-                return JsonResponse({
-                    'status': 'ok',
+                return self.api_success({
                     'ready': True,
                     'data': data
                 }, safe=False)
@@ -485,7 +473,7 @@ class ShopifyStoreApi(View):
         product.userupload_set.update(product=None)
         product.delete()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_bulk_edit(self, request, user, data):
         for p in data.getlist('product'):
@@ -504,7 +492,7 @@ class ShopifyStoreApi(View):
             product.data = json.dumps(product_data)
             product.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_bulk_edit_connected(self, request, user, data):
         req_data = json.loads(request.body)
@@ -518,10 +506,7 @@ class ShopifyStoreApi(View):
             args=[store.id, req_data['products']],
             queue='priority_high')
 
-        return JsonResponse({
-            'status': 'ok',
-            'task': task.id
-        })
+        return self.api_success({'task': task.id})
 
     def get_product_shopify_id(self, request, user, data):
         ids = []
@@ -532,10 +517,7 @@ class ShopifyStoreApi(View):
             if shopify_id and shopify_id not in ids:
                 ids.append(shopify_id)
 
-        return JsonResponse({
-            'status': 'ok',
-            'ids': ids
-        })
+        return self.api_success({'ids': ids})
 
     def post_product_edit(self, request, user, data):
         products = []
@@ -568,10 +550,7 @@ class ShopifyStoreApi(View):
             product.data = json.dumps(product_data)
             product.save()
 
-        return JsonResponse({
-            'status': 'ok',
-            'products': products
-        }, safe=False)
+        return self.api_success({'products': products})
 
     def post_boards_add(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -594,8 +573,7 @@ class ShopifyStoreApi(View):
 
         board.save()
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'board': {
                 'id': board.id,
                 'title': board.title
@@ -617,7 +595,7 @@ class ShopifyStoreApi(View):
 
         board.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_product_remove_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -634,7 +612,7 @@ class ShopifyStoreApi(View):
 
         board.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_product_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -647,9 +625,7 @@ class ShopifyStoreApi(View):
             product.shopifyboard_set.clear()
             product.save()
 
-            return JsonResponse({
-                'status': 'ok'
-            })
+            return self.api_success()
         else:
             board = ShopifyBoard.objects.get(id=data.get('board'))
             user.can_edit(board)
@@ -657,8 +633,7 @@ class ShopifyStoreApi(View):
             board.products.add(product)
             board.save()
 
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'board': {
                     'id': board.id,
                     'title': board.title
@@ -674,9 +649,7 @@ class ShopifyStoreApi(View):
 
         board.delete()
 
-        return JsonResponse({
-            'status': 'ok'
-        })
+        return self.api_success()
 
     def post_board_empty(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -687,9 +660,7 @@ class ShopifyStoreApi(View):
 
         board.products.clear()
 
-        return JsonResponse({
-            'status': 'ok'
-        })
+        return self.api_success()
 
     def get_board_config(self, request, user, data):
         if not user.can('view_product_boards.sub'):
@@ -699,14 +670,12 @@ class ShopifyStoreApi(View):
         user.can_edit(board)
 
         try:
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'title': board.title,
                 'config': json.loads(board.config)
             })
         except:
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'title': board.title,
                 'config': {
                     'title': '',
@@ -734,9 +703,7 @@ class ShopifyStoreApi(View):
 
         utils.smart_board_by_board(user.models_user, board)
 
-        return JsonResponse({
-            'status': 'ok'
-        })
+        return self.api_success()
 
     def post_variant_image(self, request, user, data):
         try:
@@ -758,9 +725,7 @@ class ShopifyStoreApi(View):
 
         requests.put(api_url, json=api_data)
 
-        return JsonResponse({
-            'status': 'ok'
-        })
+        return self.api_success()
 
     def delete_product_image(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
@@ -772,7 +737,7 @@ class ShopifyStoreApi(View):
 
         ShopifyProductImage.objects.filter(store=store, product=product).delete()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_clippingmagic_clean_image(self, request, user, data):
         img_url = None
@@ -819,8 +784,7 @@ class ShopifyStoreApi(View):
                 return self.api_error('Action is not defined', status=500)
 
         if api_response.get('id') or img_url:
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'image_id': api_response.get('id', 0),
                 'image_secret': api_response.get('secret', 0),
                 'api_id': settings.CLIPPINGMAGIC_API_ID,
@@ -867,8 +831,7 @@ class ShopifyStoreApi(View):
 
         target_user.profile.save()
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'plan': {
                 'id': plan.id,
                 'title': plan.title
@@ -883,7 +846,7 @@ class ShopifyStoreApi(View):
         for i in target_user.accesstoken_set.all():
             i.delete()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_product_notes(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -892,9 +855,7 @@ class ShopifyStoreApi(View):
         product.notes = data.get('notes')
         product.save()
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def post_shopify_products(self, request, user, data):
         store = utils.safeInt(data.get('store'))
@@ -991,9 +952,7 @@ class ShopifyStoreApi(View):
 
             tasks.update_shopify_product(product.store.id, shopify_id, product_id=product.id)
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def delete_product_connect(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -1007,9 +966,7 @@ class ShopifyStoreApi(View):
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
             shopify_orders_utils.update_line_export(product.store, shopify_id)
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def post_product_metadata(self, request, user, data):
         if not user.can('product_metadata.use'):
@@ -1059,8 +1016,7 @@ class ShopifyStoreApi(View):
 
         product.save()
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'reload': not data.get('export')
         })
 
@@ -1084,9 +1040,7 @@ class ShopifyStoreApi(View):
                 product.set_default_supplier(other_supplier)
                 product.save()
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def post_product_metadata_default(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -1102,9 +1056,7 @@ class ShopifyStoreApi(View):
         product.set_original_url(supplier.product_url)
         product.save()
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def post_add_user_upload(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -1115,9 +1067,7 @@ class ShopifyStoreApi(View):
 
         upload.save()
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def post_product_duplicate(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -1125,8 +1075,7 @@ class ShopifyStoreApi(View):
 
         duplicate_product = utils.duplicate_product(product)
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'product': {
                 'id': duplicate_product.id,
                 'url': reverse('product_view', args=[duplicate_product.id])
@@ -1189,8 +1138,7 @@ class ShopifyStoreApi(View):
 
                 tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'products_ids': [p.id for p in splitted_products]
         })
 
@@ -1286,7 +1234,7 @@ class ShopifyStoreApi(View):
             profile.config = json.dumps(config)
             profile.save()
 
-            return JsonResponse({'status': 'ok'})
+            return self.api_success()
 
         if form_webapp:
             bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha', 'validate_tracking_number']
@@ -1338,7 +1286,7 @@ class ShopifyStoreApi(View):
         profile.config = json.dumps(config)
         profile.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def get_product_config(self, request, user, data):
         if not user.can('price_changes.use'):
@@ -1382,7 +1330,7 @@ class ShopifyStoreApi(View):
         product.config = json.dumps(config)
         product.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_fulfill_order(self, request, user, data):
         try:
@@ -1419,7 +1367,7 @@ class ShopifyStoreApi(View):
         try:
             rep.raise_for_status()
 
-            return JsonResponse({'status': 'ok'})
+            return self.api_success()
 
         except:
             if 'is already fulfilled' not in rep.text:
@@ -1509,8 +1457,7 @@ class ShopifyStoreApi(View):
         if image and request.GET.get('redirect') == '1':
             return HttpResponseRedirect(image)
         elif image:
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'image': image
             })
         else:
@@ -1543,7 +1490,7 @@ class ShopifyStoreApi(View):
         product.set_variant_mapping(mapping, supplier=supplier)
         product.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_suppliers_mapping(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -1577,7 +1524,7 @@ class ShopifyStoreApi(View):
             product.set_shipping_mapping(shipping_map)
             product.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def get_order_fulfill(self, request, user, data):
         if int(data.get('count', 0)) >= 30:
@@ -1711,7 +1658,7 @@ class ShopifyStoreApi(View):
 
                 if order_line_sku and saved_track.shopify_status == 'fulfilled':
                     # Line is already fulfilled
-                    return JsonResponse({'status': 'ok'})
+                    return self.api_success()
 
                 if saved_track.source_id and source_id != saved_track.source_id:
                     delta = timezone.now() - saved_track.created_at
@@ -1762,7 +1709,7 @@ class ShopifyStoreApi(View):
 
             cache.set(note_delay_key, note_delay + 5, timeout=5)
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def delete_order_fulfill(self, request, user, data):
         order_id = data.get('order_id')
@@ -1781,7 +1728,7 @@ class ShopifyStoreApi(View):
                     'line_id': order.line_id,
                 })
 
-            return JsonResponse({'status': 'ok'})
+            return self.api_success()
         else:
             return self.api_error('Order not found.', status=404)
 
@@ -1810,7 +1757,7 @@ class ShopifyStoreApi(View):
 
         order.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_order_info(self, request, user, data):
 
@@ -1899,7 +1846,7 @@ class ShopifyStoreApi(View):
         user.can_view(store)
 
         if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
-            return JsonResponse({'status': 'ok'})
+            return self.api_success()
         else:
             return self.api_error('Shopify API Error', status=500)
 
@@ -1909,7 +1856,7 @@ class ShopifyStoreApi(View):
         user.can_view(store)
 
         if utils.set_shopify_order_note(store, data.get('order_id'), data['note']):
-            return JsonResponse({'status': 'ok'})
+            return self.api_success()
         else:
             return self.api_error('Shopify API Error', status=500)
 
@@ -1920,15 +1867,14 @@ class ShopifyStoreApi(View):
         order.hidden = data.get('hide') == 'true'
         order.save()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def get_find_product(self, request, user, data):
         try:
             product = ShopifyProduct.objects.get(user=user, shopify_id=data.get('product'))
             user.can_view(product)
 
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'url': 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
             })
         except:
@@ -1947,8 +1893,7 @@ class ShopifyStoreApi(View):
             'email': data.get('email')
         })
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'hash': reg.register_hash
         })
 
@@ -1998,7 +1943,7 @@ class ShopifyStoreApi(View):
 
             request.session['django_timezone'] = form.cleaned_data['timezone']
 
-            return JsonResponse({'status': 'ok', 'reload': True})
+            return self.api_success({'reload': True})
 
     def post_user_email(self, request, user, data):
         # TODO: Handle Payements and email changing
@@ -2021,8 +1966,7 @@ class ShopifyStoreApi(View):
                 auth_user = authenticate(username=user.username, password=password)
                 login(request, auth_user)
 
-            return JsonResponse({
-                'status': 'ok',
+            return self.api_success({
                 'email': email_change,
                 'password': password
             })
@@ -2056,7 +2000,7 @@ class ShopifyStoreApi(View):
 
         AccessToken.objects.filter(user=subuser).delete()
 
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_subuser_invite(self, request, user, data):
         if not user.can('sub_users.use'):
@@ -2091,8 +2035,7 @@ class ShopifyStoreApi(View):
                         data=data,
                     )
 
-                    return JsonResponse({
-                        'status': 'ok',
+                    return self.api_success({
                         'hash': reg.register_hash
                     })
 
@@ -2123,8 +2066,7 @@ class ShopifyStoreApi(View):
             data=data,
         )
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'hash': reg.register_hash
         })
 
@@ -2134,9 +2076,7 @@ class ShopifyStoreApi(View):
 
         PlanRegistration.objects.get(id=data.get('invite'), sender=user).delete()
 
-        return JsonResponse({
-            'status': 'ok',
-        })
+        return self.api_success()
 
     def post_alert_archive(self, request, user, data):
         try:
@@ -2156,9 +2096,7 @@ class ShopifyStoreApi(View):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        return JsonResponse({
-            'status': 'ok'
-        })
+        return self.api_success()
 
     def post_alert_delete(self, request, user, data):
         try:
@@ -2170,13 +2108,11 @@ class ShopifyStoreApi(View):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        return JsonResponse({
-            'status': 'ok'
-        })
+        return self.api_success()
 
     def post_save_orders_filter(self, request, user, data):
         utils.set_orders_filter(user, data)
-        return JsonResponse({'status': 'ok'})
+        return self.api_success()
 
     def post_import_product(self, request, user, data):
         try:
@@ -2252,7 +2188,7 @@ class ShopifyStoreApi(View):
 
         tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
 
-        return JsonResponse({'status': 'ok', 'product': product.id})
+        return self.api_success({'product': product.id})
 
     def get_description_templates(self, request, user, data):
         templates = DescriptionTemplate.objects.filter(user=user.models_user)
@@ -2268,10 +2204,9 @@ class ShopifyStoreApi(View):
         for i in templates:
             templates_dict.append(model_to_dict(i, fields='id,title,description'))
 
-        return JsonResponse({
-            'status': 'ok',
+        return self.api_success({
             'description_templates': templates_dict
-        }, status=200)
+        })
 
     def post_description_templates(self, request, user, data):
         """
@@ -2302,11 +2237,11 @@ class ShopifyStoreApi(View):
 
         template_dict = model_to_dict(template)
 
-        return JsonResponse({'status': 'ok', 'template': template_dict}, status=200)
+        return self.api_success({'template': template_dict}, status=200)
 
     def delete_description_templates(self, request, user, data):
         id = int(data.get('id'))
         template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
         template.delete()
 
-        return JsonResponse({'status': 'ok'}, status=200)
+        return self.api_success()

@@ -1,0 +1,3 @@
+
+class ApiLoginException(Exception):
+    pass
