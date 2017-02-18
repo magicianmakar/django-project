@@ -5,6 +5,7 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
+    url(r'', include('shopified_core.urls')),
     url(r'', include('leadgalaxy.urls')),
     url(r'^shopify/', include('shopify_oauth.urls')),
     url(r'^chq/', include('commercehq_core.urls', namespace='chq')),
