@@ -162,7 +162,7 @@ def resubscribe_customer(customer_id):
 
 
 def have_extra_stores(user):
-    return user.profile.plan.stores != -1 and user.profile.get_active_stores().count() > user.profile.plan.stores
+    return user.profile.plan.stores != -1 and user.profile.get_shopify_stores().count() > user.profile.plan.stores
 
 
 def extra_store_invoice(store, extra=None):

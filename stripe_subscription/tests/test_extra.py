@@ -203,7 +203,7 @@ class ExtraStoreTestCase(TestCase):
         can_add, total_allowed, user_count = self.user.profile.can_add_store()
         self.assertTrue(can_add)
         self.assertEqual(total_allowed, self.user.profile.plan.stores)
-        self.assertEqual(user_count, self.user.profile.get_active_stores().count())
+        self.assertEqual(user_count, self.user.profile.get_shopify_stores().count())
 
         self.assertEqual(self.user.extrastore_set.count(), 0)
 
@@ -212,7 +212,7 @@ class ExtraStoreTestCase(TestCase):
                 user=self.user, title="test%s" % i, api_url=SHOPIFY_APP_URL,
                 version=2, shop=MYSHOPIFY_DOMAIN)
 
-        self.assertTrue(self.user.profile.get_active_stores().count() >= 10)
+        self.assertTrue(self.user.profile.get_shopify_stores().count() >= 10)
 
         self.assertFalse(have_extra_stores(self.user))
         self.assertEqual(self.user.extrastore_set.count(), 0)
