@@ -210,21 +210,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return JsonResponse(stores, safe=False)
 
     def post_delete_store(self, request, user, data):
-        store_id = data.get('store')
-
-        store = ShopifyStore.objects.get(id=store_id, user=user)
-        user.can_delete(store)
-
-        # Sub users can't reach here
+        store = ShopifyStore.objects.get(id=data.get('store'), user=user)
+        user.can_delete(store)  # Sub users can't delete a store
 
         store.is_active = False
+        store.uninstalled_at = timezone.now()
         store.save()
-
-        # Make all products related to this store non-connected
-        store.shopifyproduct_set.update(store=None, shopify_id=0)
-
-        # Change Suppliers store
-        ProductSupplier.objects.filter(store=store).update(store=None)
 
         if store.version == 2:
             try:
@@ -816,6 +807,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         target_user = User.objects.get(id=data.get('user'))
         plan = GroupPlan.objects.get(id=data.get('plan'))
+
+        if data.get('allow_trial'):
+            target_user.stripe_customer.can_trial = True
+            target_user.stripe_customer.save()
+            return JsonResponse({'status': 'ok'})
 
         if target_user.is_recurring_customer():
             return self.api_error(
@@ -1753,6 +1749,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_data = {'aliexpress': {}}
 
         order_data['aliexpress']['end_reason'] = data.get('end_reason')
+
+        try:
+            order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
+        except:
+            pass
+
         order.data = json.dumps(order_data)
 
         order.save()
@@ -1804,6 +1806,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         tracks.append(track)
 
             for track in tracks:
+                if not track.order:
+                    continue
+
                 shopify_summary = [
                     u'Shopify Order: {}'.format(track.order['name']),
                     u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
