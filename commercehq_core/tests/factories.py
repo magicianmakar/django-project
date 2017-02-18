@@ -37,12 +37,3 @@ class CommerceHQProductFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'commercehq_core.CommerceHQProduct'
-
-
-class CommerceHQCollectionFactory(factory.DjangoModelFactory):
-    store = factory.SubFactory('commercehq_core.tests.factories.CommerceHQStoreFactory')
-    collection_id = factory.fuzzy.FuzzyInteger(999)
-    title = factory.fuzzy.FuzzyText()
-
-    class Meta:
-        model = 'commercehq_core.CommerceHQCollection'

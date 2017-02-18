@@ -4,7 +4,6 @@ from django.utils.crypto import get_random_string
 
 import re
 import textwrap
-from urlparse import urlparse
 
 
 def add_to_class(cls, name):

@@ -48,6 +48,7 @@ def add_or_update_product(store, data):
         }
     )
 
+
 def sync_products(store):
     products = []
     response = fetch_resource(store, '{}/api/v1/products'.format(store.url))
