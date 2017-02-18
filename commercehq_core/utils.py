@@ -3,7 +3,7 @@ import json
 import requests
 import arrow
 
-from .models import CommerceHQProduct, CommerceHQCollection
+from .models import CommerceHQProduct
 
 
 def fetch_resource(store, path):
@@ -16,17 +16,6 @@ def fetch_resource(store, path):
     session.close()
 
     return response
-
-
-def add_or_update_collection(store, data):
-    return CommerceHQCollection.objects.update_or_create(
-        collection_id=data['id'],
-        store=store,
-        defaults={
-            'title': data.get('title'),
-            'is_auto': bool(data.get('is_auto'))
-        }
-    )
 
 
 def add_or_update_product(store, data):
@@ -59,19 +48,6 @@ def add_or_update_product(store, data):
         }
     )
 
-
-def sync_collections(store):
-    collections = []
-    response = fetch_resource(store, '{}/api/v1/helpers/collections'.format(store.url))
-    collections_data = response.json()
-
-    for collection_data in collections_data:
-        collection, created = add_or_update_collection(store, collection_data)
-        collections.append(collection)
-
-    return collections
-
-
 def sync_products(store):
     products = []
     response = fetch_resource(store, '{}/api/v1/products'.format(store.url))
@@ -79,10 +55,6 @@ def sync_products(store):
 
     for product_data in products_data:
         product, created = add_or_update_product(store, product_data)
-        collection_ids = product_data.get('collections', [])
-        collections = CommerceHQCollection.objects.filter(collection_id__in=collection_ids)
-        product.collections.add(*collections)
         products.append(product)
 
     return products
-

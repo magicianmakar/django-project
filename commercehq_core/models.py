@@ -1,25 +1,60 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.crypto import get_random_string
 
+import re
 import textwrap
 from urlparse import urlparse
 
 
+def add_to_class(cls, name):
+    def _decorator(*args, **kwargs):
+        cls.add_to_class(name, args[0])
+    return _decorator
+
+
 class CommerceHQStore(models.Model):
-    url = models.URLField()
+    class Meta:
+        verbose_name = 'CHQ Store'
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+
     title = models.CharField(max_length=300, blank=True, default='')
+    api_url = models.CharField(max_length=512)
     api_key = models.CharField(max_length=300)
     api_password = models.CharField(max_length=300)
 
-    class Meta:
-        verbose_name = 'CommerceHQ Store'
+    is_active = models.BooleanField(default=True)
+    store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return urlparse(self.url).hostname
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.store_hash:
+            self.store_hash = get_random_string(32, 'abcdef0123456789')
+
+        super(CommerceHQStore, self).save(*args, **kwargs)
+
+    def get_api_url(self, page='', api=True):
+        url = re.findall('([^/\.]+\.commercehq(dev:?)?.com)', self.api_url).pop()[0]
+
+        page = page.lstrip('/')
+        if api and not page.startswith('api'):
+            page = 'api/v1/{}'.format(page).rstrip('/')
+
+        url = 'https://{}/{}'.format(url, page.lstrip('/'))
+
+        return url
 
 
 class CommerceHQProduct(models.Model):
     class Meta:
+        verbose_name = 'CHQ Product'
         ordering = ['-created_at']
 
     store = models.ForeignKey('CommerceHQStore', related_name='products')

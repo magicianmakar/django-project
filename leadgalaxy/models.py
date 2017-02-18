@@ -219,6 +219,18 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_chq_stores(self, flat=False):
+        if self.is_subuser:
+            # stores = self.subuser_stores.filter(is_active=True)
+            pass
+        else:
+            stores = self.user.commercehqstore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_new_alerts(self):
         return self.user.models_user.aliexpressproductchange_set \
                                     .filter(seen=False) \

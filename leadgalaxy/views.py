@@ -253,8 +253,18 @@ def proccess_api(request, user, method, target, data):
             stores.append({
                 'id': i.id,
                 'name': i.title,
-                'url': i.get_api_url(hide_keys=True)
+                'type': 'shopify',
+                'url': i.get_link(api=False)
             })
+
+        if data.get('all'):
+            for i in user.profile.get_chq_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'chq',
+                    'url': i.get_api_url(api=False)
+                })
 
         return JsonResponse(stores, safe=False)
 

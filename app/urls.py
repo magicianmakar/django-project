@@ -3,10 +3,11 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     url(r'', include('leadgalaxy.urls')),
     url(r'^shopify/', include('shopify_oauth.urls')),
-    url(r'^chq/', include('commercehq_core.urls', namespace='commercehq_core')),
+    url(r'^chq/', include('commercehq_core.urls', namespace='chq')),
     url(r'^subscription/', include('stripe_subscription.urls')),
     url(r'^marketing/', include('product_feed.urls')),
     url(r'^pages/', include('article.urls')),
