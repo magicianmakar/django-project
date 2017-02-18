@@ -6,18 +6,6 @@ import arrow
 from .models import CommerceHQProduct, CommerceHQCollection
 
 
-def fetch_resource(store, path):
-    session = requests.Session()
-    # Send an unauthorized request first or API will return a 500.
-    # This could be related to a bug on the API side.
-    session.head(path)
-    session.auth = store.api_key, store.password
-    response = session.get(path)
-    session.close()
-
-    return response
-
-
 def add_or_update_collection(store, data):
     return CommerceHQCollection.objects.update_or_create(
         collection_id=data['id'],
@@ -62,7 +50,9 @@ def add_or_update_product(store, data):
 
 def sync_collections(store):
     collections = []
-    response = fetch_resource(store, '{}/api/v1/helpers/collections'.format(store.url))
+    path = '{}/api/v1/helpers/collections'.format(store.url)
+    auth = store.api_key, store.api_password
+    response = requests.get(path, auth=auth)
     collections_data = response.json()
 
     for collection_data in collections_data:
@@ -74,7 +64,9 @@ def sync_collections(store):
 
 def sync_products(store):
     products = []
-    response = fetch_resource(store, '{}/api/v1/products'.format(store.url))
+    path = '{}/api/v1/products'.format(store.url)
+    auth = store.api_key, store.api_password
+    response = requests.get(path, auth=auth)
     products_data = response.json()['items']
 
     for product_data in products_data:

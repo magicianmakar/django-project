@@ -25,22 +25,22 @@ class SyncProductsTestCase(TestCase):
             'update_at': arrow.get(timezone.now()).timestamp,
         }
 
-    @patch('commercehq_core.utils.fetch_resource')
-    def test_must_add_new_products(self, fetch_resource):
+    @patch('commercehq_core.utils.requests.get')
+    def test_must_add_new_products(self, get):
         response = Mock()
         items = [self.product_data1]
         response.json = Mock(return_value={'items': items})
-        fetch_resource.return_value = response
+        get.return_value = response
 
         store = CommerceHQStoreFactory()
         sync_products(store)
         count = CommerceHQProduct.objects.filter(product_id=self.product_data1['id'],
                                                  store=store).count()
         self.assertEquals(count, 1)
-        self.assertEquals(fetch_resource.call_count, 1)
+        self.assertEquals(get.call_count, 1)
 
-    @patch('commercehq_core.utils.fetch_resource')
-    def test_must_update_old_products(self, fetch_resource):
+    @patch('commercehq_core.utils.requests.get')
+    def test_must_update_old_products(self, get):
         store = CommerceHQStoreFactory()
         product = CommerceHQProductFactory(store=store)
         response = Mock()
@@ -48,7 +48,7 @@ class SyncProductsTestCase(TestCase):
         self.product_data1['title'] = 'Changed'
         items = [self.product_data1]
         response.json = Mock(return_value={'items': items})
-        fetch_resource.return_value = response
+        get.return_value = response
         sync_products(product.store)
         product.refresh_from_db()
         self.assertEquals(product.title, self.product_data1['title'])
@@ -63,12 +63,12 @@ class SyncCollectionsTestCase(TestCase):
             'is_auto': False
         }
 
-    @patch('commercehq_core.utils.fetch_resource')
-    def test_must_add_new_collection(self, fetch_resource):
+    @patch('commercehq_core.utils.requests.get')
+    def test_must_add_new_collection(self, get):
         response = Mock()
         collections = [self.collection_data1]
         response.json = Mock(return_value=collections)
-        fetch_resource.return_value = response
+        get.return_value = response
 
         store = CommerceHQStoreFactory()
         sync_collections(store)
@@ -78,10 +78,10 @@ class SyncCollectionsTestCase(TestCase):
         ).count()
 
         self.assertEquals(count, 1)
-        self.assertEquals(fetch_resource.call_count, 1)
+        self.assertEquals(get.call_count, 1)
 
-    @patch('commercehq_core.utils.fetch_resource')
-    def test_must_update_old_collections(self, fetch_resource):
+    @patch('commercehq_core.utils.requests.get')
+    def test_must_update_old_collections(self, get):
         store = CommerceHQStoreFactory()
         collection = CommerceHQCollectionFactory(store=store)
         response = Mock()
@@ -89,7 +89,7 @@ class SyncCollectionsTestCase(TestCase):
         self.collection_data1['title'] = 'Changed'
         collections = [self.collection_data1]
         response.json = Mock(return_value=collections)
-        fetch_resource.return_value = response
+        get.return_value = response
         sync_collections(collection.store)
         collection.refresh_from_db()
         self.assertEquals(collection.title, self.collection_data1['title'])
