@@ -14,7 +14,16 @@ class ShopifiedApi(ApiResponseMixin, View):
         'chq'       # CommerceHQ Stores
     ]
 
+    default = {
+        'store_type': 'shopify',
+        'version': 1
+    }
+
     def dispatch(self, request, *args, **kwargs):
+        for k, v in self.default.items():
+            if not kwargs.get(k):
+                kwargs[k] = v
+
         try:
             if kwargs['store_type'] not in self.supported_stores:
                 return self.http_method_not_allowed(request, *args, **kwargs)
