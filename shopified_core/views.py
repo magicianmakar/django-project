@@ -53,6 +53,8 @@ class ShopifiedApi(ApiResponseMixin, View):
 
             if kwargs['store_type'] == 'shopify':
                 return ShopifyStoreApi.as_view()(request, *args, **kwargs)
+            else:
+                raise Exception("Unknown Store Type")
 
         except PermissionDenied as e:
             raven_client.captureException()
