@@ -10,7 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
 
 from .models import UserProfile, SubuserPermission
-from .utils import login_attempts_exceeded, unlock_account_email
+from shopified_core.utils import login_attempts_exceeded, unlock_account_email
 
 
 class BsErrorList(ErrorList):

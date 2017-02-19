@@ -5,8 +5,6 @@ import urllib2
 from urlparse import parse_qs
 
 from django.contrib.auth import authenticate, login
-from django.contrib.auth import login as user_login
-from django.contrib.auth import logout as user_logout
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -20,8 +18,9 @@ from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.exceptions import ApiLoginException
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.utils import send_email_from_template
+
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrderLine,
@@ -46,143 +45,43 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.proccess_api(request, **kwargs)
 
     def proccess_api(self, request, target, store_type, version):
-        if request.method == 'POST':
-            data = request.POST
-        elif request.method in ['GET', 'DELETE']:
-            data = request.GET
-
         self.target = target
-        self.data = data
+        self.data = self.request_data(request)
 
         # Methods that doesn't require login or perform login differently (from json data)
-        assert_login = target not in ['login', 'shopify', 'shopify-update', 'save-for-later', 'shipping-aliexpress']
+        assert_login = target not in ['shipping-aliexpress']
 
-        raven_client.context.merge(raven_client.get_data_from_request(request))
+        user = self.get_user(request, assert_login=assert_login)
+        if user:
+            raven_client.user_context({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            })
 
-        try:
-            user = self.get_user(request, assert_login=assert_login)
-            if user:
-                raven_client.user_context({
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email
-                })
+            extension_version = request.META.get('HTTP_X_EXTENSION_VERSION')
+            if extension_version:
+                user.set_config('extension_version', extension_version)
 
-                extension_version = request.META.get('HTTP_X_EXTENSION_VERSION')
-                if extension_version:
-                    user.set_config('extension_version', extension_version)
+        method_name = self.method_name(request.method, target)
+        handler = getattr(self, method_name, None)
 
-            method_name = self.method_name(request.method, target)
-            handler = getattr(self, method_name, None)
-
-            if not handler:
-                if settings.DEBUG:
-                    print 'Method Not Found:', method_name
-
-                raven_client.captureMessage('Non-handled endpoint', extra={'method': method_name})
-                return self.api_error('Non-handled endpoint', status=405)
-
-            res = handler(request, user, data)
-            if res is None:
-                res = self.response
-
-            if res is None:
-                raven_client.captureMessage('API Response is empty')
-                res = self.api_error('Internal Server Error', 500)
-
-        except PermissionDenied as e:
-            raven_client.captureException()
-            reason = e.message
-            if not reason:
-                reason = "You don't have permission to perform this action"
-
-            res = self.api_error('Permission Denied: %s' % reason, status=403)
-
-        except requests.Timeout:
-            raven_client.captureException()
-            res = self.api_error('API Request Timeout', status=501)
-
-        except ApiLoginException as e:
-            if e.message == 'unvalid_access_token':
-                res = self.api_error((
-                    'Unvalide Access Token.\nMake sure you are logged-in '
-                    'before using Chrome Extension'
-                ), status=401)
-
-            elif e.message == 'different_account_login':
-                res = self.api_error((
-                    'You are logged in with different accounts, '
-                    'please use the same account in the Extension and Shopified Web app'
-                ), status=401)
-
-            elif e.message == 'login_required':
-                res = self.api_error((
-                    'Unauthenticated API call. \nMake sure you are logged-in '
-                    'before using Chrome Extension'
-                ), status=401)
-
-            else:
-                raven_client.captureMessage('Unknown Login Error', extra={'message': e.message})
-
-                res = self.api_error('Login Required', status=401)
-
-        except:
+        if not handler:
             if settings.DEBUG:
-                traceback.print_exc()
+                print 'Method Not Found:', method_name
 
-            raven_client.captureException()
+            raven_client.captureMessage('Non-handled endpoint', extra={'method': method_name})
+            return self.api_error('Non-handled endpoint', status=405)
 
-            res = self.api_error('Internal Server Error')
+        res = handler(request, user, self.data)
+        if res is None:
+            res = self.response
 
-        raven_client.context.clear()
+        if res is None:
+            raven_client.captureMessage('API Response is empty')
+            res = self.api_error('Internal Server Error', 500)
 
         return res
-
-    def post_login(self, request, user, data):
-        username = data.get('username')
-        password = data.get('password')
-
-        if not username or not password:
-            return self.api_error('Username or password not set', status=403)
-
-        if utils.login_attempts_exceeded(username):
-            unlock_email = utils.unlock_account_email(username)
-
-            raven_client.context.merge(raven_client.get_data_from_request(request))
-            raven_client.captureMessage('Maximum login attempts reached',
-                                        extra={'username': username, 'from': 'API', 'unlock_email': unlock_email},
-                                        level='warning')
-
-            return self.api_error('You have reached the maximum login attempts.\nPlease try again later.', status=403)
-
-        if '@' in username:
-            try:
-                username = User.objects.get(email__iexact=username).username
-            except:
-                return self.api_error('Unvalide email or password')
-
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if user.is_active:
-                if request.user.is_authenticated():
-                    if user != request.user:
-                        user_logout(request)
-                        user_login(request, user)
-                else:
-                    user_login(request, user)
-
-                token = utils.get_access_token(user)
-
-                return JsonResponse({
-                    'token': token,
-                    'user': {
-                        'id': user.id,
-                        'username': user.username,
-                        'email': user.email
-                    }
-                }, safe=False)
-
-        return self.api_error('Unvalide username or password')
 
     def post_register(self, request, user, data):
         return self.api_error('Please Visit Shopified App Website to register a new account:\n\n'
@@ -370,27 +269,23 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return JsonResponse(products, safe=False)
 
     def post_shopify(self, request, user, data):
-        req_data = json.loads(request.body)
-
-        user = self.get_user(request, data=req_data, assert_login=True)
-
-        if req_data.get('store'):
-            store = ShopifyStore.objects.get(pk=req_data['store'])
+        if data.get('store'):
+            store = ShopifyStore.objects.get(pk=data['store'])
 
             if self.target == 'save-for-later' and not user.can('save_for_later.sub', store):
                 raise PermissionDenied()
             elif self.target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
                 raise PermissionDenied()
 
-        delayed = req_data.get('b')
+        delayed = data.get('b')
 
         if not delayed or self.target == 'save-for-later':
-            result = tasks.export_product(req_data, self.target, user.id)
+            result = tasks.export_product(data, self.target, user.id)
             result = utils.fix_product_url(result, request)
 
             return JsonResponse(result, safe=False)
         else:
-            task = tasks.export_product.apply_async(args=[req_data, self.target, user.id], expires=60)
+            task = tasks.export_product.apply_async(args=[data, self.target, user.id], expires=60)
 
             return self.api_success({'id': str(task.id)})
 
@@ -486,15 +381,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def post_bulk_edit_connected(self, request, user, data):
-        req_data = json.loads(request.body)
         try:
-            store = ShopifyStore.objects.get(id=req_data.get('store'))
+            store = ShopifyStore.objects.get(id=data.get('store'))
             user.can_view(store)
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
         task = tasks.bulk_edit_products.apply_async(
-            args=[store.id, req_data['products']],
+            args=[store.id, data['products']],
             queue='priority_high')
 
         return self.api_success({'task': task.id})
@@ -2033,7 +1927,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         'sender': user,
                     }
 
-                    utils.send_email_from_template(
+                    send_email_from_template(
                         tpl='subuser_added.html',
                         subject='Invitation to join Shopified App',
                         recipient=subuser_email,
@@ -2064,7 +1958,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'reg_hash': reg.register_hash
         }
 
-        utils.send_email_from_template(
+        send_email_from_template(
             tpl='subuser_invite.html',
             subject='Invitation to join Shopified App',
             recipient=subuser_email,

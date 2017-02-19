@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 
+import simplejson as json
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .exceptions import ApiLoginException
@@ -33,11 +35,16 @@ class ApiResponseMixin():
 
     def request_data(self, request):
         if request.method == 'POST':
-            return request.POST
+            if request.POST:
+                return request.POST
+            else:
+                if 'application/json' in request.META['CONTENT_TYPE']:
+                    return json.loads(request.body)
+
         elif request.method in ['GET', 'DELETE']:
             return request.GET
 
-    def get_user(self, request, data=None, assert_login=False):
+    def get_user(self, request, data=None, assert_login=True):
         """
             Return User from the current request data
         """

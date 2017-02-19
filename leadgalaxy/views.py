@@ -39,6 +39,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 import keen
 
 from analytic_events.models import RegistrationEvent
+from shopified_core.utils import send_email_from_template
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrder,
@@ -140,7 +141,7 @@ def webhook(request, provider, option):
             data['reg_hash'] = reg.register_hash
             data['plan_title'] = plan.title
 
-            utils.send_email_from_template(
+            send_email_from_template(
                 tpl='webhook_register.html',
                 subject='Your Shopified App Access',
                 recipient=data['email'],
@@ -270,10 +271,11 @@ def webhook(request, provider, option):
                     if user:
                         user.profile.apply_registration(reg)
                     else:
-                        utils.send_email_from_template(tpl='webhook_register.html',
-                                                       subject='Your Shopified App Access',
-                                                       recipient=data['email'],
-                                                       data=data)
+                        send_email_from_template(
+                            tpl='webhook_register.html',
+                            subject='Your Shopified App Access',
+                            recipient=data['email'],
+                            data=data)
 
                 else:
                     # Handle bundle purchase
@@ -288,10 +290,11 @@ def webhook(request, provider, option):
                     except User.DoesNotExist:
                         user = None
 
-                    utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
-                                                   subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
-                                                   recipient=data['email'],
-                                                   data=data)
+                    send_email_from_template(
+                        tpl='webhook_bundle_purchase.html',
+                        subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                        recipient=data['email'],
+                        data=data)
 
                 data.update(params)
 
@@ -467,10 +470,11 @@ def webhook(request, provider, option):
                 if user:
                     user.profile.apply_registration(reg)
                 else:
-                    utils.send_email_from_template(tpl='webhook_register.html',
-                                                   subject='Your Shopified App Access',
-                                                   recipient=data['email'],
-                                                   data=data)
+                    send_email_from_template(
+                        tpl='webhook_register.html',
+                        subject='Your Shopified App Access',
+                        recipient=data['email'],
+                        data=data)
 
             else:
                 # Handle bundle purchase
@@ -485,10 +489,11 @@ def webhook(request, provider, option):
                 except User.DoesNotExist:
                     user = None
 
-                utils.send_email_from_template(tpl='webhook_bundle_purchase.html',
-                                               subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
-                                               recipient=data['email'],
-                                               data=data)
+                send_email_from_template(
+                    tpl='webhook_bundle_purchase.html',
+                    subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                    recipient=data['email'],
+                    data=data)
 
             data.update(params)
 

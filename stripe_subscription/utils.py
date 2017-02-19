@@ -242,7 +242,7 @@ def process_webhook_event(request, event_id, raven_client):
             return HttpResponse('Customer Not Found')
 
         if customer.have_source() and invoice.attempted:
-            from leadgalaxy.utils import send_email_from_template
+            from shopified_core.utils import send_email_from_template
 
             user = User.objects.get(stripe_customer__customer_id=invoice.customer)
             send_email_from_template(
@@ -407,7 +407,7 @@ def process_webhook_event(request, event_id, raven_client):
         if event.data.object.status == 'trialing' and not customer.have_source():
             trial_delta = arrow.get(event.data.object.trial_end) - arrow.utcnow()
             if trial_delta.days >= 2:  # Make sure it's not an activation event
-                from leadgalaxy.utils import send_email_from_template
+                from shopified_core.utils import send_email_from_template
 
                 send_email_from_template(
                     tpl='trial_ending_soon.html',
