@@ -431,7 +431,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 return self.api_success({
                     'ready': True,
                     'data': data
-                }, safe=False)
+                })
             else:
                 return JsonResponse(data, safe=False, status=500)
 
