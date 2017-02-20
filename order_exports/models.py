@@ -126,6 +126,9 @@ class OrderExportVendor(models.Model):
     def generate_password(self):
         self.raw_password = uuid.uuid4().hex[:6]
 
+    def __unicode__(self):
+        return '{} @{}'.format(self.owner, self.user)
+
 
 def is_vendor(self):
     try:
@@ -144,6 +147,9 @@ class OrderExportFilter(models.Model):
     financial_status = models.CharField(max_length=50, default="", blank=True)
     created_at_min = models.DateTimeField(null=True, blank=True)
     created_at_max = models.DateTimeField(null=True, blank=True)
+
+    def __unicode__(self):
+        return '<OrderExportFilter {}>'.format(self.vendor)
 
 
 class OrderExport(models.Model):
@@ -238,6 +244,9 @@ class OrderExport(models.Model):
     def query(self):
         return self.queries.first()
 
+    def __unicode__(self):
+        return '<OrderExport {}>'.format(self.store.title)
+
 
 class OrderExportQuery(models.Model):
     order_export = models.ForeignKey(OrderExport, related_name="queries")
@@ -269,6 +278,9 @@ class OrderExportLog(models.Model):
     successful = models.BooleanField(default=False)
     csv_url = models.CharField(max_length=512, blank=True, default='')
     type = models.CharField(max_length=100, choices=TYPE_CHOICES, default=SAMPLE)
+
+    def __unicode__(self):
+        return '<OrderExportLog {}>'.format(self.id)
 
 
 @receiver(order_export_done)
