@@ -18,7 +18,8 @@
     "clockpicker": "^0.0.7",
     "nestable-fork": "^1.0.3",
     "uuid-js": "^0.7.5",
-    "dropzone": "^4.3.0"
+    "dropzone": "^4.3.0",
+    "jquery-form": "^3.46.0"
   },
   "devDependencies": {}
 }

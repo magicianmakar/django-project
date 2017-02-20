@@ -35,12 +35,6 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(default=datetime.datetime(2017, 2, 17, 23, 5, 50, 483477, tzinfo=utc), auto_now=True),
             preserve_default=False,
         ),
-        migrations.AddField(
-            model_name='commercehqstore',
-            name='user',
-            field=models.ForeignKey(default=None, to=settings.AUTH_USER_MODEL),
-            preserve_default=False,
-        ),
         migrations.AlterField(
             model_name='commercehqstore',
             name='url',

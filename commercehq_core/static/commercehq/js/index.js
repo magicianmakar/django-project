@@ -1,60 +1,65 @@
-(function() {
+$(document).ready(function() {
     'use strict';
 
-    $('.add-store-btn').click(function (e) {
+    $('.add-store-btn').click(function(e) {
         e.preventDefault();
-        $('#add-store').show();
-        $('#update-store').hide();
-        $('#store-name').val('');
-        $('#store-url').val('');
-        $('#store-key').val('');
-        $('#store-password').val('');
-        $('#modal-add-store-form').modal('show');
-        console.log('Clicked')
+        $('#store-create-modal').modal('show');
     });
 
-    $('#add-store').click(function(e) {
-        var name = $('#store-name');
-        var url = $('#store-url')//.match(/^[\w\-]+\.commercehq\.com/);
-        var key = $('#store-key');
-        var password = $('#store-password');
-        /**
-        if (!url || url.length != 1) {
-            swal('Add Store', 'API URL is not correct!', 'error');
-            return;
-        } else {
-            url = 'https://' + url[0];
-        }**/
+    $('.edit-store').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+        var action = '/chq/store-update/' + storeId;
 
-        $('#add-store').button('loading');
+        $('#store-update-form').prop('action', action);
 
-        $.ajax({
-            url: '/chq/api/add-store',
-            type: 'POST',
-            headers: {'X-CSRFToken': Cookies.get('csrftoken')},
-            data: {
-                title: name.val().trim(),
-                url: url.val().trim(),
-                api_key: key.val().trim(),
-                api_password: password.val().trim()
-            },
-            success: function(data) {
-                if ('error' in data) {
-                    data.error.url.forEach(function(value) {
-                        console.log(url)
-                        url.append('<p/>').html(value);
-                    });
-                } else {
-                    window.location.reload();
-                }
-            },
-            error: function(data) {
-                displayAjaxError('Add Store', data);
-            },
-            complete: function () {
-                $('#add-store').button('reset');
-            }
+        $.get(action).then(function(data) {
+            $('#store-update-form').html(data);
+            $('#store-update-modal').modal('show');
+        })
+    });
+
+    $('.delete-store').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+        var action = '/chq/store-delete/' + storeId;
+
+        swal({
+            title: 'Are you sure?',
+            text: 'Please, confirm if you want to delete this store.',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, delete it!',
+            closeOnConfirm: false
+        }, function() {
+            var data = {csrfmiddlewaretoken: Cookies.get('csrftoken')};
+            $.post(action, data).done(function() {
+                $('#store-row-' + storeId).hide();
+                swal('Deleted!', 'The store has been deleted.', 'success');
+            });
         });
     });
 
-})();
+    $('#store-create-form').ajaxForm({
+        target: '#store-create-form',
+        clearForm: true,
+        data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
+        success: function(responseText, statusText, xhr, $form) {
+            if (xhr.status == 201) {
+                window.location.reload();
+            }
+        }
+    });
+
+    $('#store-update-form').ajaxForm({
+        target: '#store-update-form',
+        clearForm: true,
+        data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
+        success: function(responseText, statusText, xhr, $form) {
+            if (xhr.status == 201) {
+                window.location.reload();
+            }
+        }
+    });
+});

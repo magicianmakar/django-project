@@ -16,20 +16,23 @@
                       <thead>
                         <tr>
                           <th style="">Name</th>
-                        </tr>
+                          <th class="hidden-xs" style="width:13%">Products</th>
+                          <th class="hidden-xs" style="width:13%">Orders</th>
                         {% if not user.is_subuser %}
-                          <th class="hidden-sm hidden-xs"></th>
+                            <th class="hidden-sm hidden-xs"></th>
                         {% endif %}
+                        </tr>
                       </thead>
                       <tbody id="stores-table-body">
-                            {% for item in stores %}
-                            <tr class="store-item" store-id="{{item.id}}">
+                            {% for store in stores %}
+                            <tr id="store-row-{{store.id}}" class="store-store" >
                                 <td class="drag-show">
                                     <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
-                                    <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
+                                    <a href="">{{store.title|default:store.api_url}}</a>
                                 </td>
-
-                              {% if not user.is_subuser %}
+                                <td></td>
+                                <td></td>
+                                {% if not user.is_subuser %}
                                 <td style="white-space:nowrap" class="hidden-sm hidden-xs">
                                     <div class="btn-group ">
                                         <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
@@ -37,43 +40,40 @@
                                         <ul class="dropdown-menu">
 
                                             <li>
-                                                <a class="visit-store " href="{{item.get_link}}/admin" target="_blank">
+                                                <a class="visit-store " href="{{store.url}}/admin" target="_blank">
                                                     <i class="fa fa-external-link"></i> Visit Store
                                                 </a>
                                             </li>
 
                                             <li class="divider"></li>
 
-                                            {% if item.version == 1 %}
                                             <li>
-                                                <a class="edit-store  " store-id="{{item.id}}"
-                                                        store-name="{{item.title}}" store-version="{{item.version}}"
-                                                        store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
+                                                <a class="edit-store" data-store-id="{{ store.id }}">
                                                     <i class="fa fa-edit"></i> Edit
                                                 </a>
                                             </li>
-                                            {% endif %}
 
                                             <li>
-                                                <a class="delete-store btn-danger btn-outline" store-id="{{item.id}}" store-version="{{item.version}}">
+                                                <a class="delete-store btn-danger btn-outline" data-store-id="{{ store.id }}">
                                                     <i class="fa fa-times"></i> Delete
                                                 </a>
                                             </li>
                                         </ul>
                                     </div>
                                 </td>
-                              {% endif %}
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
-                              <td colspan="4" class="text-center">No store found.</td>
+                                <td colspan="4" class="text-center">No store found.</td>
                             </tr>
                             {% endfor %}
                       </tbody>
                     </table>
                     {% if not user.is_subuser %}
-                        <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
-                            Add Store</a>
+                        <a class="add-store-btn btn btn-primary btn-sm" href="#">
+                            Add Store
+                        </a>
                     {% endif %}
 
                     <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
@@ -82,51 +82,13 @@
             </div>
         </div>
     </div>
-    <div id="modal-add-store-form" class="modal fade" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-6 b-r"><h3 class="m-t-none m-b">Add CommerceHQ Store</h3>
-                            <form role="form">
-                                <div class="form-group">
-                                    <label>Name</label> <input type="text" id="store-name" placeholder="Store name (optional)" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label>Store URL</label> <input type="text" id="store-url" placeholder="your-shop-url.commercehq.com" class="form-control" />
-                                </div>
-                                <div class="form-group">
-                                    <label>API Key</label> <input type="text" id="store-key" class="form-control" />
-                                </div>
-                                <div class="form-group">
-                                    <label>API Password</label> <input type="text" id="store-password" class="form-control" />
-                                </div>
-                                <div>
-                                    <button id="add-store" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Add store</strong></button>
-                                    <button id="update-store" style="display:none" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Update store</strong></button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="col-sm-6"><h4>Need Help?</h4>
-                        <p class="xwell">
-                            How To Connect Your CommerceHQ Store:
-                            <ol>
-                                <li>Create a "Private App."</li>
-                                <li>Enter the app name.</li>
-                                <li>Enter the URL in the suggested format.</li>
-                                <li>Copy and paste the <b>API key</b> and <b>API password</b> from your Private App.</li>
-                            </ol>
-                        </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'commercehq/store_create_modal.html' %}
+    {% include 'commercehq/store_update_modal.html' %}
 {% endblock main-container %}
 
 {% block extrajs %}
     {% compress js %}
+        <script src="{% static 'libs/bower_components/jquery-form/jquery.form.js' %}"></script>
         <script type="text/javascript" src="{% static 'commercehq/js/index.js' %}"></script>
     {% endcompress %}
 {% endblock extrajs%}
