@@ -7,6 +7,8 @@ from .models import CommerceHQStore
 
 
 class CommerceHQStoreForm(ModelForm):
+    api_url = forms.URLField(max_length=512)
+
     class Meta:
         model = CommerceHQStore
         fields = 'api_url', 'title', 'api_key', 'api_password'
