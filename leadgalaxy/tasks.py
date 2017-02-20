@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import requests
 import time
-import random
 
 from simplejson import JSONDecodeError
 
@@ -13,6 +12,7 @@ from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery import celery_app, CaptureFailure, retry_countdown
+from shopified_core import permissions
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -55,7 +55,7 @@ def export_product(req_data, target, user_id):
     if store or target != 'save-for-later':
         try:
             store = ShopifyStore.objects.get(id=store)
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
         except (ShopifyStore.DoesNotExist, ValueError):
             raven_client.captureException()
@@ -75,7 +75,7 @@ def export_product(req_data, target, user_id):
     if not original_url:  # Could be sent from the web app
         try:
             product = ShopifyProduct.objects.get(id=req_data.get('product'))
-            user.can_edit(product)
+            permissions.user_can_edit(user, product)
 
             original_url = product.get_original_info().get('url', '')
 
@@ -115,7 +115,7 @@ def export_product(req_data, target, user_id):
         try:
             if target == 'shopify-update':
                 product = ShopifyProduct.objects.get(id=req_data['product'])
-                user.can_edit(product)
+                permissions.user_can_edit(user, product)
 
                 api_data = json.loads(data)
                 api_data['product']['id'] = product.get_shopify_id()
@@ -203,7 +203,7 @@ def export_product(req_data, target, user_id):
             if 'product' in req_data:
                 try:
                     product = ShopifyProduct.objects.get(id=req_data['product'])
-                    user.can_edit(product)
+                    permissions.user_can_edit(user, product)
 
                     original_url = product.get_original_info().get('url', '')
 
@@ -249,7 +249,7 @@ def export_product(req_data, target, user_id):
             # Saved product update
             try:
                 product = ShopifyProduct.objects.get(id=req_data['product'])
-                user.can_edit(product)
+                permissions.user_can_edit(user, product)
 
             except ShopifyProduct.DoesNotExist:
                 raven_client.captureException()
@@ -284,7 +284,7 @@ def export_product(req_data, target, user_id):
                 product.update_data(data)
                 product.set_original_data(original_data, commit=False)
 
-                user.can_add(product)
+                permissions.user_can_add(user, product)
 
                 product.save()
 

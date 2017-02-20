@@ -18,6 +18,7 @@ from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import send_email_from_template
 
@@ -110,7 +111,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_delete_store(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
-        user.can_delete(store)  # Sub users can't delete a store
+        permissions.user_can_delete(user, store)  # Sub users can't delete a store
 
         store.is_active = False
         store.uninstalled_at = timezone.now()
@@ -144,7 +145,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_update_store(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_edit(store)
+        permissions.user_can_edit(user, store)
 
         store_title = data.get('title')
         store_api_url = data.get('url')
@@ -172,7 +173,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def get_custom_tracking_url(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_view(store)
+        permissions.user_can_view(user, store)
 
         custom_tracking = None
         aftership_domain = user.models_user.get_config('aftership_domain')
@@ -186,7 +187,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_custom_tracking_url(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_edit(store)
+        permissions.user_can_edit(user, store)
 
         if not user.can('edit_settings.sub'):
             raise PermissionDenied()
@@ -210,7 +211,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_store_order(self, request, user, data):
         for store, idx in data.iteritems():
             store = ShopifyStore.objects.get(id=store)
-            user.can_edit(store)
+            permissions.user_can_edit(user, store)
 
             store.list_index = utils.safeInt(idx, 0)
             store.save()
@@ -220,7 +221,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def get_store_verify(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
@@ -229,13 +230,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             info = store.get_info
 
             if store.version == 1:
-                ok, permissions = utils.verify_shopify_permissions(store)
+                ok, missing_perms = utils.verify_shopify_permissions(store)
                 if not ok:
                     return self.api_error(
                         'The following permissions are missing: \n{}\n\n'
                         'You can find instructions to fix this issue here:\n'
                         'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
-                        .format('\n'.join(permissions)), status=403)
+                        .format('\n'.join(missing_perms)), status=403)
 
             return self.api_success({'store': info['name']})
 
@@ -248,7 +249,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def get_product(self, request, user, data):
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'))
-            user.can_view(product)
+            permissions.user_can_view(user, product)
 
         except ShopifyProduct.DoesNotExist:
             return self.api_error('Product not found')
@@ -260,7 +261,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         for p in data.getlist('products[]'):
             try:
                 product = ShopifyProduct.objects.get(id=p)
-                user.can_view(product)
+                permissions.user_can_view(user, product)
 
                 products[p] = json.loads(product.data)
             except:
@@ -349,7 +350,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_product_delete(self, request, user, data):
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'))
-            user.can_delete(product)
+            permissions.user_can_delete(user, product)
         except ShopifyProduct.DoesNotExist:
             return self.api_error('Product does not exists', status=404)
 
@@ -364,7 +365,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_bulk_edit(self, request, user, data):
         for p in data.getlist('product'):
             product = ShopifyProduct.objects.get(id=p)
-            user.can_edit(product)
+            permissions.user_can_edit(user, product)
 
             product_data = json.loads(product.data)
 
@@ -383,7 +384,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_bulk_edit_connected(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
+            permissions.user_can_view(user, store)
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
@@ -408,7 +409,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         products = []
         for p in data.getlist('products[]'):
             product = ShopifyProduct.objects.get(id=p)
-            user.can_edit(product)
+            permissions.user_can_edit(user, product)
 
             product_data = json.loads(product.data)
 
@@ -454,7 +455,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Board name is required', status=501)
 
         board = ShopifyBoard(title=board_name, user=user.models_user)
-        user.can_add(board)
+        permissions.user_can_add(user, board)
 
         board.save()
 
@@ -470,11 +471,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
-        user.can_edit(board)
+        permissions.user_can_edit(user, board)
 
         for p in data.getlist('products[]'):
             product = ShopifyProduct.objects.get(id=p)
-            user.can_edit(product)
+            permissions.user_can_edit(user, product)
 
             board.products.add(product)
 
@@ -487,11 +488,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
-        user.can_edit(board)
+        permissions.user_can_edit(user, board)
 
         for p in data.getlist('products[]'):
             product = ShopifyProduct.objects.get(id=p)
-            user.can_edit(product)
+            permissions.user_can_edit(user, product)
 
             board.products.remove(product)
 
@@ -504,7 +505,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         if data.get('board') == '0':
             product.shopifyboard_set.clear()
@@ -513,7 +514,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             board = ShopifyBoard.objects.get(id=data.get('board'))
-            user.can_edit(board)
+            permissions.user_can_edit(user, board)
 
             board.products.add(product)
             board.save()
@@ -530,7 +531,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
-        user.can_delete(board)
+        permissions.user_can_delete(user, board)
 
         board.delete()
 
@@ -541,7 +542,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
-        user.can_edit(board)
+        permissions.user_can_edit(user, board)
 
         board.products.clear()
 
@@ -552,7 +553,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
-        user.can_edit(board)
+        permissions.user_can_edit(user, board)
 
         try:
             return self.api_success({
@@ -574,7 +575,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         board = ShopifyBoard.objects.get(id=data.get('board'))
-        user.can_edit(board)
+        permissions.user_can_edit(user, board)
 
         board.title = data.get('store-title')
 
@@ -593,7 +594,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_variant_image(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
@@ -614,7 +615,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def delete_product_image(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_view(store)
+        permissions.user_can_view(user, store)
 
         product = utils.safeInt(data.get('product'))
         if not product:
@@ -740,7 +741,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_product_notes(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         product.notes = data.get('notes')
         product.save()
@@ -754,7 +755,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             store = ShopifyStore.objects.get(id=store)
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
             page = utils.safeInt(data.get('page'), 1)
             limit = 25
@@ -797,10 +798,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_product_connect(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_view(store)
+        permissions.user_can_view(user, store)
 
         shopify_id = utils.safeInt(data.get('shopify'))
 
@@ -846,7 +847,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def delete_product_connect(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         shopify_id = product.shopify_id
         if shopify_id:
@@ -863,7 +864,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Your current plan doesn\'t have this feature.', status=500)
 
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         original_link = utils.remove_link_query(data.get('original-link'))
 
@@ -912,7 +913,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def delete_product_metadata(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         try:
             supplier = ProductSupplier.objects.get(id=data.get('export'), product=product)
@@ -934,7 +935,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_product_metadata_default(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         try:
             supplier = ProductSupplier.objects.get(id=data.get('export'), product=product)
@@ -950,10 +951,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_add_user_upload(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         upload = UserUpload(user=user.models_user, product=product, url=data.get('url'))
-        user.can_add(upload)
+        permissions.user_can_add(user, upload)
 
         upload.save()
 
@@ -961,7 +962,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_product_duplicate(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_view(product)
+        permissions.user_can_view(user, product)
 
         duplicate_product = utils.duplicate_product(product)
 
@@ -975,7 +976,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_product_split_variants(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         split_factor = data.get('split_factor')
-        user.can_view(product)
+        permissions.user_can_view(user, product)
 
         splitted_products = utils.split_product(product, split_factor)
 
@@ -1185,7 +1186,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product = request.GET.get('product')
         if product:
             product = get_object_or_404(ShopifyProduct, id=product)
-            request.user.can_view(product)
+            permissions.user_can_view(request.user, product)
         else:
             return self.api_error('Product not found', status=404)
 
@@ -1203,7 +1204,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product = data.get('product')
         if product:
             product = get_object_or_404(ShopifyProduct, id=product)
-            request.user.can_edit(product)
+            permissions.user_can_edit(request.user, product)
         else:
             return self.api_error('Product not found', status=404)
 
@@ -1229,7 +1230,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
@@ -1298,7 +1299,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             store = ShopifyStore.objects.get(id=store)
-            user.can_view(store)
+            permissions.user_can_view(user, store)
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
@@ -1335,7 +1336,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def get_product_variant_image(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
+            permissions.user_can_view(user, store)
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
@@ -1355,7 +1356,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_variants_mapping(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         supplier = product.productsupplier_set.get(id=data.get('supplier'))
 
@@ -1384,7 +1385,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_suppliers_mapping(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
-        user.can_edit(product)
+        permissions.user_can_edit(user, product)
 
         suppliers_cache = {}
 
@@ -1489,7 +1490,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             store = ShopifyStore.objects.get(id=int(data.get('store')))
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
-            user.can_view(store)
+            permissions.user_can_view(user, store)
         except ShopifyStore.DoesNotExist:
             raven_client.captureException()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
@@ -1609,7 +1610,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if orders.count():
             for order in orders:
-                user.can_delete(order)
+                permissions.user_can_delete(user, order)
                 order.delete()
 
                 order.store.pusher_trigger('order-source-id-delete', {
@@ -1629,7 +1630,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 raise PermissionDenied()
 
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
-        user.can_edit(order)
+        permissions.user_can_edit(user, order)
 
         order.source_status = data.get('status')
         order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
@@ -1694,7 +1695,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 tracks = []
 
                 for store, store_tracks in stores.iteritems():
-                    user.can_view(store)
+                    permissions.user_can_view(user, store)
 
                     for track in utils.get_tracking_orders(store, store_tracks):
                         tracks.append(track)
@@ -1742,7 +1743,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_order_add_note(self, request, user, data):
         # Append to the Order note
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_view(store)
+        permissions.user_can_view(user, store)
 
         if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
             return self.api_success()
@@ -1752,7 +1753,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_order_note(self, request, user, data):
         # Change the Order note
         store = ShopifyStore.objects.get(id=data.get('store'))
-        user.can_view(store)
+        permissions.user_can_view(user, store)
 
         if utils.set_shopify_order_note(store, data.get('order_id'), data['note']):
             return self.api_success()
@@ -1761,7 +1762,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_order_fullfill_hide(self, request, user, data):
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
-        user.can_edit(order)
+        permissions.user_can_edit(user, order)
 
         order.hidden = data.get('hide') == 'true'
         order.save()
@@ -1771,7 +1772,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def get_find_product(self, request, user, data):
         try:
             product = ShopifyProduct.objects.get(user=user, shopify_id=data.get('product'))
-            user.can_view(product)
+            permissions.user_can_view(user, product)
 
             return self.api_success({
                 'url': 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
@@ -1799,7 +1800,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def get_product_original_desc(self, request, user, data):
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'))
-            user.can_view(product)
+            permissions.user_can_view(user, product)
 
             return HttpResponse(json.loads(product.get_original_data())['description'])
         except:
@@ -1981,13 +1982,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         try:
             if data.get('all') == '1':
                 store = ShopifyStore.objects.get(id=data.get('store'))
-                user.can_view(store)
+                permissions.user_can_view(user, store)
 
                 AliexpressProductChange.objects.filter(product__store=store).update(hidden=1)
 
             else:
                 alert = AliexpressProductChange.objects.get(id=data.get('alert'))
-                user.can_edit(alert)
+                permissions.user_can_edit(user, alert)
 
                 alert.hidden = 1
                 alert.save()
@@ -2000,7 +2001,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_alert_delete(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
             AliexpressProductChange.objects.filter(product__store=store).delete()
 
@@ -2016,7 +2017,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_import_product(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
-            user.can_view(store)
+            permissions.user_can_view(user, store)
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
@@ -2070,7 +2071,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             })
         )
 
-        user.can_add(product)
+        permissions.user_can_add(user, product)
         product.set_original_data('{}')
         product.save()
 

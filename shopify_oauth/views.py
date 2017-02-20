@@ -12,6 +12,8 @@ from requests_oauthlib import OAuth2Session
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core import permissions
+
 from leadgalaxy.models import ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks
 
@@ -255,7 +257,7 @@ def callback(request):
                 access_token=token['access_token'],
                 scope=token['access_token'][0])
 
-        user.can_add(store)
+        permissions.user_can_add(user, store)
 
         try:
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)

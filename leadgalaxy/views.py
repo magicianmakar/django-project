@@ -39,13 +39,17 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 import keen
 
 from analytic_events.models import RegistrationEvent
+
+from shopified_core import permissions
 from shopified_core.utils import send_email_from_template
+
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
     ShopifyOrderShippingLine,
 )
+
 from stripe_subscription.utils import (
     process_webhook_event,
     sync_subscription,
@@ -796,16 +800,16 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
                 in_store = get_object_or_404(ShopifyStore, id=in_store)
                 res = res.filter(store=in_store)
 
-                user.can_view(in_store)
+                permissions.user_can_view(user, in_store)
         else:
             store = get_object_or_404(ShopifyStore, id=utils.safeInt(store))
             res = res.filter(shopify_id__gt=0, store=store)
 
-            user.can_view(store)
+            permissions.user_can_view(user, store)
 
     if board:
         res = res.filter(shopifyboard=board)
-        user.can_view(get_object_or_404(ShopifyBoard, id=board))
+        permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
 
     if filter_products:
         res = accept_product(res, request.GET)
@@ -974,7 +978,7 @@ def products_list(request, tpl='grid'):
 @login_required
 def product_image_download(request, pid):
     product = get_object_or_404(ShopifyProduct, id=pid)
-    request.user.can_view(product)
+    permissions.user_can_view(request.user, product)
 
     images = json.loads(product.data)['images']
     if not len(images):
@@ -1032,7 +1036,7 @@ def product_view(request, pid):
                                       'Login as {u.username}</a>'.format(u=product.user, p=product))
     else:
         product = get_object_or_404(ShopifyProduct, id=pid)
-        request.user.can_view(product)
+        permissions.user_can_view(request.user, product)
 
     try:
         alert_config = json.loads(product.config)
@@ -1123,7 +1127,7 @@ def variants_edit(request, store_id, pid):
         return render(request, 'upgrade.html')
 
     store = get_object_or_404(ShopifyStore, id=store_id)
-    request.user.can_view(store)
+    permissions.user_can_view(request.user, store)
 
     product = utils.get_shopify_product(store, pid)
 
@@ -1144,7 +1148,7 @@ def variants_edit(request, store_id, pid):
 @login_required
 def product_mapping(request, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
-    request.user.can_edit(product)
+    permissions.user_can_edit(request.user, product)
 
     current_supplier = utils.safeInt(request.GET.get('supplier'))
     if not current_supplier and product.default_supplier:
@@ -1232,7 +1236,7 @@ def product_mapping(request, product_id):
 @login_required
 def mapping_supplier(request, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
-    request.user.can_edit(product)
+    permissions.user_can_edit(request.user, product)
 
     shopify_id = product.get_shopify_id()
     if not shopify_id:
@@ -1322,7 +1326,7 @@ def bulk_edit(request, what):
 
     elif what == 'connected':
         store = get_object_or_404(ShopifyStore, id=request.GET.get('store'))
-        request.user.can_view(store)
+        permissions.user_can_view(request.user, store)
 
         product_ids = request.GET.get('products')
         if not product_ids:
@@ -1363,7 +1367,7 @@ def boards(request, board_id):
         raise PermissionDenied()
 
     board = get_object_or_404(ShopifyBoard, id=board_id)
-    request.user.can_view(board)
+    permissions.user_can_view(request.user, board)
 
     args = {
         'request': request,
@@ -1406,7 +1410,7 @@ def get_shipping_info(request):
     if not aliexpress_id and supplier:
         if int(supplier) == 0:
             product = ShopifyProduct.objects.get(id=product)
-            request.user.can_view(product)
+            permissions.user_can_view(request.user, product)
             supplier = product.default_supplier
         else:
             supplier = ProductSupplier.objects.get(id=supplier)
@@ -1431,7 +1435,7 @@ def get_shipping_info(request):
                                                urlencode({'next': request.get_full_path()})))
 
     product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
-    request.user.can_view(product)
+    permissions.user_can_view(request.user, product)
 
     product_data = json.loads(product.data)
 
@@ -1883,7 +1887,7 @@ def autocomplete(request, target):
     elif target == 'supplier-name':
         try:
             store = ShopifyStore.objects.get(id=request.GET.get('store'))
-            request.user.can_view(store)
+            permissions.user_can_view(request.user, store)
 
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
@@ -1906,7 +1910,7 @@ def autocomplete(request, target):
     elif target == 'shipping-method-name':
         try:
             store = ShopifyStore.objects.get(id=request.GET.get('store'))
-            request.user.can_view(store)
+            permissions.user_can_view(request.user, store)
 
         except ShopifyStore.DoesNotExist:
             return JsonResponse({'error': 'Store not found'}, status=404)
@@ -2099,7 +2103,7 @@ def save_image_s3(request):
     mimetype = mimetypes.guess_type(img_url)[0]
 
     product = ShopifyProduct.objects.get(id=product_id)
-    request.user.can_edit(product)
+    permissions.user_can_edit(request.user, product)
 
     upload_url = utils.aws_s3_upload(
         filename=img_name,
@@ -2742,7 +2746,7 @@ def orders_place(request):
     if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):
         try:
             store = ShopifyStore.objects.get(id=store)
-            request.user.can_view(store)
+            permissions.user_can_view(request.user, store)
         except ShopifyStore.DoesNotExist:
             raise Http404('Store not found')
 
@@ -2816,7 +2820,7 @@ def product_alerts(request):
     product = request.GET.get('product')
     if product:
         product = get_object_or_404(ShopifyProduct, id=product)
-        request.user.can_view(product)
+        permissions.user_can_view(request.user, product)
 
     post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
     page = utils.safeInt(request.GET.get('page'), 1)

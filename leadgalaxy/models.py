@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
-from django.core.exceptions import PermissionDenied
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 from django.db.models import Count, Max, Q, F
@@ -1699,97 +1698,8 @@ def user_models_user(self):
         return self.profile.subuser_parent
 
 
-def user_can_add(self, obj):
-    if not self.is_subuser:
-        can = obj.user == self
-    else:
-        if isinstance(obj, ShopifyStore):
-            raise PermissionDenied('Sub-User can not add new stores')
-
-        can = obj.user == self.profile.subuser_parent
-
-        if can:
-            if hasattr(obj, 'store'):
-                store = obj.store
-            else:
-                store = None
-
-            if store:
-                stores = self.profile.get_shopify_stores(flat=True)
-                if store.id not in stores:
-                    raise PermissionDenied("You don't have autorization to edit this store.")
-
-    if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(abs(hash('add'))))
-
-
-def user_can_view(self, obj):
-    if self.is_superuser:
-        return True
-    elif not self.is_subuser:
-        can = obj.user == self
-    else:
-        can = obj.user == self.profile.subuser_parent
-        if can:
-            if isinstance(obj, ShopifyStore):
-                store = obj
-            elif hasattr(obj, 'store'):
-                store = obj.store
-            else:
-                store = None
-
-            if store:
-                stores = self.profile.get_shopify_stores(flat=True)
-                if store.id not in stores:
-                    raise PermissionDenied("You don't have autorization to view this store.")
-
-    if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('view')))
-
-
-def user_can_edit(self, obj):
-    if not self.is_subuser:
-        can = obj.user == self
-    else:
-        if isinstance(obj, ShopifyStore):
-            raise PermissionDenied('Sub-User can not edit stores')
-
-        can = obj.user == self.profile.subuser_parent
-        if can:
-            if hasattr(obj, 'store'):
-                store = obj.store
-            else:
-                store = None
-
-            if store:
-                stores = self.profile.get_shopify_stores(flat=True)
-                if store.id not in stores:
-                    raise PermissionDenied("You don't have autorization to view this store.")
-
-    if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('edit')))
-
-
-def user_can_delete(self, obj):
-    if not self.is_subuser:
-        can = obj.user == self
-    else:
-        if isinstance(obj, ShopifyStore):
-            raise PermissionDenied('Sub-User can not delete stores')
-
-        can = obj.user == self.profile.subuser_parent
-
-    if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('delete')))
-
-
 User.add_to_class("is_subuser", cached_property(user_is_subsuser))
 User.add_to_class("models_user", cached_property(user_models_user))
-
-User.add_to_class("can_add", user_can_add)
-User.add_to_class("can_view", user_can_view)
-User.add_to_class("can_edit", user_can_edit)
-User.add_to_class("can_delete", user_can_delete)
 
 
 # Signals Handling

@@ -34,6 +34,7 @@ from django.shortcuts import get_object_or_404
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
+from shopified_core import permissions
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -430,13 +431,13 @@ def get_store_from_request(request):
         store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
 
     if store:
-        request.user.can_view(store)
+        permissions.user_can_view(request.user, store)
         request.session['last_store'] = store.id
     else:
         try:
             if 'last_store' in request.session:
                 store = stores.get(id=request.session['last_store'])
-                request.user.can_view(store)
+                permissions.user_can_view(request.user, store)
 
         except (PermissionDenied, ShopifyStore.DoesNotExist):
             store = None
