@@ -28,7 +28,7 @@
                             <tr id="store-row-{{store.id}}" class="store-store" >
                                 <td class="drag-show">
                                     <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
-                                    <a href="">{{store.title|default:store.api_url}}</a>
+                                    <a href="{{ store.api_url }}">{{store.title|default:store.api_url}}</a>
                                 </td>
                                 <td></td>
                                 <td></td>
@@ -40,7 +40,7 @@
                                         <ul class="dropdown-menu">
 
                                             <li>
-                                                <a class="visit-store " href="{{store.url}}/admin" target="_blank">
+                                                <a class="visit-store " href="{{ store.api_url }}/admin" target="_blank">
                                                     <i class="fa fa-external-link"></i> Visit Store
                                                 </a>
                                             </li>

@@ -97,13 +97,3 @@ class CommerceHQSupplier(models.Model):
 
     def __unicode__(self):
         return self.supplier_name
-
-
-class CommerceHQCollection(models.Model):
-    store = models.ForeignKey('CommerceHQStore', related_name='collections')
-    collection_id = models.BigIntegerField()
-    title = models.CharField(max_length=100)
-    is_auto = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return self.collection_id
