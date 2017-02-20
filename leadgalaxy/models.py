@@ -355,7 +355,7 @@ class UserProfile(models.Model):
         else:
             total_allowed = user_products
 
-        user_count = self.user.shopifyproduct_set.count()
+        user_count = self.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         can_add = True
 
         if (total_allowed > -1) and (user_count + 1 > total_allowed):
