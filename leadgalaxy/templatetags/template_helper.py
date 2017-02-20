@@ -184,7 +184,7 @@ def render_markdown(text, render_help=True):
 def money_format(amount=None, store=None):
     currency_format = '${{amount}}'
 
-    if store and store.currency_format:
+    if store and getattr(store, 'currency_format', None):
         currency_format = store.currency_format
 
     if amount is not None and amount != '':

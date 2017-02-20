@@ -1,18 +1,121 @@
+import simplejson as json
+
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Max, Q, F
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
 from django.views.generic import ListView
 
+from shopified_core.utils import safeInt, safeFloat, SimplePaginator
+
+from leadgalaxy.templatetags.template_helper import money_format
+
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
+
+
+def get_product(request, post_per_page=25, sort=None, board=None, load_boards=False):
+    products = []
+    paginator = None
+    page = request.GET.get('page', 1)
+    store = request.GET.get('store')
+    sort = request.GET.get('sort')
+
+    models_user = request.user.models_user
+    user = request.user
+    user_stores = request.user.profile.get_chq_stores(flat=True)
+    res = CommerceHQProduct.objects.select_related('store') \
+                                   .filter(user=models_user)
+
+    if request.user.is_subuser:
+        res = res.filter(store__in=user_stores)
+    else:
+        res = res.filter(Q(store__in=user_stores) | Q(store=None))
+
+    if store:
+        if store == 'c':  # connected
+            res = res.exclude(source_id=0)
+        elif store == 'n':  # non-connected
+            res = res.filter(source_id=0)
+
+            in_store = safeInt(request.GET.get('in'))
+            if in_store:
+                in_store = get_object_or_404(CommerceHQStore, id=in_store)
+                res = res.filter(store=in_store)
+
+                permissions.user_can_view(user, in_store)
+        else:
+            store = get_object_or_404(CommerceHQStore, id=store)
+            res = res.filter(source_id__gt=0, store=store)
+
+            permissions.user_can_view(user, store)
+
+    if board:
+        res = res.filter(shopifyboard=board)
+        permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
+
+    res = filter_products(res, request.GET)
+
+    if sort:
+        if re.match(r'^-?(title|price)$', sort):
+            res = res.order_by(sort)
+
+    return res
+
+
+def filter_products(res, fdata):
+    if fdata.get('title'):
+        res = res.filter(title__icontains=fdata.get('title'))
+
+    if fdata.get('price_min') or fdata.get('price_max'):
+        min_price = utils.safeFloat(fdata.get('price_min'), -1)
+        max_price = utils.safeFloat(fdata.get('price_max'), -1)
+
+        if (min_price > 0 and max_price > 0):
+            res = res.filter(price__gte=min_price, price__lte=max_price)
+
+        elif (min_price > 0):
+            res = res.filter(price__gte=min_price)
+
+        elif (max_price > 0):
+            res = res.filter(price__lte=max_price)
+
+    if fdata.get('type'):
+        res = res.filter(product_type__icontains=fdata.get('type'))
+
+    if fdata.get('tag'):
+        res = res.filter(tag__icontains=fdata.get('tag'))
+
+    if fdata.get('vendor'):
+        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
+
+    return res
 
 
 class ProductsList(ListView):
     model = CommerceHQProduct
     template_name = 'commercehq/products_grid.html'
     context_object_name = 'products'
+
+    paginator_class = SimplePaginator
+    paginate_by = 25
+
+    def get_queryset(self):
+        return get_product(self.request)
+
+    def get_context_data(self, **kwargs):
+        breadcrumbs = [{'title': 'Products', 'url': '/product'}]
+
+        if self.request.GET.get('store', 'n') == 'n':
+            breadcrumbs.append({'title': 'Non Connected', 'url': '/product?store=n'})
+        elif self.request.GET.get('store', 'n') == 'c':
+            breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
+
+        kwargs['breadcrumbs'] = breadcrumbs
+
+        return super(ProductsList, self).get_context_data(**kwargs)
 
 
 @login_required

@@ -13,6 +13,8 @@ import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.api import ShopifyStoreApi
+from commercehq_core.api import CHQStoreApi
+
 from .mixins import ApiResponseMixin
 from .exceptions import ApiLoginException
 
@@ -53,6 +55,8 @@ class ShopifiedApi(ApiResponseMixin, View):
 
             if kwargs['store_type'] == 'shopify':
                 return ShopifyStoreApi.as_view()(request, *args, **kwargs)
+            elif kwargs['store_type'] == 'chq':
+                return CHQStoreApi.as_view()(request, *args, **kwargs)
             else:
                 raise Exception("Unknown Store Type")
 

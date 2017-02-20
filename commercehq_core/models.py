@@ -5,6 +5,7 @@ from django.utils.crypto import get_random_string
 
 import re
 import textwrap
+import simplejson as json
 
 
 def add_to_class(cls, name):
@@ -75,8 +76,8 @@ class CommerceHQProduct(models.Model):
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='CommerceHQ Product ID')
     default_supplier = models.ForeignKey('CommerceHQSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
         try:
@@ -90,10 +91,68 @@ class CommerceHQProduct(models.Model):
         except:
             return u'<CommerceHQProduct: %d>' % self.id
 
+    def save(self, *args, **kwargs):
+        data = json.loads(self.data)
+
+        self.title = data.get('title', '')
+        self.tag = data.get('tags', '')[:1024]
+        self.product_type = data.get('type', '')[:254]
+
+        try:
+            self.price = '%.02f' % float(data['price'])
+        except:
+            self.price = 0.0
+
+        super(CommerceHQProduct, self).save(*args, **kwargs)
+
+    @property
+    def parsed(self):
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
+
+    def update_data(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
+
+        product_data.update(data)
+
+        self.data = json.dumps(product_data)
+
+    def set_default_supplier(self, supplier, commit=False):
+        self.default_supplier = supplier
+
+        if commit:
+            self.save()
+
+        self.get_suppliers().update(is_default=False)
+
+        supplier.is_default = True
+        supplier.save()
+
+    def get_suppliers(self):
+        return self.commercehqsupplier_set.all().order_by('-is_default')
+
 
 class CommerceHQSupplier(models.Model):
-    store = models.ForeignKey('CommerceHQStore', related_name='suppliers')
-    supplier_name = models.CharField(max_length=300)
+    store = models.ForeignKey(CommerceHQStore, related_name='suppliers')
+    product = models.ForeignKey(CommerceHQProduct)
+
+    product_url = models.CharField(max_length=512, null=True, blank=True)
+    supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
+    supplier_url = models.CharField(max_length=512, null=True, blank=True)
+    shipping_method = models.CharField(max_length=512, null=True, blank=True)
+    variants_map = models.TextField(null=True, blank=True)
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
         return self.supplier_name

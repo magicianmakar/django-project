@@ -42,7 +42,7 @@ import keen
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template
+from shopified_core.utils import send_email_from_template, SimplePaginator
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -819,7 +819,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         if re.match(r'^-?(title|price)$', sort):
             res = res.order_by(sort)
 
-    paginator = utils.SimplePaginator(res, post_per_page)
+    paginator = SimplePaginator(res, post_per_page)
 
     page = min(max(1, utils.safeInt(page)), paginator.num_pages)
     page = paginator.page(page)
@@ -2289,7 +2289,7 @@ def orders_view(request):
             sort_desc = '-' if sort_type == 'true' else ''
             orders = orders.order_by(sort_desc + sort_field.replace('created_at', 'order_id'))
 
-        paginator = utils.SimplePaginator(orders, post_per_page)
+        paginator = SimplePaginator(orders, post_per_page)
         page = min(max(1, page), paginator.num_pages)
         current_page = paginator.page(page)
         page = current_page
@@ -2664,7 +2664,7 @@ def orders_track(request):
 
     orders = orders.order_by(sorting)
 
-    paginator = utils.SimplePaginator(orders, post_per_page)
+    paginator = SimplePaginator(orders, post_per_page)
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
     orders = page.object_list
@@ -2854,7 +2854,7 @@ def product_alerts(request):
 
     changes = changes.order_by('-updated_at')
 
-    paginator = utils.SimplePaginator(changes, post_per_page)
+    paginator = SimplePaginator(changes, post_per_page)
     page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
     changes = page.object_list
