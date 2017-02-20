@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 
@@ -17,8 +18,7 @@ class CommerceHQStore(models.Model):
         verbose_name = 'CHQ Store'
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User)
-
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     title = models.CharField(max_length=300, blank=True, default='')
     api_url = models.CharField(max_length=512)
     api_key = models.CharField(max_length=300)
@@ -97,3 +97,13 @@ class CommerceHQSupplier(models.Model):
 
     def __unicode__(self):
         return self.supplier_name
+
+
+class CommerceHQCollection(models.Model):
+    store = models.ForeignKey('CommerceHQStore', related_name='collections')
+    collection_id = models.BigIntegerField()
+    title = models.CharField(max_length=100)
+    is_auto = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.collection_id

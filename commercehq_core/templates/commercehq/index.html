@@ -1,142 +1,94 @@
 {% extends "base_commercehq_core.html" %}
 
+{% load static %}
 {% load cache %}
+{% load compress %}
 
 {% block main-container %}
     <div class="ibox float-e-margins">
         <div class="ibox-title">
-            <h5>Shopify Stores<small></small></h5>
-            <div class="ibox-tools">
-                {% if not user.is_subuser and stores.count > 1 %}
-                <a href="#" class="change-store-orders">
-                    <i class="fa fa-sort"></i> Change Order
-                </a>
-                {% endif %}
-            </div>
+            <h5>CommerceHQ Stores<small></small></h5>
         </div>
         <div class="ibox-content">
             <div class="row">
                 <div class="col-md-12">
-            <table class="table table-ligthborder store-tables">
-              <thead>
-                <tr>
-                  <th style="">Name</th>
-                  <th class="hidden-xs" style="width:13%">Products</th>
-                  <th class="hidden-xs" style="width:13%">Orders</th>
-
-                  {% if not user.is_subuser %}
-                  <th class="hidden-sm hidden-xs"></th>
-                  {% endif %}
-                </tr>
-              </thead>
-              <tbody id="stores-table-body">
-                    {% for item in stores %}
-                    <tr class="store-item" store-id="{{item.id}}">
-                        <td class="drag-show">
-                            <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
-                            <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
-                        </td>
-                      <td class="hidden-xs" style="white-space:nowrap">
-                        {% with connected=item.connected_count saved=item.saved_count %}
-                            {% if connected or saved %}
-                                {% if saved %}
-                                    <a href="/product?store=n&in={{item.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
-                                {% endif %}
-
-                                {% if connected %}
-                                    <a href="/product?store={{item.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
-                                {% endif %}
-                            {% endif %}
-                        {% endwith %}
-                      </td>
-                      <td class="hidden-xs" style="white-space:nowrap">
-                        {% cache 600 orders_status item.id %}
-                        {% with pending=item.pending_orders awaiting_tracking=item.awaiting_tracking %}
-                            {% if pending or awaiting_tracking %}
-                                {% if pending %}
-                                <a class="label "
-                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
-                                ><span class="num">{{pending}}</span> Pending</a>
-                                {% endif %}
-
-                                {% if awaiting_tracking %}
-                                    <a class="label "
-                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0&completed=1"
-                                    ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
-                                {% endif %}
-                            {% endif %}
-                        {% endwith %}
-                        {% endcache %}
-                      </td>
-                      {% if not user.is_subuser %}
-                      <td style="white-space:nowrap" class="hidden-sm hidden-xs">
-                        <div class="btn-group ">
-                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
-                                <i class="fa fa-cog"></i> <span class=""></span></button>
-                            <ul class="dropdown-menu">
-
-                        <li>
-                            <a class="visit-store " href="{{item.get_link}}/admin" target="_blank">
-                                <i class="fa fa-external-link"></i> Visit Store
-                            </a>
-                        </li>
-
-                        <li class="divider"></li>
-
-                        <li>
-                            <a store-id="{{item.id}}" class="verify-api-url btn-success btn-outline"
-                               data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
-                                <i class="fa fa-check-circle-o"></i> Verify
-                            </a>
-                        </li>
-
-                        <li>
-                            <a store-id="{{item.id}}" class="change-tracking-url btn-success btn-outline">
-                                <i class="fa fa-chain"></i> Custom Tracking URL
-                            </a>
-                        </li>
-
-                        {% if item.version == 1 %}
-                        <li>
-                            <a class="edit-store  " store-id="{{item.id}}"
-                                    store-name="{{item.title}}" store-version="{{item.version}}"
-                                    store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
-                                <i class="fa fa-edit"></i> Edit
-                            </a>
-                        </li>
+                    <table class="table table-ligthborder store-tables">
+                      <thead>
+                        <tr>
+                          <th style="">Name</th>
+                          <th class="hidden-xs" style="width:13%">Products</th>
+                          <th class="hidden-xs" style="width:13%">Orders</th>
+                        {% if not user.is_subuser %}
+                            <th class="hidden-sm hidden-xs"></th>
                         {% endif %}
+                        </tr>
+                      </thead>
+                      <tbody id="stores-table-body">
+                            {% for store in stores %}
+                            <tr id="store-row-{{store.id}}" class="store-store" >
+                                <td class="drag-show">
+                                    <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
+                                    <a href="">{{store.title|default:store.api_url}}</a>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                {% if not user.is_subuser %}
+                                <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                                    <div class="btn-group ">
+                                        <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                            <i class="fa fa-cog"></i> <span class=""></span></button>
+                                        <ul class="dropdown-menu">
 
-                        <li>
-                            <a class="delete-store btn-danger btn-outline" store-id="{{item.id}}" store-version="{{item.version}}">
-                                <i class="fa fa-times"></i> Delete
-                            </a>
-                        </li>
-                        </ul>
-                        </div>
-                      </td>
-                      {% endif %}
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="4" class="text-center">No store found.</td>
-                    </tr>
-                    {% endfor %}
-              </tbody>
-            </table>
+                                            <li>
+                                                <a class="visit-store " href="{{store.url}}/admin" target="_blank">
+                                                    <i class="fa fa-external-link"></i> Visit Store
+                                                </a>
+                                            </li>
 
-        {% if not user.is_subuser %}
-            <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
-                Add Store</a>
+                                            <li class="divider"></li>
 
-            Need a new Shopify store?  <a href="http://bit.ly/2k0FdOI" class="itooltip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="21 day free trial with 10% off Shopify for 1 Year">Get your Free Trial here</a>
-        {% endif %}
+                                            <li>
+                                                <a class="edit-store" data-store-id="{{ store.id }}">
+                                                    <i class="fa fa-edit"></i> Edit
+                                                </a>
+                                            </li>
 
-            <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
-               class="btn btn-default btn-outline btn-xs pull-right extension-link hidden-sm hidden-xs" target="_blank">Install Chrome Extension</a>
+                                            <li>
+                                                <a class="delete-store btn-danger btn-outline" data-store-id="{{ store.id }}">
+                                                    <i class="fa fa-times"></i> Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No store found.</td>
+                            </tr>
+                            {% endfor %}
+                      </tbody>
+                    </table>
+                    {% if not user.is_subuser %}
+                        <a class="add-store-btn btn btn-primary btn-sm" href="#">
+                            Add Store
+                        </a>
+                    {% endif %}
 
+                    <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
+                       class="btn btn-default btn-outline btn-xs pull-right extension-link hidden-sm hidden-xs" target="_blank">Install Chrome Extension</a>
                 </div>
             </div>
-
         </div>
     </div>
+    {% include 'commercehq/store_create_modal.html' %}
+    {% include 'commercehq/store_update_modal.html' %}
 {% endblock main-container %}
+
+{% block extrajs %}
+    {% compress js %}
+        <script src="{% static 'libs/bower_components/jquery-form/jquery.form.js' %}"></script>
+        <script type="text/javascript" src="{% static 'commercehq/js/index.js' %}"></script>
+    {% endcompress %}
+{% endblock extrajs%}

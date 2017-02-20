@@ -2,11 +2,13 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -63,6 +65,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(default=b'', max_length=300, blank=True)),
                 ('api_key', models.CharField(max_length=300)),
                 ('api_password', models.CharField(max_length=300)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'CommerceHQ Store',
