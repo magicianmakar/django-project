@@ -97,6 +97,9 @@ def add(request):
             if request.POST.get('vendor_username'):
                 email = request.POST.get('vendor_email')
                 username = request.POST.get('vendor_username')
+
+                assert not User.objects.filter(Q(email__iexact=email) | Q(username__iexact=username)).exists()
+
                 user = User.objects.create(email=email, username=username)
 
                 vendor_user = OrderExportVendor(user=user, owner=request.user)
@@ -207,6 +210,9 @@ def edit(request, order_export_id):
             if request.POST.get('vendor_username'):
                 email = request.POST.get('vendor_email')
                 username = request.POST.get('vendor_username')
+
+                assert not User.objects.filter(Q(email__iexact=email) | Q(username__iexact=username)).exists()
+
                 user = User.objects.create(email=email, username=username)
 
                 vendor_user = OrderExportVendor(user=user, owner=request.user)
