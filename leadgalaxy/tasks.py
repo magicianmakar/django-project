@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from app.celery import app as celery_app, CaptureFailure
+from app.celery import celery_app, CaptureFailure, retry_countdown
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -26,14 +26,6 @@ from product_feed.models import FeedStatus
 
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
-
-
-def retry_countdown(key, retries):
-    retries = max(1, retries)
-    countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries * 60) + (60 * retries)
-    cache.set(key, countdown + random.randint(5, 30), timeout=countdown + 60)
-
-    return countdown
 
 
 @celery_app.task(base=CaptureFailure)
