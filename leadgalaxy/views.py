@@ -22,6 +22,7 @@ from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.http import JsonResponse
@@ -78,7 +79,7 @@ def index_view(request):
     if request.user.profile.plan.slug == 'jvzoo-free-gift':
         first_visit = False
 
-    can_add, total_allowed, user_count = request.user.profile.can_add_store()
+    can_add, total_allowed, user_count = permissions.can_add_store(request.user)
 
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_shopify_stores().count() >= 1

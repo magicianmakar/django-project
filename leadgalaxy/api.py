@@ -1,11 +1,12 @@
-
 # -*- coding: utf-8 -*-
+
 import traceback
 import urllib2
 from urlparse import parse_qs
 
 from django.contrib.auth import authenticate, login
 from django.core import serializers
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -442,7 +443,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
 
-        can_add, total_allowed, user_count = user.profile.can_add_board()
+        can_add, total_allowed, user_count = permissions.can_add_board(user)
 
         if not can_add:
             return self.api_error(
@@ -1081,7 +1082,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'force_update': cache.get('extension_required', False)
             }
 
-        can_add, total_allowed, user_count = user.profile.can_add_store()
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
 
         extra_stores = can_add and user.profile.plan.is_stripe() and \
             user.profile.get_shopify_stores().count() >= 1
@@ -2021,7 +2022,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        can_add, total_allowed, user_count = user.models_user.profile.can_add_product()
+        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
         if not can_add:
             return self.api_error(
                 'Your current plan allow up to %d saved products, currently you have %d saved products.'

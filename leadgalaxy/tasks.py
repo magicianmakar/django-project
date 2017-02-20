@@ -270,7 +270,7 @@ def export_product(req_data, target, user_id):
 
         else:  # New product to save
 
-            can_add, total_allowed, user_count = user.models_user.profile.can_add_product()
+            can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
             if not can_add:
                 return {
                     'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'

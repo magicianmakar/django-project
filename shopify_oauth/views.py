@@ -148,7 +148,7 @@ def install(request, store):
         messages.error(request, 'Sub-Users can not add new stores.')
         return HttpResponseRedirect('/')
 
-    can_add, total_allowed, user_count = user.profile.can_add_store()
+    can_add, total_allowed, user_count = permissions.can_add_store(user)
 
     if not can_add:
         if user.profile.plan.is_free and user.can_trial():
@@ -221,7 +221,7 @@ def callback(request):
         store.save()
 
     except ShopifyStore.DoesNotExist:
-        can_add, total_allowed, user_count = user.profile.can_add_store()
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
 
         if not can_add:
             plans_url = request.build_absolute_uri('/user/profile#plan')

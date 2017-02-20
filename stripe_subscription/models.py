@@ -14,6 +14,7 @@ import arrow
 from .stripe_api import stripe
 import stripe.error
 
+from shopified_core import permissions
 from leadgalaxy.models import GroupPlan, ShopifyStore
 
 PLAN_INTERVAL = (
@@ -305,7 +306,7 @@ def stripe_customer_signal(sender, instance, created, **kwargs):
 def add_store_signal(sender, instance, created, **kwargs):
     if created:
         try:
-            can_add, total_allowed, user_count = instance.user.profile.can_add_store()
+            can_add, total_allowed, user_count = permissions.can_add_store(instance.user)
         except User.DoesNotExist:
             return
 

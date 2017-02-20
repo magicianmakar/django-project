@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import PermissionDenied
 
 from leadgalaxy.models import ShopifyStore
@@ -85,3 +87,80 @@ def user_can_delete(user, obj):
 
     if not can:
         raise PermissionDenied('Unautorized Action (0x{})'.format(hash('delete')))
+
+
+def can_add_store(user):
+    """ Check if the user plan allow him to add a new store """
+
+    profile = user.profile
+
+    if profile.is_subuser:
+        return can_add_store(profile.subuser_parent)
+
+    user_stores = int(profile.stores)
+    if user_stores == -2:  # Use GroupPlan.stores limit (default)
+        total_allowed = profile.plan.stores  # if equal -1 that mean user can add unlimited store
+    else:
+        total_allowed = user_stores
+
+    user_count = profile.user.shopifystore_set.filter(is_active=True).count()
+    can_add = True
+
+    if (total_allowed > -1) and (user_count + 1 > total_allowed):
+        if not profile.can('unlimited_stores.use') or profile.get_config_value('_limit_stores'):
+            can_add = False
+
+    if not can_add and profile.plan.is_stripe():
+        can_add = len(re.findall(r'\blite\b', profile.plan.title, re.I)) == 0
+
+    return can_add, total_allowed, user_count
+
+
+def can_add_product(user):
+    """ Check if the user plan allow one more product saving """
+
+    from django.db.models import Q
+
+    profile = user.profile
+
+    if profile.is_subuser:
+        return can_add_product(profile.subuser_parent)
+
+    user_products = int(profile.products)
+    if user_products == -2:
+        total_allowed = profile.plan.products  # -1 mean unlimited
+    else:
+        total_allowed = user_products
+
+    user_count = profile.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+    can_add = True
+
+    if (total_allowed > -1) and (user_count + 1 > total_allowed):
+        if not profile.can('unlimited_products.use'):
+            can_add = False
+
+    return can_add, total_allowed, user_count
+
+
+def can_add_board(user):
+    """ Check if the user plan allow adding one more Board """
+
+    profile = user.profile
+
+    if profile.is_subuser:
+        return can_add_board(profile.subuser_parent)
+
+    user_boards = int(profile.boards)
+    if user_boards == -2:
+        total_allowed = profile.plan.boards  # -1 mean unlimited
+    else:
+        total_allowed = user_boards
+
+    user_count = profile.user.shopifyboard_set.count()
+    can_add = True
+
+    if (total_allowed > -1) and (user_count + 1 > total_allowed):
+        if not profile.can('unlimited_boards.use'):
+            can_add = False
+
+    return can_add, total_allowed, user_count
