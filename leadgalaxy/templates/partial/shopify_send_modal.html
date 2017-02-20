@@ -10,7 +10,7 @@
                     <div class="col-sm-12">
                         <label for="send-select-store">Store:</label>
                         <select class="form-control" name="send-select-store" id="send-select-store" style="display: inline-block; width: 191px; ">
-                            {% for item in user.profile.get_active_stores %}
+                            {% for item in user.profile.get_shopify_stores %}
                             <option value="{{item.id}}">{{item.title}}</option>
                             {% endfor %}
                         </select>

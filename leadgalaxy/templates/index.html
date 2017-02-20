@@ -265,7 +265,10 @@
                                     </div>
                                 </div>
                                 <div id="desc-div" class="form-group" {% if config.description_mode != 'custom' %} style="display:none" {% endif %}>
-                                    <label for="default_desc" class="col-sm-2 control-label">Default Description</label>
+                                    <label for="default_desc" class="col-sm-2 control-label no-wrap">
+                                    Default Description
+                                    {% include 'partial/help_tooltip.html' with help="<p>Available Custom Tags:</p> <p><b>{{title}}</p></b> <p><b>{{description_full}}</p></b> <p><b>{{description_simplified}}</p></b> <p><b>{{price}}</p></b> <p><b>{{compare_at_price}}</p></b> <p><b>{{weight}}</p></b> <p><b>{{vendor}}</p></b> <p><b>{{type}}</p></b>" qtipstyle="color:#BBB" %}
+                                    </label>
                                     <div class="col-sm-10">
                                         <textarea name="default_desc" id="default_desc" cols="30" rows="10" class="form-control">{{config.default_desc}}</textarea>
                                     </div>
@@ -514,6 +517,7 @@
                                             <option value="notify" {% if config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="update" {% if config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update with the same margin</option>
                                             <option value="update_for_increase" {% if config.alert_price_change == 'update_for_increase' %} selected="selected"{% endif %}>Update only when price goes up</option>
+                                            <option value="none" {% if config.alert_price_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -526,6 +530,7 @@
                                         <select id="alert_quantity_change" name="alert_quantity_change" class="form-control">
                                             <option value="notify"{% if config.alert_quantity_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="update"{% if config.alert_quantity_change == 'update' %} selected="selected"{% endif %}>Update automatically</option>
+                                            <option value="none" {% if config.alert_quantity_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -541,6 +546,7 @@
                                             <option value="notify"{% if config.alert_product_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="unpublish"{% if config.alert_product_disappears == 'unpublish' %} selected="selected"{% endif %}>Unpublish product</option>
                                             <option value="zero_quantity"{% if config.alert_product_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                            <option value="none" {% if config.alert_product_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -554,6 +560,7 @@
                                             <option value="notify"{% if config.alert_variant_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
                                             <option value="remove"{% if config.alert_variant_disappears == 'remove' %} selected="selected"{% endif %}>Remove the variant</option>
                                             <option value="zero_quantity"{% if config.alert_variant_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                            <option value="none" {% if config.alert_variant_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
                                 </div>
@@ -644,11 +651,16 @@
                         <form role="form" action="" method="post" id="add-template-form">
                             <input type="hidden" name="id" value="">
                             <div class="form-group">
-                                <label>Title</label> 
+                                <label>Title</label>
                                 <input type="text" name="title" placeholder="Template title" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label>Description</label>
+
+                                <label>
+                                    Description
+                                    {% include 'partial/help_tooltip.html' with help="<p>Available Custom Tags:</p> <p><b>{{title}}</p></b> <p><b>{{description_full}}</p></b> <p><b>{{description_simplified}}</p></b> <p><b>{{price}}</p></b> <p><b>{{compare_at_price}}</p></b> <p><b>{{weight}}</p></b> <p><b>{{vendor}}</p></b> <p><b>{{type}}</p></b>" qtipstyle="color:#BBB" %}
+                                </label>
+
                                 <textarea name="description" placeholder="Description for template" class="form-control" autocomplete="off"></textarea>
                             </div>
                             <div class="m-t-n-xs">

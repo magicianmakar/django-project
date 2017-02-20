@@ -10,7 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
 
 from .models import UserProfile, SubuserPermission
-from .utils import login_attempts_exceeded, unlock_account_email
+from shopified_core.utils import login_attempts_exceeded, unlock_account_email
 
 
 class BsErrorList(ErrorList):
@@ -216,7 +216,7 @@ class SubUserStoresForm(forms.ModelForm):
 
         self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_stores"].help_text = ""
-        self.fields["subuser_stores"].queryset = parent_user.profile.get_active_stores()
+        self.fields["subuser_stores"].queryset = parent_user.profile.get_shopify_stores()
 
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)

@@ -208,11 +208,23 @@ class UserProfile(models.Model):
         else:
             return False
 
-    def get_active_stores(self, flat=False):
+    def get_shopify_stores(self, flat=False):
         if self.is_subuser:
             stores = self.subuser_stores.filter(is_active=True)
         else:
             stores = self.user.shopifystore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
+    def get_chq_stores(self, flat=False):
+        if self.is_subuser:
+            # stores = self.subuser_stores.filter(is_active=True)
+            pass
+        else:
+            stores = self.user.commercehqstore_set.filter(is_active=True)
 
         if flat:
             stores = stores.values_list('id', flat=True)
@@ -326,8 +338,8 @@ class UserProfile(models.Model):
             return self.subuser_parent.profile.can_add_store()
 
         user_stores = int(self.stores)
-        if user_stores == -2:
-            total_allowed = self.plan.stores  # -1 mean unlimited
+        if user_stores == -2:  # Use GroupPlan.stores limit (default)
+            total_allowed = self.plan.stores  # if equal -1 that mean user can add unlimited store
         else:
             total_allowed = user_stores
 
@@ -430,6 +442,20 @@ def user_first_name(self):
     return self.first_name.title() if self.first_name else self.username
 
 
+@add_to_class(User, 'get_access_token')
+def user_get_access_token(self):
+    try:
+        access_token = AccessToken.objects.filter(user=self).latest('created_at')
+    except:
+        token = get_random_string(32)
+        token = hashlib.md5(token).hexdigest()
+
+        access_token = AccessToken(user=self, token=token)
+        access_token.save()
+
+    return access_token.token
+
+
 @add_to_class(User, 'can')
 def user_can(self, perms, store_id=None):
     return self.profile.can(perms, store_id)
@@ -516,8 +542,9 @@ class ShopifyStore(models.Model):
 
     user = models.ForeignKey(User)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    uninstalled_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
@@ -633,6 +660,9 @@ class ShopifyStore(models.Model):
                                          .count()
 
     def pusher_trigger(self, event, data):
+        if not settings.PUSHER_APP_ID:
+            return
+
         pusher = Pusher(
             app_id=settings.PUSHER_APP_ID,
             key=settings.PUSHER_KEY,
@@ -709,7 +739,7 @@ class ShopifyProduct(models.Model):
             return data_store.data
         return getattr(self, 'original_data', '{}')
 
-    def set_original_data(self, value, clear_original=False):
+    def set_original_data(self, value, clear_original=False, commit=True):
         if self.original_data_key:
             data_store = DataStore.objects.get(key=self.original_data_key)
             data_store.data = value
@@ -731,7 +761,8 @@ class ShopifyProduct(models.Model):
                     if clear_original:
                         self.original_data = ''
 
-                    self.save()
+                    if commit:
+                        self.save()
 
                     break
 
@@ -1115,7 +1146,13 @@ class ShopifyProduct(models.Model):
         if type(data) is not dict:
             data = json.loads(data)
 
-        product_data = json.loads(self.data)
+        if data.get('weight_unit') == 'lbs':
+            data['weight_unit'] = 'lb'
+
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
 
         product_data.update(data)
 
@@ -1148,6 +1185,13 @@ class ProductSupplier(models.Model):
         try:
             if 'aliexpress.com' in self.product_url.lower():
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+        except:
+            return None
+
+    def get_store_id(self):
+        try:
+            if 'aliexpress.com' in self.supplier_url.lower():
+                return int(re.findall('/([0-9]+)', self.supplier_url).pop())
         except:
             return None
 
@@ -1398,11 +1442,12 @@ class ClippingMagic(models.Model):
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")
-
-    stores = models.IntegerField(default=0)
-    products = models.IntegerField(default=0)
-    boards = models.IntegerField(default=0)
     register_hash = models.CharField(unique=True, max_length=50, editable=False)
+
+    stores = models.IntegerField(default=0, verbose_name="Stores Limit")
+    products = models.IntegerField(default=0, verbose_name="Products Limit")
+    boards = models.IntegerField(default=0, verbose_name="Boards Limit")
+    auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
@@ -1437,11 +1482,15 @@ class GroupPlan(models.Model):
 
         stores = []
         for i in self.permissions.all():
-            if i.name.endswith('_import.use'):
+            if i.name.endswith('_import.use') and 'pinterest' not in i.name:
                 name = i.name.split('_')[0]
-                stores.append(name)
+                stores.append(name.title())
 
         return stores
+
+    def have_feature(self, perm_name):
+        permission = AppPermission.objects.filter(name_iexact=perm_name)
+        return permission and permission.groupplan_set.filter(id=permission.id).exists()
 
     def is_stripe(self):
         try:
@@ -1666,7 +1715,7 @@ def user_can_add(self, obj):
                 store = None
 
             if store:
-                stores = self.profile.get_active_stores(flat=True)
+                stores = self.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to edit this store.")
 
@@ -1690,7 +1739,7 @@ def user_can_view(self, obj):
                 store = None
 
             if store:
-                stores = self.profile.get_active_stores(flat=True)
+                stores = self.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
@@ -1713,7 +1762,7 @@ def user_can_edit(self, obj):
                 store = None
 
             if store:
-                stores = self.profile.get_active_stores(flat=True)
+                stores = self.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
@@ -1750,7 +1799,7 @@ def invalidate_acp_users(sender, instance, created, **kwargs):
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
 
     if not created and not instance.is_subuser:
-        instance.get_active_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
+        instance.get_shopify_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
 
 
 @receiver(post_save, sender=ShopifyOrderTrack)

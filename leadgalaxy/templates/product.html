@@ -14,7 +14,7 @@
             <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
             <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
 
-            {% for item in user.profile.get_active_stores %}
+            {% for item in user.profile.get_shopify_stores %}
             <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
             {% endfor %}
 
@@ -31,7 +31,7 @@
             <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
             {% endif %}
 
-            {% for item in user.profile.get_active_stores %}
+            {% for item in user.profile.get_shopify_stores %}
                 {% if item.id|stringformat:"i" == request.GET.store %}
                     <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}

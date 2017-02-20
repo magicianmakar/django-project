@@ -8,20 +8,16 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .forms import CommerceHQStoreForm
 
+from django.views.generic import ListView
+from .models import CommerceHQProduct
+
 
 @login_required
 def index_view(request):
     return render(request, 'commercehq/index.html', {})
 
 
-@require_http_methods(['GET', 'POST'])
-@csrf_protect
-@login_required
-def api(request, target):
-    if request.method == 'POST' and target == 'add-store':
-        form = CommerceHQStoreForm(request.POST)
-        if not form.is_valid():
-            return JsonResponse({'error': form.errors})
-        return JsonResponse({'status': 'ok'})
-
-    return JsonResponse({'error': 'Non-handled endpoint'}, status=501)
+class ProductsList(ListView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/products_grid.html'
+    context_object_name = 'products'

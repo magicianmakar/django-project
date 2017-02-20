@@ -3,13 +3,13 @@ from leadgalaxy.forms import EmailAuthenticationForm
 from django.contrib.auth.views import password_reset
 
 import leadgalaxy.views
+import leadgalaxy.api
 
 urlpatterns = patterns(
     '',
     url(r'^$', leadgalaxy.views.index_view, name='index'),
     url(r'^logout$', leadgalaxy.views.logout),
 
-    url(r'^api/(?P<target>[a-z-]+)$', leadgalaxy.views.api),
     url(r'^webhook/(?P<provider>[a-z-]+)/(?P<option>[a-z:-]+)/?$', leadgalaxy.views.webhook),
     url(r'^product/edit/(?P<what>[a-z-]+)$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
     url(r'^product/?(?P<tpl>(grid|table))?$', leadgalaxy.views.products_list, name='product'),

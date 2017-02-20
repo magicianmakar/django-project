@@ -3,7 +3,7 @@ import json
 import requests
 import arrow
 
-from .models import CommerceHQProduct, CommerceHQCollection
+from .models import CommerceHQProduct
 
 
 def add_or_update_collection(store, data):
@@ -15,6 +15,18 @@ def add_or_update_collection(store, data):
             'is_auto': bool(data.get('is_auto'))
         }
     )
+
+def fetch_resource(store, path):
+    session = requests.Session()
+    # Send an unauthorized request first or API will return a 500.
+    # This could be related to a bug on the API side.
+    session.head(path)
+    session.auth = store.api_key, store.password
+    response = session.get(path)
+    session.close()
+
+    return response
+>>>>>>> e1bc028125b47e03367d6aeb2a5c78662e23992d
 
 
 def add_or_update_product(store, data):
@@ -71,10 +83,6 @@ def sync_products(store):
 
     for product_data in products_data:
         product, created = add_or_update_product(store, product_data)
-        collection_ids = product_data.get('collections', [])
-        collections = CommerceHQCollection.objects.filter(collection_id__in=collection_ids)
-        product.collections.add(*collections)
         products.append(product)
 
     return products
-

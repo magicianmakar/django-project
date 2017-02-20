@@ -1,21 +1,18 @@
-import os
+from __future__ import absolute_import
+
 import requests
 import time
 import random
-from celery import Celery
-from celery import Task
+
 from simplejson import JSONDecodeError
 
-# set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
-
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
 from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
-from raven.contrib.celery import register_signal
+
+from app.celery import app as celery_app, CaptureFailure
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -30,24 +27,6 @@ from product_feed.models import FeedStatus
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
 
-app = Celery('shopified')
-
-# Using a string here means the worker will not have to
-# pickle the object when using Windows.
-app.config_from_object('django.conf:settings')
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
-
-# hook into the Celery error handler
-if hasattr(settings, 'RAVEN_CONFIG'):
-    register_signal(raven_client)
-
-
-class CaptureFailure(Task):
-    abstract = True
-
-    def after_return(self, *args, **kwargs):
-        raven_client.context.clear()
-
 
 def retry_countdown(key, retries):
     retries = max(1, retries)
@@ -57,7 +36,7 @@ def retry_countdown(key, retries):
     return countdown
 
 
-@app.task(base=CaptureFailure)
+@celery_app.task(base=CaptureFailure)
 def export_product(req_data, target, user_id):
     start = time.time()
 
@@ -180,7 +159,8 @@ def export_product(req_data, target, user_id):
                         shopify_error, store, store.get_link('/admin/products.json', api=True)
                     ).encode('utf-8')
                 else:
-                    print u'SHOPIFY EXPORT: {} - Store: {}'.format(shopify_error, store).encode('utf-8')
+                    print u'SHOPIFY EXPORT: {} - Store: {} - Product: {}'.format(
+                        shopify_error, store, req_data.get('product')).encode('utf-8')
 
                 if 'requires write_products scope' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
@@ -292,8 +272,9 @@ def export_product(req_data, target, user_id):
                 }
 
             product.update_data(data)
-
             product.store = store
+
+            product.save()
 
         else:  # New product to save
 
@@ -307,31 +288,31 @@ def export_product(req_data, target, user_id):
             is_active = req_data.get('activate', True)
 
             try:
-                product = ShopifyProduct(store=store, user=user.models_user, data=data, is_active=is_active)
-                product.set_original_data(original_data)
-                product.notes = req_data.get('notes', '')
+                product = ShopifyProduct(store=store, user=user.models_user, notes=req_data.get('notes', ''), is_active=is_active)
+                product.update_data(data)
+                product.set_original_data(original_data, commit=False)
 
                 user.can_add(product)
 
                 product.save()
 
-                supplier = product.get_supplier_info()
-                product.default_supplier = ProductSupplier.objects.create(
+                supplier_info = product.get_supplier_info()
+                supplier = ProductSupplier.objects.create(
                     store=store,
                     product=product,
                     product_url=original_url,
-                    supplier_name=supplier.get('name'),
-                    supplier_url=supplier.get('url'),
+                    supplier_name=supplier_info.get('name'),
+                    supplier_url=supplier_info.get('url'),
                     is_default=True
                 )
+
+                product.set_default_supplier(supplier, commit=True)
 
             except PermissionDenied as e:
                 raven_client.captureException()
                 return {
                     'error': "Add Product: {}".format(e.message)
                 }
-
-        product.save()
 
         utils.smart_board_by_product(user.models_user, product)
 
@@ -354,7 +335,7 @@ def export_product(req_data, target, user_id):
     }
 
 
-@app.task(base=CaptureFailure, bind=True, ignore_result=True)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_product(self, store_id, shopify_id, shopify_product=None, product_id=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -416,7 +397,7 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@app.task(base=CaptureFailure, bind=True, ignore_result=True)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -460,7 +441,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@app.task(base=CaptureFailure, ignore_result=True)
+@celery_app.task(base=CaptureFailure, ignore_result=True)
 def smartmemeber_webhook_call(subdomain, data):
     try:
         data['cprodtitle'] = 'Shopified App Success Club OTO3'
@@ -478,7 +459,7 @@ def smartmemeber_webhook_call(subdomain, data):
         raven_client.captureException()
 
 
-@app.task(base=CaptureFailure, bind=True, ignore_result=True)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -500,7 +481,7 @@ def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@app.task(base=CaptureFailure, bind=True)
+@celery_app.task(base=CaptureFailure, bind=True)
 def add_ordered_note(self, store_id, order_id, note):
     try:
         store = ShopifyStore.objects.get(id=store_id)
@@ -513,13 +494,13 @@ def add_ordered_note(self, store_id, order_id, note):
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@app.task(base=CaptureFailure, ignore_result=True)
+@celery_app.task(base=CaptureFailure, ignore_result=True)
 def invite_user_to_slack(slack_teams, data):
     for team in slack_teams.split(','):
         utils.slack_invite(data, team=team)
 
 
-@app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
 def generate_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = FeedStatus.objects.get(id=feed_id)
@@ -533,7 +514,7 @@ def generate_feed(self, feed_id, nocache=False, by_fb=False):
         raven_client.captureException()
 
 
-@app.task(base=CaptureFailure, ignore_result=True)
+@celery_app.task(base=CaptureFailure, ignore_result=True)
 def product_change_alert(change_id):
     try:
         product_change = AliexpressProductChange.objects.get(pk=change_id)
@@ -544,7 +525,7 @@ def product_change_alert(change_id):
         raven_client.captureException()
 
 
-@app.task(base=CaptureFailure, bind=True, ignore_result=True)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def bulk_edit_products(self, store, products):
     """ Bulk Edit Connected products """
 
@@ -572,7 +553,7 @@ def bulk_edit_products(self, store, products):
     })
 
 
-@app.task(bind=True, base=CaptureFailure)
+@celery_app.task(bind=True, base=CaptureFailure)
 def generate_order_export(self, order_export_id):
     try:
         order_export = OrderExport.objects.get(pk=order_export_id)

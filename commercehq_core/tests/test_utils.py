@@ -94,4 +94,3 @@ class SyncCollectionsTestCase(TestCase):
         collection.refresh_from_db()
         self.assertEquals(collection.title, self.collection_data1['title'])
         self.assertEquals(CommerceHQCollection.objects.count(), 1)
-

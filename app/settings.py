@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'analytic_events',
     'order_exports',
     'order_imports',
+
     'commercehq_core',
 )
 
@@ -319,3 +320,5 @@ CLIPPINGMAGIC_API_ID = os.environ.get('CLIPPINGMAGIC_API_ID')
 CLIPPINGMAGIC_API_SECRET = os.environ.get('CLIPPINGMAGIC_API_SECRET')
 
 FACEBOOK_PIXEL_ID = os.environ.get('FACEBOOK_PIXEL_ID')
+
+KEEN_PROJECT_ID = os.environ.get('KEEN_PROJECT_ID')

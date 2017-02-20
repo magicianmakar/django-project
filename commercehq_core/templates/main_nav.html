@@ -33,10 +33,17 @@
             </li>
             {% endif %}
 
-            <li {% if page == 'commercehq_core:index' %}class="active"{% endif %}>
-                <a href="{% url 'commercehq_core:index' %}">
+            <li {% if url_name == 'chq:index' %}class="active"{% endif %}>
+                <a href="{% url 'chq:index' %}">
                     <i class="fa fa-th-large"></i>
                     <span class="nav-label">Stores</span>
+                </a>
+            </li>
+
+            <li {% if url_name == 'chq:product' %}class="active"{% endif %}>
+                <a href="{% url 'chq:product' %}">
+                    <i class="fa fa-th-large"></i>
+                    <span class="nav-label">Products</span>
                 </a>
             </li>
         </ul>

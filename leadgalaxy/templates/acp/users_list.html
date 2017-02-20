@@ -48,7 +48,7 @@
                                 - {{item.profile.subuser_parent.profile.plan.title}}
                                 {% endif %}
                             </td>
-                            <td>{{item.profile.get_active_stores.count}}</td>
+                            <td>{{item.profile.get_shopify_stores.count}}</td>
                             <td>{{item.shopifyproduct_set.count}}</td>
                             {% else %}
                             <td>{{item.profile.plan.title}}</td>
@@ -72,6 +72,7 @@
                                             <li><a href="#" class="intercom-btn" data-email="{{item.email}}" target="_blank">Intercom</a></li>
                                             <li class="divider"></li>
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
+                                            <li><a href="#" class="allow-trial-btn" user-id="{{item.id}}">Allow Free Trial</a></li>
                                             <li class="divider"></li>
                                             <li><a href="text-danger" class="clear-sessions btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Sessions</a></li>
                                             <li><a href="text-danger" class="clear-access-tokens btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Access Tokens</a></li>
@@ -88,7 +89,7 @@
     </div>
 </div>
 
-<div id="modal-plan-select" class="modal fade" aria-hidden="true">
+<div id="modal-plan-select" class="modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
@@ -184,6 +185,37 @@
                 }
             });
         }
+        function allowFreeTrial(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            swal({
+                title: "Allow Free Trial",
+                text: 'Allow user to have an other trial subscribtion?',
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonText: "Yes,",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/change-plan',
+                        data: {'user': user_id, 'allow_trial': true},
+                        success: function(data) {
+                            swal('Allow Free Trial', 'User can now have free trial', 'success');
+                        },
+                        error: function(data) {
+                            displayAjaxError('Allow Free Trial', data);
+                        },
+                    });
+                }
+            });
+        }
 
 {% cache 600 acp_profiles_list user.id users_count request.GET.plan %}
 
@@ -200,6 +232,7 @@
                 $('.change-plan-btn').unbind('click').click(changePlan);
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.clear-access-tokens').unbind('click').click(clearAccessToken);
+                $('.allow-trial-btn').unbind('click').click(allowFreeTrial);
             }
 
             {% if users_count > 1 %}
@@ -238,6 +271,8 @@
                         if (data.status == 'ok') {
                             $('#modal-plan-select').modal('hide');
                             $('.active-plan-change').find('b').text(data.plan.title);
+
+                            toastr.success('User plan changed to: <b>' + data.plan.title + '</b>', 'Change Plan');
                         } else {
                             displayAjaxError('Change Plan', data);
                         }
