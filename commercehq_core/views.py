@@ -13,6 +13,7 @@ from shopified_core.utils import safeInt, safeFloat, SimplePaginator
 
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
+from .decorators import no_subusers, must_be_authenticated
 
 
 def get_product(request, post_per_page=25, sort=None, board=None, load_boards=False):
@@ -96,9 +97,10 @@ def index_view(request):
     return render(request, 'commercehq/index.html', {'stores': stores})
 
 
-@require_http_methods(['POST'])
+@must_be_authenticated
+@no_subusers
 @csrf_protect
-@login_required
+@require_http_methods(['POST'])
 def store_create(request):
     form = CommerceHQStoreForm(request.POST)
 
@@ -111,9 +113,10 @@ def store_create(request):
     return render(request, 'commercehq/store_create_form.html', {'form': form})
 
 
-@require_http_methods(['GET', 'POST'])
+@must_be_authenticated
+@no_subusers
 @csrf_protect
-@login_required
+@require_http_methods(['GET', 'POST'])
 def store_update(request, store_id):
     instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
     form = CommerceHQStoreForm(request.POST or None, instance=instance)
@@ -125,9 +128,10 @@ def store_update(request, store_id):
     return render(request, 'commercehq/store_update_form.html', {'form': form})
 
 
-@require_http_methods(['POST'])
+@must_be_authenticated
+@no_subusers
 @csrf_protect
-@login_required
+@require_http_methods(['POST'])
 def store_delete(request, store_id):
     instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
     instance.delete()
