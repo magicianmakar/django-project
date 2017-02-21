@@ -1,12 +1,7 @@
-import requests
-import time
-
 import simplejson as json
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.core.cache import cache
-from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery import celery_app, CaptureFailure
@@ -22,11 +17,9 @@ from .models import (
 
 @celery_app.task(base=CaptureFailure)
 def save_for_later(req_data, user_id):
-    start = time.time()
 
     store = req_data.get('store')
     data = req_data['data']
-    variants_mapping = None
 
     user = User.objects.get(id=user_id)
 
@@ -101,7 +94,7 @@ def save_for_later(req_data, user_id):
             product = CommerceHQProduct.objects.get(id=req_data['product'])
             permissions.user_can_edit(user, product)
 
-        except ShopifyProduct.DoesNotExist:
+        except CommerceHQProduct.DoesNotExist:
             raven_client.captureException()
             return {
                 'error': "Product {} does not exist".format(req_data['product'])

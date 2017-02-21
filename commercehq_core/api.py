@@ -6,11 +6,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core.mixins import ApiResponseMixin
 
 import tasks
-from .models import (
-    CommerceHQStore,
-    CommerceHQProduct,
-    CommerceHQSupplier
-)
 
 
 class CHQStoreApi(ApiResponseMixin, View):

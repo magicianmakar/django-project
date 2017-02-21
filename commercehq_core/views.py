@@ -1,25 +1,21 @@
-import simplejson as json
+import re
 
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Max, Q, F
+from django.db.models import Q
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
 from django.views.generic import ListView
 
+from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, SimplePaginator
-
-from leadgalaxy.templatetags.template_helper import money_format
 
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
 
 
 def get_product(request, post_per_page=25, sort=None, board=None, load_boards=False):
-    products = []
-    paginator = None
-    page = request.GET.get('page', 1)
     store = request.GET.get('store')
     sort = request.GET.get('sort')
 
@@ -52,9 +48,9 @@ def get_product(request, post_per_page=25, sort=None, board=None, load_boards=Fa
 
             permissions.user_can_view(user, store)
 
-    if board:
+    # if board:
         res = res.filter(shopifyboard=board)
-        permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
+        # permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
 
     res = filter_products(res, request.GET)
 
@@ -70,8 +66,8 @@ def filter_products(res, fdata):
         res = res.filter(title__icontains=fdata.get('title'))
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = utils.safeFloat(fdata.get('price_min'), -1)
-        max_price = utils.safeFloat(fdata.get('price_max'), -1)
+        min_price = safeFloat(fdata.get('price_min'), -1)
+        max_price = safeFloat(fdata.get('price_max'), -1)
 
         if (min_price > 0 and max_price > 0):
             res = res.filter(price__gte=min_price, price__lte=max_price)
