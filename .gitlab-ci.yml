@@ -1,4 +1,4 @@
-image: ubuntu:14.04
+image: python:2.7.11
 
 services:
   - postgres:9.5.4
