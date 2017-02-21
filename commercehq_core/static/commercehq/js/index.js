@@ -13,10 +13,16 @@ $(document).ready(function() {
 
         $('#store-update-form').prop('action', action);
 
-        $.get(action).then(function(data) {
-            $('#store-update-form').html(data);
-            $('#store-update-modal').modal('show');
-        })
+        $.get(action)
+            .done(function(data) {
+                $('#store-update-form').html(data);
+                $('#store-update-modal').modal('show');
+            })
+            .fail(function(jqXHR) {
+                if (jqXHR.status === 401) {
+                    window.location.reload();
+                }
+            });
     });
 
     $('.delete-store').click(function(e) {
@@ -46,7 +52,7 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status == 201) {
+            if (xhr.status === 201) {
                 window.location.reload();
             }
         }
@@ -57,7 +63,7 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status == 201) {
+            if (xhr.status === 201) {
                 window.location.reload();
             }
         }
