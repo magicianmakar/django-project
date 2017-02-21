@@ -1622,8 +1622,9 @@ class AliexpressProductChange(models.Model):
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
     data = models.TextField(blank=True, default='')
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notified_at = models.DateTimeField(null=True, verbose_name='Email Notification Sate')
 
     def __unicode__(self):
         return u'{}'.format(self.id)

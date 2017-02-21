@@ -1,9 +1,11 @@
-from django.core.management.base import BaseCommand, CommandError
+import simplejson as json
+import arrow
+
+from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 
 from leadgalaxy.models import AliexpressProductChange
 from leadgalaxy.utils import send_email_from_template, get_variant_name
-import simplejson as json
 from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -12,15 +14,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 class Command(BaseCommand):
     help = 'Send product change alerts per every given hours'
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '-f',
-            '--frequency',
-            dest='frequency',
-            default=24,
-            help='Given a frequency, in hours, send product change alerts via email'
-        )
-
     def handle(self, *args, **options):
         try:
             self.start_command(*args, **options)
@@ -28,13 +21,16 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
-        frequency = int(options['frequency'])
+        merge_date = arrow.get(1487693000).datetime  # Date when this change was deployed
 
-        now = timezone.now()
-        earlier = now - timezone.timedelta(hours=frequency)
-        all_changes = AliexpressProductChange.objects.filter(created_at__range=(earlier, now))
+        all_changes = AliexpressProductChange.objects.filter(created_at__gt=merge_date) \
+                                                     .filter(notified_at=None) \
+                                                     .order_by('user_id')
 
         changes_by_user = {}
+
+        if options['verbosity'] > 1:
+            self.stdout.write('Notfiy {} changes'.format(all_changes.count()))
 
         for c in all_changes:
             if c.user_id not in changes_by_user:
@@ -46,8 +42,14 @@ class Command(BaseCommand):
                 user = User.objects.get(pk=user_id)
                 self.handle_changes(user, changes)
 
+                AliexpressProductChange.objects.filter(id__in=[j.id for j in changes]) \
+                                               .update(notified_at=timezone.now())
+
             except User.DoesNotExist:
-                raise CommandError('User "%s" does not exist' % user_id)
+                raven_client.captureException(level='warning')
+
+            except:
+                raven_client.captureException()
 
     def handle_changes(self, user, changes):
         changes_map = {'availability': [], 'price': [], 'quantity': [], 'removed': []}
