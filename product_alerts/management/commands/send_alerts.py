@@ -63,7 +63,7 @@ class Command(BaseCommand):
             }
 
             common_data = {
-                'image': change.product.get_images()[0],
+                'images': change.product.get_images(),
                 'title': change.product.title,
                 'url': 'https://app.shopifiedapp.com/product/{}'.format(change.product.id),
                 'shopify_url': change.product.store.get_link('/admin/products/{}'.format(change.product.get_shopify_id())),
@@ -149,13 +149,18 @@ class Command(BaseCommand):
             'changes_map': changes_map,
         }
 
-        send_email_from_template(
-            'product_change_notify.html',
-            '[Shopified App] AliExpress Product Alert',
-            user.email,
-            data,
-            nl2br=False
-        )
+        if any([changes_map['availability'],
+                changes_map['price'],
+                changes_map['quantity'],
+                changes_map['removed']]):
+
+            send_email_from_template(
+                'product_change_notify.html',
+                '[Shopified App] AliExpress Product Alert',
+                user.email,
+                data,
+                nl2br=False
+            )
 
     def get_config(self, name, product, user, default='notify'):
         value = product.get_config().get(name)

@@ -61,7 +61,7 @@
               {% for product in changes_map.availability %}
     						<tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
     							<td class="image">
-    								<img class="product-image" src="{{product.image}}" alt="product image" />
+    								<img class="product-image" src="{{product.images|first}}" alt="product image" />
     							</td>
     							<td class="product">
     								<a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
@@ -96,7 +96,7 @@
               {% for product in changes_map.price %}
                 <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
                   <td class="image">
-                    <img class="product-image" src="{{product.image}}" alt="product image" />
+                    <img class="product-image" src="{{product.images|first}}" alt="product image" />
                   </td>
                   <td class="product">
                     <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
@@ -110,7 +110,7 @@
           </table>
         </div>
       {% endif %}
-      {% if changes_map.quanty|length > 0 %}
+      {% if changes_map.quantity|length > 0 %}
         <div class="info-block">
           <p class="info-title">Quantity Changes:</p>
           <table class="info-table" valign="center">
@@ -124,10 +124,10 @@
               </tr>
             </thead>
             <tbody>
-              {% for product in changes_map.quanty %}
+              {% for product in changes_map.quantity %}
                 <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
                   <td class="image">
-                    <img class="product-image" src="{{product.image}}" alt="product image" />
+                    <img class="product-image" src="{{product.images|first}}" alt="product image" />
                   </td>
                   <td class="product">
                     <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
@@ -157,13 +157,15 @@
               {% for product in changes_map.removed %}
                 <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
                   <td class="image">
-                    <img class="product-image" src="{{product.image}}" alt="product image" />
+                    <img class="product-image" src="{{product.images|first}}" alt="product image" />
                   </td>
                   <td class="product">
                     <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
                   </td>
-                  <td lass="variants red">
-                    {{ product.variants|join:"\n"|linebreaks }}
+                  <td lass="variants ">
+                    <p class="red">
+                        {{ product.variants|join:"<br>"|safe }}
+                    </p>
                   </td>
                   <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
                 </tr>
