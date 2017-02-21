@@ -94,30 +94,6 @@ def filter_products(res, fdata):
     return res
 
 
-class ProductsList(ListView):
-    model = CommerceHQProduct
-    template_name = 'commercehq/products_grid.html'
-    context_object_name = 'products'
-
-    paginator_class = SimplePaginator
-    paginate_by = 25
-
-    def get_queryset(self):
-        return get_product(self.request)
-
-    def get_context_data(self, **kwargs):
-        breadcrumbs = [{'title': 'Products', 'url': '/product'}]
-
-        if self.request.GET.get('store', 'n') == 'n':
-            breadcrumbs.append({'title': 'Non Connected', 'url': '/product?store=n'})
-        elif self.request.GET.get('store', 'n') == 'c':
-            breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
-
-        kwargs['breadcrumbs'] = breadcrumbs
-
-        return super(ProductsList, self).get_context_data(**kwargs)
-
-
 @login_required
 def index_view(request):
     stores = CommerceHQStore.objects.filter(user=request.user.models_user)
@@ -161,3 +137,27 @@ def store_delete(request, store_id):
     instance.delete()
 
     return HttpResponse()
+
+
+class ProductsList(ListView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/products_grid.html'
+    context_object_name = 'products'
+
+    paginator_class = SimplePaginator
+    paginate_by = 25
+
+    def get_queryset(self):
+        return get_product(self.request)
+
+    def get_context_data(self, **kwargs):
+        breadcrumbs = [{'title': 'Products', 'url': '/product'}]
+
+        if self.request.GET.get('store', 'n') == 'n':
+            breadcrumbs.append({'title': 'Non Connected', 'url': '/product?store=n'})
+        elif self.request.GET.get('store', 'n') == 'c':
+            breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
+
+        kwargs['breadcrumbs'] = breadcrumbs
+
+        return super(ProductsList, self).get_context_data(**kwargs)

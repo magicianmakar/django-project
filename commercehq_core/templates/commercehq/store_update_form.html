@@ -1,5 +1,5 @@
 {% load widget_tweaks %}
-
+{% spaceless %}
 {{ form.non_field_errors }}
 <div class="form-group">
     <label>Title</label>
@@ -56,3 +56,4 @@
 <div>
     <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Update store</strong></button>
 </div>
+{% endspaceless %}
