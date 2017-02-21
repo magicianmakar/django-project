@@ -888,6 +888,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             product_supplier = ProductSupplier.objects.get(id=data.get('export'))
+            permissions.user_can_edit(user, product_supplier)
+
             product_supplier.product = product
             product_supplier.product_url = original_link
             product_supplier.supplier_name = data.get('supplier-name')
@@ -940,6 +942,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             supplier = ProductSupplier.objects.get(id=data.get('export'), product=product)
+            permissions.user_can_edit(user, product_supplier)
         except ProductSupplier.DoesNotExist:
             return self.api_error('Supplier not found.\nPlease reload the page and try again.')
 

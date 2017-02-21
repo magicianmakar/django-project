@@ -1,4 +1,5 @@
 import os
+import re
 import hashlib
 import time
 import urlparse
@@ -53,6 +54,16 @@ def get_domain(url, full=False):
         return hostname
     else:
         return get_tld(url, as_object=True).domain
+
+
+def remove_link_query(link):
+    if not link:
+        return ''
+
+    if not link.startswith('http'):
+        link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
+
+    return re.sub('([?#].*)$', r'', link)
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):

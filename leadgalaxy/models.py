@@ -69,6 +69,7 @@ class UserProfile(models.Model):
 
     subuser_parent = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='subuser_parent')
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
+    subuser_chq_stores = models.ManyToManyField('commercehq_core.CommerceHQStore', blank=True, related_name='subuser_chq_stores')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -220,8 +221,7 @@ class UserProfile(models.Model):
 
     def get_chq_stores(self, flat=False):
         if self.is_subuser:
-            # stores = self.subuser_stores.filter(is_active=True)
-            pass
+            stores = self.subuser_chq_stores.filter(is_active=True)
         else:
             stores = self.user.commercehqstore_set.filter(is_active=True)
 

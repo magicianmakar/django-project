@@ -2,11 +2,13 @@ import re
 
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
 from django.views.generic import ListView
+from django.views.generic.detail import DetailView
 
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, SimplePaginator
@@ -19,11 +21,9 @@ def get_product(request, post_per_page=25, sort=None, board=None, load_boards=Fa
     store = request.GET.get('store')
     sort = request.GET.get('sort')
 
-    models_user = request.user.models_user
-    user = request.user
     user_stores = request.user.profile.get_chq_stores(flat=True)
     res = CommerceHQProduct.objects.select_related('store') \
-                                   .filter(user=models_user)
+                                   .filter(user=request.user.models_user)
 
     if request.user.is_subuser:
         res = res.filter(store__in=user_stores)
@@ -41,16 +41,16 @@ def get_product(request, post_per_page=25, sort=None, board=None, load_boards=Fa
                 in_store = get_object_or_404(CommerceHQStore, id=in_store)
                 res = res.filter(store=in_store)
 
-                permissions.user_can_view(user, in_store)
+                permissions.user_can_view(request.user, in_store)
         else:
             store = get_object_or_404(CommerceHQStore, id=store)
             res = res.filter(source_id__gt=0, store=store)
 
-            permissions.user_can_view(user, store)
+            permissions.user_can_view(request.user, store)
 
     # if board:
-        res = res.filter(shopifyboard=board)
-        # permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
+        # res = res.filter(shopifyboard=board)
+        # permissions.user_can_view(request.user, get_object_or_404(ShopifyBoard, id=board))
 
     res = filter_products(res, request.GET)
 
@@ -147,13 +147,38 @@ class ProductsList(ListView):
         return get_product(self.request)
 
     def get_context_data(self, **kwargs):
-        breadcrumbs = [{'title': 'Products', 'url': '/product'}]
+        context = super(ProductsList, self).get_context_data(**kwargs)
+
+        context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('chq:products_list')}]
 
         if self.request.GET.get('store', 'n') == 'n':
-            breadcrumbs.append({'title': 'Non Connected', 'url': '/product?store=n'})
+            context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('chq:products_list') + '?store=n'})
         elif self.request.GET.get('store', 'n') == 'c':
-            breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
+            context['breadcrumbs'].append({'title': 'Connected', 'url': reverse('chq:products_list') + '?store=c'})
+        elif safeInt(self.request.GET.get('store')):
+            store = CommerceHQStore.objects.get(id=self.request.GET.get('store'))
+            permissions.user_can_view(self.request.user, store)
 
-        kwargs['breadcrumbs'] = breadcrumbs
+            context['store'] = store
+            context['breadcrumbs'].append({'title': store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), store.id)})
 
-        return super(ProductsList, self).get_context_data(**kwargs)
+        return context
+
+
+class ProductDetailView(DetailView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/product_detail.html'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductDetailView, self).get_context_data(**kwargs)
+
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('chq:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
+            self.object.title
+        ]
+
+        return context

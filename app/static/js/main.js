@@ -4,6 +4,29 @@
 var taskIntervals = {};
 var taskCallsCount = {};
 
+function api_url(endpoint, store_type) {
+    store_type = typeof(store_type) === 'undefined' ? null : store_type;
+
+    var url = '';
+
+    if(typeof(endpoint) === 'object') {
+        endpoint = endpoint.reduce(function(a, b) {
+            return a.replace(/\/+$/, '').replace(/^\/+/, '') + '/' + b.replace(/\/+$/, '').replace(/^\/+/, '');
+        });
+    }
+
+    endpoint = endpoint.replace(/^\/?api\//, '');
+
+    if (store_type) {
+        url = '/api/' + store_type + '/' + endpoint;
+    } else {
+        url = '/api/' + endpoint;
+    }
+
+    return url;
+}
+
+
 function allPossibleCases(arr, top) {
     top = typeof(top) === 'undefined' ? true : top;
 

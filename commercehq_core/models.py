@@ -128,6 +128,8 @@ class CommerceHQProduct(models.Model):
     def set_default_supplier(self, supplier, commit=False):
         self.default_supplier = supplier
 
+        print self.get_suppliers().values('is_default'), '=>', self.default_supplier
+
         if commit:
             self.save()
 
@@ -135,6 +137,7 @@ class CommerceHQProduct(models.Model):
 
         supplier.is_default = True
         supplier.save()
+        print self.get_suppliers().values('is_default'), '=>', self.default_supplier
 
     def get_suppliers(self):
         return self.commercehqsupplier_set.all().order_by('-is_default')
@@ -155,4 +158,9 @@ class CommerceHQSupplier(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return self.supplier_name
+        if self.supplier_name:
+            return self.supplier_name
+        elif self.supplier_url:
+            return self.supplier_url
+        else:
+            return u'<CommerceHQSupplier: {}>'.format(self.id)

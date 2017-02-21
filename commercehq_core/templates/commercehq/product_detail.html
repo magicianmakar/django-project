@@ -1,0 +1,749 @@
+{% extends "base_commercehq_core.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+         <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-edit"></i> Edit</a></li>
+                {% if request.user|can:'notes.view' %}
+                <li class=""><a
+                    data-auto-click="#notes"
+                    {% if request.user|can:'notes.use' %}
+                    data-toggle="tab" href="#tab-4"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-file-o"></i>Notes</a></li>
+                {% endif %}
+                {% if request.user|can:'product_metadata.view' %}
+                <li class="connections-tab"><a
+                    data-auto-click="#connections"
+                    {% if request.user|can:'product_metadata.use' %}
+                    data-toggle="tab" href="#tab-5"
+                    {% else %}
+                    href="{% url 'upgrade_required' %}"
+                    {% endif %}
+                    ><i class="fa fa-cogs"></i> Connections</a></li>
+                {% endif %}
+            </ul>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane active">
+                    <div class="panel-body">
+                <!-- Product view -->
+                <div class=" row">
+                    <div class="form-group col-xs-12">
+                        <label for="product-title">Title</label>
+                        <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
+                    </div>
+                </div>
+                <div class=" row" {% if shopify_product %}style="display:none"{% endif %}>
+                    <div class="form-group col-xs-3">
+                        <label for="product-price">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-addon">{% money_format None product.store  %}</span>
+                            <input type="text" class="form-control" id="product-price">
+                        </div>
+                    </div>
+                    <div class="form-group col-xs-3">
+                        <label for="product-type">Compare at price</label>
+                        <div class="input-group">
+                            <span class="input-group-addon">{% money_format None product.store  %}</span>
+                            <input type="text" class="form-control" id="product-compare-at"
+                                   value="{{product.product.compare_at_price|default:''}}">
+                        </div>
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label for="product-type" style="display: block">Weight</label>
+                        <input type="text" class="form-control" id="product-weight" style="display: inline;width: 30%;">
+
+                        <select name="product-weight-unit" id="product-weight-unit" class="form-control"
+                            style="display: inline;width: 20%;">
+                            <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                            <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                            <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                            <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-xs-3">
+                        <label for="product-type">Type</label>
+                        <input type="text" class="form-control" id="product-type" placeholder="Product Type">
+                    </div>
+                    <div class="form-group col-xs-6">
+                        <label for="product-type">Tags</label>
+                        <input type="text" class="form-control tag-it" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
+                    </div>
+                    <div class="form-group col-xs-3">
+                        <label for="product-vendor">Vendor</label>
+                        <input type="text" class="form-control" value="" id="product-vendor" placeholder="Product Vendor">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div id="more-options" class="col-xs-12">
+                        <div class="childs" style="">
+                            {% if shopify_product %}
+                                <div class="panel panel-default m-b-lg">
+                                    <div class="panel-heading">Variants</div>
+                                    <div class="panel-body" style="padding-bottom:0">
+                                <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:64px">Image</th>
+                                            <th>Title</th>
+                                            <th>Price</th>
+                                            <th>Compare at price</th>
+                                            <th>Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in shopify_product.variants %}
+                                        <tr class="shopify-variant" variant-id="{{item.id}}">
+                                            <td>
+                                                {% if item.image_src %}
+                                                <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb item.image_src %}"
+                                                     store="{{product.store.id}}" product="{{item.product_id}}"
+                                                     variant="{{item.id}}" style="width:64px" />
+                                                {% endif %}
+                                            </td>
+
+                                            <td>
+                                                <input type="hidden" name="variant" value="{{item.id}}">
+                                                <input type="hidden" name="option1" value="{{item.option1|default:''}}">
+                                                <input type="hidden" name="option2" value="{{item.option2|default:''}}">
+                                                <input type="hidden" name="option3" value="{{item.option3|default:''}}">
+                                                <input type="hidden" name="title" value="{{item.title}}"/>
+                                                <!-- <input class="var-input var-input-title" type="text" name="title" value="{{item.title}}" /> -->
+                                                <span>{{item.title}}</span>
+                                            </td>
+
+                                            <td style="white-space:nowrap">
+                                                <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
+                                                <span class="var-pad">{% money_format None product.store  %}</span>
+                                            </td>
+
+                                            <td style="white-space:nowrap">
+                                                <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
+                                                <span class="var-pad">{% money_format None product.store  %}</span>
+                                            </td>
+
+                                            <td style="white-space:nowrap">
+                                                <input class="var-input" type="text" name="weight" value="{{item.weight}}" />
+                                                <select class="var-pad var-input" name="weight_unit" class="form-control"
+                                                    style="border-left: 1px #EAEAEA solid;display: inline;width: 20%;background-color: #fff;padding: 9px 2px;">
+                                                    <option value="g" {% if item.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                                                    <option value="kg" {% if item.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                                                    <option value="oz" {% if item.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                                                    <option value="lb" {% if item.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                                                </select>
+
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row" {% if shopify_product %}style="display:none"{% endif %}>
+                                <div class="form-group col-xs-6">
+                                    <label for="">Variants</label>
+                                </div>
+                            </div>
+
+                            <div id="variants" class="row well"
+                                 style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if shopify_product %}display:none{% endif %}">
+
+                                <div class="variant-simple form-group col-xs-10" style="display:none">
+                                    <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
+                                    <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0px;" placeholder="Values (separeted by comma)">
+                                    <a href="#" class="btn btn-danger btn-xs remove-variant">Remove</a>
+                                </div>
+                                <div class="area col-xs-12">
+                                </div>
+                                <div class="col-xs-12" style="margin: 10px 0;text-align: right">
+                                    <a href="#" class="btn btn-success btn-xs add-variant">Add Variant</a>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group col-xs-12" style="padding:0">
+                                <textarea name="product-description" class="form-control"></textarea>
+                            </div>
+
+                            <div class="form-group col-xs-12" style="padding:0">
+                                <label for="product-visible">
+                                    <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
+                                    Make Product Visible
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="buttons col-xs-12">
+                        <div class="row text-center" id="var-images">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xs-12 text-right" style="margin-top: 15px;">
+                                <a id="download-images"
+                                   class="btn btn-success btn-xs"
+                                   data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading"
+                                   href="{% url 'product_image_download' pid=product.id %}">
+                                    <i class="fa fa-download"></i> Download Images
+                                </a>
+                                {% if aws_available and request.user|can:'image_uploader.view' %}
+                                <a class="btn btn-success btn-xs"
+                                    {% if request.user|can:'image_uploader.use' %}
+                                    data-toggle="modal" data-target="#modal-upload-image"
+                                    {% else %}
+                                    href="{% url 'upgrade_required' %}"
+                                    {% endif %}
+                                >
+                                    <i class="fa fa-upload"></i> Upload Image
+                                </a>
+                                {% endif %}
+                                <button class="btn btn-success btn-xs add-images-btn">More images</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not product.shopify_url %}
+                    <div class="form-group col-xs-12">
+                        <label for="store-select">Export to:</label>
+                        <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
+                        {% for i in request.user.profile.get_chq_stores %}
+                            <option value="{{i.id}}" {% if i == product.store %}selected{% endif %}>{{i.title}}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                    <input type="hidden" id="store-select" name="store-select" value="{{product.store_id}}">
+                    {% endif %}
+
+                    <div class="buttons col-xs-12">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                {% if not product.shopify_url and not shopify_product %}
+                                <button id="export-btn" target="shopify" type="button"
+                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Send to Shopify</button>
+                                {% endif %}
+
+                                {% if shopify_product %}
+                                <button id="export-btn" target="shopify-update" type="button"
+                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">Update in Shopify</button>
+                                {% endif %}
+
+                                <button id="save-for-later-btn" target="save-for-later"
+                                        type="button" class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving"
+                                        {% if shopify_product %}style="display:none"{% endif %}>Save for later</button>
+
+                            <div class="btn-group dropup">
+                                <button id="more-options-btn" data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
+                                    More Options<span class="caret" style="margin-left:10px"></span></button>
+
+                                <ul class="dropdown-menu">
+                                {% if product.shopify_url %}
+                                    <li><a href="{{product.shopify_url}}" target="_blank" >
+                                        <i class="fa fa-file-o"></i> View in Shopify</a>
+                                    </li>
+                                    {% if request.user|can:'product_variant_setup.view' %}
+                                    <li><a href="{{product.variant_edit}}" target="_blank">
+                                        <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li><a id="view-btn" type="button" style="display:none">View in Shopify</a></li>
+                                    {% if request.user|can:'product_variant_setup.view' %}
+                                    <li><a id="btn-variants-img" type="button" style="display:none">
+                                        <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if product.get_shopify_id %}
+                                <li><a href="{% url 'product_mapping' product.id %}" target="_blank">
+                                    <i class="fa fa-chain"></i> Variants Mapping</a>
+                                </li>
+                                {% endif %}
+
+                                <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
+
+                                <li><a id="btn-split-variants" product-id="{{product.id}}" shopify-id="{{product.get_shopify_id}}"
+                                       type="button" target="_blank" class="itooltip" title="Split Variants into Separate Products"
+                                       data-placement="right">
+                                    <i class="fa fa-code-fork"></i> Split Variants</a>
+                                </li>
+
+                                {% if product.product.original_url %}
+                                    <li><a href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source.source}}</a></li>
+                                {% endif %}
+                                </ul>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- / Product view -->
+            </div> <!-- / #tab-1 -->
+        </div>
+
+        <div id="tab-4" class="tab-pane">
+            <div class="panel-body" style="min-height:300px">
+                <div class="row">
+                    <div class="form-group col-xs-12">
+                        <input id="product-notes" type="hidden" name="content-notes">
+                        <trix-editor id="trix-notes" input="product-notes" style="min-height: 250px"></trix-editor>
+                    </div>
+                    <div class="form-group col-xs-12">
+                        <button id="save-product-notes" class="btn btn-success"><i class="fa fa-save"></i> Save Notes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-5" class="tab-pane">
+            <div class="panel-body"  style="min-height:300px">
+                <div class="row">
+                    <div class="col-md-10 col-md-offset-1" style="padding-left:0;padding-right:0">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                Shopify Product
+                            </div>
+                            <div class="panel-body">
+                                {% if shopify_product %}
+                                <div class="row" style="display: flex; align-items: center; ">
+                                    <div class="col-md-1">
+                                        <img class="no-img no-img-sm" no-img-width="45px"
+                                             src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}">
+                                    </div>
+                                    <div class="col-md-10">
+                                        <a href="{{product.shopify_link}}" target="_blank">{{shopify_product.title}}</a>
+                                    </div>
+                                </div>
+
+                                <div class="row text-right">
+                                    <div class="col-md-12">
+                                        <a href="#" class="btn btn-success btn-xs product-connection-change"><i class="fa fa-refresh"></i> Change</a>
+                                        <a href="#" class="btn btn-danger btn-xs product-connection-disconnect"><i class="fa fa-chain-broken"></i> Disconnect</a>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="row m-t-xs">
+                                    <div class="col-md-12">
+                                        <p>The product is not connected</p>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <a href="#" class="btn btn-success btn-xs product-connection-change"><i class="fa fa-chain"></i> Connect To Shopify</a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div id="export-container" class="col-xs-10 col-xs-offset-1">
+                    </div>
+
+                    <div class="col-xs-5 col-xs-offset-1" style="padding: 0">
+                        <a class="btn btn-success export-add-btn" href="#" target="_blank">
+                            <i class="fa fa-plus"></i>
+                            Add Supplier
+                        </a>
+                    </div>
+
+                    {% if product.get_shopify_id %}
+                        <div class="col-xs-5 text-right" style="padding: 0">
+                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.id %}" target="_blank">
+                            Variants Mapping
+                            <i class="fa fa-external-link"></i>
+                        </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+    </div>
+</div>
+
+<div id="modal-add-image" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Image to add</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="row">
+                        {% for item in original.extra_images %}
+                            {% if forloop.counter0|divisibleby:"4" %}
+                            <div class="col-xs-12"></div>
+                            {% endif %}
+
+                            <div class="col-xs-3 add-var-image-block">
+                                <img src="{% static 'img/blank.gif' %}" data-src="{{item}}" class="add-var-image unveil" />
+                            </div>
+                        {% endfor %}
+                        </div>
+
+                        <div class="description-images-add" class="row">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default" data-dismiss="modal">Close</button>
+              </div>
+        </div>
+    </div>
+</div>
+
+{% include "partial/shopify_product_selector.html" %}
+
+{% if request.user|can:'image_uploader.use' %}
+<div id="modal-upload-image" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Image upload</h4>
+          </div>
+            <div class="modal-body">
+                <div id="uploader"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% verbatim %}
+<script id="product-export-template" type="text/x-handlebars-template">
+    <div class="row well export" style="padding: 10px 0">
+        <form class="product-export-form" method="post" data-export-id="{{id}}" data-product-id="{{product}}">
+            <div class="form-group col-xs-12">
+                <label>Original Product link:</label>
+                <input type="text" class="form-control product-original-link" value="{{original.url}}">
+                <i class="fa fa-spinner fa-spin product-original-link-loading"></i>
+            </div>
+            <div class="form-group col-xs-12 col-md-5">
+                <label>Supplier Name:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control product-supplier-name" value="{{supplier.name}}">
+                    <span class="input-group-btn">
+                    <a href="/orders?supplier_name={{urlencode supplier.name}}" class="btn btn-default" title="View orders"><i class="fa fa-long-arrow-right"></i></a>
+                    </span>
+                </div>
+            </div>
+            <div class="form-group col-xs-12">
+                <label>Supplier Link:</label>
+                <input type="text" class="form-control product-supplier-link" value="{{supplier.url}}" style="width:350px">
+            </div>
+            <div class="form-group col-xs-12 text-right">
+                <button class="btn btn-success btn-xs export-save-btn">
+                    <i class="fa fa-save"></i> Save Changes
+                </button>
+
+                {{#if id}}
+                    {{#if is_default}}
+                    <a class="btn btn-default btn-xs is-default-btn" href="#">
+                        <i class="fa fa-check"></i> Default
+                    </a>
+                    {{else}}
+                    <button class="btn btn-primary btn-xs export-default-btn">
+                        <i class="fa fa-check"></i> Make Default
+                    </button>
+                    {{/if}}
+                {{/if}}
+
+                <button class="btn btn-danger btn-xs export-delete-btn">
+                    <i class="fa fa-times"></i> Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</script>
+
+{% endverbatim %}
+
+<div id="modal-pick-variant" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Select Variant Type to Split By</h4>
+          </div>
+            <div class="modal-body">
+              <div class="dropdown m-b-sm">
+                  <button id="pick-variant-btn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" value="">
+                    Select Variant Type<span class="caret" style="margin-left:10px"></span>
+                  </button>
+                  <ul class="dropdown-menu">
+                  {% if shopify_product %}
+                    {% for option in shopify_product.options %}
+                      <li>
+                        <a type="button">{{ option.name }}</a>
+                      </li>
+                    {% endfor %}
+                  {% else %}
+                    {% for v in product.product.variants %}
+                      <li>
+                        <a type="button">{{ v.title }}</a>
+                      </li>
+                    {% endfor %}
+                  {% endif %}
+                  </ul>
+              </div>
+              <div>
+                <p class="m-b-sm">
+                  <strong>Products that will be splitted: </strong>
+                  <span id="split-variants-count">0</span>
+                </p>
+                <p class="font-bold">Variant Values: </p>
+                <p id="split-variants-values"></p>
+              </div>
+              <div class="text-center">
+                <button class="btn btn-success btn-submit full-width" type="button">Split</button>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+
+{% compress css %}
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+<link href="{% static 'commercehq/css/product_view.css' %}" rel="stylesheet">
+{% endcompress %}
+{% endblock %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+    var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
+    $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+
+    var bootstrapTooltip = $.fn.tooltip.noConflict();
+    $.fn.bootstrapTooltip = bootstrapTooltip;
+</script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/pixlr.js' %}"></script>
+
+<!-- Load Feather code -->
+{% if request.is_secure %}
+<script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/js/feather.js"></script>
+{% else %}
+<script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
+{% endif %}
+
+<script type="text/javascript">
+
+var product = {% json_dumps product.parsed %};
+
+var config = {
+    user_id: {{user.id}},
+    product_id: {{product.id}},
+    product_notes: '{{product.notes|default:''|escapejs}}',
+
+    clipping_magic: {
+        api_id: '{{user.clippingmagic.api_id|default:""}}',
+        clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
+    },
+
+{% if shopify_product %}
+    shopify_options: {% json_dumps shopify_product.options %},
+    shopify_images: {% json_dumps shopify_product.images %},
+{% else %}
+    shopify_options: null,
+    shopify_images: null,
+{% endif %}
+
+    image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
+    photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
+    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
+    feather_editor: null,
+    shopify_variants: {
+    {% for variant in shopify_product.variants %}
+        '{{variant.title|escapejs}}': {{variant.id}},
+    {% endfor %}
+    },
+
+    product_extra_images: [
+    {% for item in original.extra_images %}
+        '{% remove_link_query item %}',
+    {% endfor %}
+    ],
+
+    default_export: {
+        product: {{product.id}},
+        supplier: {
+            name: product.store && product.store.name ? product.store.name : '',
+            url: product.store && product.store.url ? product.store.url : '',
+        },
+        original: {
+            url: product.original_url
+        }
+    },
+    exports: [
+    {% for item in product.get_suppliers %}
+        {
+            id: {{item.id}},
+            product: {{product.id}},
+            is_default: {% if item.id == product.default_supplier_id %}true{% else %}false{% endif %},
+            original: {
+                url: '{{item.product_url|escapejs}}'
+            },
+            shopify: {
+                id: {{item.shopify_id|default:'0'}},
+                url: '{{item.shopify_url|escapejs}}',
+            },
+            supplier: {
+                name: '{{item.supplier_name|escapejs}}',
+                url: '{{item.supplier_url|escapejs}}',
+            },
+        },
+    {% endfor %}
+    ],
+};
+
+$(function() {
+    {% if aws_available and request.user|can:'image_uploader.use' %}
+
+    $("#uploader").plupload({
+        runtimes : 'html5,flash',
+        flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/Moxie.swf',
+        url : "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
+        file_name_name: false,
+        multipart: true,
+        multipart_params : {
+          filename: 'filename',
+          utf8: true,
+          AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
+          acl: "public-read",
+          policy: "{{aws_policy|escapejs}}",
+          signature: "{{aws_signature|escapejs}}",
+          key: "uploads/u{{user.id}}/${filename}",
+          'Content-Type': 'image/jpeg',
+        },
+        filters : {
+            max_file_size : '3mb',
+            mime_types: [
+                {title : "Image files", extensions : "png,jpg,jpeg,gif"}
+            ]
+        },
+        views: {
+            list: true,
+            thumbs: true,
+            active: 'thumbs'
+        },
+        sortable: true,
+        dragdrop: true,
+        init: {
+            BeforeUpload: function(up, file) {
+                up.settings.multipart_params['Content-Type'] = file.type;
+            },
+            FileUploaded: function(up, file, info) {
+                var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/uploads/u{{user.id}}/"+file.name;
+                document.file_uploaded(url);
+            },
+            UploadComplete: function(up, files){
+                $('#modal-upload-image').modal('hide');
+            }
+        }
+    });
+    {% endif %}
+
+    {% if request.user|can:'aviary_photo_editor.use' %}
+
+    config.feather_editor = new Aviary.Feather({
+        apiKey: '220489e3e16f4691bc88d1ef81e05a8b',
+        theme: 'dark', // Check out our new 'light' and 'dark' themes!
+        tools: 'all',
+        appendTo: '',
+        onSave: function(imageID, newURL) {
+            var img = document.getElementById(imageID);
+            img.src = newURL;
+
+            config.feather_editor.disableControls();
+            config.feather_editor.showWaitIndicator();
+
+            $.ajax({
+                url: '/upload/save_image_s3',
+                type: 'POST',
+                data: {
+                    'url': newURL,
+                    'product': config.product_id
+                },
+                context: {'img': img, 'imageID': imageID},
+                success: function (data) {
+                    if (data.status == 'ok') {
+                        this.img.src = data.url;
+                        product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
+                    } else {
+                        displayAjaxError('Image Editor', data);
+                    }
+                },
+                error: function(data) {
+                    displayAjaxError('Image Editor', data);
+                },
+                complete: function() {
+                    config.feather_editor.enableControls();
+                    config.feather_editor.hideWaitIndicator();
+                }
+            });
+        },
+        onError: function(errorObj) {
+            alert(errorObj.message);
+        }
+    });
+    {% endif %}
+
+    $('.original-description').css('overflow', 'auto');
+});
+
+</script>
+
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'commercehq/js/clippingmagic.js' %}"></script>
+    <script type="text/javascript" src="{% static 'commercehq/js/shopify_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'commercehq/js/product_view.js' %}"></script>
+    {% endcompress %}
+
+{% if request.user|can:'image_uploader.use' %}
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'commercehq/js/uploader.js' %}"></script>
+    {% endcompress %}
+{% endif %}
+
+
+{% endblock %}
