@@ -1634,6 +1634,7 @@ def proccess_api(request, user, method, target, data):
         unfulfilled_only = data.get('unfulfilled_only') != 'false'
 
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                                  .defer('data') \
                                                   .order_by('updated_at')
 
         if unfulfilled_only:
@@ -1885,6 +1886,7 @@ def proccess_api(request, user, method, target, data):
 
             tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
                                               .filter(source_id__in=chunk_ids) \
+                                              .defer('data') \
                                               .order_by('store')
 
             if tracks.count():
@@ -4499,6 +4501,7 @@ def orders_view(request):
 
             source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
             tracks = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
+                                              .defer('data') \
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
@@ -4647,7 +4650,7 @@ def orders_view(request):
             products_ids.append(line_id)
 
     orders_list = {}
-    res = ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids)
+    res = ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data')
     for i in res:
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
@@ -4896,7 +4899,7 @@ def orders_track(request):
         messages.warning(request, 'Please add at least one store before using the Tracking page.')
         return HttpResponseRedirect('/')
 
-    orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store)
+    orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store).defer('data')
 
     if query:
         order_id = shopify_orders_utils.order_id_from_number(store, query)
