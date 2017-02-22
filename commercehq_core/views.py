@@ -13,7 +13,7 @@ from shopified_core.utils import safeInt, safeFloat, SimplePaginator
 
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
-from .decorators import no_subusers, must_be_authenticated
+from .decorators import no_subusers, must_be_authenticated, ajax_only
 
 
 def get_product(request, post_per_page=25, sort=None, board=None, load_boards=False):
@@ -97,6 +97,7 @@ def index_view(request):
     return render(request, 'commercehq/index.html', {'stores': stores})
 
 
+@ajax_only
 @must_be_authenticated
 @no_subusers
 @csrf_protect
@@ -113,6 +114,7 @@ def store_create(request):
     return render(request, 'commercehq/store_create_form.html', {'form': form})
 
 
+@ajax_only
 @must_be_authenticated
 @no_subusers
 @csrf_protect
@@ -128,6 +130,7 @@ def store_update(request, store_id):
     return render(request, 'commercehq/store_update_form.html', {'form': form})
 
 
+@ajax_only
 @must_be_authenticated
 @no_subusers
 @csrf_protect
