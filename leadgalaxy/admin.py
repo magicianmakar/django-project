@@ -219,3 +219,8 @@ class PlanPaymentAdmin(admin.ModelAdmin):
             return '$ {}'.format(json.loads(obj.data)['jvzoo']['ctransamount'])
         except:
             return ''
+
+
+@admin.register(DescriptionTemplate)
+class DescriptionTemplateAdmin(admin.ModelAdmin):
+    list_display = ('user', 'title')

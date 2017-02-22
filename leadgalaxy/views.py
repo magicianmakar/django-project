@@ -98,7 +98,7 @@ def index_view(request):
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_active_stores().count() >= 1
 
-    templates = DescriptionTemplate.objects.filter(user=request.user)
+    templates = DescriptionTemplate.objects.filter(user=request.user).defer('description')
 
     return render(request, 'index.html', {
         'stores': stores,
