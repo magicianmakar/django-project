@@ -41,7 +41,7 @@
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
                       <td class="hidden-xs" style="white-space:nowrap">
-                        {% with connected=0 saved=0 %}
+                        {% with connected=item.connected_count saved=item.saved_count %}
                             {% if connected or saved %}
                                 {% if saved %}
                                     <a href="/product?store=n&in={{item.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
