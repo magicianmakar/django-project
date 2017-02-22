@@ -51,6 +51,12 @@ class CommerceHQStore(models.Model):
 
         return url
 
+    def connected_count(self):
+        return self.products.exclude(source_id=0).count()
+
+    def saved_count(self):
+        return self.products.filter(source_id=0).count()
+
 
 class CommerceHQProduct(models.Model):
     class Meta:

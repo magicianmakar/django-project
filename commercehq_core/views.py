@@ -50,7 +50,7 @@ def get_product(request, post_per_page=25, sort=None, board=None, load_boards=Fa
             permissions.user_can_view(user, store)
 
     # if board:
-        res = res.filter(shopifyboard=board)
+        # res = res.filter(shopifyboard=board)
         # permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
 
     res = filter_products(res, request.GET)
