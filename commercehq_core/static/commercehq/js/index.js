@@ -3,7 +3,26 @@ $(document).ready(function() {
 
     $('.add-store-btn').click(function(e) {
         e.preventDefault();
-        $('#store-create-modal').modal('show');
+        if ($(this).data('extra')) {
+            swal({
+                title: "Additional Store",
+                text: "You are about to add an additional store to your plan for <b>$27/month</b>, Would you like to continue?",
+                type: "info",
+                html: true,
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: true,
+                animation: false,
+                showLoaderOnConfirm: true,
+                confirmButtonText: "Yes, Add This Store",
+                cancelButtonText: "Cancel"
+            }, function(isConfirmed) {
+                if (!isConfirmed) return;
+                $('#store-create-modal').modal('show');
+            });
+        } else {
+            $('#store-create-modal').modal('show');
+        }
     });
 
     $('.edit-store').click(function(e) {
