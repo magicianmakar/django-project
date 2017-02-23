@@ -34,11 +34,11 @@
                                     {% with connected=store.connected_count saved=store.saved_count %}
                                     {% if connected or saved %}
                                         {% if saved %}
-                                            <a href="{% url 'chq:product' %}?store=n&in={{store.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
+                                            <a href="{% url 'chq:products_list' %}?store=n&in={{store.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
                                         {% endif %}
 
                                         {% if connected %}
-                                            <a href="{% url 'chq:product' %}?store={{store.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
+                                            <a href="{% url 'chq:products_list' %}?store={{store.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
                                         {% endif %}
                                     {% endif %}
                                     {% endwith %}

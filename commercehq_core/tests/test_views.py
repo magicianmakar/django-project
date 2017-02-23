@@ -123,7 +123,7 @@ class StoreDeleteTestCase(TestCase):
     def test_user_must_be_able_to_delete_own_store(self):
         self.client.login(username=self.user.username, password=self.password)
         r = self.client.post(reverse('chq:store_delete', args=(self.store.pk,)), **self.headers)
-        count = self.user.commercehqstore_set.count()
+        count = self.user.commercehqstore_set.filter(is_active=True).count()
         self.assertEquals(count, 0)
 
     def test_must_not_allow_subusers_to_delete(self):
