@@ -20,17 +20,13 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
-        # Archive seen changes
-        self.stdout.write('Archive seen alerts', self.style.HTTP_INFO)
-        AliexpressProductChange.objects.filter(seen=True, hidden=False).update(hidden=True)
-
         # Archive alerts after 7 days
         archive_date = arrow.utcnow().replace(days=-7).datetime
         AliexpressProductChange.objects.filter(hidden=False, created_at__lt=archive_date).update(hidden=True)
 
         # Remove alerts after 30 days
         delete_date = arrow.utcnow().replace(days=-30).datetime
-        AliexpressProductChange.objects.filter(created_at__lt=delete_date).update(hidden=True)
+        AliexpressProductChange.objects.filter(created_at__lt=delete_date).delete()
 
         # Expired plans
         self.stdout.write('Change plan of expired profiles', self.style.HTTP_INFO)
