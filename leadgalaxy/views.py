@@ -2905,9 +2905,6 @@ def webhook(request, provider, option):
                     cache.set(countdown_key, True, timeout=5)
                     tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
 
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
-
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
@@ -2917,18 +2914,11 @@ def webhook(request, provider, option):
 
                 AliexpressProductChange.objects.filter(product=product).delete()
 
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
-
-                ShopifyProductImage.objects.filter(store=store,
-                                                   product=shopify_product['id']).delete()
+                ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/create' or topic == 'orders/updated':
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
-
                 new_order = topic == 'orders/create'
                 queue = 'priority_high' if new_order else 'celery'
                 countdown = 1 if new_order else random.randint(2, 9)
