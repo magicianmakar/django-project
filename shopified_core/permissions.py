@@ -104,6 +104,8 @@ def can_add_store(user):
         total_allowed = user_stores
 
     user_count = profile.user.shopifystore_set.filter(is_active=True).count()
+    user_count += profile.user.commercehqstore_set.filter(is_active=True).count()
+
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):

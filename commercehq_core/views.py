@@ -15,6 +15,7 @@ from shopified_core.utils import safeInt, safeFloat, SimplePaginator
 
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
+from .decorators import no_subusers, must_be_authenticated, ajax_only
 
 
 def get_product(request, post_per_page=25, sort=None, board=None, load_boards=False):
@@ -93,12 +94,30 @@ def filter_products(res, fdata):
 @login_required
 def index_view(request):
     stores = CommerceHQStore.objects.filter(user=request.user.models_user)
-    return render(request, 'commercehq/index.html', {'stores': stores})
+
+    can_add, total_allowed, user_count = permissions.can_add_store(request.user)
+    is_stripe = request.user.profile.plan.is_stripe()
+    store_count = request.user.profile.get_shopify_stores().count()
+    store_count += request.user.profile.get_chq_stores().count()
+    extra_stores = can_add and is_stripe and store_count >= 1
+
+    config = request.user.models_user.profile.get_config()
+    first_visit = config.get('_first_visit', True)
+    if first_visit:
+        request.user.set_config('_first_visit', False)
+
+    return render(request, 'commercehq/index.html', {
+        'stores': stores,
+        'extra_stores': extra_stores,
+        'first_visit': first_visit
+    })
 
 
-@require_http_methods(['POST'])
+@ajax_only
+@must_be_authenticated
+@no_subusers
 @csrf_protect
-@login_required
+@require_http_methods(['POST'])
 def store_create(request):
     form = CommerceHQStoreForm(request.POST)
 
@@ -111,9 +130,11 @@ def store_create(request):
     return render(request, 'commercehq/store_create_form.html', {'form': form})
 
 
-@require_http_methods(['GET', 'POST'])
+@ajax_only
+@must_be_authenticated
+@no_subusers
 @csrf_protect
-@login_required
+@require_http_methods(['GET', 'POST'])
 def store_update(request, store_id):
     instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
     form = CommerceHQStoreForm(request.POST or None, instance=instance)
@@ -125,9 +146,11 @@ def store_update(request, store_id):
     return render(request, 'commercehq/store_update_form.html', {'form': form})
 
 
-@require_http_methods(['POST'])
+@ajax_only
+@must_be_authenticated
+@no_subusers
 @csrf_protect
-@login_required
+@require_http_methods(['POST'])
 def store_delete(request, store_id):
     instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
     instance.delete()
