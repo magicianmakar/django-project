@@ -68,8 +68,8 @@ class ProductChangeEvent():
 
     def take_action(self):
         data = self.get_shopify_product()
-
-        self.notify(data)
+        # emails will be queued and sent as batch via management command with cron on regular basis. e.g. 24 hrs
+        # self.notify(data)
 
         self.revision.data = data
 
@@ -196,8 +196,10 @@ class ProductChangeEvent():
 
                 elif self.config['product_disappears'] == 'zero_quantity':
                     if product_change['new_value'] is True:
-                        for variant in data['product']['variants']:
-                            variant['inventory_quantity'] = 0
+                        for idx, variant in enumerate(data['product']['variants']):
+                            data['product']['variants'][idx]['inventory_quantity'] = 0
+                            data['product']['variants'][idx]['inventory_management'] = 'shopify'
+                            data['product']['variants'][idx]['inventory_policy'] = 'deny'
                             self.save_revision = True
                     else:
                         # Try to find variants from previous revision
@@ -206,7 +208,7 @@ class ProductChangeEvent():
                         if revision is not None:
                             revision_variants = json.loads(revision.data)['product']['variants']
 
-                        for variant in data['product']['variants']:
+                        for idx, variant in enumerate(data['product']['variants']):
                             # look for previous revision variant or use old_inventory_quantity
                             inventory = variant['old_inventory_quantity']
                             for revision_variant in revision_variants:
@@ -214,7 +216,9 @@ class ProductChangeEvent():
                                     inventory = revision_variant['inventory_quantity']
                                     break
 
-                            variant['inventory_quantity'] = inventory
+                            data['product']['variants'][idx]['inventory_quantity'] = inventory
+                            data['product']['variants'][idx]['inventory_management'] = 'shopify'
+                            data['product']['variants'][idx]['inventory_policy'] = 'deny'
                             self.save_revision = True
         return data
 
@@ -261,6 +265,8 @@ class ProductChangeEvent():
                         elif self.config['variant_disappears'] == 'zero_quantity':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = 0
+                                data['product']['variants'][found]['inventory_management'] = 'shopify'
+                                data['product']['variants'][found]['inventory_policy'] = 'deny'
                                 self.save_revision = True
 
                     elif change['category'] == 'Price':
@@ -278,5 +284,7 @@ class ProductChangeEvent():
                         if self.config['quantity_change'] == 'update':
                             for found in found_variants:
                                 data['product']['variants'][found]['inventory_quantity'] = change['new_value']
+                                data['product']['variants'][found]['inventory_management'] = 'shopify'
+                                data['product']['variants'][found]['inventory_policy'] = 'deny'
                                 self.save_revision = True
         return data

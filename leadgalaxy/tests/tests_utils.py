@@ -590,13 +590,13 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         event = ProductChangeEvent(product_change)
         event.take_action()
 
-        self.assertTrue(send_email.called)
+        self.assertFalse(send_email.called)
 
         # Assert notification is sent only in a time span
         event = ProductChangeEvent(product_change)
         event.take_action()
 
-        send_email.assert_called_once()
+        send_email.assert_not_called() # email will be sent by cron with changes as batch on certain time basis.
 
     def test_get_found_variant(self):
         product_change = AliexpressProductChange.objects.get(pk=2)
