@@ -94,14 +94,23 @@ def filter_products(res, fdata):
 @login_required
 def index_view(request):
     stores = CommerceHQStore.objects.filter(user=request.user.models_user)
+
     can_add, total_allowed, user_count = permissions.can_add_store(request.user)
     is_stripe = request.user.profile.plan.is_stripe()
     store_count = request.user.profile.get_shopify_stores().count()
     store_count += request.user.profile.get_chq_stores().count()
     extra_stores = can_add and is_stripe and store_count >= 1
-    context = {'stores': stores, 'extra_stores': extra_stores}
 
-    return render(request, 'commercehq/index.html', context)
+    config = request.user.models_user.profile.get_config()
+    first_visit = config.get('_first_visit', True)
+    if first_visit:
+        request.user.set_config('_first_visit', False)
+
+    return render(request, 'commercehq/index.html', {
+        'stores': stores,
+        'extra_stores': extra_stores,
+        'first_visit': first_visit
+    })
 
 
 @ajax_only

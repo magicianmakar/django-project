@@ -103,7 +103,37 @@
         <script src="{% static 'libs/bower_components/jquery-form/jquery.form.js' %}"></script>
         <script type="text/javascript" src="{% static 'commercehq/js/index.js' %}"></script>
     {% endcompress %}
-{% endblock extrajs%}
+    {% if first_visit %}
+        <script type="text/javascript">
+            $(function() {
+                var tour = new Tour({
+                    name: 'tour-intro',
+                    steps: [{
+                        element: '.add-store-btn',
+                        title: 'Step One: Connect your store',
+                        content: "The first thing you'll need to do is connect your CommerceHQ Store to Shopified App."
+                    }, {
+                        element: '.extension-link',
+                        title: 'Step Two: Chrome Extension',
+                        content: 'Install the Shopified App Chrome Extension to start importing products to your stores.',
+                        placement: 'left',
+                    }, {
+                        element: '.profile-options',
+                        title: 'Your Profile',
+                        content: 'Edit your email, password and other settings here.',
+                    }, {
+                        element: '.current-plan',
+                        title: 'Plan & Bundles',
+                        content: 'Click here to view your current Plan and Feature Bundles',
+                        placement: 'bottom',
+                    }, ],
+                });
+                tour.init();
+                tour.start();
+            });
+        </script>
+    {% endif %}
+{% endblock extrajs %}
 
 {% block extracss %}
 <style type="text/css">
@@ -156,3 +186,5 @@
     }
 </style>
 {% endblock %}
+
+
