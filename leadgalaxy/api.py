@@ -1433,6 +1433,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         unfulfilled_only = data.get('unfulfilled_only') != 'false'
 
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                                  .defer('data') \
                                                   .order_by('updated_at')
 
         if unfulfilled_only:
@@ -1684,6 +1685,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
                                               .filter(source_id__in=chunk_ids) \
+                                              .defer('data') \
                                               .order_by('store')
 
             if tracks.count():

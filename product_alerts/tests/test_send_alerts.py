@@ -20,7 +20,7 @@ class SendProductAlertsTestCase(TransactionTestCase):
 
         self.changes = AliexpressProductChange.objects.all()
 
-    @patch('leadgalaxy.utils.send_email_from_template', Mock())
+    @patch('shopified_core.utils.send_email_from_template', Mock())
     @patch('product_alerts.management.commands.send_alerts.Command.handle_changes')
     def test_notification_not_sent_for_changes_out_of_last_timespan(self, handle_changes):
         self.changes.update(created_at=arrow.get(1487693000).replace(days=-1).datetime)
@@ -29,7 +29,7 @@ class SendProductAlertsTestCase(TransactionTestCase):
 
         handle_changes.assert_not_called()
 
-    @patch('leadgalaxy.utils.send_email_from_template', Mock())
+    @patch('shopified_core.utils.send_email_from_template', Mock())
     @patch('product_alerts.management.commands.send_alerts.Command.handle_changes')
     def test_notification_sent_once_per_each_affected_user(self, handle_changes):
         affected_users = list(set([change.user for change in self.changes]))
@@ -40,7 +40,7 @@ class SendProductAlertsTestCase(TransactionTestCase):
 
         handle_changes.assert_called_once()
 
-    @patch('leadgalaxy.utils.send_email_from_template', Mock())
+    @patch('shopified_core.utils.send_email_from_template', Mock())
     @patch('product_alerts.management.commands.send_alerts.Command.send_email')
     def test_notification_sent_with_changes_as_batch(self, send_email):
         command = Command()

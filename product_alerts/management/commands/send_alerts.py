@@ -4,10 +4,11 @@ import arrow
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.contrib.auth.models import User
-
-from leadgalaxy.models import AliexpressProductChange
-from leadgalaxy.utils import send_email_from_template, get_variant_name
 from django.utils import timezone
+
+from shopified_core.utils import send_email_from_template
+from leadgalaxy.models import AliexpressProductChange
+from leadgalaxy.utils import get_variant_name
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
