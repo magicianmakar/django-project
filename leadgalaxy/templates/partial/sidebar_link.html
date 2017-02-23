@@ -14,7 +14,7 @@
     </a>
             <ul class="nav nav-second-level collapse">
                 {% for child in childs %}
-                {% if user|can_view_sidebar_item:plan %}
+                {% if user|can_view_sidebar_item:child %}
                  <li>
                     <a href="{{ child.link }}" {% if child.new_tab %}target="_blank"{% endif %}>
                         {% if child.icon %}<i class="fa fa-{{child.icon}}"></i>{% endif %}
