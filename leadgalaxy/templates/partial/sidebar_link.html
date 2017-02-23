@@ -1,6 +1,7 @@
+{% load perms_helper %}
 
 {% for item in links %}
-{% if plan in item.plans %}
+{% if user|can_view_sidebar_item:item %}
 <li>
     {% with childs=item.childs.all %}
     <a href="{{ item.link }}" {% if item.new_tab %}target="_blank"{% endif %} {% if item.title|length > 20 %}style="padding-right:0px"{%endif%}>
@@ -13,7 +14,7 @@
     </a>
             <ul class="nav nav-second-level collapse">
                 {% for child in childs %}
-                {% if plan in child.plans %}
+                {% if user|can_view_sidebar_item:plan %}
                  <li>
                     <a href="{{ child.link }}" {% if child.new_tab %}target="_blank"{% endif %}>
                         {% if child.icon %}<i class="fa fa-{{child.icon}}"></i>{% endif %}

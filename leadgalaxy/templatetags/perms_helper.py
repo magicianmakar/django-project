@@ -23,3 +23,9 @@ def can(user, perm_name):
 @register.filter
 def plan_have_feature(plan, perm_name):
     return plan.permissions.filter(name__iexact=perm_name).exists()
+
+
+@register.filter
+def can_view_sidebar_item(user, item):
+    return user.profile.plan.register_hash in item.plans() or (
+        user.is_subuser and can_view_sidebar_item(user.profile.subuser_parent, item))
