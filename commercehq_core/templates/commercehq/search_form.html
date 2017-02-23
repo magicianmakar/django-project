@@ -1,0 +1,20 @@
+<form role="search" class="navbar-form-custom" method="get"
+    {% if searchable %}
+        action="{{request.path}}"
+    {% else %}
+        action="{% url 'chq:products_list' %}"
+    {% endif %}
+>
+    <div class="form-group">
+        <input type="text" placeholder="Search" class="form-control" name="title" id="top-search"
+        {% if request.GET.title and request.GET.f %}
+               value="{{request.GET.title}}"
+        {% endif %}
+        >
+        <input type="hidden" name="f" value="1">
+
+        {% if request.GET.store %}
+        <input type="hidden" name="store" value="{{request.GET.store}}">
+        {% endif %}
+    </div>
+</form>

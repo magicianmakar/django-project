@@ -153,7 +153,8 @@ def store_update(request, store_id):
 @require_http_methods(['POST'])
 def store_delete(request, store_id):
     instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
-    instance.delete()
+    instance.is_active = False
+    instance.save()
 
     return HttpResponse()
 
