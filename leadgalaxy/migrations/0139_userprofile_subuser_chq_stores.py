@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('commercehq_core', '0007_auto_20170220_2014'),
-        ('leadgalaxy', '0137_auto_20170215_1735'),
+        ('leadgalaxy', '0138_auto_20170221_1553'),
     ]
 
     operations = [
