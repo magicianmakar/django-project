@@ -535,7 +535,7 @@
 
 {% compress css %}
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
-<link href="{% static 'commercehq/css/product_view.css' %}" rel="stylesheet">
+<link href="{% static 'commercehq/css/product_detail.css' %}" rel="stylesheet">
 {% endcompress %}
 {% endblock %}
 
@@ -736,7 +736,7 @@ $(function() {
     {% compress js %}
     <script type="text/javascript" src="{% static 'commercehq/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/shopify_product_selector.js' %}"></script>
-    <script type="text/javascript" src="{% static 'commercehq/js/product_view.js' %}"></script>
+    <script type="text/javascript" src="{% static 'commercehq/js/product_detail.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}
