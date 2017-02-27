@@ -159,3 +159,9 @@
 {% include 'partial/filter_modal.html' %}
 
 {% endblock %}
+
+{% block store-switch %}
+    {% with shopify_view_name='product' chq_view_name=request.resolver_match.view_name %}
+        {% include 'store_switch.html' %}
+    {% endwith %}
+{% endblock %}

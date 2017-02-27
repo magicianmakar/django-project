@@ -198,6 +198,12 @@
 
 {% endblock %}
 
+{% block store-switch %}
+    {% with shopify_view_name=request.resolver_match.view_name chq_view_name='chq:products_list' %}
+        {% include 'store_switch.html' %}
+    {% endwith %}
+{% endblock %}
+
 {% block extracss %}
 <style type="text/css">
 
