@@ -102,6 +102,7 @@ class SidebarLink(models.Model):
     order = models.IntegerField(default=0)
     new_tab = models.BooleanField(default=False)
     icon = models.CharField(blank=True, default='', max_length=20)
+    inherit_plan = models.BooleanField(default=False, verbose_name='Show For Subuser If Parent Can See It')
 
     parent = models.ForeignKey('SidebarLink', on_delete=models.SET_NULL, related_name='childs', blank=True, null=True)
     display_plans = models.ManyToManyField(GroupPlan, blank=True)

@@ -2,6 +2,7 @@ import simplejson as json
 import arrow
 
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
 from django.contrib.auth.models import User
 
 from leadgalaxy.models import AliexpressProductChange
@@ -52,6 +53,11 @@ class Command(BaseCommand):
                 raven_client.captureException()
 
     def handle_changes(self, user, changes):
+        notify_key = 'product_change_%d' % user.id
+        if cache.get(notify_key):
+            # We already sent the user a notification for a product change
+            return
+
         changes_map = {'availability': [], 'price': [], 'quantity': [], 'removed': []}
 
         for change in changes:
@@ -138,6 +144,8 @@ class Command(BaseCommand):
                         ),
                         'increase': max(new_quantities) > max(old_quantities)
                     }, **common_data))
+
+        cache.set(notify_key, True, timeout=86400)
 
         self.send_email(user, changes_map)
         return changes_map

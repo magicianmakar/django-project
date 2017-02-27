@@ -98,7 +98,7 @@ def index_view(request):
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
         request.user.profile.get_active_stores().count() >= 1
 
-    templates = DescriptionTemplate.objects.filter(user=request.user)
+    templates = DescriptionTemplate.objects.filter(user=request.user).defer('description')
 
     return render(request, 'index.html', {
         'stores': stores,
@@ -1637,6 +1637,7 @@ def proccess_api(request, user, method, target, data):
         unfulfilled_only = data.get('unfulfilled_only') != 'false'
 
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                                  .defer('data') \
                                                   .order_by('updated_at')
 
         if unfulfilled_only:
@@ -1888,6 +1889,7 @@ def proccess_api(request, user, method, target, data):
 
             tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
                                               .filter(source_id__in=chunk_ids) \
+                                              .defer('data') \
                                               .order_by('store')
 
             if tracks.count():
@@ -2903,9 +2905,6 @@ def webhook(request, provider, option):
                     cache.set(countdown_key, True, timeout=5)
                     tasks.update_shopify_product.apply_async(args=[store.id, shopify_product['id']], countdown=5)
 
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
-
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
@@ -2915,18 +2914,11 @@ def webhook(request, provider, option):
 
                 AliexpressProductChange.objects.filter(product=product).delete()
 
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
-
-                ShopifyProductImage.objects.filter(store=store,
-                                                   product=shopify_product['id']).delete()
+                ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/create' or topic == 'orders/updated':
-                ShopifyWebhook.objects.filter(token=token, store=store, topic=topic) \
-                                      .update(call_count=F('call_count') + 1, updated_at=timezone.now())
-
                 new_order = topic == 'orders/create'
                 queue = 'priority_high' if new_order else 'celery'
                 countdown = 1 if new_order else random.randint(2, 9)
@@ -4502,6 +4494,7 @@ def orders_view(request):
 
             source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
             tracks = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
+                                              .defer('data') \
                                               .values_list('order_id', flat=True)
 
             if order_number or len(tracks):
@@ -4650,7 +4643,7 @@ def orders_view(request):
             products_ids.append(line_id)
 
     orders_list = {}
-    res = ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids)
+    res = ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data')
     for i in res:
         orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
@@ -4899,7 +4892,7 @@ def orders_track(request):
         messages.warning(request, 'Please add at least one store before using the Tracking page.')
         return HttpResponseRedirect('/')
 
-    orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store)
+    orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store).defer('data')
 
     if query:
         order_id = shopify_orders_utils.order_id_from_number(store, query)
