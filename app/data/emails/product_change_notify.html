@@ -81,411 +81,138 @@
 <div class="container">
     <img class="logo" src="https://d2kadg5e284yn4.cloudfront.net/static/Shopified-App2.png" width="220" height="50" alt="logo" />
     <div class="content">
-        <p>Hi {{username}},</p>
-    <p>One or more products have changed in AliExpress:</p>
-
-
-    <!-- Availability -->
-    {% if changes_map.availability|length > 0 %}
-    <div class="info-block">
-        <p class="info-title">Availability Changes:</p>
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateColumns" class="info-table center">
-            <tr>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent image">
-                                Image
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent product">
-                                Product
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                From
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                               To
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                Open Orders
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            {% for product in changes_map.availability %}
-            <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent">
-                                <img class="product-image columnImage" src="{{product.images|first}}" alt="product image " width="80" style="max-width:280px;" />
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td {% if product.from == 'Offline' %}class="from red rightColumnContent"{% else %}class="from green rightColumnContent"{% endif %}>
-                                    {{ product.from }}
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td {% if product.to == 'Offline' %}class="to red rightColumnContent"{% else %}class="to green rightColumnContent"{% endif %}>
-                            {{ product.to }}
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="orders rightColumnContent">{{ product.open_orders|default:"No" }} Orders</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    {% endif %}
-    <!-- / Availability -->
-
-
-
-    <!-- Price -->
-    {% if changes_map.price|length > 0 %}
-    <div class="info-block">
-        <p class="info-title">Price Changes:</p>
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateColumns" class="info-table center">
-            <tr>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent image">
-                                Image
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent product">
-                                Product
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                From
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                               To
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                Open Orders
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            {% for product in changes_map.price %}
-            <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent">
-                                <img class="product-image columnImage" src="{{product.images|first}}" alt="product image " width="80" style="max-width:280px;" />
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td {% if product.increase %}class="from red rightColumnContent"{% else %}class="from green rightColumnContent"{% endif %}>{{product.from}}</td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td {% if product.increase %}class="to red rightColumnContent"{% else %}class="to green rightColumnContent"{% endif %}>{{product.to}}</td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="orders rightColumnContent">{{ product.open_orders|default:"No" }} Orders</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    {% endif %}
-    <!-- / Price -->
-
-
-
-    <!-- Quantity -->
-    {% if changes_map.quantity|length > 0 %}
-    <div class="info-block">
-        <p class="info-title">Quantity Changes:</p>
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateColumns" class="info-table center">
-            <tr>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent image">
-                                Image
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent product">
-                                Product
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                From
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                               To
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                Open Orders
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            {% for product in changes_map.quanty %}
-            <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent">
-                                <img class="product-image columnImage" src="{{product.images|first}}" alt="product image " width="80" style="max-width:280px;" />
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td {% if product.increase %}class="from red rightColumnContent"{% else %}class="from green rightColumnContent"{% endif %}>{{product.from}}</td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td {% if product.increase %}class="to red rightColumnContent"{% else %}class="to green rightColumnContent"{% endif %}>{{product.to}}</td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="orders rightColumnContent">{{ product.open_orders|default:"No" }} Orders</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    {% endif %}
-    <!-- / Quantity -->
-
-
-
-    <!-- Removed -->
-    {% if changes_map.removed|length > 0 %}
-    <div class="info-block">
-        <p class="info-title">Variants Removed:</p>
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateColumns" class="info-table center">
-            <tr>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent image">
-                                Image
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent product">
-                                Product
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                Variants
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                Open Orders
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            {% for product in changes_map.removed %}
-            <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="leftColumnContent">
-                                <img class="product-image columnImage" src="{{product.images|first}}" alt="product image " width="80" style="max-width:280px;" />
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="rightColumnContent">
-                                <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="variants rightColumnContent">
-                                <p class="red">
-                                    {{ product.variants|join:"<br>"|safe }}
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td align="center" valign="top" width="20%" class="templateColumnContainer">
-                    <table border="0" cellpadding="10" cellspacing="0" width="100%">
-                        <tr>
-                            <td class="orders rightColumnContent">{{ product.open_orders|default:"No" }} Orders</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    {% endif %}
-    <!-- / Removed -->
+     	<p>Hi {{username}},</p>
+	    <p>One or more products have changed in AliExpress:</p>
+			{% if changes_map.availability|length > 0 %}
+  			<div class="info-block">
+  				<p class="info-title">Availability Changes:</p>
+  				<table class="info-table" valign="center">
+  					<thead>
+  						<tr>
+  							<th class="image"></th>
+  							<th class="product">Product</th>
+  							<th class="from">From</th>
+  							<th class="to">To</th>
+  							<th class="orders">Open Orders</th>
+  						</tr>
+  					</thead>
+  					<tbody>
+              {% for product in changes_map.availability %}
+    						<tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
+    							<td class="image">
+    								<img class="product-image" src="{{product.images|first}}" alt="product image" />
+    							</td>
+    							<td class="product">
+    								<a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+    							</td>
+    							<td {% if product.from == 'Offline' %}class="from red"{% else %}class="from green"{% endif %}>
+                    {{ product.from }}
+                  </td>
+    							<td {% if product.to == 'Offline' %}class="to red"{% else %}class="to green"{% endif %}>
+                    {{ product.to }}
+                  </td>
+    							<td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
+    						</tr>
+              {% endfor %}
+  					</tbody>
+  				</table>
+  			</div>
+      {% endif %}
+      {% if changes_map.price|length > 0 %}
+        <div class="info-block">
+          <p class="info-title">Price Changes:</p>
+          <table class="info-table" valign="center">
+            <thead>
+              <tr>
+                <th class="image"></th>
+                <th class="product">Product</th>
+                <th class="from">From</th>
+                <th class="to">To</th>
+                <th class="orders">Open Orders</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in changes_map.price %}
+                <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
+                  <td class="image">
+                    <img class="product-image" src="{{product.images|first}}" alt="product image" />
+                  </td>
+                  <td class="product">
+                    <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+                  </td>
+                  <td {% if product.increase %}class="from red"{% else %}class="from green"{% endif %}>{{product.from}}</td>
+                  <td {% if product.increase %}class="to red"{% else %}class="to green"{% endif %}>{{product.to}}</td>
+                  <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+      {% if changes_map.quantity|length > 0 %}
+        <div class="info-block">
+          <p class="info-title">Quantity Changes:</p>
+          <table class="info-table" valign="center">
+            <thead>
+              <tr>
+                <th class="image"></th>
+                <th class="product">Product</th>
+                <th class="from">From</th>
+                <th class="to">To</th>
+                <th class="orders">Open Orders</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in changes_map.quantity %}
+                <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
+                  <td class="image">
+                    <img class="product-image" src="{{product.images|first}}" alt="product image" />
+                  </td>
+                  <td class="product">
+                    <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+                  </td>
+                  <td {% if product.increase %}class="from red"{% else %}class="from green"{% endif %}>{{product.from}}</td>
+                  <td {% if product.increase %}class="to red"{% else %}class="to green"{% endif %}>{{product.to}}</td>
+                  <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+      {% if changes_map.removed|length > 0 %}
+        <div class="info-block">
+          <p class="info-title">Variants Removed:</p>
+          <table class="info-table" valign="center">
+            <thead>
+              <tr>
+                <th class="image"></th>
+                <th class="product">Product</th>
+                <th class="variants">Variants</th>
+                <th class="orders">Open Orders</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in changes_map.removed %}
+                <tr {% if forloop.counter0|divisibleby:2 %}class="odd"{% endif %}>
+                  <td class="image">
+                    <img class="product-image" src="{{product.images|first}}" alt="product image" />
+                  </td>
+                  <td class="product">
+                    <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+                  </td>
+                  <td lass="variants ">
+                    <p class="red">
+                        {{ product.variants|join:"<br>"|safe }}
+                    </p>
+                  </td>
+                  <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
 
 
 
