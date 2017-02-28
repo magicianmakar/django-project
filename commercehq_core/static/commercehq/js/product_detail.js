@@ -16,7 +16,7 @@ function showProductInfo(rproduct) {
         $('#product-vendor').val(product.vendor);
         $('#product-compare-at').val(product.compare_at_price);
 
-        if (product.variants.length) {
+        if (product.variants.length && !config.connected) {
             $.each(product.variants, function(i, el) {
                 var v = $('#variants .variant-simple').clone();
                 v.removeClass('variant-simple');
@@ -41,13 +41,6 @@ function showProductInfo(rproduct) {
 
         if (product.description) {
             document.editor.setData(product.description);
-        }
-
-        if (config.shopify_images !== null) {
-            product.images = [];
-            $.each(config.shopify_images, function (i, img) {
-                product.images.push(img.src);
-            });
         }
 
         renderImages();
@@ -77,72 +70,17 @@ function removeVariant(e) {
     $(this).parent().remove();
 }
 
-function productExported(data, target, btn) {
-    if ('product' in data) {
-        if (data.product.data) {
-            $('#btn-variants-img').prop('store-id', $('#store-select').val());
-            $('#btn-variants-img').prop('product-id', data.product.data.id);
-            $('#btn-variants-img').show();
-        }
-
-        $("#view-btn").attr("shopify-id", data.product.id);
-        $("#view-btn").attr("shopify-url", data.product.url);
-        $("#view-btn").show();
-
-        if (target == 'shopify') {
-            $('#export-btn, #save-for-later-btn').hide();
-            $('#more-options-btn').trigger('click');
-
-            toastr.success('Product Exported.','Shopify Export');
-        } else {
-            toastr.success('Product Updated in Shopify.','Shopify Update');
-            window.location.href = window.location.href;
-        }
-    }  else {
-        displayAjaxError('Product Export', data);
-    }
-
-    $(btn).bootstrapBtn('reset');
-}
-
-function waitForTask(task_id, target, button) {
-    document.taskInterval = setInterval(function () {
-        $.ajax({
-            url: '/api/export-product',
-            type: 'GET',
-            data: {id: task_id, count: document.taskCount},
-            context: {target: target, btn: button},
-            success: function (data) {
-                if (data.ready) {
-                    clearInterval(document.taskInterval);
-
-                    productExported(data.data, this.target, this.btn);
-                }
-            },
-            error: function (data) {
-                clearInterval(document.taskInterval);
-                $(this.btn).bootstrapBtn('reset');
-
-                displayAjaxError('Export Error', data);
-            },
-            complete: function() {
-                document.taskCount += 1;
-            }
-        });
-    }, 1000);
-}
-
-$('#export-btn').click(function () {
-    $('#save-for-later-btn').prop('no-confirm', true).trigger('click');
+$('#product-export-btn').click(function (e) {
+    e.preventDefault();
 
     var btn = $(this);
-    var target = btn.attr('target');
 
-    if (target != 'shopify' && target != 'shopify-update') {
-        swal('Unknow target', 'Unknow target', 'error');
-        return;
-    }
+    productSave($('#product-save-btn'), function () {
+        productExport(btn);
+    });
+});
 
+function productExport(btn) {
     var store_id = $('#store-select').val();
     if (!store_id || store_id.length === 0) {
         swal('Product Export', 'Please choose a Shopify store first!', 'error');
@@ -151,138 +89,78 @@ $('#export-btn').click(function () {
 
     btn.bootstrapBtn('loading');
 
+    $.ajax({
+        url: api_url('product-export', 'chq'),
+        type: 'POST',
+        data: {
+            'product': config.product_id,
+            'store': store_id,
+        },
+        context: {btn: btn},
+        success: function (data) {
+            var pusher = new Pusher(config.sub_conf.key);
+            var channel = pusher.subscribe(config.sub_conf.channel);
+
+            channel.bind('product-export', function(data) {
+                console.dir(data);
+
+                if (data.product == config.product_id) {
+                    btn.bootstrapBtn('reset');
+
+                    if (data.success) {
+                        toastr.success('Product Exported.','CommerceHQ Export');
+                    } else {
+                        displayAjaxError('CommerceHQ Export', data);
+                    }
+                }
+            });
+        },
+        error: function (data) {
+            $(this.btn).bootstrapBtn('reset');
+            displayAjaxError('Product Export', data);
+        }
+    });
+}
+
+$('#product-update-btn').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(this);
+
     var api_data = {
-      "product": {
-        "title": $('#product-title').val(),
-        "body_html": document.editor.getData(),
-        "product_type": $('#product-type').val(),
-        "vendor": $('#product-vendor').val(),
-        "published": $('#product-visible')[0].checked,
-        "tags": $('#product-tag').val(),
-        "variants": [],
-        "options": [],
-        "images" :[]
-      }
+        'title': $('#product-title').val().trim(),
+        'type': $('#product-type').val(),
+        'tags': $('#product-tag').val(),
+        'vendor': $('#product-vendor').val(),
+        'published': $('#product-visible').prop('checked'),
+
+        'price': parseFloat($('#product-price').val()),
+        'compare_price': parseFloat($('#product-compare-at').val()),
+
+        'weight': parseFloat($('#product-weight').val()),
+        'weight_unit': $('#product-weight-unit').val(),
+
+        'description': document.editor.getData(),
+
+        'variants': [],
+        'images': product.images,
     };
 
-    if (product.images) {
-        for (var i = 0; i < product.images.length; i++) {
-            var image = {
-                src: product.images[i]
-            };
-
-            var imageFileName = hashUrlFileName(image.src);
-            if (product.variants_images && product.variants_images.hasOwnProperty(imageFileName)) {
-                image.filename = 'v-'+product.variants_images[imageFileName]+'__'+imageFileName;
-            }
-
-            api_data.product.images.push(image);
-        }
-    }
-
-    if (config.shopify_options === null) {
-
-        if ($('#variants .variant').length === 0) {
-            var vdata = {
-                "price": parseFloat($('#product-price').val()),
-            };
-
-            if ($('#product-compare-at').val().length) {
-                vdata.compare_at_price = parseFloat($('#product-compare-at').val());
-            }
-
-            if ($('#product-weight').val().length) {
-                vdata.weight = parseFloat($('#product-weight').val());
-                vdata.weight_unit = $('#product-weight-unit').val();
-            }
-
-            api_data.product.variants.push(vdata);
-
-        } else {
-            $('#variants .variant').each(function (i, el) {
-                var vals = $(el).find('#product-variant-values').val().split(',');
-                api_data.product.options.push({
-                    'name': $(el).find('#product-variant-name').val(),
-                    'values': vals
-                });
-            });
-
-            var vars_list = [];
-            $('#variants .variant').each(function (i, el) {
-                var vals = $(el).find('#product-variant-values').val().split(',');
-                vars_list.push(vals);
-            });
-
-            if (vars_list.length>0) {
-                vars_list = allPossibleCases(vars_list);
-                for (var i = 0; i < vars_list.length; i++) {
-                    var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
-
-                    var vdata = {
-                        "price": parseFloat($('#product-price').val()),
-                        "title": title,
-                    };
-
-                    if (typeof(vars_list[i]) == "string") {
-                        vdata["option1"] = vars_list[i];
-
-                        if (product.variants_sku && product.variants_sku.hasOwnProperty(vars_list[i])) {
-                            vdata["sku"] = product.variants_sku[vars_list[i]];
-                        }
-                    } else {
-                        var sku = [];
-
-                        $.each(vars_list[i], function (j, va) {
-                            vdata["option"+(j+1)] = va;
-
-                            if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {
-                                sku.push(product.variants_sku[va]);
-                            }
-                        });
-
-                        if (sku.length) {
-                            vdata["sku"] = sku.join(';');
-                        }
-                    }
-
-                    if ($('#product-compare-at').val().length) {
-                        vdata.compare_at_price = parseFloat($('#product-compare-at').val());
-                    }
-
-                    if ($('#product-weight').val().length) {
-                        vdata.weight = parseFloat($('#product-weight').val());
-                        vdata.weight_unit = $('#product-weight-unit').val();
-                    }
-
-                    if (vdata.title in config.shopify_variants) {
-                        vdata.id = config.shopify_variants[vdata.title];
-                    }
-
-                    api_data.product.variants.push(vdata);
-                }
-            } else {
-                swal('Variants should have more than one value separated by comma (,)');
-                btn.bootstrapBtn('reset');
-                return;
-            }
-        }
-
-    } else {
-        $('#shopify-variants tr.shopify-variant').each(function(j, tr) {
+    if (product.is_multi) {
+        $('#commercehq-variants tr.commercehq-variant').each(function(j, tr) {
 
             var variant_data = {
                 id: $(tr).attr('variant-id')
             };
 
             var attrs = [
-                'option1', 'option2', 'option3', 'title', 'weight_unit',
-                'price', 'compare_at_price', 'weight'
+                'price', 'compare_price', 'sku'
             ];
 
             $.each(attrs, function(k, att) {
                 var att_val = $('[name="' + att + '"]', tr).val();
                 if (att_val && att_val.length > 0) {
-                    if (k > 4) {
+                    if (k < 2) {
                         att_val = parseFloat(att_val);
                     }
 
@@ -292,59 +170,31 @@ $('#export-btn').click(function () {
                 }
             });
 
-            api_data.product.variants.push(variant_data);
+            api_data.variants.push(variant_data);
         });
-
-        api_data.product.options = config.shopify_options;
-
-        // Match images with shopify images
-        //api_data.product.images = config.shopify_images;
-
-        var shopify_images_map = {};
-        $.each(config.shopify_images, function(i, img) {
-            shopify_images_map[img.src] = img;
-        });
-
-        var new_images = [];
-        $.each(api_data.product.images, function (i, el) {
-            if (shopify_images_map.hasOwnProperty(el.src)) {
-                new_images.push({
-                    id: shopify_images_map[el.src].id
-                });
-            } else {
-                new_images.push(el);
-            }
-        });
-
-        api_data.product.images = new_images;
     }
 
     $.ajax({
-        url: '/api/' + target,
+        url: api_url('product-update', 'chq'),
         type: 'POST',
         data: JSON.stringify ({
             'product': config.product_id,
-            'store': store_id,
             'data': JSON.stringify(api_data),
-            'b': true,
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        context: {btn: this, target: target},
+        context: {btn: btn},
         success: function (data) {
-            if (data.hasOwnProperty('id')) {
-                document.taskCount = 1;
-                waitForTask(data.id, this.target, this.btn);
-            } else {
-                productExported(data, this.target, this.btn);
+            if (callback) {
+                callback();
             }
         },
         error: function (data) {
+            displayAjaxError('Save Product', data);
+        },
+        complete: function () {
             $(this.btn).bootstrapBtn('reset');
-
-            displayAjaxError('Error', data);
         }
-
     });
 });
 
@@ -408,8 +258,9 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
 
             if ('products_ids' in data) {
                 // check if current product is already connected to shopify..
-                if ($('#export-btn').attr('target') === 'shopify-update') {
-                  toastr.success('The variants are splitted into new products now.\r\nThe new products will get connected to shopify very soon.', 'Product Split!');
+                if ($('#product-export-btn').attr('target') === 'shopify-update') {
+                  toastr.success('The variants are splitted into new products now.\r\n' +
+                    'The new products will get connected to shopify very soon.', 'Product Split!');
                 } else {
                   toastr.success('The variants are splitted into new products now.', 'Product Split!');
                 }
@@ -426,8 +277,15 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
     $('#modal-pick-variant').modal('hide');
 });
 
-$('#save-for-later-btn').click(function (e) {
+$('#product-save-btn').click(function (e) {
     var btn = $(this);
+    productSave(btn, function () {
+        toastr.success('Product changes saved!','Product Saved');
+    });
+
+});
+
+function productSave(btn, callback) {
     var target = btn.attr('target');
 
     btn.bootstrapBtn('loading');
@@ -435,7 +293,7 @@ $('#save-for-later-btn').click(function (e) {
     var store_id = $('#store-select').val();
 
     var api_data = {
-        'title': $('#product-title').val(),
+        'title': $('#product-title').val().trim(),
         'description': document.editor.getData(),
         'price': parseFloat($('#product-price').val()),
         'compare_at_price': parseFloat($('#product-compare-at').val()),
@@ -462,39 +320,29 @@ $('#save-for-later-btn').click(function (e) {
     }
 
     $.ajax({
-        url: api_url('save-for-later', 'chq'),
+        url: api_url('product-save', 'chq'),
         type: 'POST',
         data: JSON.stringify ({
             'product': config.product_id,
             'store': store_id,
             'data': JSON.stringify(api_data),
-            'b': true,
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        context: {btn: this},
+        context: {btn: btn},
         success: function (data) {
-            $(this.btn).bootstrapBtn('reset');
-
-            if ('product' in data) {
-                $("#view-btn").attr("shopify-id", data.product.id);
-                $("#view-btn").attr("shopify-url", data.product.url);
-
-                if ($('#save-for-later-btn').prop('no-confirm') == true) {
-                    $('#save-for-later-btn').prop('no-confirm', false);
-                } else {
-                    toastr.success('Save for later.','Product Saved');
-                }
-            }  else {
-                displayAjaxError('Save for later', data);
+            if (callback) {
+                callback();
             }
         },
         error: function (data) {
+            displayAjaxError('Save Product', data);
+        },
+        complete: function () {
             $(this.btn).bootstrapBtn('reset');
-            displayAjaxError('Save for later', data);
         }
     });
-});
+}
 
 $("#view-btn").click(function () {
     window.open($(this).attr('shopify-url'), '_blank');
@@ -1225,17 +1073,17 @@ Handlebars.registerHelper('urlencode', function(text) {
 });
 
 // Product Shopify Connect
-window.shopifyProductSelected = function (store, shopify_id) {
+window.commercehqProductSelected = function (store, chq_id) {
     $.ajax({
-        url: '/api/product-connect',
+        url: api_url('product-connect', 'chq'),
         type: 'POST',
         data: {
             product: config.product_id,
-            shopify: shopify_id,
+            shopify: chq_id,
             store: store
         },
         success: function (data) {
-            $('#modal-shopify-product').modal('hide');
+            $('#modal-commercehq-product').modal('hide');
             window.location.hash = 'connections';
             window.location.reload();
         },
@@ -1248,7 +1096,7 @@ window.shopifyProductSelected = function (store, shopify_id) {
 $('.product-connection-change').click(function (e) {
     e.preventDefault();
 
-    $('#modal-shopify-product').modal('show');
+    $('#modal-commercehq-product').modal('show');
 });
 
 $('.product-connection-disconnect').click(function (e) {
@@ -1268,7 +1116,7 @@ $('.product-connection-disconnect').click(function (e) {
     function(isConfirmed) {
         if (isConfirmed) {
             $.ajax({
-                url: '/api/product-connect?' + $.param({
+                url: api_url('product-connect', 'chq') + $.param({
                     product: config.product_id,
                 }),
                 type: 'DELETE',
@@ -1400,6 +1248,13 @@ function clippingmagicEditImage(data, image) {
         var element = document.querySelector("#trix-notes");
         element.editor.setSelectedRange([0, 0]);
         element.editor.insertHTML(config.product_notes);
+
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Shopified App website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0, extendedTimeOut: 0});
+        }
     }, 2000);
 
     $(".tag-it").tagit({

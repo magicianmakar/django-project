@@ -60,10 +60,10 @@ def base64_encode(context, data):
 def json_dumps(context, data):
     from django.utils.html import escapejs
 
-    data = json.dumps(data)
-    data = escapejs(data)
+    data = json.dumps(data,indent=4)
+    # data = escapejs(data)
 
-    return mark_safe("JSON.parse('{}')".format(data))
+    return mark_safe("{}".format(data))
 
 
 @register.simple_tag(takes_context=True)

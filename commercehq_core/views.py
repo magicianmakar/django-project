@@ -199,6 +199,9 @@ class ProductDetailView(DetailView):
 
         permissions.user_can_view(self.request.user, self.object)
 
+        if self.object.source_id:
+            context['commercehq_product'] = self.object.sync()
+
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('chq:products_list')},
             {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},

@@ -1,10 +1,10 @@
 
-function shopifyProductSearch (e) {
-    var loadingContainer = $('#modal-shopify-product .shopify-find-loading');
-    var productsContainer = $('#modal-shopify-product .shopify-products');
+function commercehqProductSearch (e) {
+    var loadingContainer = $('#modal-commercehq-product .commercehq-find-loading');
+    var productsContainer = $('#modal-commercehq-product .commercehq-products');
 
-    var store = $('#modal-shopify-product .shopify-store').val();
-    var query = $('#modal-shopify-product .shopify-find-product').val().trim();
+    var store = $('#modal-commercehq-product .commercehq-store').val();
+    var query = $('#modal-commercehq-product .commercehq-find-product').val().trim();
 
 
     if (!$(this).prop('page')) {
@@ -15,7 +15,7 @@ function shopifyProductSearch (e) {
     }
 
     $.ajax({
-        url: '/api/shopify-products',
+        url: api_url('commercehq-products', 'chq'),
         type: 'POST',
         data: {
             store: store,
@@ -29,16 +29,20 @@ function shopifyProductSearch (e) {
             var product_template = Handlebars.compile($("#product-select-template").html());
 
             if (data.products.length === 0) {
-                productsContainer.append($('<div class="text-center"><h3>No Product found with the given search query</h3></div>'));
+                productsContainer.append($('<div class="text-center">' +
+                    '<h3>No Product found with the given search query</h3>' +
+                    '</div>'));
             }
 
             var store = this.store;
             $.each(data.products, function () {
                 var el = $(product_template({product: this}));
 
-                $('a.shopify-product', el).click(function () {
-                    if (window.shopifyProductSelected) {
-                        window.shopifyProductSelected(store, $(this).data('product-id'));
+                $('a.commercehq-product', el).click(function (e) {
+                    e.preventDefault();
+
+                    if (window.commercehqProductSelected) {
+                        window.commercehqProductSelected(store, $(this).data('product-id'));
                     }
                 });
 
@@ -53,7 +57,7 @@ function shopifyProductSearch (e) {
                     '</i> Loading"><i class="fa fa-plus"></i> Load More</button>');
 
                 moreBtn.prop('page', data.next);
-                moreBtn.click(shopifyProductSearch);
+                moreBtn.click(commercehqProductSearch);
 
                 productsContainer.append(moreBtn);
             }
@@ -68,6 +72,6 @@ function shopifyProductSearch (e) {
     });
 }
 
-$('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopifyProductSearch, 500);
-$('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
-$('#modal-shopify-product .shopify-find-product').trigger('keyup');
+$('#modal-commercehq-product .commercehq-find-product').bindWithDelay('keyup', commercehqProductSearch, 500);
+$('#modal-commercehq-product .commercehq-store').on('change', commercehqProductSearch);
+$('#modal-commercehq-product .commercehq-find-product').trigger('keyup');

@@ -7,11 +7,23 @@ import re
 import textwrap
 import simplejson as json
 
+import requests
+from pusher import Pusher
+
 
 def add_to_class(cls, name):
     def _decorator(*args, **kwargs):
         cls.add_to_class(name, args[0])
     return _decorator
+
+
+def safeStr(v, default=''):
+    """ Always return a str object """
+
+    if isinstance(v, basestring):
+        return v
+    else:
+        return default
 
 
 class CommerceHQStore(models.Model):
@@ -51,11 +63,34 @@ class CommerceHQStore(models.Model):
 
         return url
 
+    @property
+    def request(self):
+        s = requests.Session()
+        s.auth = (self.api_key, self.api_password)
+        return s
+
     def connected_count(self):
         return self.products.exclude(source_id=0).count()
 
     def saved_count(self):
         return self.products.filter(source_id=0).count()
+
+    def get_short_hash(self):
+        return self.store_hash[:8] if self.store_hash else ''
+
+    def pusher_channel(self):
+        return 'chq_{}'.format(self.get_short_hash())
+
+    def pusher_trigger(self, event, data):
+        if not settings.PUSHER_APP_ID:
+            return
+
+        pusher = Pusher(
+            app_id=settings.PUSHER_APP_ID,
+            key=settings.PUSHER_KEY,
+            secret=settings.PUSHER_SECRET)
+
+        pusher.trigger(self.pusher_channel(), event, data)
 
 
 class CommerceHQProduct(models.Model):
@@ -101,8 +136,8 @@ class CommerceHQProduct(models.Model):
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
-        self.tag = data.get('tags', '')[:1024]
-        self.product_type = data.get('type', '')[:254]
+        self.tag = safeStr(data.get('tags', ''))[:1024]
+        self.product_type = safeStr(data.get('type', ''))[:254]
 
         try:
             self.price = '%.02f' % float(data['price'])
@@ -147,6 +182,47 @@ class CommerceHQProduct(models.Model):
 
     def get_suppliers(self):
         return self.commercehqsupplier_set.all().order_by('-is_default')
+
+    def retrieve(self):
+        """ Retrieve product from CommerceHQ API """
+
+        if not self.source_id:
+            return None
+
+        rep = self.store.request.get(
+            url='{}/{}'.format(self.store.get_api_url('products'), self.source_id),
+            params={
+                'expand': 'variants,options,images,textareas'
+            }
+        )
+
+        if rep.ok:
+            return rep.json()
+
+    def sync(self):
+        product = self.retrieve()
+        if not product:
+            return None
+
+        product['tags'] = ','.join(product['tags']) if type(product['tags']) is list else ''
+
+        for idx, img in enumerate(product['images']):
+            print idx, img
+            product['images'][idx] = img['path']
+
+        for i in product['textareas']:
+            if i['name'] == 'Description':
+                product['description'] = i['text']
+
+        product['compare_at_price'] = product.get('compare_price')
+        product['weight'] = product['shipping_weight']
+        product['published'] = not product['is_draft']
+        product['textareas'] = []
+
+        self.update_data(product)
+        self.save()
+
+        return json.loads(self.data)
 
 
 class CommerceHQSupplier(models.Model):

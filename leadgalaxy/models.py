@@ -594,6 +594,9 @@ class ShopifyStore(models.Model):
                                          .exclude(hidden=True) \
                                          .count()
 
+    def pusher_channel(self):
+        return 'shopify_{}'.format(self.get_short_hash())
+
     def pusher_trigger(self, event, data):
         if not settings.PUSHER_APP_ID:
             return
@@ -603,7 +606,7 @@ class ShopifyStore(models.Model):
             key=settings.PUSHER_KEY,
             secret=settings.PUSHER_SECRET)
 
-        pusher.trigger('order_{}'.format(self.get_short_hash()), event, data)
+        pusher.trigger(self.pusher_channel(), event, data)
 
 
 class AccessToken(models.Model):

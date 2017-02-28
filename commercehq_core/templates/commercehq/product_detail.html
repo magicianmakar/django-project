@@ -43,7 +43,7 @@
                         <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
                     </div>
                 </div>
-                <div class=" row" {% if shopify_product %}style="display:none"{% endif %}>
+                <div class=" row" {% if commercehq_product and commercehq_product.is_multi %}style="display:none"{% endif %}>
                     <div class="form-group col-xs-3">
                         <label for="product-price">Price</label>
                         <div class="input-group">
@@ -56,20 +56,20 @@
                         <div class="input-group">
                             <span class="input-group-addon">{% money_format None product.store  %}</span>
                             <input type="text" class="form-control" id="product-compare-at"
-                                   value="{{product.product.compare_at_price|default:''}}">
+                                   value="{{product.parsed.compare_at_price|default:''}}">
                         </div>
                     </div>
-                    <div class="form-group col-xs-6">
+                    <div class="form-group col-xs-3">
                         <label for="product-type" style="display: block">Weight</label>
-                        <input type="text" class="form-control" id="product-weight" style="display: inline;width: 30%;">
-
-                        <select name="product-weight-unit" id="product-weight-unit" class="form-control"
-                            style="display: inline;width: 20%;">
-                            <option value="g" {% if product.product.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
-                            <option value="kg" {% if product.product.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
-                            <option value="oz" {% if product.product.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                            <option value="lb" {% if product.product.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                        </select>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="product-weight" style="width:70%">
+                            <select name="product-weight-unit" id="product-weight-unit" class="input-group-addon form-control" style="width:30%;padding: 0 5px">
+                                <option value="g" {% if product.parsed.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                                <option value="kg" {% if not product.parsed.weight_unit or product.parsed.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                                <option value="oz" {% if product.parsed.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                                <option value="lb" {% if product.parsed.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -79,7 +79,7 @@
                     </div>
                     <div class="form-group col-xs-6">
                         <label for="product-type">Tags</label>
-                        <input type="text" class="form-control tag-it" value="{{ product.product.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
+                        <input type="text" class="form-control tag-it" value="{{ product.parsed.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
                     </div>
                     <div class="form-group col-xs-3">
                         <label for="product-vendor">Vendor</label>
@@ -90,61 +90,48 @@
                 <div class="row">
                     <div id="more-options" class="col-xs-12">
                         <div class="childs" style="">
-                            {% if shopify_product %}
+                            {% if commercehq_product and commercehq_product.is_multi %}
                                 <div class="panel panel-default m-b-lg">
                                     <div class="panel-heading">Variants</div>
                                     <div class="panel-body" style="padding-bottom:0">
-                                <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
+                                <table id="commercehq-variants" class="table table-condensed no-border" style="margin-bottom:0">
                                     <thead>
                                         <tr>
-                                            <th style="width:64px">Image</th>
                                             <th>Title</th>
                                             <th>Price</th>
-                                            <th>Compare at price</th>
-                                            <th>Weight</th>
+                                            <th>Compare Price</th>
+                                            <th>SKU</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for item in shopify_product.variants %}
-                                        <tr class="shopify-variant" variant-id="{{item.id}}">
-                                            <td>
-                                                {% if item.image_src %}
-                                                <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb item.image_src %}"
-                                                     store="{{product.store.id}}" product="{{item.product_id}}"
-                                                     variant="{{item.id}}" style="width:64px" />
-                                                {% endif %}
+                                        {% for item in commercehq_product.variants %}
+                                        <tr class="commercehq-variant" variant-id="{{item.id}}">
+                                            <td style="white-space:nowrap">
+                                                <span>{{item.variant|join:" / "}}</span>
                                             </td>
 
                                             <td>
-                                                <input type="hidden" name="variant" value="{{item.id}}">
-                                                <input type="hidden" name="option1" value="{{item.option1|default:''}}">
-                                                <input type="hidden" name="option2" value="{{item.option2|default:''}}">
-                                                <input type="hidden" name="option3" value="{{item.option3|default:''}}">
-                                                <input type="hidden" name="title" value="{{item.title}}"/>
-                                                <!-- <input class="var-input var-input-title" type="text" name="title" value="{{item.title}}" /> -->
-                                                <span>{{item.title}}</span>
+                                                <div class="input-group" style="width:120px">
+                                                   <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                                   <input type="price" value="{{item.price|default:''}}" min="0" step="0.1"
+                                                          data-number-to-fixed="2" data-number-stepfactor="100"
+                                                          class="form-control currency" />
+                                                </div>
                                             </td>
 
-                                            <td style="white-space:nowrap">
-                                                <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
-                                                <span class="var-pad">{% money_format None product.store  %}</span>
+                                            <td>
+                                                <div class="input-group" style="width:120px">
+                                                   <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                                   <input type="compare_price" value="{{item.compare_price|default:''}}"
+                                                          min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100"
+                                                          class="form-control currency" />
+                                                </div>
                                             </td>
 
-                                            <td style="white-space:nowrap">
-                                                <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
-                                                <span class="var-pad">{% money_format None product.store  %}</span>
-                                            </td>
-
-                                            <td style="white-space:nowrap">
-                                                <input class="var-input" type="text" name="weight" value="{{item.weight}}" />
-                                                <select class="var-pad var-input" name="weight_unit" class="form-control"
-                                                    style="border-left: 1px #EAEAEA solid;display: inline;width: 20%;background-color: #fff;padding: 9px 2px;">
-                                                    <option value="g" {% if item.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
-                                                    <option value="kg" {% if item.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
-                                                    <option value="oz" {% if item.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                                                    <option value="lb" {% if item.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                                                </select>
-
+                                            <td>
+                                                <input class="var-input" type="text" name="sku"
+                                                       value="{{item.sku|default:''}}"
+                                                       style="border-right:1px solid #ddd;width:120px"/>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -154,14 +141,14 @@
                             </div>
                             {% endif %}
 
-                            <div class="row" {% if shopify_product %}style="display:none"{% endif %}>
+                            <div class="row" {% if commercehq_product %}style="display:none"{% endif %}>
                                 <div class="form-group col-xs-6">
                                     <label for="">Variants</label>
                                 </div>
                             </div>
 
                             <div id="variants" class="row well"
-                                 style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if shopify_product %}display:none{% endif %}">
+                                 style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if commercehq_product %}display:none{% endif %}">
 
                                 <div class="variant-simple form-group col-xs-10" style="display:none">
                                     <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
@@ -178,13 +165,6 @@
 
                             <div class="form-group col-xs-12" style="padding:0">
                                 <textarea name="product-description" class="form-control"></textarea>
-                            </div>
-
-                            <div class="form-group col-xs-12" style="padding:0">
-                                <label for="product-visible">
-                                    <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
-                                    Make Product Visible
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -217,6 +197,13 @@
                         </div>
                     </div>
 
+                    <div class="form-group col-xs-12">
+                        <label for="product-visible">
+                            <input type="checkbox" id="product-visible" {% if product.parsed.published %} checked="checked"{% endif %}>
+                            Publish in Store
+                        </label>
+                    </div>
+
                     {% if not product.shopify_url %}
                     <div class="form-group col-xs-12">
                         <label for="store-select">Export to:</label>
@@ -233,19 +220,19 @@
                     <div class="buttons col-xs-12">
                         <div class="row">
                             <div class="col-xs-12">
-                                {% if not product.shopify_url and not shopify_product %}
-                                <button id="export-btn" target="shopify" type="button"
-                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Send to Shopify</button>
+                                {% if not product.shopify_url and not commercehq_product %}
+                                <button id="product-export-btn" target="product-export" type="button"
+                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Send to CommerceHQ</button>
                                 {% endif %}
 
-                                {% if shopify_product %}
-                                <button id="export-btn" target="shopify-update" type="button"
-                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">Update in Shopify</button>
+                                {% if commercehq_product %}
+                                <button id="product-update-btn" target="product-update" type="button"
+                                        class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Updating">Update in CommerceHQ</button>
                                 {% endif %}
 
-                                <button id="save-for-later-btn" target="save-for-later"
+                                <button id="product-save-btn" target="save-for-later"
                                         type="button" class="btn btn-primary" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving"
-                                        {% if shopify_product %}style="display:none"{% endif %}>Save for later</button>
+                                        {% if commercehq_product %}style="display:none"{% endif %}>Save for later</button>
 
                             <div class="btn-group dropup">
                                 <button id="more-options-btn" data-toggle="dropdown" class="btn btn-success dropdown-toggle" aria-expanded="false">
@@ -254,7 +241,7 @@
                                 <ul class="dropdown-menu">
                                 {% if product.shopify_url %}
                                     <li><a href="{{product.shopify_url}}" target="_blank" >
-                                        <i class="fa fa-file-o"></i> View in Shopify</a>
+                                        <i class="fa fa-file-o"></i> View in CommerceHQ</a>
                                     </li>
                                     {% if request.user|can:'product_variant_setup.view' %}
                                     <li><a href="{{product.variant_edit}}" target="_blank">
@@ -262,7 +249,7 @@
                                     </li>
                                     {% endif %}
                                 {% else %}
-                                    <li><a id="view-btn" type="button" style="display:none">View in Shopify</a></li>
+                                    <li><a id="view-btn" type="button" style="display:none">View in CommerceHQ</a></li>
                                     {% if request.user|can:'product_variant_setup.view' %}
                                     <li><a id="btn-variants-img" type="button" style="display:none">
                                         <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
@@ -284,8 +271,8 @@
                                     <i class="fa fa-code-fork"></i> Split Variants</a>
                                 </li>
 
-                                {% if product.product.original_url %}
-                                    <li><a href="{{product.product.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source.source}}</a></li>
+                                {% if product.parsed.original_url %}
+                                    <li><a href="{{product.parsed.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product: {{product.source.source}}</a></li>
                                 {% endif %}
                                 </ul>
                             </div>
@@ -317,17 +304,18 @@
                     <div class="col-md-10 col-md-offset-1" style="padding-left:0;padding-right:0">
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                Shopify Product
+                                CommerceHQ Product
                             </div>
                             <div class="panel-body">
-                                {% if shopify_product %}
+                                {% if commercehq_product %}
                                 <div class="row" style="display: flex; align-items: center; ">
                                     <div class="col-md-1">
                                         <img class="no-img no-img-sm" no-img-width="45px"
-                                             src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}">
+                                             style="width:50px"
+                                             src="{{ commercehq_product.images|first}}">
                                     </div>
                                     <div class="col-md-10">
-                                        <a href="{{product.shopify_link}}" target="_blank">{{shopify_product.title}}</a>
+                                        <a href="{{product.shopify_link}}" target="_blank">{{commercehq_product.title}}</a>
                                     </div>
                                 </div>
 
@@ -344,7 +332,9 @@
                                     </div>
 
                                     <div class="col-md-12">
-                                        <a href="#" class="btn btn-success btn-xs product-connection-change"><i class="fa fa-chain"></i> Connect To Shopify</a>
+                                        <a href="#" class="btn btn-success btn-xs product-connection-change">
+                                            <i class="fa fa-chain"></i> Connect To CommerceHQ
+                                        </a>
                                     </div>
                                 </div>
                                 {% endif %}
@@ -416,7 +406,7 @@
     </div>
 </div>
 
-{% include "partial/shopify_product_selector.html" %}
+{% include "commercehq/partial/commercehq_product_selector.html" %}
 
 {% if request.user|can:'image_uploader.use' %}
 <div id="modal-upload-image" class="modal fade" aria-hidden="true">
@@ -496,14 +486,14 @@
                     Select Variant Type<span class="caret" style="margin-left:10px"></span>
                   </button>
                   <ul class="dropdown-menu">
-                  {% if shopify_product %}
-                    {% for option in shopify_product.options %}
+                  {% if commercehq_product %}
+                    {% for option in commercehq_product.options %}
                       <li>
                         <a type="button">{{ option.name }}</a>
                       </li>
                     {% endfor %}
                   {% else %}
-                    {% for v in product.product.variants %}
+                    {% for v in product.parsed.variants %}
                       <li>
                         <a type="button">{{ v.title }}</a>
                       </li>
@@ -575,14 +565,10 @@ var config = {
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
 
-    clipping_magic: {
-        api_id: '{{user.clippingmagic.api_id|default:""}}',
-        clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
-    },
-
-{% if shopify_product %}
-    shopify_options: {% json_dumps shopify_product.options %},
-    shopify_images: {% json_dumps shopify_product.images %},
+{% if commercehq_product %}
+    connected: true,
+    shopify_options: {% json_dumps commercehq_product.options %},
+    shopify_images: {% json_dumps commercehq_product.images %},
 {% else %}
     shopify_options: null,
     shopify_images: null,
@@ -593,7 +579,7 @@ var config = {
     advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
     feather_editor: null,
     shopify_variants: {
-    {% for variant in shopify_product.variants %}
+    {% for variant in commercehq_product.variants %}
         '{{variant.title|escapejs}}': {{variant.id}},
     {% endfor %}
     },
@@ -634,6 +620,16 @@ var config = {
         },
     {% endfor %}
     ],
+
+    clipping_magic: {
+        api_id: '{{user.clippingmagic.api_id|default:""}}',
+        clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
+    },
+
+    sub_conf: {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "{{product.store.pusher_channel}}",
+    },
 };
 
 $(function() {
@@ -732,10 +728,11 @@ $(function() {
 });
 
 </script>
+    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'commercehq/js/clippingmagic.js' %}"></script>
-    <script type="text/javascript" src="{% static 'commercehq/js/shopify_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/product_detail.js' %}"></script>
     {% endcompress %}
 

@@ -979,7 +979,7 @@ def product_image_download(request, pid):
 
     with zipfile.ZipFile(filename, 'w') as images_zip:
         for i, img_url in enumerate(images):
-            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url))
+            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
             images_zip.writestr(image_name, requests.get(img_url).content)
 
     s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))

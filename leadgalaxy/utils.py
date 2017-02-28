@@ -1592,17 +1592,25 @@ def get_filename_from_url(url):
     return remove_link_query(url).split('/').pop()
 
 
-def get_fileext_from_url(url):
-    return get_filename_from_url(url).split('.').pop()
+def get_fileext_from_url(url, fallback=''):
+    name = get_filename_from_url(url)
+    if '.' in name:
+        return name.split('.').pop()
+    else:
+        return fallback
 
 
 def hash_url_filename(s):
     url = remove_link_query(s)
-    ext = get_fileext_from_url(s)
+    ext = get_fileext_from_url(s, fallback='jpg')
+
+    if not re.match(r'(gif|jpe?g|png|ico|bmp)$', ext, re.I):
+        ext = 'jpg'
 
     hashval = 0
     if (len(url) == 0):
         return hashval
+
     for i in range(len(url)):
         ch = ord(url[i])
         hashval = int(((hashval << 5) - hashval) + ch)

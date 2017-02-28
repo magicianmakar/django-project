@@ -72,7 +72,7 @@
     <script type="text/javascript">
         var sub_conf = {
             key: "{% app_setting 'PUSHER_KEY' %}",
-            channel: "order_{{store.get_short_hash}}",
+            channel: "{{store.pusher_channel}}",
             store: {{store.id}},
         };
 

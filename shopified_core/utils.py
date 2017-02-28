@@ -3,6 +3,7 @@ import re
 import hashlib
 import time
 import urlparse
+import ctypes
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -27,6 +28,15 @@ def safeFloat(v, default=0.0):
     try:
         return float(v)
     except:
+        return default
+
+
+def safeStr(v, default=''):
+    """ Always return a str object """
+
+    if isinstance(v, basestring):
+        return v
+    else:
         return default
 
 
@@ -64,6 +74,36 @@ def remove_link_query(link):
         link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
 
     return re.sub('([?#].*)$', r'', link)
+
+
+def get_filename_from_url(url):
+    return remove_link_query(url).split('/').pop()
+
+
+def get_fileext_from_url(url, fallback=''):
+    name = get_filename_from_url(url)
+    if '.' in name:
+        return name.split('.').pop()
+    else:
+        return fallback
+
+
+def hash_url_filename(s):
+    url = remove_link_query(s)
+    ext = get_fileext_from_url(s, fallback='jpg')
+
+    if not re.match(r'(gif|jpe?g|png|ico|bmp)$', ext, re.I):
+        ext = 'jpg'
+
+    hashval = 0
+    if (len(url) == 0):
+        return hashval
+
+    for i in range(len(url)):
+        ch = ord(url[i])
+        hashval = int(((hashval << 5) - hashval) + ch)
+        hashval |= 0
+    return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):

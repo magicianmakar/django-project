@@ -1,14 +1,18 @@
+import re
+
 from django.conf import settings
 from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.exceptions import ProductExportException
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import remove_link_query
+from shopified_core.utils import safeInt, remove_link_query
 from shopified_core import permissions
 
 import tasks
 from .models import (
+    CommerceHQStore,
     CommerceHQProduct,
     CommerceHQSupplier
 )
@@ -60,8 +64,21 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         return res
 
-    def post_save_for_later(self, request, user, data):
-        return self.api_success(tasks.save_for_later(data, user.id))
+    def post_product_save(self, request, user, data):
+        return self.api_success(tasks.product_save(data, user.id))
+
+    def post_product_export(self, request, user, data):
+        try:
+            tasks.product_export.apply_async(
+                args=[data.get('store'), data.get('product'), user.id],
+                countdown=0,
+                expires=60)
+            # tasks.product_export(data.get('store'), data.get('product'), user.id)
+
+            return self.api_success()
+
+        except ProductExportException as e:
+            return self.api_error(e.message)
 
     def post_supplier(self, request, user, data):
         product = CommerceHQProduct.objects.get(id=data.get('product'))
@@ -121,5 +138,103 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Supplier not found.\nPlease reload the page and try again.')
 
         product.set_default_supplier(supplier, commit=True)
+
+        return self.api_success()
+
+    def post_commercehq_products(self, request, user, data):
+        store = safeInt(data.get('store'))
+        if not store:
+            return self.api_error('No Store was selected', status=404)
+
+        try:
+            store = CommerceHQStore.objects.get(id=store)
+            permissions.user_can_view(user, store)
+
+            page = safeInt(data.get('page'), 1)
+            limit = 25
+
+            params = {
+                'fields': 'id,title,images',
+                'expand': 'images',
+                'limit': limit,
+                'page': page
+            }
+
+            query = {}
+            ids = re.findall('id=([0-9]+)', data.get('query'))
+            if ids:
+                print ids
+                query['ids'] = [ids]
+            else:
+                query['title'] = data.get('query')
+
+            rep = store.request.post(
+                url=store.get_api_url('products/search', api=True),
+                params=params,
+                json=query
+            )
+
+            if not rep.ok:
+                print rep.text
+                return self.api_error('Shopify API Error', status=500)
+
+            products = []
+            for i in rep.json()['items']:
+                if i.get('images'):
+                    i['image'] = {
+                        'src': i['images'][0]['path']
+                    }
+
+                products.append(i)
+
+            return self.api_success({
+                'products': products,
+                'page': page,
+                'next': page + 1 if len(products) == limit else None,
+            })
+
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+    def post_product_connect(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        store = CommerceHQStore.objects.get(id=data.get('store'))
+        permissions.user_can_view(user, store)
+
+        source_id = safeInt(data.get('shopify'))
+
+        if source_id != product.source_id or product.store != store:
+            connected_to = CommerceHQProduct.objects.filter(
+                store=store,
+                source_id=source_id
+            )
+
+            if connected_to.exists():
+                return self.api_error(
+                    '\n'.join(
+                        ['The selected Product is already connected to:\n'] +
+                        [request.build_absolute_uri('/chq/product/{}'.format(i))
+                            for i in connected_to.values_list('id', flat=True)]),
+                    status=500)
+
+            product.store = store
+            product.source_id = source_id
+
+            product.save()
+
+            # tasks.update_shopify_product(product.store.id, source_id, product_id=product.id)
+
+        return self.api_success()
+
+    def delete_product_connect(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        source_id = product.source_id
+        if source_id:
+            product.source_id = 0
+            product.save()
 
         return self.api_success()
