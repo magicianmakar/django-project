@@ -209,11 +209,9 @@ def product_export(store_id, product_id, user_id):
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
 
-        print json.dumps(variants_thmbs, indent=4)
-
-        for idx, img in enumerate(p['images']):  #should be p['images']
+        for idx, img in enumerate(p['images']):
             is_thumb = idx in thumbs_idx
-            print utils.get_filename_from_url(img), 'thumb:', is_thumb
+            print 'Uploading:', utils.get_filename_from_url(img), 'thumb:', is_thumb
 
             r = store.request.post(
                 url=store.get_api_url('files'),
@@ -226,8 +224,6 @@ def product_export(store_id, product_id, user_id):
             )
 
             r.raise_for_status()
-
-            print r.status_code, r.text
 
             for j in r.json():
                 upload_id = j['id']
@@ -322,8 +318,6 @@ def product_export(store_id, product_id, user_id):
 
                 api_data['variants'].append(var_info)
 
-        print json.dumps(api_data, indent=4)
-
         rep = store.request.post(
             url=store.get_api_url('products'),
             json=api_data
@@ -331,7 +325,6 @@ def product_export(store_id, product_id, user_id):
 
         rep.raise_for_status()
 
-        print 'ID:%d'%rep.json()['id']
         product.source_id = rep.json()['id']
         product.save()
 
