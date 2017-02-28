@@ -1,41 +1,27 @@
 <div class="dropdown">
     <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-    Choose Store
+        {% if request.resolver_match.namespace == '' %}
+            Shopify
+        {% elif request.resolver_match.namespace == 'chq' %}
+            CommerceHQ
+        {% else %}
+        {% endif %}
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-        {% for store in user.profile.get_shopify_stores %}
-            {% if forloop.first %}
-                <li class="dropdown-header">Shopify Stores</li>
-            {% endif %}
-            <li>
-                {% if shopify_view_name %}
-                    <a href="{% url shopify_view_name %}?store_id={{ store.id }}">
-                        {{ store.title }}
-                    </a>
-                {% else %}
-                    <a href="/?store_id={{ store.id }}">
-                        {{ store.title }}
-                    </a>
-                {% endif %}
-            </li>
-        {% endfor %}
-        {% for store in user.profile.get_chq_stores %}
-            {% if forloop.first %}
-                <li role="separator" class="divider"></li>
-                <li class="dropdown-header">CommerceHQ Stores</li>
-            {% endif %}
-            <li>
-                {% if chq_view_name %}
-                    <a href="{% url chq_view_name %}?store_id={{ store.id }}">
-                        {{ store.title }}
-                    </a>
-                {% else %}
-                    <a href="/chq/?store_id={{ store.id }}">
-                        {{ store.title }}
-                    </a>
-                {% endif %}
-            </li>
-        {% endfor %}
+        <li>
+            {% if shopify_view_name %}
+                <a href="{% url shopify_view_name %}">
+            {% else %}
+                <a href="{% url 'index' %}">
+            {% endif %}Shopify</a>
+        </li>
+        <li>
+            {% if chq_view_name %}
+                <a href="{% url chq_view_name %}">
+            {% else %}
+                <a href="{% url 'chq:index' %}">
+            {% endif %}CommerceHQ</a>
+        </li>
     </ul>
 </div>
