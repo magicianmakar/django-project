@@ -116,7 +116,7 @@ def product_save(req_data, user_id):
                 'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
             }
 
-    if 'product' in req_data:
+    if req_data.get('product'):
         # Saved product update
         try:
             product = CommerceHQProduct.objects.get(id=req_data['product'])
@@ -176,7 +176,7 @@ def product_save(req_data, user_id):
 
     return {
         'product': {
-            'url': '/product/%d' % product.id,
+            'url': reverse('chq:product_detail', kwargs={'pk': product.id}),
             'id': product.id,
         }
     }
@@ -191,7 +191,7 @@ def product_export(store_id, product_id, user_id):
         permissions.user_can_edit(user, product)
 
         store = CommerceHQStore.objects.get(id=store_id)
-        permissions.user_can_view(user, product)
+        permissions.user_can_view(user, store)
 
         product.store = store
         product.save()
@@ -211,7 +211,11 @@ def product_export(store_id, product_id, user_id):
 
         for idx, img in enumerate(p['images']):
             is_thumb = idx in thumbs_idx
-            print 'Uploading:', utils.get_filename_from_url(img), 'thumb:', is_thumb
+
+            store.pusher_trigger('product-export', {
+                'product': product.id,
+                'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
+            })
 
             r = store.request.post(
                 url=store.get_api_url('files'),
@@ -331,13 +335,117 @@ def product_export(store_id, product_id, user_id):
         store.pusher_trigger('product-export', {
             'success': True,
             'product': product.id,
-            'product_url': reverse('chq:product_detail', kwargs={'pk': product.id})
+            'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
+            'commercehq_url': product.commercehq_url
         })
 
     except Exception as e:
         raven_client.captureException()
 
         store.pusher_trigger('product-export', {
+            'success': False,
+            'error': format_chq_errors(e),
+            'product': product.id,
+            'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
+        })
+
+
+@celery_app.task(base=CaptureFailure)
+def product_update(product_id, data):
+    try:
+        product = CommerceHQProduct.objects.get(id=product_id)
+        store = product.store
+
+        p = product.retrieve()
+        p['title'] = data['title']
+        p['type'] = data['type']
+        p['tags'] = data['tags'].split(',')
+        p['vendor'] = data['vendor']
+        p['is_draft'] = not data['published']
+        p['price'] = data['price']
+        p['compare_price'] = data['compare_price']
+
+        if 'weight_unit' in p and 'weight' in p:
+            if p['weight_unit'] == 'g':
+                weight = utils.safeFloat(p['weight'], 0.0) / 1000.0
+            elif p['weight_unit'] == 'lb':
+                weight = utils.safeFloat(p['weight'], 0.0) * 0.45359237
+            elif p['weight_unit'] == 'oz':
+                weight = utils.safeFloat(p['weight'], 0.0) * 0.0283495
+            else:
+                weight = utils.safeFloat(p['weight'], 0.0)
+
+            p['shipping_weight'] = '{:.02f}'.format(weight)
+
+        for idx, textarea in enumerate(p['textareas']):
+            if textarea['name'] == 'Description':
+                p['textareas'][idx]['text'] = data['description']
+
+        for idx, variant in enumerate(p.get('variants', [])):
+            for v in data['variants']:
+                if v['id'] == variant['id']:
+                    p['variants'][idx]['price'] = v['price']
+                    p['variants'][idx]['compare_price'] = v['compare_price']
+                    p['variants'][idx]['sku'] = v['sku']
+
+        images_need_upload = []
+        for img in data['images']:
+            if img not in [j['path'] for j in p['images']]:
+                images_need_upload.append(img)
+
+        for idx, img in enumerate(images_need_upload):
+            store.pusher_trigger('product-update', {
+                'product': product.id,
+                'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
+            })
+
+            r = store.request.post(
+                url=store.get_api_url('files'),
+                files={'files': (
+                    utils.get_filename_from_url(img), requests.get(img).content, 'image/png', {'Expires': '0'})
+                },
+                data={
+                    'type': 'product_images'
+                }
+            )
+
+            r.raise_for_status()
+
+            for j in r.json():
+                p['images'].append(j['id'])
+
+        for i, image in enumerate(p['images']):
+            if type(image) is int:
+                continue
+
+            if 'id' in image:
+                p['images'][i] = image['id']
+
+        for i, option in enumerate(p.get('options', [])):
+            for j, thumb in enumerate(option['thumbnails']):
+                if type(thumb.get('image')) is dict:
+                    p['options'][i]['thumbnails'][j]['image'] = thumb['image']['id']
+
+        rep = store.request.patch(
+            url='{}/{}'.format(store.get_api_url('products'), product.source_id),
+            json=p
+        )
+
+        rep.raise_for_status()
+
+        product.source_id = rep.json()['id']
+        product.save()
+
+        store.pusher_trigger('product-update', {
+            'success': True,
+            'product': product.id,
+            'product_url': reverse('chq:product_detail', kwargs={'pk': product.id})
+        })
+
+    except Exception as e:
+        raven_client.captureException()
+
+        store.pusher_trigger('product-update', {
             'success': False,
             'error': format_chq_errors(e),
             'product': product.id,

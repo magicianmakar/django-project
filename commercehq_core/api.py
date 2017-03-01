@@ -1,4 +1,5 @@
 import re
+import simplejson as json
 
 from django.conf import settings
 from django.views.generic import View
@@ -67,13 +68,41 @@ class CHQStoreApi(ApiResponseMixin, View):
     def post_product_save(self, request, user, data):
         return self.api_success(tasks.product_save(data, user.id))
 
+    def post_save_for_later(self, request, user, data):
+        # Backward compatibly with Shopify save for later
+        return self.post_product_save(request, user, data)
+
     def post_product_export(self, request, user, data):
         try:
+            store = CommerceHQStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
             tasks.product_export.apply_async(
                 args=[data.get('store'), data.get('product'), user.id],
                 countdown=0,
+                expires=120)
+
+            return self.api_success({
+                'pusher': {
+                    'key': settings.PUSHER_KEY,
+                    'channel': store.pusher_channel()
+                }
+            })
+
+        except ProductExportException as e:
+            return self.api_error(e.message)
+
+    def post_product_update(self, request, user, data):
+        try:
+            product = CommerceHQProduct.objects.get(id=data.get('product'))
+            permissions.user_can_edit(user, product)
+
+            product_data = json.loads(data['data'])
+
+            tasks.product_update.apply_async(
+                args=[product.id, product_data],
+                countdown=0,
                 expires=60)
-            # tasks.product_export(data.get('store'), data.get('product'), user.id)
 
             return self.api_success()
 
@@ -99,7 +128,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             store = None
 
         if not store:
-            return self.api_error('Shopify store not found', status=500)
+            return self.api_error('CommerceHQ store not found', status=500)
 
         try:
             product_supplier = CommerceHQSupplier.objects.get(id=data.get('export'), store__in=user.profile.get_chq_stores())
@@ -163,8 +192,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             query = {}
             ids = re.findall('id=([0-9]+)', data.get('query'))
             if ids:
-                print ids
-                query['ids'] = [ids]
+                query['id'] = [ids]
             else:
                 query['title'] = data.get('query')
 
@@ -175,8 +203,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             )
 
             if not rep.ok:
-                print rep.text
-                return self.api_error('Shopify API Error', status=500)
+                return self.api_error('CommerceHQ API Error', status=500)
 
             products = []
             for i in rep.json()['items']:

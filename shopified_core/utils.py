@@ -1,9 +1,12 @@
 import os
 import re
+import base64
 import hashlib
 import time
+import hmac
 import urlparse
 import ctypes
+import simplejson as json
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -13,6 +16,7 @@ from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.crypto import get_random_string
 
+import arrow
 import bleach
 from tld import get_tld
 
@@ -189,6 +193,39 @@ def unlock_account_email(username):
     cache.set('unlock_email_{}'.format(hash_text(username.lower())), True, timeout=660)
 
     return True
+
+
+def aws_s3_context():
+    aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
+
+    conditions = [
+        ["starts-with", "$utf8", ""],
+        # Change this path if you need, but adjust the javascript config
+        ["starts-with", "$key", "uploads"],
+        ["starts-with", "$name", ""],
+        ["starts-with", "$Content-Type", "image/"],
+        ["starts-with", "$filename", ""],
+        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
+        {"acl": "public-read"}
+    ]
+
+    policy = {
+        # Valid for 3 hours. Change according to your needs
+        "expiration": arrow.now().replace(hours=+3).format("YYYY-MM-DDTHH:mm:ss") + 'Z',
+        "conditions": conditions
+    }
+
+    policy_str = json.dumps(policy)
+    string_to_sign = base64.encodestring(policy_str).replace('\n', '')
+
+    signature = base64.encodestring(
+        hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), hashlib.sha1).digest()).strip()
+
+    return {
+        'aws_available': aws_available,
+        'aws_policy': string_to_sign,
+        'aws_signature': signature,
+    }
 
 
 class SimplePaginator(Paginator):

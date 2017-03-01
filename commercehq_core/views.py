@@ -11,7 +11,7 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat, SimplePaginator
+from shopified_core.utils import safeInt, safeFloat, aws_s3_context, SimplePaginator
 
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
@@ -207,5 +207,7 @@ class ProductDetailView(DetailView):
             {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
             self.object.title
         ]
+
+        context.update(aws_s3_context())
 
         return context

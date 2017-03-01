@@ -153,6 +153,17 @@ class CommerceHQProduct(models.Model):
         except:
             return {}
 
+    @property
+    def commercehq_url(self):
+        if self.is_connected:
+            return '{}?id={}'.format(self.store.get_api_url('admin/products/view', api=False), self.source_id)
+        else:
+            return None
+
+    @property
+    def is_connected(self):
+        return bool(self.source_id)
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -169,8 +180,6 @@ class CommerceHQProduct(models.Model):
     def set_default_supplier(self, supplier, commit=False):
         self.default_supplier = supplier
 
-        print self.get_suppliers().values('is_default'), '=>', self.default_supplier
-
         if commit:
             self.save()
 
@@ -178,7 +187,6 @@ class CommerceHQProduct(models.Model):
 
         supplier.is_default = True
         supplier.save()
-        print self.get_suppliers().values('is_default'), '=>', self.default_supplier
 
     def get_suppliers(self):
         return self.commercehqsupplier_set.all().order_by('-is_default')

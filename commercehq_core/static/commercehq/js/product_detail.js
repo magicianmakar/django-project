@@ -105,10 +105,18 @@ function productExport(btn) {
                 console.dir(data);
 
                 if (data.product == config.product_id) {
+                    if (data.progress) {
+                        btn.text(data.progress);
+                        return;
+                    }
+
                     btn.bootstrapBtn('reset');
+
+                    pusher.unsubscribe(config.sub_conf.channel);
 
                     if (data.success) {
                         toastr.success('Product Exported.','CommerceHQ Export');
+                        setTimeout(window,location.reload, 1500);
                     } else {
                         displayAjaxError('CommerceHQ Export', data);
                     }
@@ -126,6 +134,7 @@ $('#product-update-btn').click(function (e) {
     e.preventDefault();
 
     var btn = $(this);
+    btn.bootstrapBtn('loading');
 
     var api_data = {
         'title': $('#product-title').val().trim(),
@@ -150,7 +159,7 @@ $('#product-update-btn').click(function (e) {
         $('#commercehq-variants tr.commercehq-variant').each(function(j, tr) {
 
             var variant_data = {
-                id: $(tr).attr('variant-id')
+                id: parseInt($(tr).attr('variant-id'))
             };
 
             var attrs = [
@@ -185,15 +194,33 @@ $('#product-update-btn').click(function (e) {
         dataType: "json",
         context: {btn: btn},
         success: function (data) {
-            if (callback) {
-                callback();
-            }
+            var pusher = new Pusher(config.sub_conf.key);
+            var channel = pusher.subscribe(config.sub_conf.channel);
+
+            channel.bind('product-update', function(data) {
+                console.dir(data);
+
+                if (data.product == config.product_id) {
+                    if (data.progress) {
+                        btn.text(data.progress);
+                        return;
+                    }
+
+                    btn.bootstrapBtn('reset');
+
+                    pusher.unsubscribe(config.sub_conf.channel);
+
+                    if (data.success) {
+                        toastr.success('Product Updated.','CommerceHQ Update');
+                        setTimeout(window,location.reload, 1500);
+                    } else {
+                        displayAjaxError('CommerceHQ Update', data);
+                    }
+                }
+            });
         },
         error: function (data) {
             displayAjaxError('Save Product', data);
-        },
-        complete: function () {
-            $(this.btn).bootstrapBtn('reset');
         }
     });
 });
@@ -209,14 +236,16 @@ $('#modal-pick-variant .dropdown-menu li a').click(function(e) {
     var val = $(this).text();
     $('#pick-variant-btn').html($(this).text() + '<span class="caret" style="margin-left:10px"></span>');
     $('#pick-variant-btn').val(val);
-    if (config.shopify_options === null) {
-        var targetVariants = product.variants.filter(function(v) { return v.title === val; });
+    var targetVariants = [];
+
+    if (config.commercehq_options === null) {
+        targetVariants = product.variants.filter(function(v) { return v.title === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').text(targetVariants[0].values.join(', '));
         }
     } else {
-        var targetVariants = config.shopify_options.filter(function(o) { return o.name === val; });
+        targetVariants = config.commercehq_options.filter(function(o) { return o.name === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
@@ -421,13 +450,6 @@ $('.var-image-block').mouseenter(function() {
 })
 .mouseleave(function() {
     $(this).find('button').fadeOut();
-});
-
-$('#btn-variants-img').click(function (e) {
-    var store_id = $('#btn-variants-img').prop('store-id');
-    var product_id = $('#btn-variants-img').prop('product-id');
-
-    window.location.href = '/product/variants/'+store_id+'/'+product_id;
 });
 
 $('#save-product-notes').click(function (e) {

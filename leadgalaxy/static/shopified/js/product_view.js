@@ -359,14 +359,16 @@ $('#modal-pick-variant .dropdown-menu li a').click(function(e) {
     var val = $(this).text();
     $('#pick-variant-btn').html($(this).text() + '<span class="caret" style="margin-left:10px"></span>');
     $('#pick-variant-btn').val(val);
+    var targetVariants = [];
+
     if (config.shopify_options === null) {
-        var targetVariants = product.variants.filter(function(v) { return v.title === val; });
+        targetVariants = product.variants.filter(function(v) { return v.title === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').text(targetVariants[0].values.join(', '));
         }
     } else {
-        var targetVariants = config.shopify_options.filter(function(o) { return o.name === val; });
+        targetVariants = config.shopify_options.filter(function(o) { return o.name === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
