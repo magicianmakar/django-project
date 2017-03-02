@@ -1,0 +1,26 @@
+{% spaceless %}
+{{ form.non_field_errors }}
+<div class="form-group">
+    {% if form.title.errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for error in form.title.errors %}
+                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                <span class="sr-only">Error:</span>
+                {{ error }}<br />
+            {% endfor %}
+        </div>
+    {% endif %}
+    <input
+        type="text"
+        name="title"
+        placeholder="New Board Name"
+        class="form-control"
+        value="{{ form.title.value }}" />
+</div>
+
+<div>
+    <button class="btn btn-sm btn-primary pull-right m-t-n-xs" type="submit">
+        <strong>Add</strong>
+    </button>
+</div>
+{% endspaceless %}

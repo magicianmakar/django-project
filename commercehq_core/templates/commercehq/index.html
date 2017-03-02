@@ -60,13 +60,18 @@
                                             <li class="divider"></li>
 
                                             <li>
-                                                <a class="edit-store" data-store-id="{{ store.id }}">
+                                                <a
+                                                    class="edit-store"
+                                                    data-store-update-url="{% url 'chq:store_update' store.pk %}"
+                                                    data-store-id="{{ store.pk }}">
                                                     <i class="fa fa-edit"></i> Edit
                                                 </a>
                                             </li>
 
                                             <li>
-                                                <a class="delete-store btn-danger btn-outline" data-store-id="{{ store.id }}">
+                                                <a
+                                                    class="delete-store btn-danger btn-outline" data-store-delete-url="{% url 'chq:store_delete' store.pk %}"
+                                                    data-store-id="{{ store.pk }}">
                                                     <i class="fa fa-times"></i> Delete
                                                 </a>
                                             </li>

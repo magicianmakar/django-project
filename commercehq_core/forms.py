@@ -3,7 +3,7 @@ from urlparse import urlparse
 from django import forms
 from django.forms import ModelForm
 
-from .models import CommerceHQStore
+from .models import CommerceHQStore, CommerceHQBoard
 
 
 class CommerceHQStoreForm(ModelForm):
@@ -23,3 +23,9 @@ class CommerceHQStoreForm(ModelForm):
         url = o._replace(scheme='https').geturl()
 
         return url
+
+
+class CommerceHQBoardForm(ModelForm):
+    class Meta:
+        model = CommerceHQBoard
+        fields = 'title',

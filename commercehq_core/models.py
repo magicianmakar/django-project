@@ -254,3 +254,19 @@ class CommerceHQSupplier(models.Model):
             return self.supplier_url
         else:
             return u'<CommerceHQSupplier: {}>'.format(self.id)
+
+
+class CommerceHQBoard(models.Model):
+    class Meta:
+        verbose_name = "CHQ Board"
+        verbose_name_plural = "CHQ Boards"
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    title = models.CharField(max_length=512)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.title
+

@@ -3,8 +3,8 @@ from django.core.urlresolvers import reverse
 
 from leadgalaxy.tests.factories import UserFactory
 
-from .factories import CommerceHQStoreFactory
-from ..models import CommerceHQStore
+from .factories import CommerceHQStoreFactory, CommerceHQBoardFactory
+from ..models import CommerceHQStore, CommerceHQBoard
 
 
 class StoreCreateTestCase(TestCase):
@@ -28,30 +28,34 @@ class StoreCreateTestCase(TestCase):
             'api_password': 'testpassword'}
 
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.path = reverse('chq:store_create')
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
 
     def test_must_require_requests_to_be_ajax(self):
-        r = self.client.post(reverse('chq:store_create'), self.data)
-        self.assertEquals(r.status_code, 404)
+        r = self.client.post(self.path, self.data)
+        self.assertEqual(r.status_code, 404)
 
     def test_must_be_logged_in(self):
-        r = self.client.post(reverse('chq:store_create'), self.data, **self.headers)
-        self.assertEquals(r.status_code, 401)
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.assertEqual(r.status_code, 401)
 
     def test_must_create_new_store(self):
-        self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(reverse('chq:store_create'), self.data, **self.headers)
-        self.assertEquals(r.status_code, 201)
+        self.login()
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.assertEqual(r.status_code, 201)
 
     def test_must_add_store_to_user(self):
-        self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(reverse('chq:store_create'), self.data, **self.headers)
+        self.login()
+        r = self.client.post(self.path, self.data, **self.headers)
         store = CommerceHQStore.objects.get(api_url=self.data['api_url'])
-        self.assertEquals(store.user, self.user)
+        self.assertEqual(store.user, self.user)
 
     def test_must_not_allow_subusers_to_create(self):
         self.client.login(username=self.subuser.username, password=self.subuser_password)
-        r = self.client.post(reverse('chq:store_create'), self.data, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.assertEqual(r.status_code, 403)
 
 
 class StoreUpdateTestCase(TestCase):
@@ -76,27 +80,32 @@ class StoreUpdateTestCase(TestCase):
             'api_password': 'testpassword'}
 
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.path = reverse('chq:store_update', args=(self.store.pk,))
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
 
     def test_must_be_logged_in(self):
-        r = self.client.get(reverse('chq:store_update', args=(self.store.pk,)), **self.headers)
-        self.assertEquals(r.status_code, 401)
+        r = self.client.get(self.path, **self.headers)
+        self.assertEqual(r.status_code, 401)
 
     def test_must_return_correct_form_template(self):
-        self.client.login(username=self.user.username, password=self.password)
-        r = self.client.get(reverse('chq:store_update', args=(self.store.pk,)), **self.headers)
+        self.login()
+        r = self.client.get(self.path, **self.headers)
         self.assertTrue(r.status_code, 200)
         self.assertTemplateUsed(r, 'commercehq/store_update_form.html')
 
     def test_must_update_store(self):
-        self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(reverse('chq:store_update', args=(self.store.pk,)), self.data, **self.headers)
+        self.login()
+        r = self.client.post(self.path, self.data, **self.headers)
         self.store.refresh_from_db()
+        self.assertEqual(r.status_code, 204)
         self.assertTrue(self.store.title, self.data['title'])
 
     def test_must_not_allow_subusers_to_update(self):
         self.client.login(username=self.subuser.username, password=self.subuser_password)
-        r = self.client.post(reverse('chq:store_update', args=(self.store.pk,)), self.data, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.assertEqual(r.status_code, 403)
 
 
 class StoreDeleteTestCase(TestCase):
@@ -115,18 +124,158 @@ class StoreDeleteTestCase(TestCase):
 
         self.store = CommerceHQStoreFactory(user=self.user)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.path = reverse('chq:store_delete', args=(self.store.pk,))
 
     def test_must_be_logged_in(self):
-        r = self.client.post(reverse('chq:store_delete', args=(self.store.pk,)), **self.headers)
-        self.assertEquals(r.status_code, 401)
+        r = self.client.post(self.path, **self.headers)
+        self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_delete_own_store(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(reverse('chq:store_delete', args=(self.store.pk,)), **self.headers)
+        r = self.client.post(self.path, **self.headers)
         count = self.user.commercehqstore_set.filter(is_active=True).count()
-        self.assertEquals(count, 0)
+        self.assertEqual(count, 0)
 
     def test_must_not_allow_subusers_to_delete(self):
         self.client.login(username=self.subuser.username, password=self.subuser_password)
-        r = self.client.post(reverse('chq:store_delete', args=(self.store.pk,)), **self.headers)
-        self.assertEquals(r.status_code, 403)
+        r = self.client.post(self.path, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+
+class BoardsListTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.path = reverse('chq:boards_list')
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_be_logged_in(self):
+        r = self.client.get(self.path)
+        self.assertRedirects(r, '%s?next=%s' % (reverse('login'), self.path))
+
+    def test_must_return_ok(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.status_code, 200)
+
+    def test_must_used_correct_template(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTemplateUsed(r, 'commercehq/boards_list.html')
+
+    def test_must_return_boards_of_user(self):
+        CommerceHQBoardFactory(user=self.user)
+        CommerceHQBoardFactory()
+        self.login()
+        r = self.client.get(self.path)
+        boards = list(r.context['boards'])
+        board = boards.pop()
+        self.assertEqual(board.user, self.user)
+        self.assertEqual(len(boards), 0)
+
+
+class BoardCreateTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.path = reverse('chq:board_create')
+        self.data = {'title': 'Test Board'}
+        self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_require_requests_to_be_ajax(self):
+        r = self.client.post(self.path, self.data)
+        self.assertEqual(r.status_code, 404)
+
+    def test_must_be_logged_in(self):
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.assertEqual(r.status_code, 401)
+
+    def test_must_create_new_board(self):
+        self.login()
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.assertEqual(r.status_code, 201)
+
+    def test_must_add_board_to_user(self):
+        self.login()
+        r = self.client.post(self.path, self.data, **self.headers)
+        board = CommerceHQBoard.objects.get(title=self.data['title'])
+        self.assertEqual(board.user, self.user)
+
+    def test_must_use_correct_template(self):
+        self.login()
+        r = self.client.post(self.path, {}, **self.headers)
+        self.assertTemplateUsed(r, 'commercehq/board_create_form.html')
+
+
+class BoardUpdateTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.board = CommerceHQBoardFactory(user=self.user)
+
+        self.data = {'title': 'Test Board'}
+        self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.path = reverse('chq:board_update', args=(self.board.pk,))
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_require_requests_to_be_ajax(self):
+        r = self.client.get(self.path)
+        self.assertEqual(r.status_code, 404)
+
+    def test_must_be_logged_in(self):
+        r = self.client.get(self.path, **self.headers)
+        self.assertEqual(r.status_code, 401)
+
+    def test_must_return_correct_form_template(self):
+        self.login()
+        r = self.client.get(self.path, **self.headers)
+        self.assertTrue(r.status_code, 200)
+        self.assertTemplateUsed(r, 'commercehq/board_update_form.html')
+
+    def test_must_update_board(self):
+        self.login()
+        r = self.client.post(self.path, self.data, **self.headers)
+        self.board.refresh_from_db()
+        self.assertTrue(r.status_code, 204)
+        self.assertTrue(self.board.title, self.data['title'])
+
+    def test_must_not_return_other_user_board(self):
+        board = CommerceHQBoardFactory()
+        self.login()
+        r = self.client.get(reverse('chq:board_update', args=(board.pk,)))
+        self.assertEqual(r.status_code, 404)
+
+
+class BoardDeleteTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.board = CommerceHQBoardFactory(user=self.user)
+        self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.path = reverse('chq:board_delete', args=(self.board.pk,))
+
+    def test_must_be_logged_in(self):
+        r = self.client.post(self.path, **self.headers)
+        self.assertEqual(r.status_code, 401)
+
+    def test_user_must_be_able_to_delete_own_board(self):
+        self.client.login(username=self.user.username, password=self.password)
+        r = self.client.post(self.path, **self.headers)
+        count = self.user.commercehqboard_set.count()
+        self.assertEqual(count, 0)
