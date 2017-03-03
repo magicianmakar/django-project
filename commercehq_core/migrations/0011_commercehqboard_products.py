@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('commercehq_core', '0009_commercehqboard'),
+        ('commercehq_core', '0010_auto_20170303_1844'),
     ]
 
     operations = [
