@@ -43,6 +43,7 @@ from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
 from shopified_core.utils import send_email_from_template, SimplePaginator
+from shopified_core.province_helper import load_uk_provincess, missing_province
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -62,7 +63,6 @@ import tasks
 import utils
 from .forms import *
 from .models import *
-from .province_helper import load_uk_provincess, missing_province
 from .templatetags.template_helper import money_format
 
 

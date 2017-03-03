@@ -130,7 +130,6 @@ class ShopifiedApi(ApiResponseMixin, View):
         return self.api_error('Unvalide username or password')
 
     def get_all_stores(self, request, target, store_type, version):
-        print 'ok'
         stores = []
         user = self.get_user(request, assert_login=True)
         for i in user.profile.get_shopify_stores():
@@ -146,7 +145,7 @@ class ShopifiedApi(ApiResponseMixin, View):
                 'id': i.id,
                 'name': i.title,
                 'type': 'chq',
-                'url': i.get_api_url(api=False)
+                'url': i.get_admin_url()
             })
 
         return JsonResponse(stores, safe=False)

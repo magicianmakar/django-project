@@ -10,4 +10,6 @@ urlpatterns = patterns(
     url(r'^store-create$', commercehq_core.views.store_create, name='store_create'),
     url(r'^store-update/(?P<store_id>[0-9]+)$', commercehq_core.views.store_update, name='store_update'),
     url(r'^store-delete/(?P<store_id>[0-9]+)$', commercehq_core.views.store_delete, name='store_delete'),
+
+    url(r'^orders$', commercehq_core.views.OrdersList.as_view(), name='orders_list'),
 )

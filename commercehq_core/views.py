@@ -1,4 +1,7 @@
 import re
+import arrow
+
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -15,6 +18,7 @@ from shopified_core.utils import safeInt, safeFloat, aws_s3_context, SimplePagin
 
 from .models import CommerceHQStore, CommerceHQProduct
 from .forms import CommerceHQStoreForm
+from .utils import CommerceHQOrdersPaginator, get_store_from_request, chq_customer_address
 from .decorators import no_subusers, must_be_authenticated, ajax_only
 
 
@@ -211,3 +215,198 @@ class ProductDetailView(DetailView):
         context.update(aws_s3_context())
 
         return context
+
+
+class OrdersList(ListView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/orders_list.html'
+    # context_object_name = 'orders'
+
+    paginator_class = CommerceHQOrdersPaginator
+    paginate_by = 2
+
+    def get_queryset(self):
+        return []
+
+    def get_paginator(self, *args, **kwargs):
+        paginator = super(OrdersList, self).get_paginator(*args, **kwargs)
+        paginator.set_store(self.get_store())
+
+        return paginator
+
+    def get_context_data(self, **kwargs):
+        context = super(OrdersList, self).get_context_data(**kwargs)
+
+        context['store'] = self.get_store()
+
+        context['breadcrumbs'] = [{
+            'title': 'Orders',
+            'url': reverse('chq:products_list')
+        }, {
+            'title': context['store'].title,
+            'url': '{}?store={}'.format(reverse('chq:orders_list'), context['store'].id)
+        }]
+
+        context['orders'] = self.get_orders(context)
+
+        return context
+
+    def get_store(self):
+        if not hasattr(self, 'store'):
+            self.store = get_store_from_request(self.request)
+
+        return self.store
+
+    def get_orders(self, ctx):
+        models_user = self.request.user.models_user
+        auto_orders = self.request.user.can('auto_order.use')
+
+        products_cache = {}
+        orders_list = {}
+        orders_cache = {}
+
+        orders = ctx['object_list']
+        for odx, order in enumerate(orders):
+            created_at = arrow.get(order['order_date'])
+            try:
+                created_at = created_at.to(self.request.session['django_timezone'])
+            except:
+                raven_client.captureException(level='warning')
+
+            order['date'] = created_at
+            order['date_str'] = created_at.format('MM/DD/YYYY')
+            order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
+            order['order_url'] = self.store.get_admin_url('admin/orders/%d' % order['id'])
+            order['store'] = self.store
+            order['placed_orders'] = 0
+            order['connected_lines'] = 0
+            order['lines_count'] = len(order['items'])
+            order['refunded_lines'] = []
+
+            # if type(order['refunds']) is list:
+            #     for refund in order['refunds']:
+            #         for refund_line in refund['refund_line_items']:
+            #             order['refunded_lines'].append(refund_line['line_item_id'])
+
+            order_status = {
+                0: None,
+                1: 'Partially sent to fulfilment',
+                2: 'Partially sent to fulfilment & shipped',
+                3: 'Sent to fulfilment',
+                4: 'Partially shipped',
+                5: 'Shipped',
+            }
+
+            paid_status = {
+                0: 'Not paid',
+                1: 'Paid',
+                2: 'Partially refunded',
+                3: 'Fully refunded',
+            }
+
+            order['fulfillment_status'] = order_status.get(order['status'])
+            order['financial_status'] = paid_status.get(order['paid'])
+
+            for ldx, line in enumerate(order['items']):
+                line.update(line.get('data'))
+                line.update(line.get('status'))
+
+                variant_id = line.get('variant', {}).get('id')
+
+                line['variant_link'] = self.store.get_admin_url('admin/products/view?id={}'.format(line['product_id']))
+
+                if variant_id:
+                    line['variant_link'] += '&variant={}'.format(variant_id)
+
+                line['refunded'] = line['id'] in order['refunded_lines']
+
+                line['image'] = (line.get('image') or '').replace('/uploads/', '/uploads/thumbnail_')
+
+                shopify_order = orders_list.get('{}-{}'.format(order['id'], line['id']))
+                line['shopify_order'] = shopify_order
+
+                if shopify_order or line['fulfilled'] == line['quantity'] or line['shipped'] == line['quantity']:
+                    order['placed_orders'] += 1
+
+                if not line['product_id']:
+                    if variant_id:
+                        product = CommerceHQProduct.objects.filter(store=self.store, title=line['title'], source_id__gt=0).first()
+                    else:
+                        product = None
+                elif line['product_id'] in products_cache:
+                    product = products_cache[line['product_id']]
+                else:
+                    product = CommerceHQProduct.objects.filter(store=self.store, source_id=line['product_id']).first()
+
+                supplier = None
+                if product and product.have_supplier():
+                    supplier = product.get_suppier_for_variant(variant_id)
+                    if supplier:
+                        shipping_method = product.get_shipping_for_variant(
+                            supplier_id=supplier.id,
+                            variant_id=variant_id,
+                            country_code=order['address']['shipping']['country'])
+                    else:
+                        shipping_method = None
+
+                    line['product'] = product
+                    line['supplier'] = supplier
+                    line['shipping_method'] = shipping_method
+
+                    order['connected_lines'] += 1
+
+                products_cache[line['product_id']] = product
+
+                order['shipping_address'] = order['address']['shipping']
+                if not auto_orders or not order.get('shipping_address'):
+                    order['items'][ldx] = line
+                    continue
+
+                customer_address = chq_customer_address(order)
+
+                phone = order['address']['phone']
+                if not phone or models_user.get_config('order_default_phone') != 'customer':
+                    phone = models_user.get_config('order_phone_number')
+
+                if phone:
+                    phone = re.sub('[^0-9/-]', '', phone)
+
+                order['customer_address'] = customer_address
+
+                order_data = {
+                    'id': '{}_{}_{}'.format(self.store.id, order['id'], line['id']),
+                    'quantity': line['quantity'],
+                    'shipping_address': customer_address,
+                    'order_id': order['id'],
+                    'line_id': line['id'],
+                    'product_id': product.id if product else None,
+                    'source_id': supplier.get_source_id() if supplier else None,
+                    'total': safeFloat(line['price'], 0.0),
+                    'store': self.store.id,
+                    'order': {
+                        'phone': phone,
+                        'note': models_user.get_config('order_custom_note'),
+                        'epacket': bool(models_user.get_config('epacket_shipping')),
+                        'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+                    }
+                }
+
+                if product:
+                    # mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                    # if variant_id and mapped:
+                        # order_data['variant'] = mapped
+                    # else:
+                        # order_data['variant'] = line.get('variant', {}).get('variant', '')
+                    order_data['variant'] = line.get('variant', {}).get('variant', '')
+
+                if product and product.have_supplier():
+                    orders_cache['order_{}'.format(order_data['id'])] = order_data
+                    line['order_data_id'] = order_data['id']
+
+                    line['order_data'] = order_data
+
+                order['items'][ldx] = line
+
+            orders[odx] = order
+
+        return orders

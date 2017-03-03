@@ -187,11 +187,11 @@ def product_export(store_id, product_id, user_id):
     try:
         user = User.objects.get(id=user_id)
 
-        product = CommerceHQProduct.objects.get(id=product_id)
-        permissions.user_can_edit(user, product)
-
         store = CommerceHQStore.objects.get(id=store_id)
+        product = CommerceHQProduct.objects.get(id=product_id)
+
         permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
 
         product.store = store
         product.save()

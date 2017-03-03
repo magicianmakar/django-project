@@ -63,6 +63,9 @@ class CommerceHQStore(models.Model):
 
         return url
 
+    def get_admin_url(self, page=''):
+        return self.get_api_url(page, api=False)
+
     @property
     def request(self):
         s = requests.Session()
@@ -110,6 +113,12 @@ class CommerceHQProduct(models.Model):
     tags = models.TextField(blank=True, default='', db_index=True)
     is_multi = models.BooleanField(default=False)
 
+    config = models.TextField(null=True, blank=True)
+    variants_map = models.TextField(default='', blank=True)
+    supplier_map = models.TextField(default='', null=True, blank=True)
+    shipping_map = models.TextField(default='', null=True, blank=True)
+    mapping_config = models.TextField(null=True, blank=True)
+
     parent_product = models.ForeignKey(
         'CommerceHQProduct', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Dupliacte of product')
@@ -156,13 +165,19 @@ class CommerceHQProduct(models.Model):
     @property
     def commercehq_url(self):
         if self.is_connected:
-            return '{}?id={}'.format(self.store.get_api_url('admin/products/view', api=False), self.source_id)
+            return '{}?id={}'.format(self.store.get_admin_url('admin/products/view'), self.source_id)
         else:
             return None
 
     @property
     def is_connected(self):
         return bool(self.source_id)
+
+    def have_supplier(self):
+        try:
+            return self.default_supplier is not None
+        except:
+            return False
 
     def update_data(self, data):
         if type(data) is not dict:
@@ -232,6 +247,127 @@ class CommerceHQProduct(models.Model):
 
         return json.loads(self.data)
 
+    def get_mapping_config(self):
+        try:
+            return json.loads(self.mapping_config)
+        except:
+            return {}
+
+    def set_mapping_config(self, config):
+        if type(config) is not str:
+            config = json.dumps(config)
+
+        self.mapping_config = config
+        self.save()
+
+    def set_suppliers_mapping(self, mapping):
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.supplier_map = mapping
+        self.save()
+
+    def get_suppliers_mapping(self, name=None, default=None):
+        mapping = {}
+        try:
+            if self.supplier_map:
+                mapping = json.loads(self.supplier_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
+    def get_suppier_for_variant(self, variant_id):
+        """
+            Return the mapped Supplier for the given variant_id
+            or the default one if mapping is not set/found
+        """
+
+        config = self.get_mapping_config()
+        mapping = self.get_suppliers_mapping(name=variant_id)
+
+        if not variant_id or not mapping or config.get('supplier') == 'default':
+            return self.default_supplier
+
+        try:
+            return self.productsupplier_set.get(id=mapping['supplier'])
+        except:
+            return self.default_supplier
+
+    def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
+        """ Return Shipping Method for the given variant_id and country_code """
+        mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
+
+        if variant_id and country_code and mapping and type(mapping) is list:
+            for method in mapping:
+                if country_code == method.get('country'):
+                    short_name = method.get('method_name').split(' ')
+                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
+                        method['method_short'] = ' '.join(short_name[:2])
+                    else:
+                        method['method_short'] = short_name[0]
+
+                    if method['country'] == 'GB':
+                        method['country'] = 'UK'
+
+                    return method
+
+        return None
+
+    def set_shipping_mapping(self, mapping, update=True):
+        if update:
+            try:
+                current = json.loads(self.shipping_map)
+            except:
+                current = {}
+
+            for k, v in mapping.items():
+                current[k] = v
+
+            mapping = current
+
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.shipping_map = mapping
+        self.save()
+
+    def get_shipping_mapping(self, supplier=None, variant=None, default=None):
+        mapping = {}
+        try:
+            if self.shipping_map:
+                mapping = json.loads(self.shipping_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if supplier and variant:
+            mapping = mapping.get('{}_{}'.format(supplier, variant), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
 
 class CommerceHQSupplier(models.Model):
     store = models.ForeignKey(CommerceHQStore, related_name='suppliers')
@@ -254,3 +390,48 @@ class CommerceHQSupplier(models.Model):
             return self.supplier_url
         else:
             return u'<CommerceHQSupplier: {}>'.format(self.id)
+
+    def get_source_id(self):
+        try:
+            if 'aliexpress.com' in self.product_url.lower():
+                return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+        except:
+            return None
+
+    def get_store_id(self):
+        try:
+            if 'aliexpress.com' in self.supplier_url.lower():
+                return int(re.findall('/([0-9]+)', self.supplier_url).pop())
+        except:
+            return None
+
+    def short_product_url(self):
+        source_id = self.get_source_id()
+        if source_id:
+            if 'aliexpress.com' in self.product_url.lower():
+                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+
+        return self.product_url
+
+    def support_auto_fulfill(self):
+        """
+        Return True if this supplier support auto fulfill using the extension
+        Currently only Aliexpress support that
+        """
+
+        return 'aliexpress.com/' in self.product_url.lower()
+
+    def get_name(self):
+        if self.supplier_name and self.supplier_name.strip():
+            name = self.supplier_name.strip()
+        else:
+            supplier_idx = 1
+            for i in self.product.get_suppliers():
+                if self.id == i.id:
+                    break
+                else:
+                    supplier_idx += 1
+
+            name = u'Supplier #{}'.format(supplier_idx)
+
+        return name

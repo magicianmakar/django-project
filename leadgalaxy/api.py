@@ -105,7 +105,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'id': i.id,
                     'name': i.title,
                     'type': 'chq',
-                    'url': i.get_api_url(api=False)
+                    'url': i.get_admin_url()
                 })
 
         return JsonResponse(stores, safe=False)

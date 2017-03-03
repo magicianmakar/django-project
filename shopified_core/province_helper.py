@@ -14,9 +14,9 @@ def load_uk_provincess():
     if uk_provinces:
         return uk_provinces
 
+    uk_provinces = {}
     for i in ['uk_provinces2.csv', 'uk_provinces.csv']:
         data_file = os.path.join(settings.BASE_DIR, 'app', 'data', i)
-        uk_provinces = {}
         lines = open(data_file).readlines()
         for l in lines:
             l = l.split('|')
