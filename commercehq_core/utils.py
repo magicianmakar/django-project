@@ -9,6 +9,7 @@ from shopified_core import permissions
 from shopified_core.utils import safeInt
 from shopified_core.province_helper import load_uk_provincess, missing_province
 
+
 def get_store_from_request(request):
     """
     Return CommerceHQStore from based on `store` value or last saved store
