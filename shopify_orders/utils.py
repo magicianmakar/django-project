@@ -2,6 +2,7 @@ from django.core.cache import cache
 
 import re
 import arrow
+import requests
 from unidecode import unidecode
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
@@ -245,22 +246,38 @@ def change_store_sync(store):
         pass
 
 
-def order_id_from_number(store, order_number):
-    ''' Get Order ID from Order Number '''
+def order_id_from_name(store, order_name, default=None):
+    ''' Get Order ID from Order Name '''
 
     orders = ShopifyOrder.objects.filter(store=store)
 
-    try:
-        order_rx = store.user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
-        order_number = re.findall(order_rx, order_number)
-        order_number = int(order_number[0])
-    except:
-        return None
+    order_rx = store.user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
+    order_number = re.findall(order_rx, order_name)
+    if not order_number:
+        return default
 
-    if order_number:
-        orders = orders.filter(order_number=(order_number - 1000))
+    order_number = order_number[0]
+    if len(order_number) > 7:
+        # Order name should contain less than 7 digits
+        return default
 
-        for i in orders:
-            return i.order_id
+    params = {
+        'status': 'any',
+        'fulfillment_status': 'any',
+        'financial_status': 'any',
+        'fields': 'id',
+        'name': order_name
+    }
 
-    return None
+    rep = requests.get(
+        url=store.get_link('/admin/orders.json', api=True),
+        params=params
+    )
+
+    if rep.ok:
+        orders = rep.json()['orders']
+
+        if len(orders):
+            return orders.pop()['id']
+
+    return default

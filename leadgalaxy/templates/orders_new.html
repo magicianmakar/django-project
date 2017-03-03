@@ -301,7 +301,7 @@
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
-                                    <div class="col-xs-3 order-status">
+                                    <div class="col-xs-2 order-status">
                                         {% if order.placed_orders == 0 %}
                                             <span class="badge badge-danger primary">&nbsp;</span>
                                             No Products Ordered
@@ -313,10 +313,23 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-1 text-right">
+                                    <div class="col-xs-2">
                                         {% if order.lines_count > 1 %}
-                                        <button class="btn btn-success btn-xs order-all"
-                                                order-id="{{order.id}}" style="display:none">Order All</button>
+                                            <div class="btn-group pull-right" style="display:flex">
+                                                <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
+                                                        type="button" style="border-right:1px solid #66a8cc">
+                                                    Order All
+                                                </button>
+
+                                                <button type="button" class="btn btn-success btn-xs dropdown-toggle"
+                                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                </button>
+
+                                                <ul class="dropdown-menu pull-right">
+                                                    <li><a class="order-seleted-lines" href="#">Order Slected</a></li>
+                                                </ul>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -473,8 +486,10 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <td>
-                                                            <img class="cached-img no-img no-img-sm unveil"
+                                                        <td class="product-preview">
+                                                            <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
+
+                                                            <img class="product-img cached-img no-img no-img-sm unveil"
                                                                 store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
                                                                 src="{% static 'img/blank.gif' %}"
 
@@ -510,13 +525,12 @@
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if not item.fulfillment_status %}
-
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
                                                                         <span class="caret"></span></button>
 
-                                                                        <ul class="dropdown-menu">
+                                                                        <ul class="dropdown-menu pull-right">
                                                                             <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.shopify_order.source_tracking}}">Fulfill in Shopify</a></li>
                                                                         </ul>
                                                                     </div>
@@ -793,6 +807,7 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}

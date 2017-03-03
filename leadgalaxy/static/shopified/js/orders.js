@@ -686,6 +686,38 @@ $('.cached-img').error(function() {
     });
 });
 
+$('.product-preview img').click(function (e) {
+    var checkbox = $(this).parent().find('.line-checkbox');
+    checkbox.prop('checked', !checkbox.prop('checked'));
+});
+
+$('.order-seleted-lines').click(function (e) {
+    e.preventDefault();
+
+    var order = $(this).parents('.order');
+    var delete_lines = [];
+    var selected = 0;
+
+    order.find('.line-checkbox').each(function (i, el) {
+        if(!el.checked) {
+            delete_lines.push($(el).parents('.line'));
+        } else {
+            selected += 1;
+        }
+    });
+
+    if(selected <= 1) {
+        swal('Order Selected', 'Please Select at least 2 items to order', 'warning');
+        return;
+    } else {
+        $.each(delete_lines, function (i, el) {
+            $(el).remove();
+        });
+    }
+
+    order.find('.order-all').trigger('click');
+});
+
 $('.help-select').each(function (i, el) {
     $('option', el).each(function (index, option) {
         $(option).attr('title', $(option).text());
