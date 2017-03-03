@@ -130,7 +130,7 @@ def store_create(request):
     if form.is_valid():
         form.instance.user = request.user.models_user
         form.save()
-        return HttpResponse(status=201)
+        return HttpResponse(status=204)
 
     return render(request, 'commercehq/store_create_form.html', {'form': form})
 
@@ -141,8 +141,8 @@ def store_create(request):
 @csrf_protect
 @require_http_methods(['GET', 'POST'])
 def store_update(request, store_id):
-    instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
-    form = CommerceHQStoreForm(request.POST or None, instance=instance)
+    board = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
+    form = CommerceHQStoreForm(request.POST or None, instance=board)
 
     if request.method == 'POST' and form.is_valid():
         form.save()
@@ -157,9 +157,9 @@ def store_update(request, store_id):
 @csrf_protect
 @require_http_methods(['POST'])
 def store_delete(request, store_id):
-    instance = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
-    instance.is_active = False
-    instance.save()
+    store = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
+    store.is_active = False
+    store.save()
 
     return HttpResponse()
 
@@ -174,7 +174,7 @@ def board_create(request):
     if form.is_valid():
         form.instance.user = request.user.models_user
         form.save()
-        return HttpResponse(status=201)
+        return HttpResponse(status=204)
 
     return render(request, 'commercehq/board_create_form.html', {'form': form})
 
@@ -184,8 +184,8 @@ def board_create(request):
 @csrf_protect
 @require_http_methods(['GET', 'POST'])
 def board_update(request, board_id):
-    instance = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    form = CommerceHQBoardForm(request.POST or None, instance=instance)
+    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
+    form = CommerceHQBoardForm(request.POST or None, instance=board)
 
     if request.method == 'POST' and form.is_valid():
         form.save()
@@ -199,8 +199,19 @@ def board_update(request, board_id):
 @csrf_protect
 @require_http_methods(['POST'])
 def board_delete(request, board_id):
-    instance = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    instance.delete()
+    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
+    board.delete()
+
+    return HttpResponse()
+
+
+@ajax_only
+@must_be_authenticated
+@csrf_protect
+@require_http_methods(['POST'])
+def board_empty(request, board_id):
+    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
+    board.products.clear()
 
     return HttpResponse()
 

@@ -70,7 +70,7 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status == 201) {
+            if (xhr.status == 204) {
                 window.location.reload();
             }
         }

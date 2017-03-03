@@ -3,7 +3,11 @@ from django.core.urlresolvers import reverse
 
 from leadgalaxy.tests.factories import UserFactory
 
-from .factories import CommerceHQStoreFactory, CommerceHQBoardFactory
+from .factories import (
+    CommerceHQStoreFactory,
+    CommerceHQBoardFactory,
+    CommerceHQProductFactory,
+)
 from ..models import CommerceHQStore, CommerceHQBoard
 
 
@@ -44,7 +48,7 @@ class StoreCreateTestCase(TestCase):
     def test_must_create_new_store(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(r.status_code, 204)
 
     def test_must_add_store_to_user(self):
         self.login()
@@ -202,7 +206,7 @@ class BoardCreateTestCase(TestCase):
     def test_must_create_new_board(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(r.status_code, 204)
 
     def test_must_add_board_to_user(self):
         self.login()
@@ -278,4 +282,26 @@ class BoardDeleteTestCase(TestCase):
         self.client.login(username=self.user.username, password=self.password)
         r = self.client.post(self.path, **self.headers)
         count = self.user.commercehqboard_set.count()
+        self.assertEqual(count, 0)
+
+
+class BoardEmptyTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.board = CommerceHQBoardFactory(user=self.user)
+        self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.path = reverse('chq:board_empty', args=(self.board.pk,))
+
+    def test_must_be_logged_in(self):
+        r = self.client.post(self.path, **self.headers)
+        self.assertEqual(r.status_code, 401)
+
+    def test_user_must_be_able_to_empty_own_board(self):
+        self.client.login(username=self.user.username, password=self.password)
+        r = self.client.post(self.path, **self.headers)
+        count = self.board.products.count()
         self.assertEqual(count, 0)

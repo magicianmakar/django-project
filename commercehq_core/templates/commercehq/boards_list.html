@@ -32,8 +32,8 @@
                                 </a>
                             </td>
                             <td class="products-count">
-                                <a href="/boards/{{item.id}}?store=n" class="btn btn-outline btn-xs btn-default">{{ item.saved_count|default:'0' }} Saved</a>
-                                <a href="/boards/{{item.id}}?store=c" class="btn btn-outline btn-xs btn-default">{{ item.connected_count|default:'0' }} Connected</a>
+                                <a href="/boards/{{item.id}}?store=n" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.saved_count|default:'0' }}</span> Saved</a>
+                                <a href="/boards/{{item.id}}?store=c" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.connected_count|default:'0' }}</span> Connected</a>
                             </td>
                             <td>{{item.updated_at|date}}</td>
                             <td>
@@ -42,7 +42,12 @@
                                     class="btn btn-xs btn-primary board-edit chq-edit-board-btn">
                                     <i class="fa fa-edit"></i>Edit
                                 </button>
-                                <button board-id="{{item.id}}" class="btn btn-xs btn-warning board-empty"><i class="fa fa-eraser"></i> Empty</button>
+                                <button
+                                    data-board-id="{{item.id}}"
+                                    data-board-empty-url="{% url 'chq:board_empty' item.id %}"
+                                    class="btn btn-xs btn-warning board-empty chq-empty-board-btn">
+                                    <i class="fa fa-eraser"></i> Empty
+                                </button>
                                 <button
                                     data-board-id="{{item.id}}"
                                     data-board-delete-url="{% url 'chq:board_delete' item.id %}"

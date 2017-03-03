@@ -11,6 +11,7 @@ urlpatterns = patterns(
     url(r'^board-create$', commercehq_core.views.board_create, name='board_create'),
     url(r'^board-update/(?P<board_id>[0-9]+)$', commercehq_core.views.board_update, name='board_update'),
     url(r'^board-delete/(?P<board_id>[0-9]+)$', commercehq_core.views.board_delete, name='board_delete'),
+    url(r'^board-empty/(?P<board_id>[0-9]+)$', commercehq_core.views.board_empty, name='board_empty'),
     url(r'^store-create$', commercehq_core.views.store_create, name='store_create'),
     url(r'^store-update/(?P<store_id>[0-9]+)$', commercehq_core.views.store_update, name='store_update'),
     url(r'^store-delete/(?P<store_id>[0-9]+)$', commercehq_core.views.store_delete, name='store_delete'),
