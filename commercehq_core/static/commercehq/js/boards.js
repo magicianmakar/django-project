@@ -1,6 +1,28 @@
 $(document).ready(function() {
     'use strict';
 
+    $('.dataTables').on('draw.dt', function(e) {
+        $('.dataTables tr').each(function(i, el) {
+            var info = $(el).find('td');
+
+            if (info.length == 1) {
+                $(el).find('td').last().text('No board found.').addClass('text-center');
+                return;
+            }
+        });
+    });
+
+    var table = $('.dataTables').dataTable({
+        responsive: true,
+        autoWidth: false,
+        dom: 'T<"clear">lfrtip',
+        bLengthChange: false,
+        iDisplayLength: 25,
+        tableTools: {
+            aButtons: [],
+        }
+    });
+
     $('.chq-add-board-btn').click(function(e) {
         e.preventDefault();
         $('#chq-modal-board-add').modal('show');
@@ -17,7 +39,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.chq-edit-board').click(function(e) {
+    $('.chq-edit-board-btn').click(function(e) {
         e.preventDefault();
         var action = $(this).data('board-update-url');
 
@@ -40,14 +62,13 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            console.log(xhr.status)
             if (xhr.status == 204) {
                 window.location.reload();
             }
         }
     });
 
-    $('.chq-delete-board').click(function(e) {
+    $('.chq-delete-board-btn').click(function(e) {
         e.preventDefault();
         var boardId = $(this).data('board-id');
         var action = $(this).data('board-delete-url');
@@ -63,7 +84,7 @@ $(document).ready(function() {
         }, function() {
             var data = {csrfmiddlewaretoken: Cookies.get('csrftoken')};
             $.post(action, data).done(function() {
-                $('#board-row-' + boardId).hide();
+                table.api().rows('#board-row-' + boardId).remove().draw();
                 swal('Deleted!', 'The board has been deleted.', 'success');
             });
         });

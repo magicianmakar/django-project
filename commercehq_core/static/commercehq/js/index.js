@@ -25,7 +25,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.edit-store').click(function(e) {
+    $('.edit-store-btn').click(function(e) {
         e.preventDefault();
         var action = $(this).data('store-update-url');
 
@@ -43,7 +43,7 @@ $(document).ready(function() {
             });
     });
 
-    $('.delete-store').click(function(e) {
+    $('.delete-store-btn').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');
         var action = $(this).data('store-delete-url');

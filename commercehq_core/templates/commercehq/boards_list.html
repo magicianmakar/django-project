@@ -39,14 +39,14 @@
                             <td>
                                 <button
                                     data-board-update-url="{% url 'chq:board_update' item.id %}"
-                                    class="btn btn-xs btn-primary board-edit chq-edit-board">
+                                    class="btn btn-xs btn-primary board-edit chq-edit-board-btn">
                                     <i class="fa fa-edit"></i>Edit
                                 </button>
                                 <button board-id="{{item.id}}" class="btn btn-xs btn-warning board-empty"><i class="fa fa-eraser"></i> Empty</button>
                                 <button
                                     data-board-id="{{item.id}}"
                                     data-board-delete-url="{% url 'chq:board_delete' item.id %}"
-                                    class="btn btn-xs btn-danger board-delete chq-delete-board">
+                                    class="btn btn-xs btn-danger board-delete chq-delete-board-btn">
                                     <i class="fa fa-times"></i> Delete
                                 </button>
                             </td>
@@ -127,39 +127,11 @@
     <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
     <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
 
-    <script type="text/javascript">
-
-        $(document).ready(function() {
-            $('.dataTables').on('draw.dt', function(e) {
-                $('.dataTables tr').each(function(i, el) {
-                    var info = $(el).find('td');
-
-                    if (info.length == 1) {
-                        $(el).find('td').last().text('No board found.').addClass('text-center');
-                        return;
-                    }
-                });
-            });
-
-            var table = $('.dataTables').dataTable({
-                responsive: true,
-                autoWidth: false,
-                dom: 'T<"clear">lfrtip',
-                bLengthChange: false,
-                iDisplayLength: 25,
-                tableTools: {
-                    aButtons: [],
-                }
-            });
-        });
-
-
-    </script>
-
     {% compress js %}
         <script src="{% static 'libs/bower_components/jquery-form/jquery.form.js' %}"></script>
         <script type="text/javascript" src="{% static 'commercehq/js/boards.js' %}"></script>
     {% endcompress %}
+
 {% endblock %}
 
 {% block modal-board-add %}
@@ -200,3 +172,9 @@
         </div>
     </div>
 {% endblock modal-board-add %}
+
+{% block store-switch %}
+    {% with shopify_view_name='boards_list' chq_view_name=request.resolver_match.view_name %}
+        {% include 'store_switch.html' %}
+    {% endwith %}
+{% endblock %}
