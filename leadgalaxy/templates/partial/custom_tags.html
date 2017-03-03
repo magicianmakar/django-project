@@ -39,7 +39,7 @@
 
                 stores_count: {{user.profile.get_active_stores.count}},
 
-                {% cache 3600 total_orders user.id %}
+                {% cache 604800 total_orders user.id %}
                 total_orders: {{user.models_user.shopifyorder_set.count}},
                 {% endcache %}
 
