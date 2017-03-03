@@ -70,8 +70,8 @@ class ShopifyOrder(models.Model):
     user = models.ForeignKey(User)
     store = models.ForeignKey(ShopifyStore)
 
-    order_id = models.BigIntegerField(db_index=True)
-    order_number = models.IntegerField(db_index=True)
+    order_id = models.BigIntegerField()
+    order_number = models.IntegerField()
     total_price = models.FloatField()
 
     customer_id = models.BigIntegerField()
