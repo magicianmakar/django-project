@@ -4444,8 +4444,10 @@ def orders_view(request):
     supplier_filter = request.GET.get('supplier_name')
     shipping_method_filter = request.GET.get('shipping_method_name')
 
-    if request.GET.get('shop'):
+    if request.GET.get('shop') or query or query_order:
         status, fulfillment, financial = ['any', 'any', 'any']
+        connected_only = False
+        awaiting_order = False
 
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
