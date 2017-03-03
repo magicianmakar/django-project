@@ -1,12 +1,15 @@
+import re
+
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 
 from unidecode import unidecode
 
-from .models import CommerceHQStore
+from .models import CommerceHQStore, CommerceHQProduct
 from shopified_core import permissions
-from shopified_core.utils import safeInt
+from shopified_core.utils import safeInt, safeFloat
 from shopified_core.province_helper import load_uk_provincess, missing_province
 
 
@@ -43,6 +46,79 @@ def get_store_from_request(request):
         store = stores.first()
 
     return store
+
+
+def commercehq_products(request, post_per_page=25, sort=None, board=None, load_boards=False):
+    store = request.GET.get('store')
+    sort = request.GET.get('sort')
+
+    user_stores = request.user.profile.get_chq_stores(flat=True)
+    res = CommerceHQProduct.objects.select_related('store') \
+                                   .filter(user=request.user.models_user)
+
+    if request.user.is_subuser:
+        res = res.filter(store__in=user_stores)
+    else:
+        res = res.filter(Q(store__in=user_stores) | Q(store=None))
+
+    if store:
+        if store == 'c':  # connected
+            res = res.exclude(source_id=0)
+        elif store == 'n':  # non-connected
+            res = res.filter(source_id=0)
+
+            in_store = safeInt(request.GET.get('in'))
+            if in_store:
+                in_store = get_object_or_404(CommerceHQStore, id=in_store)
+                res = res.filter(store=in_store)
+
+                permissions.user_can_view(request.user, in_store)
+        else:
+            store = get_object_or_404(CommerceHQStore, id=store)
+            res = res.filter(source_id__gt=0, store=store)
+
+            permissions.user_can_view(request.user, store)
+
+    # if board:
+        # res = res.filter(shopifyboard=board)
+        # permissions.user_can_view(request.user, get_object_or_404(ShopifyBoard, id=board))
+
+    res = filter_products(res, request.GET)
+
+    if sort:
+        if re.match(r'^-?(title|price)$', sort):
+            res = res.order_by(sort)
+
+    return res
+
+
+def filter_products(res, fdata):
+    if fdata.get('title'):
+        res = res.filter(title__icontains=fdata.get('title'))
+
+    if fdata.get('price_min') or fdata.get('price_max'):
+        min_price = safeFloat(fdata.get('price_min'), -1)
+        max_price = safeFloat(fdata.get('price_max'), -1)
+
+        if (min_price > 0 and max_price > 0):
+            res = res.filter(price__gte=min_price, price__lte=max_price)
+
+        elif (min_price > 0):
+            res = res.filter(price__gte=min_price)
+
+        elif (max_price > 0):
+            res = res.filter(price__lte=max_price)
+
+    if fdata.get('type'):
+        res = res.filter(product_type__icontains=fdata.get('type'))
+
+    if fdata.get('tag'):
+        res = res.filter(tag__icontains=fdata.get('tag'))
+
+    if fdata.get('vendor'):
+        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
+
+    return res
 
 
 def chq_customer_address(order):
@@ -93,8 +169,8 @@ def chq_customer_address(order):
 class CommerceHQOrdersPaginator(Paginator):
     query = None
     store = None
-    extra_filter = None
-    size = 2
+    request = None
+    size = 20
 
     _products = None
 
@@ -107,12 +183,11 @@ class CommerceHQOrdersPaginator(Paginator):
     def set_query(self, query):
         self.query = query
 
-    def set_extra_filter(self, extra_filter):
-        if len(extra_filter):
-            self.extra_filter = extra_filter
-
     def set_store(self, store):
         self.store = store
+
+    def set_request(self, r):
+        self.request = r
 
     def page(self, number):
         """
@@ -175,20 +250,43 @@ class CommerceHQOrdersPaginator(Paginator):
 
     num_pages = property(_get_num_pages)
 
+    def _request_filters(self):
+        filters = {
+            'order_number': self.request.GET.get('query'),
+            'status': self.request.GET.get('fulfillment'),
+            'paid': self.request.GET.get('financial'),
+        }
+
+        for k, v in filters.items():
+            if not v:
+                del filters[k]
+            elif ',' in v:
+                filters[k] = v.split(',')
+
+        return filters
+
     def _orders_request(self):
         params = {
             'size': self.per_page,
             'page': getattr(self, 'current_page', 1),
+            'sort': self.request.GET.get('sort', '!order_date'),
             # 'expand': 'all',
         }
 
-        if (self.extra_filter):
-            params.update(self.extra_filter)
+        params.update(self._request_filters())
 
-        rep = self.store.request.get(
-            url=self.store.get_api_url('orders'),
-            params=params
-        )
+        filters = self._request_filters()
+        if filters:
+            rep = self.store.request.post(
+                url=self.store.get_api_url('orders', 'search'),
+                params=params,
+                json=filters
+            )
+        else:
+            rep = self.store.request.get(
+                url=self.store.get_api_url('orders'),
+                params=params
+            )
 
         return rep.json()
 
@@ -199,12 +297,17 @@ class CommerceHQOrdersPaginator(Paginator):
             'fields': 'id'
         }
 
-        if (self.extra_filter):
-            params.update(self.extra_filter)
-
-        rep = self.store.request.get(
-            url=self.store.get_api_url('orders'),
-            params=params
-        )
+        filters = self._request_filters()
+        if filters:
+            rep = self.store.request.post(
+                url=self.store.get_api_url('orders', 'search'),
+                params=params,
+                json=filters
+            )
+        else:
+            rep = self.store.request.get(
+                url=self.store.get_api_url('orders'),
+                params=params
+            )
 
         return rep.json()

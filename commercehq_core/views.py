@@ -5,8 +5,8 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.db.models import Q
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
@@ -17,83 +17,20 @@ from django.utils.decorators import method_decorator
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, aws_s3_context, SimplePaginator
 
-from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
 from .forms import CommerceHQStoreForm, CommerceHQBoardForm
-from .utils import CommerceHQOrdersPaginator, get_store_from_request, chq_customer_address
 from .decorators import no_subusers, must_be_authenticated, ajax_only
-
-
-def get_product(request, post_per_page=25, sort=None, board=None, load_boards=False):
-    store = request.GET.get('store')
-    sort = request.GET.get('sort')
-
-    user_stores = request.user.profile.get_chq_stores(flat=True)
-    res = CommerceHQProduct.objects.select_related('store') \
-                                   .filter(user=request.user.models_user)
-
-    if request.user.is_subuser:
-        res = res.filter(store__in=user_stores)
-    else:
-        res = res.filter(Q(store__in=user_stores) | Q(store=None))
-
-    if store:
-        if store == 'c':  # connected
-            res = res.exclude(source_id=0)
-        elif store == 'n':  # non-connected
-            res = res.filter(source_id=0)
-
-            in_store = safeInt(request.GET.get('in'))
-            if in_store:
-                in_store = get_object_or_404(CommerceHQStore, id=in_store)
-                res = res.filter(store=in_store)
-
-                permissions.user_can_view(request.user, in_store)
-        else:
-            store = get_object_or_404(CommerceHQStore, id=store)
-            res = res.filter(source_id__gt=0, store=store)
-
-            permissions.user_can_view(request.user, store)
-
-    # if board:
-        # res = res.filter(shopifyboard=board)
-        # permissions.user_can_view(request.user, get_object_or_404(ShopifyBoard, id=board))
-
-    res = filter_products(res, request.GET)
-
-    if sort:
-        if re.match(r'^-?(title|price)$', sort):
-            res = res.order_by(sort)
-
-    return res
-
-
-def filter_products(res, fdata):
-    if fdata.get('title'):
-        res = res.filter(title__icontains=fdata.get('title'))
-
-    if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = safeFloat(fdata.get('price_min'), -1)
-        max_price = safeFloat(fdata.get('price_max'), -1)
-
-        if (min_price > 0 and max_price > 0):
-            res = res.filter(price__gte=min_price, price__lte=max_price)
-
-        elif (min_price > 0):
-            res = res.filter(price__gte=min_price)
-
-        elif (max_price > 0):
-            res = res.filter(price__lte=max_price)
-
-    if fdata.get('type'):
-        res = res.filter(product_type__icontains=fdata.get('type'))
-
-    if fdata.get('tag'):
-        res = res.filter(tag__icontains=fdata.get('tag'))
-
-    if fdata.get('vendor'):
-        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
-
-    return res
+from .models import (
+    CommerceHQStore,
+    CommerceHQProduct,
+    CommerceHQBoard,
+    CommerceHQOrderTrack
+)
+from .utils import (
+    CommerceHQOrdersPaginator,
+    get_store_from_request,
+    commercehq_products,
+    chq_customer_address
+)
 
 
 @login_required
@@ -234,7 +171,7 @@ class ProductsList(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return get_product(self.request)
+        return commercehq_products(self.request)
 
     def get_context_data(self, **kwargs):
         context = super(ProductsList, self).get_context_data(**kwargs)
@@ -285,7 +222,7 @@ class OrdersList(ListView):
     # context_object_name = 'orders'
 
     paginator_class = CommerceHQOrdersPaginator
-    paginate_by = 2
+    paginate_by = 20
 
     def get_queryset(self):
         return []
@@ -293,6 +230,7 @@ class OrdersList(ListView):
     def get_paginator(self, *args, **kwargs):
         paginator = super(OrdersList, self).get_paginator(*args, **kwargs)
         paginator.set_store(self.get_store())
+        paginator.set_request(self.request)
 
         return paginator
 
@@ -327,7 +265,23 @@ class OrdersList(ListView):
         orders_list = {}
         orders_cache = {}
 
+        orders_ids = []
+        products_ids = []
+        orders_list = {}
+
         orders = ctx['object_list']
+        if orders is None:
+            orders = []
+
+        for order in orders:
+            orders_ids.append(order['id'])
+            for line in order['items']:
+                products_ids.append(line.get('product_id'))
+
+        res = CommerceHQOrderTrack.objects.filter(store=self.store, order_id__in=orders_ids).defer('data')
+        for i in res:
+            orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
+
         for odx, order in enumerate(orders):
             created_at = arrow.get(order['order_date'])
             try:
@@ -338,7 +292,7 @@ class OrdersList(ListView):
             order['date'] = created_at
             order['date_str'] = created_at.format('MM/DD/YYYY')
             order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
-            order['order_url'] = self.store.get_admin_url('admin/orders/%d' % order['id'])
+            order['order_url'] = self.store.get_admin_url('admin', 'orders', order['order_number'])
             order['store'] = self.store
             order['placed_orders'] = 0
             order['connected_lines'] = 0
@@ -351,7 +305,7 @@ class OrdersList(ListView):
             #             order['refunded_lines'].append(refund_line['line_item_id'])
 
             order_status = {
-                0: None,
+                0: 'Not sent to fulfilment',
                 1: 'Partially sent to fulfilment',
                 2: 'Partially sent to fulfilment & shipped',
                 3: 'Sent to fulfilment',
@@ -369,6 +323,10 @@ class OrdersList(ListView):
             order['fulfillment_status'] = order_status.get(order['status'])
             order['financial_status'] = paid_status.get(order['paid'])
 
+            for fulfilment in order['fulfilments']:
+                for item in fulfilment['items']:
+                    orders_cache['chq_fulfilments_{}_{}_{}'.format(self.store.id, order['id'], item['id'])] = fulfilment['id']
+
             for ldx, line in enumerate(order['items']):
                 line.update(line.get('data'))
                 line.update(line.get('status'))
@@ -384,11 +342,12 @@ class OrdersList(ListView):
 
                 line['image'] = (line.get('image') or '').replace('/uploads/', '/uploads/thumbnail_')
 
-                shopify_order = orders_list.get('{}-{}'.format(order['id'], line['id']))
-                line['shopify_order'] = shopify_order
+                line['shopify_order'] = orders_list.get('{}-{}'.format(order['id'], line['id']))
 
-                if shopify_order or line['fulfilled'] == line['quantity'] or line['shipped'] == line['quantity']:
+                if line['shopify_order'] or line['fulfilled'] == line['quantity'] or line['shipped'] == line['quantity']:
                     order['placed_orders'] += 1
+
+                orders_cache['chq_quantity_{}_{}_{}'.format(self.store.id, order['id'], line['id'])] = line['quantity']
 
                 if not line['product_id']:
                     if variant_id:
@@ -470,5 +429,7 @@ class OrdersList(ListView):
                 order['items'][ldx] = line
 
             orders[odx] = order
+
+        cache.set_many(orders_cache, timeout=3600)
 
         return orders

@@ -10,7 +10,7 @@
 
     <div class="tabs-container">
         <ul class="nav nav-tabs">
-            {% for item in user.profile.get_shopify_stores %}
+            {% for item in user.profile.get_chq_stores %}
                 {% if store == item or item.id|stringformat:"i" == request.GET.store %}
                     <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}
@@ -24,7 +24,7 @@
                     <div class="row" style="padding:0px 5px">
                         <div class="col-md-4">
                             <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter &amp; Sort</button>
-                            <span class="btn btn-white btn-rounded btn-sm">Orders count: {{open_orders}}</span>
+                            <span class="btn btn-white btn-rounded btn-sm">Orders count: {{paginator.count}}</span>
                         </div>
                         <div class="col-md-8 text-right">
                             {% if request.user|can:'orders_export.use' %}
@@ -51,7 +51,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    <form method="get" action="/orders" class="filter-form m-b-sm m-t-sm"
+                    <form method="get" class="filter-form m-b-sm m-t-sm"
                     {% if request.COOKIES.orders_filter != 'true' %}
                           style="display:none"
                     {% endif %}
@@ -153,7 +153,7 @@
                             <span>Order</span>
                         </div>
                         <div class="col-md-4">
-                            <input name="query" value="{{query|default:''}}" class="form-control" placeholder="Order name or ID">
+                            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order name or ID">
                         </div>
                     </div>
                     {% endif %}
@@ -165,12 +165,13 @@
                         </div>
                         <div class="col-md-3">
                             <select name="sort" class="form-control">
-                                <option {% if sort == 'asc' %}selected="selected"{% endif %} value="asc">Newest orders first</option>
-                                <option {% if sort == 'desc' %}selected="selected"{% endif %} value="desc">Oldest orders first</option>
+                                <option {% if request.GET.sort == '!order_date' %}selected="selected"{% endif %} value="!order_date">Newest orders first</option>
+                                <option {% if request.GET.sort == 'order_date' %}selected="selected"{% endif %} value="order_date">Oldest orders first</option>
                             </select>
                         </div>
                     </div>
                     {% endif %}
+                    <!--
                     <div class="row filter-row m-t-md">
                         <div class="col-md-2  filter-label filter-order-status">
                             <span>Order Status</span>
@@ -187,25 +188,18 @@
                             <span class="help-block "></span>
                         </div>
                     </div>
+                    -->
                     <div class="row filter-row">
                         <div class="col-md-2  filter-label filter-order-status">
                             <span>Fulfillment Status</span>
                         </div>
                         <div class="col-md-3">
                             <select name="fulfillment" class="form-control help-select">
-                                {% if store_sync_enabled %}
-                                <option {% if fulfillment == 'unshipped,partial' %}selected="selected"{% endif %}
-                                        value="unshipped,partial" label="Unfulfilled / Partially fulfilled">Show orders that have not yet been fulfilled or partially fulfilled</option>
-                                {% endif %}
-
-                                <option {% if fulfillment == 'unshipped' %}selected="selected"{% endif %}
-                                        value="unshipped" label="Unfulfilled">Show orders that have not yet been fulfilled</option>
-                                <option {% if fulfillment == 'partial' %}selected="selected"{% endif %}
-                                        value="partial" label="Partially fulfilled">Show partially shipped orders</option>
-                                <option {% if fulfillment == 'shipped' %}selected="selected"{% endif %}
-                                        value="shipped" label="Fulfilled">Show orders that have been fulfilled</option>
-                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %}
-                                        value="any">Show orders with any fulfillment status</option>
+                                <option {% if not request.GET.fulfillment %}selected="selected"{% endif %} value="">Any</option>
+                                <option {% if request.GET.fulfillment == '0,1,2' %}selected="selected"{% endif %} value="0,1,2">Unfulfilled / Partially fulfilled</option>
+                                <option {% if request.GET.fulfillment == '3' %}selected="selected"{% endif %} value="3">Sent to fulfillment</option>
+                                <option {% if request.GET.fulfillment == '4' %}selected="selected"{% endif %} value="4">Partially shipped</option>
+                                <option {% if request.GET.fulfillment == '5' %}selected="selected"{% endif %} value="5">Shipped</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
@@ -218,14 +212,11 @@
                         </div>
                         <div class="col-md-3">
                             <select name="financial" class="form-control help-select">
-                                <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all authorized, pending, and paid orders</option>
-                                <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>
-                                <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
-                                <option value="paid" {% if financial == 'paid' %}selected="selected"{% endif %}>Show only paid orders</option>
-                                <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only refunded orders</option>
-                                <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option>
-                                <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only voided orders</option>
-                                <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
+                                <option value="" {% if not request.GET.financial %}selected="selected"{% endif %}>Any</option>
+                                <option value="0" {% if request.GET.financial == '0' %}selected="selected"{% endif %}>Not Paid</option>
+                                <option value="1" {% if request.GET.financial == 'authorized' %}selected="selected"{% endif %}>Paid</option>
+                                <option value="-1" {% if request.GET.financial == 'pending' %}selected="selected"{% endif %}>Partially refunded</option>
+                                <option value="-2" {% if request.GET.financial == 'paid' %}selected="selected"{% endif %}>Fully refunded</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
@@ -234,6 +225,7 @@
                     </div>
 
                     {% if store_sync_enabled %}
+                    <!--
                     <div class="row m-t-xs">
                         <div class="col-md-2 filter-label filter-order-status"></div>
                         <div class="col-md-8" style="padding: 0px 10px">
@@ -245,7 +237,6 @@
                             </label>
                         </div>
                     </div>
-
                     <div class="row m-t-xs">
                         <div class="col-md-2 filter-label filter-order-status"></div>
                         <div class="col-md-8" style="padding: 0px 10px">
@@ -257,6 +248,7 @@
                             </label>
                         </div>
                     </div>
+                    -->
                     {% endif %}
 
                     <div class="row">
@@ -301,7 +293,7 @@
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
-                                    <div class="col-xs-3 order-status">
+                                    <div class="col-xs-2 order-status">
                                         {% if order.status == 0 %}
                                             <span class="badge badge-danger primary">&nbsp;</span>
                                             No Products Ordered
@@ -313,10 +305,23 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-1 text-right">
+                                    <div class="col-xs-2">
                                         {% if order.lines_count > 1 %}
-                                        <button class="btn btn-success btn-xs order-all"
-                                                order-id="{{order.id}}" style="display:none">Order All</button>
+                                            <div class="btn-group pull-right" style="display:flex">
+                                                <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
+                                                        type="button" style="border-right:1px solid #66a8cc">
+                                                    Order All
+                                                </button>
+
+                                                <button type="button" class="btn btn-success btn-xs dropdown-toggle"
+                                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                </button>
+
+                                                <ul class="dropdown-menu pull-right">
+                                                    <li><a class="order-seleted-lines" href="#">Order Slected</a></li>
+                                                </ul>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -373,7 +378,7 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    <div class="col-md-3 col-md-offset-3">
+                                    <div class="col-md-3 col-md-offset-3" style="display:none">
                                         <div class="note-panel panel panel-default hidden-sm hidden-xs">
                                             <div class="panel-heading">
                                                 Order Notes
@@ -598,180 +603,10 @@
 
 
 {% block extracss %}
-<style type="text/css">
 
-    .no-padding {
-        padding: 0 !important;
-    }
-    .filter-label {
-        /* width: 150px; */
-        /* margin-right: 0; */
-        /* padding-right: 0; */
-        /* display: flex; */
-        /* align-items: center !important; */
-        /* align-content: center !important; */
-        padding: 7px 12px;
-        font-weight: bold;
-        text-align: right;
-    }
-    .filter-label select {
-        padding: 6px 8px !important;
-    }
-    .filter-order-status {
-        /*width: 150px;*/
-    }
-    .filter-row {
-        padding-bottom: 5px;
-    }
-    .filter-buttons {
-        padding-right: 0;
-        margin-right: 0;
-    }
-    .orders .row {
-        margin: 0 !important;
-    }
-    .filter-form {
-        background-color: rgb(243, 243, 244)
-        border-radius: 5px;
-        border: 1px solid rgb(215, 218, 215);
-        box-shadow: rgb(215, 218, 215) 0px 0px 10px 0px;
-        margin: 10px 5px 0px;
-        padding: 15px 0px 20px 15px;
-    }
-    .orders {
-        margin:  20px 5px;
-    }
-    .orders .order {
-        border: 1px solid #eee;
-        margin: 10px 0 30px 0;
-        border-radius: 4px;
-        box-shadow: 0px 0px 10px 0px rgb(204, 204, 204);
-    }
-    .orders .order .header {
-        padding: 15px 5px;
-        border-bottom: 1px solid #eee;
-
-    }
-    .orders .order .details {
-        padding: 0;
-    }
-    .orders .order .details .shipping-info {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-    .orders .order .details .line {
-        padding: 0;
-        margin: 0;
-    }
-    .orders .order .details .line.multi-lines {
-        border-top: 1px solid #eee;
-    }
-    .orders .order .details .line .source-order {
-        padding: 7px 0;
-        border-bottom: 1px solid #eee;
-    }
-    .orders .order .details .line .item {
-    }
-    .orders .order .details .line .table{
-        margin: 0;
-    }
-
-    .orders .order .details .panel {
-        margin: 0;
-    }
-    .orders .order .details .panel .panel-heading {
-        font-weight: bold;
-        padding: 2px 0px 0px 5px;
-        background: none;
-        border-bottom: 0;
-    }
-    .orders .order .details .panel .panel-body {
-        padding: 0px 0px 0px 5px;
-    }
-    .note-panel {
-        cursor: pointer !important;
-        position: absolute !important;
-        top: 0px !important;
-        right: 0px !important;
-        width: 300px !important;
-        z-index: 999 !important;
-        padding: 0 !important;
-        margin-top: -11px !important;
-        margin-right: -11px !important;
-        border-bottom: 0px solid #eee !important;
-        border-radius: 0 !important;
-        border-color: #eee !important;
-    }
-    .note-panel .panel-body {
-        border: 0px solid #eee !important;
-    }
-    .note-panel .edit-note{
-        display: none;
-    }
-    .note-panel .edit-note .note {
-        width: 99%;
-        height: 250px;
-        padding-bottom: 35px;
-    }
-    .note-panel .edit-note .note-edit-save {
-        position: absolute;
-        bottom: 7px;
-        right: 25px;
-        z-index: 1300;
-    }
-    .note-panel .edit-note .note-edit-cancel {
-        position: absolute;
-        bottom: 7px;
-        right: 80px;
-    }
-
-    .order {
-        background-color: white !important;
-    }
-    .gray-panel {
-        background-color: #f3f3f4 !important;
-    }
-
-    .icheckbox_square-blue {
-        position: relative !important;
-    }
-    .chosen-container-multi .chosen-choices li.search-field input[type="text"] {
-        width: 125px !important;
-        font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-        color: #989898 !important;
-    }
-    .order-status span {
-        width: 15px;
-        height: 15px;
-    }
-    .table > thead > tr > td {
-        vertical-align: middle;
-        padding: 5px;
-        /*border-right: 1px solid #eee;*/
-    }
-    .table > thead > tr > th {
-        text-align: center;
-        white-space: nowrap;
-        /*padding: 0;*/
-        /*border-right: 1px solid #eee;*/
-    }
-    .table > thead > tr > td:first-child {
-        padding: 3px 3px 3px 5px;
-        width:64px;
-    }
-    .table > thead > tr > td:first-child > img {
-        /*border: 1px solid #eee;*/
-        width:64px;
-    }
-    ul.shipping-method {
-        margin: 0;
-        padding: 0;
-        white-space: nowrap;
-        list-style: none;
-        margin-top: 5px;
-        font-weight: bold;
-    }
-</style>
+{% compress css %}
+    <link href="{% static 'commercehq/css/orders_list.css' %}" rel="stylesheet">
+{% endcompress %}
 
 {% endblock %}
 
@@ -797,7 +632,7 @@
 
 {% compress js %}
     <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/orders.js' %}"></script>
+    <script type="text/javascript" src="{% static 'commercehq/js/orders_list.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

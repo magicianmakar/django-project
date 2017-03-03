@@ -52,19 +52,26 @@ class CommerceHQStore(models.Model):
 
         super(CommerceHQStore, self).save(*args, **kwargs)
 
-    def get_api_url(self, page='', api=True):
+    def get_api_url(self, *args, **kwargs):
+        """
+        Get CommerceHQ Store API Url
+
+        :param args: one or more pages to add to the url
+        :param api: Return the API version of the url if true, otherwise return Admin url
+        """
+
         url = re.findall('([^/\.]+\.commercehq(dev:?)?.com)', self.api_url).pop()[0]
 
-        page = page.lstrip('/')
-        if api and not page.startswith('api'):
-            page = 'api/v1/{}'.format(page).rstrip('/')
+        args = '/'.join([str(i) for i in args]).lstrip('/')
+        if kwargs.get('api', True) and not args.startswith('api'):
+            args = 'api/v1/{}'.format(args).rstrip('/')
 
-        url = 'https://{}/{}'.format(url, page.lstrip('/'))
+        url = 'https://{}/{}'.format(url, args.lstrip('/'))
 
         return url
 
-    def get_admin_url(self, page=''):
-        return self.get_api_url(page, api=False)
+    def get_admin_url(self, *args):
+        return self.get_api_url(*args, api=False)
 
     @property
     def request(self):
@@ -450,3 +457,95 @@ class CommerceHQBoard(models.Model):
 
     def __unicode__(self):
         return self.title
+
+
+class CommerceHQOrderTrack(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+        index_together = ['store', 'order_id', 'line_id']
+
+    user = models.ForeignKey(User)
+    store = models.ForeignKey(CommerceHQStore, null=True)
+    order_id = models.BigIntegerField()
+    line_id = models.BigIntegerField()
+    shopify_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
+
+    source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
+    source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
+    source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
+    source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
+
+    hidden = models.BooleanField(default=False)
+    seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
+    auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
+    check_count = models.IntegerField(default=0)
+
+    data = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def save(self, *args, **kwargs):
+        try:
+            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+        except:
+            pass
+
+        super(CommerceHQOrderTrack, self).save(*args, **kwargs)
+
+    def encoded(self):
+        return json.dumps(self.data).encode('base64')
+
+    def get_commercehq_link(self):
+        return self.store.get_admin_link('orders/{}'.format(self.order_id))
+
+    def get_tracking_link(self):
+        aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
+
+        if type(self.user.get_config('aftership_domain')) is dict:
+            aftership_domain = self.user.get_config('aftership_domain').get(str(self.store_id), aftership_domain)
+
+            if '{{tracking_number}}' not in aftership_domain:
+                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
+            elif not aftership_domain.startswith('http'):
+                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
+
+        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
+
+    def get_source_status(self):
+        status_map = {
+            "PLACE_ORDER_SUCCESS": "Awaiting Payment",
+            "IN_CANCEL": "Awaiting Cancellation",
+            "WAIT_SELLER_SEND_GOODS": "Awaiting Shipment",
+            "SELLER_PART_SEND_GOODS": "Partial Shipment",
+            "WAIT_BUYER_ACCEPT_GOODS": "Awaiting delivery",
+            "WAIT_GROUP_SUCCESS": "Pending operation success",
+            "FINISH": "Order Completed",
+            "IN_ISSUE": "Dispute Orders",
+            "IN_FROZEN": "Frozen Orders",
+            "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
+            "RISK_CONTROL": "Payment being verified",
+            "IN_PRESELL_PROMOTION": "Promotion is on",
+        }
+
+        return status_map.get(self.source_status)
+
+    get_source_status.admin_order_field = 'source_status'
+
+    def get_source_status_color(self):
+        if not self.source_status:
+            return 'danger'
+        elif self.source_status == 'FINISH':
+            return 'primary'
+        else:
+            return 'warning'
+
+    def get_source_url(self):
+        if self.source_id:
+            return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
+        else:
+            return None
+
+    def __unicode__(self):
+        return u'{} | {}'.format(self.order_id, self.line_id)
