@@ -24,7 +24,7 @@
             <span class="caret"></span></button>
     {% endif %}
 
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu pull-right">
             {% if item.shopify_order %}
             <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
             {% else %}
