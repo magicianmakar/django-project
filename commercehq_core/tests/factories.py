@@ -21,3 +21,13 @@ class CommerceHQBoardFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'commercehq_core.CommerceHQBoard'
+
+
+class CommerceHQProductFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('commercehq.tests.factories.CommerceHQStoreFactory')
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    title = factory.fuzzy.FuzzyText()
+    product_type = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = 'commercehq_core.CommerceHQProduct'

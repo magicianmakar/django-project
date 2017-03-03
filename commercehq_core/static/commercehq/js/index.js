@@ -25,7 +25,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.edit-store').click(function(e) {
+    $('.edit-store-btn').click(function(e) {
         e.preventDefault();
         var action = $(this).data('store-update-url');
 
@@ -43,7 +43,7 @@ $(document).ready(function() {
             });
     });
 
-    $('.delete-store').click(function(e) {
+    $('.delete-store-btn').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');
         var action = $(this).data('store-delete-url');
@@ -70,7 +70,7 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status == 201) {
+            if (xhr.status == 204) {
                 window.location.reload();
             }
         }

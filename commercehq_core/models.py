@@ -451,12 +451,19 @@ class CommerceHQBoard(models.Model):
 
     user = models.ForeignKey(User)
     title = models.CharField(max_length=512)
+    products = models.ManyToManyField('CommerceHQProduct', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
         return self.title
+
+    def saved_count(self):
+        return self.products.filter(source_id=0).count()
+
+    def connected_count(self):
+        return self.products.exclude(source_id=0).count()
 
 
 class CommerceHQOrderTrack(models.Model):
