@@ -216,7 +216,7 @@ class BoardsList(ListView):
 
     def get_queryset(self):
         qs = super(BoardsList, self).get_queryset()
-        return qs.filter(user=self.request.user)
+        return qs.filter(user=self.request.user.models_user)
 
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
