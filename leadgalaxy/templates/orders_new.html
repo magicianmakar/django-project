@@ -301,7 +301,7 @@
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
-                                    <div class="col-xs-3 order-status">
+                                    <div class="col-xs-2 order-status">
                                         {% if order.placed_orders == 0 %}
                                             <span class="badge badge-danger primary">&nbsp;</span>
                                             No Products Ordered
@@ -313,9 +313,9 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-1 text-right">
+                                    <div class="col-xs-2">
                                         {% if order.lines_count > 1 %}
-                                            <div class="btn-group ">
+                                            <div class="btn-group pull-right" style="display:flex">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc">
                                                     Order All
