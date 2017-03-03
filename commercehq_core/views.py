@@ -12,12 +12,13 @@ from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
+from django.utils.decorators import method_decorator
 
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, aws_s3_context, SimplePaginator
 
-from .models import CommerceHQStore, CommerceHQProduct
-from .forms import CommerceHQStoreForm
+from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
+from .forms import CommerceHQStoreForm, CommerceHQBoardForm
 from .utils import CommerceHQOrdersPaginator, get_store_from_request, chq_customer_address
 from .decorators import no_subusers, must_be_authenticated, ajax_only
 
@@ -97,8 +98,8 @@ def filter_products(res, fdata):
 
 @login_required
 def index_view(request):
-    stores = CommerceHQStore.objects.filter(user=request.user.models_user)
-
+    stores = CommerceHQStore.objects.filter(user=request.user.models_user) \
+                                    .filter(is_active=True)
     can_add, total_allowed, user_count = permissions.can_add_store(request.user)
     is_stripe = request.user.profile.plan.is_stripe()
     store_count = request.user.profile.get_shopify_stores().count()
@@ -113,7 +114,8 @@ def index_view(request):
     return render(request, 'commercehq/index.html', {
         'stores': stores,
         'extra_stores': extra_stores,
-        'first_visit': first_visit
+        'first_visit': first_visit,
+        'breadcrumbs': ['Stores']
     })
 
 
@@ -126,9 +128,8 @@ def store_create(request):
     form = CommerceHQStoreForm(request.POST)
 
     if form.is_valid():
-        store = form.save(commit=False)
-        store.user = request.user.models_user
-        store.save()
+        form.instance.user = request.user.models_user
+        form.save()
         return HttpResponse(status=201)
 
     return render(request, 'commercehq/store_create_form.html', {'form': form})
@@ -145,7 +146,7 @@ def store_update(request, store_id):
 
     if request.method == 'POST' and form.is_valid():
         form.save()
-        return HttpResponse(status=201)
+        return HttpResponse(status=204)
 
     return render(request, 'commercehq/store_update_form.html', {'form': form})
 
@@ -161,6 +162,67 @@ def store_delete(request, store_id):
     instance.save()
 
     return HttpResponse()
+
+
+@ajax_only
+@must_be_authenticated
+@csrf_protect
+@require_http_methods(['POST'])
+def board_create(request):
+    form = CommerceHQBoardForm(request.POST)
+
+    if form.is_valid():
+        form.instance.user = request.user.models_user
+        form.save()
+        return HttpResponse(status=201)
+
+    return render(request, 'commercehq/board_create_form.html', {'form': form})
+
+
+@ajax_only
+@must_be_authenticated
+@csrf_protect
+@require_http_methods(['GET', 'POST'])
+def board_update(request, board_id):
+    instance = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
+    form = CommerceHQBoardForm(request.POST or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return HttpResponse(status=204)
+
+    return render(request, 'commercehq/board_update_form.html', {'form': form})
+
+
+@ajax_only
+@must_be_authenticated
+@csrf_protect
+@require_http_methods(['POST'])
+def board_delete(request, board_id):
+    instance = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
+    instance.delete()
+
+    return HttpResponse()
+
+
+class BoardsList(ListView):
+    model = CommerceHQBoard
+    context_object_name = 'boards'
+    template_name = 'commercehq/boards_list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(BoardsList, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(BoardsList, self).get_queryset()
+        return qs.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardsList, self).get_context_data(**kwargs)
+        context['breadcrumbs'] = ['Boards']
+
+        return context
 
 
 class ProductsList(ListView):

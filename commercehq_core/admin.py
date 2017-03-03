@@ -11,3 +11,8 @@ class CommerceHQStoreAdmin(admin.ModelAdmin):
 @admin.register(CommerceHQProduct)
 class CommerceHQProductAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(CommerceHQBoard)
+class CommerceHQBoardAdmin(admin.ModelAdmin):
+    pass

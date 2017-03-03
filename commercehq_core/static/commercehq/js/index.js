@@ -27,8 +27,7 @@ $(document).ready(function() {
 
     $('.edit-store').click(function(e) {
         e.preventDefault();
-        var storeId = $(this).data('store-id');
-        var action = '/chq/store-update/' + storeId;
+        var action = $(this).data('store-update-url');
 
         $('#store-update-form').prop('action', action);
 
@@ -38,7 +37,7 @@ $(document).ready(function() {
                 $('#store-update-modal').modal('show');
             })
             .fail(function(jqXHR) {
-                if (jqXHR.status === 401) {
+                if (jqXHR.status == 401) {
                     window.location.reload();
                 }
             });
@@ -47,7 +46,7 @@ $(document).ready(function() {
     $('.delete-store').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');
-        var action = '/chq/store-delete/' + storeId;
+        var action = $(this).data('store-delete-url');
 
         swal({
             title: 'Are you sure?',
@@ -71,7 +70,7 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status === 201) {
+            if (xhr.status == 201) {
                 window.location.reload();
             }
         }
@@ -82,7 +81,7 @@ $(document).ready(function() {
         clearForm: true,
         data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
         success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status === 201) {
+            if (xhr.status == 204) {
                 window.location.reload();
             }
         }

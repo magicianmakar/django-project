@@ -1,0 +1,22 @@
+{% load widget_tweaks %}
+{% spaceless %}
+{{ form.non_field_errors }}
+<div class="form-group">
+    {% if form.title.errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for error in form.title.errors %}
+                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                <span class="sr-only">Error:</span>
+                {{ error }}<br />
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% render_field form.title class="form-control" %}
+</div>
+
+<div>
+    <button class="btn btn-sm btn-primary pull-right m-t-n-xs" type="submit">
+        <strong>Update</strong>
+    </button>
+</div>
+{% endspaceless %}

@@ -31,7 +31,7 @@ class CommerceHQStore(models.Model):
         verbose_name = 'CHQ Store'
         ordering = ['-created_at']
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
     title = models.CharField(max_length=300, blank=True, default='')
     api_url = models.CharField(max_length=512)
     api_key = models.CharField(max_length=300)
@@ -435,3 +435,19 @@ class CommerceHQSupplier(models.Model):
             name = u'Supplier #{}'.format(supplier_idx)
 
         return name
+
+
+class CommerceHQBoard(models.Model):
+    class Meta:
+        verbose_name = "CHQ Board"
+        verbose_name_plural = "CHQ Boards"
+
+    user = models.ForeignKey(User)
+    title = models.CharField(max_length=512)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.title
+
