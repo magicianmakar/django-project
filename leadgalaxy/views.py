@@ -4480,28 +4480,22 @@ def orders_view(request):
         if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
             messages.info(request, 'Your Store Orders are being imported')
 
-        orders = ShopifyOrder.objects.filter(user=request.user.models_user, store=store)
+        orders = ShopifyOrder.objects.filter(store=store)
 
         if query_order:
-            try:
-                order_rx = models_user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
-                order_number = re.findall(order_rx, query_order)
-                order_number = int(order_number[0])
-            except:
-                order_number = 0
+            order_id = shopify_orders_utils.order_id_from_name(store, query_order)
 
-            source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
-            tracks = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
-                                              .defer('data') \
-                                              .values_list('order_id', flat=True)
-
-            if order_number or len(tracks):
-                orders = orders.filter(Q(order_number=(order_number - 1000)) |
-                                       Q(order_id=order_number) |
-                                       Q(order_id__in=tracks))
-
+            if order_id:
+                orders = orders.filter(order_id=order_id)
             else:
-                orders = orders.filter(Q(order_id=utils.safeInt(query_order)))
+                source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
+                order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
+                                                     .defer('data') \
+                                                     .values_list('order_id', flat=True)
+                if len(order_ids):
+                    orders = orders.filter(order_id__in=order_ids)
+                else:
+                    orders = orders.filter(order_id=query_order)
 
         if query_customer:
             orders = orders.filter(Q(customer_name__icontains=query_customer) |
@@ -4893,7 +4887,7 @@ def orders_track(request):
     orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store).defer('data')
 
     if query:
-        order_id = shopify_orders_utils.order_id_from_number(store, query)
+        order_id = shopify_orders_utils.order_id_from_name(store, query)
 
         if order_id:
             query = str(order_id)
