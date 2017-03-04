@@ -19,7 +19,8 @@ from .models import (
     CommerceHQStore,
     CommerceHQProduct,
     CommerceHQSupplier,
-    CommerceHQOrderTrack
+    CommerceHQOrderTrack,
+    CommerceHQBoard
 )
 
 
@@ -424,3 +425,21 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             return self.api_error('Order not found.', status=404)
+
+    def delete_board(self, request, user, data):
+        try:
+            pk = safeInt(request.GET.get('board_id'))
+            board = CommerceHQBoard.objects.get(user=user, pk=pk)
+            board.delete()
+            return self.api_success()
+        except CommerceHQBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+    def post_board_empty(self, request, user, data):
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = CommerceHQBoard.objects.get(user=user, pk=pk)
+            board.products.clear()
+            return self.api_success()
+        except CommerceHQBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)

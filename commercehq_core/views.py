@@ -131,28 +131,6 @@ def board_update(request, board_id):
     return render(request, 'commercehq/board_update_form.html', {'form': form})
 
 
-@ajax_only
-@must_be_authenticated
-@csrf_protect
-@require_http_methods(['POST'])
-def board_delete(request, board_id):
-    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    board.delete()
-
-    return HttpResponse()
-
-
-@ajax_only
-@must_be_authenticated
-@csrf_protect
-@require_http_methods(['POST'])
-def board_empty(request, board_id):
-    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    board.products.clear()
-
-    return HttpResponse()
-
-
 class BoardsList(ListView):
     model = CommerceHQBoard
     context_object_name = 'boards'

@@ -71,7 +71,6 @@ $(document).ready(function() {
     $('.chq-delete-board-btn').click(function(e) {
         e.preventDefault();
         var boardId = $(this).data('board-id');
-        var action = $(this).data('board-delete-url');
 
         swal({
             title: 'Are you sure?',
@@ -82,10 +81,13 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!',
             closeOnConfirm: false
         }, function() {
-            var data = {csrfmiddlewaretoken: Cookies.get('csrftoken')};
-            $.post(action, data).done(function() {
-                table.api().rows('#board-row-' + boardId).remove().draw();
-                swal('Deleted!', 'The board has been deleted.', 'success');
+            $.ajax({
+                url: api_url('board', 'chq') + '?board_id=' + boardId,
+                method: 'DELETE',
+                success: function() {
+                    table.api().rows('#board-row-' + boardId).remove().draw();
+                    swal('Deleted!', 'The board has been deleted.', 'success');
+                }
             });
         });
     });
@@ -93,7 +95,6 @@ $(document).ready(function() {
     $('.chq-empty-board-btn').click(function(e) {
         e.preventDefault();
         var boardId = $(this).data('board-id');
-        var action = $(this).data('board-empty-url');
 
         swal({
             title: "Empty Board",
@@ -106,8 +107,7 @@ $(document).ready(function() {
             confirmButtonText: "Empty Board",
             closeOnConfirm: false
         }, function() {
-            var data = {csrfmiddlewaretoken: Cookies.get('csrftoken')};
-            $.post(action, data).done(function() {
+            $.post(api_url('board-empty', 'chq'), {board_id: boardId}).done(function() {
                 swal.close();
                 $('#board-row-' + boardId).find('.product-count').html('0')
                 toastr.success("The board is now empty.", "Empty Board");

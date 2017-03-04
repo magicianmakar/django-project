@@ -272,17 +272,18 @@ class BoardDeleteTestCase(TestCase):
 
         self.board = CommerceHQBoardFactory(user=self.user)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:board_delete', args=(self.board.pk,))
+        self.path = '/api/chq/board?board_id=%s' % self.board.pk
 
     def test_must_be_logged_in(self):
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_delete_own_board(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         count = self.user.commercehqboard_set.count()
         self.assertEqual(count, 0)
+        self.assertEqual(r.status_code, 200)
 
 
 class BoardEmptyTestCase(TestCase):
@@ -292,16 +293,19 @@ class BoardEmptyTestCase(TestCase):
         self.user.set_password(self.password)
         self.user.save()
 
+        self.store = CommerceHQStoreFactory(user=self.user)
         self.board = CommerceHQBoardFactory(user=self.user)
+        self.product = CommerceHQProductFactory(user=self.user, store=self.store)
+        self.board.products.add(self.product)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:board_empty', args=(self.board.pk,))
+        self.path = '/api/chq/board-empty'
 
     def test_must_be_logged_in(self):
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
         self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_empty_own_board(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
         count = self.board.products.count()
         self.assertEqual(count, 0)
