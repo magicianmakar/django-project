@@ -424,3 +424,64 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             return self.api_error('Order not found.', status=404)
+
+    def get_order_data(self, request, user, data):
+        # version = request.META.get('HTTP_X_EXTENSION_VERSION')
+        # if version:
+        #     required = None
+
+        #     if utils.version_compare(version, '1.25.6') < 0:
+        #         required = '1.25.6'
+        #     elif utils.version_compare(version, '1.26.0') == 0:
+        #         required = '1.26.1'
+
+        #     if required:
+        #         raven_client.captureMessage(
+        #             'Extension Update Required',
+        #             level='warning',
+        #             extra={'current': version, 'required': required})
+
+        #         return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
+
+        order_key = data.get('order')
+
+        if not order_key.startswith('order_'):
+            order_key = 'order_{}'.format(order_key)
+
+        prefix, store, order, line = order_key.split('_')
+
+        try:
+            store = CommerceHQStore.objects.get(id=store)
+            permissions.user_can_view(user, store)
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        order = cache.get(order_key)
+        if order:
+            if not order['shipping_address'].get('address2'):
+                order['shipping_address']['address2'] = ''
+
+            order['ordered'] = False
+            order['fast_checkout'] = user.get_config('_fast_checkout', False)
+            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
+
+            try:
+                track = CommerceHQOrderTrack.objects.get(
+                    store=store,
+                    order_id=order['order_id'],
+                    line_id=order['line_id']
+                )
+
+                order['ordered'] = {
+                    'time': arrow.get(track.created_at).humanize(),
+                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
+                }
+
+            except CommerceHQOrderTrack.DoesNotExist:
+                pass
+            except:
+                raven_client.captureException()
+
+            return self.api_success(order)
+        else:
+            return self.api_error('Not found: {}'.format(data.get('order')), status=404)

@@ -158,6 +158,7 @@ def chq_customer_address(order):
         customer_address['country_code'] = 'PR'
         customer_address['country'] = 'Puerto Rico'
 
+    customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name'])
     # customer_address['name'] = utils.ensure_title(customer_address['name'])
 
     # if customer_address['company']:

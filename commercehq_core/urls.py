@@ -17,4 +17,5 @@ urlpatterns = patterns(
     url(r'^store-delete/(?P<store_id>[0-9]+)$', commercehq_core.views.store_delete, name='store_delete'),
 
     url(r'^orders$', commercehq_core.views.OrdersList.as_view(), name='orders_list'),
+    url(r'^orders/place$', commercehq_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
 )

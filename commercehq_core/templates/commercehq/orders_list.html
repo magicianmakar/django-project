@@ -289,7 +289,7 @@
                                         </span>
                                     </div>
                                     <div class="col-xs-2">
-                                        <span class="badge badge-{% if not order.fulfillment_status %}warning{% else %}primary{% endif %}">
+                                        <span class="badge badge-{% if not order.fulfillment_status or order.status == 0 %}warning{% else %}primary{% endif %}">
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
                                         </span>
                                     </div>
@@ -409,7 +409,7 @@
                                     {% with original=item.product.get_original_info %}
 
                                     <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}" line-id="{{item.id}}"
-                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}"
+                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.order_track.id|default:''}}"
                                          fulfillment-status="{{item.fulfillment_status}}">
                                         <div class="row source-order">
 
@@ -422,9 +422,9 @@
                                                         href="#"
                                                     {% endif %}
 
-                                                    {% if user.id == 883 and item.shopify_order %}
+                                                    {% if user.id == 883 and item.order_track %}
                                                         class="order-supplier-store"
-                                                        source-order-id="{{item.shopify_order.source_id}}"
+                                                        source-order-id="{{item.order_track.source_id}}"
                                                     {% endif %}
 
                                                     >{{item.supplier.supplier_name|truncatechars:25}}</a>
@@ -435,28 +435,28 @@
 
                                             <div class="col-xs-3 line-order-id">
                                                 Order ID:
-                                                {% if item.shopify_order %}
+                                                {% if item.order_track %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
-                                                        source-order-id="{{item.shopify_order.source_id}}"
-                                                        order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}"
+                                                        source-order-id="{{item.order_track.source_id}}"
+                                                        order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
-                                                        title="View Order Details">#{{item.shopify_order.source_id}}</a>
+                                                        title="View Order Details">#{{item.order_track.source_id}}</a>
                                                 {% else %}
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
                                                 {% endif %}
                                             </div>
                                             <div class="col-xs-3 line-ordered">
-                                                <span class="badge badge-{% if item.shopify_order or item.status.fulfilled or item.status.shipped %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
-                                                {% if item.shopify_order %}
+                                                <span class="badge badge-{% if item.order_track or item.status.fulfilled or item.status.shipped %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
+                                                {% if item.order_track %}
                                                     <span class="ordered-status"
-                                                    {% if item.shopify_order.source_id %}
-                                                        title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}"
+                                                    {% if item.order_track.source_id %}
+                                                        title="{{original.source|title}} Order ID: #{{item.order_track.source_id}}"
                                                     {% endif %}
                                                         >Order Placed
 
-                                                        {% if item.shopify_order.created_at %}
+                                                        {% if item.order_track.created_at %}
                                                         <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
-                                                            {% date_humanize item.shopify_order.created_at %}
+                                                            {% date_humanize item.order_track.created_at %}
                                                         </span>
                                                         {% endif %}
                                                     </span>
@@ -469,9 +469,9 @@
                                                 {% endif %}
                                             </div>
                                             <div class="col-xs-3 line-tracking">
-                                                {% if item.shopify_order %}
-                                                    <span class="badge badge-{{ item.shopify_order.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
-                                                    {{item.shopify_order.get_source_status|default:'No Tracking Status'}}
+                                                {% if item.order_track %}
+                                                    <span class="badge badge-{{ item.order_track.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
+                                                    {{item.order_track.get_source_status|default:'No Tracking Status'}}
                                                 {% elif item.fulfillment_status != 'fulfilled' %}
                                                     <span class="badge badge-default" style="width:15px;height:15px">&nbsp;</span>
                                                     Not Tracked
@@ -525,7 +525,7 @@
                                                                         <span class="caret"></span></button>
 
                                                                         <ul class="dropdown-menu">
-                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.shopify_order.source_tracking}}">Fulfill in Shopify</a></li>
+                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Fulfill in CommerceHQ</a></li>
                                                                         </ul>
                                                                     </div>
                                                             {% else %}
@@ -533,9 +533,9 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% if item.shopify_order and item.shopify_order.source_tracking %}
-                                                            <a href="{{item.shopify_order.get_tracking_link}}" target="_blank">
-                                                                {{item.shopify_order.source_tracking}}
+                                                            {% if item.order_track and item.order_track.source_tracking %}
+                                                            <a href="{{item.order_track.get_tracking_link}}" target="_blank">
+                                                                {{item.order_track.source_tracking}}
                                                             </a>
                                                             {% endif %}
                                                         </td>
@@ -554,7 +554,7 @@
                         {% empty %}
 
                         {% if api_error %}
-                            <p class="text-center">Shopify Error: {{api_error}}</p>
+                            <p class="text-center">CommerceHQ Error: {{api_error}}</p>
                             <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
                         {% else %}
                             <h3 class="text-center">
@@ -631,6 +631,7 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/orders_list.js' %}"></script>
 {% endcompress %}

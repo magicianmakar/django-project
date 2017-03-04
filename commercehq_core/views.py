@@ -4,14 +4,16 @@ import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
+from django.views.generic.base import RedirectView
 from django.utils.decorators import method_decorator
 
 from shopified_core import permissions
@@ -353,9 +355,9 @@ class OrdersList(ListView):
 
                 line['image'] = (line.get('image') or '').replace('/uploads/', '/uploads/thumbnail_')
 
-                line['shopify_order'] = orders_list.get('{}-{}'.format(order['id'], line['id']))
+                line['order_track'] = orders_list.get('{}-{}'.format(order['id'], line['id']))
 
-                if line['shopify_order'] or line['fulfilled'] == line['quantity'] or line['shipped'] == line['quantity']:
+                if line['order_track'] or line['fulfilled'] == line['quantity'] or line['shipped'] == line['quantity']:
                     order['placed_orders'] += 1
 
                 orders_cache['chq_quantity_{}_{}_{}'.format(self.store.id, order['id'], line['id'])] = line['quantity']
@@ -444,3 +446,67 @@ class OrdersList(ListView):
         cache.set_many(orders_cache, timeout=3600)
 
         return orders
+
+
+class OrderPlaceRedirectView(RedirectView):
+    permanent = False
+    query_string = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            assert self.request.GET['product']
+            assert self.request.GET['SAPlaceOrder']
+
+            product = self.request.GET['product']
+        except:
+            raven_client.captureException()
+            raise Http404("Product or Order not set")
+
+        from leadgalaxy.utils import (
+            get_aliexpress_credentials,
+            get_admitad_credentials,
+            get_aliexpress_affiliate_url,
+            get_admitad_affiliate_url,
+            affiliate_link_set_query
+        )
+
+        ali_api_key, ali_tracking_id, user_ali_credentials = get_aliexpress_credentials(self.request.user.models_user)
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+
+        disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
+
+        redirect_url = False
+        if not disable_affiliate:
+            if user_admitad_credentials:
+                service = 'admitad'
+            elif user_ali_credentials:
+                service = 'ali'
+            else:
+                service = 'admitad'
+
+            if service == 'ali' and ali_api_key and ali_tracking_id:
+                redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+            elif service == 'admitad':
+                redirect_url = get_admitad_affiliate_url(admitad_site_id, product)
+
+        if not redirect_url:
+            redirect_url = product
+
+        for k in self.request.GET.keys():
+            if k.startswith('SA') and k not in redirect_url:
+                redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
+
+        redirect_url = affiliate_link_set_query(redirect_url, 'SAStore', 'chq')
+
+        # Verify if the user didn't pass order limit
+        parent_user = self.request.user.models_user
+        plan = parent_user.profile.plan
+        if plan.auto_fulfill_limit != -1:
+            month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
+            orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start).count()
+
+            if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+                messages.error(self.request, "You have reached your plan auto fulfill limit")
+                return '/'
+
+        return redirect_url
