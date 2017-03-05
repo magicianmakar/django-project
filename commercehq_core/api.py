@@ -440,19 +440,53 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Store not found.', status=404)
 
     def delete_board(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(request.GET.get('board_id'))
             board = CommerceHQBoard.objects.get(user=user, pk=pk)
+            permissions.user_can_delete(user, board)
             board.delete()
             return self.api_success()
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
 
     def post_board_empty(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(user=user, pk=pk)
+            permissions.user_can_edit(user, board)
             board.products.clear()
             return self.api_success()
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
+
+    def post_boards_add(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        can_add, total_allowed, user_count = permissions.can_add_board(user)
+
+        if not can_add:
+            return self.api_error(
+                'Your current plan allow up to %d boards, currently you have %d boards.'
+                % (total_allowed, user_count))
+
+        board_name = data.get('title', '').strip()
+
+        if not len(board_name):
+            return self.api_error('Board name is required', status=501)
+
+        board = CommerceHQBoard(title=board_name, user=user.models_user)
+        permissions.user_can_add(user, board)
+
+        board.save()
+
+        return self.api_success({
+            'board': {
+                'id': board.id,
+                'title': board.title
+            }
+        })

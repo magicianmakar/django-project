@@ -1,3 +1,5 @@
+from mock import patch, Mock
+
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
@@ -32,7 +34,7 @@ class StoreListTestCase(TestCase):
         r = self.client.get(self.path)
         self.assertTrue(r.status_code, 200)
 
-    def test_must_return_correct_form_template(self):
+    def test_must_return_correct_template(self):
         self.login()
         r = self.client.get(self.path)
         self.assertTemplateUsed(r, 'commercehq/index.html')
@@ -239,7 +241,7 @@ class BoardCreateTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
-        self.path = reverse('chq:board_create')
+        self.path = '/api/chq/boards-add'
         self.data = {'title': 'Test Board'}
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
 
@@ -248,27 +250,30 @@ class BoardCreateTestCase(TestCase):
 
     def test_must_require_requests_to_be_ajax(self):
         r = self.client.post(self.path, self.data)
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 401)
 
     def test_must_be_logged_in(self):
         r = self.client.post(self.path, self.data, **self.headers)
         self.assertEqual(r.status_code, 401)
 
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
     def test_must_create_new_board(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 204)
+        self.assertEqual(r.status_code, 200)
 
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
     def test_must_add_board_to_user(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
         board = CommerceHQBoard.objects.get(title=self.data['title'])
         self.assertEqual(board.user, self.user)
 
-    def test_must_use_correct_template(self):
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
+    def test_board_name_is_required(self):
         self.login()
-        r = self.client.post(self.path, {}, **self.headers)
-        self.assertTemplateUsed(r, 'commercehq/board_create_form.html')
+        r = self.client.post(self.path, {'title': ''}, **self.headers)
+        self.assertEqual(r.status_code, 501)
 
 
 class BoardUpdateTestCase(TestCase):
@@ -360,3 +365,48 @@ class BoardEmptyTestCase(TestCase):
         r = self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
         count = self.board.products.count()
         self.assertEqual(count, 0)
+
+
+class BoardDetailTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.board = CommerceHQBoardFactory(user=self.user, title='Test Board')
+        self.path = reverse('chq:board_detail', args=(self.board.pk,))
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_be_logged_in(self):
+        r = self.client.get(self.path)
+        redirect_to = reverse('login') + '?next=' + self.path
+        self.assertRedirects(r, redirect_to)
+
+    def test_must_return_ok(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTrue(r.status_code, 200)
+
+    def test_must_return_correct_template(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTemplateUsed(r, 'commercehq/board.html')
+
+    def test_must_have_board_in_context(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertIn('board', r.context)
+
+    def test_must_only_show_own_board(self):
+        board = CommerceHQStoreFactory()
+        self.login()
+        r = self.client.get(reverse('chq:board_detail', args=(board.pk,)))
+        self.assertEqual(r.status_code, 404)
+
+    def test_must_have_breadcrumbs(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.context['breadcrumbs'], ['Boards', self.board.title])
+

@@ -68,21 +68,6 @@ def store_update(request, store_id):
 @ajax_only
 @must_be_authenticated
 @csrf_protect
-@require_http_methods(['POST'])
-def board_create(request):
-    form = CommerceHQBoardForm(request.POST)
-
-    if form.is_valid():
-        form.instance.user = request.user.models_user
-        form.save()
-        return HttpResponse(status=204)
-
-    return render(request, 'commercehq/board_create_form.html', {'form': form})
-
-
-@ajax_only
-@must_be_authenticated
-@csrf_protect
 @require_http_methods(['GET', 'POST'])
 def board_update(request, board_id):
     board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
@@ -149,6 +134,27 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
+
+        return context
+
+
+class BoardDetailView(DetailView):
+    model = CommerceHQBoard
+    context_object_name = 'board'
+    template_name = 'commercehq/board.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(BoardDetailView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(BoardDetailView, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardDetailView, self).get_context_data(**kwargs)
+        board = self.get_object()
+        context['breadcrumbs'] = ['Boards', board.title]
 
         return context
 

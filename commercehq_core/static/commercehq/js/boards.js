@@ -28,15 +28,33 @@ $(document).ready(function() {
         $('#chq-modal-board-add').modal('show');
     });
 
-    $("#chq-new-board-add-form").ajaxForm({
-        target: "#chq-new-board-add-form",
-        clearForm: true,
-        data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
-        success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status == 204) {
-                window.location.reload();
+    $("#chq-new-board-add-form").submit(function(e) {
+        e.preventDefault();
+        var $title = $(this).find('input[name="title"]');
+        var boardName = $title.val().trim();
+
+        $.ajax({
+            url: api_url('boards-add', 'chq'),
+            type: 'POST',
+            data: {title: boardName},
+            success: function(data) {
+                if ('status' in data && data.status == 'ok') {
+                    $('#chq-modal-board-add').modal('hide');
+                    $title.val('');
+
+                    if (typeof(window.onBoardAdd) == 'function') {
+                        window.onBoardAdd(data.board);
+                    } else {
+                        window.location.href = window.location.href;
+                    }
+                } else {
+                    displayAjaxError('Create Board', data);
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Create Board', data);
             }
-        }
+        });
     });
 
     $('.chq-edit-board-btn').click(function(e) {
@@ -84,9 +102,17 @@ $(document).ready(function() {
             $.ajax({
                 url: api_url('board', 'chq') + '?board_id=' + boardId,
                 method: 'DELETE',
-                success: function() {
-                    table.api().rows('#board-row-' + boardId).remove().draw();
-                    swal('Deleted!', 'The board has been deleted.', 'success');
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        table.api().rows('#board-row-' + boardId).remove().draw();
+                        swal.close();
+                        toastr.success('Board has been deleted.', 'Delete Board');
+                    } else {
+                        displayAjaxError('Delete Board', data);
+                    }
+                },
+                error: function (data) {
+                    displayAjaxError('Delete Board', data);
                 }
             });
         });
@@ -107,10 +133,22 @@ $(document).ready(function() {
             confirmButtonText: "Empty Board",
             closeOnConfirm: false
         }, function() {
-            $.post(api_url('board-empty', 'chq'), {board_id: boardId}).done(function() {
-                swal.close();
-                $('#board-row-' + boardId).find('.product-count').html('0')
-                toastr.success("The board is now empty.", "Empty Board");
+            $.ajax({
+                url: api_url('board-empty', 'chq'),
+                data: {board_id: boardId},
+                method: 'POST',
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        swal.close();
+                        toastr.success("The board is now empty.", "Empty Board");
+                        $('#board-row-' + boardId).find('.product-count').html('0');
+                    } else {
+                        displayAjaxError('Empty Board', data);
+                    }
+                },
+                error: function (data) {
+                    displayAjaxError('Empty Board', data);
+                }
             });
         });
     });
