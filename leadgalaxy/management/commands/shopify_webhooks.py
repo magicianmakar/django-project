@@ -32,7 +32,7 @@ class Command(BaseCommand):
             self.write_success(u'{} webhooks for plan: {}'.format(action.title(), plan.title))
 
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
-            self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
+            self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % len(stores)))
             for store in stores:
                 self.handle_store(store, action, options['delete_on_detach'])
 

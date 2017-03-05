@@ -1818,7 +1818,7 @@ def proccess_api(request, user, method, target, data):
 
         orders = ShopifyOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
 
-        if orders.count():
+        if len(orders):
             for order in orders:
                 user.can_delete(order)
                 order.delete()
@@ -1893,7 +1893,7 @@ def proccess_api(request, user, method, target, data):
                                               .defer('data') \
                                               .order_by('store')
 
-            if tracks.count():
+            if len(tracks):
                 stores = {}
                 # tracks = utils.get_tracking_orders(tracks[0].store, tracks)
 

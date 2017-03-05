@@ -31,7 +31,7 @@ class Command(BaseCommand):
         changes_by_user = {}
 
         if options['verbosity'] > 1:
-            self.stdout.write('Notfiy {} changes'.format(all_changes.count()))
+            self.stdout.write('Notfiy {} changes'.format(len(all_changes)))
 
         for c in all_changes:
             if c.user_id not in changes_by_user:

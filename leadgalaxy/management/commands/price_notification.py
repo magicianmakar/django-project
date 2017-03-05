@@ -83,7 +83,7 @@ class Command(BaseCommand):
 
         products = products.exclude(shopify_id=0).exclude(store=None)
 
-        products_count = products.count()
+        products_count = len(products)
 
         if products_count:
             self.stdout.write(self.style.MIGRATE_SUCCESS('Products Count: %d' % products_count))
