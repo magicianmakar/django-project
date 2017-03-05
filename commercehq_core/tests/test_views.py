@@ -11,6 +11,57 @@ from .factories import (
 from ..models import CommerceHQStore, CommerceHQBoard
 
 
+class StoreListTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.path = reverse('chq:index')
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_be_logged_in(self):
+        r = self.client.get(self.path)
+        redirect_to = reverse('login') + '?next=' + self.path
+        self.assertRedirects(r, redirect_to)
+
+    def test_must_return_ok(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTrue(r.status_code, 200)
+
+    def test_must_return_correct_form_template(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTemplateUsed(r, 'commercehq/index.html')
+
+    def test_must_only_list_active_stores(self):
+        CommerceHQStoreFactory(user=self.user, is_active=True)
+        CommerceHQStoreFactory(user=self.user, is_active=False)
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.context['stores'].count(), 1)
+
+    def test_must_show_first_visit(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTrue(r.context['first_visit'])
+
+    def test_must_set_first_visit_to_false(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.user.profile.refresh_from_db()
+        config = self.user.profile.get_config()
+        self.assertFalse(config['_first_visit'])
+
+    def test_must_have_breadcrumbs(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.context['breadcrumbs'], ['Stores'])
+
+
 class StoreCreateTestCase(TestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
@@ -128,21 +179,21 @@ class StoreDeleteTestCase(TestCase):
 
         self.store = CommerceHQStoreFactory(user=self.user)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:store_delete', args=(self.store.pk,))
+        self.path = '/api/chq/store?store_id=%s' % self.store.pk
 
     def test_must_be_logged_in(self):
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_delete_own_store(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         count = self.user.commercehqstore_set.filter(is_active=True).count()
         self.assertEqual(count, 0)
 
     def test_must_not_allow_subusers_to_delete(self):
         self.client.login(username=self.subuser.username, password=self.subuser_password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         self.assertEqual(r.status_code, 403)
 
 

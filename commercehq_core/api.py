@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.views.generic import View
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -425,6 +426,18 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             return self.api_error('Order not found.', status=404)
+
+    def delete_store(self, request, user, data):
+        if user.is_subuser:
+            raise PermissionDenied()
+        try:
+            pk = safeInt(request.GET.get('store_id'))
+            store = CommerceHQStore.objects.get(user=user, pk=pk)
+            store.is_active = False
+            store.save()
+            return self.api_success()
+        except CommerceHQBoard.DoesNotExist:
+            return self.api_error('Store not found.', status=404)
 
     def delete_board(self, request, user, data):
         try:
