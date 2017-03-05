@@ -398,7 +398,7 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         orders = CommerceHQOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
 
-        if orders.count():
+        if len(orders):
             for order in orders:
                 permissions.user_can_delete(user, order)
 
