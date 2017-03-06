@@ -99,6 +99,9 @@ class StoresList(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
         return super(StoresList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

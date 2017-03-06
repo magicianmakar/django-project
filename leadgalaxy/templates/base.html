@@ -310,11 +310,15 @@
                     <li>
                         <div id="notification-bell"></div>
                     </li>
+
+                    {% if user|can:'commercehq.use' %}
                     <li>
                         {% block store-switch %}
                             {% include 'store_switch.html' %}
                         {% endblock store-switch %}
                     </li>
+                    {% endif %}
+
                     <li>
                         {% if user.is_authenticated %}
 
