@@ -16,7 +16,7 @@ class CommerceHQStoreForm(ModelForm):
     def clean_api_url(self):
         url = self.cleaned_data['api_url']
 
-        if not url.endswith('.commercehq.com'):
+        if not url.endswith('.commercehq.com') and not url.endswith('.commercehqdev.com'):
             raise forms.ValidationError('Only CommerceHQ stores can be added.')
 
         o = urlparse(url)

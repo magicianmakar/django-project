@@ -175,10 +175,3 @@
         <script type="text/javascript" src="{% static 'commercehq/js/boards.js' %}"></script>
     {% endcompress %}
 {% endblock %}
-
-{% block store-switch %}
-    {% with shopify_view_name='boards_list' chq_view_name='chq:boards_list' %}
-        {% include 'store_switch.html' %}
-    {% endwith %}
-{% endblock %}
-

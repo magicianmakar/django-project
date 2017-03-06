@@ -10,19 +10,43 @@
 
     <div class="tabs-container">
         <ul class="nav nav-tabs">
-            {% if request.GET.store == 'n' or not request.GET.store %}
-                <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
-                <li><a href="?store=c" aria-expanded="true">Connected</a></li>
+        {% if not request.GET.store %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
+
+            {% for item in user.profile.get_chq_stores %}
+            <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+            {% endfor %}
+
+        {% else %}
+            {% if request.GET.store == 'n' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
             {% else %}
-                <li><a href="?store=n" aria-expanded="true">Not Connected</a></li>
-                <li class="active"><a href="#tab-1" aria-expanded="true">Connected</a></li>
+            <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
             {% endif %}
+
+            {% if request.GET.store == 'c' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
+            {% endif %}
+
+            {% for item in user.profile.get_chq_stores %}
+                {% if item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
         </ul>
+
 
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                {% if False %}
+                {% if products %}
                     <div class="row m-b-lg">
                         <div class="col-md-8 filter-col">
                             <label for="selected-actions" class="filter-col-item">Selected Items:</label>
@@ -33,7 +57,7 @@
                                 {% endif %}
                                 <option value="board">Add to Board...</option>
                                 {% if not request.GET.store or request.GET.store == 'n' %}
-                                <option value="shopify-send">Send To Shopify...</option>
+                                {# <option value="shopify-send">Send To CommerceHQ...</option> #}
                                 {% endif %}
                                 <option value="delete">Delete</option>
                             </select>
@@ -47,8 +71,8 @@
                             {% endif %}
 
                             {% if store.id %}
-                            <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
-                                <i class="fa fa-plus"></i> Import From Shopify
+                            <a href="#" class="commercehq-product-import-btn filter-col-item" store="{{store.id}}">
+                                <i class="fa fa-plus"></i> Import From CommerceHQ
                             </a>
                             {% endif %}
                         </div>
@@ -137,7 +161,7 @@
                             <div class="form-group text-center">
                             <label for="selected-board">Select board</label>
                             <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
-                                {% for item in request.user.get_boards %}
+                                {% for item in request.user.get_chq_boards %}
                                 <option value="{{item.id}}">{{item.title}}</option>
                                 {% endfor %}
                             </select>
@@ -158,10 +182,50 @@
 
 {% include 'partial/filter_modal.html' %}
 
+{% include "commercehq/partial/commercehq_product_selector.html" %}
+
 {% endblock %}
 
-{% block store-switch %}
-    {% with shopify_view_name='product' chq_view_name=request.resolver_match.view_name %}
-        {% include 'store_switch.html' %}
-    {% endwith %}
+{% block extracss %}
+<style type="text/css">
+
+.filter-col {
+    display: flex;
+    align-items: center;
+}
+
+.filter-col .filter-col-item {
+    margin-right: 5px;
+}
+
+.filter-col .shopify-product-import-btn {
+    margin-left: 15px;
+}
+
+#selected-actions {
+    padding-top: 2px;
+    display: inline-block;
+    width: 191px;
+}
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    var boardsMenu = {
+    {% for item in request.user.get_chq_boards %}
+        "{{item.id}}": {name: "{{item.title}}"},
+    {% endfor %}
+        "sep1": "---------",
+        "add": {name: "Add new board", icon: 'add'},
+        "clear": {name: "Clear", icon: 'quit'}
+    };
+</script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'commercehq/js/products_grid.js' %}"></script>
+{% endcompress %}
+
 {% endblock %}

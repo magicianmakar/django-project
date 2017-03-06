@@ -151,9 +151,3 @@
     <script type="text/javascript" src="{% static 'shopified/js/boards.js' %}"></script>
 {% endcompress %}
 {% endblock %}
-
-{% block store-switch %}
-    {% with shopify_view_name=request.resolver_match.view_name chq_view_name='chq:boards_list' %}
-        {% include 'store_switch.html' %}
-    {% endwith %}
-{% endblock %}

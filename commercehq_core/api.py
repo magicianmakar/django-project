@@ -125,6 +125,21 @@ class CHQStoreApi(ApiResponseMixin, View):
         except ProductExportException as e:
             return self.api_error(e.message)
 
+    def delete_product(self, request, user, data):
+        try:
+            product = CommerceHQProduct.objects.get(id=data.get('product'))
+            permissions.user_can_delete(user, product)
+        except CommerceHQProduct.DoesNotExist:
+            return self.api_error('Product does not exists', status=404)
+
+        # TODO: Sub user permssion for CHQ
+        # if not user.can('delete_products.sub', product.store):
+            # raise PermissionDenied()
+
+        product.delete()
+
+        return self.api_success()
+
     def post_supplier(self, request, user, data):
         product = CommerceHQProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -509,6 +524,7 @@ class CHQStoreApi(ApiResponseMixin, View):
     def delete_store(self, request, user, data):
         if user.is_subuser:
             raise PermissionDenied()
+
         try:
             pk = safeInt(request.GET.get('store_id'))
             store = CommerceHQStore.objects.get(user=user, pk=pk)
@@ -519,8 +535,9 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Store not found.', status=404)
 
     def delete_board(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
+        # if not user.can('edit_product_boards.sub'):
+        #     raise PermissionDenied()
+
         try:
             pk = safeInt(request.GET.get('board_id'))
             board = CommerceHQBoard.objects.get(user=user, pk=pk)
@@ -531,8 +548,9 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
     def post_board_empty(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
+        # if not user.can('edit_product_boards.sub'):
+        #     raise PermissionDenied()
+
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(user=user, pk=pk)
@@ -543,8 +561,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
     def post_boards_add(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
+        # if not user.can('edit_product_boards.sub'):
+        #     raise PermissionDenied()
 
         can_add, total_allowed, user_count = permissions.can_add_board(user)
 
@@ -569,6 +587,32 @@ class CHQStoreApi(ApiResponseMixin, View):
                 'title': board.title
             }
         })
+
+    def post_product_board(self, request, user, data):
+        # if not user.can('edit_product_boards.sub'):
+        #     raise PermissionDenied()
+
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        if data.get('board') == '0':
+            product.commercehqboard_set.clear()
+            product.save()
+
+            return self.api_success()
+        else:
+            board = CommerceHQBoard.objects.get(id=data.get('board'))
+            permissions.user_can_edit(user, board)
+
+            board.products.add(product)
+            board.save()
+
+            return self.api_success({
+                'board': {
+                    'id': board.id,
+                    'title': board.title
+                }
+            })
 
     def get_order_data(self, request, user, data):
         version = request.META.get('HTTP_X_EXTENSION_VERSION')
@@ -688,11 +732,11 @@ class CHQStoreApi(ApiResponseMixin, View):
                 'Your current plan allow up to %d saved products, currently you have %d saved products.'
                 % (total_allowed, user_count), status=401)
 
-        shopify_product = safeInt(data.get('product'))
+        source_id = safeInt(data.get('product'))
         supplier_url = data.get('supplier')
 
-        if shopify_product:
-            if user.models_user.shopifyproduct_set.filter(shopify_id=shopify_product).count():
+        if source_id:
+            if user.models_user.commercehqproduct_set.filter(source_id=source_id).count():
                 return self.api_error('Product is already import/connected', status=422)
         else:
             return self.api_error('Shopify Product ID is missing', status=422)
@@ -724,7 +768,7 @@ class CHQStoreApi(ApiResponseMixin, View):
         product = CommerceHQProduct(
             store=store,
             user=user.models_user,
-            source_id=shopify_product,
+            source_id=source_id,
             data=json.dumps({
                 'title': 'Importing...',
                 'variants': [],

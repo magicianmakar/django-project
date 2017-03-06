@@ -68,6 +68,7 @@ function shopifyProductSearch (e) {
     });
 }
 
-$('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopifyProductSearch, 500);
-$('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
-$('#modal-shopify-product .shopify-find-product').trigger('keyup');
+$(function () {
+    $('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopifyProductSearch, 500);
+    $('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
+});

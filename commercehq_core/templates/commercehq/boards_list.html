@@ -174,9 +174,3 @@
         </div>
     </div>
 {% endblock modal-board-add %}
-
-{% block store-switch %}
-    {% with shopify_view_name='boards_list' chq_view_name=request.resolver_match.view_name %}
-        {% include 'store_switch.html' %}
-    {% endwith %}
-{% endblock %}

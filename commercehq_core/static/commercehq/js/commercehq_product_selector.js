@@ -72,6 +72,7 @@ function commercehqProductSearch (e) {
     });
 }
 
-$('#modal-commercehq-product .commercehq-find-product').bindWithDelay('keyup', commercehqProductSearch, 500);
-$('#modal-commercehq-product .commercehq-store').on('change', commercehqProductSearch);
-$('#modal-commercehq-product .commercehq-find-product').trigger('keyup');
+$(function () {
+    $('#modal-commercehq-product .commercehq-find-product').bindWithDelay('keyup', commercehqProductSearch, 500);
+    $('#modal-commercehq-product .commercehq-store').on('change', commercehqProductSearch);
+});

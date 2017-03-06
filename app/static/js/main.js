@@ -535,7 +535,7 @@ $(function() {
         }
 
         $.ajax({
-            url: '/api/boards-add',
+            url: api_url('boards-add', $('#modal-board-add').prop('store-type')),
             type: 'POST',
             data: {
                 title: board_name
