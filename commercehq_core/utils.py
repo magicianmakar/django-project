@@ -162,9 +162,93 @@ def chq_customer_address(order):
     # customer_address['name'] = utils.ensure_title(customer_address['name'])
 
     # if customer_address['company']:
-        # customer_address['name'] = '{} - {}'.format(customer_address['name'],
-        #                                             customer_address['company'])
+    #     customer_address['name'] = '{} - {}'.format(customer_address['name'],
+    #                                                 customer_address['company'])
     return customer_address
+
+
+def get_tracking_orders(store, tracker_orders):
+    ids = []
+    for i in tracker_orders:
+        ids.append(str(i.order_id))
+
+    rep = store.request.post(
+        url=store.get_api_url('orders', 'search'),
+        params={'size': 50},
+        json={'id': ids}
+    )
+
+    rep.raise_for_status()
+
+    orders = {}
+    lines = {}
+
+    for order in rep.json()['items']:
+        orders[order['id']] = order
+        for line in order['items']:
+            line.update(line.get('data'))
+            line.update(line.get('status'))
+            line['image'] = (line.get('image') or '').replace('/uploads/', '/uploads/thumbnail_')
+
+            lines['{}-{}'.format(order['id'], line['id'])] = line
+
+    new_tracker_orders = []
+    for tracked in tracker_orders:
+        tracked.order = orders.get(tracked.order_id)
+        tracked.line = lines.get('{}-{}'.format(tracked.order_id, tracked.line_id))
+
+        if tracked.line:
+            if tracked.line.get('shipped') == tracked.line.get('quantity'):
+                tracked.line['fulfillment_status'] = 'fulfilled'
+            else:
+                tracked.line['fulfillment_status'] = ''
+
+            if tracked.commercehq_status != tracked.line['fulfillment_status']:
+                tracked.commercehq_status = tracked.line['fulfillment_status']
+                tracked.save()
+
+        new_tracker_orders.append(tracked)
+
+    return new_tracker_orders
+
+
+def order_id_from_name(store, order_name, default=None):
+    ''' Get Order ID from Order Name '''
+
+    order_rx = store.user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
+    order_number = re.findall(order_rx, order_name)
+    if not order_number:
+        return default
+
+    order_number = order_number[0]
+    if len(order_number) > 7:
+        # Order name should contain less than 7 digits
+        return default
+
+    params = {
+        'status': 'any',
+        'fulfillment_status': 'any',
+        'financial_status': 'any',
+        'fields': 'id',
+        'name': order_name
+    }
+
+    params = {
+        'order_number': order_name,
+    }
+
+    rep = store.request.post(
+        url=store.get_api_url('orders', 'search'),
+        json=params
+    )
+
+    if rep.ok:
+        orders = rep.json()['items']
+
+        if len(orders):
+            return orders.pop()['id']
+
+    return default
 
 
 class CommerceHQOrdersPaginator(Paginator):

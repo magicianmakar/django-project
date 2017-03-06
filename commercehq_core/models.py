@@ -63,8 +63,12 @@ class CommerceHQStore(models.Model):
         url = re.findall('([^/\.]+\.commercehq(dev:?)?.com)', self.api_url).pop()[0]
 
         args = '/'.join([str(i) for i in args]).lstrip('/')
-        if kwargs.get('api', True) and not args.startswith('api'):
-            args = 'api/v1/{}'.format(args).rstrip('/')
+        if kwargs.get('api', True):
+            if not args.startswith('api'):
+                args = 'api/v1/{}'.format(args).rstrip('/')
+        else:
+            if not args.startswith('admin'):
+                args = 'admin/{}'.format(args).rstrip('/')
 
         url = 'https://{}/{}'.format(url, args.lstrip('/'))
 
@@ -220,7 +224,7 @@ class CommerceHQProduct(models.Model):
             return None
 
         rep = self.store.request.get(
-            url='{}/{}'.format(self.store.get_api_url('products'), self.source_id),
+            url=self.store.get_api_url('products', self.source_id),
             params={
                 'expand': 'variants,options,images,textareas'
             }
@@ -475,7 +479,7 @@ class CommerceHQOrderTrack(models.Model):
     store = models.ForeignKey(CommerceHQStore, null=True)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
-    shopify_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
+    commercehq_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
 
     source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
@@ -505,7 +509,7 @@ class CommerceHQOrderTrack(models.Model):
         return json.dumps(self.data).encode('base64')
 
     def get_commercehq_link(self):
-        return self.store.get_admin_link('orders/{}'.format(self.order_id))
+        return self.store.get_admin_url('orders', self.order_id)
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'

@@ -18,13 +18,14 @@ class ApiResponseMixin():
 
         return self.response
 
-    def api_success(self, rep=None, status=200):
+    def api_success(self, rep=None, status=200, safe=True):
         if rep is None:
             rep = {}
 
-        rep.update({'status': 'ok'})
+        if safe:
+            rep.update({'status': 'ok'})
 
-        self.response = JsonResponse(rep, status=status)
+        self.response = JsonResponse(rep, status=status, safe=safe)
 
         return self.response
 

@@ -121,6 +121,7 @@ def can_add_store(user):
 def can_add_product(user):
     """ Check if the user plan allow one more product saving """
 
+    # TODO: Add count for CommerceHQ
     from django.db.models import Q
 
     profile = user.profile
@@ -147,6 +148,7 @@ def can_add_product(user):
 def can_add_board(user):
     """ Check if the user plan allow adding one more Board """
 
+    # TODO: Add count for CommerceHQ
     profile = user.profile
 
     if profile.is_subuser:

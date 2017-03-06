@@ -120,13 +120,6 @@ def random_filename(filename):
     return '{}.{}'.format(random_hash(), '.'.join(ext))
 
 
-def version_compare(left, right):
-    def normalize(v):
-        return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
-
-    return cmp(normalize(left), normalize(right))
-
-
 def generate_plan_registration(plan, data={}, bundle=None, sender=None):
     reg = PlanRegistration(plan=plan, bundle=bundle, sender=sender, email=data['email'], data=json.dumps(data))
     reg.register_hash = random_hash()
@@ -1199,21 +1192,6 @@ def product_changes_remap(changes):
                     })
 
     return remapped
-
-
-def calc_orders_limit(orders_count, check_freq=30, total_time=1440, min_count=20):
-    """
-    Calculate Orders update check limit
-
-    orders_count: Total number of orders
-    check_freq: Extension check interval (minutes)
-    total_time: Total time amount to verify all orders (minutes)
-    min_count: Minimum orders check limit
-    """
-
-    limit = (orders_count * check_freq) / total_time
-
-    return max(limit, min_count)
 
 
 def object_dump(obj, desc=None):

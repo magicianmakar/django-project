@@ -2,7 +2,7 @@
 
 import traceback
 import urllib2
-from urlparse import parse_qs
+import urlparse
 
 from django.contrib.auth import authenticate, login
 from django.core import serializers
@@ -21,7 +21,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import send_email_from_template
+from shopified_core.utils import send_email_from_template, version_compare, orders_update_limit
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -1281,9 +1281,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if version:
             required = None
 
-            if utils.version_compare(version, '1.25.6') < 0:
+            if version_compare(version, '1.25.6') < 0:
                 required = '1.25.6'
-            elif utils.version_compare(version, '1.26.0') == 0:
+            elif version_compare(version, '1.26.0') == 0:
                 required = '1.26.1'
 
             if required:
@@ -1451,7 +1451,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             limit = cache.get(limit_key)
 
             if limit is None:
-                limit = utils.calc_orders_limit(orders_count=shopify_orders.count())
+                limit = orders_update_limit(orders_count=shopify_orders.count())
 
                 if limit != 20:
                     cache.set(limit_key, limit, timeout=3600)
@@ -1468,7 +1468,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             shopify_orders = shopify_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
 
         if data.get('count_only') == 'true':
-            return JsonResponse({'pending': shopify_orders.count()})
+            return self.api_success({'pending': shopify_orders.count()})
 
         shopify_orders = serializers.serialize('python', shopify_orders,
                                                fields=('id', 'order_id', 'line_id',
@@ -1488,7 +1488,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
                                      .update(check_count=F('check_count') + 1, updated_at=timezone.now())
 
-        return JsonResponse(orders, safe=False)
+        return self.api_success(orders, safe=False)
 
     def post_order_fulfill(self, request, user, data):
         try:
@@ -2047,7 +2047,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if utils.get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
-                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
+                supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
 
             if 's.aliexpress.com' in supplier_url.lower():
                 rep = requests.get(supplier_url, allow_redirects=False)

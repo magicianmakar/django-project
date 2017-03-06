@@ -42,7 +42,7 @@ import keen
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template, SimplePaginator
+from shopified_core.utils import send_email_from_template, version_compare, SimplePaginator
 from shopified_core.province_helper import load_uk_provincess, missing_province
 
 from shopify_orders import utils as shopify_orders_utils
@@ -2148,7 +2148,7 @@ def orders_view(request):
     user_version = request.user.get_config('extension_version')
 
     if user_version and latest_release \
-            and utils.version_compare(user_version, latest_release) < 0 \
+            and version_compare(user_version, latest_release) < 0 \
             and cache.get('extension_required', False):
         messages.warning(
             request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '

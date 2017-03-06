@@ -1,18 +1,28 @@
 import re
 import arrow
+import urlparse
 import simplejson as json
 
 from django.conf import settings
+from django.core import serializers
 from django.core.cache import cache
+from django.db.models import F
 from django.views.generic import View
 from django.utils import timezone
 
+import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.exceptions import ProductExportException
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import safeInt, remove_link_query
 from shopified_core import permissions
+from shopified_core.utils import (
+    safeInt,
+    get_domain,
+    remove_link_query,
+    version_compare,
+    orders_update_limit,
+)
 
 import tasks
 from .models import (
@@ -270,6 +280,75 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def get_order_fulfill(self, request, user, data):
+        if int(data.get('count', 0)) >= 30:
+            raise self.api_error('Not found', status=404)
+
+        # Get Orders marked as Ordered
+
+        orders = []
+
+        all_orders = data.get('all') == 'true'
+        unfulfilled_only = data.get('unfulfilled_only') != 'false'
+
+        shopify_orders = CommerceHQOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                                     .defer('data') \
+                                                     .order_by('updated_at')
+
+        if unfulfilled_only:
+            shopify_orders = shopify_orders.filter(source_tracking='') \
+                                           .exclude(source_status='FINISH')
+
+        if user.is_subuser:
+            shopify_orders = shopify_orders.filter(store__in=user.profile.get_shopify_stores(flat=True))
+
+        if data.get('store'):
+            shopify_orders = shopify_orders.filter(store=data.get('store'))
+
+        if not data.get('order_id') and not data.get('line_id') and not all_orders:
+            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
+            limit = cache.get(limit_key)
+
+            if limit is None:
+                limit = orders_update_limit(orders_count=shopify_orders.count())
+
+                if limit != 20:
+                    cache.set(limit_key, limit, timeout=3600)
+
+            if data.get('forced') == 'true':
+                limit = limit * 2
+
+            shopify_orders = shopify_orders[:limit]
+
+        elif data.get('all') == 'true':
+            shopify_orders = shopify_orders.order_by('created_at')
+
+        if data.get('order_id') and data.get('line_id'):
+            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
+
+        if data.get('count_only') == 'true':
+            return self.api_success({'pending': shopify_orders.count()})
+
+        shopify_orders = serializers.serialize('python', shopify_orders,
+                                               fields=('id', 'order_id', 'line_id',
+                                                       'source_id', 'source_status',
+                                                       'source_tracking', 'created_at'))
+
+        for i in shopify_orders:
+            fields = i['fields']
+            fields['id'] = i['pk']
+
+            if all_orders:
+                fields['created_at'] = arrow.get(fields['created_at']).humanize()
+
+            orders.append(fields)
+
+        if not data.get('order_id') and not data.get('line_id'):
+            CommerceHQOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
+                                        .update(check_count=F('check_count') + 1, updated_at=timezone.now())
+
+        return self.api_success(orders, safe=False)
+
     def post_order_fulfill(self, request, user, data):
         try:
             store = CommerceHQStore.objects.get(id=int(data.get('store')))
@@ -426,22 +505,22 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Order not found.', status=404)
 
     def get_order_data(self, request, user, data):
-        # version = request.META.get('HTTP_X_EXTENSION_VERSION')
-        # if version:
-        #     required = None
+        version = request.META.get('HTTP_X_EXTENSION_VERSION')
+        if version:
+            required = None
 
-        #     if utils.version_compare(version, '1.25.6') < 0:
-        #         required = '1.25.6'
-        #     elif utils.version_compare(version, '1.26.0') == 0:
-        #         required = '1.26.1'
+            if version_compare(version, '1.25.6') < 0:
+                required = '1.25.6'
+            elif version_compare(version, '1.26.0') == 0:
+                required = '1.26.1'
 
-        #     if required:
-        #         raven_client.captureMessage(
-        #             'Extension Update Required',
-        #             level='warning',
-        #             extra={'current': version, 'required': required})
+            if required:
+                raven_client.captureMessage(
+                    'Extension Update Required',
+                    level='warning',
+                    extra={'current': version, 'required': required})
 
-        #         return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
+                return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
 
         order_key = data.get('order')
 
@@ -485,3 +564,121 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_success(order)
         else:
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
+
+    def post_order_fulfill_update(self, request, user, data):
+        # if data.get('store'):
+        #     store = CommerceHQStore.objects.get(pk=int(data['store']))
+
+        #     TODO: sub user permission for CHQ
+        #     if not user.can('place_orders.sub', store):
+        #         raise PermissionDenied()
+
+        order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
+        permissions.user_can_edit(user, order)
+
+        order.source_status = data.get('status')
+        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.status_updated_at = timezone.now()
+
+        try:
+            order_data = json.loads(order.data)
+            if 'aliexpress' not in order_data:
+                order_data['aliexpress'] = {}
+        except:
+            order_data = {'aliexpress': {}}
+
+        order_data['aliexpress']['end_reason'] = data.get('end_reason')
+
+        try:
+            order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
+        except:
+            pass
+
+        order.data = json.dumps(order_data)
+
+        order.save()
+
+        return self.api_success()
+
+    def post_order_fullfill_hide(self, request, user, data):
+        order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
+        permissions.user_can_edit(user, order)
+
+        order.hidden = data.get('hide') == 'true'
+        order.save()
+
+        return self.api_success()
+
+    def post_import_product(self, request, user, data):
+        try:
+            store = CommerceHQStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+        if not can_add:
+            return self.api_error(
+                'Your current plan allow up to %d saved products, currently you have %d saved products.'
+                % (total_allowed, user_count), status=401)
+
+        shopify_product = safeInt(data.get('product'))
+        supplier_url = data.get('supplier')
+
+        if shopify_product:
+            if user.models_user.shopifyproduct_set.filter(shopify_id=shopify_product).count():
+                return self.api_error('Product is already import/connected', status=422)
+        else:
+            return self.api_error('Shopify Product ID is missing', status=422)
+
+        if not supplier_url:
+            return self.api_error('Supplier URL is missing', status=422)
+
+        if get_domain(supplier_url) == 'aliexpress':
+            if '/deep_link.htm' in supplier_url.lower():
+                supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
+
+            if 's.aliexpress.com' in supplier_url.lower():
+                rep = requests.get(supplier_url, allow_redirects=False)
+                rep.raise_for_status()
+
+                supplier_url = rep.headers.get('location')
+
+                if '/deep_link.htm' in supplier_url:
+                    raven_client.captureMessage(
+                        'Deep link in redirection',
+                        level='warning',
+                        extra={
+                            'location': supplier_url,
+                            'supplier_url': data.get('supplier')
+                        })
+
+            supplier_url = remove_link_query(supplier_url)
+
+        product = CommerceHQProduct(
+            store=store,
+            user=user.models_user,
+            source_id=shopify_product,
+            data=json.dumps({
+                'title': 'Importing...',
+                'variants': [],
+                'original_url': supplier_url
+            })
+        )
+
+        permissions.user_can_add(user, product)
+        product.save()
+
+        supplier = CommerceHQSupplier.objects.create(
+            store=product.store,
+            product=product,
+            product_url=supplier_url,
+            supplier_name=data.get('vendor_name', 'Supplier'),
+            supplier_url=data.get('vendor_url', 'http://www.aliexpress.com/'),
+            is_default=True
+        )
+
+        product.set_default_supplier(supplier, commit=True)
+        product.sync()
+
+        return self.api_success({'product': product.id})

@@ -3,21 +3,29 @@ import arrow
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from django.shortcuts import render, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.http import HttpResponse, Http404
+from django.shortcuts import render, get_object_or_404
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponse, Http404
 from django.views.generic import ListView
-from django.views.generic.detail import DetailView
 from django.views.generic.base import RedirectView
-from django.utils.decorators import method_decorator
+from django.views.generic.detail import DetailView
+
 
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat, aws_s3_context, SimplePaginator
+from shopified_core.utils import (
+    safeInt,
+    safeFloat,
+    aws_s3_context,
+    clean_query_id,
+    SimplePaginator
+)
 
 from .forms import CommerceHQStoreForm, CommerceHQBoardForm
 from .decorators import no_subusers, must_be_authenticated, ajax_only
@@ -31,7 +39,9 @@ from .utils import (
     CommerceHQOrdersPaginator,
     get_store_from_request,
     commercehq_products,
-    chq_customer_address
+    chq_customer_address,
+    get_tracking_orders,
+    order_id_from_name
 )
 
 
@@ -254,7 +264,7 @@ class OrdersList(ListView):
 
         context['breadcrumbs'] = [{
             'title': 'Orders',
-            'url': reverse('chq:products_list')
+            'url': reverse('chq:orders_list')
         }, {
             'title': context['store'].title,
             'url': '{}?store={}'.format(reverse('chq:orders_list'), context['store'].id)
@@ -510,3 +520,102 @@ class OrderPlaceRedirectView(RedirectView):
                 return '/'
 
         return redirect_url
+
+
+class OrdersTrackList(ListView):
+    model = CommerceHQOrderTrack
+    paginator_class = SimplePaginator
+    template_name = 'commercehq/orders_track.html'
+    context_object_name = 'orders'
+    paginate_by = 20
+
+    def get_queryset(self):
+        if not self.request.user.can('orders.use'):
+            return render(self.request, 'upgrade.html')
+
+        order_map = {
+            'order': 'order_id',
+            'source': 'source_id',
+            'status': 'source_status',
+            'tracking': 'source_tracking',
+            'add': 'created_at',
+            'reason': 'source_status_details',
+            'update': 'status_updated_at',
+        }
+
+        for k, v in order_map.items():
+            order_map['-' + k] = '-' + v
+
+        sorting = self.request.GET.get('sort', '-update')
+        sorting = order_map.get(sorting, 'status_updated_at')
+
+        query = self.request.GET.get('query')
+        tracking_filter = self.request.GET.get('tracking')
+        fulfillment_filter = self.request.GET.get('fulfillment')
+        hidden_filter = self.request.GET.get('hidden')
+        completed = self.request.GET.get('completed')
+        source_reason = self.request.GET.get('reason')
+
+        store = self.get_store()
+
+        orders = CommerceHQOrderTrack.objects.select_related('store') \
+                                             .filter(user=self.request.user.models_user, store=store) \
+                                             .defer('data')
+
+        if query:
+            order_id = order_id_from_name(store, query)
+
+            if order_id:
+                query = str(order_id)
+
+            orders = orders.filter(Q(order_id=clean_query_id(query)) |
+                                   Q(source_id=clean_query_id(query)) |
+                                   Q(source_tracking__icontains=query))
+
+        if tracking_filter == '0':
+            orders = orders.filter(source_tracking='')
+        elif tracking_filter == '1':
+            orders = orders.exclude(source_tracking='')
+
+        if fulfillment_filter == '1':
+            orders = orders.filter(commercehq_status='fulfilled')
+        elif fulfillment_filter == '0':
+            orders = orders.exclude(commercehq_status='fulfilled')
+
+        if hidden_filter == '1':
+            orders = orders.filter(hidden=True)
+        elif not hidden_filter or hidden_filter == '0':
+            orders = orders.exclude(hidden=True)
+
+        if completed == '1':
+            orders = orders.exclude(source_status='FINISH')
+
+        if source_reason:
+            orders = orders.filter(source_status_details=source_reason)
+
+        return orders.order_by(sorting)
+
+    def get_context_data(self, **kwargs):
+        context = super(OrdersTrackList, self).get_context_data(**kwargs)
+
+        context['store'] = self.get_store()
+        context['orders'] = get_tracking_orders(self.get_store(), context['orders'])
+
+        context['breadcrumbs'] = [{
+            'title': 'Orders',
+            'url': reverse('chq:orders_list')
+        }, {
+            'title': 'Tracking',
+            'url': reverse('chq:orders_track')
+        }, {
+            'title': context['store'].title,
+            'url': '{}?store={}'.format(reverse('chq:orders_list'), context['store'].id)
+        }]
+
+        return context
+
+    def get_store(self):
+        if not hasattr(self, 'store'):
+            self.store = get_store_from_request(self.request)
+
+        return self.store

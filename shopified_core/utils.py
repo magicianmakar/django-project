@@ -228,6 +228,36 @@ def aws_s3_context():
     }
 
 
+def clean_query_id(qid):
+    ids = re.findall('([0-9]+)', qid)
+    if len(ids):
+        return safeInt(ids[0], 0)
+    else:
+        return 0
+
+
+def version_compare(left, right):
+    def normalize(v):
+        return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
+
+    return cmp(normalize(left), normalize(right))
+
+
+def orders_update_limit(orders_count, check_freq=30, total_time=1440, min_count=20):
+    """
+    Calculate Orders update check limit
+
+    orders_count: Total number of orders
+    check_freq: Extension check interval (minutes)
+    total_time: Total time amount to verify all orders (minutes)
+    min_count: Minimum orders check limit
+    """
+
+    limit = (orders_count * check_freq) / total_time
+
+    return max(limit, min_count)
+
+
 class SimplePaginator(Paginator):
     current_page = 0
 
