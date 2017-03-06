@@ -41,7 +41,7 @@
                             <td>{{item.updated_at|date}}</td>
                             <td>
                                 <button
-                                    data-board-update-url="{% url 'chq:board_update' item.id %}"
+                                    data-board-id="{{item.id}}"
                                     class="btn btn-xs btn-primary board-edit chq-edit-board-btn">
                                     <i class="fa fa-edit"></i>Edit
                                 </button>
@@ -105,8 +105,8 @@
                             </div>
                         </form>
                     </div>
+                </div>
             </div>
-        </div>
         </div>
     </div>
 </div>
@@ -134,43 +134,12 @@
     <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
 
     {% compress js %}
-        <script src="{% static 'libs/bower_components/jquery-form/jquery.form.js' %}"></script>
         <script type="text/javascript" src="{% static 'commercehq/js/boards.js' %}"></script>
     {% endcompress %}
 
 {% endblock %}
 
 {% block modal-board-add %}
-    <div id="chq-modal-board-add" class="modal fade" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h3 class="m-t-none m-b">Add new board</h3>
-                            <form id="chq-new-board-add-form" method="post" role="form">
-                                {% include 'commercehq/board_create_form.html' %}
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="chq-modal-board-update" class="modal fade" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h3 class="m-t-none m-b">Update board</h3>
-                            <form id="chq-board-update-form" method="post" role="form">
-                                {% include 'commercehq/board_update_form.html' %}
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'commercehq/modal_board_add.html' %}
+    {% include 'commercehq/modal_board_update.html' %}
 {% endblock modal-board-add %}

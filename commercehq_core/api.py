@@ -26,6 +26,8 @@ from shopified_core.utils import (
 )
 
 import tasks
+import utils
+
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
@@ -613,6 +615,51 @@ class CHQStoreApi(ApiResponseMixin, View):
                     'title': board.title
                 }
             })
+
+    def get_board_config(self, request, user, data):
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = CommerceHQBoard.objects.get(user=user.models_user, pk=pk)
+            permissions.user_can_edit(user, board)
+        except CommerceHQBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        try:
+            return self.api_success({
+                'title': board.title,
+                'config': json.loads(board.config)
+            })
+        except:
+            return self.api_success({
+                'title': board.title,
+                'config': {
+                    'title': '',
+                    'tags': '',
+                    'type': ''
+                }
+            })
+
+    def post_board_config(self, request, user, data):
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = CommerceHQBoard.objects.get(user=user.models_user, pk=pk)
+            permissions.user_can_edit(user, board)
+        except CommerceHQBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        board.title = data.get('title')
+
+        board.config = json.dumps({
+            'title': data.get('product_title'),
+            'tags': data.get('product_tags'),
+            'type': data.get('product_type'),
+        })
+
+        board.save()
+
+        utils.smart_board_by_board(user.models_user, board)
+
+        return self.api_success()
 
     def get_order_data(self, request, user, data):
         version = request.META.get('HTTP_X_EXTENSION_VERSION')

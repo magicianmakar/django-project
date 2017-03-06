@@ -59,31 +59,33 @@ $(document).ready(function() {
 
     $('.chq-edit-board-btn').click(function(e) {
         e.preventDefault();
-        var action = $(this).data('board-update-url');
+        var boardId = $(this).data('board-id');
 
-        $('#chq-board-update-form').prop('action', action);
-
-        $.get(action)
-            .done(function(data) {
-                $('#chq-board-update-form').html(data);
-                $('#chq-modal-board-update').modal('show');
-            })
-            .fail(function(jqXHR) {
-                if (jqXHR.status == 401) {
-                    window.location.reload();
-                }
-            });
+        $.get(api_url('board-config', 'chq'), {'board_id': boardId}).done(function(data) {
+            var $form = $('#chq-board-update-form');
+            $form.find('input[name="board-id"]').val(boardId);
+            $form.find('input[name="title"]').val(data.title);
+            $form.find('input[name="product-title"]').val(data.config.title);
+            $form.find('input[name="product-tags"]').val(data.config.tags);
+            $form.find('input[name="product-type"]').val(data.config.type);
+            $('#chq-modal-board-update').modal('show');
+        });
     });
 
-    $('#chq-board-update-form').ajaxForm({
-        target: '#chq-board-update-form',
-        clearForm: true,
-        data: {csrfmiddlewaretoken: Cookies.get('csrftoken')},
-        success: function(responseText, statusText, xhr, $form) {
-            if (xhr.status == 204) {
-                window.location.reload();
-            }
-        }
+    $('#chq-board-update-form').submit(function(e) {
+        e.preventDefault();
+        var data = {
+            board_id: $(this).find('input[name="board-id"]').val().trim(),
+            title: $(this).find('input[name="title"]').val().trim(),
+            product_title: $(this).find('input[name="product-title"]').val().trim(),
+            product_tags: $(this).find('input[name="product-tags"]').val().trim(),
+            product_type: $(this).find('input[name="product-type"]').val().trim()
+        };
+
+        $.post(api_url('board-config', 'chq'), data).done(function() {
+            $('#chq-modal-board-update').modal('hide');
+            window.location.href = window.location.href;
+        });
     });
 
     $('.chq-delete-board-btn').click(function(e) {
