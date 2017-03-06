@@ -149,3 +149,4 @@ class ShopifiedApi(ApiResponseMixin, View):
             })
 
         return JsonResponse(stores, safe=False)
+

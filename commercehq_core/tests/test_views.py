@@ -1,3 +1,5 @@
+from mock import patch, Mock
+
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
@@ -9,6 +11,57 @@ from .factories import (
     CommerceHQProductFactory,
 )
 from ..models import CommerceHQStore, CommerceHQBoard
+
+
+class StoreListTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.path = reverse('chq:index')
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_be_logged_in(self):
+        r = self.client.get(self.path)
+        redirect_to = reverse('login') + '?next=' + self.path
+        self.assertRedirects(r, redirect_to)
+
+    def test_must_return_ok(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTrue(r.status_code, 200)
+
+    def test_must_return_correct_template(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTemplateUsed(r, 'commercehq/index.html')
+
+    def test_must_only_list_active_stores(self):
+        CommerceHQStoreFactory(user=self.user, is_active=True)
+        CommerceHQStoreFactory(user=self.user, is_active=False)
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.context['stores'].count(), 1)
+
+    def test_must_show_first_visit(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTrue(r.context['first_visit'])
+
+    def test_must_set_first_visit_to_false(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.user.profile.refresh_from_db()
+        config = self.user.profile.get_config()
+        self.assertFalse(config['_first_visit'])
+
+    def test_must_have_breadcrumbs(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.context['breadcrumbs'], ['Stores'])
 
 
 class StoreCreateTestCase(TestCase):
@@ -128,21 +181,21 @@ class StoreDeleteTestCase(TestCase):
 
         self.store = CommerceHQStoreFactory(user=self.user)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:store_delete', args=(self.store.pk,))
+        self.path = '/api/chq/store?store_id=%s' % self.store.pk
 
     def test_must_be_logged_in(self):
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_delete_own_store(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         count = self.user.commercehqstore_set.filter(is_active=True).count()
         self.assertEqual(count, 0)
 
     def test_must_not_allow_subusers_to_delete(self):
         self.client.login(username=self.subuser.username, password=self.subuser_password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         self.assertEqual(r.status_code, 403)
 
 
@@ -188,7 +241,7 @@ class BoardCreateTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
-        self.path = reverse('chq:board_create')
+        self.path = '/api/chq/boards-add'
         self.data = {'title': 'Test Board'}
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
 
@@ -197,27 +250,30 @@ class BoardCreateTestCase(TestCase):
 
     def test_must_require_requests_to_be_ajax(self):
         r = self.client.post(self.path, self.data)
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 401)
 
     def test_must_be_logged_in(self):
         r = self.client.post(self.path, self.data, **self.headers)
         self.assertEqual(r.status_code, 401)
 
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
     def test_must_create_new_board(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 204)
+        self.assertEqual(r.status_code, 200)
 
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
     def test_must_add_board_to_user(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
         board = CommerceHQBoard.objects.get(title=self.data['title'])
         self.assertEqual(board.user, self.user)
 
-    def test_must_use_correct_template(self):
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
+    def test_board_name_is_required(self):
         self.login()
-        r = self.client.post(self.path, {}, **self.headers)
-        self.assertTemplateUsed(r, 'commercehq/board_create_form.html')
+        r = self.client.post(self.path, {'title': ''}, **self.headers)
+        self.assertEqual(r.status_code, 501)
 
 
 class BoardUpdateTestCase(TestCase):
@@ -272,17 +328,18 @@ class BoardDeleteTestCase(TestCase):
 
         self.board = CommerceHQBoardFactory(user=self.user)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:board_delete', args=(self.board.pk,))
+        self.path = '/api/chq/board?board_id=%s' % self.board.pk
 
     def test_must_be_logged_in(self):
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_delete_own_board(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.delete(self.path, **self.headers)
         count = self.user.commercehqboard_set.count()
         self.assertEqual(count, 0)
+        self.assertEqual(r.status_code, 200)
 
 
 class BoardEmptyTestCase(TestCase):
@@ -292,16 +349,64 @@ class BoardEmptyTestCase(TestCase):
         self.user.set_password(self.password)
         self.user.save()
 
+        self.store = CommerceHQStoreFactory(user=self.user)
         self.board = CommerceHQBoardFactory(user=self.user)
+        self.product = CommerceHQProductFactory(user=self.user, store=self.store)
+        self.board.products.add(self.product)
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:board_empty', args=(self.board.pk,))
+        self.path = '/api/chq/board-empty'
 
     def test_must_be_logged_in(self):
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
         self.assertEqual(r.status_code, 401)
 
     def test_user_must_be_able_to_empty_own_board(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, **self.headers)
+        r = self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
         count = self.board.products.count()
         self.assertEqual(count, 0)
+
+
+class BoardDetailTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.board = CommerceHQBoardFactory(user=self.user, title='Test Board')
+        self.path = reverse('chq:board_detail', args=(self.board.pk,))
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_must_be_logged_in(self):
+        r = self.client.get(self.path)
+        redirect_to = reverse('login') + '?next=' + self.path
+        self.assertRedirects(r, redirect_to)
+
+    def test_must_return_ok(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTrue(r.status_code, 200)
+
+    def test_must_return_correct_template(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertTemplateUsed(r, 'commercehq/board.html')
+
+    def test_must_have_board_in_context(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertIn('board', r.context)
+
+    def test_must_only_show_own_board(self):
+        board = CommerceHQStoreFactory()
+        self.login()
+        r = self.client.get(reverse('chq:board_detail', args=(board.pk,)))
+        self.assertEqual(r.status_code, 404)
+
+    def test_must_have_breadcrumbs(self):
+        self.login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.context['breadcrumbs'], ['Boards', self.board.title])
+

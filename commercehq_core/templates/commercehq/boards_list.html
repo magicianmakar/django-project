@@ -27,7 +27,10 @@
                         {% for item in boards %}
                         <tr id="board-row-{{item.id}}" class="board-box">
                             <td>
-                                <a class="edit-user-premsc" board-id="{{item.id}}" href="/boards/{{item.id}}">
+                                <a
+                                    class="edit-user-premsc"
+                                    board-id="{{item.id}}"
+                                    href="{% url 'chq:board_detail' item.id %}">
                                     {{item.title}}
                                 </a>
                             </td>
@@ -44,13 +47,11 @@
                                 </button>
                                 <button
                                     data-board-id="{{item.id}}"
-                                    data-board-empty-url="{% url 'chq:board_empty' item.id %}"
                                     class="btn btn-xs btn-warning board-empty chq-empty-board-btn">
                                     <i class="fa fa-eraser"></i> Empty
                                 </button>
                                 <button
                                     data-board-id="{{item.id}}"
-                                    data-board-delete-url="{% url 'chq:board_delete' item.id %}"
                                     class="btn btn-xs btn-danger board-delete chq-delete-board-btn">
                                     <i class="fa fa-times"></i> Delete
                                 </button>
@@ -147,11 +148,7 @@
                     <div class="row">
                         <div class="col-sm-12">
                             <h3 class="m-t-none m-b">Add new board</h3>
-                            <form
-                                id="chq-new-board-add-form"
-                                action="{% url 'chq:board_create' %}"
-                                method="post"
-                                role="form">
+                            <form id="chq-new-board-add-form" method="post" role="form">
                                 {% include 'commercehq/board_create_form.html' %}
                             </form>
                         </div>

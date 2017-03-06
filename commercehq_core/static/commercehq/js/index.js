@@ -46,7 +46,6 @@ $(document).ready(function() {
     $('.delete-store-btn').click(function(e) {
         e.preventDefault();
         var storeId = $(this).data('store-id');
-        var action = $(this).data('store-delete-url');
 
         swal({
             title: 'Are you sure?',
@@ -57,10 +56,13 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!',
             closeOnConfirm: false
         }, function() {
-            var data = {csrfmiddlewaretoken: Cookies.get('csrftoken')};
-            $.post(action, data).done(function() {
-                $('#store-row-' + storeId).hide();
-                swal('Deleted!', 'The store has been deleted.', 'success');
+            $.ajax({
+                url: api_url('store', 'chq') + '?store_id=' + storeId,
+                method: 'DELETE',
+                success: function() {
+                    $('#store-row-' + storeId).hide();
+                    swal('Deleted!', 'The store has been deleted.', 'success');
+                }
             });
         });
     });

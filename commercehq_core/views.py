@@ -45,29 +45,6 @@ from .utils import (
 )
 
 
-@login_required
-def index_view(request):
-    stores = CommerceHQStore.objects.filter(user=request.user.models_user) \
-                                    .filter(is_active=True)
-    can_add, total_allowed, user_count = permissions.can_add_store(request.user)
-    is_stripe = request.user.profile.plan.is_stripe()
-    store_count = request.user.profile.get_shopify_stores().count()
-    store_count += request.user.profile.get_chq_stores().count()
-    extra_stores = can_add and is_stripe and store_count >= 1
-
-    config = request.user.models_user.profile.get_config()
-    first_visit = config.get('_first_visit', True)
-    if first_visit:
-        request.user.set_config('_first_visit', False)
-
-    return render(request, 'commercehq/index.html', {
-        'stores': stores,
-        'extra_stores': extra_stores,
-        'first_visit': first_visit,
-        'breadcrumbs': ['Stores']
-    })
-
-
 @ajax_only
 @must_be_authenticated
 @no_subusers
@@ -90,42 +67,14 @@ def store_create(request):
 @csrf_protect
 @require_http_methods(['GET', 'POST'])
 def store_update(request, store_id):
-    board = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
-    form = CommerceHQStoreForm(request.POST or None, instance=board)
+    store = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
+    form = CommerceHQStoreForm(request.POST or None, instance=store)
 
     if request.method == 'POST' and form.is_valid():
         form.save()
         return HttpResponse(status=204)
 
     return render(request, 'commercehq/store_update_form.html', {'form': form})
-
-
-@ajax_only
-@must_be_authenticated
-@no_subusers
-@csrf_protect
-@require_http_methods(['POST'])
-def store_delete(request, store_id):
-    store = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
-    store.is_active = False
-    store.save()
-
-    return HttpResponse()
-
-
-@ajax_only
-@must_be_authenticated
-@csrf_protect
-@require_http_methods(['POST'])
-def board_create(request):
-    form = CommerceHQBoardForm(request.POST)
-
-    if form.is_valid():
-        form.instance.user = request.user.models_user
-        form.save()
-        return HttpResponse(status=204)
-
-    return render(request, 'commercehq/board_create_form.html', {'form': form})
 
 
 @ajax_only
@@ -143,26 +92,42 @@ def board_update(request, board_id):
     return render(request, 'commercehq/board_update_form.html', {'form': form})
 
 
-@ajax_only
-@must_be_authenticated
-@csrf_protect
-@require_http_methods(['POST'])
-def board_delete(request, board_id):
-    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    board.delete()
+class StoresList(ListView):
+    model = CommerceHQStore
+    context_object_name = 'stores'
+    template_name = 'commercehq/index.html'
 
-    return HttpResponse()
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(StoresList, self).dispatch(request, *args, **kwargs)
 
+    def get_queryset(self):
+        qs = super(StoresList, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user).filter(is_active=True)
 
-@ajax_only
-@must_be_authenticated
-@csrf_protect
-@require_http_methods(['POST'])
-def board_empty(request, board_id):
-    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    board.products.clear()
+    def is_first_visit(self):
+        config = self.request.user.models_user.profile.get_config()
+        first_visit = config.get('_first_visit', True)
+        if first_visit:
+            self.request.user.set_config('_first_visit', False)
 
-    return HttpResponse()
+        return first_visit
+
+    def get_store_count(self):
+        store_count = self.request.user.profile.get_shopify_stores().count()
+        store_count += self.request.user.profile.get_chq_stores().count()
+
+        return store_count
+
+    def get_context_data(self, **kwargs):
+        context = super(StoresList, self).get_context_data(**kwargs)
+        can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
+        is_stripe = self.request.user.profile.plan.is_stripe()
+        context['extra_stores'] = can_add and is_stripe and self.get_store_count() >= 1
+        context['first_visit'] = self.is_first_visit()
+        context['breadcrumbs'] = ['Stores']
+
+        return context
 
 
 class BoardsList(ListView):
@@ -181,6 +146,27 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
+
+        return context
+
+
+class BoardDetailView(DetailView):
+    model = CommerceHQBoard
+    context_object_name = 'board'
+    template_name = 'commercehq/board.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(BoardDetailView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(BoardDetailView, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardDetailView, self).get_context_data(**kwargs)
+        board = self.get_object()
+        context['breadcrumbs'] = ['Boards', board.title]
 
         return context
 

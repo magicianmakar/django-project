@@ -1,0 +1,184 @@
+{% extends "base_commercehq_core.html" %}
+
+{% load static %}
+{% load compress %}
+{% load perms_helper %}
+
+
+{% block main-container %}
+
+{% if board %}
+    <div id="b{{board.id}}" board-id="{{board.id}}" class="board-box ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>{{board.title}}<small></small></h5>
+        <div class="ibox-tools">
+            <a class="collapse-link">
+                <i class="fa fa-chevron-up"></i>
+            </a>
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                <i class="fa fa-wrench"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-user">
+                <li><a board-id="{{board.id}}" class="board-edit" href="#">Edit...</a></li>
+                <li><a board-id="{{board.id}}" class="board-empty" href="#">Empty board</a></li>
+                <li><a board-id="{{board.id}}" class="board-delete" href="#">Delete board</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="ibox-content">
+
+    {% if board.products.all %}
+    <div class="row" style="margin-bottom: 20px">
+        <div class="col-md-8">
+            <label for="selected-actions">Selected Items:</label>
+            <select class="form-control selected-actions" name="selected-actions" style="display: inline-block; width: 191px; ">
+                <option value=""></option>
+                <option value="edit">Edit...</option>
+                <option value="shopify-send">Send To Shopify...</option>
+                <option value="board-remove">Remove from board</option>
+                <option value="delete">Delete</option>
+            </select>
+            <button class="btn btn-primary apply-btn">Apply</button>
+            <button class="btn btn-default btn-outline select-all-btn">Select All</button>
+
+            {% if request.user|can:'product_filters.view' %}
+                <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        {% for item in board.products.all %}
+        <div class="col-xs-3 col-md-3 ">
+            <div class="ibox">
+                <div class="ibox-content product-box" product-id="{{item.id}}">
+                    <div class="product-imitation" style="padding: 0;">
+                        <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                        <label for="product_{{item.id}}"><img class="unveil"  src="{% static 'img/blank.gif' %}" data-src="{{item.images|first}}" style="width: 100%"></label>
+                        {# <button class="btn btn-xs btn-danger delete-from-board-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button> #}
+                    </div>
+                    <div class="product-desc">
+                        <span class="product-price">
+                            {{item.price}}
+                        </span>
+                        <small class="text-muted">{{item.product.type}}</small>
+                        {% if item.source %}
+                        <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                            <a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a>
+                            </small>
+                        {% endif %}
+
+                        <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
+                        <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
+
+                        <div class="small m-t-xs">
+                            Submitted at {{item.created_at|date}}
+                        </div>
+                        <div class="m-t text-right">
+                            {% if item.qelem.is_connected %}
+                                <a
+                                    class="btn btn-xs btn-outline btn-primary"
+                                    href="{{ item.shopify_url }}"
+                                    title="Connected to Shopify"
+                                    target="_blank"
+                                >
+                                    <i class="text-success fa fa-fw fa-link"></i>
+                                </a>
+                            {% endif %}
+                            <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% if forloop.counter|divisibleby:"4" %}
+        </div>
+        <div class="row">
+    {% endif %}
+
+        {% empty %}
+            <h3 class="text-center">No product in this board.</h3>
+        {% endfor %}
+
+    </div>
+
+        {% include "partial/paginator.html" %}
+
+    </div>
+    </div>
+{% else %}
+    <div class="row">
+        <div class="middle-box text-center animated fadeInDown">
+            <h3 class="">No board found.</h3>
+            <a href="#" class="add-board-btn btn btn-primary"><span class="fa fa-plus"></span> Add Board</a>
+
+        </div>
+    </div>
+{% endif %}
+
+{% include "partial/product_edit_modal.html" %}
+
+
+<div id="smartboard-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Edit Board</h3>
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="">Board Title:</label>
+                                <input type="text" id="board-title" class="form-control">
+                            </div>
+
+                            <h3 class="m-t-none m-b">Smart Board</h3>
+                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
+                            <input type="hidden" id="smartboard-board">
+
+                            <div class="form-group">
+                                <label for="">Product Title contains:</label>
+                                <input type="text" id="smartboard-product-title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Tags contains:</label>
+                                <input type="text" id="smartboard-product-tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Type contains:</label>
+                                <input type="text" id="smartboard-product-type" class="form-control">
+                            </div>
+                            <div>
+                                <button id="smartboard-save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Save</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partial/shopify_send_modal.html' %}
+
+{% include 'partial/filter_modal.html' %}
+
+{% endblock %}
+
+
+{% block extrajs %}
+    {% compress js %}
+        <script type="text/javascript" src="{% static 'commercehq/js/boards.js' %}"></script>
+    {% endcompress %}
+{% endblock %}
+
+{% block store-switch %}
+    {% with shopify_view_name='boards_list' chq_view_name='chq:boards_list' %}
+        {% include 'store_switch.html' %}
+    {% endwith %}
+{% endblock %}
+
