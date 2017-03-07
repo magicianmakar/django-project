@@ -155,25 +155,35 @@
                                     </td>
 
                                     <td style="white-space:nowrap">
-                                        <input class="var-input" type="text" name="price" value="{{item.price|default:''}}" />
-                                        <span class="var-pad">{% money_format None product.store  %}</span>
+                                        <div class="input-group" style="width:120px">
+                                           <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                           <input type="number" name="price" value="{{item.price|default:''}}" min="0" step="0.1"
+                                                  data-number-to-fixed="2" data-number-stepfactor="100"
+                                                  class="form-control currency" />
+                                        </div>
                                     </td>
 
                                     <td style="white-space:nowrap">
-                                        <input class="var-input" type="text" name="compare_at_price" value="{{item.compare_at_price|default:''}}" />
-                                        <span class="var-pad">{% money_format None product.store  %}</span>
+                                        <div class="input-group" style="width:120px">
+                                           <span class="input-group-addon input-sm">{% money_format None product.store %}</span>
+                                           <input type="number" name="compare_at_price" value="{{item.compare_at_price|default:''}}" min="0" step="0.1"
+                                                  data-number-to-fixed="2" data-number-stepfactor="100"
+                                                  class="form-control currency" />
+                                        </div>
                                     </td>
 
                                     <td style="white-space:nowrap">
-                                        <input class="var-input" type="text" name="weight" value="{{item.weight}}" />
-                                        <select class="var-pad var-input" name="weight_unit" class="form-control"
-                                            style="border-left: 1px #EAEAEA solid;display: inline;width: 20%;background-color: #fff;padding: 9px 2px;">
+                                        <input class="form-control" type="number" name="weight" value="{{item.weight}}"
+                                               min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100"
+                                               style="display:inline-block;width:100px;"/>
+
+                                        <select class="form-control" name="weight_unit" class="form-control"
+                                                style="width:65px;display:inline-block;">
                                             <option value="g" {% if item.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
                                             <option value="kg" {% if item.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
                                             <option value="oz" {% if item.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
                                             <option value="lb" {% if item.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
                                         </select>
-
                                     </td>
                                 </tr>
                                 {% endfor %}
