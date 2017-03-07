@@ -433,6 +433,13 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def update_product_connection(self, store_id, shopify_id):
+    print store_id, shopify_id
+    store = ShopifyStore.objects.get(id=store_id)
+    order_utils.update_line_export(store, shopify_id)
+
+
 @celery_app.task(base=CaptureFailure, ignore_result=True)
 def smartmemeber_webhook_call(subdomain, data):
     try:
