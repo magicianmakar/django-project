@@ -840,7 +840,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            shopify_orders_utils.update_line_export(product.store, shopify_id)
+            tasks.update_product_connection(product.store.id, shopify_id)
 
             tasks.update_shopify_product(product.store.id, shopify_id, product_id=product.id)
 
@@ -856,7 +856,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            shopify_orders_utils.update_line_export(product.store, shopify_id)
+            tasks.update_product_connection(product.store.id, shopify_id)
 
         return self.api_success()
 
