@@ -285,6 +285,11 @@
                             <li><a href="{{product.shopify_url}}" target="_blank" >
                                 <i class="fa fa-file-o"></i> View in Shopify</a>
                             </li>
+
+                            <li><a href="?sync=1">
+                                <i class="fa fa-refresh"></i> Sync with Shopify</a>
+                            </li>
+
                             {% if request.user|can:'product_variant_setup.view' %}
                             <li><a href="{{product.variant_edit}}" target="_blank">
                                 <i class="fa fa-file-image-o"></i> Setup Variants Images</a>
