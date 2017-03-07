@@ -464,7 +464,6 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
 
 @app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_product_connection(self, store_id, shopify_id):
-    print store_id, shopify_id
     store = ShopifyStore.objects.get(id=store_id)
     order_utils.update_line_export(store, shopify_id)
 
