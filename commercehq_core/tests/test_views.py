@@ -1,9 +1,11 @@
+import json
+
 from mock import patch, Mock
 
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
-from leadgalaxy.tests.factories import UserFactory
+from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, AppPermissionFactory
 
 from .factories import (
     CommerceHQStoreFactory,
@@ -19,6 +21,10 @@ class StoreListTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+        self.user.profile.plan = GroupPlanFactory()
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='commercehq.use'))
+        self.user.profile.save()
+
         self.path = reverse('chq:index')
 
     def login(self):
@@ -284,38 +290,42 @@ class BoardUpdateTestCase(TestCase):
         self.user.save()
         self.board = CommerceHQBoardFactory(user=self.user)
 
-        self.data = {'title': 'Test Board'}
+        self.data = {
+            'board_id': self.board.pk,
+            'title': 'Test Board',
+            'product_title': 'Test Product Title',
+            'product_tags': 'hello,there',
+            'product_type': 'Test Type'}
+
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:board_update', args=(self.board.pk,))
+        self.path = '/api/chq/board-config'
 
     def login(self):
         self.client.login(username=self.user.username, password=self.password)
 
     def test_must_require_requests_to_be_ajax(self):
         r = self.client.get(self.path)
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 401)
 
     def test_must_be_logged_in(self):
         r = self.client.get(self.path, **self.headers)
         self.assertEqual(r.status_code, 401)
 
-    def test_must_return_correct_form_template(self):
-        self.login()
-        r = self.client.get(self.path, **self.headers)
-        self.assertTrue(r.status_code, 200)
-        self.assertTemplateUsed(r, 'commercehq/board_update_form.html')
-
     def test_must_update_board(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
         self.board.refresh_from_db()
-        self.assertTrue(r.status_code, 204)
-        self.assertTrue(self.board.title, self.data['title'])
+        new_config = json.loads(self.board.config)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.board.title, self.data['title'])
+        self.assertEqual(new_config['title'], self.data['product_title'])
+        self.assertEqual(new_config['tags'], self.data['product_tags'])
+        self.assertEqual(new_config['type'], self.data['product_type'])
 
-    def test_must_not_return_other_user_board(self):
+    def test_must_not_return_data_of_other_users_board(self):
         board = CommerceHQBoardFactory()
         self.login()
-        r = self.client.get(reverse('chq:board_update', args=(board.pk,)))
+        r = self.client.get(self.path, data={'board_id': board.pk})
         self.assertEqual(r.status_code, 404)
 
 

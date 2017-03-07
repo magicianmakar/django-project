@@ -1,4 +1,5 @@
 import re
+import json
 
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -396,3 +397,36 @@ class CommerceHQOrdersPaginator(Paginator):
             )
 
         return rep.json()
+
+
+def smart_board_by_board(user, board):
+    for product in user.commercehqproduct_set.all():
+        product_info = json.loads(product.data)
+        product_info = {
+            'title': product_info.get('title', '').lower(),
+            'tags': product_info.get('tags', '').lower(),
+            'type': product_info.get('type', '').lower(),
+        }
+
+        try:
+            config = json.loads(board.config)
+        except:
+            continue
+
+        product_added = False
+        for j in ['title', 'tags', 'type']:
+            if product_added:
+                break
+
+            if not len(config.get(j, '')) or not len(product_info[j]):
+                continue
+
+            for f in config.get(j, '').split(','):
+                if f.lower() in product_info[j]:
+                    board.products.add(product)
+                    product_added = True
+
+                    break
+
+        if product_added:
+            board.save()

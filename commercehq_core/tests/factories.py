@@ -18,6 +18,7 @@ class CommerceHQStoreFactory(factory.DjangoModelFactory):
 class CommerceHQBoardFactory(factory.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
+    config = '{}'
 
     class Meta:
         model = 'commercehq_core.CommerceHQBoard'

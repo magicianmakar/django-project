@@ -77,21 +77,6 @@ def store_update(request, store_id):
     return render(request, 'commercehq/store_update_form.html', {'form': form})
 
 
-@ajax_only
-@must_be_authenticated
-@csrf_protect
-@require_http_methods(['GET', 'POST'])
-def board_update(request, board_id):
-    board = get_object_or_404(CommerceHQBoard, user=request.user.models_user, pk=board_id)
-    form = CommerceHQBoardForm(request.POST or None, instance=board)
-
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        return HttpResponse(status=204)
-
-    return render(request, 'commercehq/board_update_form.html', {'form': form})
-
-
 class StoresList(ListView):
     model = CommerceHQStore
     context_object_name = 'stores'
