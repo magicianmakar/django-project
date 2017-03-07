@@ -1030,7 +1030,7 @@ def proccess_api(request, user, method, target, data):
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            shopify_orders_utils.update_line_export(product.store, shopify_id)
+            tasks.update_product_connection.delay(product.store.id, shopify_id)
 
             tasks.update_shopify_product(product.store.id, shopify_id, product_id=product.id)
 
@@ -1048,7 +1048,7 @@ def proccess_api(request, user, method, target, data):
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            shopify_orders_utils.update_line_export(product.store, shopify_id)
+            tasks.update_product_connection.delay(product.store.id, shopify_id)
 
         return JsonResponse({
             'status': 'ok',
@@ -3352,7 +3352,6 @@ def product_view(request, pid):
             p['product']['published'] = shopify_product['published_at'] is not None
 
             if arrow.get(shopify_product['updated_at']).datetime > p['qelem'].updated_at or request.GET.get('sync'):
-                print 'Syncing'
                 tasks.update_shopify_product(
                     product.store.id,
                     product.shopify_id,
