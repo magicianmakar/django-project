@@ -3749,6 +3749,8 @@ def acp_users_list(request):
 
     plans = GroupPlan.objects.all()
     profiles = UserProfile.objects.all()
+    if q:
+        profiles = profiles.filter(user__in=users)
 
     return render(request, 'acp/users_list.html', {
         'users': users,
