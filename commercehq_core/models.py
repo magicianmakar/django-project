@@ -249,7 +249,6 @@ class CommerceHQProduct(models.Model):
         product['tags'] = ','.join(product['tags']) if type(product['tags']) is list else ''
 
         for idx, img in enumerate(product['images']):
-            print idx, img
             product['images'][idx] = img['path']
 
         for i in product['textareas']:
