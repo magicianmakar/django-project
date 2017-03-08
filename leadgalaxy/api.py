@@ -314,7 +314,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Export Error', status=500)
 
         if count >= 125:
-            return self.api_error('Export Error', status=500)
+            return self.api_error('Export Error', status=404)
 
         if not task.ready():
             return self.api_success({
