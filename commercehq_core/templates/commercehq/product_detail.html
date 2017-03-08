@@ -175,12 +175,15 @@
 
                         <div class="row">
                             <div class="col-xs-12 text-right" style="margin-top: 15px;">
+                                <!--
                                 <a id="download-images"
                                    class="btn btn-success btn-xs"
                                    data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading"
                                    href="{% url 'product_image_download' pid=product.id %}">
                                     <i class="fa fa-download"></i> Download Images
                                 </a>
+                                -->
+
                                 {% if aws_available and request.user|can:'image_uploader.view' %}
                                 <a class="btn btn-success btn-xs"
                                     {% if request.user|can:'image_uploader.use' %}
@@ -192,7 +195,10 @@
                                     <i class="fa fa-upload"></i> Upload Image
                                 </a>
                                 {% endif %}
+
+                                <!--
                                 <button class="btn btn-success btn-xs add-images-btn">More images</button>
+                                -->
                             </div>
                         </div>
                     </div>

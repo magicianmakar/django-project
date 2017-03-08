@@ -173,6 +173,9 @@ def get_tracking_orders(store, tracker_orders):
     for i in tracker_orders:
         ids.append(str(i.order_id))
 
+    if not len(ids):
+        return tracker_orders
+
     rep = store.request.post(
         url=store.get_api_url('orders', 'search'),
         params={'size': 50},

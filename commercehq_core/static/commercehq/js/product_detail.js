@@ -116,7 +116,10 @@ function productExport(btn) {
 
                     if (data.success) {
                         toastr.success('Product Exported.','CommerceHQ Export');
-                        setTimeout(window,location.reload, 1500);
+
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         displayAjaxError('CommerceHQ Export', data);
                     }
@@ -212,7 +215,9 @@ $('#product-update-btn').click(function (e) {
 
                     if (data.success) {
                         toastr.success('Product Updated.','CommerceHQ Update');
-                        setTimeout(window,location.reload, 1500);
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         displayAjaxError('CommerceHQ Update', data);
                     }
