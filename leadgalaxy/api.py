@@ -1665,7 +1665,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         aliexpress_ids = data.get('aliexpress_id')
         if aliexpress_ids:
-            aliexpress_ids = aliexpress_ids.split(',')
+            aliexpress_ids = aliexpress_ids if type(aliexpress_ids) is list else aliexpress_ids.split(',')
         else:
             try:
                 aliexpress_ids = json.loads(request.body)['aliexpress_id']
