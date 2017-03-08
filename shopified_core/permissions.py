@@ -4,11 +4,13 @@ from django.core.exceptions import PermissionDenied
 
 from leadgalaxy.models import ShopifyStore
 
+
 def get_object_user(obj):
     if hasattr(obj, 'user'):
         return obj.user
     else:
         return obj.store.user
+
 
 def user_can_add(user, obj):
     obj_user = get_object_user(obj)
