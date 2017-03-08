@@ -15,8 +15,6 @@ from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.crypto import get_random_string
 
-from raven.contrib.django.raven_compat.models import client as raven_client
-
 import arrow
 import bleach
 import phonenumbers
@@ -272,5 +270,4 @@ def order_phone_number(user, phone_number, customer_country):
         parsed = phonenumbers.parse(phone_number, customer_country)
         return '+{}'.format(parsed.country_code), parsed.national_number
     except:
-        raven_client.captureException(level='warning')
         return None, phone_number
