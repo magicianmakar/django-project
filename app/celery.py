@@ -1,8 +1,11 @@
 from __future__ import absolute_import
 
 import os
+import random
+
 from celery import Celery
 from celery import Task
+from django.core.cache import cache
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
