@@ -266,7 +266,7 @@ def order_id_from_name(store, order_name, default=None):
         'fulfillment_status': 'any',
         'financial_status': 'any',
         'fields': 'id',
-        'name': order_name
+        'name': order_name.strip()
     }
 
     rep = requests.get(

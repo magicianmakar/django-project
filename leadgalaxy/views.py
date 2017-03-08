@@ -2226,7 +2226,7 @@ def orders_view(request):
                 if len(order_ids):
                     orders = orders.filter(order_id__in=order_ids)
                 else:
-                    orders = orders.filter(order_id=query_order)
+                    orders = orders.filter(order_id=utils.safeInt(query_order, 0))
 
         if query_customer:
             orders = orders.filter(Q(customer_name__icontains=query_customer) |
