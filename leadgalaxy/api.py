@@ -1038,9 +1038,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         })
 
     def get_user_config(self, request, user, data):
-        if not user.can('edit_settings.sub'):
-            raise PermissionDenied()
-
         if data.get('current'):
             profile = user.profile
         else:
