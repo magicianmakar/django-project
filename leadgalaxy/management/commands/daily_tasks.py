@@ -4,7 +4,6 @@ from django.utils import timezone
 import arrow
 
 from leadgalaxy.models import *
-from leadgalaxy import utils
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -51,8 +50,11 @@ class Command(BaseCommand):
             'new_plan': new_plan
         }
 
-        utils.send_email_from_template(tpl='expire_plan_change.html',
-                                       subject='[Shopified App] Plan Expire',
-                                       recipient=['ma7dev@gmail.com', 'chase@shopifiedapp.com'],
-                                       data=data,
-                                       nl2br=False)
+        from shopified_core.utils import send_email_from_template
+
+        send_email_from_template(
+            tpl='expire_plan_change.html',
+            subject='[Shopified App] Plan Expire',
+            recipient=['ma7dev@gmail.com', 'chase@shopifiedapp.com'],
+            data=data,
+            nl2br=False)

@@ -59,7 +59,7 @@ class ExtraStoreAdmin(admin.ModelAdmin):
     raw_id_fields = ('store', 'user')
 
     def stores_count(self, obj):
-        return obj.user.profile.get_active_stores().count()
+        return obj.user.profile.get_shopify_stores().count()
 
     def is_active(self, obj):
         return obj.store.is_active

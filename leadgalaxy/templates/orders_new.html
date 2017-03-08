@@ -10,7 +10,7 @@
 
     <div class="tabs-container">
         <ul class="nav nav-tabs">
-            {% for item in user.profile.get_active_stores %}
+            {% for item in user.profile.get_shopify_stores %}
                 {% if store == item or item.id|stringformat:"i" == request.GET.store %}
                     <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}
@@ -800,7 +800,7 @@
 
     var sub_conf = {
         key: "{% app_setting 'PUSHER_KEY' %}",
-        channel: "order_{{store.get_short_hash}}",
+        channel: "{{store.pusher_channel}}",
     };
 </script>
 

@@ -13,7 +13,7 @@
          <div class="tabs-container">
             <ul class="nav nav-tabs">
             {% if not request.GET.store %}
-                {% for item in user.profile.get_active_stores %}
+                {% for item in user.profile.get_shopify_stores %}
                     {% if forloop.first %}
                         <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                     {% else %}
@@ -22,7 +22,7 @@
                 {% endfor %}
 
             {% else %}
-                {% for item in user.profile.get_active_stores %}
+                {% for item in user.profile.get_shopify_stores %}
                     {% if item.id|stringformat:"i" == request.GET.store %}
                         <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                     {% else %}

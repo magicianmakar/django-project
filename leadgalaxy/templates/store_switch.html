@@ -1,0 +1,29 @@
+<div class="dropdown">
+    <button class="btn btn-default btn-outline dropdown-toggle"
+            type="button" id="dropdownMenu1" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="true">
+        {% if request.resolver_match.namespace == '' %}
+            Shopify
+        {% elif request.resolver_match.namespace == 'chq' %}
+            CommerceHQ
+        {% else %}
+        {% endif %}
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+        <li>
+            {% if shopify_view_name %}
+                <a href="{% url shopify_view_name %}">
+            {% else %}
+                <a href="{% url 'index' %}">
+            {% endif %}Shopify</a>
+        </li>
+        <li>
+            {% if chq_view_name %}
+                <a href="{% url chq_view_name %}">
+            {% else %}
+                <a href="{% url 'chq:index' %}">
+            {% endif %}CommerceHQ</a>
+        </li>
+    </ul>
+</div>

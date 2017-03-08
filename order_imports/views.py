@@ -14,7 +14,7 @@ def index(request):
     if not request.user.can('order_imports.use'):
         raise PermissionDenied()
 
-    stores = request.user.profile.get_active_stores()
+    stores = request.user.profile.get_shopify_stores()
     breadcrumbs = [
         {'url': reverse('orders'), 'title': 'Orders'},
         {'url': reverse('orders_track'), 'title': 'Tracking'},

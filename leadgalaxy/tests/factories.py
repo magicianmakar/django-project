@@ -85,3 +85,11 @@ class ShopifyOrderTrackFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'leadgalaxy.ShopifyOrderTrack'
+
+
+class AppPermissionFactory(factory.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText(length=50)
+    description = factory.fuzzy.FuzzyText(length=50)
+
+    class Meta:
+        model = 'leadgalaxy.AppPermission'

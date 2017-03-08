@@ -35,7 +35,7 @@
                 <label for="store" class="col-sm-2 control-label">Step 1: Choose your store</label>
                 <div class="col-sm-10">
                     <select class="form-control" name="store" autocomplete="off">
-                        {% for item in user.profile.get_active_stores %}
+                        {% for item in user.profile.get_shopify_stores %}
                         <option value="{{ item.id }}">{{ item.title }}</option>
                         {% endfor %}
                     </select>

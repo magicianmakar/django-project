@@ -260,7 +260,7 @@
             <div class="form-group col-xs-12">
                 <label for="store-select">Export to:</label>
                 <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
-                {% for i in request.user.profile.get_active_stores %}
+                {% for i in request.user.profile.get_shopify_stores %}
                     <option value="{{i.id}}" {% if i == product.store %}selected{% endif %}>{{i.title}}</option>
                 {% endfor %}
                 </select>

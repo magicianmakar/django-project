@@ -150,7 +150,7 @@ class SubuserpermissionsApiTestCase(TestCase):
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
-    @patch('leadgalaxy.utils.get_api_user')
+    @patch('shopified_core.mixins.ApiResponseMixin.get_user')
     def test_subuser_can_save_for_later_with_permission(self, get_api_user):
         get_api_user.return_value = self.user
         data = json.dumps({'b': False, 'store': self.store.id})
@@ -159,7 +159,7 @@ class SubuserpermissionsApiTestCase(TestCase):
         self.assertEquals(r.status_code, 200)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
-    @patch('leadgalaxy.utils.get_api_user')
+    @patch('shopified_core.mixins.ApiResponseMixin.get_user')
     def test_subuser_cant_save_for_later_without_permission(self, get_api_user):
         get_api_user.return_value = self.user
         self.user.profile.subuser_stores.add(self.store)
@@ -171,7 +171,7 @@ class SubuserpermissionsApiTestCase(TestCase):
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
-    @patch('leadgalaxy.utils.get_api_user')
+    @patch('shopified_core.mixins.ApiResponseMixin.get_user')
     def test_subuser_can_send_to_shopify_with_permission(self, get_api_user):
         get_api_user.return_value = self.user
         data = json.dumps({'b': False, 'store': self.store.id})
@@ -180,7 +180,7 @@ class SubuserpermissionsApiTestCase(TestCase):
         self.assertEquals(r.status_code, 200)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
-    @patch('leadgalaxy.utils.get_api_user')
+    @patch('shopified_core.mixins.ApiResponseMixin.get_user')
     def test_subuser_cant_send_to_shopify_without_permission(self, get_api_user):
         get_api_user.return_value = self.user
         self.user.profile.subuser_stores.add(self.store)
@@ -192,7 +192,7 @@ class SubuserpermissionsApiTestCase(TestCase):
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
-    @patch('leadgalaxy.utils.get_api_user')
+    @patch('shopified_core.mixins.ApiResponseMixin.get_user')
     def test_subuser_can_update_shopify_with_permission(self, get_api_user):
         get_api_user.return_value = self.user
         data = json.dumps({'b': False, 'store': self.store.id})
@@ -201,7 +201,7 @@ class SubuserpermissionsApiTestCase(TestCase):
         self.assertEquals(r.status_code, 200)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
-    @patch('leadgalaxy.utils.get_api_user')
+    @patch('shopified_core.mixins.ApiResponseMixin.get_user')
     def test_subuser_cant_update_shopify_without_permission(self, get_api_user):
         get_api_user.return_value = self.user
         self.user.profile.subuser_stores.add(self.store)

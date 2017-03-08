@@ -52,7 +52,7 @@ def product_feeds(request):
         return JsonResponse({'error': 'Missing parameters'}, status=500)
 
     feeds = []
-    for store in request.user.profile.get_active_stores():
+    for store in request.user.profile.get_shopify_stores():
         feeds.append(get_store_feed(store))
 
     return render(request, 'product_feeds.html', {

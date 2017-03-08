@@ -1,0 +1,85 @@
+{% load static %}
+{% load perms_helper %}
+{% load cache %}
+
+<nav class="navbar-default navbar-static-side" role="navigation">
+    <div class="sidebar-collapse">
+        <ul class="nav metismenu" id="side-menu">
+            <li class="profile-element" style="padding:12px 5px 11px 5px;text-align:center;">
+                <img src="{% static 'Shopified-App-White.png' %}" width="160" height="37" />
+            </li>
+
+            {% if user.is_authenticated %}
+            <li class="nav-header">
+                <div class="dropdown profile-element">
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.get_full_name|default:user.username}}</strong>
+                         </span> <span class="text-muted text-xs block profile-options">Options <b class="caret"></b></span> </span> </a>
+                        <ul class="dropdown-menu m-t-xs">
+                            {% if user.is_superuser %}
+                            <li><a href="{% url 'admin:index' %}">Admin Panel</a></li>
+                            <li class="divider"></li>
+                            {% endif %}
+
+                            {% if user.is_authenticated %}
+                            <li><a href="{% url 'user_profile' %}" class="user-profile">Profile</a></li>
+                            <li><a href="{% url 'leadgalaxy.views.logout' %}">Logout</a></li>
+                            {% endif %}
+                        </ul>
+                </div>
+                <div style="font-size: 0.9em;padding: 0;margin: 0;" class="logo-element">
+                    <img src="{% static 'logo-element.png' %}" style="width: 50%; ">
+                </div>
+            </li>
+            {% endif %}
+
+            <li {% if url_name == 'chq:index' %}class="active"{% endif %}>
+                <a href="{% url 'chq:index' %}">
+                    <i class="fa fa-th-large"></i>
+                    <span class="nav-label">Stores</span>
+                </a>
+            </li>
+
+            <li {% if url_name == 'chq:products_list' or url_name == 'chq:boards_list' %}class="active"{% endif %}>
+                <a href="{% url 'chq:products_list' %}">
+                    <i class="fa fa-shopping-cart"></i>
+                    <span class="nav-label">Products</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level {% if url_name != 'chq:products_list' and url_name != 'chq:boards_list' %}collapse{% endif %}">
+                    <li {% if url_name == 'chq:products_list' %}class="active"{% endif %}>
+                        <a href="{% url 'chq:products_list' %}">
+                            <i class="fa fa-list"></i>
+                            <span class="nav-label">All Products</span>
+                        </a>
+                    </li>
+
+                    {% if user|can:'view_product_boards.sub' %}
+                    <li {% if url_name == 'chq:boards_list' %}class="active"{% endif %}>
+                        <a href="{% url 'chq:boards_list' %}">
+                            <i class="fa fa-edit"></i>
+                            <span class="nav-label">Boards</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </li>
+
+            {% if request.user|can:'orders.view' %}
+            <li {% if url_name == 'chq:orders_list' %}class="active"{% endif %}>
+                <a href="{% url 'chq:orders_list' %}" class="">
+                    <i class="fa fa-calendar-check-o"></i>
+                    <span class="nav-label">Orders</span>
+                </a>
+            </li>
+
+            <li {% if url_name == 'chq:orders_track' %}class="active"{% endif %}>
+                <a href="{% url 'chq:orders_track' %}" class="">
+                    <i class="fa fa-truck"></i>
+                    <span class="nav-label">Tracking</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

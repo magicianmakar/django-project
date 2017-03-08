@@ -21,23 +21,20 @@ from hashlib import sha256
 from math import ceil
 
 from tld import get_tld
-from bleach import clean
 from boto.s3.key import Key
 
 from django.conf import settings
-from django.core.mail import send_mail
-from django.template import Context, Template
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
+from shopified_core import permissions
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -121,154 +118,6 @@ def hash_list(data):
 def random_filename(filename):
     ext = filename.split('.')[1:]
     return '{}.{}'.format(random_hash(), '.'.join(ext))
-
-
-def version_compare(left, right):
-    def normalize(v):
-        return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
-
-    return cmp(normalize(left), normalize(right))
-
-
-def get_access_token(user):
-    try:
-        access_token = AccessToken.objects.filter(user=user).latest('created_at')
-    except:
-        token = random_hash()
-
-        access_token = AccessToken(user=user, token=token)
-        access_token.save()
-
-    return access_token.token
-
-
-def get_user_from_token(token):
-    if not token:
-        return None
-
-    try:
-        access_token = AccessToken.objects.get(token=token)
-    except AccessToken.DoesNotExist:
-        return None
-    except:
-        raven_client.captureException()
-        return None
-
-    if len(token) and access_token:
-        return access_token.user
-
-    return None
-
-
-class ApiLoginException(Exception):
-    pass
-
-
-def get_api_user(request, data, assert_login=False):
-    user = None
-
-    authorization = request.META.get('HTTP_AUTHORIZATION')
-    if authorization:
-        if 'undefined' in authorization:
-            authorization = None
-        else:
-            authorization = authorization.split(' ')
-            if len(authorization) == 2:
-                authorization = authorization[1]
-            else:
-                authorization = None
-
-    if authorization or data.get('access_token'):
-        token = authorization if authorization else data.get('access_token')
-        user = get_user_from_token(token)
-
-        if not user:
-            raise ApiLoginException('unvalid_access_token')
-
-        if token != authorization and not data.get('newrelic'):
-            raven_client.captureMessage(
-                'Authorization Different From Access Token',
-                extra={
-                    'aut': authorization,
-                    'tok': token,
-                    'vers': request.META.get('HTTP_X_EXTENSION_VERSION')
-                },
-                level='warning'
-            )
-
-    if request.user.is_authenticated():
-        if user is None:
-            user = request.user
-        else:
-            if user != request.user and not user.is_superuser:
-                if request.method != 'GET':
-                    raven_client.captureMessage(
-                        'Different account login',
-                        extra={'Request User': request.user, 'API User': user},
-                        level='warning'
-                    )
-
-                raise ApiLoginException('different_account_login')
-
-    if assert_login and not user:
-        raise ApiLoginException('login_required')
-
-    return user
-
-
-def login_attempts_exceeded(username):
-    tries_key = 'login_attempts_{}'.format(hash_text(username.lower()))
-    tries = cache.get(tries_key)
-    if tries is None:
-        tries = {'count': 1, 'username': username}
-    else:
-        tries['count'] = tries.get('count', 1) + 1
-
-    cache.set(tries_key, tries, timeout=600)
-
-    if tries['count'] != 1:
-        if tries['count'] < 5:
-            time.sleep(1)
-            return False
-        else:
-            return True
-    else:
-        return False
-
-
-def unlock_account_email(username):
-    try:
-        if '@' in username:
-            user = User.objects.get(email__iexact=username)
-        else:
-            user = User.objects.get(username__iexact=username)
-    except:
-        return False
-
-    unlock_token = random_hash()
-    if cache.get('unlock_email_{}'.format(hash_text(username.lower()))) is not None:
-        # Email already sent
-        return False
-
-    cache.set('unlock_account_{}'.format(unlock_token), {
-        'user': user.id,
-        'username': username
-    }, timeout=660)
-
-    send_email_from_template(
-        tpl='account_unlock_instructions.html',
-        subject='Unlock instructions',
-        recipient=user.email,
-        data={
-            'username': user.get_first_name(),
-            'unlock_link': reverse('user_unlock', kwargs={'token': unlock_token})
-        },
-        nl2br=False
-    )
-
-    cache.set('unlock_email_{}'.format(hash_text(username.lower())), True, timeout=660)
-
-    return True
 
 
 def generate_plan_registration(plan, data={}, bundle=None, sender=None):
@@ -563,7 +412,7 @@ def get_store_from_request(request):
     """
 
     store = None
-    stores = request.user.profile.get_active_stores()
+    stores = request.user.profile.get_shopify_stores()
 
     if request.GET.get('shop'):
         try:
@@ -575,13 +424,13 @@ def get_store_from_request(request):
         store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
 
     if store:
-        request.user.can_view(store)
+        permissions.user_can_view(request.user, store)
         request.session['last_store'] = store.id
     else:
         try:
             if 'last_store' in request.session:
                 store = stores.get(id=request.session['last_store'])
-                request.user.can_view(store)
+                permissions.user_can_view(request.user, store)
 
         except (PermissionDenied, ShopifyStore.DoesNotExist):
             store = None
@@ -594,7 +443,7 @@ def get_store_from_request(request):
 
 def get_myshopify_link(user, default_store, link):
     stores = [default_store, ]
-    for i in user.profile.get_active_stores():
+    for i in user.profile.get_shopify_stores():
         if i not in stores:
             stores.append(i)
 
@@ -1345,21 +1194,6 @@ def product_changes_remap(changes):
     return remapped
 
 
-def calc_orders_limit(orders_count, check_freq=30, total_time=1440, min_count=20):
-    """
-    Calculate Orders update check limit
-
-    orders_count: Total number of orders
-    check_freq: Extension check interval (minutes)
-    total_time: Total time amount to verify all orders (minutes)
-    min_count: Minimum orders check limit
-    """
-
-    limit = (orders_count * check_freq) / total_time
-
-    return max(limit, min_count)
-
-
 def object_dump(obj, desc=None):
     if desc:
         print 'object_dump'
@@ -1563,34 +1397,6 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
     return None
 
 
-def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
-    template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
-    template = Template(open(template_file).read())
-
-    ctx = Context(data)
-
-    email_html = template.render(ctx)
-
-    if nl2br:
-        email_plain = email_html
-        email_html = email_html.replace('\n', '<br />')
-    else:
-        email_plain = clean(email_html, tags=[], strip=True).strip().split('\n')
-        email_plain = map(lambda l: l.strip(), email_plain)
-        email_plain = '\n'.join(email_plain)
-
-    if type(recipient) is not list:
-        recipient = [recipient]
-
-    send_mail(subject=subject,
-              recipient_list=recipient,
-              from_email='"Shopified App" <support@shopifiedapp.com>',
-              message=email_plain,
-              html_message=email_html)
-
-    return email_html
-
-
 def get_countries():
     country_names = pytz.country_names
     country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
@@ -1764,17 +1570,25 @@ def get_filename_from_url(url):
     return remove_link_query(url).split('/').pop()
 
 
-def get_fileext_from_url(url):
-    return get_filename_from_url(url).split('.').pop()
+def get_fileext_from_url(url, fallback=''):
+    name = get_filename_from_url(url)
+    if '.' in name:
+        return name.split('.').pop()
+    else:
+        return fallback
 
 
 def hash_url_filename(s):
     url = remove_link_query(s)
-    ext = get_fileext_from_url(s)
+    ext = get_fileext_from_url(s, fallback='jpg')
+
+    if not re.match(r'(gif|jpe?g|png|ico|bmp)$', ext, re.I):
+        ext = 'jpg'
 
     hashval = 0
     if (len(url) == 0):
         return hashval
+
     for i in range(len(url)):
         ch = ord(url[i])
         hashval = int(((hashval << 5) - hashval) + ch)
@@ -1797,30 +1611,6 @@ class TimezoneMiddleware(object):
             timezone.activate(pytz.timezone(tzname))
         else:
             timezone.deactivate()
-
-
-class SimplePaginator(Paginator):
-    current_page = 0
-
-    def page(self, number):
-        self.current_page = number
-        return super(SimplePaginator, self).page(number)
-
-    def page_range(self):
-        """
-        Returns a 1-based range of pages for iterating through within
-        a template for loop.
-        """
-        page_count = self.num_pages
-
-        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
-        if 1 not in pages:
-            pages = [1, None] + pages
-
-        if page_count not in pages:
-            pages = pages + [None, page_count]
-
-        return pages
 
 
 class ShopifyOrderPaginator(Paginator):

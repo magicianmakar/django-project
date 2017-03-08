@@ -12,6 +12,8 @@ from requests_oauthlib import OAuth2Session
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core import permissions
+
 from leadgalaxy.models import ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks
 
@@ -110,7 +112,7 @@ def index(request):
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
         if request.user.is_authenticated():
-            if not request.user.profile.get_active_stores(flat=True).filter(shop=request.GET['shop']).exists():
+            if not request.user.profile.get_shopify_stores(flat=True).filter(shop=request.GET['shop']).exists():
                 messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
 
             return HttpResponseRedirect('/')
@@ -122,7 +124,7 @@ def index(request):
         return HttpResponseRedirect('/accounts/login/')
 
     if request.user.is_authenticated():
-        if store.id not in request.user.profile.get_active_stores(flat=True):
+        if store.id not in request.user.profile.get_shopify_stores(flat=True):
             messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
 
         return HttpResponseRedirect('/')
@@ -146,7 +148,7 @@ def install(request, store):
         messages.error(request, 'Sub-Users can not add new stores.')
         return HttpResponseRedirect('/')
 
-    can_add, total_allowed, user_count = user.profile.can_add_store()
+    can_add, total_allowed, user_count = permissions.can_add_store(user)
 
     if not can_add:
         if user.profile.plan.is_free and user.can_trial():
@@ -160,7 +162,7 @@ def install(request, store):
                     'user': user.email,
                     'store': store,
                     'plan': user.profile.plan.title,
-                    'stores': user.profile.get_active_stores().count()
+                    'stores': user.profile.get_shopify_stores().count()
                 }
             )
 
@@ -219,7 +221,7 @@ def callback(request):
         store.save()
 
     except ShopifyStore.DoesNotExist:
-        can_add, total_allowed, user_count = user.profile.can_add_store()
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
 
         if not can_add:
             plans_url = request.build_absolute_uri('/user/profile#plan')
@@ -255,7 +257,7 @@ def callback(request):
                 access_token=token['access_token'],
                 scope=token['access_token'][0])
 
-        user.can_add(store)
+        permissions.user_can_add(user, store)
 
         try:
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)

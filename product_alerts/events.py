@@ -6,8 +6,9 @@ from django.template.defaultfilters import truncatewords
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.utils import send_email_from_template
 from shopify_revision.models import ProductRevision
-from leadgalaxy.utils import send_email_from_template, get_variant_name
+from leadgalaxy.utils import get_variant_name
 
 
 class ProductChangeEvent():

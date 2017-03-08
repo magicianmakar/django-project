@@ -273,26 +273,9 @@
             <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
                 <div class="navbar-header">
                     <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
-                    <form role="search" class="navbar-form-custom" method="get"
-                        {% if searchable %}
-                            action="{{request.path}}"
-                        {% else %}
-                            action="/product"
-                        {% endif %}
-                    >
-                        <div class="form-group">
-                            <input type="text" placeholder="Search" class="form-control" name="title" id="top-search"
-                            {% if request.GET.title and request.GET.f %}
-                                   value="{{request.GET.title}}"
-                            {% endif %}
-                            >
-                            <input type="hidden" name="f" value="1">
-
-                            {% if request.GET.store %}
-                            <input type="hidden" name="store" value="{{request.GET.store}}">
-                            {% endif %}
-                        </div>
-                    </form>
+                    {% block search-form %}
+                        {% include 'partial/search_form.html' %}
+                    {% endblock search-form %}
                 </div>
                 <ul class="nav navbar-top-links navbar-right">
                     <li>
@@ -327,8 +310,18 @@
                     <li>
                         <div id="notification-bell"></div>
                     </li>
+
+                    {% if user|can:'commercehq.use' %}
+                    <li>
+                        {% block store-switch %}
+                            {% include 'store_switch.html' %}
+                        {% endblock store-switch %}
+                    </li>
+                    {% endif %}
+
                     <li>
                         {% if user.is_authenticated %}
+
                         <a href="{% url 'leadgalaxy.views.logout' %}">
                             <i class="fa fa-sign-out"></i> Log out
                         </a>
@@ -398,6 +391,7 @@
     </div>
   </div>
 
+{% block modal-board-add %}
 <div id="modal-board-add" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -422,6 +416,7 @@
         </div>
     </div>
 </div>
+{% endblock modal-board-add %}
 
     {# Mainly scripts #}
     {% compress js %}

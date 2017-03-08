@@ -13,7 +13,8 @@ from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.utils import aws_s3_upload, send_email_from_template, order_track_fulfillment
+from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment
+from shopified_core.utils import send_email_from_template
 
 
 # Get an instance of a logger

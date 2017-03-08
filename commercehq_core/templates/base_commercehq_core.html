@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block main-nav %}
+    {% include 'main_nav.html' with url_name=request.resolver_match.view_name %}
+{% endblock main-nav %}
+
+{% block search-form %}
+    {% include 'commercehq/search_form.html' %}
+{% endblock %}

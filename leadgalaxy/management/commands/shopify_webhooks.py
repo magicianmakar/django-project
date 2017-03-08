@@ -42,13 +42,13 @@ class Command(BaseCommand):
                     self.write_success(u'{} webhooks for Plan: {}'.format(action.title(), plan.title))
 
                     for profile in plan.userprofile_set.select_related('user').all():
-                        for store in profile.get_active_stores():
+                        for store in profile.get_shopify_stores():
                             self.handle_store(store, action, options['delete_on_detach'])
 
                 for bundle in p.featurebundle_set.all():
                     self.write_success(u'{} webhooks for Bundle: {}'.format(action.title(), bundle.title))
                     for profile in bundle.userprofile_set.select_related('user').all():
-                        for store in profile.get_active_stores():
+                        for store in profile.get_shopify_stores():
                             self.handle_store(store, action, options['delete_on_detach'])
 
         for store_id in options['store_id']:

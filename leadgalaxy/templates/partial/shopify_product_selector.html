@@ -8,7 +8,7 @@
           </div>
             <div class="modal-body">
                 <div class="row">
-                    {% with stores=user.profile.get_active_stores.count %}
+                    {% with stores=user.profile.get_shopify_stores.count %}
 
                     <div class="col-sm-8" style="padding-right:0">
                         <input type="text" class="form-control input-md shopify-find-product" placeholder="Find product..." data-store="{{product.qelem.store_id}}">
@@ -16,7 +16,7 @@
 
                     <div class="form-group col-sm-4" style="padding-left:5px">
                         <select class="form-control shopify-store">
-                        {% for i in user.profile.get_active_stores %}
+                        {% for i in user.profile.get_shopify_stores %}
                             <option value="{{i.id}}" {% if i == product.store or stores == 1 %}selected{% endif %}>
                                 {{i.title}}
                             </option>
@@ -31,7 +31,7 @@
                         <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
                     </div>
                     <div class="col-sm-12">
-                        <div class="shopify-products ative-scroll"></div>
+                        <div class="container-fluid shopify-products ative-scroll"></div>
                     </div>
                 </div>
             </div>
