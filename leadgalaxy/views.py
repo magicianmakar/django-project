@@ -42,7 +42,8 @@ import keen
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template, version_compare, SimplePaginator
+from shopified_core.utils import send_email_from_template, version_compare, order_phone_number
+from shopified_core.paginators import SimplePaginator
 from shopified_core.province_helper import load_uk_provincess, missing_province
 
 from shopify_orders import utils as shopify_orders_utils
@@ -2494,12 +2495,8 @@ def orders_view(request):
                         shipping_address_asci['name'] = '{} - {}'.format(shipping_address_asci['name'],
                                                                          shipping_address_asci['company'])
 
-                    phone = shipping_address_asci.get('phone')
-                    if not phone or models_user.get_config('order_default_phone') != 'customer':
-                        phone = models_user.get_config('order_phone_number')
-
-                    if phone:
-                        phone = re.sub('[^0-9/-]', '', phone)
+                    phone_country, phone_number = order_phone_number(models_user, shipping_address_asci.get('phone'),
+                                                                     shipping_address_asci['country_code'])
 
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
@@ -2512,7 +2509,8 @@ def orders_view(request):
                         'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
-                            'phone': phone,
+                            'phone': phone_number,
+                            'phoneCountry': phone_country,
                             'note': models_user.get_config('order_custom_note'),
                             'epacket': bool(models_user.get_config('epacket_shipping')),
                             'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered

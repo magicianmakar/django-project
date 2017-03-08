@@ -1,4 +1,3 @@
-import re
 import arrow
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -19,12 +18,13 @@ from django.views.generic.detail import DetailView
 
 
 from shopified_core import permissions
+from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import (
     safeInt,
     safeFloat,
     aws_s3_context,
     clean_query_id,
-    SimplePaginator
+    order_phone_number
 )
 
 from .forms import CommerceHQStoreForm
@@ -382,12 +382,8 @@ class OrdersList(ListView):
 
                 customer_address = chq_customer_address(order)
 
-                phone = order['address']['phone']
-                if not phone or models_user.get_config('order_default_phone') != 'customer':
-                    phone = models_user.get_config('order_phone_number')
-
-                if phone:
-                    phone = re.sub('[^0-9/-]', '', phone)
+                phone_country, phone_number = order_phone_number(models_user, order['address']['phone'],
+                                                                 customer_address['country_code'])
 
                 order['customer_address'] = customer_address
 
@@ -402,7 +398,8 @@ class OrdersList(ListView):
                     'total': safeFloat(line['price'], 0.0),
                     'store': self.store.id,
                     'order': {
-                        'phone': phone,
+                        'phone': phone_number,
+                        'phoneCountry': phone_country,
                         'note': models_user.get_config('order_custom_note'),
                         'epacket': bool(models_user.get_config('epacket_shipping')),
                         'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered

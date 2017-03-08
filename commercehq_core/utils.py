@@ -131,6 +131,8 @@ def chq_customer_address(order):
         'country': 'country_code',
     }
 
+    # TODO: Fix CommerceHQ country and state
+
     for k in shipping_address.keys():
         if shipping_address[k] and type(shipping_address[k]) is unicode:
             customer_address[k] = unidecode(shipping_address[k])
@@ -377,6 +379,8 @@ class CommerceHQOrdersPaginator(Paginator):
                 params=params
             )
 
+        rep.raise_for_status()
+
         return rep.json()
 
     def _orders_count_request(self):
@@ -398,6 +402,8 @@ class CommerceHQOrdersPaginator(Paginator):
                 url=self.store.get_api_url('orders'),
                 params=params
             )
+
+        rep.raise_for_status()
 
         return rep.json()
 

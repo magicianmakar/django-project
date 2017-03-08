@@ -11,13 +11,15 @@ import simplejson as json
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.cache import cache
-from django.core.paginator import Paginator
 from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.crypto import get_random_string
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 import arrow
 import bleach
+import phonenumbers
 from tld import get_tld
 
 
@@ -258,25 +260,17 @@ def orders_update_limit(orders_count, check_freq=30, total_time=1440, min_count=
     return max(limit, min_count)
 
 
-class SimplePaginator(Paginator):
-    current_page = 0
+def order_phone_number(user, phone_number, customer_country):
+    try:
+        if not phone_number or user.get_config('order_default_phone') != 'customer':
+            phone_number = user.get_config('order_phone_number')
+            customer_country = user.profile.country
 
-    def page(self, number):
-        self.current_page = number
-        return super(SimplePaginator, self).page(number)
+        if phone_number:
+            phone_number = '+{}'.format(''.join(re.findall('[0-9]+', phone_number)))
 
-    def page_range(self):
-        """
-        Returns a 1-based range of pages for iterating through within
-        a template for loop.
-        """
-        page_count = self.num_pages
-
-        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
-        if 1 not in pages:
-            pages = [1, None] + pages
-
-        if page_count not in pages:
-            pages = pages + [None, page_count]
-
-        return pages
+        parsed = phonenumbers.parse(phone_number, customer_country)
+        return '+{}'.format(parsed.country_code), parsed.national_number
+    except:
+        raven_client.captureException(level='warning')
+        return None, phone_number

@@ -53,6 +53,7 @@ newrelic==2.80.1.61
 oauth2client==1.4.11
 oauthlib==1.1.2
 pbr==1.10.0
+phonenumbers==8.3.1
 Pillow==2.9.0
 ply==3.8
 psycopg2==2.6.1
