@@ -22,10 +22,10 @@
 
         {% for pa in paginator.page_range %}
 
-            {% if pa == current_page.number or pa == page_obj.number %}
-            <li class="active"><span>{{pa}}</span></li>
-            {% elif pa == None %}
+            {% if pa == None %}
             <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
+            {% elif pa == current_page.number or pa == page_obj.number %}
+            <li class="active"><span>{{pa}}</span></li>
             {% else %}
             <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
             {% endif %}
