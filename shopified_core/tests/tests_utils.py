@@ -41,3 +41,19 @@ class UtilsTestCase(TestCase):
         country_code, phone_number = order_phone_number(request, user, '33652413300', 'FR')
         self.assertEqual(country_code, '+33')
         self.assertEqual(phone_number, '652413300')
+
+    def test_empty_order_phone_numbers(self):
+        user = Mock(get_config=Mock(return_value='000000000000'))
+        request = Mock(META={'HTTP_X_EXTENSION_VERSION': '1.62.0'})
+
+        country_code, phone_number = order_phone_number(request, user, '0652413300', 'FR')
+        self.assertEqual(country_code, '+1')
+        self.assertEqual(phone_number, '000000000000')
+
+
+        user = Mock(get_config=Mock(return_value='000-0000'))
+        request = Mock(META={'HTTP_X_EXTENSION_VERSION': '1.62.0'})
+
+        country_code, phone_number = order_phone_number(request, user, '0652413300', 'FR')
+        self.assertEqual(country_code, '+1')
+        self.assertEqual(phone_number, '0000000')

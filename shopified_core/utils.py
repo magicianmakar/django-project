@@ -270,6 +270,9 @@ def order_phone_number(request, user, phone_number, customer_country):
     if not version or version_compare(version, ' 1.61.5') <= 0:
         return None, phone_number
 
+    if re.match('^0+$', phone_number):
+        return '+1', phone_number
+
     try:
         parsed = phonenumbers.parse(phone_number, customer_country)
         return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
