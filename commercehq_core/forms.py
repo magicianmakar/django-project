@@ -1,4 +1,4 @@
-from urlparse import urlparse
+import re
 
 from django import forms
 from django.forms import ModelForm
@@ -15,14 +15,12 @@ class CommerceHQStoreForm(ModelForm):
 
     def clean_api_url(self):
         url = self.cleaned_data['api_url']
+        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', url)
 
-        if not url.endswith('.commercehq.com') and not url.endswith('.commercehqdev.com'):
+        if not len(url):
             raise forms.ValidationError('Only CommerceHQ stores can be added.')
 
-        o = urlparse(url)
-        url = o._replace(scheme='https').geturl()
-
-        return url
+        return 'https://{}'.format(url.pop())
 
 
 class CommerceHQBoardForm(ModelForm):
