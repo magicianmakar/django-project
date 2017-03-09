@@ -287,8 +287,8 @@ class OrdersList(ListView):
             paid_status = {
                 0: 'Not paid',
                 1: 'Paid',
-                2: 'Partially refunded',
-                3: 'Fully refunded',
+                -1: 'Partially refunded',
+                -2: 'Fully refunded',
             }
 
             order['fulfillment_status'] = order_status.get(order['status'])

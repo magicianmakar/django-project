@@ -214,9 +214,9 @@
                             <select name="financial" class="form-control help-select">
                                 <option value="" {% if not request.GET.financial %}selected="selected"{% endif %}>Any</option>
                                 <option value="0" {% if request.GET.financial == '0' %}selected="selected"{% endif %}>Not Paid</option>
-                                <option value="1" {% if request.GET.financial == 'authorized' %}selected="selected"{% endif %}>Paid</option>
-                                <option value="-1" {% if request.GET.financial == 'pending' %}selected="selected"{% endif %}>Partially refunded</option>
-                                <option value="-2" {% if request.GET.financial == 'paid' %}selected="selected"{% endif %}>Fully refunded</option>
+                                <option value="1" {% if request.GET.financial == '1' %}selected="selected"{% endif %}>Paid</option>
+                                <option value="-1" {% if request.GET.financial == '-1' %}selected="selected"{% endif %}>Partially refunded</option>
+                                <option value="-2" {% if request.GET.financial == '-2' %}selected="selected"{% endif %}>Fully refunded</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
