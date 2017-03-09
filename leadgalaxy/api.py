@@ -21,7 +21,12 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import send_email_from_template, version_compare, orders_update_limit
+from shopified_core.utils import (
+    send_email_from_template,
+    version_compare,
+    orders_update_limit,
+    order_phone_number
+)
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -1312,6 +1317,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', False)
             order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
+
+            phone = order['order']['phone']
+            if type(phone) is dict:
+                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
+                order['order']['phone'] = phone_number
+                order['order']['phoneCountry'] = phone_country
 
             try:
                 track = ShopifyOrderTrack.objects.get(

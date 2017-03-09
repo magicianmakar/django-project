@@ -23,8 +23,7 @@ from shopified_core.utils import (
     safeInt,
     safeFloat,
     aws_s3_context,
-    clean_query_id,
-    order_phone_number
+    clean_query_id
 )
 
 from .forms import CommerceHQStoreForm
@@ -382,9 +381,6 @@ class OrdersList(ListView):
 
                 customer_address = chq_customer_address(order)
 
-                phone_country, phone_number = order_phone_number(models_user, order['address']['phone'],
-                                                                 customer_address['country_code'])
-
                 order['customer_address'] = customer_address
 
                 order_data = {
@@ -398,8 +394,10 @@ class OrdersList(ListView):
                     'total': safeFloat(line['price'], 0.0),
                     'store': self.store.id,
                     'order': {
-                        'phone': phone_number,
-                        'phoneCountry': phone_country,
+                        'phone': {
+                            'number': order['address']['phone'],
+                            'country': customer_address['country_code']
+                        },
                         'note': models_user.get_config('order_custom_note'),
                         'epacket': bool(models_user.get_config('epacket_shipping')),
                         'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered

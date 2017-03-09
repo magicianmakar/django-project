@@ -258,17 +258,29 @@ def orders_update_limit(orders_count, check_freq=30, total_time=1440, min_count=
     return max(limit, min_count)
 
 
-def order_phone_number(user, phone_number, customer_country):
+def order_phone_number(request, user, phone_number, customer_country):
+    if not phone_number or user.get_config('order_default_phone') != 'customer':
+        phone_number = user.get_config('order_phone_number')
+        customer_country = user.profile.country
+
+    if phone_number:
+        phone_number = ''.join(re.findall('[0-9]+', phone_number))
+
+    version = request.META.get('HTTP_X_EXTENSION_VERSION')
+    if not version or version_compare(version, ' 1.61.5') <= 0:
+        return None, phone_number
+
     try:
-        if not phone_number or user.get_config('order_default_phone') != 'customer':
-            phone_number = user.get_config('order_phone_number')
-            customer_country = user.profile.country
-
-        if phone_number:
-            phone_number = ''.join(re.findall('[0-9]+', phone_number))
-
-        return None, phone_number
-        # parsed = phonenumbers.parse(phone_number, customer_country)
-        # return '+{}'.format(parsed.country_code), parsed.national_number
+        parsed = phonenumbers.parse(phone_number, customer_country)
+        return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
     except:
-        return None, phone_number
+        pass
+
+    try:
+        number = '+' + phone_number[2:] if phone_number.startswith('00') else phone_number
+        parsed = phonenumbers.parse(number, customer_country)
+        return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
+    except:
+        pass
+
+    return None, phone_number

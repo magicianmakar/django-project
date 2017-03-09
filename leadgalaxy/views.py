@@ -42,7 +42,7 @@ import keen
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template, version_compare, order_phone_number
+from shopified_core.utils import send_email_from_template, version_compare
 from shopified_core.paginators import SimplePaginator
 from shopified_core.province_helper import load_uk_provincess, missing_province
 
@@ -2495,9 +2495,6 @@ def orders_view(request):
                         shipping_address_asci['name'] = '{} - {}'.format(shipping_address_asci['name'],
                                                                          shipping_address_asci['company'])
 
-                    phone_country, phone_number = order_phone_number(models_user, shipping_address_asci.get('phone'),
-                                                                     shipping_address_asci['country_code'])
-
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'quantity': el['quantity'],
@@ -2509,8 +2506,10 @@ def orders_view(request):
                         'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
-                            'phone': phone_number,
-                            'phoneCountry': phone_country,
+                            'phone': {
+                                'number': shipping_address_asci.get('phone'),
+                                'country': shipping_address_asci['country_code']
+                            },
                             'note': models_user.get_config('order_custom_note'),
                             'epacket': bool(models_user.get_config('epacket_shipping')),
                             'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered

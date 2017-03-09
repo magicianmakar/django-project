@@ -23,6 +23,7 @@ from shopified_core.utils import (
     remove_link_query,
     version_compare,
     orders_update_limit,
+    order_phone_number
 )
 
 import tasks
@@ -700,6 +701,12 @@ class CHQStoreApi(ApiResponseMixin, View):
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', False)
             order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
+
+            phone = order['order']['phone']
+            if type(phone) is dict:
+                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
+                order['order']['phone'] = phone_number
+                order['order']['phoneCountry'] = phone_country
 
             try:
                 track = CommerceHQOrderTrack.objects.get(
