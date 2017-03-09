@@ -57,7 +57,7 @@ $(document).ready(function() {
             closeOnConfirm: false
         }, function() {
             $.ajax({
-                url: api_url('store', 'chq') + '?store_id=' + storeId,
+                url: api_url('store', 'chq') + '?' + $.param({store_id: storeId}),
                 method: 'DELETE',
                 success: function() {
                     $('#store-row-' + storeId).hide();

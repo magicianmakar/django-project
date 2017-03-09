@@ -21,8 +21,10 @@ class StoreListTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+
         self.user.profile.plan = GroupPlanFactory()
-        self.user.profile.plan.permissions.add(AppPermissionFactory(name='commercehq.use'))
+        permission = AppPermissionFactory(name='commercehq.use')
+        self.user.profile.plan.permissions.add(permission)
         self.user.profile.save()
 
         self.path = reverse('chq:index')
@@ -418,5 +420,5 @@ class BoardDetailTestCase(TestCase):
     def test_must_have_breadcrumbs(self):
         self.login()
         r = self.client.get(self.path)
-        self.assertEqual(r.context['breadcrumbs'], ['Boards', self.board.title])
-
+        boards_breadcrumb = {'title': 'Boards', 'url': reverse('chq:boards_list')}
+        self.assertEqual(r.context['breadcrumbs'], [boards_breadcrumb, self.board.title])

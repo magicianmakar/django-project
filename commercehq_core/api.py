@@ -528,7 +528,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(request.GET.get('store_id'))
+            pk = safeInt(data.get('store_id'))
             store = CommerceHQStore.objects.get(user=user, pk=pk)
             store.is_active = False
             store.save()
@@ -541,7 +541,7 @@ class CHQStoreApi(ApiResponseMixin, View):
         #     raise PermissionDenied()
 
         try:
-            pk = safeInt(request.GET.get('board_id'))
+            pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(user=user, pk=pk)
             permissions.user_can_delete(user, board)
             board.delete()

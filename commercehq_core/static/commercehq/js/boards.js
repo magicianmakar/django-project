@@ -102,13 +102,19 @@ $(document).ready(function() {
             closeOnConfirm: false
         }, function() {
             $.ajax({
-                url: api_url('board', 'chq') + '?board_id=' + boardId,
+                url: api_url('board', 'chq') + '?' + $.param({board_id: boardId}),
                 method: 'DELETE',
                 success: function(data) {
                     if ('status' in data && data.status == 'ok') {
-                        table.api().rows('#board-row-' + boardId).remove().draw();
                         swal.close();
                         toastr.success('Board has been deleted.', 'Delete Board');
+                        var selector = '#board-row-' + boardId;
+                        var $row = $(selector);
+                        if ($row.length) {
+                            table.api().rows(selector).remove().draw();
+                        } else {
+                            window.location.href = '/chq/boards/list';
+                        }
                     } else {
                         displayAjaxError('Delete Board', data);
                     }
@@ -143,7 +149,13 @@ $(document).ready(function() {
                     if ('status' in data && data.status == 'ok') {
                         swal.close();
                         toastr.success("The board is now empty.", "Empty Board");
-                        $('#board-row-' + boardId).find('.product-count').html('0');
+                        var selector = '#board-row-' + boardId;
+                        var $row = $(selector);
+                        if ($row.length) {
+                            $row.find('.product-count').html('0');
+                        } else {
+                            window.location.href = window.location.href;
+                        }
                     } else {
                         displayAjaxError('Empty Board', data);
                     }
@@ -153,5 +165,48 @@ $(document).ready(function() {
                 }
             });
         });
+    });
+
+    var currentBoardBox = null;
+
+    $('.apply-btn').click(function(e) {
+        var boardBox = $(this).parents('.board-box');
+        var action = boardBox.find('.selected-actions').val();
+
+        if (action == 'delete') {
+            swal({
+                title: "Delete Products",
+                text: "Are you sure that you want to permanently delete the selected products?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Delete Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                   console.log('deleting...');
+                }
+            });
+        } else if (action == 'edit') {
+            $('#modal-products-edit-form').modal('show');
+            return;
+        } else if (action == 'commercehq-send') {
+            currentBoardBox = boardBox;
+            console.log('Showing CHQ send modal');
+            //$('#modal-commerhq-send').modal('show');
+            return;
+        } else if (action == 'board-remove') {
+            var btn = $(this);
+            var products = [];
+            var products_el = [];
+            var board_id = boardBox.attr('board-id');
+
+            console.log('Removing products from board')
+        }
+
+        boardBox.find('.selected-actions').val('');
     });
 });

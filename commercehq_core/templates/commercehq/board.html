@@ -19,22 +19,34 @@
                 <i class="fa fa-wrench"></i>
             </a>
             <ul class="dropdown-menu dropdown-user">
-                <li><a board-id="{{board.id}}" class="board-edit" href="#">Edit...</a></li>
-                <li><a board-id="{{board.id}}" class="board-empty" href="#">Empty board</a></li>
-                <li><a board-id="{{board.id}}" class="board-delete" href="#">Delete board</a></li>
+                <li>
+                    <a data-board-id="{{board.id}}" class="chq-edit-board-btn" href="#">
+                        Edit...
+                    </a>
+                </li>
+                <li>
+                    <a data-board-id="{{board.id}}" class="chq-empty-board-btn" class="" href="#">
+                        Empty board
+                    </a>
+                </li>
+                <li>
+                    <a data-board-id="{{board.id}}" class="chq-delete-board-btn" href="#">
+                        Delete board
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
     <div class="ibox-content">
 
-    {% if board.products.all %}
+    {% if products %}
     <div class="row" style="margin-bottom: 20px">
         <div class="col-md-8">
             <label for="selected-actions">Selected Items:</label>
             <select class="form-control selected-actions" name="selected-actions" style="display: inline-block; width: 191px; ">
                 <option value=""></option>
                 <option value="edit">Edit...</option>
-                <option value="shopify-send">Send To Shopify...</option>
+                <option value="commercehq-send">Send to CommerceHQ...</option>
                 <option value="board-remove">Remove from board</option>
                 <option value="delete">Delete</option>
             </select>
@@ -49,7 +61,7 @@
     {% endif %}
 
     <div class="row">
-        {% for item in board.products.all %}
+        {% for item in products %}
         <div class="col-xs-3 col-md-3 ">
             <div class="ibox">
                 <div class="ibox-content product-box" product-id="{{item.id}}">
@@ -104,7 +116,7 @@
 
     </div>
 
-        {% include "partial/paginator.html" %}
+        {% include "partial/paginator.html" with page_obj=products %}
 
     </div>
     </div>
@@ -120,57 +132,20 @@
 
 {% include "partial/product_edit_modal.html" %}
 
-
-<div id="smartboard-modal" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">Edit Board</h3>
-                        <form role="form">
-                            <div class="form-group">
-                                <label for="">Board Title:</label>
-                                <input type="text" id="board-title" class="form-control">
-                            </div>
-
-                            <h3 class="m-t-none m-b">Smart Board</h3>
-                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
-                            <input type="hidden" id="smartboard-board">
-
-                            <div class="form-group">
-                                <label for="">Product Title contains:</label>
-                                <input type="text" id="smartboard-product-title" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="">Product Tags contains:</label>
-                                <input type="text" id="smartboard-product-tags" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="">Product Type contains:</label>
-                                <input type="text" id="smartboard-product-type" class="form-control">
-                            </div>
-                            <div>
-                                <button id="smartboard-save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                    <strong>Save</strong>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-            </div>
-        </div>
-        </div>
-    </div>
-</div>
-
-{% include 'partial/shopify_send_modal.html' %}
-
 {% include 'partial/filter_modal.html' %}
 
 {% endblock %}
 
+{% block modal-board-add %}
+    {% include 'commercehq/modal_board_update.html' %}
+{% endblock modal-board-add %}
 
 {% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
     {% compress js %}
         <script type="text/javascript" src="{% static 'commercehq/js/boards.js' %}"></script>
     {% endcompress %}
