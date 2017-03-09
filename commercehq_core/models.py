@@ -68,7 +68,7 @@ class CommerceHQStore(models.Model):
         :param api: Return the API version of the url if true, otherwise return Admin url
         """
 
-        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', self.api_url).pop()[0]
+        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', self.api_url).pop()
 
         args = '/'.join([str(i) for i in args]).lstrip('/')
         if kwargs.get('api', True):
