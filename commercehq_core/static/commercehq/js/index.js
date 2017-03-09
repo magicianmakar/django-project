@@ -25,6 +25,36 @@ $(document).ready(function() {
         }
     });
 
+    $('#store-create-form').on('submit', function(e) {
+        var url = $('#store_api_url').val().match(/[^\/\.]+\.commercehq(?:dev)?\.com/);
+
+        if (!url || url.length != 1) {
+            swal('Add Store', 'API URL is not correct!', 'error');
+            return;
+        }
+
+        $('#store-create-form [type=submit]').button('loading');
+
+        $.ajax({
+            url: api_url('store-add', 'chq'),
+            type: 'POST',
+            data: $('#store-create-form').serialize(),
+            success: function(data) {
+                toastr.success('Add Store', 'Your Store Have Been Added!');
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            },
+            error: function(data) {
+                $('#store-create-form [type=submit]').button('reset');
+                displayAjaxError('Add Store', data);
+            }
+        });
+
+        return false;
+    });
+
+
     $('.edit-store-btn').click(function(e) {
         e.preventDefault();
         var action = $(this).data('store-update-url');

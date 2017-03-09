@@ -524,6 +524,63 @@ class CHQStoreApi(ApiResponseMixin, View):
         else:
             return self.api_error('Order not found.', status=404)
 
+    def post_store_add(self, request, user, data):
+        url = data.get('api_url').strip()
+
+        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', url)
+
+        if len(url):
+            url = url.pop()
+        else:
+            return self.api_error('CommerceHQ stores URL is not correct', status=422)
+
+        if user.is_subuser:
+            return self.api_error('Sub-Users can not add new stores.', status=401)
+
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
+
+        if not can_add:
+            if user.profile.plan.is_free and user.can_trial():
+                from shopify_oauth.views import subscribe_user_to_default_plan
+
+                subscribe_user_to_default_plan(user)
+            else:
+                raven_client.captureMessage(
+                    'Add Extra CHQ Store',
+                    level='warning',
+                    extra={
+                        'user': user.email,
+                        'plan': user.profile.plan.title,
+                        'stores': user.profile.get_chq_stores().count()
+                    }
+                )
+
+                if user.profile.plan.is_free or user.can_trial():
+                    return self.api_error('Please Activate your account first by visiting:\n{}').format(
+                        request.build_absolute_uri('/user/profile#plan'), status=401)
+                else:
+                    return self.api_error('Your plan does not support connecting another Shopify store. '
+                                          'Please contact support@shopifiedapp.com to learn how to connect more stores.')
+
+        store = CommerceHQStore(
+            title=data.get('title').strip(),
+            api_url=url,
+            api_key=data.get('api_key').strip(),
+            api_password=data.get('api_password').strip(),
+            user=user.models_user)
+
+        permissions.user_can_add(user, store)
+
+        try:
+            rep = store.request.get(store.get_api_url('products'))
+            rep.raise_for_status()
+        except:
+            return self.api_error('API credetnails is not correct', status=500)
+
+        store.save()
+
+        return self.api_success()
+
     def delete_store(self, request, user, data):
         if user.is_subuser:
             raise PermissionDenied()

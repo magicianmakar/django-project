@@ -48,22 +48,6 @@ from .utils import (
 @must_be_authenticated
 @no_subusers
 @csrf_protect
-@require_http_methods(['POST'])
-def store_create(request):
-    form = CommerceHQStoreForm(request.POST)
-
-    if form.is_valid():
-        form.instance.user = request.user.models_user
-        form.save()
-        return HttpResponse(status=204)
-
-    return render(request, 'commercehq/store_create_form.html', {'form': form})
-
-
-@ajax_only
-@must_be_authenticated
-@no_subusers
-@csrf_protect
 @require_http_methods(['GET', 'POST'])
 def store_update(request, store_id):
     store = get_object_or_404(CommerceHQStore, user=request.user.models_user, pk=store_id)
@@ -73,7 +57,7 @@ def store_update(request, store_id):
         form.save()
         return HttpResponse(status=204)
 
-    return render(request, 'commercehq/store_update_form.html', {'form': form})
+    return render(request, 'commercehq/partial/store_update_form.html', {'form': form})
 
 
 class StoresList(ListView):
@@ -92,14 +76,6 @@ class StoresList(ListView):
         qs = super(StoresList, self).get_queryset()
         return qs.filter(user=self.request.user.models_user).filter(is_active=True)
 
-    def is_first_visit(self):
-        config = self.request.user.models_user.profile.get_config()
-        first_visit = config.get('_first_visit', True)
-        if first_visit:
-            self.request.user.set_config('_first_visit', False)
-
-        return first_visit
-
     def get_store_count(self):
         store_count = self.request.user.profile.get_shopify_stores().count()
         store_count += self.request.user.profile.get_chq_stores().count()
@@ -111,7 +87,6 @@ class StoresList(ListView):
         can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
         is_stripe = self.request.user.profile.plan.is_stripe()
         context['extra_stores'] = can_add and is_stripe and self.get_store_count() >= 1
-        context['first_visit'] = self.is_first_visit()
         context['breadcrumbs'] = ['Stores']
 
         return context
