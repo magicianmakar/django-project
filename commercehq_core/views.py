@@ -154,7 +154,8 @@ class BoardDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(BoardDetailView, self).get_context_data(**kwargs)
         board = self.get_object()
-        paginator = SimplePaginator(commercehq_products(self.request), 25)
+        products = commercehq_products(self.request).filter(commercehqboard=board)
+        paginator = SimplePaginator(products, 25)
         page = safeInt(self.request.GET.get('page', 1))
         context['paginator'] = paginator
         context['products'] = paginator.page(page)

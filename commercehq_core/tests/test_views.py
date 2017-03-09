@@ -328,7 +328,7 @@ class BoardUpdateTestCase(TestCase):
         board = CommerceHQBoardFactory()
         self.login()
         r = self.client.get(self.path, data={'board_id': board.pk})
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 403)
 
 
 class BoardDeleteTestCase(TestCase):

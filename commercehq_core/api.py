@@ -542,7 +542,7 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         try:
             pk = safeInt(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(user=user, pk=pk)
+            board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_delete(user, board)
             board.delete()
             return self.api_success()
@@ -555,7 +555,7 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         try:
             pk = safeInt(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(user=user, pk=pk)
+            board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
             board.products.clear()
             return self.api_success()
@@ -619,7 +619,7 @@ class CHQStoreApi(ApiResponseMixin, View):
     def get_board_config(self, request, user, data):
         try:
             pk = safeInt(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(user=user.models_user, pk=pk)
+            board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -642,7 +642,7 @@ class CHQStoreApi(ApiResponseMixin, View):
     def post_board_config(self, request, user, data):
         try:
             pk = safeInt(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(user=user.models_user, pk=pk)
+            board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -660,6 +660,58 @@ class CHQStoreApi(ApiResponseMixin, View):
         utils.smart_board_by_board(user.models_user, board)
 
         return self.api_success()
+
+    def delete_board_products(self, request, user, data):
+        # if not user.can('edit_product_boards.sub'):
+        #    raise PermissionDenied()
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = CommerceHQBoard.objects.get(pk=pk)
+            permissions.user_can_edit(user, board)
+        except CommerceHQBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        for p in data.getlist('products[]'):
+            pk = safeInt(p)
+            product = CommerceHQProduct.objects.filter(pk=pk).first()
+            if product:
+                permissions.user_can_edit(user, product)
+                board.products.remove(product)
+
+        return self.api_success()
+
+    def post_product_edit(self, request, user, data):
+        products = []
+        for p in data.getlist('products[]'):
+            product = CommerceHQProduct.objects.get(id=p)
+            permissions.user_can_edit(user, product)
+
+            product_data = json.loads(product.data)
+
+            if 'tags' in data:
+                product_data['tags'] = data.get('tags')
+
+            if 'price' in data:
+                product_data['price'] = utils.safeFloat(data.get('price'))
+
+            if 'compare_at' in data:
+                product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at'))
+
+            if 'type' in data:
+                product_data['type'] = data.get('type')
+
+            if 'weight' in data:
+                product_data['weight'] = data.get('weight')
+
+            if 'weight_unit' in data:
+                product_data['weight_unit'] = data.get('weight_unit')
+
+            products.append(product_data)
+
+            product.data = json.dumps(product_data)
+            product.save()
+
+        return self.api_success({'products': products})
 
     def get_order_data(self, request, user, data):
         version = request.META.get('HTTP_X_EXTENSION_VERSION')
