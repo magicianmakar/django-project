@@ -75,4 +75,5 @@ function commercehqProductSearch (e) {
 $(function () {
     $('#modal-commercehq-product .commercehq-find-product').bindWithDelay('keyup', commercehqProductSearch, 500);
     $('#modal-commercehq-product .commercehq-store').on('change', commercehqProductSearch);
+    $('#modal-commercehq-product').on('show.bs.modal', commercehqProductSearch);
 });
