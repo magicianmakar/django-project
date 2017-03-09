@@ -265,9 +265,10 @@ def order_phone_number(user, phone_number, customer_country):
             customer_country = user.profile.country
 
         if phone_number:
-            phone_number = '+{}'.format(''.join(re.findall('[0-9]+', phone_number)))
+            phone_number = ''.join(re.findall('[0-9]+', phone_number))
 
-        parsed = phonenumbers.parse(phone_number, customer_country)
-        return '+{}'.format(parsed.country_code), parsed.national_number
+        return None, phone_number
+        # parsed = phonenumbers.parse(phone_number, customer_country)
+        # return '+{}'.format(parsed.country_code), parsed.national_number
     except:
         return None, phone_number
