@@ -11,7 +11,12 @@ from unidecode import unidecode
 from .models import CommerceHQStore, CommerceHQProduct
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
-from shopified_core.shipping_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import (
+    load_uk_provincess,
+    missing_province,
+    country_from_code,
+    province_from_code
+)
 
 
 def get_store_from_request(request):
@@ -125,13 +130,6 @@ def filter_products(res, fdata):
 def chq_customer_address(order):
     customer_address = {}
     shipping_address = order['shipping_address']
-    address_map = {
-        'street': 'address1',
-        'suite': 'address2',
-        'country': 'country_code',
-    }
-
-    # TODO: Fix CommerceHQ country and state
 
     for k in shipping_address.keys():
         if shipping_address[k] and type(shipping_address[k]) is unicode:
@@ -139,8 +137,13 @@ def chq_customer_address(order):
         else:
             customer_address[k] = shipping_address[k]
 
-        if k in address_map:
-            customer_address[address_map[k]] = customer_address[k]
+    customer_address['address1'] = customer_address.get('street')
+    customer_address['address2'] = customer_address.get('suite')
+    customer_address['country_code'] = customer_address.get('country')
+    customer_address['province_code'] = customer_address.get('state')
+
+    customer_address['country'] = country_from_code(customer_address['country_code'])
+    customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
 
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:

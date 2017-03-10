@@ -1,4 +1,5 @@
 import os
+import simplejson as json
 from hashlib import md5
 
 from django.core.cache import cache
@@ -6,6 +7,8 @@ from django.conf import settings
 
 
 uk_provinces = None
+countries_code = None
+provinces_code = {}
 
 
 def load_uk_provincess():
@@ -32,3 +35,26 @@ def missing_province(city):
     if cache.get(city_key) is None:
         print 'WARNING: UK Province not found for:', city
         cache.set(city_key, 1, timeout=3600)
+
+
+def country_from_code(country_code):
+    global countries_code
+
+    if countries_code is None:
+        countries_code = json.load(open(os.path.join(settings.BASE_DIR, 'app/data/shipping/countries.json')))
+
+    return countries_code[country_code]
+
+
+def province_from_code(country_code, province_code):
+    global countries_code
+
+    country_code = country_code.lower()
+    if country_code not in provinces_code:
+        path = os.path.join(settings.BASE_DIR, 'app/data/shipping/provinces/{}.json'.format(country_code))
+        if os.path.isfile(path):
+            provinces_code[country_code] = json.load(open(path))
+
+    province = provinces_code.get(country_code, {}).get(province_code)
+
+    return province if province else province_code
