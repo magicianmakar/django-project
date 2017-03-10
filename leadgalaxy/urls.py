@@ -42,7 +42,6 @@ urlpatterns = patterns(
 
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
-    url(r'^product/images/download/(?P<pid>[0-9]+)$', leadgalaxy.views.product_image_download, name='product_image_download'),
 
     url(r'^pixlr/serve$', leadgalaxy.views.pixlr_serve_image, name='pixlr_serve_image'),
     url(r'^pixlr/close$', leadgalaxy.views.pixlr_close, name='pixlr_close'),

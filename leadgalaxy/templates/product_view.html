@@ -234,12 +234,15 @@
 
                 <div class="row">
                     <div class="col-xs-12 text-right" style="margin-top: 15px;">
+                        {% if product.store %}
                         <a id="download-images"
                            class="btn btn-success btn-xs"
-                           data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading"
-                           href="{% url 'product_image_download' pid=product.id %}">
+                           href="#"
+                           product="{{ product.id }}"
+                           data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading">
                             <i class="fa fa-download"></i> Download Images
                         </a>
+                        {% endif %}
                         {% if aws_available and request.user|can:'image_uploader.view' %}
                         <a class="btn btn-success btn-xs"
                             {% if request.user|can:'image_uploader.use' %}
@@ -831,6 +834,10 @@ var config = {
 	    api_id: '{{user.clippingmagic.api_id|default:""}}',
         clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
     },
+    sub_conf: {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "{{ product.store.pusher_channel }}",
+    },
 
 {% if shopify_product %}
     shopify_options: {% json_dumps shopify_product.options %},
@@ -982,8 +989,9 @@ $(function() {
 
     $('.original-description').css('overflow', 'auto');
 });
-
 </script>
+
+    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
