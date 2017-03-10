@@ -261,7 +261,9 @@ def orders_update_limit(orders_count, check_freq=30, total_time=1440, min_count=
 def order_phone_number(request, user, phone_number, customer_country):
     if not phone_number or user.get_config('order_default_phone') != 'customer':
         phone_number = user.get_config('order_phone_number')
-        customer_country = user.profile.country
+        country = user.profile.country
+    else:
+        country = customer_country
 
     if phone_number:
         phone_number = ''.join(re.findall('[0-9]+', phone_number))
@@ -271,17 +273,17 @@ def order_phone_number(request, user, phone_number, customer_country):
         return None, phone_number
 
     if re.match('^0+$', phone_number):
-        return '+1', phone_number
+        return '+{}|{}'.format(max(phonenumbers.country_code_for_region(customer_country), 1), phone_number).split('|')
 
     try:
-        parsed = phonenumbers.parse(phone_number, customer_country)
+        parsed = phonenumbers.parse(phone_number, country)
         return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
     except:
         pass
 
     try:
         number = '+' + phone_number[2:] if phone_number.startswith('00') else phone_number
-        parsed = phonenumbers.parse(number, customer_country)
+        parsed = phonenumbers.parse(number, country)
         return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
     except:
         pass
