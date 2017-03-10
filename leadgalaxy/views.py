@@ -4,14 +4,11 @@ import base64
 import hmac
 import mimetypes
 import random
-import tempfile
 import time
 import traceback
 import urllib
 import urllib2
-import zipfile
 import zlib
-import os
 from hashlib import sha1
 from io import BytesIO
 from urllib import urlencode
@@ -31,7 +28,6 @@ from django.shortcuts import render, get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
-from django.utils.text import slugify
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
@@ -961,28 +957,6 @@ def products_list(request, tpl='grid'):
         'page': 'product',
         'breadcrumbs': breadcrumbs
     })
-
-
-@login_required
-def product_image_download(request, pid):
-    product = get_object_or_404(ShopifyProduct, id=pid)
-    permissions.user_can_view(request.user, product)
-
-    images = json.loads(product.data)['images']
-    if not len(images):
-        raise Http404('No images to proccess')
-
-    filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
-
-    with zipfile.ZipFile(filename, 'w') as images_zip:
-        for i, img_url in enumerate(images):
-            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
-            images_zip.writestr(image_name, requests.get(img_url).content)
-
-    s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
-    url = utils.aws_s3_upload(s3_path, input_filename=filename)
-
-    return JsonResponse({'url': url})
 
 
 @login_required
