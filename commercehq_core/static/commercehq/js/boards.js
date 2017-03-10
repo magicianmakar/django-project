@@ -102,13 +102,19 @@ $(document).ready(function() {
             closeOnConfirm: false
         }, function() {
             $.ajax({
-                url: api_url('board', 'chq') + '?board_id=' + boardId,
+                url: api_url('board', 'chq') + '?' + $.param({board_id: boardId}),
                 method: 'DELETE',
                 success: function(data) {
                     if ('status' in data && data.status == 'ok') {
-                        table.api().rows('#board-row-' + boardId).remove().draw();
                         swal.close();
                         toastr.success('Board has been deleted.', 'Delete Board');
+                        var selector = '#board-row-' + boardId;
+                        var $row = $(selector);
+                        if ($row.length) {
+                            table.api().rows(selector).remove().draw();
+                        } else {
+                            window.location.href = '/chq/boards/list';
+                        }
                     } else {
                         displayAjaxError('Delete Board', data);
                     }
@@ -143,7 +149,13 @@ $(document).ready(function() {
                     if ('status' in data && data.status == 'ok') {
                         swal.close();
                         toastr.success("The board is now empty.", "Empty Board");
-                        $('#board-row-' + boardId).find('.product-count').html('0');
+                        var selector = '#board-row-' + boardId;
+                        var $row = $(selector);
+                        if ($row.length) {
+                            $row.find('.product-count').html('0');
+                        } else {
+                            window.location.href = window.location.href;
+                        }
                     } else {
                         displayAjaxError('Empty Board', data);
                     }
@@ -152,6 +164,150 @@ $(document).ready(function() {
                     displayAjaxError('Empty Board', data);
                 }
             });
+        });
+    });
+
+    var currentBoardBox = null;
+
+    $('.apply-btn').click(function(e) {
+        var boardBox = $(this).parents('.board-box');
+        var action = boardBox.find('.selected-actions').val();
+
+        if (action == 'delete') {
+            swal({
+                title: "Delete Products",
+                text: "Are you sure that you want to permanently delete the selected products?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Delete Permanently",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                   boardBox.find('input.item-select[type=checkbox]').each(function(i, el) {
+                        if (el.checked) {
+                            var product = $(el).parents('.product-box').attr('product-id');
+                            if (action == 'delete') {
+                                $.ajax({
+                                    url: api_url('product', 'chq') + '?' + $.param({product: product}),
+                                    type: 'DELETE',
+                                    success: function(data) {
+                                        $(el).parents('.col-md-3').remove();
+                                    },
+                                    error: function(data) {
+                                        displayAjaxError('Delete Product', data);
+                                    }
+                                });
+                            }
+
+                            $(el).iCheck('uncheck');
+                        }
+                    });
+                }
+            });
+        } else if (action == 'edit') {
+            $('#modal-products-edit-form').modal('show');
+            return;
+        } else if (action == 'commercehq-send') {
+            currentBoardBox = boardBox;
+            //$('#modal-commerhq-send').modal('show');
+            return;
+        } else if (action == 'board-remove') {
+            var btn = $(this);
+            var products = [];
+            var products_el = [];
+            var board_id = boardBox.attr('board-id');
+
+            boardBox.find('input.item-select[type=checkbox]').each(function(i, el) {
+                if (el.checked) {
+                    products.push($(el).parents('.product-box').attr('product-id'));
+                    products_el.push($(el));
+                    $(el).iCheck('uncheck');
+                }
+            });
+
+            var param = {products: products, board_id: board_id}
+
+            $.ajax({
+                url: api_url('board-products', 'chq') + '?' + $.param(param),
+                type: 'DELETE',
+                success: function(data) {
+                    if ('status' in data && data.status == 'ok') {
+                        $.each(products_el, function(j, elc) {
+                            elc.parents('.col-md-3').remove();
+                        });
+                    } else {
+                        displayAjaxError('Board Product', data);
+                    }
+                },
+                error: function(data) {
+                    displayAjaxError('Board Product', data);
+                }
+            });
+        }
+
+        boardBox.find('.selected-actions').val('');
+    });
+
+    $('#modal-products-edit-form #save-changes').click(function(e) {
+        var btn = $(this);
+        var products = [];
+
+        $('input.item-select[type=checkbox]').each(function(i, el) {
+            if (el.checked) {
+                products.push($(el).parents('.product-box').attr('product-id'));
+                $(el).iCheck('uncheck');
+            }
+        });
+
+
+        var data = {
+            'products': products
+        };
+
+        if ($('#product-price').val().length) {
+            data['price'] = $('#product-price').val();
+        }
+
+        if ($('#product-compare-at').val().length) {
+            data['compare_at'] = $('#product-compare-at').val();
+        }
+
+        if ($('#product-type').val().length) {
+            data['type'] = $('#product-type').val();
+        }
+
+        if ($('#product-tags').val().length) {
+            data['tags'] = $('#product-tags').val();
+        }
+
+        if ($('#product-weight').val().length) {
+            data['weight'] = $('#product-weight').val();
+            data['weight_unit'] = $('#product-weight-unit').val();
+        }
+
+        btn.button('loading');
+
+        $.ajax({
+            url: api_url('product-edit', 'chq'),
+            type: 'POST',
+            data: data,
+            success: function(data) {
+                if ('status' in data && data.status == 'ok') {
+                    window.location.href = window.location.href;
+                } else {
+                    displayAjaxError('Edit Products', data);
+                }
+            },
+            error: function(data) {
+                displayAjaxError('Edit Products', data);
+            },
+            complete: function() {
+                btn.button('reset');
+            }
         });
     });
 });

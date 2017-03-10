@@ -3,7 +3,7 @@
 {% load static %}
 {% load compress %}
 {% load perms_helper %}
-
+{% load template_helper %}
 
 {% block main-container %}
 
@@ -19,22 +19,34 @@
                 <i class="fa fa-wrench"></i>
             </a>
             <ul class="dropdown-menu dropdown-user">
-                <li><a board-id="{{board.id}}" class="board-edit" href="#">Edit...</a></li>
-                <li><a board-id="{{board.id}}" class="board-empty" href="#">Empty board</a></li>
-                <li><a board-id="{{board.id}}" class="board-delete" href="#">Delete board</a></li>
+                <li>
+                    <a data-board-id="{{board.id}}" class="chq-edit-board-btn" href="#">
+                        Edit...
+                    </a>
+                </li>
+                <li>
+                    <a data-board-id="{{board.id}}" class="chq-empty-board-btn" class="" href="#">
+                        Empty board
+                    </a>
+                </li>
+                <li>
+                    <a data-board-id="{{board.id}}" class="chq-delete-board-btn" href="#">
+                        Delete board
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
     <div class="ibox-content">
 
-    {% if board.products.all %}
+    {% if products %}
     <div class="row" style="margin-bottom: 20px">
         <div class="col-md-8">
             <label for="selected-actions">Selected Items:</label>
             <select class="form-control selected-actions" name="selected-actions" style="display: inline-block; width: 191px; ">
                 <option value=""></option>
                 <option value="edit">Edit...</option>
-                <option value="shopify-send">Send To Shopify...</option>
+                <option value="commercehq-send">Send to CommerceHQ...</option>
                 <option value="board-remove">Remove from board</option>
                 <option value="delete">Delete</option>
             </select>
@@ -49,44 +61,49 @@
     {% endif %}
 
     <div class="row">
-        {% for item in board.products.all %}
-        <div class="col-xs-3 col-md-3 ">
+        {% for item in products %}
+        <div class="col-xs-12 col-md-3">
             <div class="ibox">
                 <div class="ibox-content product-box" product-id="{{item.id}}">
                     <div class="product-imitation" style="padding: 0;">
-                        <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
-                        <label for="product_{{item.id}}"><img class="unveil"  src="{% static 'img/blank.gif' %}" data-src="{{item.images|first}}" style="width: 100%"></label>
-                        {# <button class="btn btn-xs btn-danger delete-from-board-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; "><i class="fa fa-times"></i></button> #}
+                        <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
+                        <a href="{% url 'chq:product_detail' pk=item.id %}">
+                            <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.parsed.images|first}}" style="width: 100%">
+                        </a>
+                        <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>
                     </div>
                     <div class="product-desc">
                         <span class="product-price">
-                            {{item.price}}
+                            {% money_format item.price %}
                         </span>
-                        <small class="text-muted">{{item.product.type}}</small>
+                        <small class="text-muted">{{item.parsed.type}}</small>
                         {% if item.source %}
                         <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
-                            <a href="{{item.product.original_url}}" target="_blank">{{item.source}}</a>
-                            </small>
+                            <a href="{{item.parsed.original_url}}" target="_blank">{{item.source}}</a>
+                        </small>
                         {% endif %}
-
-                        <a href="/product/{{item.id}}" class="hidden-xs product-name"> {{item.product.title|truncatewords:13}}</a>
-                        <a href="/product/{{item.id}}" class="visible-xs product-name" style="font-size: 12px"> {{item.product.title|truncatewords:5}}</a>
+                        <a href="{% url 'chq:product_detail' pk=item.id %}" class="hidden-xs product-name"> {{item.title|truncatewords:13}}</a>
+                        <a href="{% url 'chq:product_detail' pk=item.id %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
 
                         <div class="small m-t-xs">
                             Submitted at {{item.created_at|date}}
                         </div>
-                        <div class="m-t text-right">
-                            {% if item.qelem.is_connected %}
-                                <a
-                                    class="btn btn-xs btn-outline btn-primary"
-                                    href="{{ item.shopify_url }}"
-                                    title="Connected to Shopify"
-                                    target="_blank"
-                                >
-                                    <i class="text-success fa fa-fw fa-link"></i>
-                                </a>
-                            {% endif %}
-                            <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
+                        <div class="m-t row">
+                            <div class="col-md-4" style="padding-right:0">
+                            <a href="{% url 'chq:product_detail' pk=item.id %}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
+                            </div>
+                            <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
+                            <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
+                                {% with board=item.board %}
+                                    {% if board %}
+                                    Board: {{board.title}}
+                                    {% else %}
+                                    Board
+                                    {% endif %}
+                                {% endwith %}
+
+                            </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -104,7 +121,7 @@
 
     </div>
 
-        {% include "partial/paginator.html" %}
+        {% include "partial/paginator.html" with page_obj=products %}
 
     </div>
     </div>
@@ -120,57 +137,20 @@
 
 {% include "partial/product_edit_modal.html" %}
 
-
-<div id="smartboard-modal" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <h3 class="m-t-none m-b">Edit Board</h3>
-                        <form role="form">
-                            <div class="form-group">
-                                <label for="">Board Title:</label>
-                                <input type="text" id="board-title" class="form-control">
-                            </div>
-
-                            <h3 class="m-t-none m-b">Smart Board</h3>
-                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
-                            <input type="hidden" id="smartboard-board">
-
-                            <div class="form-group">
-                                <label for="">Product Title contains:</label>
-                                <input type="text" id="smartboard-product-title" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="">Product Tags contains:</label>
-                                <input type="text" id="smartboard-product-tags" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="">Product Type contains:</label>
-                                <input type="text" id="smartboard-product-type" class="form-control">
-                            </div>
-                            <div>
-                                <button id="smartboard-save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                    <strong>Save</strong>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-            </div>
-        </div>
-        </div>
-    </div>
-</div>
-
-{% include 'partial/shopify_send_modal.html' %}
-
 {% include 'partial/filter_modal.html' %}
 
 {% endblock %}
 
+{% block modal-board-add %}
+    {% include 'commercehq/modal_board_update.html' %}
+{% endblock modal-board-add %}
 
 {% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
     {% compress js %}
         <script type="text/javascript" src="{% static 'commercehq/js/boards.js' %}"></script>
     {% endcompress %}

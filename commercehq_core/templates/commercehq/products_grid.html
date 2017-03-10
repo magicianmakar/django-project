@@ -118,7 +118,7 @@
                                             </div>
                                             <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
                                             <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
-                                                {% with board=item.board %}
+                                                {% with board=item.commercehqboard_set.first %}
                                                     {% if board %}
                                                     Board: {{board.title}}
                                                     {% else %}

@@ -472,10 +472,10 @@ class CommerceHQBoard(models.Model):
         return self.title
 
     def saved_count(self):
-        return self.products.filter(source_id=0).count()
+        return self.products.filter(store__is_active=True, source_id=0).count()
 
     def connected_count(self):
-        return self.products.exclude(source_id=0).count()
+        return self.products.exclude(store__is_active=True, source_id=0).count()
 
 
 class CommerceHQOrderTrack(models.Model):
