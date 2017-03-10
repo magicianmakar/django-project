@@ -9,7 +9,11 @@ def get_object_user(obj):
     if hasattr(obj, 'user'):
         return obj.user
     else:
-        return obj.store.user
+        store = obj.store
+        if not store and hasattr(obj, 'product'):
+            store = obj.product.store
+
+        return store.user
 
 
 def user_can_add(user, obj):
