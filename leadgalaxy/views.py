@@ -44,7 +44,7 @@ from analytic_events.models import RegistrationEvent
 from shopified_core import permissions
 from shopified_core.utils import send_email_from_template, version_compare
 from shopified_core.paginators import SimplePaginator
-from shopified_core.province_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import load_uk_provincess, missing_province
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (

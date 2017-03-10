@@ -11,7 +11,7 @@ from unidecode import unidecode
 from .models import CommerceHQStore, CommerceHQProduct
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
-from shopified_core.province_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import load_uk_provincess, missing_province
 
 
 def get_store_from_request(request):
