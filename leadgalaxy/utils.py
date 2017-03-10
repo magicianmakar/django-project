@@ -879,6 +879,9 @@ def get_tracking_orders(store, tracker_orders):
         params=params
     )
 
+    if not rep.ok:
+        return tracker_orders
+
     orders = {}
     lines = {}
 

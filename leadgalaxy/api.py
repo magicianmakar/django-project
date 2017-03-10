@@ -1716,33 +1716,34 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         tracks.append(track)
 
             for track in tracks:
-                if not track.order:
-                    continue
-
-                shopify_summary = [
-                    u'Shopify Order: {}'.format(track.order['name']),
-                    u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
-                    u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
-                ]
-
-                for line in track.order['line_items']:
-                    shopify_summary.append(u'<br><b>{}x {}</b> {} - {}'.format(
-                        line['quantity'],
-                        money_format(line['price'], track.store),
-                        truncatewords(line['title'], 10),
-                        truncatewords(line['variant_title'] or '', 5)
-                    ).rstrip('- ').replace(' ...', '...'))
-
                 info = {
                     'aliexpress_id': track.source_id,
                     'shopify_order': track.order_id,
-                    'shopify_number': track.order['name'],
-                    'shopify_status': track.order['fulfillment_status'],
-                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
-                    'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
-                    'shopify_summary': "<br>".join(shopify_summary),
                     'tracking_number': track.source_tracking,
+                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
                 }
+
+                if track.order:
+                    shopify_summary = [
+                        u'Shopify Order: {}'.format(track.order['name']),
+                        u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
+                        u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
+                    ]
+
+                    for line in track.order['line_items']:
+                        shopify_summary.append(u'<br><b>{}x {}</b> {} - {}'.format(
+                            line['quantity'],
+                            money_format(line['price'], track.store),
+                            truncatewords(line['title'], 10),
+                            truncatewords(line['variant_title'] or '', 5)
+                        ).rstrip('- ').replace(' ...', '...'))
+
+                    info.update({
+                        'shopify_number': track.order['name'],
+                        'shopify_status': track.order['fulfillment_status'],
+                        'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
+                        'shopify_summary': "<br>".join(shopify_summary),
+                    })
 
                 if track.source_id in orders:
                     orders[track.source_id].append(info)
