@@ -272,7 +272,7 @@ def order_phone_number(request, user, phone_number, customer_country):
     if not version or version_compare(version, ' 1.61.5') <= 0:
         return None, phone_number
 
-    if re.match('^0+$', phone_number):
+    if not phone_number or re.match('^0+$', phone_number):
         return '+{}|{}'.format(max(phonenumbers.country_code_for_region(customer_country), 1), phone_number).split('|')
 
     try:

@@ -67,3 +67,11 @@ class UtilsTestCase(TestCase):
         country_code, phone_number = order_phone_number(request, user, '0652413300', '')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '0000000')
+
+    def test_null_order_phone_numbers(self):
+        user = Mock(get_config=Mock(return_value='customer'))
+        request = Mock(META={'HTTP_X_EXTENSION_VERSION': '1.62.0'})
+
+        country_code, phone_number = order_phone_number(request, user, None, 'US')
+        self.assertEqual(country_code, '+1')
+        self.assertEqual(phone_number, '')
