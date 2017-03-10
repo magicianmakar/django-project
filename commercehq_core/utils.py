@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from unidecode import unidecode
 
-from .models import CommerceHQStore, CommerceHQProduct
+from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
 from shopified_core.province_helper import load_uk_provincess, missing_province
@@ -50,17 +50,14 @@ def get_store_from_request(request):
 
 
 def commercehq_products(request, post_per_page=25, sort=None, board=None, load_boards=False):
-    store = request.GET.get('store')
+    store = request.GET.get('store', 'n')
     sort = request.GET.get('sort')
 
     user_stores = request.user.profile.get_chq_stores(flat=True)
     res = CommerceHQProduct.objects.select_related('store') \
-                                   .filter(user=request.user.models_user)
-
-    if request.user.is_subuser:
-        res = res.filter(store__in=user_stores)
-    else:
-        res = res.filter(Q(store__in=user_stores) | Q(store=None))
+                                   .filter(user=request.user.models_user) \
+                                   .filter(Q(store__in=user_stores) | Q(store=None)) \
+                                   .prefetch_related('commercehqboard_set')  # TODO: Optmize loading boards
 
     if store:
         if store == 'c':  # connected
@@ -80,9 +77,9 @@ def commercehq_products(request, post_per_page=25, sort=None, board=None, load_b
 
             permissions.user_can_view(request.user, store)
 
-    # if board:
-        # res = res.filter(shopifyboard=board)
-        # permissions.user_can_view(request.user, get_object_or_404(ShopifyBoard, id=board))
+    if board:
+        res = res.filter(commercehqboard=board)
+        permissions.user_can_view(request.user, get_object_or_404(CommerceHQBoard, id=board))
 
     res = filter_products(res, request.GET)
 

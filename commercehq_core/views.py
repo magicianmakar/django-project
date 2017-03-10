@@ -154,14 +154,16 @@ class BoardDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(BoardDetailView, self).get_context_data(**kwargs)
         board = self.get_object()
-        products = commercehq_products(self.request).filter(commercehqboard=board)
+
+        products = commercehq_products(self.request, board=board.id)
         paginator = SimplePaginator(products, 25)
-        page = safeInt(self.request.GET.get('page', 1))
+        page = safeInt(self.request.GET.get('page'), 1)
+        page = paginator.page(page)
+
         context['paginator'] = paginator
-        context['products'] = paginator.page(page)
-        context['current_page'] = min(max(1, page), paginator.num_pages)
-        boards_breadcrumb = {'title': 'Boards', 'url': reverse('chq:boards_list')}
-        context['breadcrumbs'] = [boards_breadcrumb, board.title]
+        context['products'] = page
+        context['current_page'] = page
+        context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('chq:boards_list')}, board.title]
 
         return context
 
