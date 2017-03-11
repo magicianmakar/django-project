@@ -14,7 +14,7 @@ import simplejson as json
 import requests
 import textwrap
 import hashlib
-from urlparse import urlparse
+import urlparse
 
 import arrow
 from pusher import Pusher
@@ -772,7 +772,7 @@ class ShopifyProduct(models.Model):
 
         if url:
             # Extract domain name
-            domain = urlparse(url).hostname
+            domain = urlparse.urlparse(url).hostname
             if domain is None:
                 return domain
 
