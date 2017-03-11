@@ -27,7 +27,7 @@ from shopified_core.utils import (
     SimplePaginator
 )
 
-from .forms import CommerceHQStoreForm, CommerceHQBoardForm
+from .forms import CommerceHQStoreForm
 from .decorators import no_subusers, must_be_authenticated, ajax_only
 from .models import (
     CommerceHQStore,

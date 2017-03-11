@@ -116,13 +116,13 @@ class CHQStoreApi(ApiResponseMixin, View):
         else:
             data = task.result
 
-            if 'product' in data:
+            if 'error' not in data:
                 return self.api_success({
                     'ready': True,
                     'data': data
                 })
             else:
-                return JsonResponse(data, safe=False, status=500)
+                return self.api_error(data['error'], status=500)
 
     def post_product_export(self, request, user, data):
         try:
