@@ -1,8 +1,14 @@
 from django.test import TestCase
 from mock import Mock
+from collections import OrderedDict
 
 from shopified_core.utils import (
     order_phone_number
+)
+
+from shopified_core.shipping_helper import (
+    country_from_code,
+    get_counrties_list
 )
 
 
@@ -75,3 +81,29 @@ class UtilsTestCase(TestCase):
         country_code, phone_number = order_phone_number(request, user, None, 'US')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '')
+
+
+class ShippingHelperTestCase(TestCase):
+    def setUp(self):
+        pass
+
+    def test_get_country_from_code(self):
+        counrties = {
+            'US': 'United States',
+            'GB': 'United Kingdom',
+            'CA': 'Canada',
+        }
+
+        for code, name in counrties.items():
+            self.assertEqual(country_from_code(code), name)
+
+    def test_get_country_list(self):
+        counrties = OrderedDict()
+        counrties['US'] = 'United States'
+        counrties['GB'] = 'United Kingdom'
+        counrties['CA'] = 'Canada'
+
+        counrties_list = get_counrties_list()
+
+        for i, c in enumerate(counrties.items()):
+            self.assertEqual(counrties_list[i][0], c[0])

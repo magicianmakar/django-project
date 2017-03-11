@@ -3,7 +3,6 @@ import simplejson as json
 import requests
 import hashlib
 import pytz
-import collections
 import time
 import base64
 import boto
@@ -1398,14 +1397,6 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
         raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
-
-
-def get_countries():
-    country_names = pytz.country_names
-    country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
-    countries = zip(country_names.keys(), country_names.values())
-
-    return countries
 
 
 def get_timezones(country=None):

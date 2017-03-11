@@ -21,6 +21,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     send_email_from_template,
     version_compare,
@@ -1826,7 +1827,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return JsonResponse(utils.get_timezones(data.get('country')), safe=False)
 
     def get_countries(self, request, user, data):
-        return JsonResponse(utils.get_countries(), safe=False)
+        return JsonResponse(get_counrties_list(), safe=False)
 
     def post_user_profile(self, request, user, data):
         form = UserProfileForm(data)

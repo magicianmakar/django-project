@@ -40,7 +40,7 @@ from analytic_events.models import RegistrationEvent
 from shopified_core import permissions
 from shopified_core.utils import send_email_from_template, version_compare
 from shopified_core.paginators import SimplePaginator
-from shopified_core.shipping_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import load_uk_provincess, missing_province, get_counrties_list
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -1248,7 +1248,7 @@ def mapping_supplier(request, product_id):
         'variants_map': variants_map,
         'product_suppliers': product_suppliers,
         'mapping_config': mapping_config,
-        'countries': utils.get_countries(),
+        'countries': get_counrties_list(),
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
@@ -1968,7 +1968,7 @@ def user_profile(request):
         sync_subscription(request.user)
 
     return render(request, 'user/profile.html', {
-        'countries': utils.get_countries(),
+        'countries': get_counrties_list(),
         'now': timezone.now(),
         'extra_bundles': extra_bundles,
         'bundles': bundles,
@@ -2515,7 +2515,7 @@ def orders_view(request):
     cache.set_many(active_orders, timeout=3600)
 
     if store_order_synced:
-        countries = utils.get_countries()
+        countries = get_counrties_list()
     else:
         countries = []
 

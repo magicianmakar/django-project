@@ -1,6 +1,7 @@
 import os
 import simplejson as json
 from hashlib import md5
+from collections import OrderedDict
 
 from django.core.cache import cache
 from django.conf import settings
@@ -37,13 +38,23 @@ def missing_province(city):
         cache.set(city_key, 1, timeout=3600)
 
 
-def country_from_code(country_code):
+def load_countries():
     global countries_code
 
     if countries_code is None:
-        countries_code = json.load(open(os.path.join(settings.BASE_DIR, 'app/data/shipping/countries.json')))
+        countries_code = json.load(
+            open(os.path.join(settings.BASE_DIR, 'app/data/shipping/countries.json')),
+            object_pairs_hook=OrderedDict)
 
-    return countries_code[country_code]
+    return countries_code
+
+
+def get_counrties_list():
+    return load_countries().items()
+
+
+def country_from_code(country_code):
+    return load_countries()[country_code]
 
 
 def province_from_code(country_code, province_code):
