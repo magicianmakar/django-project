@@ -90,17 +90,52 @@ class CHQStoreApi(ApiResponseMixin, View):
         # Backward compatibly with Shopify save for later
         return self.post_product_save(request, user, data)
 
+    def get_product_export(self, request, user, data):
+        task = tasks.product_export.AsyncResult(data.get('id'))
+        count = utils.safeInt(data.get('count'))
+
+        if count == 60:
+            raven_client.context.merge(raven_client.get_data_from_request(request))
+            raven_client.captureMessage('Celery Task is taking too long.', level='warning')
+
+        if count > 120 and count < 125:
+            raven_client.captureMessage('Terminate Celery Task.',
+                                        extra={'task': data.get('id')},
+                                        level='warning')
+
+            task.revoke(terminate=True)
+            return self.api_error('Export Error', status=500)
+
+        if count >= 125:
+            return self.api_error('Export Error', status=500)
+
+        if not task.ready():
+            return self.api_success({
+                'ready': False
+            })
+        else:
+            data = task.result
+
+            if 'product' in data:
+                return self.api_success({
+                    'ready': True,
+                    'data': data
+                })
+            else:
+                return JsonResponse(data, safe=False, status=500)
+
     def post_product_export(self, request, user, data):
         try:
             store = CommerceHQStore.objects.get(id=data.get('store'))
             permissions.user_can_view(user, store)
 
-            tasks.product_export.apply_async(
-                args=[data.get('store'), data.get('product'), user.id],
+            task = tasks.product_export.apply_async(
+                args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
                 countdown=0,
                 expires=120)
 
             return self.api_success({
+                'id': task.id,
                 'pusher': {
                     'key': settings.PUSHER_KEY,
                     'channel': store.pusher_channel()
@@ -710,6 +745,20 @@ class CHQStoreApi(ApiResponseMixin, View):
 
             product.data = json.dumps(product_data)
             product.save()
+
+        return self.api_success({'products': products})
+
+    def get_products_info(self, request, user, data):
+        products = {}
+        for p in data.getlist('products[]'):
+            pk = safeInt(p)
+            try:
+                product = CommerceHQProduct.objects.get(pk=pk)
+                permissions.user_can_view(user, product)
+
+                products[p] = json.loads(product.data)
+            except:
+                return self.api_error('Product not found')
 
         return self.api_success({'products': products})
 

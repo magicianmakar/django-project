@@ -300,6 +300,33 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
     });
 }
 
+function sendProductToCommerceHQ(product, store_id, product_id, publish, callback, callback_data) {
+    $.ajax({
+        url: api_url('product-export', 'chq'),
+        type: 'POST',
+        data: {
+            'product': product_id,
+            'store': store_id,
+            'publish': publish || false
+        },
+        success: function (data) {
+            if (data.hasOwnProperty('id')) {
+                taskCallsCount[data.id] = 1;
+                waitForTask(data.id, product, data, callback, callback_data, true);
+            } else {
+                if (callback) {
+                    callback(product, data, callback_data, true);
+                }
+            }
+        },
+        error: function (data) {
+            if (callback) {
+                callback(product, data, callback_data, false);
+            }
+        }
+    });
+}
+
 function productsEditModal(products) {
     if (!products || !products.length) {
         toastr.warning('No product is selected');
@@ -332,10 +359,14 @@ function productsEditModal(products) {
     }
 }
 
-function waitForTask(task_id, product, data, callback, callback_data) {
+function waitForTask(task_id, product, data, callback, callback_data, chq) {
+    var url = '/api/export-product';
+    if (chq) {
+        url = api_url('product-export', 'chq')
+    }
     taskIntervals[task_id] = setInterval(function () {
         $.ajax({
-            url: '/api/export-product',
+            url: url,
             type: 'GET',
             data: {
                 id: task_id,

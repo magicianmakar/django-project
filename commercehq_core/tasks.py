@@ -183,7 +183,7 @@ def product_save(req_data, user_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def product_export(store_id, product_id, user_id):
+def product_export(store_id, product_id, user_id, publish=None):
     try:
         user = User.objects.get(id=user_id)
 
@@ -192,6 +192,9 @@ def product_export(store_id, product_id, user_id):
 
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
+
+        if publish is not None:
+            product.update_data({'published': publish})
 
         product.store = store
         product.save()
@@ -332,22 +335,30 @@ def product_export(store_id, product_id, user_id):
         product.source_id = rep.json()['id']
         product.save()
 
-        store.pusher_trigger('product-export', {
+        data = {
             'success': True,
             'product': product.id,
             'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
             'commercehq_url': product.commercehq_url
-        })
+        }
+
+        store.pusher_trigger('product-export', data)
+
+        return data
 
     except Exception as e:
         raven_client.captureException()
 
-        store.pusher_trigger('product-export', {
+        data = {
             'success': False,
             'error': format_chq_errors(e),
             'product': product.id,
             'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
-        })
+        }
+
+        store.pusher_trigger('product-export', data)
+
+        return data
 
 
 @celery_app.task(base=CaptureFailure)

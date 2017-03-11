@@ -213,7 +213,7 @@ $(document).ready(function() {
             return;
         } else if (action == 'commercehq-send') {
             currentBoardBox = boardBox;
-            //$('#modal-commerhq-send').modal('show');
+            $('#modal-commercehq-send').modal('show');
             return;
         } else if (action == 'board-remove') {
             var btn = $(this);
@@ -263,7 +263,6 @@ $(document).ready(function() {
             }
         });
 
-
         var data = {
             'products': products
         };
@@ -307,6 +306,82 @@ $(document).ready(function() {
             },
             complete: function() {
                 btn.button('reset');
+            }
+        });
+    });
+
+    $('#commercehq-send-btn').click(function(e) {
+
+        var btn = $(this);
+        btn.button('loading');
+
+        var products = [];
+        var products_ids = [];
+        var publish = $('#send-product-visible').prop('checked');
+
+        $('#modal-commercehq-send .progress').show();
+
+        $('input.item-select[type=checkbox]', currentBoardBox).each(function(i, el) {
+            if (el.checked) {
+                products.push({
+                    product: $(el).parents('.product-box').attr('product-id'),
+                    element: $(el).parents('.product-box')
+                });
+
+                products_ids.push($(el).parents('.product-box').attr('product-id'));
+            }
+        });
+
+        if (products.length === 0) {
+            swal('Please select a product(s) first', '', "warning");
+            btn.button('reset');
+            return;
+        }
+
+        $('#modal-commercehq-send').prop('total_sent_success', 0);
+        $('#modal-commercehq-send').prop('total_sent_error', 0);
+        $('#modal-commercehq-send').modal();
+
+        $.ajax({
+            url: api_url('products-info', 'chq'),
+            type: 'GET',
+            data: {
+                products: products_ids
+            },
+            context: {
+                products: products
+            },
+            success: function(data) {
+                $.each(products, function(i, el) {
+                    sendProductToCommerceHQ(data.products[el.product], $('#send-select-store').val(), el.product, publish,
+                        function(product, data, callback_data, req_success) {
+                            var total_sent_success = parseInt($('#modal-commercehq-send').prop('total_sent_success'));
+                            var total_sent_error = parseInt($('#modal-commercehq-send').prop('total_sent_error'));
+
+                            if (req_success && !'error' in data) {
+                                total_sent_success += 1;
+                            } else {
+                                total_sent_error += 1;
+                            }
+
+                            $('#modal-commercehq-send').prop('total_sent_success', total_sent_success);
+                            $('#modal-commercehq-send').prop('total_sent_error', total_sent_error);
+
+                            $('#modal-commercehq-send .progress-bar-success').css('width', ((total_sent_success / products.length) * 100)  + '%');
+                            $('#modal-commercehq-send .progress-bar-danger').css('width', ((total_sent_error / products.length) * 100) + '%');
+
+                            callback_data.element.find('input.item-select[type=checkbox]').iCheck('disable');
+
+                            if ((total_sent_success + total_sent_error) == products.length) {
+                                $('#modal-commercehq-send').modal('hide');
+                                btn.button('reset');
+                            }
+                        }, {
+                            'element': el.element,
+                            'product': el.product
+                        }
+                    );
+                });
             }
         });
     });
