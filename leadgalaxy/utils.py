@@ -14,7 +14,7 @@ import re
 import shutil
 import tempfile
 import ctypes
-from urlparse import urlparse, parse_qs, urlsplit, urlunsplit
+import urlparse
 from urllib import urlencode
 from hashlib import sha256
 from math import ceil
@@ -58,7 +58,7 @@ def get_domain(url, full=False):
     if not url.startswith('http'):
         url = u'http://{}'.format(url)
 
-    hostname = urlparse(url).hostname
+    hostname = urlparse.urlparse(url).hostname
     if hostname is None:
         return hostname
 
@@ -1283,22 +1283,22 @@ def set_url_query(url, param_name, param_value):
     Given a URL, set or replace a query parameter and return the modified URL.
     """
 
-    scheme, netloc, path, query_string, fragment = urlsplit(url)
-    query_params = parse_qs(query_string)
+    scheme, netloc, path, query_string, fragment = urlparse.urlsplit(url)
+    query_params = urlparse.parse_qs(query_string)
     query_params[param_name] = [param_value]
     new_query_string = urlencode(query_params, doseq=True)
-    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+    return urlparse.urlunsplit((scheme, netloc, path, new_query_string, fragment))
 
 
 def affiliate_link_set_query(url, name, value):
     if '/deep_link.htm' in url:
-        dl_target_url = parse_qs(urlparse(url).query)['dl_target_url'].pop()
+        dl_target_url = urlparse.parse_qs(urlparse.urlparse(url).query)['dl_target_url'].pop()
         dl_target_url = set_url_query(dl_target_url, name, value)
 
         return set_url_query(url, 'dl_target_url', dl_target_url)
     elif 'alitems.com' in url:
         if name != 'ulp':
-            ulp = parse_qs(urlparse(url).query)['ulp'].pop()
+            ulp = urlparse.parse_qs(urlparse.urlparse(url).query)['ulp'].pop()
             ulp = set_url_query(ulp, name, value)
 
             return set_url_query(url, 'ulp', ulp)
