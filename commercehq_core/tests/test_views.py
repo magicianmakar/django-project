@@ -54,18 +54,6 @@ class StoreListTestCase(TestCase):
         r = self.client.get(self.path)
         self.assertEqual(r.context['stores'].count(), 1)
 
-    def test_must_show_first_visit(self):
-        self.login()
-        r = self.client.get(self.path)
-        self.assertTrue(r.context['first_visit'])
-
-    def test_must_set_first_visit_to_false(self):
-        self.login()
-        r = self.client.get(self.path)
-        self.user.profile.refresh_from_db()
-        config = self.user.profile.get_config()
-        self.assertFalse(config['_first_visit'])
-
     def test_must_have_breadcrumbs(self):
         self.login()
         r = self.client.get(self.path)
@@ -88,39 +76,61 @@ class StoreCreateTestCase(TestCase):
 
         self.data = {
             'title': 'Test Store',
-            'api_url': 'https://example.commercehq.com',
-            'api_key': 'testkey',
-            'api_password': 'testpassword'}
+            'api_url': 'https://chq-shopified-dev.commercehqdev.com/admin',
+            'api_key': 'tITJhQaqiOC_xZ0GSfhWid9uN-Dv9xdl',
+            'api_password': 'wsN0Ow5vMRlsZB4njmmTSXCAXVE5noHY'}
 
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
-        self.path = reverse('chq:store_create')
+        self.path = '/api/chq/store-add'
 
     def login(self):
         self.client.login(username=self.user.username, password=self.password)
 
-    def test_must_require_requests_to_be_ajax(self):
-        r = self.client.post(self.path, self.data)
-        self.assertEqual(r.status_code, 404)
-
-    def test_must_be_logged_in(self):
-        r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 401)
-
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_create_new_store(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 204)
+        self.assertEqual(r.reason_phrase, 'OK')
 
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_add_store_to_user(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
-        store = CommerceHQStore.objects.get(api_url=self.data['api_url'])
-        self.assertEqual(store.user, self.user)
 
+        store = CommerceHQStore.objects.first()
+
+        self.assertEqual(store.user, self.user)
+        self.assertEqual(r.reason_phrase, 'OK')
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_add_store_wrong_api_url(self):
+        self.login()
+
+        self.data['api_url'] = 'https://chq-shopified-dev.commerce.com/admin'
+
+        r = self.client.post(self.path, self.data, **self.headers)
+        rep = json.loads(r.content)
+
+        self.assertIn('stores URL is not correct', rep.get('error'))
+        self.assertNotEqual(r.reason_phrase, 'OK')
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_add_store_wrong_api_keys(self):
+        self.login()
+
+        self.data['api_key'] = '123456789'
+
+        r = self.client.post(self.path, self.data, **self.headers)
+        rep = json.loads(r.content)
+
+        self.assertIn('API credetnails is not correct', rep.get('error'))
+        self.assertNotEqual(r.reason_phrase, 'OK')
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_not_allow_subusers_to_create(self):
         self.client.login(username=self.subuser.username, password=self.subuser_password)
         r = self.client.post(self.path, self.data, **self.headers)
-        self.assertEqual(r.status_code, 403)
+        self.assertIn(r.status_code, [401, 403])
 
 
 class StoreUpdateTestCase(TestCase):
@@ -158,7 +168,7 @@ class StoreUpdateTestCase(TestCase):
         self.login()
         r = self.client.get(self.path, **self.headers)
         self.assertTrue(r.status_code, 200)
-        self.assertTemplateUsed(r, 'commercehq/store_update_form.html')
+        self.assertTemplateUsed(r, 'commercehq/partial/store_update_form.html')
 
     def test_must_update_store(self):
         self.login()
@@ -386,6 +396,7 @@ class BoardDetailTestCase(TestCase):
         self.user.set_password(self.password)
         self.user.save()
         self.board = CommerceHQBoardFactory(user=self.user, title='Test Board')
+        self.board2 = CommerceHQBoardFactory(title='Test Board2')
         self.path = reverse('chq:board_detail', args=(self.board.pk,))
 
     def login(self):
@@ -412,9 +423,8 @@ class BoardDetailTestCase(TestCase):
         self.assertIn('board', r.context)
 
     def test_must_only_show_own_board(self):
-        board = CommerceHQStoreFactory()
         self.login()
-        r = self.client.get(reverse('chq:board_detail', args=(board.pk,)))
+        r = self.client.get(reverse('chq:board_detail', kwargs={'pk': self.board2.id}))
         self.assertEqual(r.status_code, 404)
 
     def test_must_have_breadcrumbs(self):

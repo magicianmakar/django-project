@@ -572,7 +572,11 @@ class CHQStoreApi(ApiResponseMixin, View):
         permissions.user_can_add(user, store)
 
         try:
-            rep = store.request.get(store.get_api_url('products'))
+            rep = store.request.get(
+                store.get_api_url('products'),
+                params={'fields': 'id', 'size': 1}
+            )
+
             rep.raise_for_status()
         except:
             return self.api_error('API credetnails is not correct', status=500)
