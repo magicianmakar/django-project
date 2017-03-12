@@ -301,18 +301,18 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
 }
 
 function sendProductToCommerceHQ(product, store_id, product_id, publish, callback, callback_data) {
+    var data;
+    data = {product: product_id, store: store_id};
+    if (publish) data.publish = true;
     $.ajax({
         url: api_url('product-export', 'chq'),
         type: 'POST',
-        data: {
-            'product': product_id,
-            'store': store_id,
-            'publish': publish || false
-        },
+        data: data,
         success: function (data) {
             if (data.hasOwnProperty('id')) {
+                var url = api_url('product-export', 'chq');
                 taskCallsCount[data.id] = 1;
-                waitForTask(data.id, product, data, callback, callback_data, true);
+                waitForTask(data.id, product, data, callback, callback_data, url);
             } else {
                 if (callback) {
                     callback(product, data, callback_data, true);
@@ -359,11 +359,9 @@ function productsEditModal(products) {
     }
 }
 
-function waitForTask(task_id, product, data, callback, callback_data, chq) {
-    var url = '/api/export-product';
-    if (chq) {
-        url = api_url('product-export', 'chq')
-    }
+function waitForTask(task_id, product, data, callback, callback_data, url) {
+    var url = url || api_url('export-product');
+
     taskIntervals[task_id] = setInterval(function () {
         $.ajax({
             url: url,

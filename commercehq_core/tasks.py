@@ -206,13 +206,13 @@ def product_export(store_id, product_id, user_id, publish=None):
         thumbs_idx = {}
         thumbs_uploads = {}
 
-        for h, var in p['variants_images'].items():
-            for idx, img in enumerate(p['images']):
+        for h, var in p.get('variants_images', {}).items():
+            for idx, img in enumerate(p.get('images', [])):
                 if utils.hash_url_filename(img) == h:
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
 
-        for idx, img in enumerate(p['images']):
+        for idx, img in enumerate(p.get('images', [])):
             is_thumb = idx in thumbs_idx
 
             store.pusher_trigger('product-export', {

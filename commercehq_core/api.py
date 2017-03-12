@@ -130,7 +130,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             permissions.user_can_view(user, store)
 
             task = tasks.product_export.apply_async(
-                args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
+                args=[data.get('store'), data.get('product'), user.id, data.get('publish', False)],
                 countdown=0,
                 expires=120)
 

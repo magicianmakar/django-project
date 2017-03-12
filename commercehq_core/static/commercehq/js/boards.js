@@ -358,7 +358,7 @@ $(document).ready(function() {
                             var total_sent_success = parseInt($('#modal-commercehq-send').prop('total_sent_success'));
                             var total_sent_error = parseInt($('#modal-commercehq-send').prop('total_sent_error'));
 
-                            if (req_success && !'error' in data) {
+                            if (req_success && !data.hasOwnProperty('error')) {
                                 total_sent_success += 1;
                             } else {
                                 total_sent_error += 1;
