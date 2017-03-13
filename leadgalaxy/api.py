@@ -737,6 +737,19 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             }
         })
 
+    def post_add_bundle(self, request, user, data):
+        if not user.is_superuser:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        bundle = FeatureBundle.objects.get(id=data.get('bundle'))
+
+        if target_user.is_subuser:
+            return self.api_error('Sub User Account', status=422)
+        target_user.profile.bundles.add(bundle)
+
+        return self.api_success()
+
     def delete_access_token(self, request, user, data):
         if not user.is_superuser:
             raise PermissionDenied()
