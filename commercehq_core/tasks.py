@@ -11,36 +11,12 @@ from app.celery import celery_app, CaptureFailure
 from shopified_core import utils
 from shopified_core import permissions
 
+from .utils import format_chq_errors
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
     CommerceHQSupplier
 )
-
-
-# TODO: move to .utils
-def format_chq_errors(e):
-    if not hasattr(e, 'response') or e.response.status_code != 422:
-        return 'Server Error'
-
-    errors = e.response.json().get('errors')
-
-    if isinstance(errors, basestring):
-        return errors
-
-    msg = []
-    for k, v in errors.items():
-        if type(v) is list:
-            error = u','.join(v)
-        else:
-            error = v
-
-        if k == 'base':
-            msg.append(error)
-        else:
-            msg.append(u'{}: {}'.format(k, error))
-
-    return u' | '.join(msg)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -296,7 +272,7 @@ def product_export(store_id, product_id, user_id):
             for v in p['variants']:
                 vars_list.append(v['values'])
 
-            vars_list = all_possible_cases(vars_list)
+            vars_list = utils.all_possible_cases(vars_list)
 
             for idx, variants in enumerate(vars_list):
                 if type(variants) is list:
@@ -455,20 +431,3 @@ def product_update(product_id, data):
             'product': product.id,
             'product_url': reverse('chq:product_detail', kwargs={'pk': product.id})
         })
-
-
-def all_possible_cases(arr, top=True):
-    sep = '_'.join([str(i) for i in range(10)])
-
-    if (len(arr) == 0):
-        return []
-    elif (len(arr) == 1):
-        return arr[0]
-    else:
-        result = []
-        allCasesOfRest = all_possible_cases(arr[1:], False)
-        for c in allCasesOfRest:
-            for i in arr[0]:
-                result.append('{}{}{}'.format(i, sep, c))
-
-        return map(lambda k: k.split(sep), result) if top else result
