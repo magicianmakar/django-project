@@ -204,11 +204,10 @@ def apply_shared_registration(user, registration):
 
 
 def smart_board_by_product(user, product):
-    product_info = json.loads(product.data)
     product_info = {
-        'title': product_info.get('title', '').lower(),
-        'tags': product_info.get('tags', '').lower(),
-        'type': product_info.get('type', '').lower(),
+        'title': product.title,
+        'tags': product.tag,
+        'type': product.product_type,
     }
 
     for i in user.shopifyboard_set.all():
@@ -222,11 +221,11 @@ def smart_board_by_product(user, product):
             if product_added:
                 break
 
-            if not len(config.get(j, '')) or not len(product_info[j]):
+            if not len(config.get(j, '')) or not product_info[j]:
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j]:
+                if f.lower() in product_info[j].lower():
                     i.products.add(product)
                     product_added = True
 
@@ -237,12 +236,11 @@ def smart_board_by_product(user, product):
 
 
 def smart_board_by_board(user, board):
-    for product in user.shopifyproduct_set.all():
-        product_info = json.loads(product.data)
+    for product in user.shopifyproduct_set.only('id', 'title', 'product_type', 'tag').all():
         product_info = {
-            'title': product_info.get('title', '').lower(),
-            'tags': product_info.get('tags', '').lower(),
-            'type': product_info.get('type', '').lower(),
+            'title': product.title,
+            'tags': product.tag,
+            'type': product.product_type,
         }
 
         try:
@@ -255,11 +253,11 @@ def smart_board_by_board(user, board):
             if product_added:
                 break
 
-            if not len(config.get(j, '')) or not len(product_info[j]):
+            if not len(config.get(j, '')) or not product_info[j]:
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j]:
+                if f.lower() in product_info[j].lower():
                     board.products.add(product)
                     product_added = True
 
