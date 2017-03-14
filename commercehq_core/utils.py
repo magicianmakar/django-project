@@ -257,6 +257,32 @@ def order_id_from_name(store, order_name, default=None):
     return default
 
 
+def format_chq_errors(e):
+    if not hasattr(e, 'response') or e.response.status_code != 422:
+        return 'Server Error'
+
+    errors = e.response.json().get('errors')
+
+    if not errors:
+        return 'Server Error'
+    elif isinstance(errors, basestring):
+        return errors
+
+    msg = []
+    for k, v in errors.items():
+        if type(v) is list:
+            error = u','.join(v)
+        else:
+            error = v
+
+        if k == 'base':
+            msg.append(error)
+        else:
+            msg.append(u'{}: {}'.format(k, error))
+
+    return u' | '.join(msg)
+
+
 class CommerceHQOrdersPaginator(Paginator):
     query = None
     store = None

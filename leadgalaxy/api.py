@@ -737,6 +737,19 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             }
         })
 
+    def post_add_bundle(self, request, user, data):
+        if not user.is_superuser:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        bundle = FeatureBundle.objects.get(id=data.get('bundle'))
+
+        if target_user.is_subuser:
+            return self.api_error('Sub User Account', status=422)
+        target_user.profile.bundles.add(bundle)
+
+        return self.api_success()
+
     def delete_access_token(self, request, user, data):
         if not user.is_superuser:
             raise PermissionDenied()
@@ -2169,11 +2182,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             permissions.user_can_view(user, product)
 
         except ShopifyProduct.DoesNotExist:
-            return self.api_error('Product not found', staus=404)
+            return self.api_error('Product not found', status=404)
 
         images = json.loads(product.data).get('images')
         if not images:
-            return self.api_error('Product doesn\'t have any images', staus=422)
+            return self.api_error('Product doesn\'t have any images', status=422)
 
         tasks.create_image_zip.delay(images, product.id)
 

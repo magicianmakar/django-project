@@ -53,6 +53,23 @@ def random_hash():
     return hashlib.md5(token).hexdigest()
 
 
+def all_possible_cases(arr, top=True):
+    sep = '_'.join([str(i) for i in range(10)])
+
+    if (len(arr) == 0):
+        return []
+    elif (len(arr) == 1):
+        return arr[0]
+    else:
+        result = []
+        allCasesOfRest = all_possible_cases(arr[1:], False)
+        for c in allCasesOfRest:
+            for i in arr[0]:
+                result.append('{}{}{}'.format(i, sep, c))
+
+        return map(lambda k: k.split(sep), result) if top else result
+
+
 def get_domain(url, full=False):
     if not url:
         return None

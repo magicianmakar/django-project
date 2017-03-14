@@ -1450,13 +1450,16 @@ def acp_users_list(request):
         users = users.distinct()
 
     plans = GroupPlan.objects.all()
+    bundles = FeatureBundle.objects.all()
     profiles = UserProfile.objects.all()
+
     if q:
         profiles = profiles.filter(user__in=users)
 
     return render(request, 'acp/users_list.html', {
         'users': users,
         'plans': plans,
+        'bundles': bundles,
         'profiles': profiles,
         'users_count': users.count(),
         'random_cache': random_cache,
