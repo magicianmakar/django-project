@@ -476,6 +476,7 @@ def all_possible_cases(arr, top=True):
 
         return map(lambda k: k.split(sep), result) if top else result
 
+
 @celery_app.task(bind=True, base=CaptureFailure)
 def create_image_zip(self, images, product_id):
     from os.path import join as path_join
