@@ -981,6 +981,33 @@ function launchEditor(id, src) {
     }
 }
 
+function pusherSub() {
+    if (typeof(Pusher) === 'undefined') {
+        toastr.error('This could be due to using Adblocker extensions<br>' +
+            'Please whitelist Shopified App website and reload the page<br>' +
+            'Contact us for further assistance',
+            'Pusher service is not loaded', {timeOut: 0});
+        return;
+    }
+
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
+    channel.bind('images-download', function(data) {
+        if (data.product == config.product_id) {
+            $('#download-images').bootstrapBtn('reset');
+            pusher.unsubscribe(config.sub_conf.channel);
+
+            if (data.success) {
+                setTimeout(function() {
+                    window.location.href = data.url;
+                }, 500);
+            } else {
+                displayAjaxError('Images Download', data);
+            }
+        }
+    });
+}
+
 $('#download-images').on('click', function(e) {
     e.preventDefault();
 
@@ -988,17 +1015,16 @@ $('#download-images').on('click', function(e) {
     btn.bootstrapBtn('loading');
 
     $.ajax({
-        url: $(this).attr('href'),
-        type: 'get',
-        dataType: 'json',
+        url: api_url('product-image-download', 'shopify'),
+        type: 'GET',
+        data: {
+            product: btn.attr('product')
+        },
         success: function(result) {
-            window.location = result.url;
+            pusherSub();
         },
         error: function(data) {
             displayAjaxError('Images Download', data);
-        },
-        complete: function () {
-            btn.bootstrapBtn('reset');
         }
     });
 });
