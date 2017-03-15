@@ -2754,6 +2754,8 @@ def orders_place(request):
 
 @login_required
 def locate(request, what):
+    from commercehq_core.models import CommerceHQOrderTrack
+
     if what == 'order':
         aliexpress_id = utils.safeInt(request.GET.get('aliexpress'))
 
@@ -2764,6 +2766,11 @@ def locate(request, what):
                     '{}?store={}&query_order={}&new=1&status=any&'
                     'financial=any&fulfillment=any&awaiting_order=false&connected=false'.format(
                         reverse('orders'), track.store.id, aliexpress_id))
+
+            track = CommerceHQOrderTrack.objects.filter(user=request.user.models_user, source_id=aliexpress_id).first()
+            if track:
+                return HttpResponseRedirect(
+                    '{}?store={}&query={}'.format(reverse('chq:orders_list'), track.store.id, aliexpress_id))
 
     elif what == 'product':
         if request.GET.get('shop') and request.GET.get('id'):

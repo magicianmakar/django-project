@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from unidecode import unidecode
 
-from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
+from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
 from shopified_core.shipping_helper import (
@@ -379,6 +379,12 @@ class CommerceHQOrdersPaginator(Paginator):
                 del filters[k]
             elif ',' in v:
                 filters[k] = v.split(',')
+
+        if safeInt(filters.get('order_number')):
+            track = CommerceHQOrderTrack.objects.filter(source_id=filters['order_number']).first()
+            if track:
+                del filters['order_number']
+                filters['id'] = track.order_id
 
         return filters
 
