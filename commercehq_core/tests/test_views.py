@@ -77,8 +77,8 @@ class StoreCreateTestCase(TestCase):
         self.data = {
             'title': 'Test Store',
             'api_url': 'https://chq-shopified-dev.commercehqdev.com/admin',
-            'api_key': 'tITJhQaqiOC_xZ0GSfhWid9uN-Dv9xdl',
-            'api_password': 'wsN0Ow5vMRlsZB4njmmTSXCAXVE5noHY'}
+            'api_key': 'uVlgBcvwRtP2GvIkp6HbxDNA-PJ9c3Z7',
+            'api_password': '7zg_g6yr1L4SEY50X2Ur_J57G0O6RhyM'}
 
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         self.path = '/api/chq/store-add'
