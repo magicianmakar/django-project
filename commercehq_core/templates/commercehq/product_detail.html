@@ -175,14 +175,15 @@
 
                         <div class="row">
                             <div class="col-xs-12 text-right" style="margin-top: 15px;">
-                                <!--
+                                {% if product.store %}
                                 <a id="download-images"
                                    class="btn btn-success btn-xs"
-                                   data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading"
-                                   href="#">
+                                   href="#"
+                                   product="{{ product.id }}"
+                                   data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Downloading">
                                     <i class="fa fa-download"></i> Download Images
                                 </a>
-                                -->
+                                {% endif %}
 
                                 {% if aws_available and request.user|can:'image_uploader.view' %}
                                 <a class="btn btn-success btn-xs"
@@ -623,7 +624,7 @@ var config = {
     sub_conf: {
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{product.store.pusher_channel}}",
-    },
+    }
 };
 
 $(function() {

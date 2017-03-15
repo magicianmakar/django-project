@@ -1023,3 +1023,19 @@ class CHQStoreApi(ApiResponseMixin, View):
             product.save()
 
         return self.api_success()
+
+    def get_product_image_download(self, request, user, data):
+        try:
+            product = CommerceHQProduct.objects.get(id=data.get('product'))
+            permissions.user_can_view(user, product)
+
+        except CommerceHQProduct.DoesNotExist:
+            return self.api_error('Product not found', staus=404)
+
+        images = json.loads(product.data).get('images')
+        if not images:
+            return self.api_error('Product doesn\'t have any images', staus=422)
+
+        tasks.create_image_zip.delay(images, product.id)
+
+        return self.api_success()
