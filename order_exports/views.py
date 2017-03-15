@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import json
+import simplejson as json
 from datetime import datetime
 
 from django.core.exceptions import PermissionDenied

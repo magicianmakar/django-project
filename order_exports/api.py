@@ -4,7 +4,7 @@ import logging
 import tempfile
 import os
 import uuid
-import json
+import simplejson as json
 from math import ceil
 
 import requests

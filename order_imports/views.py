@@ -1,4 +1,4 @@
-import json
+import simplejson as json
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied

@@ -1,5 +1,5 @@
 import re
-import json
+import simplejson as json
 
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
