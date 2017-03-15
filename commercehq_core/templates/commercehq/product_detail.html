@@ -258,8 +258,8 @@
                                     <li><a id="view-btn" type="button" style="display:none">View in CommerceHQ</a></li>
                                 {% endif %}
 
-                                {% if product.get_shopify_id %}
-                                <li><a href="{% url 'product_mapping' product.id %}" target="_blank">
+                                {% if product.is_connected %}
+                                <li><a href="{% url 'chq:product_mapping' product.id %}" target="_blank">
                                     <i class="fa fa-chain"></i> Variants Mapping</a>
                                 </li>
                                 {% endif %}
@@ -356,9 +356,9 @@
                         </a>
                     </div>
 
-                    {% if product.get_shopify_id %}
+                    {% if product.is_connected %}
                         <div class="col-xs-5 text-right" style="padding: 0">
-                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.id %}" target="_blank">
+                        <a class="btn btn-success btn-outline" href="{% url 'chq:product_mapping' product.id %}" target="_blank">
                             Variants Mapping
                             <i class="fa fa-external-link"></i>
                         </a>

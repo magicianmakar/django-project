@@ -1,4 +1,5 @@
 import arrow
+import simplejson as json
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -196,6 +197,96 @@ class ProductDetailView(DetailView):
         return context
 
 
+class ProductMappingView(DetailView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/product_mapping.html'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductMappingView, self).get_context_data(**kwargs)
+
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['commercehq_product'] = product.sync()
+
+        images_map = {}
+        for option in product.parsed['options']:
+            for thumb in option['thumbnails']:
+                if thumb.get('image'):
+                    images_map[thumb['value']] = thumb['image']['path']
+
+        for idx, variant in enumerate(context['commercehq_product']['variants']):
+            for v in variant['variant']:
+                if v in images_map:
+                    context['commercehq_product']['variants'][idx]['image'] = images_map[v]
+                    continue
+
+            if len(variant['images']):
+                context['commercehq_product']['variants'][idx]['image'] = variant['images'][0]
+
+        current_supplier = self.request.GET.get('supplier')
+        if not current_supplier and product.default_supplier:
+            current_supplier = product.default_supplier.id
+
+        current_supplier = product.get_suppliers().get(id=current_supplier)
+
+        variants_map = product.get_variant_mapping(supplier=current_supplier)
+
+        seen_variants = []
+
+        for i, v in enumerate(context['commercehq_product']['variants']):
+            mapped = variants_map.get(str(v['id']))
+            if mapped:
+                options = mapped
+            else:
+                options = map(lambda a: {'title': a}, v['variant'])
+
+            try:
+                if type(options) not in [list, dict]:
+                    options = json.loads(options)
+
+                    if type(options) is int:
+                        options = str(options)
+            except:
+                import traceback; traceback.print_exc()
+                pass
+
+            variants_map[str(v['id'])] = options
+            context['commercehq_product']['variants'][i]['default'] = options
+            seen_variants.append(str(v['id']))
+
+        for k in variants_map.keys():
+            if k not in seen_variants:
+                del variants_map[k]
+
+        product_suppliers = {}
+        for i in product.get_suppliers():
+            product_suppliers[i.id] = {
+                'id': i.id,
+                'name': i.get_name(),
+                'url': i.product_url
+            }
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('chq:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('chq:product_detail', args=[self.object.id])},
+            'Variants Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+            'variants_map': variants_map,
+            'product_suppliers': product_suppliers,
+            'current_supplier': current_supplier,
+        })
+
+        return context
+
+
 class OrdersList(ListView):
     model = CommerceHQProduct
     template_name = 'commercehq/orders_list.html'
@@ -389,12 +480,11 @@ class OrdersList(ListView):
                 }
 
                 if product:
-                    # mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
-                    # if variant_id and mapped:
-                        # order_data['variant'] = mapped
-                    # else:
-                        # order_data['variant'] = line.get('variant', {}).get('variant', '')
-                    order_data['variant'] = line.get('variant', {}).get('variant', '')
+                    mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                    if variant_id and mapped:
+                        order_data['variant'] = mapped
+                    else:
+                        order_data['variant'] = line.get('variant', {}).get('variant', '')
 
                 if product and product.have_supplier():
                     orders_cache['order_{}'.format(order_data['id'])] = order_data

@@ -190,13 +190,16 @@ class CommerceHQProduct(models.Model):
 
     @property
     def is_connected(self):
-        return bool(self.source_id)
+        return bool(self.get_chq_id())
 
     def have_supplier(self):
         try:
             return self.default_supplier is not None
         except:
             return False
+
+    def get_chq_id(self):
+        return self.source_id if self.store else None
 
     def update_data(self, data):
         if type(data) is not dict:
@@ -383,6 +386,66 @@ class CommerceHQProduct(models.Model):
 
         if type(mapping) is int:
             mapping = str(mapping)
+
+        return mapping
+
+    def set_variant_mapping(self, mapping, supplier=None, update=False):
+        if supplier is None:
+            supplier = self.default_supplier
+
+        if update:
+            try:
+                current = json.loads(supplier.variants_map)
+            except:
+                current = {}
+
+            for k, v in mapping.items():
+                current[k] = v
+
+            mapping = current
+
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        if supplier:
+            supplier.variants_map = mapping
+            supplier.save()
+        else:
+            self.variants_map = mapping
+            self.save()
+
+    def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
+        mapping = {}
+
+        if supplier is None:
+            if mapping_supplier:
+                supplier = self.get_suppier_for_variant(name)
+            else:
+                supplier = self.default_supplier
+
+        try:
+            if supplier and supplier.variants_map:
+                mapping = json.loads(supplier.variants_map)
+            elif self.variants_map:
+                mapping = json.loads(self.variants_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        if for_extension and type(mapping) in [str, unicode]:
+            mapping = mapping.split(',')
 
         return mapping
 

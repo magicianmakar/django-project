@@ -959,3 +959,32 @@ class CHQStoreApi(ApiResponseMixin, View):
         product.sync()
 
         return self.api_success({'product': product.id})
+
+    def post_variants_mapping(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        supplier = product.get_suppliers().get(id=data.get('supplier'))
+
+        mapping = {}
+        for k in data:
+            if k != 'product' and k != 'supplier':
+                mapping[k] = data[k]
+
+        if not product.default_supplier:
+            supplier = product.get_supplier_info()
+            product.default_supplier = CommerceHQSupplier.objects.create(
+                store=product.store,
+                product=product,
+                product_url=product.get_original_info().get('url', ''),
+                supplier_name=supplier.get('name'),
+                supplier_url=supplier.get('url'),
+                is_default=True
+            )
+
+            supplier = product.default_supplier
+
+        product.set_variant_mapping(mapping, supplier=supplier)
+        product.save()
+
+        return self.api_success()
