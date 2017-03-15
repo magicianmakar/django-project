@@ -20,6 +20,7 @@ from django.views.generic.detail import DetailView
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
+from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     safeInt,
     safeFloat,
@@ -249,7 +250,6 @@ class ProductMappingView(DetailView):
                     if type(options) is int:
                         options = str(options)
             except:
-                import traceback; traceback.print_exc()
                 pass
 
             variants_map[str(v['id'])] = options
@@ -282,6 +282,75 @@ class ProductMappingView(DetailView):
             'variants_map': variants_map,
             'product_suppliers': product_suppliers,
             'current_supplier': current_supplier,
+        })
+
+        return context
+
+
+class MappingSupplierView(DetailView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/mapping_supplier.html'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingSupplierView, self).get_context_data(**kwargs)
+
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['commercehq_product'] = product.sync()
+
+        images_map = {}
+        for option in product.parsed['options']:
+            for thumb in option['thumbnails']:
+                if thumb.get('image'):
+                    images_map[thumb['value']] = thumb['image']['path']
+
+        for idx, variant in enumerate(context['commercehq_product']['variants']):
+            for v in variant['variant']:
+                if v in images_map:
+                    context['commercehq_product']['variants'][idx]['image'] = images_map[v]
+                    continue
+
+            if len(variant['images']):
+                context['commercehq_product']['variants'][idx]['image'] = variant['images'][0]
+
+        suppliers_map = product.get_suppliers_mapping()
+        default_supplier_id = product.default_supplier.id
+        for i, v in enumerate(context['commercehq_product']['variants']):
+            supplier = suppliers_map.get(str(v['id']), {'supplier': default_supplier_id, 'shipping': {}})
+            suppliers_map[str(v['id'])] = supplier
+
+            context['commercehq_product']['variants'][i]['supplier'] = supplier['supplier']
+            context['commercehq_product']['variants'][i]['shipping'] = supplier['shipping']
+
+        product_suppliers = {}
+        for i in product.get_suppliers():
+            product_suppliers[i.id] = {
+                'id': i.id,
+                'name': i.get_name(),
+                'url': i.product_url
+            }
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('chq:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('chq:product_detail', args=[self.object.id])},
+            'Advanced Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+
+            'suppliers_map': suppliers_map,
+            'product_suppliers': product_suppliers,
+            'shipping_map': product.get_shipping_mapping(),
+            'variants_map': product.get_all_variants_mapping(),
+            'mapping_config': product.get_mapping_config(),
+
+            'countries': get_counrties_list(),
         })
 
         return context

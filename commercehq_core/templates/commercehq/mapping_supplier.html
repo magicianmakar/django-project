@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+<div class="row m-b">
+    <div class="tabs-container col-md-offset-1 col-md-10">
+       <ul class="nav nav-tabs">
+            <li>
+                <a href="{% url 'chq:product_mapping' product.id %}"><i class="fa fa-chain"></i> Variants Mapping</a>
+            </li>
+
+            <li class="active">
+                <a data-toggle="tab" href="#tab-1"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
+            </li>
+       </ul>
+       <div class="tab-content">
+           <div id="tab-1" class="tab-pane active">
+               <div class="panel-body">
+                <form id="mapping-form">
+                    <table class="table table-borderd table-compact">
+                        <thead>
+                            <tr>
+                                <th style="padding-left:60px">CommerceHQ</th>
+                                <th style="width:150px;">Supplier</th>
+                                <th>Aliexpress Variants</th>
+                                <th>Shipping Method</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for variant in commercehq_product.variants %}
+                            <tr data-variant="{{variant.id}}">
+                                <td class="variant-image">
+                                    {% if variant.image %}
+                                        <img class="thumb unveil" src="{% static 'img/blank.gif' %}"
+                                             data-src="{% shopify_image_thumb variant.image 'thumb' %}"
+                                             style="width:50px;margin-right:10px" />
+                                    {% else %}
+                                        <img class="thumb" src="{% static 'img/blank.gif' %}" />
+                                    {% endif %}
+
+                                    {{variant.variant|join:" / "}}</td>
+                                <td>
+                                    <select class="supplier-select form-control" data-variant="{{variant.id}}" style="width:auto">
+                                    {% for key, item in product_suppliers.items %}
+                                        <option value="{{item.id}}" {% if variant.supplier == item.id %}selected{% endif %}>{{item.name}}</option>
+                                    {% endfor %}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <div class="mapping-preview">
+                                        <div>
+                                            <a class="select-var-mapping edit-btn" data-variant="{{variant.id}}"
+                                               href="#" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                        </div>
+
+                                        <div class="var-data-display preview-display"
+                                             id="var_{{variant.id}}" data-variant="{{variant.id}}"></div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="mapping-preview">
+                                        <div>
+                                            <a href="#" class="change-shipping-rules edit-btn"data-variant="{{variant.id}}">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                       </div>
+
+                                        <div class="shipping-rules-display preview-display-block"
+                                             data-variant="{{variant.id}}"></div>
+                                    </div>
+                               </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    Product doesn't have any variant.
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <tr class="supplier-config">
+                                <td colspan="2">
+                                    <label class="control-label ">Supplier To Use: {% include 'partial/help_tooltip.html' with help="<b>Default Supplier:</b> Default supplier in <i>Connections</i> tab will be used.<br/><br/><b>Advanced Mapping:</b> The supplier will be chosen from the mapping above." qtipstyle="color:#BBB" pos_at="top center" pos_my="bottom center" %}</label>
+                                </td>
+                                <td colspan="3">
+                                    <select class="supplier-config-select form-control">
+                                            <option value="default" {% if mapping_config.supplier == 'default' %}selected=""{% endif %}>Default Supplier</option>
+                                            <option value="advanced" {% if mapping_config.supplier == 'advanced' %}selected=""{% endif %}>Advanced Mapping</option>
+                                            <option disabled>------</option>
+
+                                        {% for item in product.get_suppliers %}
+                                            <option value="{{item.id}}" data-supplier="true" {% if mapping_config.supplier == item.id|slugify %}selected=""{% endif %}>
+                                                {{item.get_name}}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <input type="hidden" name="product" value="{{product.id}}">
+                </form>
+
+                <hr />
+
+
+                {% if commercehq_product.variants %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <button id="save-mapping" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-shipping-methods" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title">Shipping Methods</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12 shipping-methods-container">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 m-t">
+                        <button class="btn btn-outline btn-default btn-xs add-shipping-rule"><i class="fa fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <div class="row shipping-rule-options m-t">
+                    <div class="options col-xs-5 text-left">
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                {# <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button> #}
+                <label htmlFor="apply-for-all" class="pull-left">
+                    <input name="apply-for-all" class="apply-for-all" type="checkbox"/>
+                    Apply shipping methods for all variants of this supplier.
+                </label>
+
+                <button id="save-shipping-rules" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-variant-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title">Product Variants</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12 variants-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button id="save-var-mapping" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script id="shipping-rule-template" type="text/x-handlebars-template">
+    <div class="row shipping-rule m-b">
+        <div class="options col-xs-5">
+            <select name="shipping-country"  class="shipping-country form-control"
+                    data-placeholder="Shipping Country">
+               <option value=""></option>
+                {% for item in countries %}
+                <option value="{{item.0}}">{{item.1}}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="options col-xs-1 text-center rule-arrow">
+            <i class="fa fa-long-arrow-right"></i>
+        </div>
+
+        <div class="options col-xs-5 text-left">
+
+            <select name="shipping-method" class="shipping-method form-control"
+                    data-placeholder="Shipping Method">
+               <option value=""></option>
+            </select>
+        </div>
+    </div>
+</script>
+
+{% verbatim %}
+
+<script id="shipping-rule-display-template" type="text/x-handlebars-template">
+    <div class="row shipping-rule m-b">
+        <div class="options col-xs-3">
+            <span>{{country_name}}</span>
+        </div>
+
+        <div class="options col-xs-1 text-center rule-arrow">
+            <i class="fa fa-long-arrow-right"></i>
+        </div>
+
+        <div class="options col-xs-7 text-left">
+            <span>{{method_name}}</span>
+        </div>
+
+        <div class="options col-xs-1 text-center delete-btn">
+            <i class="fa fa-times remove-rule"></i>
+        </div>
+    </div>
+</script>
+
+<script id="variant-template" type="text/x-handlebars-template">
+    <div class="row well variant">
+        <h3>{{title}}:</h3>
+        <div class="options col-xs-12"></div>
+    </div>
+</script>
+
+<script id="variant-option-template" type="text/x-handlebars-template">
+    <div class="option-item">
+        <div class="option-item-select">
+            <input class="variant-select" name="{{variant.title}}"
+                   type="radio" var-data="{{var_json}}"
+                   {{#if selected }}
+                   checked
+                   {{/if}}
+                   >
+            {{#if option.image}}
+                <img src="{{option.image}}">
+            {{/if}}
+
+            <span class="variant-title">{{option.title}}</span>
+        </div>
+    </div>
+</script>
+
+<script id="extra-input-template" type="text/x-handlebars-template">
+    <div style="padding: 5px 0">
+        <input class="extra-input form-control" type="text">
+    </div>
+</script>
+
+{% endverbatim %}
+{% endblock %}
+
+{% block extracss %}
+<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+
+{% compress css %}
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+<link href="{% static 'commercehq/css/mapping_supplier.css' %}" rel="stylesheet">
+{% endcompress %}
+
+{% endblock %}
+
+{% block extrajs %}
+
+<script type="text/javascript">
+    var bootstrapButton = $.fn.button.noConflict();
+    $.fn.bootstrapBtn = bootstrapButton;
+
+    var bootstrapTooltip = $.fn.tooltip.noConflict();
+    $.fn.bootstrapTooltip = bootstrapTooltip;
+
+    var product_id = {{product.id}};
+    var product_suppliers = {% json_dumps product_suppliers %};
+
+    var suppliers_mapping = {% json_dumps suppliers_map %};
+    var shipping_mapping = {% json_dumps shipping_map %};
+    var variants_mapping = {% json_dumps variants_map %};
+</script>
+
+<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'commercehq/js/mapping_supplier.js' %}"></script>
+{% endcompress %}
+
+{% endblock %}
+

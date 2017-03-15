@@ -6,6 +6,7 @@ import simplejson as json
 from django.conf import settings
 from django.core import serializers
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import F
 from django.views.generic import View
 from django.utils import timezone
@@ -986,5 +987,39 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         product.set_variant_mapping(mapping, supplier=supplier)
         product.save()
+
+        return self.api_success()
+
+    def post_suppliers_mapping(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        suppliers_cache = {}
+
+        mapping = {}
+        shipping_map = {}
+
+        with transaction.atomic():
+            for k in data:
+                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
+                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
+                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
+                    supplier_id, variant_id = k.replace('variant_', '').split('_')
+                    supplier = suppliers_cache.get(supplier_id, product.get_suppliers().get(id=supplier_id))
+
+                    suppliers_cache[supplier_id] = supplier
+                    var_mapping = {variant_id: data[k]}
+
+                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True)
+
+                elif k == 'config':
+                    product.set_mapping_config({'supplier': data[k]})
+
+                elif k != 'product':  # Save the variant -> supplier mapping
+                    mapping[k] = json.loads(data[k])
+
+            product.set_suppliers_mapping(mapping)
+            product.set_shipping_mapping(shipping_map)
+            product.save()
 
         return self.api_success()

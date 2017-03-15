@@ -16,7 +16,7 @@
 
             {% if user|can:'suppliers_shipping_mapping.use' %}
             <li>
-                <a href="{% url 'mapping_supplier' product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
+                <a href="{% url 'chq:mapping_supplier' product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
             </li>
             {% endif %}
        </ul>
@@ -52,8 +52,7 @@
                     <table class="table table-borderd table-compact">
                         <thead>
                             <tr>
-                                <th>Image</th>
-                                <th>CommerceHQ</th>
+                                <th style="padding-left:60px">CommerceHQ</th>
                                 <th>{{product.get_original_info.source|default:'Supplier'|title}}</th>
                                 <th style="width:110px;"></th>
                             </tr>
@@ -63,14 +62,13 @@
                             <tr>
                                 <td style="vertical-align:middle">
                                     {% if variant.image %}
-                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb variant.image 'thumb' %}" style="width: 50px" />
-                                    {% elif shopify_product.image %}
-                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb shopify_product.image.src 'thumb' %}" style="width: 50px" />
+                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb variant.image 'thumb' %}" style="width:50px;margin-right:10px" />
                                     {% else %}
-                                        <span style="width: 50px; height:50px"></span>
+                                        <img class="thumb" style="width: 50px" src="{% static 'img/blank.gif' %}" />
                                     {% endif %}
+
+                                    {{variant.variant|join:" / "}}
                                 </td>
-                                <td style="vertical-align:middle">{{variant.variant|join:" / "}}</td>
                                 <td style="vertical-align:middle">
                                     <div class="var-data-display" style="display: flex; align-items: center;"
                                          id="var_{{variant.id}}" data-var-id="{{variant.id}}"></div>
