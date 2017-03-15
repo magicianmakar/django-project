@@ -1030,11 +1030,11 @@ class CHQStoreApi(ApiResponseMixin, View):
             permissions.user_can_view(user, product)
 
         except CommerceHQProduct.DoesNotExist:
-            return self.api_error('Product not found', staus=404)
+            return self.api_error('Product not found', status=404)
 
         images = json.loads(product.data).get('images')
         if not images:
-            return self.api_error('Product doesn\'t have any images', staus=422)
+            return self.api_error('Product doesn\'t have any images', status=422)
 
         tasks.create_image_zip.delay(images, product.id)
 
