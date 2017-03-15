@@ -1015,7 +1015,7 @@ $('#download-images').on('click', function(e) {
     btn.bootstrapBtn('loading');
 
     $.ajax({
-        url: api_url('product-image-download', 'shopify'),
+        url: api_url('product-image-download', 'chq'),
         type: 'GET',
         data: {
             product: btn.attr('product')
