@@ -333,8 +333,6 @@ $(document).ready(function() {
 
         $('#modal-commercehq-send').modal();
 
-        Pusher.logToConsole = true;
-
         var pusher = new Pusher(pusherKey, {encrypted: true});
         var channel = pusher.subscribe(pusherChannel);
 
