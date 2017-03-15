@@ -161,6 +161,8 @@
 {% endblock modal-board-add %}
 
 {% block extrajs %}
+    <script src="https://js.pusher.com/4.0/pusher.min.js"></script>
+    <script>var PUSHER_KEY = "{% app_setting 'PUSHER_KEY' %}";</script>
     <!-- Data Tables -->
     <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
     <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>

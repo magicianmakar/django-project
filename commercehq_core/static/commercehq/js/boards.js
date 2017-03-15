@@ -311,77 +311,68 @@ $(document).ready(function() {
     });
 
     $('#commercehq-send-btn').click(function(e) {
-
-        var btn = $(this);
-        btn.button('loading');
-
-        var products = [];
-        var products_ids = [];
+        var $btn = $(this).button('loading');
+        var storeId = $('#send-select-store').val();
         var publish = $('#send-product-visible').prop('checked');
+        var pusherChannel = $('#send-select-store option:selected').data('store-channel');
+        var pusherKey = window.PUSHER_KEY;
+        var productIds = [];
 
-        $('#modal-commercehq-send .progress').show();
-
-        $('input.item-select[type=checkbox]', currentBoardBox).each(function(i, el) {
+        // Fetches all product ID's of selected products
+        $('input.item-select[type=checkbox]').each(function(i, el) {
             if (el.checked) {
-                products.push({
-                    product: $(el).parents('.product-box').attr('product-id'),
-                    element: $(el).parents('.product-box')
-                });
-
-                products_ids.push($(el).parents('.product-box').attr('product-id'));
+                productIds.push($(el).parents('.product-box').attr('product-id'));
             }
         });
 
-        if (products.length === 0) {
+        if (productIds.length === 0) {
             swal('Please select a product(s) first', '', "warning");
-            btn.button('reset');
+            $btn.button('reset');
             return;
         }
 
-        $('#modal-commercehq-send').prop('total_sent_success', 0);
-        $('#modal-commercehq-send').prop('total_sent_error', 0);
         $('#modal-commercehq-send').modal();
 
-        $.ajax({
-            url: api_url('products-info', 'chq'),
-            type: 'GET',
-            data: {
-                products: products_ids
-            },
-            context: {
-                products: products
-            },
-            success: function(data) {
-                $.each(products, function(i, el) {
-                    sendProductToCommerceHQ(data.products[el.product], $('#send-select-store').val(), el.product, publish,
-                        function(product, data, callback_data, req_success) {
-                            var total_sent_success = parseInt($('#modal-commercehq-send').prop('total_sent_success'));
-                            var total_sent_error = parseInt($('#modal-commercehq-send').prop('total_sent_error'));
+        Pusher.logToConsole = true;
 
-                            if (req_success && !data.hasOwnProperty('error')) {
-                                total_sent_success += 1;
-                            } else {
-                                total_sent_error += 1;
-                            }
+        var pusher = new Pusher(pusherKey, {encrypted: true});
+        var channel = pusher.subscribe(pusherChannel);
 
-                            $('#modal-commercehq-send').prop('total_sent_success', total_sent_success);
-                            $('#modal-commercehq-send').prop('total_sent_error', total_sent_error);
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('products-info', 'chq'),
+                type: 'GET',
+                data: {products: productIds},
+                success: function(data) {
+                    var i, len, productId;
+                    for (i = 0, len = productIds.length; i < len; i++) {
+                        productId = productIds[i];
+                        sendProductToCommerceHQ(productId, storeId, publish);
+                    }
+                }
+            });
+        });
 
-                            $('#modal-commercehq-send .progress-bar-success').css('width', ((total_sent_success / products.length) * 100)  + '%');
-                            $('#modal-commercehq-send .progress-bar-danger').css('width', ((total_sent_error / products.length) * 100) + '%');
+        var totalSuccess = 0;
+        var totalError = 0;
 
-                            callback_data.element.find('input.item-select[type=checkbox]').iCheck('disable');
+        channel.bind('product-export', function(data) {
+            var productId = String(data.product);
 
-                            if ((total_sent_success + total_sent_error) == products.length) {
-                                $('#modal-commercehq-send').modal('hide');
-                                btn.button('reset');
-                            }
-                        }, {
-                            'element': el.element,
-                            'product': el.product
-                        }
-                    );
-                });
+            if ($.inArray(productId, productIds) >= 0) {
+                $('#product_' + productId).iCheck('disable').prop('checked', false);
+
+                if (data.success) {
+                    totalSuccess += 1;
+                } else {
+                    totalError += 1;
+                }
+            }
+
+            if ((totalSuccess + totalError) === productIds.length) {
+                $('#modal-commercehq-send').modal('hide');
+                $btn.button('reset');
+                pusher.unsubscribe(pusherChannel);
             }
         });
     });

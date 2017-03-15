@@ -129,13 +129,12 @@ class CHQStoreApi(ApiResponseMixin, View):
             store = CommerceHQStore.objects.get(id=data.get('store'))
             permissions.user_can_view(user, store)
 
-            task = tasks.product_export.apply_async(
+            tasks.product_export.apply_async(
                 args=[data.get('store'), data.get('product'), user.id, data.get('publish', False)],
                 countdown=0,
                 expires=120)
 
             return self.api_success({
-                'id': task.id,
                 'pusher': {
                     'key': settings.PUSHER_KEY,
                     'channel': store.pusher_channel()

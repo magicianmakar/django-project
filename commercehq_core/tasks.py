@@ -335,30 +335,22 @@ def product_export(store_id, product_id, user_id, publish=None):
         product.source_id = rep.json()['id']
         product.save()
 
-        data = {
+        store.pusher_trigger('product-export', {
             'success': True,
             'product': product.id,
             'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
             'commercehq_url': product.commercehq_url
-        }
-
-        store.pusher_trigger('product-export', data)
-
-        return data
+        })
 
     except Exception as e:
         raven_client.captureException()
 
-        data = {
+        store.pusher_trigger('product-export', {
             'success': False,
             'error': format_chq_errors(e),
             'product': product.id,
             'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
-        }
-
-        store.pusher_trigger('product-export', data)
-
-        return data
+        })
 
 
 @celery_app.task(base=CaptureFailure)

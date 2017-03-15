@@ -11,7 +11,7 @@
                         <label for="send-select-store">Store:</label>
                         <select class="form-control" name="send-select-store" id="send-select-store" style="display: inline-block; width: 191px; ">
                             {% for item in request.user.profile.get_chq_stores %}
-                            <option value="{{item.id}}">{{item.title}}</option>
+                            <option value="{{item.id}}" data-store-channel="{{item.pusher_channel}}">{{item.title}}</option>
                             {% endfor %}
                         </select>
                         <div class="form-group col-xs-12" style="margin-top:20px;margin-left:25px">
