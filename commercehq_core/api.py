@@ -915,7 +915,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             "data": [{
                 "fulfilment_id": cache.get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
                 "tracking_number": fulfillment_data['source_tracking'],
-                "shipping_carrier": int(data.get('fulfill-tarcking-link')),
+                "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
                 "items": [{
                     "id": fulfillment_data['line_id'],
                     "quantity": cache.get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
