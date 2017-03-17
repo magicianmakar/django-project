@@ -283,6 +283,10 @@ def format_chq_errors(e):
     return u' | '.join(msg)
 
 
+def store_shipping_carriers(store):
+    return store.request.get(store.get_api_url('shipping-carriers')).json()
+
+
 class CommerceHQOrdersPaginator(Paginator):
     query = None
     store = None

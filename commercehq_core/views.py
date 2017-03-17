@@ -42,7 +42,8 @@ from .utils import (
     commercehq_products,
     chq_customer_address,
     get_tracking_orders,
-    order_id_from_name
+    order_id_from_name,
+    store_shipping_carriers
 )
 
 
@@ -388,6 +389,7 @@ class OrdersList(ListView):
         }]
 
         context['orders'] = self.get_orders(context)
+        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
 
         return context
 
@@ -712,6 +714,7 @@ class OrdersTrackList(ListView):
 
         context['store'] = self.get_store()
         context['orders'] = get_tracking_orders(self.get_store(), context['orders'])
+        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
 
         context['breadcrumbs'] = [{
             'title': 'Orders',

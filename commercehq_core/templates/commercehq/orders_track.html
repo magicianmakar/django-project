@@ -253,7 +253,7 @@
         </div>
     </div>
 
-{% include 'partial/fulfillment_modal.html' with notify=True only %}
+{% include 'partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
 {% include 'partial/tracking_update_modal.html' with store=store only %}
 
 {% endblock %}

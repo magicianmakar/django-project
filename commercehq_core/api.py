@@ -887,6 +887,59 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_fulfill_order(self, request, user, data):
+        try:
+            store = CommerceHQStore.objects.get(id=data.get('fulfill-store'))
+            permissions.user_can_view(user, store)
+
+            # if not user.can('place_orders.sub', store):
+            #     raise PermissionDenied()
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        fulfillment_data = {
+            'store_id': store.id,
+            'line_id': int(data.get('fulfill-line-id')),
+            'order_id': data.get('fulfill-order-id'),
+            'source_tracking': data.get('fulfill-traking-number'),
+            'use_usps': data.get('fulfill-tarcking-link') == 'usps',
+            'user_config': {
+                'send_shipping_confirmation': data.get('fulfill-notify-customer'),
+                'validate_tracking_number': False,
+                'aftership_domain': user.get_config('aftership_domain', 'track')
+            }
+        }
+
+        # api_data = utils.order_track_fulfillment(**fulfillment_data)
+        api_data = {
+            "data": [{
+                "fulfilment_id": cache.get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
+                "tracking_number": fulfillment_data['source_tracking'],
+                "shipping_carrier": int(data.get('fulfill-tarcking-link')),
+                "items": [{
+                    "id": fulfillment_data['line_id'],
+                    "quantity": cache.get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                }]
+            }],
+            "notify": (data.get('fulfill-notify-customer') == 'yes')
+        }
+
+        rep = store.request.post(
+            url=store.get_api_url('orders', data.get('fulfill-order-id'), 'shipments'),
+            json=api_data
+        )
+
+        try:
+            rep.raise_for_status()
+        except:
+            raven_client.captureException(
+                level='warning',
+                extra={'response': rep.text})
+
+            return self.api_error('CommerceHQ API Error')
+
+        return self.api_success()
+
     def post_import_product(self, request, user, data):
         try:
             store = CommerceHQStore.objects.get(id=data.get('store'))

@@ -5,6 +5,7 @@
 {% load perms_helper %}
 {% load url_tools %}
 {% load compress %}
+{% load cache %}
 
 {% block main-container %}
 
@@ -252,12 +253,14 @@
                     {% endif %}
 
                     <div class="row">
-                        <div class="col-md-2 text-center filter-buttons">
+                        <div class="col-md-2 col-md-offset-2 filter-buttons m-t">
                             {% if request.GET.store %}
                             <input type="hidden" name="store" value="{{ request.GET.store }}">
                             {% endif %}
                         <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
                         </div>
+
+                        {% if store_order_synced %}
                         <div class="col-md-5 col-md-offset-4 text-right">
                             <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
                                 <i class="fa fa-save"></i> Save Filter
@@ -267,6 +270,8 @@
                                 <i class="fa fa-eraser"></i> Reset Filter
                             </a>
                         </div>
+                        {% endif %}
+
                     </div>
                     </form>
 
@@ -517,7 +522,7 @@
                                                             {% include 'commercehq/partial/place_order_btn.html' %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% if not item.fulfillment_status %}
+                                                            {% if not item.status.shipped %}
 
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
@@ -529,7 +534,7 @@
                                                                         </ul>
                                                                     </div>
                                                             {% else %}
-                                                                <span class="label label-success">{{item.fulfillment_status|title}}</span>
+                                                                <span class="label label-success">Shipped</span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
@@ -581,7 +586,9 @@
         </div>
     </div>
 
-    {% include 'partial/fulfillment_modal.html' with notify=True only %}
+    {% cache 600 chq_shipping_carriers store.id %}
+    {% include 'partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+    {% endcache %}
 
 <div id="shipping-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
