@@ -253,7 +253,10 @@
         </div>
     </div>
 
+{% cache 600 chq_shipping_carriers2 store.id %}
 {% include 'partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+{% endcache %}
+
 {% include 'partial/tracking_update_modal.html' with store=store only %}
 
 {% endblock %}

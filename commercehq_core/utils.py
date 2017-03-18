@@ -284,7 +284,17 @@ def format_chq_errors(e):
 
 
 def store_shipping_carriers(store):
-    return store.request.get(store.get_api_url('shipping-carriers')).json()
+    rep = store.request.get(store.get_api_url('schipping-carriers'))
+    if rep.ok:
+        return rep.json()
+    else:
+        print 'error'
+        carriers = [
+            {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
+            {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'}
+        ]
+
+        return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
 
 
 class CommerceHQOrdersPaginator(Paginator):

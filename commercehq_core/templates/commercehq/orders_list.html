@@ -586,7 +586,7 @@
         </div>
     </div>
 
-    {% cache 600 chq_shipping_carriers store.id %}
+    {% cache 600 chq_shipping_carriers2 store.id %}
     {% include 'partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
     {% endcache %}
 
