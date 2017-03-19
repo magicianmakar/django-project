@@ -213,10 +213,21 @@ class BoardsListTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+
+        self.subuser = UserFactory()
+        self.subuser_password = 'test'
+        self.subuser.set_password(self.subuser_password)
+        self.subuser.save()
+        self.subuser.profile.subuser_parent = self.user
+        self.subuser.profile.save()
+
         self.path = reverse('chq:boards_list')
 
     def login(self):
         self.client.login(username=self.user.username, password=self.password)
+
+    def subuser_login(self):
+        self.client.login(username=self.subuser.username, password=self.subuser_password)
 
     def test_must_be_logged_in(self):
         r = self.client.get(self.path)
@@ -241,6 +252,17 @@ class BoardsListTestCase(TestCase):
         board = boards.pop()
         self.assertEqual(board.user, self.user)
         self.assertEqual(len(boards), 0)
+
+    def test_subuser_cant_access_without_permission(self):
+        self.subuser_login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.status_code, 403)
+
+    def test_subuser_can_access_with_permission(self):
+        self.subuser.profile.have_global_permissions()
+        self.subuser_login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.status_code, 200)
 
 
 class BoardCreateTestCase(TestCase):
@@ -385,11 +407,22 @@ class BoardDetailTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+
+        self.subuser = UserFactory()
+        self.subuser_password = 'test'
+        self.subuser.set_password(self.subuser_password)
+        self.subuser.save()
+        self.subuser.profile.subuser_parent = self.user
+        self.subuser.profile.save()
+
         self.board = CommerceHQBoardFactory(user=self.user, title='Test Board')
         self.path = reverse('chq:board_detail', args=(self.board.pk,))
 
     def login(self):
         self.client.login(username=self.user.username, password=self.password)
+
+    def subuser_login(self):
+        self.client.login(username=self.subuser.username, password=self.subuser_password)
 
     def test_must_be_logged_in(self):
         r = self.client.get(self.path)
@@ -422,3 +455,143 @@ class BoardDetailTestCase(TestCase):
         r = self.client.get(self.path)
         boards_breadcrumb = {'title': 'Boards', 'url': reverse('chq:boards_list')}
         self.assertEqual(r.context['breadcrumbs'], [boards_breadcrumb, self.board.title])
+
+    def test_subuser_cant_access_without_permission(self):
+        self.subuser_login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.status_code, 403)
+
+    def test_subuser_can_access_with_permission(self):
+        self.subuser.profile.have_global_permissions()
+        self.subuser_login()
+        r = self.client.get(self.path)
+        self.assertEqual(r.status_code, 200)
+
+
+class SubuserpermissionsApiTestCase(TestCase):
+    def setUp(self):
+        self.error_message = "Permission Denied: You don't have permission to perform this action"
+        self.parent_user = UserFactory()
+        self.user = UserFactory()
+        self.user.profile.subuser_parent = self.parent_user
+        self.user.profile.save()
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.store = CommerceHQStoreFactory(user=self.parent_user)
+        self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        self.client.login(username=self.user.username, password=self.password)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_can_view_board_with_permission(self):
+        self.user.profile.have_global_permissions()
+        board = CommerceHQBoardFactory(user=self.user)
+        data = {'board_id': board.pk}
+        r = self.client.get('/api/chq/board-config', data, **self.headers)
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_cannot_view_board_without_permission(self):
+        board = CommerceHQBoardFactory(user=self.user)
+        data = {'board_id': board.pk}
+        r = self.client.get('/api/chq/board-config', data, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
+    @patch('commercehq_core.api.permissions.user_can_add', Mock(return_value=True))
+    def test_subuser_can_add_board_with_permission(self):
+        self.user.profile.have_global_permissions()
+        data = {'title': 'test'}
+        r = self.client.post('/api/chq/boards-add', data, **self.headers)
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
+    @patch('commercehq_core.api.permissions.user_can_add', Mock(return_value=True))
+    def test_subuser_cannot_add_board_without_permission(self):
+        data = {'title': 'test'}
+        r = self.client.post('/api/chq/boards-add', data, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_can_add_product_to_board_with_permission(self):
+        self.user.profile.have_global_permissions()
+        board = CommerceHQBoardFactory(user=self.user)
+        product = CommerceHQProductFactory(store=self.store, user=self.parent_user)
+        data = {'product': product.id, 'board': board.id}
+        r = self.client.post('/api/chq/product-board', data, **self.headers)
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_cannot_add_product_to_board_without_permission(self):
+        board = CommerceHQBoardFactory(user=self.user)
+        product = CommerceHQProductFactory(store=self.store, user=self.parent_user)
+        data = {'product': product.id, 'board': board.id}
+        r = self.client.post('/api/chq/product-board', data, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_can_remove_product_from_board_with_permission(self):
+        self.user.profile.have_global_permissions()
+        board = CommerceHQBoardFactory(user=self.user)
+        product = CommerceHQProductFactory(store=self.store, user=self.parent_user)
+        board.products.add(product)
+        params = '?products={}&board_id={}'.format(product.id, board.id)
+        r = self.client.delete('/api/chq/board-products' + params, **self.headers)
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_cannot_remove_product_from_board_without_permission(self):
+        board = CommerceHQBoardFactory(user=self.user)
+        product = CommerceHQProductFactory(store=self.store, user=self.parent_user)
+        board.products.add(product)
+        params = '?products={}&board_id={}'.format(product.id, board.id)
+        r = self.client.delete('/api/chq/board-products' + params, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
+    def test_subuser_can_delete_board_with_permission(self):
+        self.user.profile.have_global_permissions()
+        board = CommerceHQBoardFactory(user=self.user)
+        params = '?board_id={}'.format(board.id)
+        r = self.client.delete('/api/chq/board' + params, **self.headers)
+        self.assertFalse(CommerceHQBoard.objects.filter(pk=board.id).exists())
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
+    def test_subuser_cannot_delete_board_without_permission(self):
+        board = CommerceHQBoardFactory(user=self.user)
+        params = '?board_id={}'.format(board.id)
+        r = self.client.delete('/api/chq/board' + params, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_can_empty_board_with_permission(self):
+        self.user.profile.have_global_permissions()
+        board = CommerceHQBoardFactory(user=self.user)
+        data = {'board_id': board.id}
+        r = self.client.post('/api/chq/board-empty', data, **self.headers)
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    def test_subuser_cannot_empty_board_without_permission(self):
+        board = CommerceHQBoardFactory(user=self.user)
+        data = {'board_id': board.id}
+        r = self.client.post('/api/chq/board-empty', data, **self.headers)
+        self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    @patch('commercehq_core.utils.smart_board_by_board', Mock(return_value=True))
+    def test_subuser_can_edit_board_config_with_permission(self):
+        self.user.profile.have_global_permissions()
+        board = CommerceHQBoardFactory(user=self.user)
+        data = {'board_id': board.id, 'title': 'test'}
+        r = self.client.post('/api/chq/board-config', data, **self.headers)
+        self.assertEqual(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
+    @patch('commercehq_core.utils.smart_board_by_board', Mock(return_value=True))
+    def test_subuser_cannot_edit_board_config_without_permission(self):
+        board = CommerceHQBoardFactory(user=self.user)
+        data = {'board_id': board.id, 'title': 'test'}
+        r = self.client.post('/api/chq/board-config', data, **self.headers)
+        self.assertEqual(r.status_code, 403)

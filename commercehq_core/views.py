@@ -125,6 +125,9 @@ class BoardsList(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('view_product_boards.sub'):
+            raise permissions.PermissionDenied()
+
         return super(BoardsList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -145,6 +148,9 @@ class BoardDetailView(DetailView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('view_product_boards.sub'):
+            raise permissions.PermissionDenied()
+
         return super(BoardDetailView, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

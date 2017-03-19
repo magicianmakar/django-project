@@ -571,8 +571,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Store not found.', status=404)
 
     def delete_board(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         try:
             pk = safeInt(data.get('board_id'))
@@ -584,8 +584,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
     def post_board_empty(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         try:
             pk = safeInt(data.get('board_id'))
@@ -597,8 +597,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
     def post_boards_add(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         can_add, total_allowed, user_count = permissions.can_add_board(user)
 
@@ -625,8 +625,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         })
 
     def post_product_board(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         product = CommerceHQProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -651,6 +651,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             })
 
     def get_board_config(self, request, user, data):
+        if not user.can('view_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
@@ -674,6 +676,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             })
 
     def post_board_config(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
@@ -696,8 +700,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def delete_board_products(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #    raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
