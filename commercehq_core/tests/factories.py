@@ -25,7 +25,7 @@ class CommerceHQBoardFactory(factory.DjangoModelFactory):
 
 
 class CommerceHQProductFactory(factory.DjangoModelFactory):
-    store = factory.SubFactory('commercehq.tests.factories.CommerceHQStoreFactory')
+    store = factory.SubFactory('commercehq_core.tests.factories.CommerceHQStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     title = factory.fuzzy.FuzzyText()
     product_type = factory.fuzzy.FuzzyText()

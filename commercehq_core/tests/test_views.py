@@ -595,3 +595,62 @@ class SubuserpermissionsApiTestCase(TestCase):
         data = {'board_id': board.id, 'title': 'test'}
         r = self.client.post('/api/chq/board-config', data, **self.headers)
         self.assertEqual(r.status_code, 403)
+
+    @patch('commercehq_core.tasks.product_save', Mock(return_value=None))
+    def test_subuser_can_save_for_later_with_permission(self):
+        self.user.profile.subuser_chq_stores.add(self.store)
+        data = {'store': self.store.id}
+        r = self.client.post('/api/chq/save-for-later', data, **self.headers)
+        self.assertEquals(r.status_code, 200)
+
+    @patch('commercehq_core.tasks.product_save', Mock(return_value=None))
+    def test_subuser_cant_save_for_later_without_permission(self):
+        self.user.profile.subuser_chq_stores.add(self.store)
+        permission = self.user.profile.subuser_chq_permissions.get(codename='save_for_later')
+        self.user.profile.subuser_chq_permissions.remove(permission)
+        data = {'store': self.store.id}
+        r = self.client.post('/api/chq/save-for-later', data, **self.headers)
+        self.assertEquals(r.status_code, 403)
+
+    @patch('commercehq_core.tasks.product_export.apply_async', Mock(return_value=None))
+    @patch('commercehq_core.api.permissions.user_can_view', Mock(return_value=True))
+    def test_subuser_can_send_to_chq_with_permission(self):
+        product = CommerceHQProductFactory(user=self.parent_user)
+        self.store.products.add(product)
+        self.user.profile.subuser_chq_stores.add(self.store)
+        data = {'store': self.store.id, 'product': product.id, 'publish': False}
+        r = self.client.post('/api/chq/product-export', data, **self.headers)
+        self.assertEquals(r.status_code, 200)
+
+    @patch('commercehq_core.tasks.product_export.apply_async', Mock(return_value=None))
+    @patch('commercehq_core.api.permissions.user_can_view', Mock(return_value=True))
+    def test_subuser_cant_send_to_chq_without_permission(self):
+        product = CommerceHQProductFactory(user=self.parent_user)
+        self.store.products.add(product)
+        self.user.profile.subuser_chq_stores.add(self.store)
+        permission = self.user.profile.subuser_chq_permissions.get(codename='send_to_chq')
+        self.user.profile.subuser_chq_permissions.remove(permission)
+        data = {'store': self.store.id, 'product': product.id, 'publish': False}
+        r = self.client.post('/api/chq/product-export', data, **self.headers)
+        self.assertEquals(r.status_code, 403)
+
+    @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
+    def test_subuser_can_delete_products_with_permission(self):
+        product = CommerceHQProductFactory(user=self.parent_user)
+        self.store.products.add(product)
+        self.user.profile.subuser_chq_stores.add(self.store)
+        params = '?product={}'.format(product.id)
+        r = self.client.delete('/api/chq/product' + params, **self.headers)
+        self.assertEquals(r.status_code, 200)
+
+    @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
+    def test_subuser_cant_delete_products_without_permission(self):
+        product = CommerceHQProductFactory(user=self.parent_user)
+        self.store.products.add(product)
+        self.user.profile.subuser_chq_stores.add(self.store)
+        permission = self.user.profile.subuser_chq_permissions.get(codename='delete_products')
+        self.user.profile.subuser_chq_permissions.remove(permission)
+        params = '?product={}'.format(product.id)
+        r = self.client.delete('/api/chq/product' + params, **self.headers)
+        self.assertEquals(r.status_code, 403)
+

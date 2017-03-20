@@ -87,6 +87,10 @@ class CHQStoreApi(ApiResponseMixin, View):
         return self.api_success(tasks.product_save(data, user.id))
 
     def post_save_for_later(self, request, user, data):
+        store_id = safeInt(data.get('store'))
+        store = CommerceHQStore.objects.get(pk=store_id)
+        if not user.can('save_for_later.sub', store):
+            raise PermissionDenied()
         # Backward compatibly with Shopify save for later
         return self.post_product_save(request, user, data)
 
@@ -125,10 +129,15 @@ class CHQStoreApi(ApiResponseMixin, View):
                 return self.api_error(data['error'], status=500)
 
     def post_product_export(self, request, user, data):
-        try:
-            store = CommerceHQStore.objects.get(id=data.get('store'))
-            permissions.user_can_view(user, store)
+        pk = safeInt(data.get('store'))
+        store = CommerceHQStore.objects.get(id=pk)
 
+        if not user.can('send_to_chq.sub', store):
+            raise PermissionDenied()
+
+        permissions.user_can_view(user, store)
+
+        try:
             tasks.product_export.apply_async(
                 args=[data.get('store'), data.get('product'), user.id, data.get('publish', False)],
                 countdown=0,
@@ -168,9 +177,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         except CommerceHQProduct.DoesNotExist:
             return self.api_error('Product does not exists', status=404)
 
-        # TODO: Sub user permssion for CHQ
-        # if not user.can('delete_products.sub', product.store):
-            # raise PermissionDenied()
+        if not user.can('delete_products.sub', product.store):
+            raise PermissionDenied()
 
         product.delete()
 
