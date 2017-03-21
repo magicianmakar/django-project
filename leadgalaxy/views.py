@@ -3138,8 +3138,15 @@ def subuser_perms_edit(request, user_id):
     else:
         form = SubuserPermissionsForm(initial=initial)
 
-    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username]
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('subusers')},
+        subuser.username,
+        'Permissions',
+    ]
+
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+
     return render(request, 'subuser_perms_edit.html', context)
 
 
@@ -3165,8 +3172,16 @@ def subuser_store_permissions(request, user_id, store_id):
     else:
         form = SubuserPermissionsForm(initial=initial)
 
-    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('subusers')},
+        subuser.username,
+        {'title': 'Permissions', 'url': reverse('subuser_perms_edit', args=(user_id,))},
+        store.title,
+    ]
+
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+
     return render(request, 'subuser_store_permissions.html', context)
 
 
