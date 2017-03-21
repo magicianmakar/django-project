@@ -8,8 +8,8 @@ machine:
   environment:
     DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
     DATA_STORE_DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/store_test
-    REDISCLOUD_URL: redis://localhost:6391
-    REDISCLOUD_CACHE: redis://localhost:6391
+    REDISCLOUD_URL: redis://localhost:6379
+    REDISCLOUD_CACHE: redis://localhost:6379
     S3_BUCKET_NAME: shopifiedapp-assets
     DEBUG_APP: "TRUE"
     SENDGRID_PASSWORD: ""
