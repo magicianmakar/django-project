@@ -654,3 +654,18 @@ class SubuserpermissionsApiTestCase(TestCase):
         r = self.client.delete('/api/chq/product' + params, **self.headers)
         self.assertEquals(r.status_code, 403)
 
+    def test_subuser_cant_fulfill_order_without_permission(self):
+        self.user.profile.subuser_chq_stores.add(self.store)
+        permission = self.user.profile.subuser_chq_permissions.get(codename='place_orders')
+        self.user.profile.subuser_chq_permissions.remove(permission)
+        data = {'store': self.store.id}
+        r = self.client.post('/api/chq/order-fulfill', data, **self.headers)
+        self.assertEquals(r.status_code, 403)
+
+    def test_subuser_cant_update_order_fulfillment_without_permission(self):
+        self.user.profile.subuser_chq_stores.add(self.store)
+        permission = self.user.profile.subuser_chq_permissions.get(codename='place_orders')
+        self.user.profile.subuser_chq_permissions.remove(permission)
+        data = {'store': self.store.id}
+        r = self.client.post('/api/chq/order-fulfill-update', data, **self.headers)
+        self.assertEquals(r.status_code, 403)

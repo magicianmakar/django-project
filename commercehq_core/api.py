@@ -413,8 +413,8 @@ class CHQStoreApi(ApiResponseMixin, View):
     def post_order_fulfill(self, request, user, data):
         try:
             store = CommerceHQStore.objects.get(id=int(data.get('store')))
-            # if not user.can('place_orders.sub', store): # TODO: subuser perms. for CHQ Stores
-            #     raise PermissionDenied()
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied()
 
             permissions.user_can_view(user, store)
         except CommerceHQStore.DoesNotExist:
@@ -835,12 +835,10 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
 
     def post_order_fulfill_update(self, request, user, data):
-        # if data.get('store'):
-        #     store = CommerceHQStore.objects.get(pk=int(data['store']))
-
-        #     TODO: sub user permission for CHQ
-        #     if not user.can('place_orders.sub', store):
-        #         raise PermissionDenied()
+        if data.get('store'):
+            store = CommerceHQStore.objects.get(pk=safeInt(data['store']))
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied()
 
         order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
         permissions.user_can_edit(user, order)
