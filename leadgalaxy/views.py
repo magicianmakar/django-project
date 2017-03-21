@@ -2536,9 +2536,6 @@ def orders_view(request):
     if product_filter:
         product_filter = models_user.shopifyproduct_set.get(id=product_filter)
 
-    if not request.user.profile.plan.is_free and request.user.captchacredit is None:
-        CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
-
     return render(request, 'orders_new.html', {
         'orders': all_orders,
         'store': store,
