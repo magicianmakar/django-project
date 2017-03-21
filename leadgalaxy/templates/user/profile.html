@@ -323,6 +323,12 @@
                                 {% include "payments/clippingmagic_plans.html" %}
                             </div>
                             {% endif %}
+
+                            {% if user|can:'captchacredit.use' %}
+                            <div class="col-md-12">
+                                {% include "payments/captchacredit_plans.html" %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

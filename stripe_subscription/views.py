@@ -9,7 +9,7 @@ import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import GroupPlan
-from leadgalaxy.models import ClippingMagic, ClippingMagicPlan
+from leadgalaxy.models import ClippingMagic, ClippingMagicPlan, CaptchaCredit, CaptchaCreditPlan
 
 from analytic_events.models import PlanSelectionEvent, BillingInformationEntryEvent
 
@@ -223,6 +223,64 @@ def clippingmagic_subscription(request):
             )
 
     except ClippingMagicPlan.DoesNotExist:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Selected Credit not found'
+        }, status=500)
+
+    except stripe.CardError as e:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error: {}'.format(e.message)
+        }, status=500)
+
+    except stripe.InvalidRequestError as e:
+        raven_client.captureException(level='warning')
+        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+    except:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error, Please try again'
+        }, status=500)
+
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@csrf_protect
+def captchacredit_subscription(request):
+    user = request.user
+
+    try:
+        captchacredit_plan = CaptchaCreditPlan.objects.get(id=request.POST.get('plan'))
+
+        stripe.Charge.create(
+            amount=captchacredit_plan.amount * 100,
+            currency="usd",
+            customer=user.stripe_customer.customer_id,
+            description="Auto Captcha - {} Credits".format(captchacredit_plan.allowed_credits),
+            metadata={
+                'user': user.id,
+                'captchacredit_plan': captchacredit_plan.id
+            }
+        )
+
+        try:
+            captchacredit = CaptchaCredit.objects.get(user=user)
+            captchacredit.remaining_credits += captchacredit_plan.allowed_credits
+            captchacredit.save()
+
+        except CaptchaCredit.DoesNotExist:
+            captchacredit.objects.create(
+                user=user,
+                remaining_credits=captchacredit_plan.allowed_credits
+            )
+
+    except CaptchaCreditPlan.DoesNotExist:
         raven_client.captureException(level='warning')
 
         return JsonResponse({

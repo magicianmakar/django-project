@@ -2,7 +2,7 @@
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        Manage ClippingMagic Credits
+        Manage Auto Captcha Credits
     </div>
     <div class="panel-body">
         <div class="row">
@@ -14,22 +14,22 @@
 
             <div class="col-md-3" >
                 <span>
-                    <b>{{clippingmagic.remaining_credits|default:"0"}}</b>
-                    Credit{{ clippingmagic.remaining_credits|pluralize }}
+                    <b>{{ captchacredit.remaining_credits|default:"0" }}</b>
+                    Credit{{ captchacredit.remaining_credits|pluralize }}
                 </span>
             </div>
         </div>
 
         <div class="row m-t flex-group">
             <div class="col-md-3 ">
-                <label for="clippingmagic_plan">Purchase Credits:</label>
+                <label for="captchacredit_plan">Purchase Credits:</label>
             </div>
 
             <div class="col-md-4">
-                <select class="form-control" id="clippingmagic_plan"
-                        name="clippingmagic_plan">
+                <select class="form-control" id="captchacredit_plan"
+                        name="captchacredit_plan">
                     <option value="">Select Credits</option>
-                    {% for item in clippingmagic_plans %}
+                    {% for item in captchacredit_plans %}
                         <option value="{{item.id}}" data-amount="{% money_format item.amount %}"
                                 data-credits="{{item.allowed_credits}}">
                             {{item.allowed_credits}} Credits / {% money_format item.amount %}
@@ -38,7 +38,7 @@
                 </select>
             </div>
             <div class="col-md-3" >
-                <button class="btn btn-primary" id="renew_clippingmagic" data-title="ClippingMagic Credits" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
+                <button class="btn btn-primary" id="renew_captchacredit" data-title="AutoCaptcha Credits" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
             </div>
         </div>
     </div>

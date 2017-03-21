@@ -137,19 +137,21 @@ $('#save-email').click(function () {
     });
 });
 
-$('#renew_clippingmagic').click(function() {
-    var option = $("#clippingmagic_plan option:selected");
+$('#renew_clippingmagic, #renew_captchacredit').click(function() {
+    var type = $(this).attr('id').split('_')[1];
+    var title = $(this).data('title');
+    var option = $('#' + type + '_plan option:selected');
     var plan = option.val();
     var have_billing_info = $(this).data('cc');
 
     if (!plan) {
-        swal('ClippingMagic Credits', 'Please select a credit to purchase first.', 'warning');
+        swal(title, 'Please select a credit to purchase first.', 'warning');
         return;
     }
 
     if(!have_billing_info) {
         swal({
-            title: "ClippingMagic Credits",
+            title: title,
             text: "Add your credit card to purchase credits.",
             type: "warning",
             showCancelButton: true,
@@ -184,13 +186,13 @@ $('#renew_clippingmagic').click(function() {
     function(isConfirmed) {
         if (isConfirmed) {
             $.ajax({
-                url: '/subscription/clippingmagic_subscription',
+                url: '/subscription/' + type + '_subscription',
                 type: 'POST',
                 data: {
                     'plan': plan
                 },
                 success: function(data) {
-                    toastr.success('Credit Purchase Complete!', 'ClippingMagic Credits');
+                    toastr.success('Credit Purchase Complete!', title);
                     swal.close();
 
                     setTimeout(function() {
@@ -198,7 +200,7 @@ $('#renew_clippingmagic').click(function() {
                     }, 1500);
                 },
                 error: function(data) {
-                    displayAjaxError('ClippingMagic Credits', data);
+                    displayAjaxError(title, data);
                 }
             });
         }
