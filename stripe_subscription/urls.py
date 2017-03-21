@@ -10,5 +10,6 @@ urlpatterns = patterns(
     url(r'^plan$', stripe_subscription.views.subscription_plan),
     url(r'^cancel$', stripe_subscription.views.subscription_cancel),
     url(r'^invoices/(?P<invoice_id>[\w-]+)/pay$', stripe_subscription.views.invoice_pay, name='invoice_pay'),
-    url(r'^clippingmagic_subscription$', stripe_subscription.views.clippingmagic_subscription)
+    url(r'^clippingmagic_subscription$', stripe_subscription.views.clippingmagic_subscription),
+    url(r'^captchacredit_subscription$', stripe_subscription.views.captchacredit_subscription)
 )
