@@ -337,22 +337,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             else:
                 return JsonResponse(data, safe=False, status=500)
 
-    def get_pixlr_hash(self, request, user, data):
-        if 'new' in data:
-            random_hash = data.get('random_hash')
-            pixlr_data = {'status': 'new', 'url': '', 'image_id': data.get('new'), 'key': random_hash}
-            cache.set('pixlr_{}'.format(random_hash), pixlr_data, timeout=21600)  # 6 hours timeout
-
-        elif 'check' in data:
-            pixlr_key = 'pixlr_{}'.format(data.get('check'))
-
-            pixlr_data = cache.get(pixlr_key)
-
-            if pixlr_data is None:
-                return self.api_error('Pixlr key not found.', status=404)
-
-        return JsonResponse(pixlr_data)
-
     def post_product_delete(self, request, user, data):
         try:
             product = ShopifyProduct.objects.get(id=data.get('product'))

@@ -1035,7 +1035,6 @@ function renderImages() {
                 image: imageUrl,
                 title: imageId,
                 target: window.location.origin + '/upload/save_image_s3?' + $.param({
-                    key: hash,
                     product: config.product_id,
                     advanced: true,
                     image_id: imageId
@@ -1121,7 +1120,7 @@ $('#download-images').on('click', function(e) {
             product: btn.attr('product')
         },
         success: function(result) {
-            pusherSub();
+            PusherSubscription.imagesDownload();
         },
         error: function(data) {
             displayAjaxError('Images Download', data);
@@ -1133,28 +1132,13 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
     if (config.advanced_photo_editor) {
         var image = $(this).siblings('img'),
             imageUrl = image.attr('src'),
-            imageId = image.attr('id'),
-            imageHash = $(this).attr('data-hash');
+            imageId = image.attr('id');
 
         if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
             imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
         }
 
-        $.ajax({
-            type: 'GET',
-            url: '/api/pixlr-hash',
-            data: {'new': imageId, 'random_hash': imageHash},
-            success: function(result) {
-                if (result.status == 'new') {
-                    pixlrCheck(imageHash);
-                } else {
-                    displayAjaxError('Advanced Image Editor', result);
-                }
-            },
-            error: function(result) {
-                displayAjaxError('Advanced Image Editor', result);
-            }
-        });
+        PusherSubscription.pixlrEditor(imageId);
     } else {
         e.preventDefault();
         swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
@@ -1170,54 +1154,6 @@ $('.add-images-btn').click(function (e) {
 $('#modal-add-image').on('shown.bs.modal', function() {
     $('#modal-add-image img').trigger("unveil");
 });
-
-$('#pixlr-background').click(function(e) {
-    e.preventDefault();
-
-    pixlr.overlay.hide();
-
-    clearInterval(document.pixlrInterval);
-    document.pixlrInterval = null;
-});
-
-function pixlrCheck(key) {
-    if (typeof document.pixlrInterval !== 'undefined' || document.pixlrInterval !== null) {
-        clearInterval(document.pixlrInterval);
-    }
-
-    document.pixlrIntervalCount = 0;
-    document.pixlrInterval = setInterval(function() {
-        $.ajax({
-            type: 'GET',
-            url: '/api/pixlr-hash',
-            data: {
-                check: key,
-                count: document.pixlrIntervalCount
-            },
-            dataType: 'json',
-            success: function(result) {
-                if (result.status == 'changed') {
-                    var image = $('#'+result.image_id);
-                    image.attr('src', result.url);
-                    product.images[parseInt(image.attr('image-id'), 10)] = result.url;
-                    pixlr.overlay.hide();
-
-                    clearInterval(document.pixlrInterval);
-                    document.pixlrInterval = null;
-                    if (document.pixlrPopup) {
-                        document.pixlrPopup.close();
-                    }
-                } else {
-                    document.pixlrIntervalCount += 1;
-                }
-            },
-            error: function(result) {
-                clearInterval(document.pixlrInterval);
-                document.pixlrInterval = null;
-            }
-        });
-    }, 3000);
-}
 
 document.renderImages = renderImages;
 var export_template = Handlebars.compile($("#product-export-template").html());
@@ -1392,32 +1328,67 @@ function clippingmagicEditImage(data, image) {
     });
 }
 
-function pusherSub() {
-    if (typeof(Pusher) === 'undefined') {
-        toastr.error('This could be due to using Adblocker extensions<br>' +
-            'Please whitelist Shopified App website and reload the page<br>' +
-            'Contact us for further assistance',
-            'Pusher service is not loaded', {timeOut: 0});
-        return;
-    }
-
-    var pusher = new Pusher(config.sub_conf.key);
-    var channel = pusher.subscribe(config.sub_conf.channel);
-    channel.bind('images-download', function(data) {
-        if (data.product == config.product_id) {
-            $('#download-images').bootstrapBtn('reset');
-            pusher.unsubscribe(config.sub_conf.channel);
-
-            if (data.success) {
-                setTimeout(function() {
-                    window.location.href = data.url;
-                }, 500);
-            } else {
-                displayAjaxError('Images Download', data);
-            }
+var PusherSubscription = {
+    imagesDownload: function() {
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Shopified App website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
         }
-    });
-}
+
+        var pusher = new Pusher(config.sub_conf.key);
+        var channel = pusher.subscribe(config.sub_conf.channel);
+        channel.bind('images-download', function(data) {
+            if (data.product == config.product_id) {
+                $('#download-images').bootstrapBtn('reset');
+                pusher.unsubscribe(config.sub_conf.channel);
+
+                if (data.success) {
+                    setTimeout(function() {
+                        window.location.href = data.url;
+                    }, 500);
+                } else {
+                    displayAjaxError('Images Download', data);
+                }
+            }
+        });
+    },
+    pixlrEditor: function(imageId) {
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Shopified App website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+
+        var pusher = new Pusher(config.sub_conf.key);
+        var channel = pusher.subscribe(config.sub_conf.channel);
+        channel.bind('pixlr-editor', function(data) {
+            console.log(data.product, config.product_id);
+            if (data.product == config.product_id) {
+                $('#download-images').bootstrapBtn('reset');
+                pusher.unsubscribe(config.sub_conf.channel);
+
+                if (data.success) {
+                    setTimeout(function() {
+                        var image = $('#'+imageId);
+                        image.attr('src', data.url);
+                        product.images[parseInt(image.attr('image-id'), 10)] = data.url;
+
+                        if (document.pixlrPopup) {
+                            document.pixlrPopup.close();
+                        }
+                    }, 500);
+                } else {
+                    displayAjaxError('Images Download', data);
+                }
+            }
+        });
+    }
+};
 
 (function() {
     setup_full_editor('product-description');
