@@ -1209,7 +1209,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except:
             credits = 0
 
-        return self.api_success({'credits': credits})
+        return self.api_success({
+            'credits': credits,
+            'user': user.models_user.username
+        })
 
     def post_captcha_credits(self, request, user, data):
         if not user.can('captchacredit.use'):
