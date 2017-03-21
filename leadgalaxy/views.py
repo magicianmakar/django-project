@@ -1965,6 +1965,15 @@ def user_profile(request):
         except ClippingMagic.DoesNotExist:
             clippingmagic = ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
+    captchacredit_plans = CaptchaCreditPlan.objects.all()
+    captchacredit = None
+    if not request.user.profile.plan.is_free:
+        try:
+            captchacredit = CaptchaCredit.objects.get(user=request.user)
+
+        except CaptchaCredit.DoesNotExist:
+            captchacredit = CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
+
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
@@ -1979,6 +1988,8 @@ def user_profile(request):
         'stripe_customer': stripe_customer,
         'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,
+        'captchacredit_plans': captchacredit_plans,
+        'captchacredit': captchacredit,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
@@ -2524,6 +2535,9 @@ def orders_view(request):
 
     if product_filter:
         product_filter = models_user.shopifyproduct_set.get(id=product_filter)
+
+    if not request.user.profile.plan.is_free and request.user.captchacredit is None:
+        CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
 
     return render(request, 'orders_new.html', {
         'orders': all_orders,

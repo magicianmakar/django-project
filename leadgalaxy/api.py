@@ -1200,6 +1200,31 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def get_captcha_credits(self, request, user, data):
+        if not user.can('captchacredit.use'):
+            raise PermissionDenied()
+
+        try:
+            credits = user.models_user.captchacredit.remaining_credits
+        except:
+            credits = 0
+
+        return self.api_success({'credits': credits})
+
+    def post_captcha_credits(self, request, user, data):
+        if not user.can('captchacredit.use'):
+            raise PermissionDenied()
+
+        if user.models_user.captchacredit and user.models_user.captchacredit.remaining_credits > 0:
+            user.models_user.captchacredit.remaining_credits -= 1
+            user.models_user.captchacredit.save()
+        else:
+            return self.api_error('Insufficient Credits', status=402)
+
+        return self.api_success({
+            'remaining_credits': user.models_user.captchacredit.remaining_credits
+        })
+
     def get_product_config(self, request, user, data):
         if not user.can('price_changes.use'):
             raise PermissionDenied()

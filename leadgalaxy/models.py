@@ -1377,6 +1377,29 @@ class ClippingMagic(models.Model):
         return u'{} / {} Credits'.format(self.user.username, self.remaining_credits)
 
 
+class CaptchaCreditPlan(models.Model):
+    allowed_credits = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0, verbose_name='In USD')
+
+    def __unicode__(self):
+        return u'{} / {}'.format(self.allowed_credits, self.amount)
+
+
+class CaptchaCredit(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.OneToOneField(User, related_name='captchacredit')
+
+    remaining_credits = models.BigIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return u'{} / {} Credits'.format(self.user.username, self.remaining_credits)
+
+
 class GroupPlan(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Plan Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Plan Slug")

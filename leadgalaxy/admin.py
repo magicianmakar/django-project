@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 admin.site.register(ClippingMagicPlan)
+admin.site.register(CaptchaCreditPlan)
 
 
 @admin.register(GroupPlan)
