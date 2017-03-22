@@ -7,9 +7,6 @@ from django.core.urlresolvers import reverse
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
-admin.site.register(ClippingMagicPlan)
-admin.site.register(CaptchaCreditPlan)
-
 
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
@@ -225,3 +222,17 @@ class PlanPaymentAdmin(admin.ModelAdmin):
 @admin.register(DescriptionTemplate)
 class DescriptionTemplateAdmin(admin.ModelAdmin):
     list_display = ('user', 'title')
+
+
+@admin.register(ClippingMagic)
+class ClippingMagicAdmin(admin.ModelAdmin):
+    search_fields = USER_SEARCH_FIELDS
+
+
+@admin.register(CaptchaCredit)
+class CaptchaCreditAdmin(admin.ModelAdmin):
+    search_fields = USER_SEARCH_FIELDS
+
+
+admin.site.register(ClippingMagicPlan)
+admin.site.register(CaptchaCreditPlan)
