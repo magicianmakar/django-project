@@ -1169,7 +1169,7 @@ $('.product-connection-disconnect').click(function (e) {
     function(isConfirmed) {
         if (isConfirmed) {
             $.ajax({
-                url: api_url('product-connect', 'chq') + $.param({
+                url: api_url('product-connect', 'chq') + '?' + $.param({
                     product: config.product_id,
                 }),
                 type: 'DELETE',
