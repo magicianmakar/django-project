@@ -38,7 +38,7 @@ import keen
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template, version_compare
+from shopified_core.utils import send_email_from_template, version_compare, get_mimetype
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import load_uk_provincess, missing_province, get_counrties_list
 
@@ -2034,7 +2034,7 @@ def pixlr_serve_image(request):
         raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
 
     fp = StringIO.StringIO(requests.get(img_url).content)
-    return HttpResponse(fp, content_type=utils.get_mimetype(img_url))
+    return HttpResponse(fp, content_type=get_mimetype(img_url))
 
 
 @login_required

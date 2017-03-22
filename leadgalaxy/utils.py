@@ -97,10 +97,6 @@ def remove_link_query(link):
     return re.sub('([?#].*)$', r'', link)
 
 
-def get_mimetype(url):
-    return mimetypes.guess_type(remove_link_query(url))[0]
-
-
 def random_hash():
     token = get_random_string(32)
     return hashlib.md5(token).hexdigest()

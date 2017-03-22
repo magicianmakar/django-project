@@ -4,6 +4,7 @@ import base64
 import hashlib
 import time
 import hmac
+import mimetypes
 import urlparse
 import ctypes
 import simplejson as json
@@ -125,6 +126,11 @@ def hash_url_filename(s):
         hashval = int(((hashval << 5) - hashval) + ch)
         hashval |= 0
     return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
+
+
+def get_mimetype(url, default=None):
+    content_type = mimetypes.guess_type(remove_link_query(url))[0]
+    return content_type if content_type else default
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
