@@ -1201,7 +1201,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def get_captcha_credits(self, request, user, data):
-        if not user.can('captchacredit.use'):
+        if not user.can('aliexpress_captcha.use'):
             raise PermissionDenied()
 
         try:
@@ -1215,7 +1215,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         })
 
     def post_captcha_credits(self, request, user, data):
-        if not user.can('captchacredit.use'):
+        if not user.can('aliexpress_captcha.use'):
             raise PermissionDenied()
 
         if user.models_user.captchacredit and user.models_user.captchacredit.remaining_credits > 0:
