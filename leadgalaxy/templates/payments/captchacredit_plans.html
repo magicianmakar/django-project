@@ -25,7 +25,7 @@
                 <label for="captchacredit_plan">Purchase Credits:</label>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <select class="form-control" id="captchacredit_plan"
                         name="captchacredit_plan">
                     <option value="">Select Credits</option>
@@ -37,8 +37,13 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3" >
+
+            <div class="col-md-2" >
                 <button class="btn btn-primary" id="renew_captchacredit" data-title="AutoCaptcha Credits" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
+            </div>
+
+            <div class="col-md-4">
+                1 credit equals 1 attempt to solve AliExpress Captcha.
             </div>
         </div>
     </div>
