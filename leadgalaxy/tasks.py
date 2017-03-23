@@ -596,3 +596,62 @@ def create_image_zip(self, images, product_id):
             'success': False,
             'product': product_id,
         })
+
+
+@celery_app.task(bind=True, base=CaptureFailure)
+def import_orders(self, store_id, parsed_orders, file_index=0):
+    from order_imports.api import ShopifyOrderImportAPI
+
+    store = ShopifyStore.objects.get(id=store_id)
+    api = ShopifyOrderImportAPI(store=store)
+
+    try:
+        data = api.find_orders(parsed_orders)
+
+        cache.set('order_import_{}_{}'.format(file_index, store.pusher_channel()),
+                  data.values(),
+                  timeout=3600)
+
+        store.pusher_trigger('order-import', {
+            'success': True,
+            'finished': True,
+            'store_id': store_id,
+            'file_index': file_index,
+            # 'orders': data.values()
+        })
+    except Exception, e:
+        raven_client.captureException()
+
+        store.pusher_trigger('order-import', {
+            'success': False,
+            'finished': True,
+            'store_id': store_id,
+            'file_index': file_index,
+            'error': str(e)
+        })
+
+
+@celery_app.task(bind=True, base=CaptureFailure)
+def approve_imported_orders(self, user_id, data, pusher_store_id):
+    from order_imports.api import ShopifyOrderImportAPI
+    user = User.objects.get(pk=user_id)
+    stores = user.profile.get_shopify_stores()
+    pusher_store = stores.get(pk=pusher_store_id)
+
+    try:
+        for store_id, items in data.items():
+            store = stores.get(pk=store_id)
+            api = ShopifyOrderImportAPI(store=store)
+            api.send_tracking_number(items)
+
+        print pusher_store.id
+        pusher_store.pusher_trigger('order-import-approve', {
+            'success': True
+        })
+    except Exception, e:
+        raven_client.captureException()
+
+        pusher_store.pusher_trigger('order-import-approve', {
+            'success': False,
+            'error': str(e)
+        })

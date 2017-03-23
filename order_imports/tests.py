@@ -55,9 +55,15 @@ class OrderImportReadOrdersTestCase(TestCase):
         writer.writerow({'order_name': '#1089', 'line_item': '911761-black-frame-gray', 'tracking_number': '654321'})
         writer.writerow({'order_name': '#1039', 'line_item': '4175570565', 'tracking_number': '7890'})
         csv_file.seek(0)
-        self.orders = self.api.read_csv_file(csv_file)
 
-        self.empty_orders = self.api.read_csv_file(StringIO())
+        headers = {
+            'order_id': 0,
+            'line_item': 1,
+            'tracking_number': 2,
+        }
+        self.orders = self.api.read_csv_file(csv_file, headers)
+
+        self.empty_orders = self.api.read_csv_file(StringIO(), headers)
 
     def test_line_items_with_same_order_merged(self):
         self.assertEqual(self.orders, {
@@ -91,7 +97,20 @@ class OrderImportFetchOrdersTestCase(TestCase):
         writer.writerow({'order_name': '#1089', 'line_item': '911761-black-frame-gray', 'tracking_number': '654321'})
         writer.writerow({'order_name': '#1039', 'line_item': '4175570565', 'tracking_number': '7890'})
         csv_file.seek(0)
-        self.orders = self.api.read_csv_file(csv_file)
+
+        raw_headers = {
+            'order_id_position': '1',
+            'order_id_name': '',
+            'line_item_position': '2',
+            'line_item_name': '',
+            'tracking_number_position': '3',
+            'tracking_number_name': '',
+            'identify_column_position': '',
+            'identify_column_name': '',
+        }
+
+        headers = self.api.parse_headers(csv_file, raw_headers)
+        self.orders = self.api.read_csv_file(csv_file, headers)
 
     def test_found_shopify_filled_for_items(self):
         with requests_mock.mock(real_http=True) as mock:
