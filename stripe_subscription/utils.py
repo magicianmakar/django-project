@@ -188,6 +188,13 @@ def extra_store_invoice(store, extra=None):
 
     extra.save()
 
+    invoice_item.description = u'{} ({} through {})'.format(
+        invoice_item.description,
+        arrow.get(extra.period_start).format('MM/DD'),
+        arrow.get(extra.period_end).format('MM/DD'))
+
+    invoice_item.save()
+
 
 def invoice_extra_stores():
     """
