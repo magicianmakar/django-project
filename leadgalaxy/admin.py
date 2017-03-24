@@ -226,11 +226,15 @@ class DescriptionTemplateAdmin(admin.ModelAdmin):
 
 @admin.register(ClippingMagic)
 class ClippingMagicAdmin(admin.ModelAdmin):
+    list_display = ('user', 'remaining_credits', 'updated_at')
+    raw_id_fields = ('user',)
     search_fields = USER_SEARCH_FIELDS
 
 
 @admin.register(CaptchaCredit)
 class CaptchaCreditAdmin(admin.ModelAdmin):
+    list_display = ('user', 'remaining_credits', 'updated_at')
+    raw_id_fields = ('user',)
     search_fields = USER_SEARCH_FIELDS
 
 
