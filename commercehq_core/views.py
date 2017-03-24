@@ -207,6 +207,15 @@ class ProductDetailView(DetailView):
 
         if self.object.source_id:
             context['commercehq_product'] = self.object.sync()
+            context['product_data'] = self.object.parsed
+
+            common_images = []
+            for j in context['commercehq_product']['variants']:
+                for k in j['images']:
+                    if k in common_images and k['path'] not in context['product_data']['images']:
+                        context['product_data']['images'].append(k['path'])
+
+                    common_images.append(k)
 
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('chq:products_list')},

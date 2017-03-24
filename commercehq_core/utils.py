@@ -300,7 +300,6 @@ def store_shipping_carriers(store):
     if rep.ok:
         return rep.json()
     else:
-        print 'error'
         carriers = [
             {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
             {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'}

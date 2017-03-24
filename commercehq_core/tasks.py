@@ -58,20 +58,6 @@ def product_save(req_data, user_id):
     if not original_url:
         original_url = req_data.get('original_url')
 
-    # if not original_url:  # Could be sent from the web app
-    #     try:
-    #         product = ShopifyProduct.objects.get(id=req_data.get('product'))
-    #         permissions.user_can_edit(user, product)
-
-    #         original_url = product.get_original_info().get('url', '')
-
-    #     except ShopifyProduct.DoesNotExist:
-    #         original_url = ''
-
-    #     except PermissionDenied as e:
-    #         return {
-    #             'error': "Product: {}".format(e.message)
-    #         }
     try:
         import_store = utils.get_domain(original_url)
     except:
@@ -186,12 +172,16 @@ def product_export(store_id, product_id, user_id, publish=None):
         variants_thmbs = {}
         thumbs_idx = {}
         thumbs_uploads = {}
+        variants_uploads = {}
 
+        have_variant_images = False
         for h, var in p.get('variants_images', {}).items():
             for idx, img in enumerate(p.get('images', [])):
                 if utils.hash_url_filename(img) == h:
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
+
+                    have_variant_images = True
 
         upload_session = store.request
         for idx, img in enumerate(p.get('images', [])):
@@ -204,21 +194,45 @@ def product_export(store_id, product_id, user_id, publish=None):
 
             content = requests.get(img)
             mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
+            filename = utils.get_filename_from_url(img)
 
-            r = upload_session.post(
-                url=store.get_api_url('files'),
-                files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
-                data={'type': ('thumbnails' if is_thumb else 'product_images')}
-            )
+            if is_thumb:
+                # Upload the variant thumbnail
+                r = upload_session.post(
+                    url=store.get_api_url('files'),
+                    files={'files': (filename, content.content, mimetype, {'Expires': '0'})},
+                    data={'type': 'thumbnails'}
+                )
 
-            r.raise_for_status()
+                r.raise_for_status()
 
-            for j in r.json():
-                upload_id = j['id']
-                if is_thumb:
+                for j in r.json():
                     if idx in thumbs_idx:
-                        thumbs_uploads[thumbs_idx[idx]] = upload_id
-                else:
+                        thumbs_uploads[thumbs_idx[idx]] = j['id']
+
+                # Upload the variant image
+                r = upload_session.post(
+                    url=store.get_api_url('files'),
+                    files={'files': (filename, content.content, mimetype, {'Expires': '0'})},
+                    data={'type': 'variant_images'}
+                )
+
+                r.raise_for_status()
+
+                for j in r.json():
+                    if idx in thumbs_idx:
+                        variants_uploads[thumbs_idx[idx]] = j['id']
+
+            else:
+                r = upload_session.post(
+                    url=store.get_api_url('files'),
+                    files={'files': (filename, content.content, mimetype, {'Expires': '0'})},
+                    data={'type': 'variant_images' if have_variant_images else 'product_images'}
+                )
+
+                r.raise_for_status()
+
+                for j in r.json():
                     images.append(j['id'])
 
         is_multi = len(p['variants']) > 0
@@ -242,7 +256,7 @@ def product_export(store_id, product_id, user_id, publish=None):
                 'text': p['description'],
                 'name': 'Description'
             }],
-            'images': images,
+            'images': [] if have_variant_images else images,
 
             # 'seo_url': slugify(p['title']),
             # 'seo_title': p['title'],
@@ -274,6 +288,8 @@ def product_export(store_id, product_id, user_id, publish=None):
                             'image': thumbs_uploads[v]
                         })
 
+                        option['changes_look'] = True
+
                 api_data['options'].append(option)
 
             vars_list = []
@@ -290,9 +306,13 @@ def product_export(store_id, product_id, user_id, publish=None):
                     variants = [variants]
 
                 sku = []
+                image = None
                 for v in variants:
                     if v in p.get('variants_sku', []):
                         sku.append(p['variants_sku'][v])
+
+                    if not image and v in variants_uploads:
+                        image = variants_uploads[v]
 
                 var_info = {
                     'default': idx == 0,
@@ -302,7 +322,14 @@ def product_export(store_id, product_id, user_id, publish=None):
                     'shipping_weight': weight,
                     'variant': variants,
                     # 'sku': ';'.join(sku),
+                    'images': []
                 }
+
+                if image:
+                    var_info['images'] = [image]
+
+                    for j in images:
+                        var_info['images'].append(j)
 
                 api_data['variants'].append(var_info)
 
@@ -374,9 +401,17 @@ def product_update(product_id, data):
                     p['variants'][idx]['compare_price'] = v['compare_price']
                     p['variants'][idx]['sku'] = v['sku']
 
+        product_images = [j['path'] for j in p['images']]
+        variant_images = []
+        for j in p.get('variants', []):
+            for k in j['images']:
+                variant_images.append(k['path'])
+
+        have_variant_images = len(set(variant_images)) > len(product_images)
+
         images_need_upload = []
         for img in data['images']:
-            if img not in [j['path'] for j in p['images']]:
+            if img not in product_images + variant_images:
                 images_need_upload.append(img)
 
         for idx, img in enumerate(images_need_upload):
@@ -391,13 +426,17 @@ def product_update(product_id, data):
             r = store.request.post(
                 url=store.get_api_url('files'),
                 files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
-                data={'type': 'product_images'}
+                data={'type': 'variant_images' if have_variant_images else 'product_images'}
             )
 
             r.raise_for_status()
 
             for j in r.json():
-                p['images'].append(j['id'])
+                if have_variant_images:
+                    for idx, v in enumerate(p['variants']):
+                        p['variants'][idx]['images'].append(j['id'])
+                else:
+                    p['images'].append(j['id'])
 
         for i, image in enumerate(p['images']):
             if type(image) is int:
