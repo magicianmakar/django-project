@@ -2,7 +2,6 @@ from django.test import TestCase
 
 from mock import MagicMock
 from mock import patch
-from munch import Munch
 
 from shopified_core import permissions
 
@@ -13,6 +12,22 @@ from leadgalaxy.models import GroupPlan, ShopifyStore, User
 
 MYSHOPIFY_DOMAIN = 'shopified-app-ci.myshopify.com'
 SHOPIFY_APP_URL = ':88937df17024aa5126203507e2147f47@%s' % MYSHOPIFY_DOMAIN
+
+
+class InvoiceItemMock():
+    def __init__(self, invoice_id='ii_1235467890'):
+        self.id = invoice_id
+
+    @property
+    def id(self):
+        return self.id
+
+    @property
+    def description(self):
+        return ''
+
+    def save(self):
+        pass
 
 
 class ExtraStoreTestCase(TestCase):
@@ -68,7 +83,7 @@ class ExtraStoreTestCase(TestCase):
 
         invoiceitem_id = 'ii_123456789'
 
-        utils.stripe.InvoiceItem.create = MagicMock(return_value=Munch({'id': invoiceitem_id}))
+        utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock(invoiceitem_id))
 
         utils.extra_store_invoice(extra_store)
 
@@ -102,8 +117,16 @@ class ExtraStoreTestCase(TestCase):
                 self.invoiceitem_idx += 1
                 return self.invoiceitems[self.invoiceitem_idx]
 
+            @property
+            def description(self):
+                return ''
+
             def get(self, idx):
                 return self.invoiceitems[idx]
+
+            def save(self):
+                pass
+
         invoices = NextInvoice()
 
         utils.stripe.InvoiceItem.create = MagicMock(return_value=invoices)
@@ -146,7 +169,7 @@ class ExtraStoreTestCase(TestCase):
         extra = self.user.extrastore_set.first()
 
         from stripe_subscription import utils
-        utils.stripe.InvoiceItem.create = MagicMock(return_value=Munch({'id': 'invoiceitem_id'}))
+        utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
 
         self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Active store')
 
@@ -165,7 +188,7 @@ class ExtraStoreTestCase(TestCase):
         extra = self.user.extrastore_set.first()
 
         from stripe_subscription import utils
-        utils.stripe.InvoiceItem.create = MagicMock(return_value=Munch({'id': 'invoiceitem_id'}))
+        utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
 
         self.store.is_active = False
         self.store.save()
