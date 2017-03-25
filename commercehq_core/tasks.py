@@ -188,6 +188,7 @@ def product_export(store_id, product_id, user_id):
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
 
+        upload_session = store.request
         for idx, img in enumerate(p['images']):
             is_thumb = idx in thumbs_idx
 
@@ -196,14 +197,13 @@ def product_export(store_id, product_id, user_id):
                 'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
             })
 
-            r = store.request.post(
+            content = requests.get(img)
+            mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
+
+            r = upload_session.post(
                 url=store.get_api_url('files'),
-                files={'files': (
-                    utils.get_filename_from_url(img), requests.get(img).content, 'image/png', {'Expires': '0'})
-                },
-                data={
-                    'type': ('thumbnails' if is_thumb else 'product_images')
-                }
+                files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
+                data={'type': ('thumbnails' if is_thumb else 'product_images')}
             )
 
             r.raise_for_status()
@@ -380,14 +380,13 @@ def product_update(product_id, data):
                 'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
             })
 
+            content = requests.get(img)
+            mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
+
             r = store.request.post(
                 url=store.get_api_url('files'),
-                files={'files': (
-                    utils.get_filename_from_url(img), requests.get(img).content, 'image/png', {'Expires': '0'})
-                },
-                data={
-                    'type': 'product_images'
-                }
+                files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
+                data={'type': 'product_images'}
             )
 
             r.raise_for_status()

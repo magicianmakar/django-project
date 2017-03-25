@@ -261,7 +261,7 @@ def format_chq_errors(e):
     if not hasattr(e, 'response') or e.response.status_code != 422:
         return 'Server Error'
 
-    errors = e.response.json().get('errors')
+    errors = e.response.json().get('errors') or e.response.json().get('message')
 
     if not errors:
         return 'Server Error'
