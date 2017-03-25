@@ -25,5 +25,8 @@ class Command(BaseCommand):
     def generate_product_feeds(self):
         an_hour_ago = timezone.now() - datetime.timedelta(hours=1)
         statuses = FeedStatus.objects.filter(fb_access_at__gte=an_hour_ago)
+
+        self.stdout.write('Generate {} feeds'.format(len(statuses)))
+
         for status in statuses:
             generate_product_feed(status, nocache=True)
