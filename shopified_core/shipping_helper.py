@@ -53,8 +53,13 @@ def get_counrties_list():
     return load_countries().items()
 
 
-def country_from_code(country_code):
-    return load_countries()[country_code]
+def country_from_code(country_code, default=None):
+    countries = load_countries()
+
+    if default is not None:
+        return countries.get(country_code, default)
+    else:
+        return countries[country_code]
 
 
 def province_from_code(country_code, province_code):

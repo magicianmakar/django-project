@@ -3058,6 +3058,8 @@ def register(request, registration=None, subscribe_plan=None):
 
             RegistrationEvent.objects.create(user=request.user)
 
+            utils.wicked_report_add_user(request, new_user)
+
             if new_user.profile.plan.is_free:
                 return HttpResponseRedirect("/user/profile?w=1#plan")
             else:
