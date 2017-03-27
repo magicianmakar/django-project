@@ -149,3 +149,16 @@ class ShopifiedApi(ApiResponseMixin, View):
             })
 
         return JsonResponse(stores, safe=False)
+
+    def post_quick_save(self, request, **kwargs):
+        user = self.get_user(request, assert_login=True)
+
+        chq_count = user.profile.get_chq_stores().count()
+        shopify_count = user.profile.get_shopify_stores().count()
+
+        kwargs['target'] = 'save-for-later'
+
+        if not chq_count or (chq_count and shopify_count):
+            return ShopifyStoreApi.as_view()(request, **kwargs)
+        else:
+            return CHQStoreApi.as_view()(request, **kwargs)
