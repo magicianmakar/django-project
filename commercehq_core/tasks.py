@@ -51,6 +51,8 @@ def product_save(req_data, user_id):
             return {
                 'error': "Store: {}".format(e.message)
             }
+    else:
+        store = user.profile.get_chq_stores().first()
 
     original_url = json.loads(data).get('original_url')
     if not original_url:
