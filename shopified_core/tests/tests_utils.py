@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
+
 from django.test import TestCase
 from mock import Mock
 from collections import OrderedDict
 
 from shopified_core.utils import (
-    order_phone_number
+    order_phone_number,
+    hash_url_filename
 )
 
 from shopified_core.shipping_helper import (
@@ -81,6 +84,30 @@ class UtilsTestCase(TestCase):
         country_code, phone_number = order_phone_number(request, user, None, 'US')
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '')
+
+    def test_hash_url_filename(self):
+        self.assertEqual('1205230341.jpg', hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg'))
+        self.assertEqual('1384416073.png', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible.png?with=450&height=450'))
+        self.assertEqual('-1523470574.jpg', hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high'))
+        self.assertEqual('355713761.jpg', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible/?with=450&height=450'))
+        self.assertEqual('1384415896.jpg', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible.php?with=450&height=450'))
+
+        self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m%C3%A4nner-'
+                                                            r'digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-wasserdicht-relogio.jpg_50x50.jpg'))
+
+        self.assertEqual(hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg'),
+                         hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg?with=450&height=450'))
+
+    def test_hash_url_filename_unicode(self):
+        self.assertEqual('1786948925.jpg', hash_url_filename(u'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-männer-'
+                                                             u'digital-led-uhr-military-watch-armee-männer-armbanduhr-50-mt-wasserdicht-relogio.jpg_50x50.jpg'))
+
+        self.assertEqual('-1460244430.jpg', hash_url_filename(u'https://ae01.alicdn.com/kf/HTB1dvTSHVXXXXX.XFXXq6xXFXXXB/Findking-marke-hohe-'
+                                                              u'qualität-7-inch-chef-küchenmesser-keramik-messer-gemüse-keramik-messer.jpg_640x640.jpg'))
+
+        self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m'
+                                                            r'%C3%A4nner-digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-'
+                                                            r'wasserdicht-relogio.jpg_50x50.jpg'))
 
 
 class ShippingHelperTestCase(TestCase):
