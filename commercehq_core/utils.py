@@ -1,5 +1,5 @@
 import re
-import json
+import simplejson as json
 
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -8,10 +8,15 @@ from django.shortcuts import get_object_or_404
 
 from unidecode import unidecode
 
-from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
+from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
-from shopified_core.province_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import (
+    load_uk_provincess,
+    missing_province,
+    country_from_code,
+    province_from_code
+)
 
 
 def get_store_from_request(request):
@@ -122,11 +127,6 @@ def filter_products(res, fdata):
 def chq_customer_address(order):
     customer_address = {}
     shipping_address = order['shipping_address']
-    address_map = {
-        'street': 'address1',
-        'suite': 'address2',
-        'country': 'country_code',
-    }
 
     for k in shipping_address.keys():
         if shipping_address[k] and type(shipping_address[k]) is unicode:
@@ -134,8 +134,13 @@ def chq_customer_address(order):
         else:
             customer_address[k] = shipping_address[k]
 
-        if k in address_map:
-            customer_address[address_map[k]] = customer_address[k]
+    customer_address['address1'] = customer_address.get('street')
+    customer_address['address2'] = customer_address.get('suite')
+    customer_address['country_code'] = customer_address.get('country')
+    customer_address['province_code'] = customer_address.get('state')
+
+    customer_address['country'] = country_from_code(customer_address['country_code'])
+    customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
 
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
@@ -169,6 +174,9 @@ def get_tracking_orders(store, tracker_orders):
     ids = []
     for i in tracker_orders:
         ids.append(str(i.order_id))
+
+    if not len(ids):
+        return tracker_orders
 
     rep = store.request.post(
         url=store.get_api_url('orders', 'search'),
@@ -247,6 +255,46 @@ def order_id_from_name(store, order_name, default=None):
             return orders.pop()['id']
 
     return default
+
+
+def format_chq_errors(e):
+    if not hasattr(e, 'response') or e.response.status_code != 422:
+        return 'Server Error'
+
+    errors = e.response.json().get('errors') or e.response.json().get('message')
+
+    if not errors:
+        return 'Server Error'
+    elif isinstance(errors, basestring):
+        return errors
+
+    msg = []
+    for k, v in errors.items():
+        if type(v) is list:
+            error = u','.join(v)
+        else:
+            error = v
+
+        if k == 'base':
+            msg.append(error)
+        else:
+            msg.append(u'{}: {}'.format(k, error))
+
+    return u' | '.join(msg)
+
+
+def store_shipping_carriers(store):
+    rep = store.request.get(store.get_api_url('schipping-carriers'))
+    if rep.ok:
+        return rep.json()
+    else:
+        print 'error'
+        carriers = [
+            {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
+            {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'}
+        ]
+
+        return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
 
 
 class CommerceHQOrdersPaginator(Paginator):
@@ -346,6 +394,12 @@ class CommerceHQOrdersPaginator(Paginator):
             elif ',' in v:
                 filters[k] = v.split(',')
 
+        if safeInt(filters.get('order_number')):
+            track = CommerceHQOrderTrack.objects.filter(source_id=filters['order_number']).first()
+            if track:
+                del filters['order_number']
+                filters['id'] = track.order_id
+
         return filters
 
     def _orders_request(self):
@@ -371,6 +425,8 @@ class CommerceHQOrdersPaginator(Paginator):
                 params=params
             )
 
+        rep.raise_for_status()
+
         return rep.json()
 
     def _orders_count_request(self):
@@ -392,6 +448,8 @@ class CommerceHQOrdersPaginator(Paginator):
                 url=self.store.get_api_url('orders'),
                 params=params
             )
+
+        rep.raise_for_status()
 
         return rep.json()
 

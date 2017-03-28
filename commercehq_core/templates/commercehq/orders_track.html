@@ -5,6 +5,7 @@
 {% load perms_helper %}
 {% load url_tools %}
 {% load compress %}
+{% load cache %}
 
 {% block main-container %}
 
@@ -253,7 +254,10 @@
         </div>
     </div>
 
-{% include 'partial/fulfillment_modal.html' with notify=True only %}
+{% cache 600 chq_shipping_carriers2 store.id %}
+{% include 'partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+{% endcache %}
+
 {% include 'partial/tracking_update_modal.html' with store=store only %}
 
 {% endblock %}

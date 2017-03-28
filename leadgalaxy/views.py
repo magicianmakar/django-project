@@ -4,14 +4,11 @@ import base64
 import hmac
 import mimetypes
 import random
-import tempfile
 import time
 import traceback
 import urllib
 import urllib2
-import zipfile
 import zlib
-import os
 from hashlib import sha1
 from io import BytesIO
 from urllib import urlencode
@@ -31,7 +28,6 @@ from django.shortcuts import render, get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
-from django.utils.text import slugify
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
@@ -42,8 +38,9 @@ import keen
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template, version_compare, SimplePaginator
-from shopified_core.province_helper import load_uk_provincess, missing_province
+from shopified_core.utils import send_email_from_template, version_compare, get_mimetype
+from shopified_core.paginators import SimplePaginator
+from shopified_core.shipping_helper import load_uk_provincess, missing_province, get_counrties_list
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -963,28 +960,6 @@ def products_list(request, tpl='grid'):
 
 
 @login_required
-def product_image_download(request, pid):
-    product = get_object_or_404(ShopifyProduct, id=pid)
-    permissions.user_can_view(request.user, product)
-
-    images = json.loads(product.data)['images']
-    if not len(images):
-        raise Http404('No images to proccess')
-
-    filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product.id))
-
-    with zipfile.ZipFile(filename, 'w') as images_zip:
-        for i, img_url in enumerate(images):
-            image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
-            images_zip.writestr(image_name, requests.get(img_url).content)
-
-    s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
-    url = utils.aws_s3_upload(s3_path, input_filename=filename)
-
-    return JsonResponse({'url': url})
-
-
-@login_required
 def product_view(request, pid):
     #  AWS
 
@@ -1273,7 +1248,7 @@ def mapping_supplier(request, product_id):
         'variants_map': variants_map,
         'product_suppliers': product_suppliers,
         'mapping_config': mapping_config,
-        'countries': utils.get_countries(),
+        'countries': get_counrties_list(),
         'page': 'product',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
@@ -1475,13 +1450,16 @@ def acp_users_list(request):
         users = users.distinct()
 
     plans = GroupPlan.objects.all()
+    bundles = FeatureBundle.objects.all()
     profiles = UserProfile.objects.all()
+
     if q:
         profiles = profiles.filter(user__in=users)
 
     return render(request, 'acp/users_list.html', {
         'users': users,
         'plans': plans,
+        'bundles': bundles,
         'profiles': profiles,
         'users_count': users.count(),
         'random_cache': random_cache,
@@ -1987,13 +1965,22 @@ def user_profile(request):
         except ClippingMagic.DoesNotExist:
             clippingmagic = ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
+    captchacredit_plans = CaptchaCreditPlan.objects.all()
+    captchacredit = None
+    if not request.user.profile.plan.is_free:
+        try:
+            captchacredit = CaptchaCredit.objects.get(user=request.user)
+
+        except CaptchaCredit.DoesNotExist:
+            captchacredit = CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
+
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
 
     return render(request, 'user/profile.html', {
-        'countries': utils.get_countries(),
+        'countries': get_counrties_list(),
         'now': timezone.now(),
         'extra_bundles': extra_bundles,
         'bundles': bundles,
@@ -2001,6 +1988,8 @@ def user_profile(request):
         'stripe_customer': stripe_customer,
         'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,
+        'captchacredit_plans': captchacredit_plans,
+        'captchacredit': captchacredit,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
@@ -2045,7 +2034,7 @@ def pixlr_serve_image(request):
         raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
 
     fp = StringIO.StringIO(requests.get(img_url).content)
-    return HttpResponse(fp, content_type=utils.get_mimetype(img_url))
+    return HttpResponse(fp, content_type=get_mimetype(img_url))
 
 
 @login_required
@@ -2226,7 +2215,7 @@ def orders_view(request):
                 if len(order_ids):
                     orders = orders.filter(order_id__in=order_ids)
                 else:
-                    orders = orders.filter(order_id=query_order)
+                    orders = orders.filter(order_id=utils.safeInt(query_order, 0))
 
         if query_customer:
             orders = orders.filter(Q(customer_name__icontains=query_customer) |
@@ -2494,13 +2483,6 @@ def orders_view(request):
                         shipping_address_asci['name'] = '{} - {}'.format(shipping_address_asci['name'],
                                                                          shipping_address_asci['company'])
 
-                    phone = shipping_address_asci.get('phone')
-                    if not phone or models_user.get_config('order_default_phone') != 'customer':
-                        phone = models_user.get_config('order_phone_number')
-
-                    if phone:
-                        phone = re.sub('[^0-9/-]', '', phone)
-
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'quantity': el['quantity'],
@@ -2512,7 +2494,10 @@ def orders_view(request):
                         'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
-                            'phone': phone,
+                            'phone': {
+                                'number': shipping_address_asci.get('phone'),
+                                'country': shipping_address_asci['country_code']
+                            },
                             'note': models_user.get_config('order_custom_note'),
                             'epacket': bool(models_user.get_config('epacket_shipping')),
                             'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
@@ -2544,7 +2529,7 @@ def orders_view(request):
     cache.set_many(active_orders, timeout=3600)
 
     if store_order_synced:
-        countries = utils.get_countries()
+        countries = get_counrties_list()
     else:
         countries = []
 
@@ -2740,8 +2725,12 @@ def orders_place(request):
         for k in request.GET.keys():
             if k == 'SAPlaceOrder':
                 pass
+
             elif k == 'product':
-                event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])[0]
+                event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])
+                if event_data['product']:
+                    event_data['product'] = event_data['product'][0]
+
             elif k.startswith('SA'):
                 event_data[k[2:].lower()] = request.GET[k]
 
@@ -2776,6 +2765,8 @@ def orders_place(request):
 
 @login_required
 def locate(request, what):
+    from commercehq_core.models import CommerceHQOrderTrack
+
     if what == 'order':
         aliexpress_id = utils.safeInt(request.GET.get('aliexpress'))
 
@@ -2786,6 +2777,11 @@ def locate(request, what):
                     '{}?store={}&query_order={}&new=1&status=any&'
                     'financial=any&fulfillment=any&awaiting_order=false&connected=false'.format(
                         reverse('orders'), track.store.id, aliexpress_id))
+
+            track = CommerceHQOrderTrack.objects.filter(user=request.user.models_user, source_id=aliexpress_id).first()
+            if track:
+                return HttpResponseRedirect(
+                    '{}?store={}&query={}'.format(reverse('chq:orders_list'), track.store.id, aliexpress_id))
 
     elif what == 'product':
         if request.GET.get('shop') and request.GET.get('id'):
@@ -3062,6 +3058,8 @@ def register(request, registration=None, subscribe_plan=None):
 
             RegistrationEvent.objects.create(user=request.user)
 
+            utils.wicked_report_add_user(request, new_user)
+
             if new_user.profile.plan.is_free:
                 return HttpResponseRedirect("/user/profile?w=1#plan")
             else:
@@ -3153,8 +3151,15 @@ def subuser_perms_edit(request, user_id):
     else:
         form = SubuserPermissionsForm(initial=initial)
 
-    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username]
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('subusers')},
+        subuser.username,
+        'Permissions',
+    ]
+
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+
     return render(request, 'subuser_perms_edit.html', context)
 
 
@@ -3180,8 +3185,16 @@ def subuser_store_permissions(request, user_id, store_id):
     else:
         form = SubuserPermissionsForm(initial=initial)
 
-    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('subusers')},
+        subuser.username,
+        {'title': 'Permissions', 'url': reverse('subuser_perms_edit', args=(user_id,))},
+        store.title,
+    ]
+
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+
     return render(request, 'subuser_store_permissions.html', context)
 
 

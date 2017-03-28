@@ -1,4 +1,4 @@
-import json
+import simplejson as json
 
 from django.db import models
 

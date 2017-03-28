@@ -5,14 +5,27 @@ from django.core.exceptions import PermissionDenied
 from leadgalaxy.models import ShopifyStore
 
 
+def get_object_user(obj):
+    if hasattr(obj, 'user'):
+        return obj.user
+    else:
+        store = obj.store
+        if not store and hasattr(obj, 'product'):
+            store = obj.product.store
+
+        return store.user
+
+
 def user_can_add(user, obj):
+    obj_user = get_object_user(obj)
+
     if not user.is_subuser:
-        can = obj.user == user
+        can = obj_user == user
     else:
         if isinstance(obj, ShopifyStore):
             raise PermissionDenied('Sub-User can not add new stores')
 
-        can = obj.user == user.profile.subuser_parent
+        can = obj_user == user.profile.subuser_parent
 
         if can:
             if hasattr(obj, 'store'):
@@ -30,12 +43,14 @@ def user_can_add(user, obj):
 
 
 def user_can_view(user, obj):
+    obj_user = get_object_user(obj)
+
     if user.is_superuser:
         return True
     elif not user.is_subuser:
-        can = obj.user == user
+        can = obj_user == user
     else:
-        can = obj.user == user.profile.subuser_parent
+        can = obj_user == user.profile.subuser_parent
         if can:
             if isinstance(obj, ShopifyStore):
                 store = obj
@@ -54,13 +69,15 @@ def user_can_view(user, obj):
 
 
 def user_can_edit(user, obj):
+    obj_user = get_object_user(obj)
+
     if not user.is_subuser:
-        can = obj.user == user
+        can = obj_user == user
     else:
         if isinstance(obj, ShopifyStore):
             raise PermissionDenied('Sub-User can not edit stores')
 
-        can = obj.user == user.profile.subuser_parent
+        can = obj_user == user.profile.subuser_parent
         if can:
             if hasattr(obj, 'store'):
                 store = obj.store
@@ -77,13 +94,15 @@ def user_can_edit(user, obj):
 
 
 def user_can_delete(user, obj):
+    obj_user = get_object_user(obj)
+
     if not user.is_subuser:
-        can = obj.user == user
+        can = obj_user == user
     else:
         if isinstance(obj, ShopifyStore):
             raise PermissionDenied('Sub-User can not delete stores')
 
-        can = obj.user == user.profile.subuser_parent
+        can = obj_user == user.profile.subuser_parent
 
     if not can:
         raise PermissionDenied('Unautorized Action (0x{})'.format(hash('delete')))

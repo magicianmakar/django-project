@@ -1,0 +1,38 @@
+machine:
+  python:
+    version: 2.7.11
+
+  services:
+    - redis
+
+  environment:
+    DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
+    DATA_STORE_DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/store_test
+    REDISCLOUD_URL: redis://localhost:6379
+    REDISCLOUD_CACHE: redis://localhost:6379
+    S3_BUCKET_NAME: shopifiedapp-assets
+    DEBUG_APP: "TRUE"
+    SENDGRID_PASSWORD: ""
+    SENDGRID_USERNAME: ""
+    AWS_ACCESS_KEY_ID: ""
+    AWS_SECRET_ACCESS_KEY: ""
+    JVZOO_SECRET: ""
+    STRIPE_PUBLIC_KEY: ""
+    STRIPE_SECRET_KEY: ""
+    SHOPIFY_API_KEY: ""
+    SHOPIFY_API_SECRET: ""
+
+dependencies:
+  override:
+    - source ./scripts/prepare_build.sh
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+
+  cache_directories:
+    - "venv"
+
+
+test:
+  override:
+    - flake8
+    - python manage.py test

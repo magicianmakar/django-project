@@ -1,5 +1,5 @@
-import re
 import arrow
+import simplejson as json
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -19,12 +19,13 @@ from django.views.generic.detail import DetailView
 
 
 from shopified_core import permissions
+from shopified_core.paginators import SimplePaginator
+from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     safeInt,
     safeFloat,
     aws_s3_context,
-    clean_query_id,
-    SimplePaginator
+    clean_query_id
 )
 
 from .forms import CommerceHQStoreForm
@@ -41,24 +42,9 @@ from .utils import (
     commercehq_products,
     chq_customer_address,
     get_tracking_orders,
-    order_id_from_name
+    order_id_from_name,
+    store_shipping_carriers
 )
-
-
-@ajax_only
-@must_be_authenticated
-@no_subusers
-@csrf_protect
-@require_http_methods(['POST'])
-def store_create(request):
-    form = CommerceHQStoreForm(request.POST)
-
-    if form.is_valid():
-        form.instance.user = request.user.models_user
-        form.save()
-        return HttpResponse(status=204)
-
-    return render(request, 'commercehq/store_create_form.html', {'form': form})
 
 
 @ajax_only
@@ -74,7 +60,7 @@ def store_update(request, store_id):
         form.save()
         return HttpResponse(status=204)
 
-    return render(request, 'commercehq/store_update_form.html', {'form': form})
+    return render(request, 'commercehq/partial/store_update_form.html', {'form': form})
 
 
 class StoresList(ListView):
@@ -93,14 +79,6 @@ class StoresList(ListView):
         qs = super(StoresList, self).get_queryset()
         return qs.filter(user=self.request.user.models_user).filter(is_active=True)
 
-    def is_first_visit(self):
-        config = self.request.user.models_user.profile.get_config()
-        first_visit = config.get('_first_visit', True)
-        if first_visit:
-            self.request.user.set_config('_first_visit', False)
-
-        return first_visit
-
     def get_store_count(self):
         store_count = self.request.user.profile.get_shopify_stores().count()
         store_count += self.request.user.profile.get_chq_stores().count()
@@ -112,7 +90,6 @@ class StoresList(ListView):
         can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
         is_stripe = self.request.user.profile.plan.is_stripe()
         context['extra_stores'] = can_add and is_stripe and self.get_store_count() >= 1
-        context['first_visit'] = self.is_first_visit()
         context['breadcrumbs'] = ['Stores']
 
         return context
@@ -159,9 +136,9 @@ class BoardDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(BoardDetailView, self).get_context_data(**kwargs)
-        board = self.get_object()
+        permissions.user_can_view(self.request.user, self.object)
 
-        products = commercehq_products(self.request, board=board.id)
+        products = commercehq_products(self.request, board=self.object.id)
         paginator = SimplePaginator(products, 25)
         page = safeInt(self.request.GET.get('page'), 1)
         page = paginator.page(page)
@@ -169,7 +146,7 @@ class BoardDetailView(DetailView):
         context['paginator'] = paginator
         context['products'] = page
         context['current_page'] = page
-        context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('chq:boards_list')}, board.title]
+        context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('chq:boards_list')}, self.object.title]
 
         return context
 
@@ -181,6 +158,13 @@ class ProductsList(ListView):
 
     paginator_class = SimplePaginator
     paginate_by = 25
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(ProductsList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return commercehq_products(self.request)
@@ -209,6 +193,13 @@ class ProductDetailView(DetailView):
     template_name = 'commercehq/product_detail.html'
     context_object_name = 'product'
 
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(ProductDetailView, self).dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
 
@@ -228,6 +219,164 @@ class ProductDetailView(DetailView):
         return context
 
 
+class ProductMappingView(DetailView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/product_mapping.html'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductMappingView, self).get_context_data(**kwargs)
+
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['commercehq_product'] = product.sync()
+
+        images_map = {}
+        for option in product.parsed['options']:
+            for thumb in option['thumbnails']:
+                if thumb.get('image'):
+                    images_map[thumb['value']] = thumb['image']['path']
+
+        for idx, variant in enumerate(context['commercehq_product']['variants']):
+            for v in variant['variant']:
+                if v in images_map:
+                    context['commercehq_product']['variants'][idx]['image'] = images_map[v]
+                    continue
+
+            if len(variant['images']):
+                context['commercehq_product']['variants'][idx]['image'] = variant['images'][0]
+
+        current_supplier = self.request.GET.get('supplier')
+        if not current_supplier and product.default_supplier:
+            current_supplier = product.default_supplier.id
+
+        current_supplier = product.get_suppliers().get(id=current_supplier)
+
+        variants_map = product.get_variant_mapping(supplier=current_supplier)
+
+        seen_variants = []
+
+        for i, v in enumerate(context['commercehq_product']['variants']):
+            mapped = variants_map.get(str(v['id']))
+            if mapped:
+                options = mapped
+            else:
+                options = map(lambda a: {'title': a}, v['variant'])
+
+            try:
+                if type(options) not in [list, dict]:
+                    options = json.loads(options)
+
+                    if type(options) is int:
+                        options = str(options)
+            except:
+                pass
+
+            variants_map[str(v['id'])] = options
+            context['commercehq_product']['variants'][i]['default'] = options
+            seen_variants.append(str(v['id']))
+
+        for k in variants_map.keys():
+            if k not in seen_variants:
+                del variants_map[k]
+
+        product_suppliers = {}
+        for i in product.get_suppliers():
+            product_suppliers[i.id] = {
+                'id': i.id,
+                'name': i.get_name(),
+                'url': i.product_url
+            }
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('chq:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('chq:product_detail', args=[self.object.id])},
+            'Variants Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+            'variants_map': variants_map,
+            'product_suppliers': product_suppliers,
+            'current_supplier': current_supplier,
+        })
+
+        return context
+
+
+class MappingSupplierView(DetailView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/mapping_supplier.html'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingSupplierView, self).get_context_data(**kwargs)
+
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['commercehq_product'] = product.sync()
+
+        images_map = {}
+        for option in product.parsed['options']:
+            for thumb in option['thumbnails']:
+                if thumb.get('image'):
+                    images_map[thumb['value']] = thumb['image']['path']
+
+        for idx, variant in enumerate(context['commercehq_product']['variants']):
+            for v in variant['variant']:
+                if v in images_map:
+                    context['commercehq_product']['variants'][idx]['image'] = images_map[v]
+                    continue
+
+            if len(variant['images']):
+                context['commercehq_product']['variants'][idx]['image'] = variant['images'][0]
+
+        suppliers_map = product.get_suppliers_mapping()
+        default_supplier_id = product.default_supplier.id
+        for i, v in enumerate(context['commercehq_product']['variants']):
+            supplier = suppliers_map.get(str(v['id']), {'supplier': default_supplier_id, 'shipping': {}})
+            suppliers_map[str(v['id'])] = supplier
+
+            context['commercehq_product']['variants'][i]['supplier'] = supplier['supplier']
+            context['commercehq_product']['variants'][i]['shipping'] = supplier['shipping']
+
+        product_suppliers = {}
+        for i in product.get_suppliers():
+            product_suppliers[i.id] = {
+                'id': i.id,
+                'name': i.get_name(),
+                'url': i.product_url
+            }
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('chq:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('chq:product_detail', args=[self.object.id])},
+            'Advanced Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+
+            'suppliers_map': suppliers_map,
+            'product_suppliers': product_suppliers,
+            'shipping_map': product.get_shipping_mapping(),
+            'variants_map': product.get_all_variants_mapping(),
+            'mapping_config': product.get_mapping_config(),
+
+            'countries': get_counrties_list(),
+        })
+
+        return context
+
+
 class OrdersList(ListView):
     model = CommerceHQProduct
     template_name = 'commercehq/orders_list.html'
@@ -235,6 +384,13 @@ class OrdersList(ListView):
 
     paginator_class = CommerceHQOrdersPaginator
     paginate_by = 20
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return []
@@ -260,6 +416,7 @@ class OrdersList(ListView):
         }]
 
         context['orders'] = self.get_orders(context)
+        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
 
         return context
 
@@ -328,8 +485,8 @@ class OrdersList(ListView):
             paid_status = {
                 0: 'Not paid',
                 1: 'Paid',
-                2: 'Partially refunded',
-                3: 'Fully refunded',
+                -1: 'Partially refunded',
+                -2: 'Fully refunded',
             }
 
             order['fulfillment_status'] = order_status.get(order['status'])
@@ -397,13 +554,6 @@ class OrdersList(ListView):
 
                 customer_address = chq_customer_address(order)
 
-                phone = order['address']['phone']
-                if not phone or models_user.get_config('order_default_phone') != 'customer':
-                    phone = models_user.get_config('order_phone_number')
-
-                if phone:
-                    phone = re.sub('[^0-9/-]', '', phone)
-
                 order['customer_address'] = customer_address
 
                 order_data = {
@@ -417,7 +567,10 @@ class OrdersList(ListView):
                     'total': safeFloat(line['price'], 0.0),
                     'store': self.store.id,
                     'order': {
-                        'phone': phone,
+                        'phone': {
+                            'number': order['address']['phone'],
+                            'country': customer_address['country_code']
+                        },
                         'note': models_user.get_config('order_custom_note'),
                         'epacket': bool(models_user.get_config('epacket_shipping')),
                         'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
@@ -425,12 +578,11 @@ class OrdersList(ListView):
                 }
 
                 if product:
-                    # mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
-                    # if variant_id and mapped:
-                        # order_data['variant'] = mapped
-                    # else:
-                        # order_data['variant'] = line.get('variant', {}).get('variant', '')
-                    order_data['variant'] = line.get('variant', {}).get('variant', '')
+                    mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                    if variant_id and mapped:
+                        order_data['variant'] = mapped
+                    else:
+                        order_data['variant'] = line.get('variant', {}).get('variant', '')
 
                 if product and product.have_supplier():
                     orders_cache['order_{}'.format(order_data['id'])] = order_data
@@ -450,6 +602,13 @@ class OrdersList(ListView):
 class OrderPlaceRedirectView(RedirectView):
     permanent = False
     query_string = False
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrderPlaceRedirectView, self).dispatch(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
         try:
@@ -517,6 +676,13 @@ class OrdersTrackList(ListView):
     template_name = 'commercehq/orders_track.html'
     context_object_name = 'orders'
     paginate_by = 20
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         if not self.request.user.can('orders.use'):
@@ -589,6 +755,7 @@ class OrdersTrackList(ListView):
 
         context['store'] = self.get_store()
         context['orders'] = get_tracking_orders(self.get_store(), context['orders'])
+        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
 
         context['breadcrumbs'] = [{
             'title': 'Orders',

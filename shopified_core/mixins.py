@@ -39,7 +39,7 @@ class ApiResponseMixin():
             if request.POST:
                 return request.POST
             else:
-                if 'application/json' in request.META['CONTENT_TYPE']:
+                if 'application/json' in request.META.get('CONTENT_TYPE', ''):
                     return json.loads(request.body)
 
         elif request.method in ['GET', 'DELETE']:

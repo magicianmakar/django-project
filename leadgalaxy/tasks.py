@@ -2,17 +2,23 @@ from __future__ import absolute_import
 
 import requests
 import time
-
+import tempfile
+import zipfile
+import os.path
 from simplejson import JSONDecodeError
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
 from django.template.defaultfilters import truncatewords
+from django.utils.text import slugify
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
+
+from unidecode import unidecode
 
 from leadgalaxy.models import *
 from leadgalaxy import utils
@@ -435,7 +441,6 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_product_connection(self, store_id, shopify_id):
-    print store_id, shopify_id
     store = ShopifyStore.objects.get(id=store_id)
     order_utils.update_line_export(store, shopify_id)
 
@@ -563,3 +568,31 @@ def generate_order_export(self, order_export_id):
         raven_client.captureException()
 
         raise self.retry(exc=exc, countdown=5, max_retries=3)
+
+
+@celery_app.task(bind=True, base=CaptureFailure)
+def create_image_zip(self, images, product_id):
+    try:
+        product = ShopifyProduct.objects.get(pk=product_id)
+        filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product_id))
+
+        with zipfile.ZipFile(filename, 'w') as images_zip:
+            for i, img_url in enumerate(images):
+                image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                images_zip.writestr(image_name, requests.get(img_url).content)
+
+        s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
+        url = utils.aws_s3_upload(s3_path, input_filename=filename)
+
+        product.store.pusher_trigger('images-download', {
+            'success': True,
+            'product': product_id,
+            'url': url
+        })
+    except Exception:
+        raven_client.captureException()
+
+        product.store.pusher_trigger('images-download', {
+            'success': False,
+            'product': product_id,
+        })

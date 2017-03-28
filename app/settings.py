@@ -292,7 +292,9 @@ BROKER_TRANSPORT_OPTIONS = {'max_connections': 10}
 BROKER_POOL_LIMIT = 10
 CELERYD_CONCURRENCY = 4
 CELERY_ROUTES = {
-    "leadgalaxy.tasks.export_product": {"queue": "priority_high"}
+    "leadgalaxy.tasks.export_product": {"queue": "priority_high"},
+    "commercehq_core.tasks.product_export": {"queue": "priority_high"},
+    "commercehq_core.tasks.product_update": {"queue": "priority_high"}
 }
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
@@ -322,3 +324,5 @@ CLIPPINGMAGIC_API_SECRET = os.environ.get('CLIPPINGMAGIC_API_SECRET')
 FACEBOOK_PIXEL_ID = os.environ.get('FACEBOOK_PIXEL_ID')
 
 KEEN_PROJECT_ID = os.environ.get('KEEN_PROJECT_ID')
+
+WICKED_REPORTS_API = os.environ.get('WICKED_REPORTS_API')

@@ -3,7 +3,6 @@ import simplejson as json
 import requests
 import hashlib
 import pytz
-import collections
 import time
 import base64
 import boto
@@ -15,7 +14,7 @@ import re
 import shutil
 import tempfile
 import ctypes
-from urlparse import urlparse, parse_qs, urlsplit, urlunsplit
+import urlparse
 from urllib import urlencode
 from hashlib import sha256
 from math import ceil
@@ -59,7 +58,7 @@ def get_domain(url, full=False):
     if not url.startswith('http'):
         url = u'http://{}'.format(url)
 
-    hostname = urlparse(url).hostname
+    hostname = urlparse.urlparse(url).hostname
     if hostname is None:
         return hostname
 
@@ -96,10 +95,6 @@ def remove_link_query(link):
         link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
 
     return re.sub('([?#].*)$', r'', link)
-
-
-def get_mimetype(url):
-    return mimetypes.guess_type(remove_link_query(url))[0]
 
 
 def random_hash():
@@ -205,11 +200,10 @@ def apply_shared_registration(user, registration):
 
 
 def smart_board_by_product(user, product):
-    product_info = json.loads(product.data)
     product_info = {
-        'title': product_info.get('title', '').lower(),
-        'tags': product_info.get('tags', '').lower(),
-        'type': product_info.get('type', '').lower(),
+        'title': product.title,
+        'tags': product.tag,
+        'type': product.product_type,
     }
 
     for i in user.shopifyboard_set.all():
@@ -223,11 +217,11 @@ def smart_board_by_product(user, product):
             if product_added:
                 break
 
-            if not len(config.get(j, '')) or not len(product_info[j]):
+            if not len(config.get(j, '')) or not product_info[j]:
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j]:
+                if f.lower() in product_info[j].lower():
                     i.products.add(product)
                     product_added = True
 
@@ -238,12 +232,11 @@ def smart_board_by_product(user, product):
 
 
 def smart_board_by_board(user, board):
-    for product in user.shopifyproduct_set.all():
-        product_info = json.loads(product.data)
+    for product in user.shopifyproduct_set.only('id', 'title', 'product_type', 'tag').all():
         product_info = {
-            'title': product_info.get('title', '').lower(),
-            'tags': product_info.get('tags', '').lower(),
-            'type': product_info.get('type', '').lower(),
+            'title': product.title,
+            'tags': product.tag,
+            'type': product.product_type,
         }
 
         try:
@@ -256,11 +249,11 @@ def smart_board_by_board(user, board):
             if product_added:
                 break
 
-            if not len(config.get(j, '')) or not len(product_info[j]):
+            if not len(config.get(j, '')) or not product_info[j]:
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j]:
+                if f.lower() in product_info[j].lower():
                     board.products.add(product)
                     product_added = True
 
@@ -370,6 +363,56 @@ def slack_invite(data, team='users'):
 
     except:
         raven_client.captureException()
+
+
+def wicked_report_add_user(request, user):
+    try:
+
+        from shopified_core.shipping_helper import country_from_code
+
+        if not settings.WICKED_REPORTS_API:
+            return
+
+        user_ip = request.META['HTTP_X_REAL_IP']
+
+        ipinfo = requests.get(
+            url='http://ipinfo.io/{}'.format(user_ip),
+            timeout=3
+        )
+
+        ipinfo = ipinfo.json() if ipinfo.ok else {}
+
+        data = {
+            'SourceSystem': 'ActiveCampaign',
+            'SourceID': user.id,
+            'CreateDate': arrow.get(user.date_joined).format("YYYY-MM-DD HH:mm:ss"),
+            'Email': user.email,
+            'FirstName': (user.first_name or '').encode('utf-8'),
+            'LastName': (user.last_name or '').encode('utf-8'),
+            'City': ipinfo.get('city'),
+            'State': ipinfo.get('region'),
+            'Country': country_from_code(ipinfo.get('country'), default=''),
+            'IP_Address': user_ip,
+        }
+
+        rep = requests.post(
+            url='https://api.wickedreports.com/contacts',
+            headers={'apikey': settings.WICKED_REPORTS_API},
+            json=data,
+            timeout=3
+        )
+
+        rep.raise_for_status()
+
+        if not user.profile.country and ipinfo.get('country'):
+            user.profile.country = ipinfo.get('country')
+            user.profile.save()
+
+    except Exception as e:
+        raven_client.captureException(
+            level='warning',
+            extra={'response': e.response.text if hasattr(e, 'response') else ''}
+        )
 
 
 def aliexpress_shipping_info(aliexpress_id, country_code):
@@ -879,6 +922,9 @@ def get_tracking_orders(store, tracker_orders):
         params=params
     )
 
+    if not rep.ok:
+        return tracker_orders
+
     orders = {}
     lines = {}
 
@@ -1281,22 +1327,22 @@ def set_url_query(url, param_name, param_value):
     Given a URL, set or replace a query parameter and return the modified URL.
     """
 
-    scheme, netloc, path, query_string, fragment = urlsplit(url)
-    query_params = parse_qs(query_string)
+    scheme, netloc, path, query_string, fragment = urlparse.urlsplit(url)
+    query_params = urlparse.parse_qs(query_string)
     query_params[param_name] = [param_value]
     new_query_string = urlencode(query_params, doseq=True)
-    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+    return urlparse.urlunsplit((scheme, netloc, path, new_query_string, fragment))
 
 
 def affiliate_link_set_query(url, name, value):
     if '/deep_link.htm' in url:
-        dl_target_url = parse_qs(urlparse(url).query)['dl_target_url'].pop()
+        dl_target_url = urlparse.parse_qs(urlparse.urlparse(url).query)['dl_target_url'].pop()
         dl_target_url = set_url_query(dl_target_url, name, value)
 
         return set_url_query(url, 'dl_target_url', dl_target_url)
     elif 'alitems.com' in url:
         if name != 'ulp':
-            ulp = parse_qs(urlparse(url).query)['ulp'].pop()
+            ulp = urlparse.parse_qs(urlparse.urlparse(url).query)['ulp'].pop()
             ulp = set_url_query(ulp, name, value)
 
             return set_url_query(url, 'ulp', ulp)
@@ -1395,14 +1441,6 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
         raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
-
-
-def get_countries():
-    country_names = pytz.country_names
-    country_names = collections.OrderedDict(sorted(country_names.items(), key=lambda i: i[1]))
-    countries = zip(country_names.keys(), country_names.values())
-
-    return countries
 
 
 def get_timezones(country=None):

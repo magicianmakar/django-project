@@ -21,7 +21,13 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import send_email_from_template, version_compare, orders_update_limit
+from shopified_core.shipping_helper import get_counrties_list
+from shopified_core.utils import (
+    send_email_from_template,
+    version_compare,
+    orders_update_limit,
+    order_phone_number
+)
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -314,7 +320,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Export Error', status=500)
 
         if count >= 125:
-            return self.api_error('Export Error', status=500)
+            return self.api_error('Export Error', status=404)
 
         if not task.ready():
             return self.api_success({
@@ -588,7 +594,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         board.save()
 
-        utils.smart_board_by_board(user.models_user, board)
+        # utils.smart_board_by_board(user.models_user, board)
 
         return self.api_success()
 
@@ -702,18 +708,19 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
-        plan = GroupPlan.objects.get(id=data.get('plan'))
 
         if data.get('allow_trial'):
             target_user.stripe_customer.can_trial = True
             target_user.stripe_customer.save()
-            return JsonResponse({'status': 'ok'})
+            return self.api_success()
 
         if target_user.is_recurring_customer():
             return self.api_error(
                 ('Plan should be changed from Stripe Dashboard:\n'
                  'https://dashboard.stripe.com/customers/{}').format(target_user.stripe_customer.customer_id),
                 status=422)
+
+        plan = GroupPlan.objects.get(id=data.get('plan'))
         try:
             profile = target_user.profile
             target_user.profile.plan = plan
@@ -729,6 +736,19 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'title': plan.title
             }
         })
+
+    def post_add_bundle(self, request, user, data):
+        if not user.is_superuser:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        bundle = FeatureBundle.objects.get(id=data.get('bundle'))
+
+        if target_user.is_subuser:
+            return self.api_error('Sub User Account', status=422)
+        target_user.profile.bundles.add(bundle)
+
+        return self.api_success()
 
     def delete_access_token(self, request, user, data):
         if not user.is_superuser:
@@ -840,7 +860,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            tasks.update_product_connection(product.store.id, shopify_id)
+            tasks.update_product_connection.delay(product.store.id, shopify_id)
 
             tasks.update_shopify_product(product.store.id, shopify_id, product_id=product.id)
 
@@ -856,7 +876,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product.save()
 
             cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            tasks.update_product_connection(product.store.id, shopify_id)
+            tasks.update_product_connection.delay(product.store.id, shopify_id)
 
         return self.api_success()
 
@@ -942,7 +962,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             supplier = ProductSupplier.objects.get(id=data.get('export'), product=product)
-            permissions.user_can_edit(user, product_supplier)
+            permissions.user_can_edit(user, supplier)
         except ProductSupplier.DoesNotExist:
             return self.api_error('Supplier not found.\nPlease reload the page and try again.')
 
@@ -1038,9 +1058,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         })
 
     def get_user_config(self, request, user, data):
-        if not user.can('edit_settings.sub'):
-            raise PermissionDenied()
-
         if data.get('current'):
             profile = user.profile
         else:
@@ -1183,6 +1200,34 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def get_captcha_credits(self, request, user, data):
+        if not user.can('aliexpress_captcha.use'):
+            raise PermissionDenied()
+
+        try:
+            credits = user.models_user.captchacredit.remaining_credits
+        except:
+            credits = 0
+
+        return self.api_success({
+            'credits': credits,
+            'user': user.models_user.username
+        })
+
+    def post_captcha_credits(self, request, user, data):
+        if not user.can('aliexpress_captcha.use'):
+            raise PermissionDenied()
+
+        if user.models_user.captchacredit and user.models_user.captchacredit.remaining_credits > 0:
+            user.models_user.captchacredit.remaining_credits -= 1
+            user.models_user.captchacredit.save()
+        else:
+            return self.api_error('Insufficient Credits', status=402)
+
+        return self.api_success({
+            'remaining_credits': user.models_user.captchacredit.remaining_credits
+        })
+
     def get_product_config(self, request, user, data):
         if not user.can('price_changes.use'):
             raise PermissionDenied()
@@ -1315,6 +1360,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', False)
             order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
+
+            phone = order['order']['phone']
+            if type(phone) is dict:
+                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
+                order['order']['phone'] = phone_number
+                order['order']['phoneCountry'] = phone_country
 
             try:
                 track = ShopifyOrderTrack.objects.get(
@@ -1665,7 +1716,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         aliexpress_ids = data.get('aliexpress_id')
         if aliexpress_ids:
-            aliexpress_ids = aliexpress_ids.split(',')
+            aliexpress_ids = aliexpress_ids if type(aliexpress_ids) is list else aliexpress_ids.split(',')
         else:
             try:
                 aliexpress_ids = json.loads(request.body)['aliexpress_id']
@@ -1707,33 +1758,34 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         tracks.append(track)
 
             for track in tracks:
-                if not track.order:
-                    continue
-
-                shopify_summary = [
-                    u'Shopify Order: {}'.format(track.order['name']),
-                    u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
-                    u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
-                ]
-
-                for line in track.order['line_items']:
-                    shopify_summary.append(u'<br><b>{}x {}</b> {} - {}'.format(
-                        line['quantity'],
-                        money_format(line['price'], track.store),
-                        truncatewords(line['title'], 10),
-                        truncatewords(line['variant_title'] or '', 5)
-                    ).rstrip('- ').replace(' ...', '...'))
-
                 info = {
                     'aliexpress_id': track.source_id,
                     'shopify_order': track.order_id,
-                    'shopify_number': track.order['name'],
-                    'shopify_status': track.order['fulfillment_status'],
-                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
-                    'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
-                    'shopify_summary': "<br>".join(shopify_summary),
                     'tracking_number': track.source_tracking,
+                    'shopify_url': track.store.get_link('/admin/orders/{}'.format(track.order_id)),
                 }
+
+                if track.order:
+                    shopify_summary = [
+                        u'Shopify Order: {}'.format(track.order['name']),
+                        u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
+                        u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
+                    ]
+
+                    for line in track.order['line_items']:
+                        shopify_summary.append(u'<br><b>{}x {}</b> {} - {}'.format(
+                            line['quantity'],
+                            money_format(line['price'], track.store),
+                            truncatewords(line['title'], 10),
+                            truncatewords(line['variant_title'] or '', 5)
+                        ).rstrip('- ').replace(' ...', '...'))
+
+                    info.update({
+                        'shopify_number': track.order['name'],
+                        'shopify_status': track.order['fulfillment_status'],
+                        'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
+                        'shopify_summary': "<br>".join(shopify_summary),
+                    })
 
                 if track.source_id in orders:
                     orders[track.source_id].append(info)
@@ -1816,7 +1868,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return JsonResponse(utils.get_timezones(data.get('country')), safe=False)
 
     def get_countries(self, request, user, data):
-        return JsonResponse(utils.get_countries(), safe=False)
+        return JsonResponse(get_counrties_list(), safe=False)
 
     def post_user_profile(self, request, user, data):
         form = UserProfileForm(data)
@@ -2149,5 +2201,21 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         id = int(data.get('id'))
         template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
         template.delete()
+
+        return self.api_success()
+
+    def get_product_image_download(self, request, user, data):
+        try:
+            product = ShopifyProduct.objects.get(id=data.get('product'))
+            permissions.user_can_view(user, product)
+
+        except ShopifyProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        images = json.loads(product.data).get('images')
+        if not images:
+            return self.api_error('Product doesn\'t have any images', status=422)
+
+        tasks.create_image_zip.delay(images, product.id)
 
         return self.api_success()

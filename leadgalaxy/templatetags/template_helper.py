@@ -80,6 +80,16 @@ def remove_link_query(context, link):
 @register.simple_tag
 def shopify_image_thumb(link, size='small', crop=''):
     if link:
+        if type(link) is dict:
+            if link.get('src'):
+                link = link['src']
+
+            elif link.get('path'):
+                link = link['path']
+
+            else:
+                return None
+
         if 'cdn.shopify.com' in link.lower():
             if crop:
                 crop = '_crop_{}'.format(crop)

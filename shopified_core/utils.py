@@ -4,6 +4,7 @@ import base64
 import hashlib
 import time
 import hmac
+import mimetypes
 import urlparse
 import ctypes
 import simplejson as json
@@ -11,13 +12,13 @@ import simplejson as json
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.cache import cache
-from django.core.paginator import Paginator
 from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.crypto import get_random_string
 
 import arrow
 import bleach
+import phonenumbers
 from tld import get_tld
 
 
@@ -51,6 +52,23 @@ def hash_text(text):
 def random_hash():
     token = get_random_string(32)
     return hashlib.md5(token).hexdigest()
+
+
+def all_possible_cases(arr, top=True):
+    sep = '_'.join([str(i) for i in range(10)])
+
+    if (len(arr) == 0):
+        return []
+    elif (len(arr) == 1):
+        return arr[0]
+    else:
+        result = []
+        allCasesOfRest = all_possible_cases(arr[1:], False)
+        for c in allCasesOfRest:
+            for i in arr[0]:
+                result.append('{}{}{}'.format(i, sep, c))
+
+        return map(lambda k: k.split(sep), result) if top else result
 
 
 def get_domain(url, full=False):
@@ -108,6 +126,11 @@ def hash_url_filename(s):
         hashval = int(((hashval << 5) - hashval) + ch)
         hashval |= 0
     return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
+
+
+def get_mimetype(url, default=None):
+    content_type = mimetypes.guess_type(remove_link_query(url))[0]
+    return content_type if content_type else default
 
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
@@ -258,25 +281,34 @@ def orders_update_limit(orders_count, check_freq=30, total_time=1440, min_count=
     return max(limit, min_count)
 
 
-class SimplePaginator(Paginator):
-    current_page = 0
+def order_phone_number(request, user, phone_number, customer_country):
+    if not phone_number or user.get_config('order_default_phone') != 'customer':
+        phone_number = user.get_config('order_phone_number')
+        country = user.profile.country
+    else:
+        country = customer_country
 
-    def page(self, number):
-        self.current_page = number
-        return super(SimplePaginator, self).page(number)
+    if phone_number:
+        phone_number = ''.join(re.findall('[0-9]+', phone_number))
 
-    def page_range(self):
-        """
-        Returns a 1-based range of pages for iterating through within
-        a template for loop.
-        """
-        page_count = self.num_pages
+    version = request.META.get('HTTP_X_EXTENSION_VERSION')
+    if not version or version_compare(version, ' 1.61.5') <= 0:
+        return None, phone_number
 
-        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
-        if 1 not in pages:
-            pages = [1, None] + pages
+    if not phone_number or re.match('^0+$', phone_number):
+        return '+{}|{}'.format(max(phonenumbers.country_code_for_region(customer_country), 1), phone_number).split('|')
 
-        if page_count not in pages:
-            pages = pages + [None, page_count]
+    try:
+        parsed = phonenumbers.parse(phone_number, country)
+        return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
+    except:
+        pass
 
-        return pages
+    try:
+        number = '+' + phone_number[2:] if phone_number.startswith('00') else phone_number
+        parsed = phonenumbers.parse(number, country)
+        return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
+    except:
+        pass
+
+    return None, phone_number

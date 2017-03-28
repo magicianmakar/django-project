@@ -21,11 +21,11 @@
         </div>
 
         <div class="row m-t flex-group">
-            <div class="col-md-3 ">
+            <div class="col-md-3">
                 <label for="clippingmagic_plan">Purchase Credits:</label>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <select class="form-control" id="clippingmagic_plan"
                         name="clippingmagic_plan">
                     <option value="">Select Credits</option>
@@ -37,8 +37,8 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3" >
-                <button class="btn btn-primary" id="renew_clippingmagic" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
+            <div class="col-md-2" >
+                <button class="btn btn-primary" id="renew_clippingmagic" data-title="ClippingMagic Credits" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
             </div>
         </div>
     </div>

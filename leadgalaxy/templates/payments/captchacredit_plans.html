@@ -1,0 +1,50 @@
+{% load template_helper %}
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        Manage Auto Captcha Credits
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-3" >
+                <span class="">
+                    <b>Remaining Credits:</b>
+                </span>
+            </div>
+
+            <div class="col-md-3" >
+                <span>
+                    <b>{{ captchacredit.remaining_credits|default:"0" }}</b>
+                    Credit{{ captchacredit.remaining_credits|pluralize }}
+                </span>
+            </div>
+        </div>
+
+        <div class="row m-t flex-group">
+            <div class="col-md-3 ">
+                <label for="captchacredit_plan">Purchase Credits:</label>
+            </div>
+
+            <div class="col-md-3">
+                <select class="form-control" id="captchacredit_plan"
+                        name="captchacredit_plan">
+                    <option value="">Select Credits</option>
+                    {% for item in captchacredit_plans %}
+                        <option value="{{item.id}}" data-amount="{% money_format item.amount %}"
+                                data-credits="{{item.allowed_credits}}">
+                            {{item.allowed_credits}} Credits / {% money_format item.amount %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2" >
+                <button class="btn btn-primary" id="renew_captchacredit" data-title="AutoCaptcha Credits" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
+            </div>
+
+            <div class="col-md-4">
+                1 credit equals 1 attempt to solve AliExpress Captcha.
+            </div>
+        </div>
+    </div>
+</div>

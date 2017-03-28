@@ -6,6 +6,7 @@ import simplejson as json
 from django.conf import settings
 from django.core import serializers
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import F
 from django.views.generic import View
 from django.utils import timezone
@@ -23,6 +24,7 @@ from shopified_core.utils import (
     remove_link_query,
     version_compare,
     orders_update_limit,
+    order_phone_number
 )
 
 import tasks
@@ -565,6 +567,67 @@ class CHQStoreApi(ApiResponseMixin, View):
         else:
             return self.api_error('Order not found.', status=404)
 
+    def post_store_add(self, request, user, data):
+        url = data.get('api_url').strip()
+
+        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', url)
+
+        if len(url):
+            url = url.pop()
+        else:
+            return self.api_error('CommerceHQ stores URL is not correct', status=422)
+
+        if user.is_subuser:
+            return self.api_error('Sub-Users can not add new stores.', status=401)
+
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
+
+        if not can_add:
+            if user.profile.plan.is_free and user.can_trial():
+                from shopify_oauth.views import subscribe_user_to_default_plan
+
+                subscribe_user_to_default_plan(user)
+            else:
+                raven_client.captureMessage(
+                    'Add Extra CHQ Store',
+                    level='warning',
+                    extra={
+                        'user': user.email,
+                        'plan': user.profile.plan.title,
+                        'stores': user.profile.get_chq_stores().count()
+                    }
+                )
+
+                if user.profile.plan.is_free or user.can_trial():
+                    return self.api_error('Please Activate your account first by visiting:\n{}').format(
+                        request.build_absolute_uri('/user/profile#plan'), status=401)
+                else:
+                    return self.api_error('Your plan does not support connecting another Shopify store. '
+                                          'Please contact support@shopifiedapp.com to learn how to connect more stores.')
+
+        store = CommerceHQStore(
+            title=data.get('title').strip(),
+            api_url=url,
+            api_key=data.get('api_key').strip(),
+            api_password=data.get('api_password').strip(),
+            user=user.models_user)
+
+        permissions.user_can_add(user, store)
+
+        try:
+            rep = store.request.get(
+                store.get_api_url('products'),
+                params={'fields': 'id', 'size': 1}
+            )
+
+            rep.raise_for_status()
+        except:
+            return self.api_error('API credetnails is not correct', status=500)
+
+        store.save()
+
+        return self.api_success()
+
     def delete_store(self, request, user, data):
         if user.is_subuser:
             raise PermissionDenied()
@@ -703,7 +766,7 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         board.save()
 
-        utils.smart_board_by_board(user.models_user, board)
+        # utils.smart_board_by_board(user.models_user, board)
 
         return self.api_success()
 
@@ -813,6 +876,12 @@ class CHQStoreApi(ApiResponseMixin, View):
             order['fast_checkout'] = user.get_config('_fast_checkout', False)
             order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
 
+            phone = order['order']['phone']
+            if type(phone) is dict:
+                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
+                order['order']['phone'] = phone_number
+                order['order']['phoneCountry'] = phone_country
+
             try:
                 track = CommerceHQOrderTrack.objects.get(
                     store=store,
@@ -873,6 +942,59 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         order.hidden = data.get('hide') == 'true'
         order.save()
+
+        return self.api_success()
+
+    def post_fulfill_order(self, request, user, data):
+        try:
+            store = CommerceHQStore.objects.get(id=data.get('fulfill-store'))
+            permissions.user_can_view(user, store)
+
+            # if not user.can('place_orders.sub', store):
+            #     raise PermissionDenied()
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        fulfillment_data = {
+            'store_id': store.id,
+            'line_id': int(data.get('fulfill-line-id')),
+            'order_id': data.get('fulfill-order-id'),
+            'source_tracking': data.get('fulfill-traking-number'),
+            'use_usps': data.get('fulfill-tarcking-link') == 'usps',
+            'user_config': {
+                'send_shipping_confirmation': data.get('fulfill-notify-customer'),
+                'validate_tracking_number': False,
+                'aftership_domain': user.get_config('aftership_domain', 'track')
+            }
+        }
+
+        # api_data = utils.order_track_fulfillment(**fulfillment_data)
+        api_data = {
+            "data": [{
+                "fulfilment_id": cache.get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
+                "tracking_number": fulfillment_data['source_tracking'],
+                "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
+                "items": [{
+                    "id": fulfillment_data['line_id'],
+                    "quantity": cache.get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                }]
+            }],
+            "notify": (data.get('fulfill-notify-customer') == 'yes')
+        }
+
+        rep = store.request.post(
+            url=store.get_api_url('orders', data.get('fulfill-order-id'), 'shipments'),
+            json=api_data
+        )
+
+        try:
+            rep.raise_for_status()
+        except:
+            raven_client.captureException(
+                level='warning',
+                extra={'response': rep.text})
+
+            return self.api_error('CommerceHQ API Error')
 
         return self.api_success()
 
@@ -949,3 +1071,82 @@ class CHQStoreApi(ApiResponseMixin, View):
         product.sync()
 
         return self.api_success({'product': product.id})
+
+    def post_variants_mapping(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        supplier = product.get_suppliers().get(id=data.get('supplier'))
+
+        mapping = {}
+        for k in data:
+            if k != 'product' and k != 'supplier':
+                mapping[k] = data[k]
+
+        if not product.default_supplier:
+            supplier = product.get_supplier_info()
+            product.default_supplier = CommerceHQSupplier.objects.create(
+                store=product.store,
+                product=product,
+                product_url=product.get_original_info().get('url', ''),
+                supplier_name=supplier.get('name'),
+                supplier_url=supplier.get('url'),
+                is_default=True
+            )
+
+            supplier = product.default_supplier
+
+        product.set_variant_mapping(mapping, supplier=supplier)
+        product.save()
+
+        return self.api_success()
+
+    def post_suppliers_mapping(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        suppliers_cache = {}
+
+        mapping = {}
+        shipping_map = {}
+
+        with transaction.atomic():
+            for k in data:
+                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
+                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
+                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
+                    supplier_id, variant_id = k.replace('variant_', '').split('_')
+                    supplier = suppliers_cache.get(supplier_id, product.get_suppliers().get(id=supplier_id))
+
+                    suppliers_cache[supplier_id] = supplier
+                    var_mapping = {variant_id: data[k]}
+
+                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True)
+
+                elif k == 'config':
+                    product.set_mapping_config({'supplier': data[k]})
+
+                elif k != 'product':  # Save the variant -> supplier mapping
+                    mapping[k] = json.loads(data[k])
+
+            product.set_suppliers_mapping(mapping)
+            product.set_shipping_mapping(shipping_map)
+            product.save()
+
+        return self.api_success()
+
+    def get_product_image_download(self, request, user, data):
+        try:
+            product = CommerceHQProduct.objects.get(id=data.get('product'))
+            permissions.user_can_view(user, product)
+
+        except CommerceHQProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        images = json.loads(product.data).get('images')
+        if not images:
+            return self.api_error('Product doesn\'t have any images', status=422)
+
+        tasks.create_image_zip.delay(images, product.id)
+
+        return self.api_success()

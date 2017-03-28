@@ -48,6 +48,32 @@ class TagsTestCase(TestCase):
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='64x64', crop='center'),
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_64x64_crop_center.jpg?v=1445304129')
 
+    def test_shopify_image_obj_path(self):
+        img = ('https://s3-us-west-2.amazonaws.com/commercehq-userfiles-master/commercehq-store29857086'
+               '/uploads/1489910485_59ef386e8d0880257db38f529394b4f3bb4ad05b.jpg')
+
+        obj = {
+            'id': 298,
+            'max_size': 8,
+            'path': img
+        }
+
+        self.assertEqual(template_helper.shopify_image_thumb(obj), img)
+
+    def test_shopify_image_obj_src(self):
+        img = ("https://cdn.shopify.com/s/files/1/1013/1174/products/5000-mah-Battery-Everycom-S6-plus-"
+               "mini-phone-projector-dlp-wifi-portable-Handheld-smartphone-Projector-Android_a728ca1f-"
+               "3ee1-4d7a-bad7-4db9b2be7260.jpg?v=1478952978")
+
+        obj = {
+            "position": 1,
+            "src": img,
+            "updated_at": "2016-11-12T06:16:18-06:00",
+            "variant_ids": []
+        }
+
+        self.assertEqual(template_helper.shopify_image_thumb(obj), img.replace('4db9b2be7260.jpg', '4db9b2be7260_small.jpg'))
+
     def test_money_format(self):
         store = Mock()
         store.currency_format = "${{amount}}"

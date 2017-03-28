@@ -33,8 +33,14 @@
                                     {% include 'partial/help_tooltip.html' with help="Which tracking link would you like to send to the customer?<br><b>AfterShip:</b> Track the Order with <a href='aftership.com'>aftership.com</a><br><b>USPS:</b> Track Order in USPS website, Select this option for ePacket (US customers only)" %}
                                 </label>
                                 <select class="form-control" name="fulfill-tarcking-link" id="fulfill-notify-customer" style="width:120px">
+                                    {% if shipping_carriers %}
+                                        {% for carrier in shipping_carriers %}
+                                            <option value="{{carrier.id}}">{{carrier.title}}</option>
+                                        {% endfor %}
+                                    {% else %}
                                     <option value="aftership">AfterShip</option>
                                     <option value="usps">USPS</option>
+                                    {% endif %}
                                 </select>
                             </div>
 

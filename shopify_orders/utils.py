@@ -6,7 +6,7 @@ import requests
 from unidecode import unidecode
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopified_core.province_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import load_uk_provincess, missing_province
 
 
 def safeInt(v, default=0):
@@ -266,7 +266,7 @@ def order_id_from_name(store, order_name, default=None):
         'fulfillment_status': 'any',
         'financial_status': 'any',
         'fields': 'id',
-        'name': order_name
+        'name': order_name.strip()
     }
 
     rep = requests.get(

@@ -1,5 +1,5 @@
 from django import template
-from urlparse import urlparse, urlunparse
+import urlparse
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
 
@@ -46,7 +46,7 @@ def sort_icon(context, field, value):
 @register.simple_tag(takes_context=True)
 def url_toggle(context, field, values):
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
     query_dict = QueryDict(query.encode('utf8')).copy()
 
     values = values.split(',')
@@ -60,38 +60,38 @@ def url_toggle(context, field, values):
     query_dict[field] = values[index]
 
     query = query_dict.urlencode()
-    return urlunparse((scheme, netloc, path, params, query, fragment))
+    return urlparse.urlunparse((scheme, netloc, path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)
 def url_replace(context, field, value):
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
     query_dict = QueryDict(query.encode('utf8')).copy()
     query_dict[field] = value
     query = query_dict.urlencode()
-    return urlunparse((scheme, netloc, path, params, query, fragment))
+    return urlparse.urlunparse((scheme, netloc, path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)
 def url_multi_replace(context, **kwargs):
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
     query_dict = QueryDict(query.encode('utf8')).copy()
 
     for k, v in kwargs.iteritems():
         query_dict[k] = v
 
     query = query_dict.urlencode()
-    return urlunparse((scheme, netloc, path, params, query, fragment))
+    return urlparse.urlunparse((scheme, netloc, path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)
 def url_path(context, new_path):
     ''' Change url path'''
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse(url)
-    return urlunparse((scheme, netloc, new_path, params, query, fragment))
+    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
+    return urlparse.urlunparse((scheme, netloc, new_path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)

@@ -3,7 +3,10 @@
 ignore = F405,F403,E402
 max-line-length = 150
 exclude = venv,
-    app,
+    app/config,
+    app/data,
+    app/static,
+    app/templates,
     migrations,
     tests,
     scripts,

@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import os
+import random
+
 from celery import Celery
 from celery import Task
 
@@ -32,6 +34,8 @@ class CaptureFailure(Task):
 
 
 def retry_countdown(key, retries):
+    from django.core.cache import cache
+
     retries = max(1, retries)
     countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries * 60) + (60 * retries)
     cache.set(key, countdown + random.randint(5, 30), timeout=countdown + 60)

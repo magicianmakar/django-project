@@ -3,44 +3,23 @@ import simplejson as json
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
+from django.utils.text import slugify
 
 import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
+
+from unidecode import unidecode
 
 from app.celery import celery_app, CaptureFailure
 from shopified_core import utils
 from shopified_core import permissions
 
+from .utils import format_chq_errors
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
     CommerceHQSupplier
 )
-
-
-# TODO: move to .utils
-def format_chq_errors(e):
-    if not hasattr(e, 'response') or e.response.status_code != 422:
-        return 'Server Error'
-
-    errors = e.response.json()['errors']
-
-    if isinstance(errors, basestring):
-        return errors
-
-    msg = []
-    for k, v in errors.items():
-        if type(v) is list:
-            error = u','.join(v)
-        else:
-            error = v
-
-        if k == 'base':
-            msg.append(error)
-        else:
-            msg.append(u'{}: {}'.format(k, error))
-
-    return u' | '.join(msg)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -72,6 +51,8 @@ def product_save(req_data, user_id):
             return {
                 'error': "Store: {}".format(e.message)
             }
+    else:
+        store = user.profile.get_chq_stores().first()
 
     original_url = json.loads(data).get('original_url')
     if not original_url:
@@ -212,6 +193,7 @@ def product_export(store_id, product_id, user_id, publish=None):
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
 
+        upload_session = store.request
         for idx, img in enumerate(p.get('images', [])):
             is_thumb = idx in thumbs_idx
 
@@ -220,14 +202,13 @@ def product_export(store_id, product_id, user_id, publish=None):
                 'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
             })
 
-            r = store.request.post(
+            content = requests.get(img)
+            mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
+
+            r = upload_session.post(
                 url=store.get_api_url('files'),
-                files={'files': (
-                    utils.get_filename_from_url(img), requests.get(img).content, 'image/png', {'Expires': '0'})
-                },
-                data={
-                    'type': ('thumbnails' if is_thumb else 'product_images')
-                }
+                files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
+                data={'type': ('thumbnails' if is_thumb else 'product_images')}
             )
 
             r.raise_for_status()
@@ -299,7 +280,7 @@ def product_export(store_id, product_id, user_id, publish=None):
             for v in p['variants']:
                 vars_list.append(v['values'])
 
-            vars_list = all_possible_cases(vars_list)
+            vars_list = utils.all_possible_cases(vars_list)
 
             for idx, variants in enumerate(vars_list):
                 if type(variants) is list:
@@ -343,7 +324,9 @@ def product_export(store_id, product_id, user_id, publish=None):
         })
 
     except Exception as e:
-        raven_client.captureException()
+        raven_client.captureException(extra={
+            'response': e.response.text if hasattr(e, 'response') else ''
+        })
 
         store.pusher_trigger('product-export', {
             'success': False,
@@ -402,14 +385,13 @@ def product_update(product_id, data):
                 'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
             })
 
+            content = requests.get(img)
+            mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
+
             r = store.request.post(
                 url=store.get_api_url('files'),
-                files={'files': (
-                    utils.get_filename_from_url(img), requests.get(img).content, 'image/png', {'Expires': '0'})
-                },
-                data={
-                    'type': 'product_images'
-                }
+                files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
+                data={'type': 'product_images'}
             )
 
             r.raise_for_status()
@@ -446,7 +428,9 @@ def product_update(product_id, data):
         })
 
     except Exception as e:
-        raven_client.captureException()
+        raven_client.captureException(extra={
+            'response': e.response.text if hasattr(e, 'response') else ''
+        })
 
         store.pusher_trigger('product-update', {
             'success': False,
@@ -456,18 +440,35 @@ def product_update(product_id, data):
         })
 
 
-def all_possible_cases(arr, top=True):
-    sep = '_'.join([str(i) for i in range(10)])
+@celery_app.task(bind=True, base=CaptureFailure)
+def create_image_zip(self, images, product_id):
+    from os.path import join as path_join
+    from tempfile import mktemp
+    from zipfile import ZipFile
 
-    if (len(arr) == 0):
-        return []
-    elif (len(arr) == 1):
-        return arr[0]
-    else:
-        result = []
-        allCasesOfRest = all_possible_cases(arr[1:], False)
-        for c in allCasesOfRest:
-            for i in arr[0]:
-                result.append('{}{}{}'.format(i, sep, c))
+    from leadgalaxy.utils import aws_s3_upload
 
-        return map(lambda k: k.split(sep), result) if top else result
+    try:
+        product = CommerceHQProduct.objects.get(pk=product_id)
+        filename = mktemp(suffix='.zip', prefix='{}-'.format(product_id))
+
+        with ZipFile(filename, 'w') as images_zip:
+            for i, img_url in enumerate(images):
+                image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                images_zip.writestr(image_name, requests.get(img_url).content)
+
+        s3_path = path_join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
+        url = aws_s3_upload(s3_path, input_filename=filename)
+
+        product.store.pusher_trigger('images-download', {
+            'success': True,
+            'product': product_id,
+            'url': url
+        })
+    except Exception:
+        raven_client.captureException()
+
+        product.store.pusher_trigger('images-download', {
+            'success': False,
+            'product': product_id,
+        })

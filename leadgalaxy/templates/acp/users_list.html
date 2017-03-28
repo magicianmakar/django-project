@@ -28,8 +28,10 @@
                             <th>Email</th>
                             <th>Plan</th>
                             {% if users_count == 1 %}
-                            <th>Stores</th>
+                            <th>Shopify Stores</th>
+                            <th>CHQ Stores</th>
                             <th>Products</th>
+                            <th>Bundles</th>
                             {% endif %}
                             <th style="width:13%">Join Date</th>
                             <th style="width:25%">Actions</th>
@@ -45,11 +47,22 @@
                             <td>
                                 {{item.profile.plan.title}}
                                 {% if item.is_subuser %}
-                                - {{item.profile.subuser_parent.profile.plan.title}}
+                                <br><b>{{item.profile.subuser_parent.profile.plan.title}}</b><br>
+                                Parent: <a href="/admin/leadgalaxy/userprofile/{{item.profile.subuser_parent.profile.id}}"
+                                           target="_blank">
+                                        {{item.profile.subuser_parent.username}}</a>
                                 {% endif %}
                             </td>
                             <td>{{item.profile.get_shopify_stores.count}}</td>
+                            <td>{{item.profile.get_chq_stores.count}}</td>
                             <td>{{item.shopifyproduct_set.count}}</td>
+                            <td>
+                                <ul style="padding:0;margin:0">
+                                    {% for bundle in item.profile.bundles.all %}
+                                    <li>{{bundle.title}}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
                             {% else %}
                             <td>{{item.profile.plan.title}}</td>
                             {% endif %}
@@ -72,6 +85,7 @@
                                             <li><a href="#" class="intercom-btn" data-email="{{item.email}}" target="_blank">Intercom</a></li>
                                             <li class="divider"></li>
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
+                                            <li><a href="#" class="add-bundle-btn" user-id="{{item.id}}">Add Bundle</a></li>
                                             <li><a href="#" class="allow-trial-btn" user-id="{{item.id}}">Allow Free Trial</a></li>
                                             <li class="divider"></li>
                                             <li><a href="text-danger" class="clear-sessions btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Sessions</a></li>
@@ -105,6 +119,32 @@
                         </select>
 
                         <button id="change-plan-apply" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-bundle-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Sending To Shopify</h3>
+
+                        <label for="send-select-store">Select Plan:</label>
+                        <select class="form-control" name="selected-actions"
+                                id="bundle-change-select" style="display:inline-block;width:191px">
+                            {% for item in bundles %}
+                            <option value="{{item.id}}">{{item.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="select-bundle-apply" class="btn btn-primary"
+                                style="margin-bottom:5px;margin-left:25px">Add Bundle</button>
                     </div>
                 </div>
             </div>
@@ -146,6 +186,13 @@
             $(this).parents('tr').find('.profile-plan').addClass('active-plan-change');
             $('#modal-plan-select').prop('user-id', $(this).attr('user-id'));
             $('#modal-plan-select').modal('show');
+        }
+
+        function addBundle(e) {
+            e.preventDefault();
+
+            $('#modal-bundle-select').prop('user-id', $(this).attr('user-id'));
+            $('#modal-bundle-select').modal('show');
         }
 
         function userProfile(e) {
@@ -217,19 +264,16 @@
             });
         }
 
-{% cache 600 acp_profiles_list user.id users_count request.GET.plan %}
-
         var profiles = {
 {% for profile in profiles  %}
     {{profile.user_id}}: {{profile.id}},
 {% endfor %}
         };
 
-{% endcache %}
-
         $(document).ready(function() {
             function handleEvents() {
                 $('.change-plan-btn').unbind('click').click(changePlan);
+                $('.add-bundle-btn').unbind('click').click(addBundle);
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.clear-access-tokens').unbind('click').click(clearAccessToken);
                 $('.allow-trial-btn').unbind('click').click(allowFreeTrial);
@@ -279,6 +323,34 @@
                     },
                     error: function(data) {
                         displayAjaxError('Change Plan', data);
+                    },
+                    complete: function() {
+                        btn.button('reset');
+                    }
+                });
+            });
+
+            $('#select-bundle-apply').click(function (e) {
+                var btn = $(this);
+                var user = $('#modal-bundle-select').prop('user-id');
+                var bundle = $('#modal-bundle-select select').val();
+
+                btn.button('loading');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/add-bundle',
+                    context: {},
+                    data: {
+                        'bundle': bundle,
+                        'user': user
+                    },
+                    success: function(data) {
+                        toastr.success('Bundle Added');
+                        $('#modal-bundle-select').modal('hide');
+                    },
+                    error: function(data) {
+                        displayAjaxError('Add Bundle', data);
                     },
                     complete: function() {
                         btn.button('reset');
