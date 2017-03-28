@@ -96,40 +96,6 @@ class CHQStoreApi(ApiResponseMixin, View):
         # Backward compatibly with Shopify save for later
         return self.post_product_save(request, user, data)
 
-    def get_product_export(self, request, user, data):
-        task = tasks.product_export.AsyncResult(data.get('id'))
-        count = utils.safeInt(data.get('count'))
-
-        if count == 60:
-            raven_client.context.merge(raven_client.get_data_from_request(request))
-            raven_client.captureMessage('Celery Task is taking too long.', level='warning')
-
-        if count > 120 and count < 125:
-            raven_client.captureMessage('Terminate Celery Task.',
-                                        extra={'task': data.get('id')},
-                                        level='warning')
-
-            task.revoke(terminate=True)
-            return self.api_error('Export Error', status=500)
-
-        if count >= 125:
-            return self.api_error('Export Error', status=500)
-
-        if not task.ready():
-            return self.api_success({
-                'ready': False
-            })
-        else:
-            data = task.result
-
-            if 'error' not in data:
-                return self.api_success({
-                    'ready': True,
-                    'data': data
-                })
-            else:
-                return self.api_error(data['error'], status=500)
-
     def post_product_export(self, request, user, data):
         pk = safeInt(data.get('store'))
         store = CommerceHQStore.objects.get(id=pk)
