@@ -97,17 +97,15 @@ class CHQStoreApi(ApiResponseMixin, View):
         return self.post_product_save(request, user, data)
 
     def post_product_export(self, request, user, data):
-        pk = safeInt(data.get('store'))
-        store = CommerceHQStore.objects.get(id=pk)
-
-        if not user.can('send_to_chq.sub', store):
-            raise PermissionDenied()
-
-        permissions.user_can_view(user, store)
-
         try:
+            store = CommerceHQStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+            if not user.can('send_to_chq.sub', store):
+                raise PermissionDenied()
+
             tasks.product_export.apply_async(
-                args=[data.get('store'), data.get('product'), user.id, data.get('publish', False)],
+                args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
                 countdown=0,
                 expires=120)
 
