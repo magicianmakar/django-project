@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('commercehq_core', '0002_commercehqboard_config'),
-        ('leadgalaxy', '0139_userprofile_subuser_chq_stores'),
+        ('leadgalaxy', '0140_captchacredit_captchacreditplan'),
     ]
 
     operations = [

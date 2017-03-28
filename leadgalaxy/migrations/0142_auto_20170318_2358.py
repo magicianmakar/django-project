@@ -35,7 +35,7 @@ def backward(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('leadgalaxy', '0140_auto_20170318_2344'),
+        ('leadgalaxy', '0141_auto_20170318_2344'),
     ]
 
     operations = [
