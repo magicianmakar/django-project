@@ -13,6 +13,8 @@ import factory
 
 from mock import patch, Mock
 
+import factories as f
+
 
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
 
@@ -109,3 +111,86 @@ class AutoFulfillTestCase(TestCase):
         call_command('auto_fulfill')
 
         fulfill_order.assert_not_called()
+
+
+class FulfillApiTestCase(TestCase):
+    def setUp(self):
+        self.parent_user = f.UserFactory()
+        self.user = f.UserFactory()
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.store = f.ShopifyStoreFactory(user=self.user)
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_add_source_id(self):
+        data = {
+            'store': self.store.id,
+            'order_id': 1000,
+            'line_id': 100,
+            'aliexpress_order_id': 123456789123
+        }
+
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEqual(r.status_code, 200)
+        # print r.content
+
+        self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
+
+        data.update({
+            'line_id': 101,
+            'aliexpress_order_id': 123456789123
+        })
+
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(ShopifyOrderTrack.objects.count(), 2)
+
+    def test_add_duplicate_source_id(self):
+        data = {
+            'store': self.store.id,
+            'order_id': 1000,
+            'line_id': 100,
+            'aliexpress_order_id': 123456789123
+        }
+
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEqual(r.status_code, 200)
+        # print r.content
+
+        self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
+
+        data.update({
+            'order_id': 1002,
+            'line_id': 101,
+            'aliexpress_order_id': 123456789123
+        })
+
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEqual(r.status_code, 422)
+        self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
+
+    def test_overwrite_source_id(self):
+        data = {
+            'store': self.store.id,
+            'order_id': 1000,
+            'line_id': 100,
+            'aliexpress_order_id': 123456789123
+        }
+
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEqual(r.status_code, 200)
+        # print r.content
+
+        self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
+
+        data.update({
+            'order_id': 1000,
+            'line_id': 100,
+            'aliexpress_order_id': 123456789000
+        })
+
+        r = self.client.post('/api/order-fulfill', data)
+        self.assertEqual(r.status_code, 422)
+        self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
