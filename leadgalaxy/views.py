@@ -7,11 +7,9 @@ import random
 import time
 import traceback
 import urllib
-import urllib2
 import zlib
 from hashlib import sha1
 from io import BytesIO
-from urllib import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
@@ -1395,7 +1393,7 @@ def get_shipping_info(request):
 
     if not request.user.is_authenticated():
         return HttpResponseRedirect('%s?%s' % (reverse('django.contrib.auth.views.login'),
-                                               urlencode({'next': request.get_full_path()})))
+                                               urllib.urlencode({'next': request.get_full_path()})))
 
     product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
     permissions.user_can_view(request.user, product)
@@ -2059,7 +2057,7 @@ def save_image_s3(request):
 
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
-        fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
+        fp = StringIO.StringIO(requests.get(img_url).content)
         img_url = '%s.png' % img_url
 
     else:
@@ -2073,7 +2071,7 @@ def save_image_s3(request):
         if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
 
-        fp = StringIO.StringIO(urllib2.urlopen(img_url).read())
+        fp = StringIO.StringIO(requests.get(img_url).content)
 
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
