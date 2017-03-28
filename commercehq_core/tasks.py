@@ -164,7 +164,7 @@ def product_save(req_data, user_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def product_export(store_id, product_id, user_id):
+def product_export(store_id, product_id, user_id, publish=None):
     try:
         user = User.objects.get(id=user_id)
 
@@ -173,6 +173,9 @@ def product_export(store_id, product_id, user_id):
 
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
+
+        if publish is not None:
+            product.update_data({'published': publish})
 
         product.store = store
         product.save()
@@ -184,14 +187,14 @@ def product_export(store_id, product_id, user_id):
         thumbs_idx = {}
         thumbs_uploads = {}
 
-        for h, var in p['variants_images'].items():
-            for idx, img in enumerate(p['images']):
+        for h, var in p.get('variants_images', {}).items():
+            for idx, img in enumerate(p.get('images', [])):
                 if utils.hash_url_filename(img) == h:
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
 
         upload_session = store.request
-        for idx, img in enumerate(p['images']):
+        for idx, img in enumerate(p.get('images', [])):
             is_thumb = idx in thumbs_idx
 
             store.pusher_trigger('product-export', {

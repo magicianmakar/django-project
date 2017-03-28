@@ -89,6 +89,10 @@ class CHQStoreApi(ApiResponseMixin, View):
         return self.api_success(tasks.product_save(data, user.id))
 
     def post_save_for_later(self, request, user, data):
+        store_id = safeInt(data.get('store'))
+        store = CommerceHQStore.objects.get(pk=store_id)
+        if not user.can('save_for_later.sub', store):
+            raise PermissionDenied()
         # Backward compatibly with Shopify save for later
         return self.post_product_save(request, user, data)
 
@@ -97,8 +101,11 @@ class CHQStoreApi(ApiResponseMixin, View):
             store = CommerceHQStore.objects.get(id=data.get('store'))
             permissions.user_can_view(user, store)
 
+            if not user.can('send_to_chq.sub', store):
+                raise PermissionDenied()
+
             tasks.product_export.apply_async(
-                args=[data.get('store'), data.get('product'), user.id],
+                args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
                 countdown=0,
                 expires=120)
 
@@ -136,9 +143,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         except CommerceHQProduct.DoesNotExist:
             return self.api_error('Product does not exists', status=404)
 
-        # TODO: Sub user permssion for CHQ
-        # if not user.can('delete_products.sub', product.store):
-            # raise PermissionDenied()
+        if not user.can('delete_products.sub', product.store):
+            raise PermissionDenied()
 
         product.delete()
 
@@ -373,8 +379,8 @@ class CHQStoreApi(ApiResponseMixin, View):
     def post_order_fulfill(self, request, user, data):
         try:
             store = CommerceHQStore.objects.get(id=int(data.get('store')))
-            # if not user.can('place_orders.sub', store): # TODO: subuser perms. for CHQ Stores
-            #     raise PermissionDenied()
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied()
 
             permissions.user_can_view(user, store)
         except CommerceHQStore.DoesNotExist:
@@ -600,8 +606,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Store not found.', status=404)
 
     def delete_board(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         try:
             pk = safeInt(data.get('board_id'))
@@ -613,8 +619,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
     def post_board_empty(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         try:
             pk = safeInt(data.get('board_id'))
@@ -626,8 +632,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Board not found.', status=404)
 
     def post_boards_add(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         can_add, total_allowed, user_count = permissions.can_add_board(user)
 
@@ -654,8 +660,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         })
 
     def post_product_board(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #     raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
 
         product = CommerceHQProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -680,6 +686,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             })
 
     def get_board_config(self, request, user, data):
+        if not user.can('view_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
@@ -703,6 +711,8 @@ class CHQStoreApi(ApiResponseMixin, View):
             })
 
     def post_board_config(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
@@ -725,8 +735,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def delete_board_products(self, request, user, data):
-        # if not user.can('edit_product_boards.sub'):
-        #    raise PermissionDenied()
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
         try:
             pk = safeInt(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
@@ -773,6 +783,20 @@ class CHQStoreApi(ApiResponseMixin, View):
 
             product.data = json.dumps(product_data)
             product.save()
+
+        return self.api_success({'products': products})
+
+    def get_products_info(self, request, user, data):
+        products = {}
+        for p in data.getlist('products[]'):
+            pk = safeInt(p)
+            try:
+                product = CommerceHQProduct.objects.get(pk=pk)
+                permissions.user_can_view(user, product)
+
+                products[p] = json.loads(product.data)
+            except:
+                return self.api_error('Product not found')
 
         return self.api_success({'products': products})
 
@@ -844,12 +868,10 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
 
     def post_order_fulfill_update(self, request, user, data):
-        # if data.get('store'):
-        #     store = CommerceHQStore.objects.get(pk=int(data['store']))
-
-        #     TODO: sub user permission for CHQ
-        #     if not user.can('place_orders.sub', store):
-        #         raise PermissionDenied()
+        if data.get('store'):
+            store = CommerceHQStore.objects.get(pk=safeInt(data['store']))
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied()
 
         order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
         permissions.user_can_edit(user, order)

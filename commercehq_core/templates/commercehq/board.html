@@ -88,6 +88,19 @@
                         <div class="small m-t-xs">
                             Submitted at {{item.created_at|date}}
                         </div>
+                        <div class="m-t text-right">
+                            {% if item.qelem.is_connected %}
+                                <a
+                                    class="btn btn-xs btn-outline btn-primary"
+                                    href="{{ item.commercehq_url }}"
+                                    title="Connected to CommerceHQ"
+                                    target="_blank"
+                                >
+                                    <i class="text-success fa fa-fw fa-link"></i>
+                                </a>
+                            {% endif %}
+                            <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> Info <i class="fa fa-long-arrow-right"></i> </a>
+                        </div>
                         <div class="m-t row">
                             <div class="col-md-4" style="padding-right:0">
                             <a href="{% url 'chq:product_detail' pk=item.id %}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
@@ -137,6 +150,8 @@
 
 {% include "partial/product_edit_modal.html" %}
 
+{% include 'commercehq/commercehq_send_modal.html' %}
+
 {% include 'partial/filter_modal.html' %}
 
 {% endblock %}
@@ -146,6 +161,8 @@
 {% endblock modal-board-add %}
 
 {% block extrajs %}
+    <script src="https://js.pusher.com/4.0/pusher.min.js"></script>
+    <script>var PUSHER_KEY = "{% app_setting 'PUSHER_KEY' %}";</script>
     <!-- Data Tables -->
     <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
     <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>

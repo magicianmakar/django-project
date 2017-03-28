@@ -300,6 +300,16 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
     });
 }
 
+function sendProductToCommerceHQ(productId, storeId, publish) {
+    var data = {
+        product: productId,
+        store: storeId,
+        publish: publish
+    };
+
+    return $.post(api_url('product-export', 'chq'), data);
+}
+
 function productsEditModal(products) {
     if (!products || !products.length) {
         toastr.warning('No product is selected');
@@ -335,7 +345,7 @@ function productsEditModal(products) {
 function waitForTask(task_id, product, data, callback, callback_data) {
     taskIntervals[task_id] = setInterval(function () {
         $.ajax({
-            url: '/api/export-product',
+            url: api_url('export-product'),
             type: 'GET',
             data: {
                 id: task_id,

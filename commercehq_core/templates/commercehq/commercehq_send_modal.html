@@ -1,0 +1,41 @@
+<div id="modal-commercehq-send" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Sending To CommerceHQ</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <label for="send-select-store">Store:</label>
+                        <select class="form-control" name="send-select-store" id="send-select-store" style="display: inline-block; width: 191px; ">
+                            {% for item in request.user.profile.get_chq_stores %}
+                            <option value="{{item.id}}" data-store-channel="{{item.pusher_channel}}">{{item.title}}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-group col-xs-12" style="margin-top:20px;margin-left:25px">
+                            <label for="send-product-visible">
+                                <input type="checkbox" name="send-product-visible" id="send-product-visible">
+                                Make Products Visible
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="progress progress-striped active" style="margin-top: 20px;display:none;">
+                        <div style="width: 0%" class="progress-bar progress-bar-danger">
+                                <span class="sr-only">0% Complete (danger)</span>
+                            </div>
+                        <div style="width: 0%;" class="progress-bar progress-bar-success">
+                            <span class="sr-only">0% Complete (success)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:none;padding-top:0;">
+                <button id="commercehq-send-btn" class="btn btn-primary">Send</button>
+            </div>
+        </div>
+    </div>
+</div>

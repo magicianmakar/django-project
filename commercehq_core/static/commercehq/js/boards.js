@@ -213,7 +213,7 @@ $(document).ready(function() {
             return;
         } else if (action == 'commercehq-send') {
             currentBoardBox = boardBox;
-            //$('#modal-commerhq-send').modal('show');
+            $('#modal-commercehq-send').modal('show');
             return;
         } else if (action == 'board-remove') {
             var btn = $(this);
@@ -263,7 +263,6 @@ $(document).ready(function() {
             }
         });
 
-
         var data = {
             'products': products
         };
@@ -307,6 +306,71 @@ $(document).ready(function() {
             },
             complete: function() {
                 btn.button('reset');
+            }
+        });
+    });
+
+    $('#commercehq-send-btn').click(function(e) {
+        var $btn = $(this).button('loading');
+        var storeId = $('#send-select-store').val();
+        var publish = $('#send-product-visible').prop('checked');
+        var pusherChannel = $('#send-select-store option:selected').data('store-channel');
+        var pusherKey = window.PUSHER_KEY;
+        var productIds = [];
+
+        // Fetches all product ID's of selected products
+        $('input.item-select[type=checkbox]').each(function(i, el) {
+            if (el.checked) {
+                productIds.push($(el).parents('.product-box').attr('product-id'));
+            }
+        });
+
+        if (productIds.length === 0) {
+            swal('Please select a product(s) first', '', "warning");
+            $btn.button('reset');
+            return;
+        }
+
+        $('#modal-commercehq-send').modal();
+
+        var pusher = new Pusher(pusherKey, {encrypted: true});
+        var channel = pusher.subscribe(pusherChannel);
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('products-info', 'chq'),
+                type: 'GET',
+                data: {products: productIds},
+                success: function(data) {
+                    var i, len, productId;
+                    for (i = 0, len = productIds.length; i < len; i++) {
+                        productId = productIds[i];
+                        sendProductToCommerceHQ(productId, storeId, publish);
+                    }
+                }
+            });
+        });
+
+        var totalSuccess = 0;
+        var totalError = 0;
+
+        channel.bind('product-export', function(data) {
+            var productId = String(data.product);
+
+            if ($.inArray(productId, productIds) >= 0) {
+                $('#product_' + productId).iCheck('disable').prop('checked', false);
+
+                if (data.success) {
+                    totalSuccess += 1;
+                } else {
+                    totalError += 1;
+                }
+            }
+
+            if ((totalSuccess + totalError) === productIds.length) {
+                $('#modal-commercehq-send').modal('hide');
+                $btn.button('reset');
+                pusher.unsubscribe(pusherChannel);
             }
         });
     });

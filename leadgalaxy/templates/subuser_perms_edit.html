@@ -43,14 +43,15 @@
                 </form>
             </div>
             <br />
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                Store permissions are assigned on a per store basis. To assign permissions, click Edit next to the store. Make sure to do this for each store. If you do not see the store listed, go back to the previous screen and make sure you have assigned the user to the store.
+            </div>
             <div class="ibox-title">
-                <h5>Store Permissions</h5>
+                <h5>Shopify Store Permissions</h5>
             </div>
             <div class="ibox-content" style="display:block">
-                <div class="alert alert-warning alert-dismissible" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    Store permissions are assigned on a per store basis. To assign permissions, click Edit next to the store. Make sure to do this for each store. If you do not see the store listed, go back to the previous screen and make sure you have assigned the user to the store.
-                </div>
+
                 {% for store in subuser.profile.subuser_stores.all %}
                     <p>
                         {{ store.title }} &nbsp;
@@ -62,6 +63,24 @@
                     </p>
                 {% endfor %}
             </div>
+            {% if subuser.profile.subuser_chq_stores.all %}
+            <br />
+            <div class="ibox-title">
+                <h5>CommerceHQ Store Permissions</h5>
+            </div>
+            <div class="ibox-content" style="display:block">
+                {% for store in subuser.profile.subuser_chq_stores.all %}
+                    <p>
+                        {{ store.title }} &nbsp;
+                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url 'subuser_chq_store_permissions' subuser.id store.id %}">Edit</a>
+                    </p>
+                {% empty %}
+                    <p class="text-center">
+                        No stores found
+                    </p>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

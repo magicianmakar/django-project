@@ -55,6 +55,14 @@ SUBUSER_STORE_PERMISSIONS = (
     ('view_alerts', 'View alerts'),
 )
 
+SUBUSER_CHQ_STORE_PERMISSIONS = (
+    ('save_for_later', 'Save products for later'),
+    ('send_to_chq', 'Send products to CHQ'),
+    ('delete_products', 'Delete products'),
+    ('place_orders', 'Place orders'),
+    ('view_alerts', 'View alerts'),
+)
+
 
 def add_to_class(cls, name):
     def _decorator(*args, **kwargs):
@@ -88,7 +96,8 @@ class UserProfile(models.Model):
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
     company = models.ForeignKey('UserCompany', null=True, blank=True)
-    subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True, related_name='user_profiles')
+    subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
+    subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
 
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title)
@@ -154,13 +163,15 @@ class UserProfile(models.Model):
         self.save()
 
         if self.subuser_parent:
-            permissions = SubuserPermission.objects.filter(store__isnull=True)
-            # Subusers have global permissions by default
-            self.subuser_permissions.add(*permissions)
+            self.have_global_permissions()
 
         reg.user = self.user
         reg.expired = True
         reg.save()
+
+    def have_global_permissions(self):
+        permissions = SubuserPermission.objects.filter(store__isnull=True)
+        self.subuser_permissions.add(*permissions)
 
     def apply_subscription(self, plan, verbose=False):
         from stripe_subscription.utils import update_subscription
@@ -335,15 +346,31 @@ class UserProfile(models.Model):
         return self.subuser_parent is not None
 
     def has_subuser_permission(self, codename, store=None):
-        if self.is_subuser:
-            permission = self.subuser_permissions.filter(codename=codename)
-            if store:
-                if not self.subuser_stores.filter(pk=store.id).exists():
-                    return False
-                permission = permission.filter(store=store)
-            if not permission.exists():
-                return False
-        return True
+        if not self.is_subuser:
+            return True
+        if store:
+            store_model_name = store.__class__.__name__
+            if store_model_name == 'ShopifyStore':
+                return self.has_subuser_shopify_permission(codename, store)
+            elif store_model_name == 'CommerceHQStore':
+                return self.has_subuser_chq_permission(codename, store)
+            else:
+                raise ValueError('Invalid store')
+
+        # Permission is global
+        return self.subuser_permissions.filter(codename=codename).exists()
+
+    def has_subuser_shopify_permission(self, codename, store):
+        if not self.subuser_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_permissions.filter(codename=codename, store=store).exists()
+
+    def has_subuser_chq_permission(self, codename, store):
+        if not self.subuser_chq_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_chq_permissions.filter(codename=codename, store=store).exists()
 
 
 class UserCompany(models.Model):
@@ -363,6 +390,19 @@ class SubuserPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
     store = models.ForeignKey('ShopifyStore', blank=True, null=True, related_name='subuser_permissions')
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __unicode__(self):
+        return '{} - {}'.format(self.store.title, self.codename)
+
+
+class SubuserCHQPermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('commercehq_core.CommerceHQStore', related_name='subuser_chq_permissions')
 
     class Meta:
         ordering = 'pk',
@@ -1729,3 +1769,19 @@ def clear_cached_template(sender, instance, pk_set, action, **kwargs):
     if set(permission_pks) & set(pk_set):
         key = make_template_fragment_key('sidebar_link', [instance.user.id, instance.plan_id])
         cache.delete(key)
+
+
+@receiver(post_save, sender='commercehq_core.CommerceHQStore')
+def add_chq_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        for codename, name in SUBUSER_CHQ_STORE_PERMISSIONS:
+            SubuserCHQPermission.objects.create(store=instance, codename=codename, name=name)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_chq_stores.through)
+def add_chq_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.commercehqstore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_chq_permissions.all()
+            instance.subuser_chq_permissions.add(*permissions)

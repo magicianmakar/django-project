@@ -9,7 +9,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
 
-from .models import UserProfile, SubuserPermission
+from .models import UserProfile, SubuserPermission, SubuserCHQPermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email
 
 
@@ -203,7 +203,7 @@ class EmailForm(forms.Form):
 class SubUserStoresForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ["subuser_stores"]
+        fields = ["subuser_stores", "subuser_chq_stores"]
 
     def __init__(self, *args, **kwargs):
         parent_user = kwargs.pop("parent_user")
@@ -213,10 +213,15 @@ class SubUserStoresForm(forms.ModelForm):
         if kwargs.get('instance'):
             initial = kwargs.setdefault('initial', {})
             initial['subuser_stores'] = [t.pk for t in kwargs['instance'].subuser_stores.all()]
+            initial['subuser_chq_stores'] = [t.pk for t in kwargs['instance'].subuser_chq_stores.all()]
 
         self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_stores"].help_text = ""
         self.fields["subuser_stores"].queryset = parent_user.profile.get_shopify_stores()
+
+        self.fields["subuser_chq_stores"].widget = forms.widgets.CheckboxSelectMultiple()
+        self.fields["subuser_chq_stores"].help_text = ""
+        self.fields["subuser_chq_stores"].queryset = parent_user.profile.get_chq_stores()
 
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)
@@ -228,6 +233,10 @@ class SubUserStoresForm(forms.ModelForm):
             instance.subuser_stores.clear()
             for store in self.cleaned_data['subuser_stores']:
                 instance.subuser_stores.add(store)
+
+            instance.subuser_chq_stores.clear()
+            for store in self.cleaned_data['subuser_chq_stores']:
+                instance.subuser_chq_stores.add(store)
 
         self.save_m2m = save_m2m
 
@@ -256,6 +265,19 @@ class SubuserPermissionsForm(forms.Form):
         super(SubuserPermissionsForm, self).__init__(*args, **kwargs)
         permissions_initial = kwargs['initial']['permissions']
         permissions_queryset = SubuserPermission.objects.filter(store=kwargs['initial']['store'])
+        permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
+        permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
+                                                          queryset=permissions_queryset,
+                                                          widget=permissions_widget,
+                                                          required=False)
+        self.fields['permissions'] = permissions_field
+
+
+class SubuserCHQPermissionsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SubuserCHQPermissionsForm, self).__init__(*args, **kwargs)
+        permissions_initial = kwargs['initial']['permissions']
+        permissions_queryset = SubuserCHQPermission.objects.filter(store=kwargs['initial']['store'])
         permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
         permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
                                                           queryset=permissions_queryset,
