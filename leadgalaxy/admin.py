@@ -142,7 +142,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         ('Sub User', {
             'classes': ('collapse',),
-            'fields': ('subuser_parent', 'subuser_stores')
+            'fields': ('subuser_parent', 'subuser_stores', 'subuser_chq_stores')
         }),
     )
 

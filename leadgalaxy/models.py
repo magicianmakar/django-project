@@ -96,8 +96,8 @@ class UserProfile(models.Model):
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
     company = models.ForeignKey('UserCompany', null=True, blank=True)
-    subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True, related_name='user_profiles')
-    subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True, related_name='user_profiles')
+    subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
+    subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
 
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title)
