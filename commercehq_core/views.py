@@ -153,6 +153,13 @@ class ProductsList(ListView):
     paginator_class = SimplePaginator
     paginate_by = 25
 
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(ProductsList, self).dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         return commercehq_products(self.request)
 
@@ -179,6 +186,13 @@ class ProductDetailView(DetailView):
     model = CommerceHQProduct
     template_name = 'commercehq/product_detail.html'
     context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(ProductDetailView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
@@ -364,6 +378,13 @@ class OrdersList(ListView):
 
     paginator_class = CommerceHQOrdersPaginator
     paginate_by = 20
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return []
@@ -576,6 +597,13 @@ class OrderPlaceRedirectView(RedirectView):
     permanent = False
     query_string = False
 
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrderPlaceRedirectView, self).dispatch(request, *args, **kwargs)
+
     def get_redirect_url(self, *args, **kwargs):
         try:
             assert self.request.GET['product']
@@ -642,6 +670,13 @@ class OrdersTrackList(ListView):
     template_name = 'commercehq/orders_track.html'
     context_object_name = 'orders'
     paginate_by = 20
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         if not self.request.user.can('orders.use'):
