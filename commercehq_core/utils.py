@@ -54,8 +54,8 @@ def get_store_from_request(request):
     return store
 
 
-def commercehq_products(request, post_per_page=25, sort=None, board=None, load_boards=False):
-    store = request.GET.get('store', 'n')
+def commercehq_products(request, post_per_page=25, sort=None, board=None, store='n'):
+    store = request.GET.get('store', store)
     sort = request.GET.get('sort')
 
     user_stores = request.user.profile.get_chq_stores(flat=True)

@@ -138,7 +138,7 @@ class BoardDetailView(DetailView):
         context = super(BoardDetailView, self).get_context_data(**kwargs)
         permissions.user_can_view(self.request.user, self.object)
 
-        products = commercehq_products(self.request, board=self.object.id)
+        products = commercehq_products(self.request, store=None, board=self.object.id)
         paginator = SimplePaginator(products, 25)
         page = safeInt(self.request.GET.get('page'), 1)
         page = paginator.page(page)
