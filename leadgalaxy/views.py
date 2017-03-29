@@ -2424,10 +2424,14 @@ def orders_view(request):
                 variant_id = product.get_real_variant_id(variant_id)
                 supplier = product.get_suppier_for_variant(variant_id)
                 if supplier:
+                    country_code = order.get('shipping_address', {}).get('country_code')
+                    if not country_code:
+                        country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
+
                     shipping_method = product.get_shipping_for_variant(
                         supplier_id=supplier.id,
                         variant_id=variant_id,
-                        country_code=order.get('shipping_address', {}).get('country_code'))
+                        country_code=country_code)
                 else:
                     shipping_method = None
 
