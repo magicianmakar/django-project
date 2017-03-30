@@ -1631,7 +1631,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'order_id': order_id,
                     'line_id': line_id,
                     'source_id': source_id,
-                    'seem_source_orders': seem_source_orders,
+                    'seem_source_orders': list(seem_source_orders),
                 })
 
                 return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
