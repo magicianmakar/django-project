@@ -121,7 +121,7 @@ class ProductFeed():
         self.writer.endTag()
 
     def _clean_description(self, product):
-        text = product.get('body_html', '')
+        text = product.get('body_html') or ''
         text = re.sub('<br */?>', '\n', text)
         text = strip_tags(text).strip()
 
