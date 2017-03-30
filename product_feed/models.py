@@ -9,8 +9,7 @@ STATUS_CHOICES = (
 )
 
 
-class FeedStatus(models.Model):
-    store = models.OneToOneField(ShopifyStore)
+class FeedStatusAbstract(models.Model):
     status = models.IntegerField(default=0, choices=STATUS_CHOICES)
 
     revision = models.IntegerField(default=0)
@@ -21,6 +20,9 @@ class FeedStatus(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     fb_access_at = models.DateTimeField(null=True, blank=True, verbose_name='Last Facebook Access')
+
+    class Meta:
+        abstract = True
 
     def __unicode__(self):
         return '{}'.format(self.store.title)
@@ -44,3 +46,19 @@ class FeedStatus(models.Model):
         from leadgalaxy.utils import aws_s3_get_key
 
         return aws_s3_get_key(self.get_filename(), settings.S3_PRODUCT_FEED_BUCKET) is not None
+
+
+class FeedStatus(FeedStatusAbstract):
+    store = models.OneToOneField(ShopifyStore)
+
+    class Meta:
+        verbose_name = 'Feed Status'
+        verbose_name_plural = 'Feed Statuses'
+
+
+class CommerceHQFeedStatus(FeedStatusAbstract):
+    store = models.OneToOneField('commercehq_core.CommerceHQStore', related_name='feedstatus')
+
+    class Meta:
+        verbose_name = 'Commerce HQ Feed Status'
+        verbose_name_plural = 'Commerce HQ Feed Statuses'

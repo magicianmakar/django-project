@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.html import strip_tags
 from django.utils import timezone
 from django.conf import settings
@@ -16,7 +17,7 @@ from leadgalaxy.utils import (
     get_shopify_products
 )
 
-from .models import FeedStatus
+from .models import FeedStatus, CommerceHQFeedStatus
 
 
 def safeInt(v, default=0):
@@ -142,13 +143,17 @@ class ProductFeed():
 
 def get_store_feed(store):
     try:
-        return FeedStatus.objects.get(store=store)
+        return store.feedstatus
+    except ObjectDoesNotExist:
+        store_model_name = store.__class__.__name__
 
-    except FeedStatus.DoesNotExist:
-        return FeedStatus.objects.create(
-            store=store,
-            updated_at=None
-        )
+        if store_model_name == 'ShopifyStore':
+            return FeedStatus.objects.create(store=store, updated_at=None)
+
+        if store_model_name == 'CommerceHQStore':
+            return CommerceHQFeedStatus.objects.create(store=store, updated_at=None)
+
+        raise ValueError('Invalid store')
 
 
 def generate_product_feed(feed_status, nocache=False):

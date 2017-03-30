@@ -80,6 +80,23 @@
                 </a>
             </li>
             {% endif %}
+
+            {% if user|can:'product_feeds.use' %}
+            <li {% if url_name == 'chq:product_feeds' %}class="active"{% endif %}>
+                <a href="#">
+                    <i class="fa fa-bar-chart"></i>
+                    <span class="nav-label">Marketing</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level collapse">
+                    <li {% if url_name == 'chq:product_feeds' %}class="active"{% endif %}>
+                        <a href="{% url 'chq:product_feeds' %}">
+                            Product Feeds
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            {% endif %}
         </ul>
     </div>
 </nav>

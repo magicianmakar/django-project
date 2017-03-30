@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import patterns, url, include
 
 import commercehq_core.views
 
@@ -19,4 +19,5 @@ urlpatterns = patterns(
     url(r'^orders$', commercehq_core.views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/place$', commercehq_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
     url(r'^orders/track$', commercehq_core.views.OrdersTrackList.as_view(), name='orders_track'),
+    url(r'^marketing/', include('product_feed.urls')),
 )
