@@ -1626,6 +1626,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders:
+                raven_client.captureMessage('Linked to an other Order', level='warning', extra={
+                    'store': store.title,
+                    'order_id': order_id,
+                    'line_id': line_id,
+                    'source_id': source_id,
+                    'seem_source_orders': seem_source_orders,
+                })
+
                 return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
 
             track, created = ShopifyOrderTrack.objects.update_or_create(
