@@ -301,7 +301,7 @@ def product_export(store_id, product_id, user_id, publish=None):
                     'compare_price': utils.safeFloat(p['compare_at_price'], ''),
                     'shipping_weight': weight,
                     'variant': variants,
-                    'sku': ';'.join(sku),
+                    # 'sku': ';'.join(sku),
                 }
 
                 api_data['variants'].append(var_info)
