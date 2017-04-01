@@ -9,7 +9,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
 
-from .feed import get_store_feed, generate_product_feed
+from .feed import get_store_feed, generate_product_feed, get_chq_store_feed, generate_chq_product_feed
 from .models import FeedStatus, CommerceHQFeedStatus
 
 
@@ -152,16 +152,16 @@ def chq_product_feeds(request):
                 if feed.status == 2:
                     return JsonResponse({'error': 'Feed is being updated'}, status=500)
 
-                from leadgalaxy.tasks import generate_feed
+                from leadgalaxy.tasks import generate_chq_feed
 
-                generate_feed.delay(feed.id, nocache=True)
+                generate_chq_feed.delay(feed.id, nocache=True)
                 return JsonResponse({'status': 'ok'})
 
         return JsonResponse({'error': 'Missing parameters'}, status=500)
 
     feeds = []
     for store in request.user.profile.get_chq_stores():
-        feeds.append(get_store_feed(store))
+        feeds.append(get_chq_store_feed(store))
 
     return render(request, 'chq_product_feeds.html', {
         'feeds': feeds,
@@ -186,7 +186,7 @@ def get_chq_product_feed(request, store_id, revision=None):
     if revision is None:
         revision = 1
 
-    feed = get_store_feed(store)  # Get feed or create it if doesn't exists
+    feed = get_chq_store_feed(store)  # Get feed or create it if doesn't exists
     feed.revision = revision
 
     if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
@@ -194,7 +194,7 @@ def get_chq_product_feed(request, store_id, revision=None):
 
     feed.save()
 
-    feed_s3_url = generate_product_feed(feed, nocache=nocache)
+    feed_s3_url = generate_chq_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
         return HttpResponseRedirect(feed_s3_url)

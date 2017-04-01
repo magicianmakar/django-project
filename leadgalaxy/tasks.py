@@ -27,8 +27,8 @@ from leadgalaxy.statuspage import record_import_metric
 from shopify_orders import utils as order_utils
 from product_alerts.events import ProductChangeEvent
 
-from product_feed.feed import generate_product_feed
-from product_feed.models import FeedStatus
+from product_feed.feed import generate_product_feed, generate_chq_product_feed
+from product_feed.models import FeedStatus, CommerceHQFeedStatus
 
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
@@ -509,6 +509,20 @@ def generate_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = FeedStatus.objects.get(id=feed_id)
         generate_product_feed(feed, nocache=nocache)
+
+    except:
+        feed.status = 0
+        feed.generation_time = -1
+        feed.save()
+
+        raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
+def generate_chq_feed(self, feed_id, nocache=False, by_fb=False):
+    try:
+        feed = CommerceHQFeedStatus.objects.get(id=feed_id)
+        generate_chq_product_feed(feed, nocache=nocache)
 
     except:
         feed.status = 0

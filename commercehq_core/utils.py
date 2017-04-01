@@ -1,6 +1,8 @@
 import re
 import simplejson as json
 
+from math import ceil
+
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -52,6 +54,40 @@ def get_store_from_request(request):
         store = stores.first()
 
     return store
+
+
+def get_chq_products_count(store):
+    api_url = store.get_api_url('products')
+    response = store.request.head(api_url)
+    total_count = response.headers['X-Pagination-Total-Count']
+    total = int(total_count)
+
+    return total
+
+
+def get_chq_products(store, page=1, limit=50, all_products=False):
+    api_url = store.get_api_url('products')
+
+    if not all_products:
+        params = {'page': page, 'size': limit, 'expand': ['variants']}
+        response = store.request.get(api_url, params=params)
+        products = response.json()['items']
+
+        for product in products:
+            yield product
+    else:
+        limit = 200
+        count = get_chq_products_count(store)
+
+        if not count:
+            return
+
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
+            response = get_chq_products(store=store, page=page, limit=limit, all_products=False)
+            products = response.json()['items']
+            for product in products:
+                yield product
 
 
 def commercehq_products(request, post_per_page=25, sort=None, board=None, store='n'):

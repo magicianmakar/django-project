@@ -1,4 +1,3 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.html import strip_tags
 from django.utils import timezone
 from django.conf import settings
@@ -8,6 +7,7 @@ import re
 import time
 from math import ceil
 from tempfile import NamedTemporaryFile
+from urlparse import urlparse
 
 from loxun import XmlWriter
 
@@ -15,6 +15,11 @@ from leadgalaxy.utils import (
     aws_s3_upload,
     get_shopify_products_count,
     get_shopify_products
+)
+
+from commercehq_core.utils import (
+    get_chq_products_count,
+    get_chq_products
 )
 
 from .models import FeedStatus, CommerceHQFeedStatus
@@ -141,19 +146,130 @@ class ProductFeed():
         os.unlink(self.out.name)
 
 
+class CommerceHQProductFeed():
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True):
+        self.store = store
+        self.info = {'currency': 'USD',
+                     'domain': urlparse(store.api_url).netloc,
+                     'name': store.title}
+
+        self.currency = self.info['currency']
+        self.domain = self.info['domain']
+
+        self.revision = safeInt(revision, 1)
+        self.all_variants = all_variants
+        self.include_variants = include_variants
+
+    def _add_element(self, tag, text):
+        self.writer.startTag(tag)
+        self.writer.text(text)
+        self.writer.endTag()
+
+    def init(self):
+        self.out = NamedTemporaryFile(suffix='.xml', prefix='chq_feed_', delete=False)
+        self.writer = XmlWriter(self.out, pretty=True, indent='')
+
+        self.writer.addNamespace("g", "http://base.google.com/ns/1.0")
+
+        self.writer.startTag("rss", {"version": "2.0"})
+        self.writer.startTag("channel")
+
+        self._add_element('title', self.info['name'])
+        self._add_element('link', 'https://{}'.format(self.info['domain']))
+        self._add_element('description', u'{} Products Feed'.format(self.info['name']))
+
+    def save(self):
+        self.writer.endTag()
+        self.writer.endTag()
+        self.writer.close()
+
+        self.out.close()
+
+        return self.out
+
+    def generate_feed(self):
+        limit = 200
+        count = get_chq_products_count(self.store)
+
+        if not count:
+            return
+
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
+            products = get_chq_products(store=self.store, page=page, limit=limit, all_products=False)
+            for p in products:
+                self.add_product(p)
+
+    def add_product(self, product):
+        if len(product.get('variants', [])) and not product.get('is_draft'):
+            # Add the first variant with Product ID
+            self._add_variant(product, product['variants'][0], variant_id=product['id'])
+
+            if self.include_variants:
+                for variant in product['variants']:
+                    self._add_variant(product, variant)
+
+                    if not self.all_variants:
+                        break
+
+    def _add_variant(self, product, variant, variant_id=None):
+        image = product.get('image')
+        if image:
+            image = image.get('path')
+        else:
+            image = ''
+
+        self.writer.startTag('item')
+
+        if variant_id is None:
+            variant_id = variant['id']
+
+        if self.revision == 1:
+            self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        else:
+            self._add_element('g:id', '{}'.format(variant_id))
+
+        self._add_element('g:link', 'https://{domain}/products/{p[seo_url]}'.format(domain=self.domain, p=product))
+        self._add_element('g:title', product.get('title'))
+        self._add_element('g:description', product.get('title'))
+        self._add_element('g:image_link', image)
+        self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
+        self._add_element('g:shipping_weight', '{product[shipping_weight]} kg'.format(product=product))
+        self._add_element('g:brand', product.get('vendor') or '')
+        self._add_element('g:google_product_category', product.get('type') or '')
+        self._add_element('g:availability', 'in stock')
+        self._add_element('g:condition', 'new')
+
+        self.writer.endTag()
+
+    def out_file(self):
+        return self.out
+
+    def out_filename(self):
+        return self.out.name
+
+    def delete_out(self):
+        os.unlink(self.out.name)
+
+
 def get_store_feed(store):
     try:
-        return store.feedstatus
-    except ObjectDoesNotExist:
-        store_model_name = store.__class__.__name__
+        return FeedStatus.objects.get(store=store)
+    except FeedStatus.DoesNotExist:
+        return FeedStatus.objects.create(
+            store=store,
+            updated_at=None
+        )
 
-        if store_model_name == 'ShopifyStore':
-            return FeedStatus.objects.create(store=store, updated_at=None)
 
-        if store_model_name == 'CommerceHQStore':
-            return CommerceHQFeedStatus.objects.create(store=store, updated_at=None)
-
-        raise ValueError('Invalid store')
+def get_chq_store_feed(store):
+    try:
+        return CommerceHQFeedStatus.objects.get(store=store)
+    except CommerceHQFeedStatus.DoesNotExist:
+        return CommerceHQFeedStatus.objects.create(
+            store=store,
+            updated_at=None
+        )
 
 
 def generate_product_feed(feed_status, nocache=False):
@@ -169,6 +285,51 @@ def generate_product_feed(feed_status, nocache=False):
                            feed_status.revision,
                            feed_status.all_variants,
                            feed_status.include_variants_id)
+
+        feed.init()
+
+        feed_status.status = 2
+        feed_status.save()
+
+        feed.generate_feed()
+        feed.save()
+
+        feed_status.generation_time = time.time() - feed_start
+        feed_status.updated_at = timezone.now()
+
+        feed_s3_url, upload_time = aws_s3_upload(
+            filename=feed_status.get_filename(),
+            input_filename=feed.out_filename(),
+            mimetype='application/xml',
+            upload_time=True,
+            compress=True,
+            bucket_name=settings.S3_PRODUCT_FEED_BUCKET
+        )
+
+        feed.delete_out()
+
+    else:
+        feed_s3_url = feed_status.get_url()
+
+    feed_status.status = 1
+    feed_status.save()
+
+    return feed_s3_url
+
+
+def generate_chq_product_feed(feed_status, nocache=False):
+    store = feed_status.store
+
+    if not store.user.can('product_feeds.use'):
+        return False
+
+    feed_start = time.time()
+
+    if not feed_status.feed_exists() or nocache:
+        feed = CommerceHQProductFeed(store,
+                                     feed_status.revision,
+                                     feed_status.all_variants,
+                                     feed_status.include_variants_id)
 
         feed.init()
 
