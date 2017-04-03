@@ -149,9 +149,9 @@ class ProductFeed():
 class CommerceHQProductFeed():
     def __init__(self, store, revision=1, all_variants=True, include_variants=True):
         self.store = store
-        self.info = {'currency': 'USD',
-                     'domain': urlparse(store.api_url).netloc,
-                     'name': store.title}
+
+        domain = urlparse(store.api_url).netloc
+        self.info = {'currency': 'USD', 'domain': domain, 'name': store.title}
 
         self.currency = self.info['currency']
         self.domain = self.info['domain']
@@ -255,6 +255,7 @@ class CommerceHQProductFeed():
 def get_store_feed(store):
     try:
         return FeedStatus.objects.get(store=store)
+
     except FeedStatus.DoesNotExist:
         return FeedStatus.objects.create(
             store=store,
@@ -265,6 +266,7 @@ def get_store_feed(store):
 def get_chq_store_feed(store):
     try:
         return CommerceHQFeedStatus.objects.get(store=store)
+
     except CommerceHQFeedStatus.DoesNotExist:
         return CommerceHQFeedStatus.objects.create(
             store=store,

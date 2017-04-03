@@ -124,7 +124,7 @@ def get_shopify_product_feed(request, store_id, revision=None):
 
 def chq_product_feeds(request):
     if not request.user.can('product_feeds.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'commercehq/upgrade.html')
 
     if request.method == 'POST':
         if request.POST.get('feed'):

@@ -27,12 +27,6 @@ class FeedStatusAbstract(models.Model):
     def __unicode__(self):
         return '{}'.format(self.store.title)
 
-    def get_filename(self):
-        import hashlib
-
-        feed_hash = hashlib.md5('u{}/{}'.format(self.store.user.id, self.store.id)).hexdigest()
-        return 'feeds/{}.xml'.format(feed_hash)
-
     def get_url(self):
         from django.conf import settings
 
@@ -55,6 +49,12 @@ class FeedStatus(FeedStatusAbstract):
         verbose_name = 'Feed Status'
         verbose_name_plural = 'Feed Statuses'
 
+    def get_filename(self):
+        import hashlib
+
+        feed_hash = hashlib.md5('u{}/{}'.format(self.store.user.id, self.store.id)).hexdigest()
+        return 'feeds/{}.xml'.format(feed_hash)
+
 
 class CommerceHQFeedStatus(FeedStatusAbstract):
     store = models.OneToOneField('commercehq_core.CommerceHQStore', related_name='feedstatus')
@@ -62,3 +62,9 @@ class CommerceHQFeedStatus(FeedStatusAbstract):
     class Meta:
         verbose_name = 'Commerce HQ Feed Status'
         verbose_name_plural = 'Commerce HQ Feed Statuses'
+
+    def get_filename(self):
+        import hashlib
+
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('chq', self.store.user.id, self.store.id)).hexdigest()
+        return 'feeds/{}.xml'.format(feed_hash)

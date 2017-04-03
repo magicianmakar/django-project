@@ -57,7 +57,6 @@ class ShopifyStoreFactory(factory.DjangoModelFactory):
     access_token = factory.fuzzy.FuzzyText()
     scope = factory.fuzzy.FuzzyText()
     is_active = True
-    store_hash = factory.fuzzy.FuzzyText(length=50)
     version = factory.fuzzy.FuzzyChoice((1, 2))
     list_index = factory.fuzzy.FuzzyInteger(999)
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
