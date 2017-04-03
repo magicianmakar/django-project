@@ -178,6 +178,60 @@
         });
     });
 
+    $('.archive-selected-orders-btn').click(function(e) {
+        var tracks = $.map($('.order-track').filter(function(i, el) {
+            return el.checked;
+        }), function(el) {
+            return {
+                el: $(el).parents('tr'),
+                order: $(el).attr('order-id'),
+                line: $(el).attr('line-id'),
+            };
+        });
+
+        if (!tracks.length) {
+            return swal('Bulk Actions', 'Please select an order first', 'warning');
+        }
+
+        swal({
+            title: 'Archive Orders',
+            text: 'Do you want to Archive the selected Order Tracks?',
+            type: 'warning',
+            html: true,
+            animation: false,
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Archive",
+            cancelButtonText: "Cancel",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
+            }
+
+            P.map(tracks, function(track) {
+                return $.ajax({
+                    url: api_url('order-fullfill-hide', 'chq'),
+                    type: 'POST',
+                    data: {
+                        order: $('.order-track', track.el).val(),
+                        hide: true
+                    }
+                }).done(function (data) {
+                    $(track.el).fadeOut();
+                });
+            }, {
+                concurrency: 2
+            }).catch(function() {
+            }).then(function() {
+                swal.close();
+            });
+        });
+    });
+
     $('.check-all').on('ifChanged', function (e) {
         $('.order-track').iCheck(e.target.checked ? 'check' : 'uncheck');
     });
