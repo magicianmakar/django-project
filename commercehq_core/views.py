@@ -233,7 +233,7 @@ class ProductMappingView(DetailView):
         context['commercehq_product'] = product.sync()
 
         for i in ['options', 'variants']:
-            if i not in context['commercehq_product']:
+            if i not in context['commercehq_product'] or not context['commercehq_product']['is_multi']:
                 context['commercehq_product'][i] = []
 
         images_map = {}
@@ -326,7 +326,7 @@ class MappingSupplierView(DetailView):
         context['commercehq_product'] = product.sync()
 
         for i in ['options', 'variants']:
-            if i not in context['commercehq_product']:
+            if i not in context['commercehq_product'] or not context['commercehq_product']['is_multi']:
                 context['commercehq_product'][i] = []
 
         images_map = {}
