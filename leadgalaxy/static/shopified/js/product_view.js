@@ -1330,16 +1330,9 @@ function clippingmagicEditImage(data, image) {
 
 var PusherSubscription = {
     imagesDownload: function() {
-        if (typeof(Pusher) === 'undefined') {
-            toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
-                'Contact us for further assistance',
-                'Pusher service is not loaded', {timeOut: 0});
-            return;
-        }
-
         var pusher = new Pusher(config.sub_conf.key);
         var channel = pusher.subscribe(config.sub_conf.channel);
+
         channel.bind('images-download', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
@@ -1356,25 +1349,17 @@ var PusherSubscription = {
         });
     },
     pixlrEditor: function(imageId) {
-        if (typeof(Pusher) === 'undefined') {
-            toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
-                'Contact us for further assistance',
-                'Pusher service is not loaded', {timeOut: 0});
-            return;
-        }
-
         var pusher = new Pusher(config.sub_conf.key);
         var channel = pusher.subscribe(config.sub_conf.channel);
+
         channel.bind('pixlr-editor', function(data) {
-            console.log(data.product, config.product_id);
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
                 pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
-                        var image = $('#'+imageId);
+                        var image = $('#' + imageId);
                         image.attr('src', data.url);
                         product.images[parseInt(image.attr('image-id'), 10)] = data.url;
 
@@ -1383,7 +1368,7 @@ var PusherSubscription = {
                         }
                     }, 500);
                 } else {
-                    displayAjaxError('Images Download', data);
+                    displayAjaxError('Advanced Editor', data);
                 }
             }
         });
@@ -1399,6 +1384,14 @@ var PusherSubscription = {
         var element = document.querySelector("#trix-notes");
         element.editor.setSelectedRange([0, 0]);
         element.editor.insertHTML(config.product_notes);
+
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Shopified App website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
     }, 2000);
 
     $(".tag-it").tagit({
