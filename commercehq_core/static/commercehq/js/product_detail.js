@@ -907,7 +907,7 @@ function renderImages() {
             var pixlrUrl = pixlr.url({
                 image: imageUrl,
                 title: imageId,
-                target: window.location.origin + '/upload/save_image_s3?' + $.param({
+                target: window.location.origin + '/chq/upload/save_image_s3?' + $.param({
                     key: hash,
                     product: config.product_id,
                     advanced: true,
@@ -1241,7 +1241,7 @@ function clippingmagicEditImage(data, image) {
                 }
             }).done(function(data) {
                 $.ajax({
-                    url: '/upload/save_image_s3',
+                    url: '/chq/upload/save_image_s3',
                     type: 'POST',
                     data: {
                         product: config.product_id,

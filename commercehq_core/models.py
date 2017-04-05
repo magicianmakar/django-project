@@ -677,3 +677,18 @@ class CommerceHQOrderTrack(models.Model):
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
+
+
+class CommerceHQUserUpload(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+    product = models.ForeignKey(CommerceHQProduct, null=True)
+    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.url.replace('%2F', '/').split('/')[-1]
