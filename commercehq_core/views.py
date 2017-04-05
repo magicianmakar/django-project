@@ -232,8 +232,12 @@ class ProductMappingView(DetailView):
 
         context['commercehq_product'] = product.sync()
 
+        for i in ['options', 'variants']:
+            if i not in context['commercehq_product']:
+                context['commercehq_product'][i] = []
+
         images_map = {}
-        for option in product.parsed.get('options', []):
+        for option in context['commercehq_product']['options']:
             for thumb in option['thumbnails']:
                 if thumb.get('image'):
                     images_map[thumb['value']] = thumb['image']['path']
@@ -321,8 +325,12 @@ class MappingSupplierView(DetailView):
 
         context['commercehq_product'] = product.sync()
 
+        for i in ['options', 'variants']:
+            if i not in context['commercehq_product']:
+                context['commercehq_product'][i] = []
+
         images_map = {}
-        for option in product.parsed.get('options', []):
+        for option in context['commercehq_product']['options']:
             for thumb in option['thumbnails']:
                 if thumb.get('image'):
                     images_map[thumb['value']] = thumb['image']['path']
