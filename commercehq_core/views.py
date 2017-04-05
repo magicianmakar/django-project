@@ -233,7 +233,7 @@ class ProductMappingView(DetailView):
         context['commercehq_product'] = product.sync()
 
         images_map = {}
-        for option in product.parsed['options']:
+        for option in product.parsed.get('options', []):
             for thumb in option['thumbnails']:
                 if thumb.get('image'):
                     images_map[thumb['value']] = thumb['image']['path']
@@ -322,7 +322,7 @@ class MappingSupplierView(DetailView):
         context['commercehq_product'] = product.sync()
 
         images_map = {}
-        for option in product.parsed['options']:
+        for option in product.parsed.get('options', []):
             for thumb in option['thumbnails']:
                 if thumb.get('image'):
                     images_map[thumb['value']] = thumb['image']['path']
