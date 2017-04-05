@@ -1056,7 +1056,7 @@ $('#download-images').on('click', function(e) {
             product: btn.attr('product')
         },
         success: function(result) {
-            PusherSubscription.imagesDownload2();
+            PusherSubscription.imagesDownload();
         },
         error: function(data) {
             displayAjaxError('Images Download', data);
