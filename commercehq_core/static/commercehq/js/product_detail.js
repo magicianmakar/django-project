@@ -907,11 +907,12 @@ function renderImages() {
             var pixlrUrl = pixlr.url({
                 image: imageUrl,
                 title: imageId,
-                target: window.location.origin + '/chq/upload/save_image_s3?' + $.param({
+                target: window.location.origin + '/upload/save_image_s3?' + $.param({
                     key: hash,
                     product: config.product_id,
                     advanced: true,
-                    image_id: imageId
+                    image_id: imageId,
+                    chq: 1
                 })
             });
 
@@ -983,14 +984,6 @@ function launchEditor(id, src) {
 
 var PusherSubscription = {
     imagesDownload: function() {
-        if (typeof(Pusher) === 'undefined') {
-            toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
-                'Contact us for further assistance',
-                'Pusher service is not loaded', {timeOut: 0});
-            return;
-        }
-
         var pusher = new Pusher(config.sub_conf.key);
         var channel = pusher.subscribe(config.sub_conf.channel);
         channel.bind('images-download', function(data) {
@@ -1009,14 +1002,6 @@ var PusherSubscription = {
         });
     },
     pixlrEditor: function(imageId) {
-        if (typeof(Pusher) === 'undefined') {
-            toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
-                'Contact us for further assistance',
-                'Pusher service is not loaded', {timeOut: 0});
-            return;
-        }
-
         var pusher = new Pusher(config.sub_conf.key);
         var channel = pusher.subscribe(config.sub_conf.channel);
         channel.bind('pixlr-editor', function(data) {
@@ -1241,12 +1226,13 @@ function clippingmagicEditImage(data, image) {
                 }
             }).done(function(data) {
                 $.ajax({
-                    url: '/chq/upload/save_image_s3',
+                    url: '/upload/save_image_s3',
                     type: 'POST',
                     data: {
                         product: config.product_id,
                         url: data.image_url,
                         clippingmagic: true,
+                        chq: 1
                     }
                 }).done(function(data) {
                     image.attr('src', data.url).siblings(".loader").hide();

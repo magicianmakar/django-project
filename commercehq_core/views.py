@@ -34,8 +34,7 @@ from .models import (
     CommerceHQStore,
     CommerceHQProduct,
     CommerceHQBoard,
-    CommerceHQOrderTrack,
-    CommerceHQUserUpload
+    CommerceHQOrderTrack
 )
 from .utils import (
     CommerceHQOrdersPaginator,
@@ -784,82 +783,3 @@ class OrdersTrackList(ListView):
             self.store = get_store_from_request(self.request)
 
         return self.store
-
-
-@login_required
-def save_image_s3(request):
-    """Saves the image in img_url into S3 with the name img_name"""
-    import StringIO
-    import requests
-    import mimetypes
-
-    from django.conf import settings
-    from django.http import JsonResponse
-
-    from leadgalaxy.utils import upload_from_url, random_filename, aws_s3_upload
-
-    if 'advanced' in request.GET:
-        # Pixlr
-        if not request.user.can('pixlr_photo_editor.use'):
-            return render(request, 'upgrade.html')
-
-        # TODO: File size limit
-        image = request.FILES.get('image')
-        product_id = request.GET.get('product')
-        img_url = image.name
-
-        fp = image
-
-    elif 'clippingmagic' in request.POST:
-        if not request.user.can('clippingmagic.use'):
-            return render(request, 'upgrade.html')
-
-        product_id = request.POST.get('product')
-        img_url = request.POST.get('url')
-        fp = StringIO.StringIO(requests.get(img_url).content)
-        img_url = '%s.png' % img_url
-
-    else:
-        # Aviary
-        if not request.user.can('aviary_photo_editor.use'):
-            return render(request, 'upgrade.html')
-
-        product_id = request.POST.get('product')
-        img_url = request.POST.get('url')
-
-        if not upload_from_url(img_url, request.user.profile.import_stores()):
-            raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-
-        fp = StringIO.StringIO(requests.get(img_url).content)
-
-    # Randomize filename in order to not overwrite an existing file
-    img_name = random_filename(img_url.split('/')[-1])
-    img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
-
-    mimetype = mimetypes.guess_type(img_url)[0]
-
-    product = CommerceHQProduct.objects.get(id=product_id)
-    permissions.user_can_edit(request.user, product)
-
-    upload_url = aws_s3_upload(
-        filename=img_name,
-        fp=fp,
-        mimetype=mimetype,
-        bucket_name=settings.S3_UPLOADS_BUCKET
-    )
-
-    upload = CommerceHQUserUpload(user=request.user.models_user, product=product, url=upload_url)
-    upload.save()
-
-    # For Pixlr upload, trigger the close of the editor
-    if 'advanced' in request.GET:
-        product.store.pusher_trigger('pixlr-editor', {
-            'success': True,
-            'product': product_id,
-            'url': upload_url
-        })
-
-    return JsonResponse({
-        'status': 'ok',
-        'url': upload_url
-    })

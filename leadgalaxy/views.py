@@ -2079,9 +2079,6 @@ def save_image_s3(request):
 
     mimetype = mimetypes.guess_type(img_url)[0]
 
-    product = ShopifyProduct.objects.get(id=product_id)
-    permissions.user_can_edit(request.user, product)
-
     upload_url = utils.aws_s3_upload(
         filename=img_name,
         fp=fp,
@@ -2089,8 +2086,16 @@ def save_image_s3(request):
         bucket_name=settings.S3_UPLOADS_BUCKET
     )
 
-    upload = UserUpload(user=request.user.models_user, product=product, url=upload_url)
-    upload.save()
+    if not request.GET.get('chq'):
+        product = ShopifyProduct.objects.get(id=product_id)
+        permissions.user_can_edit(request.user, product)
+        UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url)
+    else:
+        from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload
+
+        product = CommerceHQProduct.objects.get(id=product_id)
+        permissions.user_can_edit(request.user, product)
+        CommerceHQUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url)
 
     # For Pixlr upload, trigger the close of the editor
     if 'advanced' in request.GET:
