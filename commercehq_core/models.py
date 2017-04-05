@@ -262,11 +262,17 @@ class CommerceHQProduct(models.Model):
         product['weight'] = product['shipping_weight']
         product['published'] = not product['is_draft']
         product['textareas'] = []
-
         self.update_data(product)
         self.save()
 
-        return json.loads(self.data)
+        product = json.loads(self.data)
+
+        if not product['is_multi']:
+            # CommerceHQ doesn't set this values when product is not a multi variants product
+            product['variants'] = []
+            product['options'] = []
+
+        return product
 
     def get_mapping_config(self):
         try:
