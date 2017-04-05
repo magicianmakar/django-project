@@ -53,7 +53,7 @@ class ApiResponseMixin():
         user = None
 
         if data is None:
-            data = self.request_data(request)
+            data = self.request_data(request) or {}
 
         authorization = request.META.get('HTTP_AUTHORIZATION')
         if authorization:
