@@ -90,9 +90,11 @@ class CHQStoreApi(ApiResponseMixin, View):
 
     def post_save_for_later(self, request, user, data):
         store_id = safeInt(data.get('store'))
-        store = CommerceHQStore.objects.get(pk=store_id)
-        if not user.can('save_for_later.sub', store):
-            raise PermissionDenied()
+        if store_id:
+            store = CommerceHQStore.objects.get(pk=store_id)
+            if not user.can('save_for_later.sub', store):
+                raise PermissionDenied()
+
         # Backward compatibly with Shopify save for later
         return self.post_product_save(request, user, data)
 
