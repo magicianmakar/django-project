@@ -428,7 +428,7 @@
 
                                                 <span>Supplier:</span>
                                                 {% if item.supplier %}
-                                                    <a {% if supplier.url %}
+                                                    <a {% if item.supplier.supplier_url %}
                                                         href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
                                                     {% else %}
                                                         href="#"
@@ -488,6 +488,17 @@
                                                 {% endif %}
                                             </div>
                                         </div>
+                                        {% if item.properties and item.properties|length > 0 %}
+                                        <div class="row custom-properties">
+                                            <span class="badge badge-info" style="margin: 0 20px;">Custom Properties</span>
+                                            {% for custom_property in item.properties %}
+                                            <div class="property-line">
+                                                <span class="property-name">*{{ custom_property.name }}:&nbsp;&nbsp;&nbsp;</span>
+                                                <span class="property-value">{{ custom_property.value }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
 
                                         <div class="row item">
                                             <div class="col-md-12 no-padding">
@@ -685,9 +696,17 @@
     .orders .order .details .line.multi-lines {
         border-top: 1px solid #eee;
     }
-    .orders .order .details .line .source-order {
+    .orders .order .details .line .source-order, .orders .order .details .line .custom-properties {
         padding: 7px 0;
         border-bottom: 1px solid #eee;
+    }
+    .orders .order .details .line .custom-properties .property-line {
+        display: inline-block;
+        padding: 0 15px;
+        margin-right: 50px;
+    }
+    .orders .order .details .line .custom-properties .property-line .property-value {
+        color: #6288A2;
     }
     .orders .order .details .line .item {
     }

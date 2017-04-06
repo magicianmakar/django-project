@@ -2536,9 +2536,13 @@ def orders_view(request):
                             },
                             'note': models_user.get_config('order_custom_note'),
                             'epacket': bool(models_user.get_config('epacket_shipping')),
-                            'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+                            'auto_mark': bool(models_user.get_config('auto_ordered_mark', True))  # Auto mark as Ordered
                         }
                     }
+
+                    if el['properties'] and len(el['properties']) > 0:
+                        properties_str = '\n'.join(['{}: {}'.format(prop['name'], prop['value']) for prop in el['properties']])
+                        order_data['order']['item_note'] = 'Here are custom information for ordered product.\n{}'.format(properties_str)
 
                     if product:
                         mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)

@@ -502,10 +502,10 @@ function fixNotePanelHeight(order) {
     order = typeof(order) === 'undefined' ? document : order;
     $('.note-panel', order).each(function(i, el) {
         if ($(el).prop('editing-mode')) {
-            $(el).prop('init-height', $(el).parents('.shipping-info').outerHeight() + 'px');
+            $(el).prop('init-height', $(el).parents('.shipping-info').innerHeight() + 'px');
         } else {
             $(el).css({
-                height: $(el).parents('.shipping-info').outerHeight() + 'px',
+                height: $(el).parents('.shipping-info').innerHeight() + 'px',
                 overflow: 'hidden'
             });
         }
