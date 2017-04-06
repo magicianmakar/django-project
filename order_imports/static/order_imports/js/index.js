@@ -203,9 +203,9 @@ window.OrderImportsIndex = {
                 setTimeout(function() {
                     $('#order-import-table tbody tr:not(.clone)').remove();
 
-                    var alert = $('#approve-alert');
-                    if (alert.length == 0) {
-                        alert = $('<div id="approve-alert" class="alert alert-success alert-dismissible fade in">').append(
+                    var alertEl = $('#approve-alert');
+                    if (alertEl.length == 0) {
+                        alertEl = $('<div id="approve-alert" class="alert alert-success alert-dismissible fade in">').append(
                             $('<button type="button" class="close" data-dismiss="alert" aria-label="Close">').append(
                                 $('<span aria-hidden="true">').text('×')
                             ),
@@ -213,9 +213,7 @@ window.OrderImportsIndex = {
                         );
                     }
 
-                    console.log('alert-length', alert.length);
-
-                    $('#approve-form').prepend(alert);
+                    $('#approve-form').prepend(alertEl);
                 }, 1000);
             } else {
                 displayAjaxError('Approve Order Import', data);

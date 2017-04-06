@@ -6,6 +6,7 @@ import time
 import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.exceptions import ApiProcessException
 from leadgalaxy.utils import order_track_fulfillment
 
 # Get an instance of a logger
@@ -140,7 +141,7 @@ class ShopifyOrderImportAPI():
             if name in fieldnames:
                 order_id = fieldnames.index(name)
             else:
-                raise Exception('Not found column of name {} for Order Id #'.format(name))
+                raise ApiProcessException('Not found column of name {} for Order Id #'.format(name))
         else:
             order_id = int(order_id) - 1
 
@@ -149,7 +150,7 @@ class ShopifyOrderImportAPI():
             if name in fieldnames:
                 line_item = fieldnames.index(name)
             else:
-                raise Exception('Not found column of name {} for Line Item ID / Line Item SKU'.format(name))
+                raise ApiProcessException('Not found column of name {} for Line Item ID / Line Item SKU'.format(name))
         else:
             line_item = int(line_item) - 1
 
@@ -158,7 +159,7 @@ class ShopifyOrderImportAPI():
             if name in fieldnames:
                 tracking_number = fieldnames.index(name)
             else:
-                raise Exception('Not found column of name {} for Tracking Number'.format(name))
+                raise ApiProcessException('Not found column of name {} for Tracking Number'.format(name))
         else:
             tracking_number = int(tracking_number) - 1
 

@@ -17,5 +17,9 @@ class ApiLoginException(Exception):
             return 'Unknown Login Error'
 
 
+class ApiProcessException(Exception):
+    pass
+
+
 class ProductExportException(Exception):
     pass

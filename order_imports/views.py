@@ -6,10 +6,11 @@ from django.core.urlresolvers import reverse
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 
-from leadgalaxy.tasks import import_orders as import_orders_task, \
-    approve_imported_orders as approve_imported_orders_task
+from shopified_core.exceptions import ApiProcessException
 from leadgalaxy.utils import get_store_from_request, safeInt
-from order_imports.api import ShopifyOrderImportAPI
+
+from .tasks import import_orders, approve_imported_orders
+from .api import ShopifyOrderImportAPI
 
 
 def index(request):
@@ -52,11 +53,13 @@ def upload(request, store_id):
 
         try:
             headers = api.parse_headers(request.FILES.get('file'), raw_headers)
-        except Exception, e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=501)
+        except ApiProcessException as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=422)
+        except:
+            return JsonResponse({'success': False, 'error': 'Server Error'}, status=501)
 
         parsed_orders = api.read_csv_file(request.FILES.get('file'), headers)
-        import_orders_task.delay(store_id, parsed_orders, int(request.GET.get('file_index', '0')))
+        import_orders.delay(store_id, parsed_orders, int(request.GET.get('file_index', '0')))
         return JsonResponse({'success': True, 'message': 'Reading CSV File', 'loading': 10, 'store_id': store_id})
 
     return JsonResponse({'success': False, 'error': 'Unsupported Request Method'}, status=501)
@@ -68,7 +71,7 @@ def approve(request):
 
     data = json.loads(request.POST.get('data', '{}'))
     pusher_store_id = int(request.POST.get('pusher_store_id'))
-    approve_imported_orders_task.delay(request.user.id, data, pusher_store_id)
+    approve_imported_orders.delay(request.user.id, data, pusher_store_id)
 
     return JsonResponse({'success': True})
 
