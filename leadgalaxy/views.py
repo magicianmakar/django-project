@@ -2482,6 +2482,18 @@ def orders_view(request):
                         shipping_address_asci['country_code'] = 'PR'
                         shipping_address_asci['country'] = 'Puerto Rico'
 
+                    elif shipping_address_asci['province'] == 'Virgin Islands':
+                        # Virgin Islands is a country in Aliexpress
+                        shipping_address_asci['province'] = 'VI'
+                        shipping_address_asci['country_code'] = 'VI'
+                        shipping_address_asci['country'] = 'Virgin Islands (U.S.)'
+
+                    elif shipping_address_asci['province'] == 'Guam':
+                        # Guam is a country in Aliexpress
+                        shipping_address_asci['province'] = 'GU'
+                        shipping_address_asci['country_code'] = 'GU'
+                        shipping_address_asci['country'] = 'Guam'
+
                     shipping_address_asci['name'] = utils.ensure_title(shipping_address_asci['name'])
 
                     if shipping_address_asci['company']:

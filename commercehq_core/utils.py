@@ -161,6 +161,18 @@ def chq_customer_address(order):
         customer_address['country_code'] = 'PR'
         customer_address['country'] = 'Puerto Rico'
 
+    elif customer_address['province'] == 'Virgin Islands':
+        # Virgin Islands is a country in Aliexpress
+        customer_address['province'] = 'VI'
+        customer_address['country_code'] = 'VI'
+        customer_address['country'] = 'Virgin Islands (U.S.)'
+
+    elif customer_address['province'] == 'Guam':
+        # Guam is a country in Aliexpress
+        customer_address['province'] = 'GU'
+        customer_address['country_code'] = 'GU'
+        customer_address['country'] = 'Guam'
+
     customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name'])
     # customer_address['name'] = utils.ensure_title(customer_address['name'])
 
