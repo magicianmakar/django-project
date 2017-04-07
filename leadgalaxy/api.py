@@ -1609,7 +1609,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 source_id=source_id
             ).values_list('order_id', flat=True)
 
-            if len(seem_source_orders) and int(order_id) not in seem_source_orders:
+            if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced'):
                 raven_client.captureMessage('Linked to an other Order', level='warning', extra={
                     'store': store.title,
                     'order_id': order_id,

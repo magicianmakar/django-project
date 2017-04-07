@@ -260,30 +260,56 @@ function addOrderSourceID(e) {
             return false;
         }
 
-        $.ajax({
-            url: api_url('order-fulfill', 'chq'),
-            type: 'POST',
-            data: {
-                'store': orderData.store,
-                'order_id': orderData.order_id,
-                'line_id': orderData.line_id,
-                'aliexpress_order_id': inputValue,
-            },
-            context: {orderData: orderData, aliexpress_id: inputValue},
-            success: function (data) {
-                if (data.status == 'ok') {
-                    swal.close();
-                    toastr.success('Item was marked as ordered in Shopified App.', 'Marked as Ordered');
-                } else {
-                    displayAjaxError('Mark as Ordered', data);
-                }
-            },
-            error: function (data) {
-                displayAjaxError('Mark as Ordered', data);
-            },
-            complete: function () {
-            }
+        addOrderSourceRequest({
+            'store': orderData.store,
+            'order_id': orderData.order_id,
+            'line_id': orderData.line_id,
+            'aliexpress_order_id': inputValue,
         });
+    });
+}
+
+function addOrderSourceRequest(data_api) {
+    $.ajax({
+        url: api_url('order-fulfill', 'chq'),
+        type: 'POST',
+        data: data_api,
+        context: {
+            data_api: data_api
+        },
+    }).done(function(data) {
+        if (data.status == 'ok') {
+            swal.close();
+            toastr.success('Item was marked as ordered in Shopified App.', 'Marked as Ordered');
+        } else {
+            displayAjaxError('Mark as Ordered', data);
+        }
+    }).fail(function(data) {
+        var error = getAjaxError(data);
+        var api = $.extend({}, this.data_api, {forced: true});
+
+        if (error.indexOf('linked to an other Order') != -1) {
+            swal({
+                    title: 'Duplicate Order ID',
+                    text: error + '\nAre you sure you want to add it to this order too?',
+                    type: "warning",
+                    showCancelButton: true,
+                    animation: false,
+                    cancelButtonText: "Cancel",
+                    confirmButtonText: 'Yes',
+                    confirmButtonColor: "#DD6B55",
+                    closeOnCancel: true,
+                    closeOnConfirm: false,
+                    showLoaderOnConfirm: true,
+                },
+                function(isConfirm) {
+                    if (isConfirm) {
+                        addOrderSourceRequest(api);
+                    }
+                });
+        } else {
+            displayAjaxError('Mark as Ordered', data);
+        }
     });
 }
 
