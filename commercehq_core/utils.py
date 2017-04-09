@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
+from django.core.cache import cache
 
 from unidecode import unidecode
 
@@ -532,3 +533,24 @@ def smart_board_by_board(user, board):
 
         if product_added:
             board.save()
+
+
+def order_track_fulfillment(order_track):
+    kwargs = {
+        'store_id': order_track.store_id,
+        'order_id': order_track.order_id,
+        'line_id': order_track.line_id}
+
+    chq_fulfilments_key = 'chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
+    chq_quantity_key = 'chq_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs)
+
+    return {
+        'data': [{
+            'fulfilment_id': cache.get(chq_fulfilments_key),
+            'tracking_number': order_track.source_tracking,
+            'items': [{
+                'id': order_track.line_id,
+                'quantity': cache.get(chq_quantity_key)
+            }]
+        }],
+    }
