@@ -200,6 +200,27 @@ class CHQStoreApi(ApiResponseMixin, View):
             'reload': not data.get('export')
         })
 
+    def delete_supplier(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        try:
+            supplier = CommerceHQSupplier.objects.get(id=data.get('supplier'), product=product)
+        except CommerceHQSupplier.DoesNotExist:
+            return self.api_error('Supplier not found.\nPlease reload the page and try again.')
+
+        need_update = product.default_supplier == supplier
+
+        supplier.delete()
+
+        if need_update:
+            other_supplier = product.get_suppliers().first()
+            if other_supplier:
+                product.set_default_supplier(other_supplier)
+                product.save()
+
+        return self.api_success()
+
     def post_supplier_default(self, request, user, data):
         product = CommerceHQProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)

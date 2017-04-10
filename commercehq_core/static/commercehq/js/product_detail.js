@@ -607,9 +607,9 @@ function bindExportEvents(target) {
 
                 $.ajax({
                     type: 'DELETE',
-                    url: '/api/product-metadata?' + $.param({
+                    url: api_url('supplier', 'chq') + '?' + $.param({
                         'product': form.data('product-id'),
-                        'export': form.data('export-id'),
+                        'supplier': form.data('export-id'),
                     }),
                     context: btn,
                     success: function(data) {
