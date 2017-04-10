@@ -582,7 +582,8 @@ $('.auto-shipping-btn').click(function (e) {
         'id': $(this).attr('original-id'),
         'product': $(this).attr('product-id'),
         'country': $(this).attr('country-code'),
-        'for': 'order'
+        'for': 'order',
+        'chq': 1,
     }), function (response, status, xhr) {
         if (xhr.status != 200) {
             displayAjaxError('Shiping Method', 'Server Error, Please try again.');

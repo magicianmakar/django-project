@@ -1369,12 +1369,22 @@ def get_shipping_info(request):
         country_code = 'MNE'
 
     if not aliexpress_id and supplier:
-        if int(supplier) == 0:
-            product = ShopifyProduct.objects.get(id=product)
-            permissions.user_can_view(request.user, product)
-            supplier = product.default_supplier
+        if not request.GET.get('chq'):
+            if int(supplier) == 0:
+                product = ShopifyProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = ProductSupplier.objects.get(id=supplier)
         else:
-            supplier = ProductSupplier.objects.get(id=supplier)
+            from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
+
+            if int(supplier) == 0:
+                product = CommerceHQProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = CommerceHQSupplier.objects.get(id=supplier)
 
         aliexpress_id = supplier.get_source_id()
 

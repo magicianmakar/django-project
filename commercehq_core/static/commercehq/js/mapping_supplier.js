@@ -405,6 +405,7 @@
                 'country': select.val(),
                 'for': 'order',
                 'type': 'json',
+                'chq': 1
             },
             context: {
                 select: select
