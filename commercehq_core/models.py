@@ -269,8 +269,12 @@ class CommerceHQProduct(models.Model):
 
         if not product['is_multi']:
             # CommerceHQ doesn't set this values when product is not a multi variants product
-            product['variants'] = []
             product['options'] = []
+            product['variants'] = [{
+                "id": -1,
+                "variant": ["Default"],
+                "images": product['images']
+            }]
 
         return product
 

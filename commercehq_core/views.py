@@ -232,10 +232,6 @@ class ProductMappingView(DetailView):
 
         context['commercehq_product'] = product.sync()
 
-        for i in ['options', 'variants']:
-            if i not in context['commercehq_product'] or not context['commercehq_product']['is_multi']:
-                context['commercehq_product'][i] = []
-
         images_map = {}
         for option in context['commercehq_product']['options']:
             for thumb in option['thumbnails']:
@@ -324,10 +320,6 @@ class MappingSupplierView(DetailView):
         permissions.user_can_view(self.request.user, self.object)
 
         context['commercehq_product'] = product.sync()
-
-        for i in ['options', 'variants']:
-            if i not in context['commercehq_product'] or not context['commercehq_product']['is_multi']:
-                context['commercehq_product'][i] = []
 
         images_map = {}
         for option in context['commercehq_product']['options']:
@@ -514,6 +506,9 @@ class OrdersList(ListView):
 
                 if variant_id:
                     line['variant_link'] += '&variant={}'.format(variant_id)
+
+                if not variant_id and not line['is_multi']:
+                    variant_id = -1
 
                 line['refunded'] = line['id'] in order['refunded_lines']
 
