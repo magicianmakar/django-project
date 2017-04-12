@@ -207,10 +207,10 @@ class ShopifyOrderImportAPI():
             if headers.get('identify_column') and headers.get('identify_column') < len(row):
                 data['identify'] = row[headers.get('identify_column')]
 
-            if row[0] in orders.keys():
+            if row[headers.get('order_id')] in orders.keys():
                 orders[row[headers.get('order_id')]]['items'].append(data)
             else:
-                orders[row[headers.get('order_id')]] = {'items': [data], 'shopify': None, 'name': row[0]}
+                orders[row[headers.get('order_id')]] = {'items': [data], 'shopify': None, 'name': row[headers.get('order_id')]}
 
         return orders
 
