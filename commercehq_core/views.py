@@ -233,6 +233,13 @@ class ProductMappingView(DetailView):
     template_name = 'commercehq/product_mapping.html'
     context_object_name = 'product'
 
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(ProductMappingView, self).dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ProductMappingView, self).get_context_data(**kwargs)
 
@@ -321,6 +328,13 @@ class MappingSupplierView(DetailView):
     model = CommerceHQProduct
     template_name = 'commercehq/mapping_supplier.html'
     context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(MappingSupplierView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(MappingSupplierView, self).get_context_data(**kwargs)
