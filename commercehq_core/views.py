@@ -205,6 +205,8 @@ class ProductDetailView(DetailView):
 
         permissions.user_can_view(self.request.user, self.object)
 
+        context['product_data'] = self.object.parsed
+
         if self.object.source_id:
             context['commercehq_product'] = self.object.sync()
             context['product_data'] = self.object.parsed
