@@ -91,11 +91,13 @@ class Command(BaseCommand):
 
     def fulfill_order(self, order_track):
         store = order_track.store
+        user = store.user
         url = store.get_api_url('orders', order_track.order_id, 'shipments')
-        api_data = utils.order_track_fulfillment(order_track=order_track)
+        api_data = utils.order_track_fulfillment(order_track=order_track, user_config=user.get_config())
 
         fulfilled = False
         tries = 3
+
         while tries > 0:
             try:
                 rep = store.request.post(url=url, json=api_data)

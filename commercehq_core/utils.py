@@ -21,6 +21,8 @@ from shopified_core.shipping_helper import (
     province_from_code
 )
 
+import leadgalaxy.utils as leadgalaxy_utils
+
 
 def get_store_from_request(request):
     """
@@ -333,7 +335,7 @@ def format_chq_errors(e):
 
 
 def store_shipping_carriers(store):
-    rep = store.request.get(store.get_api_url('schipping-carriers'))
+    rep = store.request.get(store.get_api_url('shipping-carriers'))
     if rep.ok:
         return rep.json()
     else:
@@ -535,19 +537,53 @@ def smart_board_by_board(user, board):
             board.save()
 
 
-def order_track_fulfillment(order_track):
+def get_shipping_carrier(shipping_carrier_name, store):
+    shipping_carriers = store_shipping_carriers(store)
+
+    shipping_carriers_by_name = {}
+    for shipping_carrier in shipping_carriers['items']:
+        shipping_carriers_by_name[shipping_carrier['title']] = shipping_carrier
+
+    shipping_carrier = shipping_carriers_by_name.get(shipping_carrier_name, {})
+    if not shipping_carrier:
+        shipping_carrier = shipping_carriers_by_name.get('AfterShip', {})
+
+    return shipping_carrier
+
+
+def should_notify_customer(source_tracking, user_config, shipping_carrier_name):
+    is_usps = shipping_carrier_name == 'USPS'
+    notify_customer = user_config.get('send_shipping_confirmation', 'no')
+    if not notify_customer == 'no':
+        validate_tracking_number = user_config.get('validate_tracking_number', True)
+        is_valid_tracking_number = leadgalaxy_utils.is_valide_tracking_number(source_tracking)
+        if validate_tracking_number and not is_valid_tracking_number and not is_usps:
+            notify_customer = 'no'
+
+    return notify_customer == 'yes'
+
+
+def order_track_fulfillment(order_track, user_config=None):
+    user_config = {} if user_config is None else user_config
+    tracking_number = order_track.source_tracking
+    shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
+    shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
+    notify_customer = should_notify_customer(tracking_number, user_config, shipping_carrier_name)
+
     kwargs = {
         'store_id': order_track.store_id,
         'order_id': order_track.order_id,
         'line_id': order_track.line_id}
 
-    chq_fulfilments_key = 'chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
+    chq_fulfillments_key = 'chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
     chq_quantity_key = 'chq_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs)
 
     return {
+        'notify': notify_customer,
         'data': [{
-            'fulfilment_id': cache.get(chq_fulfilments_key),
-            'tracking_number': order_track.source_tracking,
+            'fulfilment_id': cache.get(chq_fulfillments_key),
+            'tracking_number': tracking_number,
+            'shipping_carrier': shipping_carrier.get('id'),
             'items': [{
                 'id': order_track.line_id,
                 'quantity': cache.get(chq_quantity_key)
