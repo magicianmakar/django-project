@@ -82,15 +82,15 @@
             {% endif %}
 
             {% if user|can:'product_feeds.use' %}
-            <li {% if url_name == 'chq:product_feeds' %}class="active"{% endif %}>
+            <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
                 <a href="#">
                     <i class="fa fa-bar-chart"></i>
                     <span class="nav-label">Marketing</span>
                     <span class="fa arrow"></span>
                 </a>
                 <ul class="nav nav-second-level collapse">
-                    <li {% if url_name == 'chq:product_feeds' %}class="active"{% endif %}>
-                        <a href="{% url 'chq:product_feeds' %}">
+                    <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
+                        <a href="{% url 'product_feeds' store_type='chq' %}">
                             Product Feeds
                         </a>
                     </li>

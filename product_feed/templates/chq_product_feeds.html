@@ -59,7 +59,7 @@
                                     <input type="text" class="form-control"
                                            value="">
 
-                                    <span class="input-group-addon copy-feed-url" style="cursor:pointer" data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/2">
+                                    <span class="input-group-addon copy-feed-url" style="cursor:pointer" data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='chq' %}/2">
                                         <i class="fa fa-files-o itooltip" title="Copy link"></i>
                                     </span>
                                 </div>

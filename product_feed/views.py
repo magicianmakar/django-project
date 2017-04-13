@@ -14,29 +14,28 @@ from .models import FeedStatus, CommerceHQFeedStatus
 
 
 @login_required
-def product_feeds(request):
-    namespace = request.resolver_match.namespace
-
-    if namespace == '':
+def product_feeds(request, *args, **kwargs):
+    if kwargs.get('store_type') == 'chq':
+        return chq_product_feeds(request)
+    else:
         return shopify_product_feeds(request)
 
-    if namespace == 'chq':
-        return chq_product_feeds(request)
-
-    raise Http404
+    raise Http404('Feed Type is not found')
 
 
 @login_required
 def get_product_feed(request, *args, **kwargs):
-    namespace = request.resolver_match.namespace
+    store_type = kwargs.get('store_type')
 
-    if namespace == '':
+    if 'store_type' in kwargs:
+        del kwargs['store_type']
+
+    if store_type == 'chq':
+        return get_chq_product_feed(request, *args, **kwargs)
+    else:
         return get_shopify_product_feed(request, *args, **kwargs)
 
-    if namespace == 'chq':
-        return get_chq_product_feed(request, *args, **kwargs)
-
-    raise Http404
+    raise Http404('Feed Type is not found')
 
 
 def shopify_product_feeds(request):
