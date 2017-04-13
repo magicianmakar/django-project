@@ -480,7 +480,7 @@ def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
         utils.add_shopify_order_note(store, order_id, note, current_note=current_note)
 
     except Exception as e:
-        if not self.request.called_directly:
+        if not self.request.called_directly and (not hasattr(e, 'response') or e.response.status_code != 429):
             countdown = retry_countdown('retry_mark_ordered_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
