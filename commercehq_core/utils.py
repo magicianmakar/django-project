@@ -537,6 +537,30 @@ def smart_board_by_board(user, board):
             board.save()
 
 
+def add_aftership_to_store_carriers(store, attempt=1):
+    url = store.get_api_url('shipping-carriers')
+
+    data = {
+        'title': 'AfterShip',
+        'url': 'http://track.aftership.com/',
+        'is_deleted': False,
+    }
+
+    try:
+        r = store.request.post(url=url, json=data)
+        r.raise_for_status()
+
+    except Exception as e:
+
+        if attempt >= 3:
+            raise e
+
+        attempt += 1
+        return add_aftership_to_store_carriers(store, attempt=attempt)
+
+    return r.json()
+
+
 def get_shipping_carrier(shipping_carrier_name, store):
     shipping_carriers = store_shipping_carriers(store)
 
@@ -547,11 +571,13 @@ def get_shipping_carrier(shipping_carrier_name, store):
     shipping_carrier = shipping_carriers_by_name.get(shipping_carrier_name, {})
     if not shipping_carrier:
         shipping_carrier = shipping_carriers_by_name.get('AfterShip', {})
+        if not shipping_carrier:
+            shipping_carrier = add_aftership_to_store_carriers(store)
 
     return shipping_carrier
 
 
-def should_notify_customer(source_tracking, user_config, shipping_carrier_name):
+def check_notify_customer(source_tracking, user_config, shipping_carrier_name):
     is_usps = shipping_carrier_name == 'USPS'
     notify_customer = user_config.get('send_shipping_confirmation', 'no')
     if not notify_customer == 'no':
@@ -563,30 +589,63 @@ def should_notify_customer(source_tracking, user_config, shipping_carrier_name):
     return notify_customer == 'yes'
 
 
+def cache_fulfillment_data(order_tracks, max):
+    stores = set()
+    store_orders = {}
+    store_order_lines = {}
+
+    for order_track in order_tracks[:max]:
+        stores.add(order_track.store)
+        store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
+        store_order_lines.setdefault(order_track.order_id, set()).add(order_track.line_id)
+
+    cache_keys = []
+    for store in stores:
+        order_ids = list(store_orders[store.id])
+        url = store.get_api_url('orders', 'search') + '?fields=id,fulfilments'
+        r = store.request.post(url=url, json={'id': order_ids})
+        r.raise_for_status()
+        orders = r.json().get('items', [])
+        for order in orders:
+            for fulfilment in order.get('fulfilments', []):
+                for item in fulfilment.get('items', []):
+                    line_ids = store_order_lines[order['id']]
+                    if item['id'] in line_ids:
+                        args = store.id, order['id'], item['id']
+                        fulfilment_key = 'chq_auto_fulfilments_{}_{}_{}'.format(*args)
+                        quantity_key = 'chq_auto_quantity_{}_{}_{}'.format(*args)
+                        cache.set(fulfilment_key, fulfilment['id'], 3600)
+                        cache.set(quantity_key, item['quantity'], 3600)
+                        cache_keys.extend([fulfilment_key, quantity_key])
+
+    return cache_keys
+
+
 def order_track_fulfillment(order_track, user_config=None):
     user_config = {} if user_config is None else user_config
     tracking_number = order_track.source_tracking
     shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
     shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
-    notify_customer = should_notify_customer(tracking_number, user_config, shipping_carrier_name)
+    notify_customer = check_notify_customer(tracking_number, user_config, shipping_carrier_name)
 
     kwargs = {
         'store_id': order_track.store_id,
         'order_id': order_track.order_id,
         'line_id': order_track.line_id}
 
-    chq_fulfillments_key = 'chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
-    chq_quantity_key = 'chq_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs)
+    # Keys are set by `commercehq_core.utils.cache_fulfillment_data`
+    fulfilment_key = 'chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
+    quantity_key = 'chq_auto_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs)
 
     return {
         'notify': notify_customer,
         'data': [{
-            'fulfilment_id': cache.get(chq_fulfillments_key),
+            'fulfilment_id': cache.get(fulfilment_key),
             'tracking_number': tracking_number,
             'shipping_carrier': shipping_carrier.get('id'),
             'items': [{
                 'id': order_track.line_id,
-                'quantity': cache.get(chq_quantity_key)
+                'quantity': cache.get(quantity_key)
             }]
         }],
     }
