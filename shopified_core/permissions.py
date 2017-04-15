@@ -3,7 +3,6 @@ import re
 from django.core.exceptions import PermissionDenied
 
 from leadgalaxy.models import ShopifyStore
-from commercehq_core.models import CommerceHQStore
 
 
 def get_object_user(obj):
@@ -23,7 +22,7 @@ def user_can_add(user, obj):
     if not user.is_subuser:
         can = obj_user == user
     else:
-        if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+        if isinstance(obj, ShopifyStore):
             raise PermissionDenied('Sub-User can not add new stores')
 
         can = obj_user == user.profile.subuser_parent
@@ -35,13 +34,7 @@ def user_can_add(user, obj):
                 store = None
 
             if store:
-                if isinstance(obj, ShopifyStore):
-                    stores = user.profile.get_shopify_stores(flat=True)
-                elif isinstance(obj, CommerceHQStore):
-                    stores = user.profile.get_chq_stores(flat=True)
-                else:
-                    raise PermissionDenied('Unknow Store Type')
-
+                stores = user.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to edit this store.")
 
@@ -59,7 +52,7 @@ def user_can_view(user, obj):
     else:
         can = obj_user == user.profile.subuser_parent
         if can:
-            if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+            if isinstance(obj, ShopifyStore):
                 store = obj
             elif hasattr(obj, 'store'):
                 store = obj.store
@@ -67,13 +60,7 @@ def user_can_view(user, obj):
                 store = None
 
             if store:
-                if isinstance(obj, ShopifyStore):
-                    stores = user.profile.get_shopify_stores(flat=True)
-                elif isinstance(obj, CommerceHQStore):
-                    stores = user.profile.get_chq_stores(flat=True)
-                else:
-                    raise PermissionDenied('Unknow Store Type')
-
+                stores = user.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
@@ -87,7 +74,7 @@ def user_can_edit(user, obj):
     if not user.is_subuser:
         can = obj_user == user
     else:
-        if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+        if isinstance(obj, ShopifyStore):
             raise PermissionDenied('Sub-User can not edit stores')
 
         can = obj_user == user.profile.subuser_parent
@@ -98,13 +85,7 @@ def user_can_edit(user, obj):
                 store = None
 
             if store:
-                if isinstance(obj, ShopifyStore):
-                    stores = user.profile.get_shopify_stores(flat=True)
-                elif isinstance(obj, CommerceHQStore):
-                    stores = user.profile.get_chq_stores(flat=True)
-                else:
-                    raise PermissionDenied('Unknow Store Type')
-
+                stores = user.profile.get_shopify_stores(flat=True)
                 if store.id not in stores:
                     raise PermissionDenied("You don't have autorization to view this store.")
 
@@ -118,7 +99,7 @@ def user_can_delete(user, obj):
     if not user.is_subuser:
         can = obj_user == user
     else:
-        if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+        if isinstance(obj, ShopifyStore):
             raise PermissionDenied('Sub-User can not delete stores')
 
         can = obj_user == user.profile.subuser_parent
