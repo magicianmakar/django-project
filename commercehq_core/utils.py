@@ -572,29 +572,40 @@ def get_shipping_carrier(shipping_carrier_name, store):
     if not shipping_carrier:
         shipping_carrier = shipping_carriers_by_name.get('AfterShip', {})
         if not shipping_carrier:
+            # Returns the newly added AfterShip shipping carrier
             shipping_carrier = add_aftership_to_store_carriers(store)
 
     return shipping_carrier
 
 
-def check_notify_customer(source_tracking, user_config, shipping_carrier_name):
+def check_notify_customer(source_tracking, user_config, shipping_carrier_name, last_shipment=False):
     is_usps = shipping_carrier_name == 'USPS'
-    notify_customer = user_config.get('send_shipping_confirmation', 'no')
-    if not notify_customer == 'no':
+    send_shipping_confirmation = user_config.get('send_shipping_confirmation', 'no')
+    notify_customer = False
+
+    if send_shipping_confirmation == 'yes':
+        notify_customer = True
         validate_tracking_number = user_config.get('validate_tracking_number', True)
         is_valid_tracking_number = leadgalaxy_utils.is_valide_tracking_number(source_tracking)
         if validate_tracking_number and not is_valid_tracking_number and not is_usps:
-            notify_customer = 'no'
+            notify_customer = False
 
-    return notify_customer == 'yes'
+    if send_shipping_confirmation == 'default':
+        notify_customer = True if last_shipment else False
+
+    return notify_customer
 
 
-def cache_fulfillment_data(order_tracks, max):
+def cache_fulfillment_data(order_tracks, max=None):
+    """
+    Caches order data of given `CommerceHQOrderTrack` instances
+    """
+    order_tracks = order_tracks[:max] if max else order_tracks
     stores = set()
     store_orders = {}
     store_order_lines = {}
 
-    for order_track in order_tracks[:max]:
+    for order_track in order_tracks:
         stores.add(order_track.store)
         store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
         store_order_lines.setdefault(order_track.order_id, set()).add(order_track.line_id)
@@ -602,11 +613,24 @@ def cache_fulfillment_data(order_tracks, max):
     cache_keys = []
     for store in stores:
         order_ids = list(store_orders[store.id])
-        url = store.get_api_url('orders', 'search') + '?fields=id,fulfilments'
+        url = store.get_api_url('orders', 'search') + '?fields=id,items,fulfilments'
         r = store.request.post(url=url, json={'id': order_ids})
         r.raise_for_status()
         orders = r.json().get('items', [])
         for order in orders:
+            total_quantity, total_shipped = 0, 0
+
+            for order_item in order.get('items', []):
+                total_quantity += order_item['status']['quantity']
+                total_shipped += order_item['status']['shipped']
+
+            args = store.id, order['id']
+            total_quantity_key = 'chq_auto_total_quantity_{}_{}'.format(*args)
+            total_shipped_key = 'chq_auto_total_shipped_{}_{}'.format(*args)
+            cache.set(total_quantity_key, total_quantity, 3600)
+            cache.set(total_shipped_key, total_shipped, 3600)
+            cache_keys.extend([total_quantity_key, total_shipped_key])
+
             for fulfilment in order.get('fulfilments', []):
                 for item in fulfilment.get('items', []):
                     line_ids = store_order_lines[order['id']]
@@ -626,7 +650,6 @@ def order_track_fulfillment(order_track, user_config=None):
     tracking_number = order_track.source_tracking
     shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
     shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
-    notify_customer = check_notify_customer(tracking_number, user_config, shipping_carrier_name)
 
     kwargs = {
         'store_id': order_track.store_id,
@@ -636,6 +659,14 @@ def order_track_fulfillment(order_track, user_config=None):
     # Keys are set by `commercehq_core.utils.cache_fulfillment_data`
     fulfilment_key = 'chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
     quantity_key = 'chq_auto_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs)
+    total_quantity_key = 'chq_auto_total_quantity_{store_id}_{order_id}'.format(**kwargs)
+    total_shipped_key = 'chq_auto_total_shipped_{store_id}_{order_id}'.format(**kwargs)
+
+    total_quantity = cache.get(total_quantity_key)
+    total_shipped = cache.get(total_shipped_key)
+    quantity = cache.get(quantity_key)
+    last_shipment = (total_quantity - total_shipped - quantity) == 0
+    notify_customer = check_notify_customer(tracking_number, user_config, shipping_carrier_name, last_shipment)
 
     return {
         'notify': notify_customer,
@@ -645,7 +676,7 @@ def order_track_fulfillment(order_track, user_config=None):
             'shipping_carrier': shipping_carrier.get('id'),
             'items': [{
                 'id': order_track.line_id,
-                'quantity': cache.get(quantity_key)
+                'quantity': quantity
             }]
         }],
     }

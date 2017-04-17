@@ -30,3 +30,12 @@ class CommerceHQProductFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'commercehq_core.CommerceHQProduct'
+
+
+class CommerceHQOrderTrackFactory(factory.DjangoModelFactory):
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    order_id = factory.fuzzy.FuzzyInteger(999)
+    line_id = factory.fuzzy.FuzzyInteger(999)
+
+    class Meta:
+        model = 'commercehq_core.CommerceHQOrderTrack'
