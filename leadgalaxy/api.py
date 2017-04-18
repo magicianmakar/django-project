@@ -2114,7 +2114,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                             'supplier_url': data.get('supplier')
                         })
 
-            supplier_url = utils.remove_link_query(supplier_url)
+        elif utils.get_domain(supplier_url) == 'alitems':
+            supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['ulp'].pop()
+
+        else:
+            raven_client.captureMessage('Unsupported Import Source', level='warning', extra={'url': supplier_url})
+
+        supplier_url = utils.remove_link_query(supplier_url)
 
         product = ShopifyProduct(
             store=store,
