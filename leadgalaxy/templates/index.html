@@ -495,7 +495,11 @@
                                         Site ID or Deeplink {% include 'partial/help_tooltip.html' with help="<a href='https://help.admitad.com/en/topic/118-what-is-deeplink/' target='_blank'>How to find my Deeplink?</a>" qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-4">
-                                        <input type="text" class="form-control col-sm-2" id="admitad_site_id" name="admitad_site_id" value="{{config.admitad_site_id}}">
+                                        <input type="text" class="form-control col-sm-2" id="admitad_site_id" name="admitad_site_id"
+                                        {% if config.admitad_site_id %}
+                                            value="https://alitems.com/g/{{config.admitad_site_id}}/"
+                                        {% endif %}
+                                        >
                                     </div>
                                 </div>
                             </div>
