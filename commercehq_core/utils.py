@@ -332,7 +332,7 @@ def format_chq_errors(e):
 
 
 def store_shipping_carriers(store):
-    rep = store.request.get(store.get_api_url('schipping-carriers'))
+    rep = store.request.get(store.get_api_url('shipping-carriers'))
     if rep.ok:
         return rep.json()
     else:
