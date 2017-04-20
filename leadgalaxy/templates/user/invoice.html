@@ -19,13 +19,13 @@
         {% endif %}
     </div>
     <div class="panel-heading">
-        <p>{{ invoice.period_start|date:'M. d, Y' }} - {{ invoice.period_end|date:'M. d, Y' }}</p>
+        <p>{{ invoice.date|date:'M. d, Y' }}</p>
     </div>
     <div class="panel-body">
         <table class="table table-striped">
             <thead>
                 <th>Description</th>
-                <th>Quantity</th>
+                <th>Period</th>
                 <th>Amount</th>
             </thead>
             <tbody>
@@ -37,7 +37,14 @@
                         {% else %}
                             <td>{{ line.plan.name }}</td>
                         {% endif %}
-                        <td>{{ line.quantity }}</td>
+                        <td>
+                            {% if line.period %}
+                                {{ line.period.start|date:'M. d, Y' }}
+                                {% if line.period.end %}
+                                    - {{ line.period.end|date:'M. d, Y' }}
+                                {% endif %}
+                            {% endif %}
+                        </td>
                         <td>{{ line.currency|upper }} {{ line.amount }}</td>
                     {% else %}
                         <td>{{ line.description }}</td>
