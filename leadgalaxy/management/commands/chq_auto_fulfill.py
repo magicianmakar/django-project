@@ -57,10 +57,10 @@ class Command(BaseCommand):
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
 
-        fulfill_max = min(fulfill_max, orders.count()) if fulfill_max else orders.count()
+        fulfill_max = min(fulfill_max, len(orders)) if fulfill_max else len(orders)
         cache_keys = utils.cache_fulfillment_data(orders, fulfill_max)
 
-        self.write('Auto Fulfill {}/{} CHQ Orders'.format(fulfill_max, orders.count()), self.style.HTTP_INFO)
+        self.write('Auto Fulfill {}/{} CHQ Orders'.format(fulfill_max, len(orders)), self.style.HTTP_INFO)
         self.store_countdown = {}
         self.start_at = timezone.now()
         self.fulfill_threshold = timezone.now() - timezone.timedelta(seconds=threshold * 60)
