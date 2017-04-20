@@ -55,9 +55,7 @@ def draw_pdf(buffer, invoice):
             ['', ''],
             [invoicee_label(invoice), ''],
             [invoicee_paragraph(customer), ''],
-            ['', ''],
-            [billing_period_label(invoice), ''],
-            [billing_period_paragraph(invoice), '']]
+            ['', '']]
     table = Table(data, colWidths=[10 * cm, 5 * cm])
     parts.append(table)
     parts.append(Spacer(1, 1 * cm))
@@ -153,19 +151,8 @@ def get_address_line_string(*args):
     return ', '.join(line_items)
 
 
-def billing_period_label(invoice):
-    return Paragraph('BILLING PERIOD', STYLES['label'])
-
-
-def billing_period_paragraph(invoice):
-    start = format_date(invoice.period_start)
-    end = format_date(invoice.period_end)
-    text = '%s - %s' % (start, end)
-    return Paragraph(text, STYLES['default'])
-
-
 def append_items_table(parts, invoice):
-    data = [['Description', 'Quantity', 'Amount']]
+    data = [['Description', 'Period', 'Amount']]
     append_item_rows(data, invoice)
     append_subtotal_row(data, invoice)
     append_discount_row(data, invoice)
@@ -186,14 +173,25 @@ def append_items_table(parts, invoice):
 
 def append_item_rows(data, invoice):
     for line in invoice.lines.get('data', []):
+        description = line.description
+        period = ''
+
         if line.plan:
             description = line.description or line.plan.name
-            quantity = line.quantity
-        else:
-            description = line.description
-            quantity = ''
+
+        if line.get('period'):
+            start, end = '', ''
+
+            if line['period'].get('start'):
+                start = format_date(line['period']['start'])
+
+            if line['period'].get('end'):
+                end = format_date(line['period']['end'])
+
+            period = '%s - %s' % (start, end)
+
         amount = line.currency.upper() + ' ' + str(line.amount)
-        data.append([Paragraph(description, styleN), quantity, amount])
+        data.append([Paragraph(description, styleN), period, amount])
 
 
 def append_subtotal_row(data, invoice):
