@@ -562,6 +562,12 @@ def add_aftership_to_store_carriers(store, attempt=1):
 
 
 def get_shipping_carrier(shipping_carrier_name, store):
+    cache_key = 'chq_shipping_carriers_{}'.format(store.id)
+
+    shipping_carriers = cache.get(cache_key)
+    if shipping_carriers is not None:
+        return shipping_carriers
+
     shipping_carriers = store_shipping_carriers(store)
 
     shipping_carriers_by_name = {}
@@ -574,6 +580,8 @@ def get_shipping_carrier(shipping_carrier_name, store):
         if not shipping_carrier:
             # Returns the newly added AfterShip shipping carrier
             shipping_carrier = add_aftership_to_store_carriers(store)
+
+    cache.set(cache_key, shipping_carrier, timeout=3600)
 
     return shipping_carrier
 
