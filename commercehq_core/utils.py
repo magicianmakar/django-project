@@ -335,9 +335,9 @@ def format_chq_errors(e):
 
 
 def store_shipping_carriers(store):
-    rep = store.request.get(store.get_api_url('shipping-carriers'))
+    rep = store.request.get(store.get_api_url('shipping-carriers'), params={'size': 100})
     if rep.ok:
-        return rep.json()
+        return rep.json()['items']
     else:
         carriers = [
             {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
