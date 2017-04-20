@@ -48,6 +48,9 @@ class CommerceHQStore(models.Model):
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
 
+    list_index = models.IntegerField(default=0)
+    auto_fulfill = models.CharField(max_length=50, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -57,6 +60,11 @@ class CommerceHQStore(models.Model):
     def save(self, *args, **kwargs):
         if not self.store_hash:
             self.store_hash = get_random_string(32, 'abcdef0123456789')
+
+        try:
+            self.auto_fulfill = self.user.get_config('auto_shopify_fulfill', '')
+        except User.DoesNotExist:
+            pass
 
         super(CommerceHQStore, self).save(*args, **kwargs)
 
