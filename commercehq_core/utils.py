@@ -621,10 +621,20 @@ def cache_fulfillment_data(order_tracks, max=None):
     cache_keys = []
     for store in stores:
         order_ids = list(store_orders[store.id])
-        url = store.get_api_url('orders', 'search') + '?fields=id,items,fulfilments'
-        r = store.request.post(url=url, json={'id': order_ids})
+
+        r = store.request.post(
+            url=store.get_api_url('orders', 'search'),
+            json={'id': order_ids},
+            params={
+                'size': 200,
+                'fields': 'id,items,fulfilments'
+            },
+        )
+
         r.raise_for_status()
+
         orders = r.json().get('items', [])
+
         for order in orders:
             total_quantity, total_shipped = 0, 0
 
