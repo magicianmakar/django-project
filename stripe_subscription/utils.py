@@ -520,6 +520,13 @@ def normalize_invoice(invoice):
         line['amount'] *= Decimal('0.01')
         if line.get('plan'):
             line['plan']['amount'] *= Decimal('0.01')
+        if line.get('period'):
+            if line['period'].get('start'):
+                period_start = datetime.datetime.fromtimestamp(float(line['period']['start']))
+                line['period']['start'] = period_start
+            if line['period'].get('end'):
+                period_end = datetime.datetime.fromtimestamp(float(line['period']['end']))
+                line['period']['end'] = period_end
 
     return invoice
 
