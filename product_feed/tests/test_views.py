@@ -38,7 +38,7 @@ class ProductFeeds(TestCase):
         self.assertRedirects(r, '%s?next=%s' % (reverse('login'), path))
 
     def test_must_be_logged_in_for_chq_store_feeds(self):
-        path = '/chq/marketing/feeds'
+        path = '/marketing/feeds/chq'
         r = self.client.get(path)
         self.assertRedirects(r, '%s?next=%s' % (reverse('login'), path))
 
@@ -49,7 +49,7 @@ class ProductFeeds(TestCase):
 
     def test_must_use_chq_product_feeds_template(self):
         self.login()
-        r = self.client.get('/chq/marketing/feeds')
+        r = self.client.get('/marketing/feeds/chq')
         self.assertTemplateUsed(r, 'chq_product_feeds.html')
 
     def test_must_set_all_variants_of_shopify_store(self):
@@ -67,7 +67,7 @@ class ProductFeeds(TestCase):
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(store=store)
         data = {'feed': feed.id, 'all_variants': False}
-        r = self.client.post('/chq/marketing/feeds', data)
+        r = self.client.post('/marketing/feeds/chq', data)
         feed.refresh_from_db()
         self.assertEqual(r.status_code, 200)
         self.assertFalse(feed.all_variants)
@@ -87,7 +87,7 @@ class ProductFeeds(TestCase):
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(store=store)
         data = {'feed': feed.id, 'include_variants_id': False}
-        r = self.client.post('/chq/marketing/feeds', data)
+        r = self.client.post('/marketing/feeds/chq', data)
         feed.refresh_from_db()
         self.assertEqual(r.status_code, 200)
         self.assertFalse(feed.include_variants_id)
@@ -110,7 +110,7 @@ class ProductFeeds(TestCase):
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(store=store)
         data = {'feed': feed.id, 'update_feed': True}
-        r = self.client.post('/chq/marketing/feeds', data)
+        r = self.client.post('/marketing/feeds/chq', data)
         self.assertEqual(r.status_code, 200)
         self.assertTrue(generate_chq_feed.called)
 
@@ -128,7 +128,7 @@ class ProductFeeds(TestCase):
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(store=store)
         data = {'feed': feed.id}
-        r = self.client.post('/chq/marketing/feeds', data)
+        r = self.client.post('/marketing/feeds/chq', data)
         self.assertEqual(r.status_code, 500)
         self.assertIn('Missing parameters', r.content)
 
@@ -144,7 +144,7 @@ class ProductFeeds(TestCase):
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(store=store)
-        r = self.client.get('/chq/marketing/feeds')
+        r = self.client.get('/marketing/feeds/chq')
         feeds = CommerceHQFeedStatus.objects.filter(store__user=self.user)
         self.assertItemsEqual(feeds, r.context['feeds'])
 
@@ -157,7 +157,7 @@ class ProductFeeds(TestCase):
     def test_must_show_upgrade_page_for_chq_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
-        r = self.client.get('/chq/marketing/feeds')
+        r = self.client.get('/marketing/feeds/chq')
         self.assertTemplateUsed('commercehq/upgrade.html')
 
 
@@ -192,7 +192,7 @@ class GetProductFeed(TestCase):
         generate_chq_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
-        r = self.client.get('/chq/marketing/feeds/{}'.format(store.store_hash[:8]))
+        r = self.client.get('/marketing/feeds/chq/{}'.format(store.store_hash[:8]))
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_chq_product_feed.called)
 
@@ -207,7 +207,7 @@ class GetProductFeed(TestCase):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
         store = CommerceHQStoreFactory(user=self.user)
-        r = self.client.get('/chq/marketing/feeds/{}'.format(store.store_hash[:8]))
+        r = self.client.get('/marketing/feeds/chq/{}'.format(store.store_hash[:8]))
         self.assertEqual(r.status_code, 404)
 
     @patch('product_feed.models.ShopifyStore.get_info', Mock(return_value=True))
@@ -226,7 +226,7 @@ class GetProductFeed(TestCase):
         generate_chq_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
-        path = '/chq/marketing/feeds/{}'.format(store.store_hash[:8])
+        path = '/marketing/feeds/chq/{}'.format(store.store_hash[:8])
         r = self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
         self.assertEqual(store.feedstatus.revision, 9)
@@ -250,7 +250,7 @@ class GetProductFeed(TestCase):
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(fb_access_at=None, store=store)
         headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
-        r = self.client.get('/chq/marketing/feeds/{}'.format(store.store_hash[:8]), **headers)
+        r = self.client.get('/marketing/feeds/chq/{}'.format(store.store_hash[:8]), **headers)
         feed.refresh_from_db()
         self.assertIsNotNone(feed.fb_access_at)
 
@@ -269,6 +269,6 @@ class GetProductFeed(TestCase):
         generate_chq_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
-        path = '/chq/marketing/feeds/{}'.format(store.store_hash[:8]) + '?nocache=1'
+        path = '/marketing/feeds/chq/{}'.format(store.store_hash[:8]) + '?nocache=1'
         r = self.client.get(path)
         generate_chq_product_feed.assert_called_with(store.feedstatus, nocache=True)
