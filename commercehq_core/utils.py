@@ -303,7 +303,7 @@ def order_id_from_name(store, order_name, default=None):
     }
 
     params = {
-        'order_number': order_name,
+        'id': order_name,
     }
 
     rep = store.request.post(
@@ -445,7 +445,7 @@ class CommerceHQOrdersPaginator(Paginator):
 
     def _request_filters(self):
         filters = {
-            'order_number': self.request.GET.get('query'),
+            'id': re.sub(r'[^0-9]', '', self.request.GET.get('query') or ''),
             'status': self.request.GET.get('fulfillment'),
             'paid': self.request.GET.get('financial'),
         }
@@ -455,12 +455,6 @@ class CommerceHQOrdersPaginator(Paginator):
                 del filters[k]
             elif ',' in v:
                 filters[k] = v.split(',')
-
-        if safeInt(filters.get('order_number')):
-            track = CommerceHQOrderTrack.objects.filter(source_id=filters['order_number']).first()
-            if track:
-                del filters['order_number']
-                filters['id'] = track.order_id
 
         return filters
 

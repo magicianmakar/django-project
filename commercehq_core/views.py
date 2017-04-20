@@ -486,7 +486,7 @@ class OrdersList(ListView):
             order['date'] = created_at
             order['date_str'] = created_at.format('MM/DD/YYYY')
             order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
-            order['order_url'] = self.store.get_admin_url('admin', 'orders', order['order_number'])
+            order['order_url'] = self.store.get_admin_url('admin', 'orders', order['id'])
             order['store'] = self.store
             order['placed_orders'] = 0
             order['connected_lines'] = 0
