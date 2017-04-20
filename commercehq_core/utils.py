@@ -568,11 +568,9 @@ def get_shipping_carrier(shipping_carrier_name, store):
     if shipping_carriers is not None:
         return shipping_carriers
 
-    shipping_carriers = store_shipping_carriers(store)
-
     shipping_carriers_by_name = {}
-    for shipping_carrier in shipping_carriers['items']:
-        shipping_carriers_by_name[shipping_carrier['title']] = shipping_carrier
+    for i in store_shipping_carriers(store):
+        shipping_carriers_by_name[i['title']] = i
 
     shipping_carrier = shipping_carriers_by_name.get(shipping_carrier_name, {})
     if not shipping_carrier:
