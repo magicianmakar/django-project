@@ -634,6 +634,11 @@ def webhook(request, provider, option):
             elif topic == 'products/delete':
                 product.price_notification_id = 0
                 product.shopify_id = 0
+
+                images = product.get_original_data().get('images')
+                if images:
+                    product.update_data({'images': images})
+
                 product.save()
 
                 AliexpressProductChange.objects.filter(product=product).delete()
