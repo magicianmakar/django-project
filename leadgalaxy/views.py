@@ -635,9 +635,12 @@ def webhook(request, provider, option):
                 product.price_notification_id = 0
                 product.shopify_id = 0
 
-                images = product.get_original_data().get('images')
-                if images:
-                    product.update_data({'images': images})
+                try:
+                    images = json.load(product.get_original_data()).get('images')
+                    if images:
+                        product.update_data({'images': images})
+                except:
+                    pass
 
                 product.save()
 
