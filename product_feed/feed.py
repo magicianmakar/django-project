@@ -174,9 +174,9 @@ class CommerceHQProductFeed():
         self.writer.startTag("rss", {"version": "2.0"})
         self.writer.startTag("channel")
 
-        self._add_element('title', self.info['name'])
-        self._add_element('link', 'https://{}'.format(self.info['domain']))
-        self._add_element('description', u'{} Products Feed'.format(self.info['name']))
+        self._add_element('title', self.store.title)
+        self._add_element('link', self.store.get_store_url())
+        self._add_element('description', u'{} Products Feed'.format(self.store.title))
 
     def save(self):
         self.writer.endTag()
@@ -229,7 +229,7 @@ class CommerceHQProductFeed():
         else:
             self._add_element('g:id', '{}'.format(variant_id))
 
-        self._add_element('g:link', 'https://{domain}/products/{p[seo_url]}'.format(domain=self.domain, p=product))
+        self._add_element('g:link', self.store.get_store_url('products', product['seo_url']))
         self._add_element('g:title', product.get('title'))
         self._add_element('g:description', product.get('title'))
         self._add_element('g:image_link', image)

@@ -93,6 +93,13 @@ class CommerceHQStore(models.Model):
     def get_admin_url(self, *args):
         return self.get_api_url(*args, api=False)
 
+    def get_store_url(self, *args):
+        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', self.api_url).pop()
+        if len(args):
+            url = url + '/' + '/'.join([str(i) for i in args]).lstrip('/')
+
+        return u'https://{}'.format(url)
+
     @property
     def request(self):
         s = requests.Session()
