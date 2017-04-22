@@ -202,32 +202,29 @@ class CommerceHQProductFeed():
 
     def add_product(self, product):
         if len(product.get('variants', [])) and not product.get('is_draft'):
-            # Add the first variant with Product ID
-            self._add_variant(product, product['variants'][0], variant_id=product['id'])
-
             if self.include_variants:
                 for variant in product['variants']:
                     self._add_variant(product, variant)
 
                     if not self.all_variants:
                         break
+            else:
+                self._add_variant(product, product['variants'][0])
 
     def _add_variant(self, product, variant, variant_id=None):
-        image = product.get('image')
-        if image:
-            image = image.get('path')
+        if variant.get('images'):
+            image = variant.get('images')[0].get('path')
+        elif product.get('images'):
+            image = product.get('images')[0].get('path')
         else:
-            image = ''
+            image = self.store.get_store_url()
 
         self.writer.startTag('item')
 
         if variant_id is None:
             variant_id = variant['id']
 
-        if self.revision == 1:
-            self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
-        else:
-            self._add_element('g:id', '{}'.format(variant_id))
+        self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
 
         self._add_element('g:link', self.store.get_store_url('products', product['seo_url']))
         self._add_element('g:title', product.get('title'))
