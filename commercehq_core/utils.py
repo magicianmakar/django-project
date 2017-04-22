@@ -72,7 +72,7 @@ def get_chq_products(store, page=1, limit=50, all_products=False):
     api_url = store.get_api_url('products')
 
     if not all_products:
-        params = {'page': page, 'size': limit, 'expand': ['variants']}
+        params = {'page': page, 'size': limit, 'expand': 'images,variants'}
         response = store.request.get(api_url, params=params)
         products = response.json()['items']
 
