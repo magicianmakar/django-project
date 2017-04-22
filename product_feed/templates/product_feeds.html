@@ -122,7 +122,10 @@
 <script type="text/javascript">
     $(function () {
         $('.copy-feed-url').each(function (i, el) {
-            $(el).parent().find('input').val($(el).attr('data-clipboard-text'));
+            var url = $(el).attr('data-clipboard-text').replace('http://', 'https://');
+
+            $(el).attr('data-clipboard-text', url);
+            $(el).parent().find('input').val(url);
         });
 
         new Clipboard('.copy-feed-url', {
