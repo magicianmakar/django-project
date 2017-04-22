@@ -123,12 +123,19 @@ class Command(BaseCommand):
                     continue
 
                 elif e.response.status_code == 422:
-                    message = e.response.json().get('message')
-                    self.write(u'{} #{} in [{}]'.format(message, order_track.order_id, store.title))
-                    order_track.commercehq_status = 'fulfilled'
-                    order_track.save()
+                    if 'shipped count of a product exceeds quantity' in e.response.text.lower():
+                        self.write(u'Already fulfilled #{} in [{}]'.format(order_track.order_id, store.title))
+                        order_track.commercehq_status = 'fulfilled'
+                        order_track.save()
 
-                    return False
+                        return False
+                    else:
+                        raven_client.captureException(
+                            level='warning',
+                            extra={'order_track': order_track.id, 'response': e.response.text}
+                        )
+
+                        return False
 
                 elif e.response.status_code == 404:
                     self.write(u'Not found #{} in [{}]'.format(order_track.order_id, store.title))
