@@ -201,17 +201,25 @@ class CommerceHQProductFeed():
                 self.add_product(p)
 
     def add_product(self, product):
-        if len(product.get('variants', [])) and not product.get('is_draft'):
-            if self.include_variants:
-                for variant in product['variants']:
-                    self._add_variant(product, variant)
+        if product.get('is_draft'):
+            return
 
-                    if not self.all_variants:
-                        break
-            else:
-                self._add_variant(product, product['variants'][0])
+        if product.get('is_multi'):
+            for variant in product.get('variants', []):
+                self._add_variant(product, variant)
+
+                if not self.all_variants:
+                    break
+        else:
+            self._add_variant(product, None)
 
     def _add_variant(self, product, variant, variant_id=None):
+        if variant is None:
+            variant = {
+                'id': 0,
+                'price': product['price']
+            }
+
         if variant.get('images'):
             image = variant.get('images')[0].get('path')
         elif product.get('images'):
