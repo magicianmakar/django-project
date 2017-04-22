@@ -23,7 +23,6 @@ def product_feeds(request, *args, **kwargs):
     raise Http404('Feed Type is not found')
 
 
-@login_required
 def get_product_feed(request, *args, **kwargs):
     store_type = kwargs.get('store_type')
 
