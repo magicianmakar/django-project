@@ -2394,6 +2394,7 @@ def orders_view(request):
         order['date_str'] = created_at.format('MM/DD/YYYY')
         order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
+        order['order_api_url'] = store.get_link('/admin/orders/%d.json' % order['id'], api=True)
         order['store'] = store
         order['placed_orders'] = 0
         order['connected_lines'] = 0

@@ -285,6 +285,10 @@
                                 <div class="row">
                                     <div class="col-xs-2">
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
+
+                                        {% if request.session.is_hijacked_user or user.is_superuser and request.GET.debug %}
+                                            <a class="badge badge-info" target="_blank" href="{{order.order_api_url}}">order</a>
+                                        {% endif %}
                                     </div>
                                     <div class="col-xs-2">
                                         <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
@@ -418,8 +422,8 @@
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
-                                                {% if session.is_hijacked_user or user.is_superuser and request.GET.debug %}
-                                                    <a class="badge badge-default" href="/api/shopify/order-data?order={{item.order_data_id}}">Data</a>
+                                                {% if request.session.is_hijacked_user or user.is_superuser and request.GET.debug %}
+                                                    <a class="badge badge-info" target="_blank" href="/api/shopify/order-data?order={{item.order_data_id}}">data</a>
                                                 {% endif %}
 
                                                 <span>Supplier:</span>
