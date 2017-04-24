@@ -16,19 +16,17 @@ from ..utils import (
 class GetShippingCarrierTestCase(TestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
-        self.store_shipping_carriers = {
-            'items': [{
-                'id': 1,
-                'title': 'USPS',
-                'url': 'https://tools.usps.com/go/TrackConfirmAction_input?qtc_tLabels1=',
-                'is_deleted': False
-            }, {
-                'id': 2,
-                'title': 'AfterShip',
-                'url': 'http://track.aftership.com/',
-                'is_deleted': False
-            }]
-        }
+        self.store_shipping_carriers = [{
+            'id': 1,
+            'title': 'USPS',
+            'url': 'https://tools.usps.com/go/TrackConfirmAction_input?qtc_tLabels1=',
+            'is_deleted': False
+        }, {
+            'id': 2,
+            'title': 'AfterShip',
+            'url': 'http://track.aftership.com/',
+            'is_deleted': False
+        }]
 
     @patch('commercehq_core.utils.store_shipping_carriers')
     def test_must_return_shipping_carrier_of_same_name(self, store_shipping_carriers):
