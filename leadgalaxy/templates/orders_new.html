@@ -418,6 +418,10 @@
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
+                                                {% if session.is_hijacked_user or user.is_superuser and request.GET.debug %}
+                                                    <a class="badge badge-default" href="/api/shopify/order-data?order={{item.order_data_id}}">Data</a>
+                                                {% endif %}
+
                                                 <span>Supplier:</span>
                                                 {% if item.supplier %}
                                                     <a {% if supplier.url %}
