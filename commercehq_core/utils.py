@@ -254,6 +254,9 @@ def get_tracking_orders(store, tracker_orders):
             for item in fulfilment['items']:
                 orders_cache['chq_fulfilments_{}_{}_{}'.format(store.id, order['id'], item['id'])] = fulfilment['id']
 
+        for line in order['items']:
+            orders_cache['chq_quantity_{}_{}_{}'.format(store.id, order['id'], line['id'])] = line['quantity']
+
     if len(orders_cache):
         cache.set_many(orders_cache, timeout=3600)
 
