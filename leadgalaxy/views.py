@@ -2107,13 +2107,13 @@ def save_image_s3(request):
     if not request.GET.get('chq'):
         product = ShopifyProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)
-        UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url)
+        UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
     else:
         from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload
 
         product = CommerceHQProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)
-        CommerceHQUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url)
+        CommerceHQUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
 
     # For Pixlr upload, trigger the close of the editor
     if 'advanced' in request.GET:

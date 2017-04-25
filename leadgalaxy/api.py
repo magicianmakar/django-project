@@ -651,7 +651,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 UserUpload.objects.create(
                     user=request.user.models_user,
                     product=data.get('product_id'),
-                    url=img_url
+                    url=img_url[:510]
                 )
 
                 user.clippingmagic.remaining_credits -= 1
