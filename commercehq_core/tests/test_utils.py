@@ -43,7 +43,7 @@ class GetShippingCarrierTestCase(TestCase):
     @patch('commercehq_core.utils.add_aftership_to_store_carriers')
     @patch('commercehq_core.utils.store_shipping_carriers')
     def test_must_add_aftership_if_no_aftership(self, store_shipping_carriers, add_aftership_to_store_carriers):
-        aftership = self.store_shipping_carriers['items'].pop()
+        aftership = self.store_shipping_carriers.pop()
         store_shipping_carriers.return_value = self.store_shipping_carriers
         add_aftership_to_store_carriers.return_value = aftership
         shipping_carrier = get_shipping_carrier('NotInThere', self.store)
