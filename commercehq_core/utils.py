@@ -239,6 +239,7 @@ def get_tracking_orders(store, tracker_orders):
 
     orders = {}
     lines = {}
+    orders_cache = {}
 
     for order in rep.json()['items']:
         orders[order['id']] = order
@@ -248,6 +249,13 @@ def get_tracking_orders(store, tracker_orders):
             line['image'] = (line.get('image') or '').replace('/uploads/', '/uploads/thumbnail_')
 
             lines['{}-{}'.format(order['id'], line['id'])] = line
+
+        for fulfilment in order['fulfilments']:
+            for item in fulfilment['items']:
+                orders_cache['chq_fulfilments_{}_{}_{}'.format(store.id, order['id'], item['id'])] = fulfilment['id']
+
+    if len(orders_cache):
+        cache.set_many(orders_cache, timeout=3600)
 
     new_tracker_orders = []
     for tracked in tracker_orders:
