@@ -57,7 +57,7 @@ $('#install-store').click(function (e) {
             window.location.href = '/shopify/install/' + shop;
         });
     } else {
-        $(this).button('loading');
+        $(this).bootstrapBtn('loading');
         window.location.href = '/shopify/install/' + shop;
     }
 });
@@ -72,7 +72,7 @@ $('#add-store').click(function(e) {
         url = 'https://' + url[0];
     }
 
-    $('#add-store').button('loading');
+    $('#add-store').bootstrapBtn('loading');
 
     $.ajax({
         url: '/api/add-store',
@@ -93,7 +93,7 @@ $('#add-store').click(function(e) {
             displayAjaxError('Add Store', data);
         },
         complete: function () {
-            $('#add-store').button('reset');
+            $('#add-store').bootstrapBtn('reset');
         }
     });
 });
@@ -234,7 +234,7 @@ $('#update-store').click(function (e) {
         url = 'https://' + url[0];
     }
 
-    btn.button('loading');
+    btn.bootstrapBtn('loading');
 
     $.ajax({
         url: '/api/update-store',
@@ -259,7 +259,7 @@ $('#update-store').click(function (e) {
             displayAjaxError('Store update', data);
         },
         complete: function () {
-            this.btn.button('reset');
+            this.btn.bootstrapBtn('reset');
         }
     });
 });
@@ -282,7 +282,7 @@ $('#auto_shopify_fulfill').change(function (e) {
 $('.verify-api-url').click(function (e) {
     e.preventDefault();
 
-    $(this).button('loading');
+    $(this).bootstrapBtn('loading');
 
     $.ajax({
         url: '/api/store-verify',
@@ -300,7 +300,7 @@ $('.verify-api-url').click(function (e) {
             displayAjaxError('API URL', data);
         },
         complete: function () {
-            this.btn.button('reset');
+            this.btn.bootstrapBtn('reset');
         }
     });
 });
@@ -330,7 +330,7 @@ $('#save-custom-tracking-btn').click(function (e) {
     e.preventDefault();
 
     var btn = $(this);
-    btn.button('loading');
+    btn.bootstrapBtn('loading');
 
     var tracking_url = $('#custom-tracking-url-input').val().trim();
     var store = $('#custom-tracking-url-input').attr('store');
@@ -355,7 +355,7 @@ $('#save-custom-tracking-btn').click(function (e) {
             displayAjaxError('Custom Tracking URL', data);
         },
         complete: function () {
-            btn.button('reset');
+            btn.bootstrapBtn('reset');
         }
     });
 });
@@ -566,6 +566,10 @@ $(function () {
         editor_sync_content();
         setup_full_editor('default_desc', false, 'default_desc', true);
     }, 1000);
+
+    $(".tag-it").tagit({
+        allowSpaces: true
+    });
 });
 
 })();

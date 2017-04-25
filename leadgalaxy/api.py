@@ -1654,6 +1654,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             cache.set(note_delay_key, note_delay + 5, timeout=5)
 
+            aliexpress_order_tags = user.models_user.get_config('aliexpress_order_tags', '')
+            if aliexpress_order_tags:
+                tasks.add_ordered_tags.delay(store.id, order_id, aliexpress_order_tags)
+
         return self.api_success()
 
     def delete_order_fulfill(self, request, user, data):
@@ -1707,6 +1711,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order.data = json.dumps(order_data)
 
         order.save()
+
+        tracking_number_tags = user.models_user.get_config('tracking_number_tags', '')
+        if tracking_number_tags:
+            tasks.add_ordered_tags.delay(order.store.id, order.order_id, tracking_number_tags)
 
         return self.api_success()
 

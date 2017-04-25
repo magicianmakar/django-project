@@ -595,6 +595,40 @@
 
                         {% endif %}
 
+                        {% if user|can:'orders.use' %}
+
+                        <div class="setting-section">
+                            <h3 class="setting-title">Orders</h3>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="aliexpress_order_tags" class="col-sm-4 col-xs-8 control-label">
+                                        Create the following tag(s) on the Shopify order when order is placed on AliExpress
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                       <input type="text" id="aliexpress_order_tags" placeholder="Tags" name="aliexpress_order_tags" class="form-control tag-it" value="{% if config.aliexpress_order_tags %}{{config.aliexpress_order_tags}}{% endif %}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="tracking_number_tags" class="col-sm-4 col-xs-8 control-label">
+                                        Create the following tag(s) on the Shopify order when tracking number is added to Shopified App
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="text" id="tracking_number_tags" placeholder="Tags" name="tracking_number_tags" class="form-control tag-it" value="{% if config.tracking_number_tags %}{{config.tracking_number_tags}}{% endif %}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% endif %}
+
                         <div class="col-md-12"><hr /></div>
                         <div class="form-group">
                             <div class="col-sm-offset-1 col-sm-10">
@@ -823,9 +857,13 @@
 {% endblock %}
 
 {% block extracss %}
+
+    <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+
 {% compress css %}
     <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/dragula.js/dist/dragula.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 {% endcompress %}
 
 <style type="text/css">
@@ -881,12 +919,22 @@
 
 {% block extrajs %}
 
+    <script type="text/javascript">
+        var bootstrapButton = $.fn.button.noConflict();
+        $.fn.bootstrapBtn = bootstrapButton;
+
+        var bootstrapTooltip = $.fn.tooltip.noConflict();
+        $.fn.bootstrapTooltip = bootstrapTooltip;
+    </script>
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+    <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
 {% compress js %}
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/index.js' %}"></script>
+    <script src="{% static 'js/tag-it.min.js' %}"></script>
+    <script src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
 
 {% if first_visit %}

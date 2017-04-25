@@ -610,3 +610,16 @@ def create_image_zip(self, images, product_id):
             'success': False,
             'product': product_id,
         })
+
+
+@celery_app.task(base=CaptureFailure, bind=True)
+def add_ordered_tags(self, store_id, order_id, tags):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+
+        utils.add_shopify_order_tags(store, order_id, tags)
+
+    except Exception as e:
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)

@@ -423,6 +423,26 @@ class OrdersTestCase(TestCase):
         self.assertIn(note2, order_note)
         self.assertIn(note3, order_note)
 
+    def test_order_tags(self):
+        order_id = 4905209738
+        line_id = 9309669834
+
+        store = ShopifyStoreFactory()
+        order = utils.get_shopify_order(store, order_id)
+        self.assertEqual(order['id'], order_id)
+
+        tag1 = 'Test Tag 1'
+        utils.set_shopify_order_tags(store, order_id, tag1)
+
+        self.assertEqual(tag1, utils.get_shopify_order_tags(store, order_id))
+
+        tag2 = 'An other Test Tag 2'
+        utils.add_shopify_order_tags(store, order_id, tag2)
+
+        order_tags = utils.get_shopify_order_tags(store, order_id)
+        self.assertIn(tag1, order_tags)
+        self.assertIn(tag2, order_tags)
+
 
 class UtilsTestCase(TestCase):
     def setUp(self):

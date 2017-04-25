@@ -781,6 +781,49 @@ def add_shopify_order_note(store, order_id, new_note, current_note=False):
     return set_shopify_order_note(store, order_id, note)
 
 
+def get_shopify_order_tags(store, order_id):
+    order = get_shopify_order(store, order_id)
+    return order['tags']
+
+
+def set_shopify_order_tags(store, order_id, tags):
+    rep = requests.put(
+        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+        json={
+            'order': {
+                'id': order_id,
+                'tags': tags[:5000]
+            }
+        }
+    )
+
+    response = rep.text
+    rep.raise_for_status()
+
+    if rep.ok:
+        response = rep.json()
+
+    return response['order']['id']
+
+
+def add_shopify_order_tags(store, order_id, new_tags, current_tags=False):
+    if current_tags is False:
+        tags = get_shopify_order_tags(store, order_id)
+    else:
+        tags = current_tags
+
+    if tags:
+        tags = set([t.strip() for t in tags.split(',')])
+        new_tags = set([t.strip() for t in new_tags.split(',')])
+        new_tags = ','.join(list(tags | new_tags))
+
+        tags = new_tags
+    else:
+        tags = new_tags
+
+    return set_shopify_order_tags(store, order_id, tags)
+
+
 def shopify_link_images(store, product):
     """
     Link Shopify variants with their images
