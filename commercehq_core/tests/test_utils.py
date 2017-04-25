@@ -108,27 +108,6 @@ class AddAftershipToStoreCarriers(TestCase):
         shipping_carrier = add_aftership_to_store_carriers(self.store)
         self.assertEqual(shipping_carrier.get('title'), 'AfterShip')
 
-    @patch('commercehq_core.models.CommerceHQStore.request')
-    def test_must_retry_after_an_error(self, request):
-        self.response.raise_for_status = Mock(side_effect=[HTTPError, None])
-        request.post = Mock(return_value=self.response)
-        shipping_carrier = add_aftership_to_store_carriers(self.store)
-        self.assertEqual(shipping_carrier.get('title'), 'AfterShip')
-
-    @patch('commercehq_core.models.CommerceHQStore.request')
-    def test_must_retry_after_two_errors(self, request):
-        self.response.raise_for_status = Mock(side_effect=[HTTPError, HTTPError, None])
-        request.post = Mock(return_value=self.response)
-        shipping_carrier = add_aftership_to_store_carriers(self.store)
-        self.assertEqual(shipping_carrier.get('title'), 'AfterShip')
-
-    @patch('commercehq_core.models.CommerceHQStore.request')
-    def test_must_raise_the_third_error(self, request):
-        self.response.raise_for_status = Mock(side_effect=[HTTPError, HTTPError, HTTPError])
-        request.post = Mock(return_value=self.response)
-        with self.assertRaises(HTTPError):
-            add_aftership_to_store_carriers(self.store)
-
 
 class CacheFulfillmentData(TestCase):
     def setUp(self):

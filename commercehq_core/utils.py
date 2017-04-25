@@ -545,7 +545,7 @@ def smart_board_by_board(user, board):
             board.save()
 
 
-def add_aftership_to_store_carriers(store, attempt=1):
+def add_aftership_to_store_carriers(store):
     url = store.get_api_url('shipping-carriers')
 
     data = {
@@ -558,36 +558,34 @@ def add_aftership_to_store_carriers(store, attempt=1):
         r = store.request.post(url=url, json=data)
         r.raise_for_status()
 
-    except Exception as e:
+        return r.json()
 
-        if attempt >= 3:
-            raise e
-
-        attempt += 1
-        return add_aftership_to_store_carriers(store, attempt=attempt)
-
-    return r.json()
+    except Exception:
+        return None
 
 
 def get_shipping_carrier(shipping_carrier_name, store):
-    cache_key = 'chq_shipping_carriers_{}'.format(store.id)
+    cache_key = 'chq_shipping_carriers_{}_{}'.format(store.id, shipping_carrier_name)
 
     shipping_carriers = cache.get(cache_key)
     if shipping_carriers is not None:
         return shipping_carriers
 
-    shipping_carriers_by_name = {}
+    shipping_carriers_map = {}
     for i in store_shipping_carriers(store):
-        shipping_carriers_by_name[i['title']] = i
+        shipping_carriers_map[i['title']] = i
 
-    shipping_carrier = shipping_carriers_by_name.get(shipping_carrier_name, {})
+    shipping_carrier = shipping_carriers_map.get(shipping_carrier_name, {})
     if not shipping_carrier:
-        shipping_carrier = shipping_carriers_by_name.get('AfterShip', {})
+        shipping_carrier = shipping_carriers_map.get('AfterShip', {})
         if not shipping_carrier:
             # Returns the newly added AfterShip shipping carrier
-            shipping_carrier = add_aftership_to_store_carriers(store)
+            aftership_carrier = add_aftership_to_store_carriers(store)
+            if aftership_carrier:
+                shipping_carrier = aftership_carrier
 
-    cache.set(cache_key, shipping_carrier, timeout=3600)
+    if shipping_carrier:
+        cache.set(cache_key, shipping_carrier, timeout=3600)
 
     return shipping_carrier
 
