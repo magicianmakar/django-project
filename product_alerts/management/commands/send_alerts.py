@@ -168,7 +168,8 @@ class Command(BaseCommand):
                 '[Shopified App] AliExpress Product Alert',
                 user.email,
                 data,
-                nl2br=False
+                nl2br=False,
+                from_email='"Shopified App" <no-reply@shopifiedapp.com>'
             )
 
     def get_config(self, name, product, user, default='notify'):

@@ -133,7 +133,7 @@ def get_mimetype(url, default=None):
     return content_type if content_type else default
 
 
-def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
+def send_email_from_template(tpl, subject, recipient, data, nl2br=True, from_email=None):
     template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
     template = Template(open(template_file).read())
 
@@ -152,9 +152,12 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True):
     if type(recipient) is not list:
         recipient = [recipient]
 
+    if from_email is None:
+        from_email = '"Shopified App" <support@shopifiedapp.com>'
+
     send_mail(subject=subject,
               recipient_list=recipient,
-              from_email='"Shopified App" <support@shopifiedapp.com>',
+              from_email=from_email,
               message=email_plain,
               html_message=email_html)
 
