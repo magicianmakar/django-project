@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 
 from unidecode import unidecode
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
@@ -563,7 +564,8 @@ def add_aftership_to_store_carriers(store):
 
         return r.json()
 
-    except Exception:
+    except:
+        raven_client.captureException()
         return None
 
 
