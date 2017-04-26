@@ -1896,12 +1896,47 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def get_find_product(self, request, user, data):
         try:
-            product = ShopifyProduct.objects.get(user=user, shopify_id=data.get('product'))
+            source_id = data.get('aliexpress')
+            shopify_id = data.get('product')
+            product = None
+
+            if source_id:
+                product = ShopifyProduct.objects.get(user=user.models_user, productsupplier__source_id=source_id)
+            else:
+                product = ShopifyProduct.objects.get(user=user.models_user, shopify_id=shopify_id)
             permissions.user_can_view(user, product)
 
             return self.api_success({
                 'url': 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
             })
+        except:
+            return self.api_error('Product not found', status=404)
+
+    def get_find_products(self, request, user, data):
+        try:
+            response = {}
+
+            source_ids = data.get('aliexpress')
+            source_ids = source_ids.split(',') if source_ids else None
+
+            shopify_ids = data.get('product')
+            shopify_ids = shopify_ids.split(',') if shopify_ids else []
+
+            if source_ids:
+                for i in source_ids:
+                    response[str(i)] = None
+
+                for supplier in ProductSupplier.objects.filter(store__user=user.models_user, source_id__in=source_ids):
+                    response[str(supplier.source_id)] = 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[supplier.product_id]))
+
+            elif shopify_ids:
+                for i in shopify_ids:
+                    response[str(i)] = None
+
+                for product in ShopifyProduct.objects.filter(user=user.models_user, shopify_id__in=shopify_ids):
+                    response[str(product.shopify_id)] = 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
+
+            return self.api_success(response)
         except:
             return self.api_error('Product not found', status=404)
 
