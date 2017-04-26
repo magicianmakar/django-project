@@ -604,10 +604,11 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
-                                    <label for="aliexpress_order_tags" class="col-sm-4 col-xs-8 control-label">
-                                        Create the following tag(s) on the Shopify order when order is placed on AliExpress
+                                    <label for="aliexpress_order_tags" class="col-sm-3 col-xs-12">
+                                        Tags - Order Placed
+                                        {% include 'partial/help_tooltip.html' with help="Create the following tag(s) on the Shopify order when order is placed on AliExpress" qtipstyle="color:#BBB" %}
                                     </label>
-                                    <div class="col-sm-6 col-xs-4">
+                                    <div class="col-sm-4 col-xs-12">
                                        <input type="text" id="aliexpress_order_tags" placeholder="Tags" name="aliexpress_order_tags" class="form-control tag-it" value="{% if config.aliexpress_order_tags %}{{config.aliexpress_order_tags}}{% endif %}" />
                                     </div>
                                 </div>
@@ -617,10 +618,11 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
-                                    <label for="tracking_number_tags" class="col-sm-4 col-xs-8 control-label">
-                                        Create the following tag(s) on the Shopify order when tracking number is added to Shopified App
+                                    <label for="tracking_number_tags" class="col-sm-3 col-xs-12">
+                                        Tags - Tracking Number Added
+                                        {% include 'partial/help_tooltip.html' with help="Create the following tag(s) on the Shopify order when tracking number is added to Shopified App" qtipstyle="color:#BBB" %}
                                     </label>
-                                    <div class="col-sm-6 col-xs-4">
+                                    <div class="col-sm-4 col-xs-12">
                                         <input type="text" id="tracking_number_tags" placeholder="Tags" name="tracking_number_tags" class="form-control tag-it" value="{% if config.tracking_number_tags %}{{config.tracking_number_tags}}{% endif %}" />
                                     </div>
                                 </div>
