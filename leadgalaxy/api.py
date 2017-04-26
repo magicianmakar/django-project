@@ -1687,11 +1687,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
+        tracking_number = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+
         order = ShopifyOrderTrack.objects.get(id=data.get('order'))
         permissions.user_can_edit(user, order)
 
+        new_tracking_number = (tracking_number and order.source_tracking != tracking_number)
+
         order.source_status = data.get('status')
-        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.source_tracking = tracking_number
         order.status_updated_at = timezone.now()
 
         try:
@@ -1712,8 +1716,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         order.save()
 
-        tracking_number_tags = user.models_user.get_config('tracking_number_tags', '')
-        if tracking_number_tags:
+        tracking_number_tags = user.models_user.get_config('tracking_number_tags')
+        if new_tracking_number and tracking_number_tags:
             tasks.add_ordered_tags.delay(order.store.id, order.order_id, tracking_number_tags)
 
         return self.api_success()
