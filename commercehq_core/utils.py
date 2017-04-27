@@ -627,7 +627,7 @@ def cache_fulfillment_data(order_tracks, max=None):
         store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
         store_order_lines.setdefault(order_track.order_id, set()).add(order_track.line_id)
 
-    cache_keys = []
+    cache_data = {}
     for store in stores:
         order_ids = list(store_orders[store.id])
 
@@ -652,24 +652,20 @@ def cache_fulfillment_data(order_tracks, max=None):
                 total_shipped += order_item['status']['shipped']
 
             args = store.id, order['id']
-            total_quantity_key = 'chq_auto_total_quantity_{}_{}'.format(*args)
-            total_shipped_key = 'chq_auto_total_shipped_{}_{}'.format(*args)
-            cache.set(total_quantity_key, total_quantity, 3600)
-            cache.set(total_shipped_key, total_shipped, 3600)
-            cache_keys.extend([total_quantity_key, total_shipped_key])
+            cache_data['chq_auto_total_quantity_{}_{}'.format(*args)] = total_quantity
+            cache_data['chq_auto_total_shipped_{}_{}'.format(*args)] = total_shipped
 
             for fulfilment in order.get('fulfilments', []):
                 for item in fulfilment.get('items', []):
                     line_ids = store_order_lines[order['id']]
                     if item['id'] in line_ids:
                         args = store.id, order['id'], item['id']
-                        fulfilment_key = 'chq_auto_fulfilments_{}_{}_{}'.format(*args)
-                        quantity_key = 'chq_auto_quantity_{}_{}_{}'.format(*args)
-                        cache.set(fulfilment_key, fulfilment['id'], 3600)
-                        cache.set(quantity_key, item['quantity'], 3600)
-                        cache_keys.extend([fulfilment_key, quantity_key])
+                        cache_data['chq_auto_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
+                        cache_data['chq_auto_quantity_{}_{}_{}'.format(*args)] = item['quantity']
 
-    return cache_keys
+    cache.set_many(cache_data, timeout=3600)
+
+    return cache_data.keys()
 
 
 def order_track_fulfillment(order_track, user_config=None):
@@ -692,7 +688,12 @@ def order_track_fulfillment(order_track, user_config=None):
     total_quantity = cache.get(total_quantity_key)
     total_shipped = cache.get(total_shipped_key)
     quantity = cache.get(quantity_key)
-    last_shipment = (total_quantity - total_shipped - quantity) == 0
+
+    try:
+        last_shipment = (total_quantity - total_shipped - quantity) == 0
+    except:
+        last_shipment = True
+
     notify_customer = check_notify_customer(tracking_number, user_config, shipping_carrier_name, last_shipment)
 
     return {

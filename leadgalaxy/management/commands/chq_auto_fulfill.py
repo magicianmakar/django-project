@@ -60,7 +60,7 @@ class Command(BaseCommand):
             orders = orders.filter(store=fulfill_store)
 
         fulfill_max = min(fulfill_max, len(orders)) if fulfill_max else len(orders)
-        cache_keys = utils.cache_fulfillment_data(orders, fulfill_max)
+        utils.cache_fulfillment_data(orders, fulfill_max)
 
         self.write('Auto Fulfill {}/{} CHQ Orders'.format(fulfill_max, len(orders)), self.style.HTTP_INFO)
         self.store_countdown = {}
@@ -90,7 +90,6 @@ class Command(BaseCommand):
             except:
                 raven_client.captureException()
 
-        cache.delete_many(cache_keys)
         results = 'Fulfilled Orders: {fulfilled} / {need_fulfill}'.format(**counter)
         self.write(results)
 
