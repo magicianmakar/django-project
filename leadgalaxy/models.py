@@ -86,6 +86,7 @@ class UserProfile(models.Model):
     subuser_parent = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='subuser_parent')
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
     subuser_chq_stores = models.ManyToManyField('commercehq_core.CommerceHQStore', blank=True, related_name='subuser_chq_stores')
+    subuser_woo_stores = models.ManyToManyField('woocommerce_core.WooStore', blank=True, related_name='subuser_woo_stores')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -258,6 +259,24 @@ class UserProfile(models.Model):
             stores = stores.values_list('id', flat=True)
 
         return stores
+
+    def get_woo_stores(self, flat=False):
+        if self.is_subuser:
+            stores = self.subuser_woo_stores.filter(is_active=True)
+        else:
+            stores = self.user.woostore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
+    def get_stores_count(self):
+        stores_count = self.get_shopify_stores().count()
+        stores_count += self.get_chq_stores().count()
+        stores_count += self.get_woo_stores().count()
+
+        return stores_count
 
     def get_new_alerts(self):
         return self.user.models_user.aliexpressproductchange_set \

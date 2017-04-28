@@ -80,17 +80,12 @@ class StoresList(ListView):
         qs = super(StoresList, self).get_queryset()
         return qs.filter(user=self.request.user.models_user).filter(is_active=True)
 
-    def get_store_count(self):
-        store_count = self.request.user.profile.get_shopify_stores().count()
-        store_count += self.request.user.profile.get_chq_stores().count()
-
-        return store_count
-
     def get_context_data(self, **kwargs):
         context = super(StoresList, self).get_context_data(**kwargs)
         can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
         is_stripe = self.request.user.profile.plan.is_stripe()
-        context['extra_stores'] = can_add and is_stripe and self.get_store_count() >= 1 and total_allowed != -1
+        stores_count = self.request.user.profile.get_stores_count()
+        context['extra_stores'] = can_add and is_stripe and stores_count >= 1 and total_allowed != -1
         context['breadcrumbs'] = ['Stores']
 
         return context

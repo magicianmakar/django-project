@@ -1,0 +1,46 @@
+<div id="modal-products-edit-form" class="modal fade" aria-hidden="true"
+    store-id="{{request.GET.store|default:'n'}}" store-url="{{store.get_link}}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Edit selected products</h3>
+                        <p class="m-t-none m-b">Empty fields will be ignored.</p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" id="product-price" placeholder="Product Price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-compare-at" placeholder="Compare at price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="product-tags" placeholder="Tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="form-group col-xs-6">
+                                        <label for="product-type">Weight</label>
+                                        <input type="text" class="form-control" id="product-weight" placeholder="Product Weight">
+                                    </div>
+
+                                    <div class="form-group col-xs-3" style="padding-top: 24px">
+                                        <select name="product-weight-unit" id="product-weight-unit" class="form-control">
+                                            <option value="g">g</option>
+                                            <option value="kg">kg</option>
+                                            <option value="oz">oz</option>
+                                            <option value="lb">lb</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button id="save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Save</strong></button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>

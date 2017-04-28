@@ -1,0 +1,241 @@
+{% extends "base_woocommerce_core.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+        {% if not request.GET.store %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
+
+            {% for item in user.profile.get_woo_stores %}
+            <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+            {% endfor %}
+
+        {% else %}
+            {% if request.GET.store == 'n' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
+            {% endif %}
+
+            {% if request.GET.store == 'c' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Connected</a></li>
+            {% else %}
+            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
+            {% endif %}
+
+            {% for item in user.profile.get_woo_stores %}
+                {% if item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
+        </ul>
+
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                {% if products %}
+                    <div class="row m-b-lg">
+                        <div class="col-md-8 filter-col">
+                            <label for="selected-actions" class="filter-col-item">Selected Items:</label>
+                            <select class="form-control filter-col-item" name="selected-actions" id="selected-actions">
+                                <option value=""></option>
+                                {% if request.GET.store != 'c' and user|can:'myshopify_integration.use' %}
+                                <option value="edit">Edit...</option>
+                                {% endif %}
+                                {% comment %}
+                                <option value="board">Add to Board...</option>
+                                {% if not request.GET.store or request.GET.store == 'n' %}
+                                    <option value="shopify-send">Send To WooCommerce...</option>
+                                {% endif %}
+                                {% endcomment %}
+                                <option value="delete">Delete</option>
+                            </select>
+                            <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
+                            <button class="btn btn-default btn-outline select-all-btn filter-col-item">Select All</button>
+                            {% if request.user|can:'product_filters.view' %}
+                                <button class="btn btn-success btn-outline filter-btn filter-col-item">Filter</button>
+                                {% if filter_products %}
+                                <a href="/product" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if store.id %}
+                            <a href="#" class="woocommerce-product-import-btn filter-col-item" store="{{store.id}}">
+                                <i class="fa fa-plus"></i> Import From WooCommerce
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <!-- <div class="col-md-1 pull-right text-right" style="padding:6px  5px">
+                            <a href="{% url_path '/product/table' %}" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
+                            <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
+                        </div> -->
+                    </div>
+                {% endif %}
+
+                    <div class="row">
+                        {% for item in products %}
+                        <div class="col-xs-12 col-md-3">
+                            <div class="ibox">
+                                <div class="ibox-content product-box" product-id="{{item.id}}">
+                                    <div class="product-imitation" style="padding: 0;">
+                                        <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
+                                        <a href="{% url 'woo:product_detail' pk=item.id %}">
+                                            <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.parsed.images|first}}" style="width: 100%">
+                                        </a>
+                                        <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>
+                                    </div>
+                                    <div class="product-desc">
+                                        <span class="product-price">
+                                            {% money_format item.price %}
+                                        </span>
+                                        {% if item.default_supplier %}
+                                        <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                                            <a href="{{item.parsed.original_url}}" target="_blank">{{item.default_supplier.supplier_name}}</a>
+                                        </small>
+                                        {% endif %}
+                                        <a href="{% url 'woo:product_detail' pk=item.id %}" class="hidden-xs product-name"> {{item.title|truncatewords:13}}</a>
+                                        <a href="{% url 'woo:product_detail' pk=item.id %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
+
+                                        <div class="small m-t-xs">
+                                            Submitted at {{item.created_at|date}}
+                                        </div>
+                                        <div class="m-t row">
+                                            <div class="col-md-4" style="padding-right:0">
+                                            <a href="{% url 'woo:product_detail' pk=item.id %}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
+                                            </div>
+                                            {% comment %}
+                                            <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
+                                            <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
+                                                {% with board=item.wooboard_set.first %}
+                                                    {% if board %}
+                                                    Board: {{board.title}}
+                                                    {% else %}
+                                                    Board
+                                                    {% endif %}
+                                                {% endwith %}
+
+                                            </button>
+                                            </div>
+                                            {% endcomment %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if forloop.counter|divisibleby:"4" %}
+                            </div><div class="row">
+                        {% endif %}
+
+                        {% empty %}
+                            <h3 class="text-center">No product found.</h3>
+                            {% if store.id %}
+                                <p class="text-center">
+                                    <a href="#" class="woocommerce-product-import-btn filter-col-item" store="{{store.id}}">
+                                        <i class="fa fa-plus"></i> Import from WooCommerce
+                                    </a>
+                                </p>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% include "partial/paginator.html" %}
+            </div>
+        </div>
+    </div> <!-- <!-- /div.tab-content -->
+</div> <!-- /div.tabs-container -->
+
+{% include "woocommerce/partial/product_edit_modal.html" %}
+<div id="modal-board-product" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add to board</h3>
+                        <form role="form">
+                            <div class="form-group text-center">
+                            <label for="selected-board">Select board</label>
+                            <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
+                                {% for item in request.user.get_woo_boards %}
+                                <option value="{{item.id}}">{{item.title}}</option>
+                                {% endfor %}
+                            </select>
+                            </div>
+
+                            <div>
+                                <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Apply</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partial/filter_modal.html' %}
+
+{% include "woocommerce/partial/woocommerce_product_selector.html" %}
+
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+
+.filter-col {
+    display: flex;
+    align-items: center;
+}
+
+.filter-col .filter-col-item {
+    margin-right: 5px;
+}
+
+.filter-col .shopify-product-import-btn {
+    margin-left: 15px;
+}
+
+#selected-actions {
+    padding-top: 2px;
+    display: inline-block;
+    width: 191px;
+}
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    var boardsMenu = {
+    {% for item in request.user.get_woo_boards %}
+        "{{item.id}}": {name: "{{item.title}}"},
+    {% endfor %}
+        "sep1": "---------",
+        "add": {name: "Add new board", icon: 'add'},
+        "clear": {name: "Clear", icon: 'quit'}
+    };
+</script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'woocommerce/js/products_grid.js' %}"></script>
+{% endcompress %}
+
+{% endblock %}

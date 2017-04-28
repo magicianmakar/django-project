@@ -91,4 +91,5 @@ urllib3==1.22
 w3lib==1.12.0
 Werkzeug==0.10.4
 whitenoise==1.0.6
+WooCommerce==1.2.1
 zope.interface==4.1.2

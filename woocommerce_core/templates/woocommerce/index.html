@@ -1,0 +1,165 @@
+{% extends "base_woocommerce_core.html" %}
+
+{% load static %}
+{% load cache %}
+{% load compress %}
+
+{% block main-container %}
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>WooCommerce Stores<small></small></h5>
+        </div>
+        <div class="ibox-content">
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-ligthborder store-tables">
+                      <thead>
+                        <tr>
+                          <th style="">Name</th>
+                          <th class="hidden-xs" style="width:13%">Products</th>
+                          <th class="hidden-xs" style="width:13%">Orders</th>
+                        {% if not user.is_subuser %}
+                            <th class="hidden-sm hidden-xs"></th>
+                        {% endif %}
+                        </tr>
+                      </thead>
+                      <tbody id="stores-table-body">
+                            {% for store in stores %}
+                            <tr id="store-row-{{store.id}}" class="store-store" >
+                                <td class="drag-show">
+                                    <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
+                                    <a href="">{{store.title|default:store.api_url}}</a>
+                                </td>
+                                <td class="hidden-xs" style="white-space:nowrap">
+                                    {% with connected=store.connected_count saved=store.saved_count %}
+                                    {% if connected or saved %}
+                                        {% if saved %}
+                                            <a href="" class="label "><span class="num">{{saved}}</span> Saved</a>
+                                        {% endif %}
+
+                                        {% if connected %}
+                                            <a href="" class="label "><span class="num">{{connected}}</span> Connected</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td></td>
+                                {% if not user.is_subuser %}
+                                <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                                    <div class="btn-group ">
+                                        <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                            <i class="fa fa-cog"></i> <span class=""></span></button>
+                                        <ul class="dropdown-menu">
+
+                                            <li>
+                                                <a class="visit-store " href="{{ store.get_admin_url }}" target="_blank">
+                                                    <i class="fa fa-external-link"></i> Visit Store
+                                                </a>
+                                            </li>
+
+                                            <li class="divider"></li>
+
+                                            <li>
+                                                <a
+                                                    class="edit-store-btn"
+                                                    data-store-id="{{ store.pk }}">
+                                                    <i class="fa fa-edit"></i> Edit
+                                                </a>
+                                            </li>
+
+                                            <li>
+                                                <a
+                                                    class="delete-store-btn btn-danger btn-outline"
+                                                    data-store-id="{{ store.pk }}">
+                                                    <i class="fa fa-times"></i> Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No store found.</td>
+                            </tr>
+                            {% endfor %}
+                      </tbody>
+                    </table>
+                    {% if not user.is_subuser %}
+                        <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}">
+                            Add Store
+                        </a>
+                    {% endif %}
+
+                    <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
+                       class="btn btn-default btn-outline btn-xs pull-right extension-link hidden-sm hidden-xs" target="_blank">Install Chrome Extension</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'woocommerce/partial/store_create_modal.html' %}
+    {% include 'woocommerce/partial/store_update_modal.html' %}
+
+{% endblock main-container %}
+
+{% block extrajs %}
+    {% compress js %}
+        <script type="text/javascript" src="{% static 'woocommerce/js/index.js' %}"></script>
+    {% endcompress %}
+{% endblock extrajs %}
+
+{% block extracss %}
+<style type="text/css">
+    label {
+        text-align: left !important;
+    }
+    .setting-section {
+        margin-top: 15px;
+        border-left: 2px #eee solid;
+        padding-top: 5px;
+        margin-left: 20px;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        background-color: rgb(250, 250, 250);
+        padding-left: 15px;
+    }
+    h3.setting-title {
+        padding: 0;
+        margin: 5px 0;
+    }
+    .table-ligthborder {
+        border:1px solid #eee;
+    }
+    .table-ligthborder > thead > tr > th {
+        background-color: #fafafa;
+    }
+
+    table .label {
+        border-radius: 3px !important;
+        background-color: #f7f7f8 !important;
+        color: #564c4c !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        font-weight: 500 !important;
+    }
+    table .label:hover {
+        background-color: #dbdbdb !important;
+    }
+    table .label .num {
+        font-weight: 600 !important;
+    }
+    table td:first-child {
+        width: 100%;
+    }
+    .table > tbody > tr > td {
+        vertical-align: middle;
+    }
+    .table > tbody > tr > td > .btn {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+

@@ -87,7 +87,7 @@ def index_view(request):
     can_add, total_allowed, user_count = permissions.can_add_store(request.user)
 
     extra_stores = can_add and request.user.profile.plan.is_stripe() and \
-        request.user.profile.get_shopify_stores().count() >= 1 and \
+        request.user.profile.get_stores_count() >= 1 and \
         total_allowed != -1
 
     pending_sub = request.user.shopifysubscription_set.filter(status='pending')

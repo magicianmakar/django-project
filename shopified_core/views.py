@@ -15,6 +15,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.api import ShopifyStoreApi
 from commercehq_core.api import CHQStoreApi
+from woocommerce_core.api import WooStoreApi
 
 from .mixins import ApiResponseMixin
 from .exceptions import ApiLoginException
@@ -26,7 +27,8 @@ class ShopifiedApi(ApiResponseMixin, View):
     supported_stores = [
         'all',      # Common endpoint
         'shopify',  # Shopify Stores
-        'chq'       # CommerceHQ Stores
+        'chq',      # CommerceHQ Stores
+        'woo',      # WooCommerce Stores
     ]
 
     default = {
@@ -58,6 +60,8 @@ class ShopifiedApi(ApiResponseMixin, View):
                 return ShopifyStoreApi.as_view()(request, *args, **kwargs)
             elif kwargs['store_type'] == 'chq':
                 return CHQStoreApi.as_view()(request, *args, **kwargs)
+            elif kwargs['store_type'] == 'woo':
+                return WooStoreApi.as_view()(request, *args, **kwargs)
             else:
                 raise Exception("Unknown Store Type")
 
