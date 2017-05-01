@@ -184,9 +184,7 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
         }
     }
 
-    if (typeof(product.weight) !== 'number') {
-        product.weight = 0.0;
-    }
+    product.weight = parseFloat(product.weight) || 0.0;
 
     if (product.variants.length === 0) {
         var vdata = {
