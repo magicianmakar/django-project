@@ -620,12 +620,10 @@ def cache_fulfillment_data(order_tracks, max=None):
     order_tracks = order_tracks[:max] if max else order_tracks
     stores = set()
     store_orders = {}
-    store_order_lines = {}
 
     for order_track in order_tracks:
         stores.add(order_track.store)
         store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
-        store_order_lines.setdefault(order_track.order_id, set()).add(order_track.line_id)
 
     cache_data = {}
     for store in stores:
@@ -657,11 +655,9 @@ def cache_fulfillment_data(order_tracks, max=None):
 
             for fulfilment in order.get('fulfilments', []):
                 for item in fulfilment.get('items', []):
-                    line_ids = store_order_lines[order['id']]
-                    if item['id'] in line_ids:
-                        args = store.id, order['id'], item['id']
-                        cache_data['chq_auto_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
-                        cache_data['chq_auto_quantity_{}_{}_{}'.format(*args)] = item['quantity']
+                    args = store.id, order['id'], item['id']
+                    cache_data['chq_auto_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
+                    cache_data['chq_auto_quantity_{}_{}_{}'.format(*args)] = item['quantity']
 
     cache.set_many(cache_data, timeout=3600)
 
