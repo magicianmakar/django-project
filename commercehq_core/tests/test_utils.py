@@ -126,11 +126,17 @@ class CacheFulfillmentData(TestCase):
                     }]
                 }],
                 'items': [{  # Order items
+                    'data': {
+                        'id': 1
+                    },
                     'status': {
                         'quantity': 2,
                         'shipped': 4,
                     }
                 }, {
+                    'data': {
+                        'id': 2
+                    },
                     'status': {
                         'quantity': 3,
                         'shipped': 5,
@@ -149,11 +155,17 @@ class CacheFulfillmentData(TestCase):
                     }]
                 }],
                 'items': [{
+                    'data': {
+                        'id': 3
+                    },
                     'status': {
                         'quantity': 4,
                         'shipped': 6,
                     }
                 }, {
+                    'data': {
+                        'id': 4
+                    },
                     'status': {
                         'quantity': 5,
                         'shipped': 7,

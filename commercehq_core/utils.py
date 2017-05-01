@@ -613,11 +613,11 @@ def check_notify_customer(source_tracking, user_config, shipping_carrier_name, l
     return notify_customer
 
 
-def cache_fulfillment_data(order_tracks, max=None):
+def cache_fulfillment_data(order_tracks, orders_max=None):
     """
     Caches order data of given `CommerceHQOrderTrack` instances
     """
-    order_tracks = order_tracks[:max] if max else order_tracks
+    order_tracks = order_tracks[:orders_max] if orders_max else order_tracks
     stores = set()
     store_orders = {}
 
@@ -653,6 +653,9 @@ def cache_fulfillment_data(order_tracks, max=None):
             cache_data['chq_auto_total_quantity_{}_{}'.format(*args)] = total_quantity
             cache_data['chq_auto_total_shipped_{}_{}'.format(*args)] = total_shipped
 
+            for line in order.get('items', []):
+                cache_data['chq_auto_quantity_{}_{}_{}'.format(store.id, order['id'], line['data']['id'])] = line['status']['quantity']
+
             for fulfilment in order.get('fulfilments', []):
                 for item in fulfilment.get('items', []):
                     args = store.id, order['id'], item['id']
@@ -673,17 +676,33 @@ def order_track_fulfillment(order_track, user_config=None):
     kwargs = {
         'store_id': order_track.store_id,
         'order_id': order_track.order_id,
-        'line_id': order_track.line_id}
+        'line_id': order_track.line_id
+    }
 
     # Keys are set by `commercehq_core.utils.cache_fulfillment_data`
-    fulfilment_key = 'chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs)
-    quantity_key = 'chq_auto_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs)
-    total_quantity_key = 'chq_auto_total_quantity_{store_id}_{order_id}'.format(**kwargs)
-    total_shipped_key = 'chq_auto_total_shipped_{store_id}_{order_id}'.format(**kwargs)
+    fulfilment_id = cache.get('chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
+    total_quantity = cache.get('chq_auto_total_quantity_{store_id}_{order_id}'.format(**kwargs))
+    total_shipped = cache.get('chq_auto_total_shipped_{store_id}_{order_id}'.format(**kwargs))
+    quantity = cache.get('chq_auto_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs))
 
-    total_quantity = cache.get(total_quantity_key)
-    total_shipped = cache.get(total_shipped_key)
-    quantity = cache.get(quantity_key)
+    if fulfilment_id is None:
+        store = order_track.store
+        rep = store.request.post(
+            url=store.get_api_url('orders', order_track.order_id, 'fulfilments'),
+            json={
+                "items": [{
+                    "id": order_track.line_id,
+                    "quantity": cache.get('chq_auto_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id), 0),
+                }]
+            }
+        )
+
+        if rep.ok:
+            for fulfilment in rep.json()['fulfilments']:
+                for item in fulfilment['items']:
+                    cache.set('chq_auto_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']), fulfilment['id'], timeout=3600)
+
+            fulfilment_id = cache.get('chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
 
     try:
         last_shipment = (total_quantity - total_shipped - quantity) == 0
@@ -695,7 +714,7 @@ def order_track_fulfillment(order_track, user_config=None):
     return {
         'notify': notify_customer,
         'data': [{
-            'fulfilment_id': cache.get(fulfilment_key),
+            'fulfilment_id': fulfilment_id,
             'tracking_number': tracking_number,
             'shipping_carrier': shipping_carrier.get('id'),
             'items': [{
