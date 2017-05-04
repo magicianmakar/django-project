@@ -2158,6 +2158,12 @@ def orders_view(request):
     latest_release = cache.get('extension_min_version')
     user_version = request.user.get_config('extension_version')
 
+    # User settings
+    order_custom_note = models_user.get_config('order_custom_note')
+    epacket_shipping = bool(models_user.get_config('epacket_shipping'))
+    auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
+    order_custom_line_attr = bool(request.user.get_config('order_custom_line_attr'))
+
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
             and cache.get('extension_required', False):
@@ -2534,11 +2540,18 @@ def orders_view(request):
                                 'number': shipping_address_asci.get('phone'),
                                 'country': shipping_address_asci['country_code']
                             },
-                            'note': models_user.get_config('order_custom_note'),
-                            'epacket': bool(models_user.get_config('epacket_shipping')),
-                            'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+                            'note': order_custom_note,
+                            'epacket': epacket_shipping,
+                            'auto_mark': auto_ordered_mark,  # Auto mark as Ordered
                         }
                     }
+
+                    if order_custom_line_attr and el.get('properties'):
+                        item_note = '\n'.join(['{name}: {value}'.format(**prop) for prop in el['properties']])
+                        item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note)
+
+                        order_data['order']['item_note'] = item_note
+                        order['line_items'][i]['item_note'] = item_note
 
                     if product:
                         mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
