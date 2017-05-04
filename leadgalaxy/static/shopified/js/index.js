@@ -369,7 +369,7 @@ $('.tracking-url-example').click(function (e) {
 $('input[name="order_phone_number"]').on('keyup', function() {
     var value = $(this).val();
 
-    $('#phone-invalid').toggle(/[^\d-]/.test(value));
+    $('#phone-invalid').toggle(/[^\d\+-]/.test(value));
 });
 
 $('input[name="order_phone_number"]').trigger('keyup');
