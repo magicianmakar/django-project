@@ -146,6 +146,21 @@
                                 </select>
                         </div>
                     </div>
+                    <div class="row filter-row">
+                        <div class="col-md-2 filter-label">
+                            <span>Created Date Range</span>
+                        </div>
+                        <div class="col-md-4">
+                            <div id="created_at_daterange" class="form-control">
+                                <i class="fa fa-calendar"></i>
+                                <span></span> <b class="caret"></b>
+                            </div>
+                            <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange }}" />
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
 
                     {% else %}
                     <div class="row filter-row">
@@ -617,6 +632,7 @@
 
 
 {% block extracss %}
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
 
     .no-padding {
@@ -815,6 +831,8 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>

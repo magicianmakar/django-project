@@ -2173,6 +2173,7 @@ def orders_view(request):
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
     awaiting_order = utils.get_orders_filter(request, 'awaiting_order', checkbox=True)
+    created_at_daterange = request.GET.get('created_at_daterange')
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
@@ -2235,6 +2236,15 @@ def orders_view(request):
                     orders = orders.filter(order_id__in=order_ids)
                 else:
                     orders = orders.filter(order_id=utils.safeInt(query_order, 0))
+
+        if created_at_daterange:
+            created_at_start, created_at_end = created_at_daterange.split('-')
+            if created_at_start:
+                created_at_start = timezone.datetime.strptime(created_at_start, '%m/%d/%Y')
+                orders = orders.filter(created_at__gte=created_at_start)
+            if created_at_end:
+                created_at_end = timezone.datetime.strptime(created_at_end, '%m/%d/%Y')
+                orders = orders.filter(created_at__gte=created_at_end)
 
         if query_customer:
             orders = orders.filter(Q(customer_name__icontains=query_customer) |
@@ -2595,6 +2605,7 @@ def orders_view(request):
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
         'countries': countries,
+        'created_at_daterange': created_at_daterange,
         'page': 'orders',
         'breadcrumbs': breadcrumbs
     })
