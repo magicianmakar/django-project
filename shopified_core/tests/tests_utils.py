@@ -41,6 +41,17 @@ class UtilsTestCase(TestCase):
         self.assertEqual(country_code, '+34')
         self.assertEqual(phone_number, '9716454717')
 
+    def test_exact_user_phone_number(self):
+        def get_config(name):
+            conf = {'order_phone_number': '+18889846283'}
+            return conf.get(name)
+
+        user = Mock(get_config=get_config, profile=Mock(country='ES'))
+
+        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        self.assertEqual(country_code, '+1')
+        self.assertEqual(phone_number, '8889846283')
+
     def test_order_phone_number_pad(self):
         user = Mock(get_config=Mock(return_value='customer'))
 

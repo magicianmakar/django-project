@@ -292,6 +292,13 @@ def order_phone_number(request, user, phone_number, customer_country):
         country = customer_country
 
     if phone_number:
+        if phone_number.startswith('+'):
+            try:
+                parsed = phonenumbers.parse(phone_number)
+                return '+{}|{}'.format(parsed.country_code, parsed.national_number).split('|')
+            except:
+                pass
+
         phone_number = ''.join(re.findall('[0-9]+', phone_number))
 
     if not phone_number or re.match('^0+$', phone_number):
