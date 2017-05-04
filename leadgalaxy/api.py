@@ -1136,6 +1136,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         else:
             bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha']
 
+        bool_config += ['order_custom_line_attr']
+
         for key in data:
             if key == 'from':
                 continue

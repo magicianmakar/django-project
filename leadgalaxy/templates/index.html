@@ -629,6 +629,20 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="order_custom_line_attr" class="col-sm-4 col-xs-8 control-label">
+                                        Send Custom Line Attributes along with the note to the seller
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input id="order_custom_line_attr" name="order_custom_line_attr" type="checkbox"
+                                               class="js-switch" {% if config.order_custom_line_attr %}checked{% endif %} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {% endif %}
 
                         <div class="col-md-12"><hr /></div>

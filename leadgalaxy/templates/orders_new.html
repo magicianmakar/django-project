@@ -422,7 +422,7 @@
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
-                                                {% if request.session.is_hijacked_user or user.is_superuser and request.GET.debug %}
+                                                {% if request.session.is_hijacked_user or user.is_superuser and request.GET.debug and item.order_data_id %}
                                                     <a class="badge badge-info" target="_blank" href="/api/shopify/order-data?order={{item.order_data_id}}">data</a>
                                                 {% endif %}
 
@@ -488,17 +488,6 @@
                                                 {% endif %}
                                             </div>
                                         </div>
-                                        {% if item.properties and item.properties|length > 0 %}
-                                        <div class="row custom-properties">
-                                            <span class="badge badge-info" style="margin: 0 20px;">Custom Properties</span>
-                                            {% for custom_property in item.properties %}
-                                            <div class="property-line">
-                                                <span class="property-name">*{{ custom_property.name }}:&nbsp;&nbsp;&nbsp;</span>
-                                                <span class="property-value">{{ custom_property.value }}</span>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
 
                                         <div class="row item">
                                             <div class="col-md-12 no-padding">
@@ -520,13 +509,25 @@
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
-                                                            <a href="/product/{{item.product.id}}" target="_blank" title="{{item.title}}">
-                                                                {{item.title|truncatewords:9}}
-                                                            </a>
+                                                                <a href="/product/{{item.product.id}}" target="_blank" title="{{item.title}}">
+                                                                    {{item.title|truncatewords:9}}
+                                                                </a>
+
+                                                                {% if item.item_note %}
+                                                                <div class="custom-properties m-t-xs">
+                                                                    {% for custom_property in item.properties %}
+                                                                    <div class="badge badge-info property-line m-r">
+                                                                        <span class="property-name">{{ custom_property.name }}:</span>
+                                                                        <span class="property-value">{{ custom_property.value }}</span>
+                                                                    </div>
+                                                                    {% endfor %}
+                                                                </div>
+                                                                {% endif %}
+
                                                             {% else %}
-                                                            <span title="{{item.title}}">
-                                                                {{item.title|truncatewords:9}}
-                                                            </span>
+                                                                <span title="{{item.title}}">
+                                                                    {{item.title|truncatewords:9}}
+                                                                </span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
@@ -696,17 +697,9 @@
     .orders .order .details .line.multi-lines {
         border-top: 1px solid #eee;
     }
-    .orders .order .details .line .source-order, .orders .order .details .line .custom-properties {
+    .orders .order .details .line .source-order {
         padding: 7px 0;
         border-bottom: 1px solid #eee;
-    }
-    .orders .order .details .line .custom-properties .property-line {
-        display: inline-block;
-        padding: 0 15px;
-        margin-right: 50px;
-    }
-    .orders .order .details .line .custom-properties .property-line .property-value {
-        color: #6288A2;
     }
     .orders .order .details .line .item {
     }
