@@ -1701,7 +1701,7 @@ class ShopifyOrderPaginator(Paginator):
     def set_store(self, store):
         self.store = store
 
-    def set_filter(self, status, fulfillment, financial, created_at_start, created_at_end):
+    def set_filter(self, status, fulfillment, financial, created_at_start=None, created_at_end=None):
         self.status = status
         self.fulfillment = fulfillment
         self.financial = financial

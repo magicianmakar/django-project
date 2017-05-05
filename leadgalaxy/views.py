@@ -2193,14 +2193,13 @@ def orders_view(request):
     elif request.GET.get('old') == '0':
         shopify_orders_utils.enable_store_sync(store)
 
-    created_at_daterange = request.GET.get('created_at_daterange', '-')
-    created_at_start, created_at_end = created_at_daterange.split('-')
-
-    if created_at_start:
-        created_at_start = timezone.datetime.strptime(created_at_start, '%m/%d/%Y')
-
-    if created_at_end:
-        created_at_end = timezone.datetime.strptime(created_at_end, '%m/%d/%Y')
+    created_at_start, created_at_end = None, None
+    created_at_daterange = request.GET.get('created_at_daterange')
+    if created_at_daterange:
+        try:
+            created_at_start, created_at_end = [arrow.get(d, r'MM/DD/YYYY').datetime for d in created_at_daterange.split('-')]
+        except:
+            created_at_daterange = None
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
     store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or
@@ -2211,7 +2210,9 @@ def orders_view(request):
             # Direct API call doesn't support more that one fulfillment status
             fulfillment = 'unshipped'
 
-        open_orders = store.get_orders_count(status, fulfillment, financial, query=utils.safeInt(query, query))
+        open_orders = store.get_orders_count(status, fulfillment, financial,
+                                             query=utils.safeInt(query, query),
+                                             created_range=[created_at_start, created_at_end])
         orders = xrange(0, open_orders)
 
         paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
