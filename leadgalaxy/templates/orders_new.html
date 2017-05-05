@@ -146,21 +146,6 @@
                                 </select>
                         </div>
                     </div>
-                    <div class="row filter-row">
-                        <div class="col-md-2 filter-label">
-                            <span>Created Date Range</span>
-                        </div>
-                        <div class="col-md-4">
-                            <div id="created_at_daterange" class="form-control">
-                                <i class="fa fa-calendar"></i>
-                                <span></span> <b class="caret"></b>
-                            </div>
-                            <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange }}" />
-                        </div>
-                        <div class="col-md-6" style="">
-                            <span class="help-block "></span>
-                        </div>
-                    </div>
 
                     {% else %}
                     <div class="row filter-row">
@@ -171,9 +156,7 @@
                             <input name="query" value="{{query|default:''}}" class="form-control" placeholder="Order name or ID">
                         </div>
                     </div>
-                    {% endif %}
 
-                    {% if not store_sync_enabled %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Sort</span>
@@ -186,6 +169,7 @@
                         </div>
                     </div>
                     {% endif %}
+
                     <div class="row filter-row m-t-md">
                         <div class="col-md-2  filter-label filter-order-status">
                             <span>Order Status</span>
@@ -242,6 +226,22 @@
                                 <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only voided orders</option>
                                 <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
                             </select>
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
+
+                    <div class="row filter-row">
+                        <div class="col-md-2 filter-label">
+                            <span>Created Date Range</span>
+                        </div>
+                        <div class="col-md-3">
+                            <div id="created_at_daterange" class="form-control">
+                                <i class="fa fa-calendar"></i>
+                                <span></span> <b class="caret"></b>
+                            </div>
+                            <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange }}" />
                         </div>
                         <div class="col-md-6" style="">
                             <span class="help-block "></span>

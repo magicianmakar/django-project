@@ -1701,10 +1701,12 @@ class ShopifyOrderPaginator(Paginator):
     def set_store(self, store):
         self.store = store
 
-    def set_filter(self, status, fulfillment, financial):
+    def set_filter(self, status, fulfillment, financial, created_at_start, created_at_end):
         self.status = status
         self.fulfillment = fulfillment
         self.financial = financial
+        self.created_at_start = created_at_start
+        self.created_at_end = created_at_end
 
     def set_order_limit(self, limit):
         self.order_limit = limit
@@ -1766,6 +1768,12 @@ class ShopifyOrderPaginator(Paginator):
             'financial_status': self.financial,
             'order': 'processed_at {}'.format(sorting)
         }
+
+        if self.created_at_start:
+            params['created_at_min'] = self.created_at_start.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        if self.created_at_end:
+            params['created_at_max'] = self.created_at_end.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         if self.query:
             if type(self.query) is long:

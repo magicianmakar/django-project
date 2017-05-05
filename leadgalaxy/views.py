@@ -2173,7 +2173,6 @@ def orders_view(request):
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
     awaiting_order = utils.get_orders_filter(request, 'awaiting_order', checkbox=True)
-    created_at_daterange = request.GET.get('created_at_daterange')
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
@@ -2194,6 +2193,15 @@ def orders_view(request):
     elif request.GET.get('old') == '0':
         shopify_orders_utils.enable_store_sync(store)
 
+    created_at_daterange = request.GET.get('created_at_daterange', '-')
+    created_at_start, created_at_end = created_at_daterange.split('-')
+
+    if created_at_start:
+        created_at_start = timezone.datetime.strptime(created_at_start, '%m/%d/%Y')
+
+    if created_at_end:
+        created_at_end = timezone.datetime.strptime(created_at_end, '%m/%d/%Y')
+
     store_order_synced = shopify_orders_utils.is_store_synced(store)
     store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or
                                                  request.GET.get('new'))
@@ -2209,7 +2217,13 @@ def orders_view(request):
         paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
         paginator.set_store(store)
         paginator.set_order_limit(post_per_page)
-        paginator.set_filter(status, fulfillment, financial)
+        paginator.set_filter(
+            status,
+            fulfillment,
+            financial,
+            created_at_start,
+            created_at_end
+        )
         paginator.set_reverse_order(sort == 'desc')
         paginator.set_query(utils.safeInt(query, query))
 
@@ -2237,14 +2251,11 @@ def orders_view(request):
                 else:
                     orders = orders.filter(order_id=utils.safeInt(query_order, 0))
 
-        if created_at_daterange:
-            created_at_start, created_at_end = created_at_daterange.split('-')
-            if created_at_start:
-                created_at_start = timezone.datetime.strptime(created_at_start, '%m/%d/%Y')
-                orders = orders.filter(created_at__gte=created_at_start)
-            if created_at_end:
-                created_at_end = timezone.datetime.strptime(created_at_end, '%m/%d/%Y')
-                orders = orders.filter(created_at__gte=created_at_end)
+        if created_at_start:
+            orders = orders.filter(created_at__gte=created_at_start)
+
+        if created_at_end:
+            orders = orders.filter(created_at__lte=created_at_end)
 
         if query_customer:
             orders = orders.filter(Q(customer_name__icontains=query_customer) |
