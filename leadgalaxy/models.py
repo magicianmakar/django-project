@@ -567,7 +567,8 @@ class ShopifyStore(models.Model):
             'api_secret': api_secret
         }
 
-    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any', query='', all_orders=False):
+    def get_orders_count(self, status='open', fulfillment='unshipped', financial='any',
+                         query='', all_orders=False, created_range=None):
         if all_orders:
             fulfillment = 'any'
             financial = 'any'
@@ -586,6 +587,10 @@ class ShopifyStore(models.Model):
                 params['ids'] = [query]
             else:
                 params['name'] = query
+
+        if created_range and all(created_range):
+            params['created_at_min'] = created_range[0]
+            params['created_at_max'] = created_range[1]
 
         return requests.get(
             url=self.get_link('/admin/orders/count.json', api=True),

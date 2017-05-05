@@ -58,25 +58,42 @@
                     >
                     {% if store_sync_enabled %}
                         <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Sort</span>
+                            <div class="col-md-offset-1 col-md-1 filter-label">
+                                <span>Sort</span>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="sort" class="form-control">
+                                    <option {% if sort == 'created_at' %}selected="selected"{% endif %} value="created_at">Order Date</option>
+                                    <option {% if sort == 'updated_at' %}selected="selected"{% endif %} value="updated_at">Order Last Update</option>
+                                    <option {% if sort == 'total_price' %}selected="selected"{% endif %} value="total_price">Total Price</option>
+                                    <option {% if sort == 'country_code' %}selected="selected"{% endif %} value="country_code">Shipping Country</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sort-desc" class="control-label">
+                                    <input type="checkbox" id="sort-desc" name="desc" value="true" class="icheck"
+                                           {% if sort_type == 'true' %}checked{% endif %}>
+                                    Descending
+                                </label>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <select name="sort" class="form-control">
-                                <option {% if sort == 'created_at' %}selected="selected"{% endif %} value="created_at">Order Date</option>
-                                <option {% if sort == 'updated_at' %}selected="selected"{% endif %} value="updated_at">Order Last Update</option>
-                                <option {% if sort == 'total_price' %}selected="selected"{% endif %} value="total_price">Total Price</option>
-                                <option {% if sort == 'country_code' %}selected="selected"{% endif %} value="country_code">Shipping Country</option>
-                            </select>
+
+                        <div class="row filter-row m-b">
+                           <div class="col-md-2 filter-label">
+                               <span>Date Range</span>
+                           </div>
+                           <div class="col-md-3">
+                               <div id="created_at_daterange" class="form-control">
+                                   <i class="fa fa-calendar m-r-xs"></i>
+                                   <span>All Time</span>
+                                   <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                               </div>
+                               <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
+                           </div>
+                           <div class="col-md-6" style="">
+                               <span class="help-block "></span>
+                           </div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="sort-desc" class="control-label">
-                                <input type="checkbox" id="sort-desc" name="desc" value="true" class="icheck"
-                                       {% if sort_type == 'true' %}checked{% endif %}>
-                                Descending
-                            </label>
-                        </div>
-                    </div>
                     {% endif %}
                     {% if store_sync_enabled %}
                     <div class="row filter-row">
@@ -156,9 +173,7 @@
                             <input name="query" value="{{query|default:''}}" class="form-control" placeholder="Order name or ID">
                         </div>
                     </div>
-                    {% endif %}
 
-                    {% if not store_sync_enabled %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Sort</span>
@@ -170,7 +185,25 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="row filter-row m-b">
+                        <div class="col-md-2 filter-label">
+                            <span>Date Range</span>
+                        </div>
+                        <div class="col-md-3">
+                            <div id="created_at_daterange" class="form-control">
+                                <i class="fa fa-calendar m-r-xs"></i>
+                                <span>All Time</span>
+                                <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                            </div>
+                            <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
                     {% endif %}
+
                     <div class="row filter-row m-t-md">
                         <div class="col-md-2  filter-label filter-order-status">
                             <span>Order Status</span>
@@ -629,6 +662,7 @@
 
 
 {% block extracss %}
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
 
     .no-padding {
@@ -827,6 +861,8 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>

@@ -2199,6 +2199,14 @@ def orders_view(request):
     elif request.GET.get('old') == '0':
         shopify_orders_utils.enable_store_sync(store)
 
+    created_at_start, created_at_end = None, None
+    created_at_daterange = request.GET.get('created_at_daterange')
+    if created_at_daterange:
+        try:
+            created_at_start, created_at_end = [arrow.get(d, r'MM/DD/YYYY').datetime for d in created_at_daterange.split('-')]
+        except:
+            created_at_daterange = None
+
     store_order_synced = shopify_orders_utils.is_store_synced(store)
     store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or
                                                  request.GET.get('new'))
@@ -2208,13 +2216,21 @@ def orders_view(request):
             # Direct API call doesn't support more that one fulfillment status
             fulfillment = 'unshipped'
 
-        open_orders = store.get_orders_count(status, fulfillment, financial, query=utils.safeInt(query, query))
+        open_orders = store.get_orders_count(status, fulfillment, financial,
+                                             query=utils.safeInt(query, query),
+                                             created_range=[created_at_start, created_at_end])
         orders = xrange(0, open_orders)
 
         paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
         paginator.set_store(store)
         paginator.set_order_limit(post_per_page)
-        paginator.set_filter(status, fulfillment, financial)
+        paginator.set_filter(
+            status,
+            fulfillment,
+            financial,
+            created_at_start,
+            created_at_end
+        )
         paginator.set_reverse_order(sort == 'desc')
         paginator.set_query(utils.safeInt(query, query))
 
@@ -2241,6 +2257,12 @@ def orders_view(request):
                     orders = orders.filter(order_id__in=order_ids)
                 else:
                     orders = orders.filter(order_id=utils.safeInt(query_order, 0))
+
+        if created_at_start:
+            orders = orders.filter(created_at__gte=created_at_start)
+
+        if created_at_end:
+            orders = orders.filter(created_at__lte=created_at_end)
 
         if query_customer:
             orders = orders.filter(Q(customer_name__icontains=query_customer) |
@@ -2608,6 +2630,7 @@ def orders_view(request):
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
         'countries': countries,
+        'created_at_daterange': created_at_daterange,
         'page': 'orders',
         'breadcrumbs': breadcrumbs
     })
