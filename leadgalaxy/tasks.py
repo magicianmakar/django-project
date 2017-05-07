@@ -485,37 +485,6 @@ def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def mark_as_ordered_note_attributes(self, store_id, order_id, source_id):
-    try:
-        store = ShopifyStore.objects.get(id=store_id)
-        note_attributes = utils.get_shopify_order_note_attributes(store, order_id)
-
-        name = 'Aliexpress Order #' + str(source_id)
-        url = 'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
-        note_attribute = {'name': name, 'value': url}
-        note_attributes.append(note_attribute)
-
-        utils.set_shopify_order_note_attributes(store, order_id, note_attributes)
-
-    except Exception as e:
-        if not self.request.called_directly:
-            countdown = retry_countdown('retry_mark_ordered_note_attributes_{}'.format(order_id), self.request.retries)
-            raise self.retry(exc=e, countdown=countdown, max_retries=3)
-
-
-@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def mark_as_ordered_add_tag(self, store_id, order_id, tag):
-    try:
-        store = ShopifyStore.objects.get(id=store_id)
-        utils.add_shopify_order_tag(store, order_id, tag)
-
-    except Exception as e:
-        if not self.request.called_directly:
-            countdown = retry_countdown('retry_mark_ordered_add_tag_{}'.format(order_id), self.request.retries)
-            raise self.retry(exc=e, countdown=countdown, max_retries=3)
-
-
 @celery_app.task(base=CaptureFailure, bind=True)
 def add_ordered_note(self, store_id, order_id, note):
     try:
@@ -644,11 +613,14 @@ def create_image_zip(self, images, product_id):
 
 
 @celery_app.task(base=CaptureFailure, bind=True)
-def add_ordered_tags(self, store_id, order_id, tags):
+def order_save_changes(self, data):
     try:
-        store = ShopifyStore.objects.get(id=store_id)
+        updater = utils.ShopifyOrderUpdater()
+        updater.fromJSON(data)
 
-        utils.add_shopify_order_tags(store, order_id, tags)
+        order_id = updater.order_id
+
+        updater.save_changes()
 
     except Exception as e:
         if not self.request.called_directly:

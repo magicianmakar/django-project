@@ -747,16 +747,6 @@ def get_shopify_order_note(store, order_id):
     return order['note']
 
 
-def get_shopify_order_note_attributes(store, order_id):
-    order = get_shopify_order(store, order_id)
-    return order['note_attributes']
-
-
-def get_shopify_order_tags(store, order_id):
-    order = get_shopify_order(store, order_id)
-    return order['tags']
-
-
 def set_shopify_order_note(store, order_id, note):
     rep = requests.put(
         url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
@@ -764,46 +754,6 @@ def set_shopify_order_note(store, order_id, note):
             'order': {
                 'id': order_id,
                 'note': note[:5000]
-            }
-        }
-    )
-
-    response = rep.text
-    rep.raise_for_status()
-
-    if rep.ok:
-        response = rep.json()
-
-    return response['order']['id']
-
-
-def set_shopify_order_note_attributes(store, order_id, note_attributes):
-    rep = requests.put(
-        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
-        json={
-            'order': {
-                'id': order_id,
-                'note_attributes': note_attributes
-            }
-        }
-    )
-
-    response = rep.text
-    rep.raise_for_status()
-
-    if rep.ok:
-        response = rep.json()
-
-    return response['order']['id']
-
-
-def set_shopify_order_tags(store, order_id, tags):
-    rep = requests.put(
-        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
-        json={
-            'order': {
-                'id': order_id,
-                'tags': tags
             }
         }
     )
@@ -829,62 +779,6 @@ def add_shopify_order_note(store, order_id, new_note, current_note=False):
         note = new_note
 
     return set_shopify_order_note(store, order_id, note)
-
-
-def add_shopify_order_tag(store, order_id, tag):
-    tags = get_shopify_order_tags(store, order_id)
-    tag_list = tags.split(',')
-
-    if tag not in tag_list:
-        tag_list.append(tag)
-        tags = ','.join(tag_list)
-
-        return set_shopify_order_tags(store, order_id, tags)
-
-    return order_id
-
-
-def get_shopify_order_tags(store, order_id):
-    order = get_shopify_order(store, order_id)
-    return order['tags']
-
-
-def set_shopify_order_tags(store, order_id, tags):
-    rep = requests.put(
-        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
-        json={
-            'order': {
-                'id': order_id,
-                'tags': tags[:5000]
-            }
-        }
-    )
-
-    response = rep.text
-    rep.raise_for_status()
-
-    if rep.ok:
-        response = rep.json()
-
-    return response['order']['id']
-
-
-def add_shopify_order_tags(store, order_id, new_tags, current_tags=False):
-    if current_tags is False:
-        tags = get_shopify_order_tags(store, order_id)
-    else:
-        tags = current_tags
-
-    if tags:
-        tags = set([t.strip() for t in tags.split(',')])
-        new_tags = set([t.strip() for t in new_tags.split(',')])
-        new_tags = ','.join(list(tags | new_tags))
-
-        tags = new_tags
-    else:
-        tags = new_tags
-
-    return set_shopify_order_tags(store, order_id, tags)
 
 
 def shopify_link_images(store, product):
@@ -1947,3 +1841,134 @@ class ProductsCollectionPaginator(Paginator):
         )
 
         return rep.json()
+
+
+class ShopifyOrderUpdater:
+
+    def __init__(self, store=None, order_id=None):
+        self.store = store
+        self.order_id = order_id
+
+        self.notes = []
+        self.tags = []
+        self.attributes = []
+
+    def add_note(self, n):
+        self.notes.append(n)
+
+    def add_tag(self, t):
+        if type(t) is not list:
+            t = t.split(',')
+
+        for i in t:
+            self.tags.append(i)
+
+    def add_attribute(self, a):
+        if type(a) is not list:
+            a = [a]
+
+        for i in a:
+            self.attributes.append(i)
+
+    def mark_as_ordered_note(self, line_id, source_id):
+        note = 'Aliexpress Order ID: {0}\n' \
+               'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+
+        if line_id:
+            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+
+        self.add_note(note)
+
+    def mark_as_ordered_attribute(self, source_id):
+        name = u'Aliexpress Order #{}'.format(source_id)
+        url = u'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+        note_attribute = {'name': name, 'value': url}
+
+        self.add_attribute(note_attribute)
+
+    def mark_as_ordered_tag(self, source_id):
+        self.add_tag(str(source_id))
+
+    def save_changes(self):
+        order = get_shopify_order(self.store, self.order_id)
+        order_data = {
+            'id': self.order_id,
+        }
+
+        if self.notes:
+            new_note = '\n'.join(self.notes)
+            order_data['note'] = '{}\n{}'.format(order['note'].encode('utf-8'), new_note.encode('utf-8')).strip()
+
+        if self.tags:
+            new_tags = [i.strip() for i in order.get('tags', '').split(',')]
+            for i in self.tags:
+                new_tags.append(i)
+
+            new_tags = ','.join(new_tags)
+
+            order_data['tags'] = new_tags[:5000]
+
+        if self.attributes:
+            new_attributes = order.get('note_attributes', [])
+            for i in self.attributes:
+                new_attributes.append(i)
+
+            order_data['note_attributes'] = new_attributes
+
+        if len(order_data.keys()) > 1:
+            rep = requests.put(
+                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                json={'order': order_data}
+            )
+
+            rep.raise_for_status()
+
+    def delay_save(self, countdown=None):
+        from leadgalaxy.tasks import order_save_changes
+
+        order_save_changes.apply_async(
+            args=[self.toJSON()],
+            countdown=countdown
+        )
+
+    def reset(self, what):
+        order_data = {
+            'id': self.order_id,
+        }
+
+        if 'notes' in what:
+            order_data['note'] = ''
+
+        if 'tags' in what:
+            order_data['tags'] = ''
+
+        if 'attributes' in what:
+            order_data['note_attributes'] = []
+
+        if len(order_data.keys()) > 1:
+            rep = requests.put(
+                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                json={'order': order_data}
+            )
+
+            rep.raise_for_status()
+
+    def toJSON(self):
+        return json.dumps({
+            "attributes": self.attributes,
+            "notes": self.notes,
+            "order": self.order_id,
+            "store": self.store.id,
+            "tags": self.tags
+        }, sort_keys=True, indent=4)
+
+    def fromJSON(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        self.store = ShopifyStore.objects.get(id=data.get("store"))
+        self.order_id = data.get("order")
+
+        self.notes = data.get("notes")
+        self.tags = data.get("tags")
+        self.attributes = data.get("attributes")

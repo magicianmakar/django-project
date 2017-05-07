@@ -425,25 +425,52 @@ class OrdersTestCase(TestCase):
         self.assertIn(note2, order_note)
         self.assertIn(note3, order_note)
 
-    def test_order_tags(self):
-        order_id = 4905209738
-        line_id = 9309669834
+        utils.set_shopify_order_note(store, order_id, '')
 
+    def test_order_updater_note(self):
         store = ShopifyStoreFactory()
-        order = utils.get_shopify_order(store, order_id)
-        self.assertEqual(order['id'], order_id)
+        order_id = 4905209738
 
-        tag1 = 'Test Tag 1'
-        utils.set_shopify_order_tags(store, order_id, tag1)
+        note = 'Test Note #%s' % utils.random_hash()
 
-        self.assertEqual(tag1, utils.get_shopify_order_tags(store, order_id))
+        updater = utils.ShopifyOrderUpdater(store, order_id)
+        updater.add_note(note)
 
-        tag2 = 'An other Test Tag 2'
-        utils.add_shopify_order_tags(store, order_id, tag2)
+        updater.reset('notes')
 
-        order_tags = utils.get_shopify_order_tags(store, order_id)
-        self.assertIn(tag1, order_tags)
-        self.assertIn(tag2, order_tags)
+        updater.save_changes()
+
+        self.assertEqual(note, utils.get_shopify_order_note(store, order_id))
+
+    def test_order_updater_tags(self):
+        store = ShopifyStoreFactory()
+        order_id = 4905209738
+
+        tag = '#%s' % utils.random_hash()
+
+        updater = utils.ShopifyOrderUpdater(store, order_id)
+        updater.add_tag(tag)
+
+        updater.reset('tags')
+
+        updater.save_changes()
+
+        self.assertEqual(tag, utils.get_shopify_order(store, order_id)['tags'])
+
+    def test_order_updater_attributes(self):
+        store = ShopifyStoreFactory()
+        order_id = 4905209738
+
+        attrib = {'name': utils.random_hash(), 'value': utils.random_hash()}
+
+        updater = utils.ShopifyOrderUpdater(store, order_id)
+        updater.add_attribute(attrib)
+
+        updater.reset('attributes')
+
+        updater.save_changes()
+
+        self.assertEqual([attrib], utils.get_shopify_order(store, order_id)['note_attributes'])
 
 
 class UtilsTestCase(TestCase):
@@ -729,12 +756,3 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         new_data = event.variants_actions(self.data)
 
         self.assertEqual(new_data['product']['variants'][found]['inventory_quantity'], variant_change['new_value'])
-
-
-class AddShopifyOrderTagTestCase(TestCase):
-    @patch('leadgalaxy.utils.set_shopify_order_tags')
-    @patch('leadgalaxy.utils.get_shopify_order_tags', Mock(return_value='foo,bar'))
-    def test_must_add_tag_to_order(self, set_shopify_order_tags):
-        order = order_factories.ShopifyOrderFactory()
-        utils.add_shopify_order_tag(order.store, order.order_id, 'baz')
-        set_shopify_order_tags.assert_called_with(order.store, order.order_id, 'foo,bar,baz')

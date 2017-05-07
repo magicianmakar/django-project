@@ -250,7 +250,7 @@
 
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
-                                <div class="form-group">
+                                <div class="form-group v-center">
                                     <label for="description_mode" class="col-sm-2 control-label" style="padding-top:0">
                                         Default Product Description
                                         {% include 'partial/help_tooltip.html' with help="<p><b>Empty</b>: No description will be used.</p><p><b>Original</b>: The full AliExpress product description will be pre-populated.</p><p><b>Simplified</b>: The product specs portion of the AliExpress description will be pre-populated.</p><p><b>Custom</b>: The custom description entered below will be pre-populated.</p>" qtipstyle="color:#BBB" %}
@@ -345,7 +345,7 @@
 
                         <div class="row m-t-sm">
                             <div class="col-sm-offset-1 col-sm-11">
-                                <div class="form-group">
+                                <div class="form-group v-center">
                                     <label for="order_custom_note" class="col-sm-2 control-label" style="padding-top:0">
                                             Custom Note To The Supplier
                                     </label>
@@ -593,50 +593,6 @@
                             </div>
                         </div>
 
-                        <div class="setting-section">
-                            <h3 class="setting-title">Aliexpress Options</h3>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-offset-1 col-sm-11">
-                                <div class="form-group">
-                                    <label for="aliexpress_as_notes" class="col-sm-6 col-xs-8 control-label">
-                                        Save AliExpress Order ID and fulfillment URL as standard Order Notes
-                                    </label>
-                                    <div class="col-sm-6 col-xs-4">
-                                        <input id="aliexpress_as_notes" name="aliexpress_as_notes" type="checkbox"
-                                               class="js-switch" {% if config.aliexpress_as_notes %}checked{% endif %} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-offset-1 col-sm-11">
-                                <div class="form-group">
-                                    <label for="aliexpress_as_custom_note" class="col-sm-6 col-xs-8 control-label">
-                                        Save AliExpress Order ID and fulfillment URL as a Custom Note
-                                    </label>
-                                    <div class="col-sm-6 col-xs-4">
-                                        <input id="aliexpress_as_custom_note" name="aliexpress_as_custom_note" type="checkbox" class="js-switch" {% if config.aliexpress_as_custom_note %}checked{% endif %} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-offset-1 col-sm-11">
-                                <div class="form-group">
-                                    <label for="aliexpress_as_order_tag" class="col-sm-6 col-xs-8 control-label">
-                                        Save AliExpress Order ID as order tag
-                                    </label>
-                                    <div class="col-sm-6 col-xs-4">
-                                        <input id="aliexpress_as_order_tag" name="aliexpress_as_order_tag" type="checkbox"
-                                               class="js-switch" {% if config.aliexpress_as_order_tag %}checked{% endif %} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {% endif %}
 
                         {% if user|can:'orders.use' %}
@@ -648,6 +604,47 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
+                                    <label for="aliexpress_as_notes" class="col-sm-4 col-xs-8 control-label">
+                                        Save AliExpress Order ID as standard Order Notes
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input id="aliexpress_as_notes" name="aliexpress_as_notes" type="checkbox"
+                                               class="js-switch" {% if config.aliexpress_as_notes or config.aliexpress_as_notes == None %}checked{% endif %} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="aliexpress_as_custom_note" class="col-sm-4 col-xs-8 control-label">
+                                        Save AliExpress Order ID as Additional Details
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input id="aliexpress_as_custom_note" name="aliexpress_as_custom_note" type="checkbox" class="js-switch" {% if config.aliexpress_as_custom_note %}checked{% endif %} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="aliexpress_as_order_tag" class="col-sm-4 col-xs-8 control-label">
+                                        Save AliExpress Order ID as Order Tag
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input id="aliexpress_as_order_tag" name="aliexpress_as_order_tag" type="checkbox"
+                                               class="js-switch" {% if config.aliexpress_as_order_tag %}checked{% endif %} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group v-center">
                                     <label for="aliexpress_order_tags" class="col-sm-3 col-xs-12">
                                         Tags - Order Placed
                                         {% include 'partial/help_tooltip.html' with help="Create the following tag(s) on the Shopify order when order is placed on AliExpress" qtipstyle="color:#BBB" %}
@@ -661,7 +658,7 @@
 
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
-                                <div class="form-group">
+                                <div class="form-group v-center">
                                     <label for="tracking_number_tags" class="col-sm-3 col-xs-12">
                                         Tags - Tracking Number Added
                                         {% include 'partial/help_tooltip.html' with help="Create the following tag(s) on the Shopify order when tracking number is added to Shopified App" qtipstyle="color:#BBB" %}
@@ -973,6 +970,10 @@
     }
     .table > tbody > tr > td > .btn {
         margin-bottom: 0;
+    }
+    .v-center {
+        display: flex !important;
+        align-items: center !important;
     }
 </style>
 {% endblock %}

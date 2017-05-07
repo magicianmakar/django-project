@@ -1580,6 +1580,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         note_delay_key = 'store_{}_order_{}'.format(store.id, order_id)
         note_delay = cache.get(note_delay_key, 0)
 
+        order_updater = utils.ShopifyOrderUpdater(store, order_id)
+
         for line_id in order_lines.split(','):
             if not line_id:
                 return self.api_error('Order Line Was Not Found.', status=501)
@@ -1661,21 +1663,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
                 profile = user.models_user.profile
 
-                if profile.get_config_value('aliexpress_as_notes'):
-                    # TODO: make this done with one api call
-                    tasks.mark_as_ordered_note.apply_async(
-                        args=[store.id, order_id, line_id, source_id],
-                        countdown=note_delay)
+                if profile.get_config_value('aliexpress_as_notes', True):
+                    order_updater.mark_as_ordered_note(line_id, source_id)
 
                 if profile.get_config_value('aliexpress_as_custom_note'):
-                    args = [store.id, order_id, source_id]
-                    countdown = note_delay
-                    tasks.mark_as_ordered_note_attributes.apply_async(args=args, countdown=countdown)
+                    order_updater.mark_as_ordered_attribute(source_id)
 
                 if profile.get_config_value('aliexpress_as_order_tag'):
-                    args = [store.id, order_id, str(source_id)]
-                    countdown = note_delay
-                    tasks.mark_as_ordered_add_tag.apply_async(args=args, countdown=countdown)
+                    order_updater.mark_as_ordered_tag(source_id)
 
             store.pusher_trigger('order-source-id-add', {
                 'track': track.id,
@@ -1688,7 +1683,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         aliexpress_order_tags = user.models_user.get_config('aliexpress_order_tags')
         if aliexpress_order_tags:
-            tasks.add_ordered_tags.delay(store.id, order_id, aliexpress_order_tags)
+            order_updater.add_tag(aliexpress_order_tags)
+
+        order_updater.delay_save(countdown=note_delay)
 
         return self.api_success()
 
@@ -1750,7 +1747,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         tracking_number_tags = user.models_user.get_config('tracking_number_tags')
         if new_tracking_number and tracking_number_tags:
-            tasks.add_ordered_tags.delay(order.store.id, order.order_id, tracking_number_tags)
+            order_updater = utils.ShopifyOrderUpdater(store, order_id)
+            order_updater.add_tag(tracking_number_tags)
+            order_updater.delay_save()
 
         return self.api_success()
 
