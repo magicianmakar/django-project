@@ -1896,8 +1896,9 @@ class ShopifyOrderUpdater:
         }
 
         if self.notes:
+            current_note = order.get('note', '') or ''
             new_note = '\n'.join(self.notes)
-            order_data['note'] = '{}\n{}'.format(order['note'].encode('utf-8'), new_note.encode('utf-8')).strip()
+            order_data['note'] = u'{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()
 
         if self.tags:
             new_tags = [i.strip() for i in order.get('tags', '').split(',')]
