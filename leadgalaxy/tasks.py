@@ -623,6 +623,8 @@ def order_save_changes(self, data):
         updater.save_changes()
 
     except Exception as e:
+        raven_client.captureException()
+
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
