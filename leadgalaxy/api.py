@@ -1747,7 +1747,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         tracking_number_tags = user.models_user.get_config('tracking_number_tags')
         if new_tracking_number and tracking_number_tags:
-            order_updater = utils.ShopifyOrderUpdater(store, order_id)
+            order_updater = utils.ShopifyOrderUpdater(order.store, order.order_id)
             order_updater.add_tag(tracking_number_tags)
             order_updater.delay_save()
 
