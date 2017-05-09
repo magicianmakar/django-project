@@ -210,7 +210,7 @@ def invoice_extra_stores():
     invoiced = 0
     for extra in extra_stores:
         ignore = False
-        if not extra.store.is_active:
+        if not extra.store.is_active or extra.user.profile.plan.is_free:
             extra.status = 'disabled'
             extra.save()
             ignore = True
