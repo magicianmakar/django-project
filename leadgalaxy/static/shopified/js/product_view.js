@@ -541,9 +541,11 @@ $('#duplicate-btn').click(function (e) {
     });
 });
 
-function matchImagesWithExtra() {
-    $('#modal-add-image .extra-added').remove();
-    $('#modal-add-image .add-var-image-block').each(function(i, el) {
+function matchImagesWithExtra( parent ) {
+    if ( typeof parent === "undefined" ) parent = "modal-add-image";
+
+    $('#' + parent + ' .extra-added').remove();
+    $('#' + parent + ' .add-var-image-block').each(function(i, el) {
             if (indexOfImages(product.images, $('img', el).attr('src')) != -1) {
                 $(el).append($('<img class="extra-added" src="//i.imgur.com/HDg5nrv.png" ' +
                     'style="position:absolute;left:16px;top:1px;border-radius:0 0 8px 0;' +
@@ -842,7 +844,7 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
     matchImagesWithExtra();
 });
 
-$('#modal-add-image .add-var-image').click(function (e) {
+$(document).on('click', '#modal-add-image .add-var-image, #modal-upload-image .add-var-image', function (e) {
     var imageIdx = indexOfImages(product.images, $(this).attr('src'));
     if (imageIdx == -1) {
         product.images.push($(this).attr('src'));
@@ -1513,6 +1515,34 @@ var PusherSubscription = {
     });
 
     bindExportEvents();
+
+    $('#modal-upload-image a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if ( $(e.target).attr('href') == '#upload-tab2' ) {
+            if ( !$( '#loader', par ).hasClass( 'hide' ) && !$( '#loader .sk-spinner', par ).hasClass( 'hide' ) ) {
+                var par = $('#upload-tab2');
+                $.post('/api/youzign-images', {})
+                .done( function( data ) {
+                    $.each( data.data, function(i, image) {
+                        if ( i % 4 == 0 )
+                            $('<div>', {class: 'col-xs-12',}).appendTo($( '#images', par ));
+
+                        $('<div>', {
+                            class: 'col-xs-3 add-var-image-block',
+                            html: '<img src="/static/img/blank.gif" data-src="'+image.image_src[0]+'" class="add-var-image unveil" />'
+                        }).appendTo($( '#images', par ));
+                    });
+                    $( '#loader', par ).addClass( 'hide' );
+                    $( '#images', par ).removeClass( 'hide' );
+                    $('.unveil', par).unveil();
+                    matchImagesWithExtra( "modal-upload-image" );
+                })
+                .fail( function( data ) {
+                    $( '#loader .sk-spinner', par ).addClass( 'hide' );
+                    swal( 'Youzign', 'Please verify your API credentials and retry.', 'error');
+                });
+            }
+        }
+    });
 
 })();
 })(config, product);

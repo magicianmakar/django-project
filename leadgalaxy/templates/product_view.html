@@ -697,7 +697,41 @@
             <h4 class="modal-title">Image upload</h4>
           </div>
             <div class="modal-body">
-                <div id="uploader"></div>
+                <div class="row tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a data-toggle="tab" href="#upload-tab1" aria-expanded="true"><i class="fa fa-desktop"></i> Desktop</a>
+                        </li>
+                        <li class="">
+                            <a data-toggle="tab" href="#upload-tab2"><i class="fa fa-cloud-download"></i> Youzign</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="upload-tab1">
+                            <div class="panel-body" style="padding: 5px 20px;">
+                                <div id="uploader" class="row"></div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="upload-tab2">
+                            <div id="youzign" class="panel-body">
+                                <div class="row hide" id="images">
+                                </div>
+                                <div class="spiner-example" id="loader">
+                                    <div class="sk-spinner sk-spinner-wave">
+                                        <div class="sk-rect1"></div>
+                                        <div class="sk-rect2"></div>
+                                        <div class="sk-rect3"></div>
+                                        <div class="sk-rect4"></div>
+                                        <div class="sk-rect5"></div>
+                                    </div>
+                                </div>
+
+                                <div class="description-images-add" class="row">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

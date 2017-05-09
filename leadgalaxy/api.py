@@ -691,6 +691,22 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             return self.api_error(response, status=500)
 
+    def post_youzign_images(self, request, user, data):
+        api_url = 'https://www.youzign.com/api/designs/'
+
+        auth_detils = {
+            "key": user.get_config()["yz_public_key"],
+            "token": user.get_config()["yz_access_token"],
+        }
+
+        res = requests.post(api_url, data=auth_detils).json()
+
+        if isinstance(res, list):
+            return self.api_success({"data": res})
+        else:
+            return self.api_success({"data": []}) if not res.get('error') else self.api_error(
+                "Invalid API credentials.", status=500)
+
     def post_change_plan(self, request, user, data):
         if not user.is_superuser:
             raise PermissionDenied()
