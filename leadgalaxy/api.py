@@ -1970,7 +1970,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'password': password
             })
         else:
-            return self.api_error(form.errors)
+            errors = []
+            for key, val in form.errors.items():
+                print errors
+                errors.append(u'{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
+
+            return self.api_error('\n\n'.join(errors), status=422)
 
     def get_shipping_aliexpress(self, request, user, data):
         aliexpress_id = data.get('id')
