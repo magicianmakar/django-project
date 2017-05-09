@@ -409,9 +409,13 @@ def wicked_report_add_user(request, user):
             user.profile.save()
 
     except Exception as e:
+        response = ''
+        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+            response = e.response.text
+
         raven_client.captureException(
             level='warning',
-            extra={'response': e.response.text if hasattr(e, 'response') else ''}
+            extra={'response': response}
         )
 
 
