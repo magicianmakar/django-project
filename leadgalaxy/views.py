@@ -2238,10 +2238,15 @@ def orders_view(request):
         current_page = paginator.page(page)
         page = current_page
     else:
+        orders = ShopifyOrder.objects.filter(store=store)
         if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
             messages.info(request, 'Your Store Orders are being imported')
-
-        orders = ShopifyOrder.objects.filter(store=store)
+        else:
+            shopify_count = store.get_orders_count(all_orders=True)
+            db_count = orders.count()
+            if shopify_count != db_count:
+                messages.warning(request, 'Order count does not match.')
+                tasks.update_shopify_orders.apply_async(args=[store.id])
 
         if query_order:
             order_id = shopify_orders_utils.order_id_from_name(store, query_order)

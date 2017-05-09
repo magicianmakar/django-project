@@ -33,6 +33,8 @@ from product_feed.models import FeedStatus, CommerceHQFeedStatus
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
 
+from shopify_orders.models import ShopifyOrder
+
 
 @celery_app.task(base=CaptureFailure)
 def export_product(req_data, target, user_id):
@@ -393,6 +395,21 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
         if not self.request.called_directly:
             countdown = retry_countdown('retry_product_{}'.format(shopify_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def update_shopify_orders(self, store_id):
+    store = ShopifyStore.objects.get(id=store_id)
+    orders = ShopifyOrder.objects.filter(store=store)
+    shopify_count = store.get_orders_count(all_orders=True)
+    db_count = orders.count()
+    if shopify_count > db_count:
+        imported_order_ids = []
+        for order in orders:
+            imported_order_ids.append(order.order_id)
+        new_orders = utils.get_shopify_orders(store, all_orders=True, order_ids_not=imported_order_ids, limit=shopify_count - db_count)
+        for new_order in new_orders:
+            update_shopify_order(store_id, new_order['id'], new_order)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
