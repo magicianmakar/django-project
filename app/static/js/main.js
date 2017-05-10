@@ -786,6 +786,10 @@ $(function() {
                 subject: 'getVersion',
                 from: 'website',
             }, function(rep) {
+                if(!rep) {
+                    return;
+                }
+
                 var current_version = rep.version;
                 var comapre = versionCompare(version, current_version);
 
