@@ -2304,7 +2304,7 @@ def orders_view(request):
 
         if product_filter:
             if request.GET.get('exclude_products'):
-                orders = orders.exclude(shopifyorderline__product_id__in=product_filter, items_count=len(product_filter)).distinct()
+                orders = orders.exclude(shopifyorderline__product_id__in=product_filter, items_count__lte=len(product_filter)).distinct()
             else:
                 orders = orders.filter(shopifyorderline__product_id__in=product_filter).distinct()
 
