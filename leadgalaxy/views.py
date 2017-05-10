@@ -1858,13 +1858,17 @@ def autocomplete(request, target):
 
     elif target == 'title':
         results = []
-        products = request.user.models_user.shopifyproduct_set.only('id', 'title').filter(title__icontains=q, shopify_id__gt=0)
+        products = request.user.models_user.shopifyproduct_set.only('id', 'title', 'data').filter(title__icontains=q, shopify_id__gt=0)
         store = request.GET.get('store')
         if store:
             products = products.filter(store=store)
 
         for product in products[:10]:
-            results.append({'value': product.title, 'data': product.id})
+            results.append({
+                'value': (truncatewords(product.title, 10) if request.GET.get('trunc') else product.title),
+                'data': product.id,
+                'image': product.get_image()
+            })
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
@@ -2185,7 +2189,7 @@ def orders_view(request):
     query_customer = request.GET.get('query_customer')
     query_address = request.GET.getlist('query_address')
 
-    product_filter = request.GET.get('product')
+    product_filter = request.GET.getlist('product')
     supplier_filter = request.GET.get('supplier_name')
     shipping_method_filter = request.GET.get('shipping_method_name')
 
@@ -2299,7 +2303,10 @@ def orders_view(request):
             orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if product_filter:
-            orders = orders.filter(shopifyorderline__product_id=product_filter).distinct()
+            if request.GET.get('exclude_products'):
+                orders = orders.exclude(shopifyorderline__product_id__in=product_filter, items_count=len(product_filter)).distinct()
+            else:
+                orders = orders.filter(shopifyorderline__product_id__in=product_filter).distinct()
 
         if supplier_filter:
             orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter).distinct()
@@ -2605,7 +2612,7 @@ def orders_view(request):
         countries = []
 
     if product_filter:
-        product_filter = models_user.shopifyproduct_set.get(id=product_filter)
+        product_filter = models_user.shopifyproduct_set.filter(id__in=product_filter)
 
     return render(request, 'orders_new.html', {
         'orders': all_orders,

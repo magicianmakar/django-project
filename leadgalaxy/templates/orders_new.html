@@ -121,9 +121,18 @@
                             <span>Product</span>
                         </div>
                         <div class="col-md-4">
-                            <input name="product" value="{{request.GET.product|default:''}}" type="hidden" />
-                            <input name="" id="product_title" value="{{product_filter.title|default:''}}" class="form-control"
-                                   placeholder="Product Title" data-store="{{store.id}}">
+                            <select name="product" id="product" class="form-control" data-store="{{store.id}}" multiple="">
+                               {% for p in product_filter %}
+                               <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
+                               {% endfor %}
+                           </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="exclude_products" class="control-label">
+                                <input type="checkbox" id="exclude_products" name="exclude_products" value="true" class="icheck"
+                                       {% if request.GET.exclude_products %}checked{% endif %}>
+                                Exclude Products
+                            </label>
                         </div>
                     </div>
 
@@ -662,7 +671,10 @@
 
 
 {% block extracss %}
+
+{% compress css %}
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+<link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 <style type="text/css">
 
     .no-padding {
@@ -836,7 +848,18 @@
         margin-top: 5px;
         font-weight: bold;
     }
+    .select2-results .select2-results__options .select2-results__option {
+        min-height: 51px;
+        padding: 0;
+        border-bottom: 1px solid #ccc;
+    }
+    .select2-results .select2-results__options .select2-results__option img {
+        width: 50px;
+        float: left;
+        margin-right: 5px;
+    }
 </style>
+{% endcompress %}
 
 {% endblock %}
 
@@ -864,6 +887,7 @@
     <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}

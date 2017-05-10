@@ -808,7 +808,14 @@ class ShopifyProduct(models.Model):
             return None
 
     def get_images(self):
-        return json.loads(self.data)['images']
+        try:
+            return json.loads(self.data)['images']
+        except:
+            return []
+
+    def get_image(self):
+        images = self.get_images()
+        return images.pop() if len(images) else None
 
     def get_original_info(self, url=None):
         if not url:
