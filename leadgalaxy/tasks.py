@@ -415,7 +415,7 @@ def sync_shopify_orders(self, store_id):
                 shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
                 shopify_order_ids = [o['id'] for o in shopify_orders]
 
-                order_ids = ShopifyOrder.objects.filter(order_id__in=shopify_order_ids).values_list('order_id', flat=True)
+                order_ids = list(ShopifyOrder.objects.filter(order_id__in=shopify_order_ids).values_list('order_id', flat=True))
                 for shopify_order_id in shopify_order_ids:
                     if shopify_order_id not in order_ids:
                         update_shopify_order(store_id, shopify_order_id)
@@ -434,7 +434,7 @@ def sync_shopify_orders(self, store_id):
 
         print 'Sync {}/{} Orders @{} Complete in {}s'.format(need_import, shopify_count, store.id, (arrow.now() - start_time).seconds)
 
-    except Exception:
+    except Exception as e:
         raven_client.captureException()
 
         if not self.request.called_directly:
