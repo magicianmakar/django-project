@@ -2251,7 +2251,7 @@ def orders_view(request):
             if cache.get(orders_sync_check_key) is None:
                 shopify_count = store.get_orders_count(all_orders=True)
                 db_count = orders.count()
-                if shopify_count != db_count:
+                if shopify_count > db_count:
                     tasks.sync_shopify_orders.apply_async(args=[store.id])
 
                     raven_client.captureMessage('Sync Store Orders', level='info', extra={

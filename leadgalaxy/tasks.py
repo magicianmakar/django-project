@@ -400,6 +400,8 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def sync_shopify_orders(self, store_id):
     try:
+        start_time = arrow.now()
+
         store = ShopifyStore.objects.get(id=store_id)
         orders = ShopifyOrder.objects.filter(store=store)
         shopify_count = store.get_orders_count(all_orders=True)
@@ -429,6 +431,8 @@ def sync_shopify_orders(self, store_id):
                     break
 
                 page += 1
+
+        print 'Sync {}/{} Orders @{} Complete in {}s'.format(need_import, shopify_count, store.id, (arrow.now() - start_time).seconds)
 
     except Exception:
         raven_client.captureException()
