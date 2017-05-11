@@ -754,15 +754,15 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
         for p in rep['orders']:
             yield p
     else:
-        per_request = 250
+        limit = 250
         count = store.get_orders_count(all_orders=True)
 
         if not count:
             return
 
-        pages = int(ceil(count / float(per_request)))
+        pages = int(ceil(count / float(limit)))
         for page in xrange(1, pages + 1):
-            rep = get_shopify_orders(store=store, page=page, limit=per_request,
+            rep = get_shopify_orders(store=store, page=page, limit=limit,
                                      fields=fields, all_orders=False, session=requests.session())
             for p in rep:
                 yield p

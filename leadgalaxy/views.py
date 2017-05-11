@@ -2239,14 +2239,24 @@ def orders_view(request):
         page = current_page
     else:
         orders = ShopifyOrder.objects.filter(store=store)
+
         if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
             messages.info(request, 'Your Store Orders are being imported')
         else:
-            shopify_count = store.get_orders_count(all_orders=True)
-            db_count = orders.count()
-            if shopify_count != db_count:
-                messages.warning(request, 'Order count does not match.')
-                tasks.update_shopify_orders.apply_async(args=[store.id])
+            orders_sync_check_key = 'store_orders_sync_check_{}'.format(store.id)
+            if cache.get(orders_sync_check_key) is None:
+                shopify_count = store.get_orders_count(all_orders=True)
+                db_count = orders.count()
+                if shopify_count != db_count:
+                    tasks.sync_shopify_orders.apply_async(args=[store.id])
+
+                    raven_client.captureMessage('Sync Store Orders', level='info', extra={
+                        'store': store.title,
+                        'missing': (shopify_count - db_count)
+                    })
+
+                    messages.info(request, '<i class="fa fa-circle-o-notch fa-spin"></i> Importing {} orders from your store'
+                                           '<span class="order_sync_status"> (0%)</span>'.format(shopify_count - db_count))
 
         if query_order:
             order_id = shopify_orders_utils.order_id_from_name(store, query_order)
