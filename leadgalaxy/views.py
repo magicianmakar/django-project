@@ -2262,6 +2262,8 @@ def orders_view(request):
                     messages.info(request, '<i class="fa fa-circle-o-notch fa-spin"></i> Importing {} orders from your store'
                                            '<span class="order_sync_status"> (0%)</span>'.format(shopify_count - db_count))
 
+                cache.set(orders_sync_check_key, True, timeout=43200)
+
         if query_order:
             order_id = shopify_orders_utils.order_id_from_name(store, query_order)
 
