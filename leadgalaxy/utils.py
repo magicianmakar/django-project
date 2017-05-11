@@ -722,7 +722,7 @@ def get_shopify_order(store, order_id):
 
 
 def get_shopify_orders(store, page=1, limit=50, all_orders=False,
-                       order_ids=None, order_ids_not=None, fields=None, session=requests):
+                       order_ids=None, fields=None, session=requests):
 
     if not all_orders:
         params = {
@@ -752,11 +752,7 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
         rep = rep.json()
 
         for p in rep['orders']:
-            if order_ids_not:
-                if p['id'] not in order_ids_not:
-                    yield p
-            else:
-                yield p
+            yield p
     else:
         per_request = 250
         count = store.get_orders_count(all_orders=True)
@@ -764,21 +760,12 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
         if not count:
             return
 
-        total = 0
-
         pages = int(ceil(count / float(per_request)))
         for page in xrange(1, pages + 1):
-            rep = get_shopify_orders(store=store, page=page, limit=per_request, order_ids_not=order_ids_not,
+            rep = get_shopify_orders(store=store, page=page, limit=per_request,
                                      fields=fields, all_orders=False, session=requests.session())
             for p in rep:
-                if limit:
-                    if total < limit:
-                        total += 1
-                        yield p
-                    else:
-                        break
-                else:
-                    yield p
+                yield p
 
 
 def get_shopify_order_line(store, order_id, line_id, line_sku=None, note=False):

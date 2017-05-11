@@ -404,12 +404,23 @@ def update_shopify_orders(self, store_id):
     shopify_count = store.get_orders_count(all_orders=True)
     db_count = orders.count()
     if shopify_count > db_count:
-        imported_order_ids = []
-        for order in orders:
-            imported_order_ids.append(order.order_id)
-        new_orders = utils.get_shopify_orders(store, all_orders=True, order_ids_not=imported_order_ids, limit=shopify_count - db_count)
-        for new_order in new_orders:
-            update_shopify_order(store_id, new_order['id'], new_order)
+        imported = 0
+        limit = shopify_count - db_count
+        page = 0
+
+        while True:
+            page += 1
+            shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
+            shopify_order_ids = [o['id'] for o in shopify_orders]
+
+            order_ids = ShopifyOrder.objects.filter(order_id__in=shopify_order_ids).values_list('order_id', flat=True)
+            if shopify_order_ids.count() != order_ids.count():
+                for shopify_order_id in shopify_order_ids:
+                    if shopify_order_id not in order_ids:
+                        imported += 1
+                        update_shopify_order(store_id, shopify_order_id)
+            if imported >= limit:
+                break
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
