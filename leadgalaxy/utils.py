@@ -725,6 +725,53 @@ def get_shopify_order(store, order_id):
     return rep.json()['order']
 
 
+def get_shopify_orders(store, page=1, limit=50, all_orders=False,
+                       order_ids=None, fields=None, session=requests):
+
+    if not all_orders:
+        params = {
+            'page': page,
+            'limit': limit,
+            'status': 'any',
+            'order': 'created_at desc'
+        }
+
+        if order_ids:
+            if type(order_ids) is list:
+                params['ids'] = ','.join(order_ids)
+            else:
+                params['ids'] = order_ids
+
+        if fields:
+            if type(fields) is list:
+                params['fields'] = ','.join(fields)
+            else:
+                params['fields'] = fields
+
+        rep = session.get(
+            url=store.get_link('/admin/orders.json', api=True),
+            params=params
+        )
+
+        rep = rep.json()
+
+        for p in rep['orders']:
+            yield p
+    else:
+        limit = 250
+        count = store.get_orders_count(all_orders=True)
+
+        if not count:
+            return
+
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
+            rep = get_shopify_orders(store=store, page=page, limit=limit,
+                                     fields=fields, all_orders=False, session=requests.session())
+            for p in rep:
+                yield p
+
+
 def get_shopify_order_line(store, order_id, line_id, line_sku=None, note=False):
     order = get_shopify_order(store, order_id)
     for line in order['line_items']:

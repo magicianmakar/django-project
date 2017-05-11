@@ -33,6 +33,8 @@ from product_feed.models import FeedStatus, CommerceHQFeedStatus
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
 
+from shopify_orders.models import ShopifyOrder
+
 
 @celery_app.task(base=CaptureFailure)
 def export_product(req_data, target, user_id):
@@ -392,6 +394,47 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_product_{}'.format(shopify_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def sync_shopify_orders(self, store_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+        orders = ShopifyOrder.objects.filter(store=store)
+        shopify_count = store.get_orders_count(all_orders=True)
+        db_count = orders.count()
+        if shopify_count > db_count:
+            imported = 0
+            need_import = shopify_count - db_count
+            page = 1
+
+            while True:
+                shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
+                shopify_order_ids = [o['id'] for o in shopify_orders]
+
+                order_ids = ShopifyOrder.objects.filter(order_id__in=shopify_order_ids).values_list('order_id', flat=True)
+                for shopify_order_id in shopify_order_ids:
+                    if shopify_order_id not in order_ids:
+                        update_shopify_order(store_id, shopify_order_id)
+
+                        imported += 1
+
+                        store.pusher_trigger('order-sync-status', {
+                            'curreny': imported,
+                            'total': need_import
+                        })
+
+                if imported >= need_import:
+                    break
+
+                page += 1
+
+    except Exception:
+        raven_client.captureException()
+
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_sync_store_{}'.format(store_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 

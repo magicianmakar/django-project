@@ -842,6 +842,22 @@ function pusherSub() {
         fixNotePanelHeight(order);
     });
 
+    channel.bind('order-sync-status', function(data) {
+        var el = $('.order_sync_status');
+
+        var progress = ((data.curreny / data.total) * 100.0).toFixed(0);
+
+        el.text(' (' + progress + '%)');
+
+        if (data.curreny >= data.total) {
+            el.html('. Sync Completed, <a href="#">reload page</a>').find('a').click(function (e) {
+                window.location.reload();
+            });
+
+            el.css('font-weight', 'bold').parent().find('i').hide();
+        }
+    });
+
     /*
     pusher.connection.bind('disconnected', function () {
         toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
