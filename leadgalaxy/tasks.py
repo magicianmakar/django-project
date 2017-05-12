@@ -410,6 +410,7 @@ def sync_shopify_orders(self, store_id):
             imported = 0
             need_import = shopify_count - db_count
             page = 1
+            countdown = 0
 
             while True:
                 shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
@@ -418,9 +419,12 @@ def sync_shopify_orders(self, store_id):
                 order_ids = list(ShopifyOrder.objects.filter(order_id__in=shopify_order_ids).values_list('order_id', flat=True))
                 for shopify_order_id in shopify_order_ids:
                     if shopify_order_id not in order_ids:
-                        update_shopify_order(store_id, shopify_order_id)
+                        update_shopify_order.apply_async(
+                            args=[store_id, shopify_order_id],
+                            countdown=countdown)
 
                         imported += 1
+                        countdown += 1
 
                         store.pusher_trigger('order-sync-status', {
                             'curreny': imported,
@@ -434,12 +438,8 @@ def sync_shopify_orders(self, store_id):
 
         print 'Sync {}/{} Orders @{} Complete in {}s'.format(need_import, shopify_count, store.id, (arrow.now() - start_time).seconds)
 
-    except Exception as e:
+    except Exception:
         raven_client.captureException()
-
-        if not self.request.called_directly:
-            countdown = retry_countdown('retry_sync_store_{}'.format(store_id), self.request.retries)
-            raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
