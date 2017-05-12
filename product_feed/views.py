@@ -6,6 +6,7 @@ from django.http import JsonResponse
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core import permissions
 from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
 
@@ -45,7 +46,8 @@ def shopify_product_feeds(request):
         if request.POST.get('feed'):
 
             try:
-                feed = FeedStatus.objects.get(id=request.POST['feed'], store__user=request.user)
+                feed = FeedStatus.objects.get(id=request.POST['feed'])
+                permissions.user_can_view(request.user, feed.store)
 
             except FeedStatus.DoesNotExist:
                 return JsonResponse({'error': 'Feed Not Found'}, status=500)
@@ -128,7 +130,8 @@ def chq_product_feeds(request):
         if request.POST.get('feed'):
 
             try:
-                feed = CommerceHQFeedStatus.objects.get(id=request.POST['feed'], store__user=request.user)
+                feed = CommerceHQFeedStatus.objects.get(id=request.POST['feed'])
+                permissions.user_can_view(request.user, feed.store)
 
             except CommerceHQFeedStatus.DoesNotExist:
                 return JsonResponse({'error': 'Feed Not Found'}, status=500)
