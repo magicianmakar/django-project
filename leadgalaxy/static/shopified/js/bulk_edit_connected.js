@@ -6,7 +6,7 @@
     }
 
     function calculationMethod(exp) {
-        if (exp[0] == '+' || exp[exp.length - 1] == '%') {
+        if (exp[0] == '+' || (exp[exp.length - 1] == '%' && exp[0] != '-')) {
             if (exp[exp.length - 1] == '%') {
                 return function(a, b) {
                     return a + (a * (b / 100));
