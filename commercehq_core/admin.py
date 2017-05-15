@@ -26,7 +26,7 @@ class CommerceHQProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('store', 'user', 'parent_product', 'default_supplier')
     ordering = ('-updated_at',)
-    search_fields = ('data', 'notes', 'price_notification_id', 'source_id')
+    search_fields = ('data', 'notes', 'source_id')
 
     def store_(self, obj):
         return obj.store.title
