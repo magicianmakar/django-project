@@ -416,7 +416,9 @@ def sync_shopify_orders(self, store_id):
                 shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
                 shopify_order_ids = [o['id'] for o in shopify_orders]
 
-                order_ids = list(ShopifyOrder.objects.filter(order_id__in=shopify_order_ids).values_list('order_id', flat=True))
+                order_ids = list(ShopifyOrder.objects.filter(store=store, order_id__in=shopify_order_ids)
+                                                     .values_list('order_id', flat=True))
+
                 for shopify_order_id in shopify_order_ids:
                     if shopify_order_id not in order_ids:
                         update_shopify_order.apply_async(
