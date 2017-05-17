@@ -63,6 +63,12 @@ SUBUSER_CHQ_STORE_PERMISSIONS = (
     ('view_alerts', 'View alerts'),
 )
 
+PRICE_MARKUP_TYPES = (
+    ('margin_percent', 'Increase by %'),
+    ('margin_amount', 'Increase by $'),
+    ('fixed_amount', 'Set to $'),
+)
+
 
 def add_to_class(cls, name):
     def _decorator(*args, **kwargs):
@@ -1758,6 +1764,19 @@ class DescriptionTemplate(models.Model):
 
     def __unicode__(self):
         return self.title
+
+
+class PriceMarkupRule(models.Model):
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length=255)
+    min_price = models.FloatField(default=0.0)
+    max_price = models.FloatField(default=0.0)
+    markup_value = models.FloatField(default=0.0)
+    markup_value_for_compare = models.FloatField(default=0.0)
+    markup_type = models.CharField(max_length=25, choices=PRICE_MARKUP_TYPES, default=PRICE_MARKUP_TYPES[0][0])
+
+    def __unicode__(self):
+        return self.name
 
 
 def user_is_subsuser(self):
