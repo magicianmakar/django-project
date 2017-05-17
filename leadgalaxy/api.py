@@ -1131,29 +1131,16 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             return self.api_success()
 
+        bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha']
+
         if form_webapp:
-            bool_config = [
-                'make_visisble',
-                'epacket_shipping',
-                'auto_ordered_mark',
-                'aliexpress_captcha',
+            bool_config += [
                 'validate_tracking_number',
                 'aliexpress_as_notes',
                 'aliexpress_as_order_tag',
                 'aliexpress_as_custom_note',
+                'order_custom_line_attr'
             ]
-        else:
-            bool_config = [
-                'make_visisble',
-                'epacket_shipping',
-                'auto_ordered_mark',
-                'aliexpress_captcha',
-                'aliexpress_as_notes',
-                'aliexpress_as_order_tag',
-                'aliexpress_as_custom_note',
-            ]
-
-        bool_config += ['order_custom_line_attr']
 
         for key in data:
             if key == 'from':
