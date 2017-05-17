@@ -412,7 +412,7 @@ def sync_shopify_orders(self, store_id):
             page = 1
             countdown = 0
 
-            while True:
+            while imported < need_import:
                 shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
                 shopify_order_ids = [o['id'] for o in shopify_orders]
 
@@ -432,9 +432,6 @@ def sync_shopify_orders(self, store_id):
                             'curreny': imported,
                             'total': need_import
                         })
-
-                if imported >= need_import:
-                    break
 
                 page += 1
 
