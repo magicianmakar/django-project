@@ -78,6 +78,7 @@ class Command(BaseCommand):
                 self.update_pending_orders(order_sync)
 
                 order_sync.sync_status = 2
+                order_sync.revision = 2  # New imported (or re-imported) orders support Product filters by default
                 order_sync.save()
 
             except:
@@ -105,6 +106,8 @@ class Command(BaseCommand):
                                  .values_list('id', 'shopify_id') \
                                  .order_by('created_at')
         self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
+
+        self.filtered_map = store.shopifyproduct_set.filter(is_excluded=True).values_list('shopify_id', flat=True)
 
         self.tracking_map = store.shopifyordertrack_set.values_list('id', 'line_id')
         self.tracking_map = dict(map(lambda a: (a[1], a[0]), self.tracking_map))
@@ -231,6 +234,19 @@ class Command(BaseCommand):
         address = data.get('shipping_address', data.get('customer', {}).get('default_address', {}))
         customer = data.get('customer', address)
 
+        connected_items = 0
+        need_fulfillment = len(data.get('line_items', []))
+
+        for line in data.get('line_items', []):
+            product_id = self.products_map.get(safeInt(line['product_id']))
+            track_id = self.tracking_map.get(safeInt(line['id']))
+
+            if product_id:
+                connected_items += 1
+
+            if track_id or line['fulfillment_status'] == 'fulfilled' or line['product_id'] in self.filtered_map:
+                need_fulfillment -= 1
+
         order = ShopifyOrder(
             store=store,
             user=store.user,
@@ -248,6 +264,8 @@ class Command(BaseCommand):
             zip_code=str_max(address.get('zip'), 31),
             country_code=str_max(address.get('country_code'), 31),
             items_count=len(data.get('line_items', [])),
+            need_fulfillment=need_fulfillment,
+            connected_items=connected_items,
             created_at=get_datetime(data['created_at']),
             updated_at=get_datetime(data['updated_at']),
             closed_at=get_datetime(data['closed_at']),

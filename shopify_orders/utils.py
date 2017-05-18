@@ -150,6 +150,9 @@ def update_shopify_order(store, data, sync_check=True):
         }
     )
 
+    connected_items = 0
+    need_fulfillment = len(data.get('line_items', []))
+
     for line in data.get('line_items', []):
         cache_key = 'export_product_{}_{}'.format(store.id, line['product_id'])
         product = cache.get(cache_key)
@@ -158,6 +161,14 @@ def update_shopify_order(store, data, sync_check=True):
             cache.set(cache_key, product.id if product else 0, timeout=300)
         else:
             product = store.shopifyproduct_set.get(id=product) if product != 0 else None
+
+        track = store.shopifyordertrack_set.objects.filter(order_id=data['id'], line_id=line['id']).first()
+
+        if product:
+            connected_items += 1
+
+        if track or line['fulfillment_status'] == 'fulfilled' or product.is_excluded:
+            need_fulfillment -= 1
 
         ShopifyOrderLine.objects.update_or_create(
             order=order,
@@ -170,8 +181,13 @@ def update_shopify_order(store, data, sync_check=True):
                 'variant_id': safeInt(line['variant_id']),
                 'variant_title': line['variant_title'],
                 'fulfillment_status': line['fulfillment_status'],
-                'product': product
+                'product': product,
+                'track': track
             })
+
+    order.need_fulfillment = need_fulfillment
+    order.connected_items = connected_items
+    order.save()
 
 
 def update_line_export(store, product_id):
@@ -205,6 +221,16 @@ def is_store_sync_enabled(store, sync_type='orders'):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
         return sync_status.sync_status in [2, 6]
+    except ShopifySyncStatus.DoesNotExist:
+        return False
+
+
+def support_product_filter(store, sync_type='orders'):
+    ''' Return True if store support Filtered Products feature '''
+
+    try:
+        sync_status = ShopifySyncStatus.objects.get(store=store)
+        return sync_status.revision > 1
     except ShopifySyncStatus.DoesNotExist:
         return False
 

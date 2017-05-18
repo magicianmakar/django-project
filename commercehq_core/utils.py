@@ -12,7 +12,7 @@ from django.core.cache import cache
 from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
+from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
 from shopified_core.shipping_helper import (

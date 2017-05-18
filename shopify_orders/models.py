@@ -24,6 +24,7 @@ class ShopifySyncStatus(models.Model):
     sync_status = models.IntegerField(default=0, choices=SYNC_STATUS)
     orders_count = models.IntegerField(default=0)
     pending_orders = models.TextField(blank=True, null=True)
+    revision = models.IntegerField(default=1)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -86,7 +87,10 @@ class ShopifyOrder(models.Model):
     city = models.CharField(max_length=64, blank=True, null=True, default='')
     zip_code = models.CharField(max_length=32, blank=True, null=True, default='')
     country_code = models.CharField(max_length=32, blank=True, null=True, default='')
+
     items_count = models.IntegerField(blank=True, null=True, verbose_name='Item Lines count')
+    need_fulfillment = models.IntegerField(blank=True, null=True, verbose_name='Item Lines not ordered yet')
+    connected_items = models.IntegerField(blank=True, null=True, verbose_name='Item Lines with connect products')
 
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()

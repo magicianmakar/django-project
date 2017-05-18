@@ -520,23 +520,37 @@
                 <div class="row">
                     <div id="export-container" class="col-xs-10 col-xs-offset-1">
                     </div>
+                </div>
 
+                <div class="row">
                     <div class="col-xs-5 col-xs-offset-1" style="padding: 0">
                         <a class="btn btn-success export-add-btn" href="#" target="_blank">
                             <i class="fa fa-plus"></i>
                             Add Supplier
                         </a>
-                    </div>
 
-                    {% if product.qelem.get_shopify_id %}
-                        <div class="col-xs-5 text-right" style="padding: 0">
-                        <a class="btn btn-success btn-outline" href="{% url 'product_mapping' product.qelem.id %}" target="_blank">
+                        {% if product.qelem.get_shopify_id %}
+                        <a class="btn btn-success btn-outline m-l" href="{% url 'product_mapping' product.qelem.id %}" target="_blank">
                             Variants Mapping
                             <i class="fa fa-external-link"></i>
                         </a>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
+
+                {% if request.user|can:'exclude_products.use' %}
+                <div class="row m-t m-b">
+                    <div class="col-xs-5 col-xs-offset-6 text-right exclude-product-info" style="padding-right:0">
+                        <div class="include-product-div" {% if not product.qelem.is_excluded %}style="display:none"{% endif %}>
+                            This product is excluded from <b>Pending Orders</b> <button id="include-product" class="btn btn-success btn-xs m-l">Include</button>
+                        </div>
+
+                        <div class="exclude-product-div" {% if product.qelem.is_excluded %}style="display:none"{% endif %}>
+                            This product is not excluded from <b>Pending Orders</b> <button id="exclude-product" class="btn btn-success btn-xs m-l">Exclude</button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 

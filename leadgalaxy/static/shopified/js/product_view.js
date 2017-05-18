@@ -1227,6 +1227,79 @@ $('.remove-background-image-editor').click(function(e) {
     initClippingMagic($(this));
 });
 
+$('#exclude-product').on('click', function(e) {
+    e.preventDefault();
+
+    swal({
+        title: 'Exclude Product',
+        text: 'Are you sure you want to exclude this product?',
+        type: "warning",
+        animation: false,
+        showCancelButton: true,
+        closeOnCancel: true,
+        closeOnConfirm: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "Cancel"
+    },
+    function(isConfirmed) {
+        if (isConfirmed) {
+            $.ajax({
+                url: api_url('product-exclude'),
+                type: 'POST',
+                data: {
+                    product: config.product_id,
+                },
+            }).done(function(data) {
+                toastr.success('Product is exclude', 'Exclude Product');
+                $('.include-product-div').show().addClass('m-t').addClass('m-b');
+
+                $('.include-product-div').html('Note: Excluding or Including products requires your orders to be re-synced. <br>' +
+                    'Shopified App will automatically re-sync at the top of every hour. <br>' +
+                    'Meanwhile you can exclude other products');
+            }).fail(function(data) {
+                displayAjaxError('Exclude Product', data);
+            });
+        }
+    });
+});
+
+$('#include-product').on('click', function(e) {
+    e.preventDefault();
+
+    swal({
+        title: 'Include Product',
+        text: 'Are you sure you want to include this product?',
+        type: "warning",
+        animation: false,
+        showCancelButton: true,
+        closeOnCancel: true,
+        closeOnConfirm: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "Cancel"
+    },
+    function(isConfirmed) {
+        if (isConfirmed) {
+            $.ajax({
+                url: api_url('product-include'),
+                type: 'POST',
+                data: {
+                    product: config.product_id,
+                },
+            }).done(function(data) {
+                toastr.success('Product is include', 'Include Product');
+                $('.exclude-product-div').show().addClass('m-t').addClass('m-b');
+
+                $('.include-product-div').html('Note: Excluding or Including products requires your orders to be re-synced. <br>' +
+                    'Shopified App will automatically re-sync at the top of every hour. <br>' +
+                    'Meanwhile you can exclude other products');
+            }).fail(function(data) {
+                displayAjaxError('Include Product', data);
+            });
+        }
+    });
+});
+
+
 function initClippingMagic(el) {
 
     var image = $(el).siblings('img');
@@ -1398,7 +1471,7 @@ var PusherSubscription = {
         allowSpaces: true,
         autocomplete: {
             source: '/autocomplete/tags',
-            delay: 500, 
+            delay: 500,
             minLength: 1
         }
     });

@@ -2216,8 +2216,8 @@ def orders_view(request):
             created_at_daterange = None
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
-    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or
-                                                 request.GET.get('new'))
+    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
+    support_product_filter = shopify_orders_utils.support_product_filter(store)
 
     if not store_sync_enabled:
         if ',' in fulfillment:
@@ -2318,10 +2318,16 @@ def orders_view(request):
             orders = orders.filter(financial_status=financial)
 
         if connected_only == 'true':
-            orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
+            if support_product_filter:
+                orders = orders.filter(connected_items__gt=0)
+            else:
+                orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
 
         if awaiting_order == 'true':
-            orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
+            if support_product_filter:
+                orders = orders.filter(need_fulfillment__gt=0)
+            else:
+                orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
         if product_filter:
             if request.GET.get('exclude_products'):
@@ -2479,9 +2485,6 @@ def orders_view(request):
             shopify_order = orders_list.get('{}-{}'.format(order['id'], el['id']))
             order['line_items'][i]['shopify_order'] = shopify_order
 
-            if shopify_order or el['fulfillment_status'] == 'fulfilled':
-                order['placed_orders'] += 1
-
             variant_id = el['variant_id']
             if not el['product_id']:
                 if variant_id:
@@ -2492,6 +2495,9 @@ def orders_view(request):
                 product = products_cache[el['product_id']]
             else:
                 product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
+
+            if shopify_order or el['fulfillment_status'] == 'fulfilled' or product.is_excluded:
+                order['placed_orders'] += 1
 
             supplier = None
             if product and product.have_supplier():

@@ -688,6 +688,7 @@ class ShopifyProduct(models.Model):
     notes = models.TextField(default='', blank=True)
     shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_excluded = models.NullBooleanField(null=True)
 
     title = models.TextField(blank=True, default='', db_index=True)
     price = models.FloatField(default=0.0)

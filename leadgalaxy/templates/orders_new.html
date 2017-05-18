@@ -127,13 +127,6 @@
                                {% endfor %}
                            </select>
                         </div>
-                        <div class="col-md-4">
-                            <label for="exclude_products" class="control-label">
-                                <input type="checkbox" id="exclude_products" name="exclude_products" value="true" class="icheck"
-                                       {% if request.GET.exclude_products %}checked{% endif %}>
-                                Exclude Products
-                            </label>
-                        </div>
                     </div>
 
                     <div class="row filter-row">
@@ -456,11 +449,11 @@
 
                                 <div class="row">
                                     {% for item in order.line_items %}
-                                    {% with image=item.image original=item.product.get_original_info %}
+                                    {% with image=item.image original=item.product.get_original_info excluded_product=item.product.is_excluded %}
 
-                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}" line-id="{{item.id}}"
+                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %} {% if excluded_product %}excluded{% endif %}" line-id="{{item.id}}"
                                          line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}"
-                                         fulfillment-status="{{item.fulfillment_status}}">
+                                         fulfillment-status="{{item.fulfillment_status}}" {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
@@ -500,7 +493,7 @@
                                                 {% endif %}
                                             </div>
                                             <div class="col-xs-3 line-ordered">
-                                                <span class="badge badge-{% if item.shopify_order or item.fulfillment_status == 'fulfilled' %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
+                                                <span class="badge badge-{% if item.shopify_order or item.fulfillment_status == 'fulfilled' or excluded_product %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
                                                 {% if item.shopify_order %}
                                                     <span class="ordered-status"
                                                     {% if item.shopify_order.source_id %}
@@ -516,6 +509,8 @@
                                                     </span>
                                                 {% elif item.fulfillment_status == 'fulfilled' %}
                                                     <span class="ordered-status">Fulfilled in Shopify</span>
+                                                {% elif excluded_product %}
+                                                    <span class="ordered-status">Excluded Product</span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
@@ -524,7 +519,7 @@
                                                 {% if item.shopify_order %}
                                                     <span class="badge badge-{{ item.shopify_order.get_source_status_color }}" style="width:15px;height:15px">&nbsp;</span>
                                                     {{item.shopify_order.get_source_status|default:'No Tracking Status'}}
-                                                {% elif item.fulfillment_status != 'fulfilled' %}
+                                                {% elif item.fulfillment_status != 'fulfilled' and not excluded_product %}
                                                     <span class="badge badge-default" style="width:15px;height:15px">&nbsp;</span>
                                                     Not Tracked
                                                 {% endif %}
@@ -752,7 +747,9 @@
     .orders .order .details .line .table{
         margin: 0;
     }
-
+    .orders .order .details .line.excluded {
+        opacity: 0.5;
+    }
     .orders .order .details .panel {
         margin: 0;
     }
@@ -857,6 +854,9 @@
         width: 50px;
         float: left;
         margin-right: 5px;
+    }
+    .select2.select2-container.select2-container--default {
+        width: 100% !important;
     }
 </style>
 {% endcompress %}

@@ -1040,6 +1040,44 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'products_ids': [p.id for p in splitted_products]
         })
 
+    def post_product_exclude(self, request, user, data):
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        permissions.user_can_view(user, product)
+
+        if product.is_excluded:
+            return self.api_error('Product is already excluded', status=422)
+
+        try:
+            if shopify_orders_utils.is_store_synced(product.store):  # Only reset if store is already imported
+                ShopifySyncStatus.objects.filter(sync_type='orders', store=product.store) \
+                                         .update(sync_status=6)
+        except ShopifySyncStatus.DoesNotExist:
+            pass
+
+        product.is_excluded = True
+        product.save()
+
+        return self.api_success()
+
+    def post_product_include(self, request, user, data):
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        permissions.user_can_view(user, product)
+
+        if not product.is_excluded:
+            return self.api_error('Product is already included', status=422)
+
+        try:
+            if shopify_orders_utils.is_store_synced(product.store):  # Only reset if store is already imported
+                ShopifySyncStatus.objects.filter(sync_type='orders', store=product.store) \
+                                         .update(sync_status=6)
+        except ShopifySyncStatus.DoesNotExist:
+            pass
+
+        product.is_excluded = False
+        product.save()
+
+        return self.api_success()
+
     def get_user_config(self, request, user, data):
         if data.get('current'):
             profile = user.profile
