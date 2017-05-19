@@ -2496,7 +2496,7 @@ def orders_view(request):
             else:
                 product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
 
-            if shopify_order or el['fulfillment_status'] == 'fulfilled' or product.is_excluded:
+            if shopify_order or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
                 order['placed_orders'] += 1
 
             supplier = None

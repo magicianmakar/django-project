@@ -167,7 +167,7 @@ def update_shopify_order(store, data, sync_check=True):
         if product:
             connected_items += 1
 
-        if track or line['fulfillment_status'] == 'fulfilled' or product.is_excluded:
+        if track or line['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
             need_fulfillment -= 1
 
         ShopifyOrderLine.objects.update_or_create(
