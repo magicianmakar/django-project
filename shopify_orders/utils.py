@@ -162,7 +162,7 @@ def update_shopify_order(store, data, sync_check=True):
         else:
             product = store.shopifyproduct_set.get(id=product) if product != 0 else None
 
-        track = store.shopifyordertrack_set.objects.filter(order_id=data['id'], line_id=line['id']).first()
+        track = store.shopifyordertrack_set.filter(order_id=data['id'], line_id=line['id']).first()
 
         if product:
             connected_items += 1
