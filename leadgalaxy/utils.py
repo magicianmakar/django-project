@@ -1958,7 +1958,7 @@ class ShopifyOrderUpdater:
 
             new_tags = ','.join(new_tags)
 
-            order_data['tags'] = new_tags[:5000]
+            order_data['tags'] = new_tags[:5000].strip(', ')
 
         if self.attributes:
             new_attributes = order.get('note_attributes', [])
