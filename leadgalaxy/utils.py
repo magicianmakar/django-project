@@ -1943,7 +1943,7 @@ class ShopifyOrderUpdater:
     def save_changes(self):
         order = get_shopify_order(self.store, self.order_id)
         order_data = {
-            'id': self.order_id,
+            'id': int(self.order_id),
         }
 
         if self.notes:
@@ -1973,6 +1973,13 @@ class ShopifyOrderUpdater:
                 json={'order': order_data}
             )
 
+            if not rep.ok:
+                raven_client.captureMessage('Shopify Order Updater Error', extra={
+                    'rep': rep.text,
+                    'order_data': order_data,
+                    'store': self.store.title
+                })
+
             rep.raise_for_status()
 
     def delay_save(self, countdown=None):
@@ -1985,7 +1992,7 @@ class ShopifyOrderUpdater:
 
     def reset(self, what):
         order_data = {
-            'id': self.order_id,
+            'id': int(self.order_id),
         }
 
         if 'notes' in what:
