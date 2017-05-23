@@ -1169,10 +1169,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             return self.api_success()
 
-        bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark', 'aliexpress_captcha']
+        bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark']
 
         if form_webapp:
             bool_config += [
+                'aliexpress_captcha',
                 'validate_tracking_number',
                 'aliexpress_as_notes',
                 'aliexpress_as_order_tag',
