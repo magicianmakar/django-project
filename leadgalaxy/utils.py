@@ -1686,8 +1686,26 @@ def hash_url_filename(s):
     return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
 
 
-# Helper Classes
+def attach_boards_with_product(user, product, ids):
+    # remove boards
+    boards = ShopifyBoard.objects.filter(products=product).exclude(id__in=ids)
+    for board in boards:
+        board.products.remove(product)
+        board.save()
 
+    # attach new boards
+    boards = ShopifyBoard.objects.filter(id__in=ids)
+    if boards:
+        for board in boards:
+            try:
+                permissions.user_can_edit(user, board)
+                board.products.add(product)
+                board.save()
+            except PermissionDenied:
+                pass
+
+
+# Helper Classes
 class TimezoneMiddleware(object):
 
     def process_request(self, request):
