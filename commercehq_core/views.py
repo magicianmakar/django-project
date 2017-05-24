@@ -517,6 +517,11 @@ class OrdersList(ListView):
             order['fulfillment_status'] = order_status.get(order['status'])
             order['financial_status'] = paid_status.get(order['paid'])
 
+            if not order['address']:
+                order['address'] = {
+                    'shipping': {}
+                }
+
             for fulfilment in order['fulfilments']:
                 for item in fulfilment['items']:
                     orders_cache['chq_fulfilments_{}_{}_{}'.format(self.store.id, order['id'], item['id'])] = fulfilment['id']
@@ -558,12 +563,14 @@ class OrdersList(ListView):
 
                 supplier = None
                 if product and product.have_supplier():
+                    country_code = order['address']['shipping'].get('country')
+
                     supplier = product.get_suppier_for_variant(variant_id)
                     if supplier:
                         shipping_method = product.get_shipping_for_variant(
                             supplier_id=supplier.id,
                             variant_id=variant_id,
-                            country_code=order['address']['shipping']['country'])
+                            country_code=country_code)
                     else:
                         shipping_method = None
 
@@ -596,7 +603,7 @@ class OrdersList(ListView):
                     'store': self.store.id,
                     'order': {
                         'phone': {
-                            'number': order['address']['phone'],
+                            'number': order['address'].get('phone'),
                             'country': customer_address['country_code']
                         },
                         'note': models_user.get_config('order_custom_note'),
