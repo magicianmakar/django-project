@@ -78,10 +78,9 @@ class Command(BaseCommand):
 
                 order_sync.sync_status = 2
                 order_sync.revision = 2  # New imported (or re-imported) orders support Product filters by default
+                order_sync.save()
 
                 self.update_pending_orders(order_sync)
-
-                order_sync.save()
 
             except:
                 raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
