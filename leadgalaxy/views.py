@@ -2211,7 +2211,9 @@ def orders_view(request):
     created_at_daterange = request.GET.get('created_at_daterange')
     if created_at_daterange:
         try:
-            created_at_start, created_at_end = [arrow.get(d, r'MM/DD/YYYY').datetime for d in created_at_daterange.split('-')]
+            created_at_start, created_at_end = [arrow.get(d, r'MM/DD/YYYY') for d in created_at_daterange.split('-')]
+            created_at_end = created_at_end.span('day')[1]
+            created_at_start, created_at_end = created_at_start.datetime, created_at_end.datetime
         except:
             created_at_daterange = None
 
