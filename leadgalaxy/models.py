@@ -1160,7 +1160,7 @@ class ProductSupplier(models.Model):
     shipping_method = models.CharField(max_length=512, null=True, blank=True)
     variants_map = models.TextField(null=True, blank=True)
     is_default = models.BooleanField(default=False)
-
+    source_id = models.CharField(max_length=512, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1216,6 +1216,11 @@ class ProductSupplier(models.Model):
             name = u'Supplier #{}'.format(supplier_idx)
 
         return name
+
+    def save(self, *args, **kwargs):
+        if self.source_id != self.get_source_id():
+            self.source_id = self.get_source_id()
+        super(ProductSupplier, self).save(*args, **kwargs)
 
 
 class ShopifyProductExport(models.Model):
