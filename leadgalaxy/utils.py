@@ -1941,7 +1941,7 @@ class ShopifyOrderUpdater:
         self.add_tag(str(source_id))
 
     def save_changes(self):
-        with cache.lock('updater_lock_{}_{}'.format(self.store, self.order_id), timeout=15):
+        with cache.lock('updater_lock_{}_{}'.format(self.store.id, self.order_id), timeout=15):
             self._do_save_changes()
 
     def _do_save_changes(self):
