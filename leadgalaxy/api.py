@@ -922,6 +922,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product_supplier.product_url = original_link
             product_supplier.supplier_name = data.get('supplier-name')
             product_supplier.supplier_url = supplier_url
+            product_supplier.notes = data.get('supplier-notes', '')
             product_supplier.save()
 
         except (ValueError, ProductSupplier.DoesNotExist):
@@ -931,6 +932,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 product_url=original_link,
                 supplier_name=data.get('supplier-name'),
                 supplier_url=supplier_url,
+                notes=data.get('supplier-notes', ''),
             )
 
         if not product.default_supplier_id or not data.get('export'):

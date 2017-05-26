@@ -1175,6 +1175,7 @@ class ProductSupplier(models.Model):
     supplier_url = models.CharField(max_length=512, null=True, blank=True)
     shipping_method = models.CharField(max_length=512, null=True, blank=True)
     variants_map = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
     is_default = models.BooleanField(default=False)
     source_id = models.CharField(max_length=512, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -726,6 +726,13 @@
                 <label>Supplier Link:</label>
                 <input type="text" class="form-control product-supplier-link" value="{{supplier.url}}" style="width:350px">
             </div>
+            <div class="form-group col-xs-12">
+                <label>Supplier Notes:</label>
+                <span style="width: 100%; float: left;">
+                    <input type="hidden" id="supplier-notes-{{id}}" name="supplier-notes" value="{{supplier.notes}}"/>
+                    <trix-editor id="trix-supplier-notes" input="supplier-notes-{{id}}" style="min-height: 150px;"></trix-editor>
+                </span>
+            </div>
             <div class="form-group col-xs-12 text-right">
                 <button class="btn btn-success btn-xs export-save-btn">
                     <i class="fa fa-save"></i> Save Changes
@@ -925,6 +932,7 @@ var config = {
             supplier: {
                 name: '{{item.supplier_name|escapejs}}',
                 url: '{{item.supplier_url|escapejs}}',
+                notes: '{{item.notes|escapejs}}',
             },
         },
     {% endfor %}
