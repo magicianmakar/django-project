@@ -1941,15 +1941,29 @@ class ShopifyOrderUpdater:
         self.add_tag(str(source_id))
 
     def save_changes(self):
+        with cache.lock('updater_lock_{}_{}'.format(self.store, self.order_id), timeout=15):
+            self._do_save_changes()
+
+    def _do_save_changes(self):
         order = get_shopify_order(self.store, self.order_id)
-        order_data = {
-            'id': int(self.order_id),
-        }
 
         if self.notes:
             current_note = order.get('note', '') or ''
             new_note = '\n'.join(self.notes)
-            order_data['note'] = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()
+
+            order_data = {
+                'order': {
+                    'id': int(self.order_id),
+                    'note': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()
+                }
+            }
+
+            rep = requests.put(
+                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                json=order_data
+            )
+
+            rep.raise_for_status()
 
         if self.tags:
             new_tags = [i.strip() for i in order.get('tags', '').split(',')]
@@ -1958,29 +1972,42 @@ class ShopifyOrderUpdater:
 
             new_tags = ','.join(new_tags)
 
-            order_data['tags'] = new_tags[:5000].strip(', ')
+            order_data = {
+                'order': {
+                    'id': int(self.order_id),
+                    'tags': new_tags[:5000].strip(', ')
+                }
+            }
+
+            rep = requests.put(
+                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                json=order_data
+            )
+
+            rep.raise_for_status()
+
+            time.sleep(1)
 
         if self.attributes:
             new_attributes = order.get('note_attributes', [])
             for i in self.attributes:
                 new_attributes.append(i)
 
-            order_data['note_attributes'] = new_attributes
+            order_data = {
+                'order': {
+                    'id': int(self.order_id),
+                    'note_attributes': new_attributes
+                }
+            }
 
-        if len(order_data.keys()) > 1:
             rep = requests.put(
                 url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
-                json={'order': order_data}
+                json=order_data
             )
 
-            if not rep.ok:
-                raven_client.captureMessage('Shopify Order Updater Error', extra={
-                    'rep': rep.text,
-                    'order_data': order_data,
-                    'store': self.store.title
-                })
-
             rep.raise_for_status()
+
+            time.sleep(1)
 
     def delay_save(self, countdown=None):
         from leadgalaxy.tasks import order_save_changes
