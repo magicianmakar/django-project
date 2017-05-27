@@ -1926,7 +1926,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 for i in source_ids:
                     response[str(i)] = None
 
-                for supplier in ProductSupplier.objects.filter(store__user=user.models_user, source_id__in=source_ids):
+                for supplier in ProductSupplier.objects.filter(product__user=user.models_user, source_id__in=source_ids):
                     response[str(supplier.source_id)] = 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[supplier.product_id]))
 
             elif shopify_ids:
