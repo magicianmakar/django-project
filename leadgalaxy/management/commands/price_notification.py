@@ -117,10 +117,7 @@ class Command(BaseCommand):
 
             store_id = supplier.get_store_id()
             if not store_id:
-                # Product doesn't have Source Store ID
-                product.price_notification_id = -2
-                product.save()
-                return
+                store_id = 0
 
             product_id = supplier.get_source_id()
             if not product_id:
