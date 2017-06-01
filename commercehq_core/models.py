@@ -6,6 +6,7 @@ from django.utils.crypto import get_random_string
 import re
 import textwrap
 import simplejson as json
+import urlparse
 
 import requests
 from pusher import Pusher
@@ -513,6 +514,30 @@ class CommerceHQProduct(models.Model):
             all_mapping[str(supplier.id)] = variants_map
 
         return all_mapping
+
+    def get_original_info(self, url=None):
+        if not url:
+            data = json.loads(self.data)
+            url = data.get('original_url')
+
+        if url:
+            # Extract domain name
+            domain = urlparse.urlparse(url).hostname
+            if domain is None:
+                return domain
+
+            for i in ['com', 'co.uk', 'org', 'net']:
+                domain = domain.replace('.%s' % i, '')
+
+            domain = domain.split('.')[-1]
+
+            return {
+                'domain': domain,
+                'source': domain.title(),
+                'url': url
+            }
+
+        return {}
 
 
 class CommerceHQSupplier(models.Model):
