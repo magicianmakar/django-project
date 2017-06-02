@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('woocommerce_core', '0001_initial'),
-        ('leadgalaxy', '0143_auto_20170328_2304'),
+        ('leadgalaxy', '0145_productsupplier_source_id'),
     ]
 
     operations = [
