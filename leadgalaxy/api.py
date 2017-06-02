@@ -2238,6 +2238,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not supplier_url:
             return self.api_error('Supplier URL is missing', status=422)
 
+        if utils.get_domain(supplier_url) == 'myshopify':
+            return self.api_error('Product supplier is not correct', status=422)
+
         if utils.get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
                 supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()

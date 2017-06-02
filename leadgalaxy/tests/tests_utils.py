@@ -491,6 +491,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.get_domain('www.wanelo.co'), 'wanelo')
         self.assertEqual(utils.get_domain('http://www.costco.com/Jura.product.100223622.html'), 'costco')
         self.assertEqual(utils.get_domain('http://www.qvc.com/egiftcards'), 'qvc')
+        self.assertEqual(utils.get_domain('http://shopified-app-ci.myshopify.com/admin/products/1234'), 'myshopify')
 
         self.assertEqual(utils.get_domain('www.aliexpress.com', full=True), 'www.aliexpress.com')
         self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')
