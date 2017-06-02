@@ -515,13 +515,9 @@ class CommerceHQProduct(models.Model):
 
         return all_mapping
 
-    def get_original_info(self, url=None):
-        if not url:
-            data = json.loads(self.data)
-            url = data.get('original_url')
-
-        if url:
-            # Extract domain name
+    def get_original_info(self):
+        if self.have_supplier:
+            url = self.default_supplier.product_url
             domain = urlparse.urlparse(url).hostname
             if domain is None:
                 return domain
