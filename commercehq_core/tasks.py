@@ -183,6 +183,14 @@ def product_export(store_id, product_id, user_id, publish=None):
 
                     have_variant_images = True
 
+        thumb_keys = thumbs_idx.values()
+        variant_values = []
+        for variant in p.get('variants', []):
+            for value in variant.get('values', []):
+                variant_values.append(value)
+
+        have_variant_images = bool(set(variant_values) & set(thumb_keys))
+
         upload_session = store.request
         for idx, img in enumerate(p.get('images', [])):
             is_thumb = idx in thumbs_idx

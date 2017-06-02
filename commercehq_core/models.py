@@ -515,6 +515,20 @@ class CommerceHQProduct(models.Model):
 
         return all_mapping
 
+    def get_primary_image_src(self):
+        images = self.parsed.get('images', [])
+
+        if images:
+            return images[0]
+
+        variants = self.parsed.get('variants', [])
+        variant_images = []
+        for variant in variants:
+            for image in variant.get('images', []):
+                variant_images.append(image.get('path'))
+
+        return variant_images[0] if variant_images else ''
+
     def get_original_info(self):
         if self.have_supplier:
             url = self.default_supplier.product_url
@@ -532,8 +546,6 @@ class CommerceHQProduct(models.Model):
                 'source': domain.title(),
                 'url': url
             }
-
-        return {}
 
 
 class CommerceHQSupplier(models.Model):
