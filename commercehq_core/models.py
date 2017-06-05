@@ -515,7 +515,7 @@ class CommerceHQProduct(models.Model):
 
         return all_mapping
 
-    def get_primary_image_src(self):
+    def get_image(self):
         images = self.parsed.get('images', [])
 
         if images:
