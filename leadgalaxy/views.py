@@ -2606,7 +2606,6 @@ def orders_view(request):
                 if bundles:
                     product_bundles = []
                     for idx, b in enumerate(bundles):
-                        print b
                         b_product = ShopifyProduct.objects.get(id=b['id'])
                         b_variant_id = b_product.get_real_variant_id(b['variant_id'])
                         b_supplier = b_product.get_suppier_for_variant(variant_id)

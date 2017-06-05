@@ -1505,8 +1505,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
 
-        print json.dumps(data, indent=4)
-
         product.set_bundle_mapping(data.get('mapping'))
         product.save()
 
@@ -2067,7 +2065,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         else:
             errors = []
             for key, val in form.errors.items():
-                print errors
                 errors.append(u'{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
 
             return self.api_error('\n\n'.join(errors), status=422)
