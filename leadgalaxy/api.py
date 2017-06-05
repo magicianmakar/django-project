@@ -2230,8 +2230,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         supplier_url = data.get('supplier')
 
         if shopify_product:
-            if user.models_user.shopifyproduct_set.filter(shopify_id=shopify_product).count():
-                return self.api_error('Product is already import/connected', status=422)
+            if user.models_user.shopifyproduct_set.filter(store=store, shopify_id=shopify_product).count():
+                return self.api_error('Product is already imported/connected', status=422)
         else:
             return self.api_error('Shopify Product ID is missing', status=422)
 
