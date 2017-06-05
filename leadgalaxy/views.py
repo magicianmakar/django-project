@@ -2304,7 +2304,8 @@ def orders_view(request):
             # Direct API call doesn't support more that one fulfillment status
             fulfillment = 'unshipped'
 
-        created_at_start, created_at_end = arrow.get(created_at_start).isoformat(), arrow.get(created_at_end).isoformat()
+        if created_at_start and created_at_end:
+            created_at_start, created_at_end = arrow.get(created_at_start).isoformat(), arrow.get(created_at_end).isoformat()
 
         open_orders = store.get_orders_count(status, fulfillment, financial,
                                              query=utils.safeInt(query, query),
