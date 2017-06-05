@@ -1778,10 +1778,10 @@ class ShopifyOrderPaginator(Paginator):
         }
 
         if self.created_at_start:
-            params['created_at_min'] = self.created_at_start.strftime("%Y-%m-%dT%H:%M:%S%z")
+            params['created_at_min'] = self.created_at_start
 
         if self.created_at_end:
-            params['created_at_max'] = self.created_at_end.strftime("%Y-%m-%dT%H:%M:%S%z")
+            params['created_at_max'] = self.created_at_end
 
         if self.query:
             if type(self.query) is long:
