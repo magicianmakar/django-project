@@ -595,9 +595,6 @@ def webhook(request, provider, option):
             except ShopifyStore.DoesNotExist:
                 return HttpResponse('ok')
 
-            if 'terrya.myshopify.com' in store.api_url and topic == 'orders/updated':
-                return JsonResponse({'status': 'ok'})
-
             if token != utils.webhook_token(store.id):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
