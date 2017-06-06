@@ -446,6 +446,9 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
+        if 'terrya.myshopify.com' in store.api_url:
+            return None
+
         if shopify_order is None:
             shopify_order = cache.get('webhook_order_{}_{}'.format(store_id, order_id))
 
