@@ -682,13 +682,18 @@ def sync_product_exclude(self, store_id, product_id):
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
+        print 'PSync', store.title, product_id
+
         filtered_map = store.shopifyproduct_set.filter(is_excluded=True).values_list('shopify_id', flat=True)
 
         orders = ShopifyOrder.objects.filter(store=store, shopifyorderline__product_id=product_id) \
                                      .prefetch_related('shopifyorderline_set') \
-                                     .only('id', 'connected_items', 'need_fulfillment')
+                                     .only('id', 'connected_items', 'need_fulfillment') \
+                                     .distinct()
 
         orders_count = orders.count()
+
+        print 'PSync Orders', orders_count
 
         start = 0
         steps = 5000
