@@ -144,6 +144,13 @@
 
     {% empty %}
     <h3 class="text-center">No product found.</h3>
+    {% if store.id %}
+        <p class="text-center">
+            <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
+                <i class="fa fa-plus"></i> Import From Shopify
+            </a>
+        </p>
+    {% endif %}
     {% endfor %}
 </div>
 
