@@ -1048,15 +1048,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if product.is_excluded:
             return self.api_error('Product is already excluded', status=422)
 
-        try:
-            if shopify_orders_utils.is_store_synced(product.store):  # Only reset if store is already imported
-                ShopifySyncStatus.objects.filter(sync_type='orders', store=product.store) \
-                                         .update(sync_status=6)
-        except ShopifySyncStatus.DoesNotExist:
-            pass
-
         product.is_excluded = True
         product.save()
+
+        tasks.sync_product_exclude.delay(product.store.id, product.id)
 
         return self.api_success()
 
@@ -1067,15 +1062,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not product.is_excluded:
             return self.api_error('Product is already included', status=422)
 
-        try:
-            if shopify_orders_utils.is_store_synced(product.store):  # Only reset if store is already imported
-                ShopifySyncStatus.objects.filter(sync_type='orders', store=product.store) \
-                                         .update(sync_status=6)
-        except ShopifySyncStatus.DoesNotExist:
-            pass
-
         product.is_excluded = False
         product.save()
+
+        tasks.sync_product_exclude.delay(product.store.id, product.id)
 
         return self.api_success()
 

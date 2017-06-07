@@ -1227,6 +1227,41 @@ $('.remove-background-image-editor').click(function(e) {
     initClippingMagic($(this));
 });
 
+function showExcludeProgress(is_exclude) {
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
+    var el = $('#modal-exclude-progress .progress-bar-success');
+
+    channel.bind('product-exclude', function(data) {
+        if (data.product == config.product_id) {
+            el.css('width', ((data.progress * 100.0) / data.total) + '%');
+
+            if (data.progress == data.total) {
+                if (is_exclude) {
+                    toastr.success('Product is excluded', 'Exclude Product');
+                } else {
+                    toastr.success('Product is included', 'Include Product');
+                }
+
+                $('#modal-exclude-progress').modal('hide');
+
+                setTimeout(function () {
+                    window.location.hash = '#connections';
+                    window.location.reload();
+                }, 1000);
+            }
+        }
+    });
+
+    $('#modal-exclude-progress').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    el.css('width', '0');
+    swal.close();
+}
+
 $('#exclude-product').on('click', function(e) {
     e.preventDefault();
 
@@ -1237,7 +1272,7 @@ $('#exclude-product').on('click', function(e) {
         animation: false,
         showCancelButton: true,
         closeOnCancel: true,
-        closeOnConfirm: true,
+        closeOnConfirm: false,
         confirmButtonText: "Yes",
         cancelButtonText: "Cancel"
     },
@@ -1250,12 +1285,10 @@ $('#exclude-product').on('click', function(e) {
                     product: config.product_id,
                 },
             }).done(function(data) {
-                toastr.success('Product is exclude', 'Exclude Product');
-                $('.include-product-div').show().addClass('m-t').addClass('m-b');
+                showExcludeProgress(true);
 
-                $('.include-product-div').html('Note: Excluding or Including products requires your orders to be re-synced. <br>' +
-                    'Shopified App will automatically re-sync at the top of every hour. <br>' +
-                    'Meanwhile you can exclude other products');
+                $('.include-product-div').show().addClass('m-t').addClass('m-b');
+                $('.include-product-div').html('');
             }).fail(function(data) {
                 displayAjaxError('Exclude Product', data);
             });
@@ -1273,7 +1306,7 @@ $('#include-product').on('click', function(e) {
         animation: false,
         showCancelButton: true,
         closeOnCancel: true,
-        closeOnConfirm: true,
+        closeOnConfirm: false,
         confirmButtonText: "Yes",
         cancelButtonText: "Cancel"
     },
@@ -1286,12 +1319,10 @@ $('#include-product').on('click', function(e) {
                     product: config.product_id,
                 },
             }).done(function(data) {
-                toastr.success('Product is include', 'Include Product');
-                $('.exclude-product-div').show().addClass('m-t').addClass('m-b');
+                showExcludeProgress(false);
 
-                $('.include-product-div').html('Note: Excluding or Including products requires your orders to be re-synced. <br>' +
-                    'Shopified App will automatically re-sync at the top of every hour. <br>' +
-                    'Meanwhile you can exclude other products');
+                $('.exclude-product-div').show().addClass('m-t').addClass('m-b');
+                $('.include-product-div').html('');
             }).fail(function(data) {
                 displayAjaxError('Include Product', data);
             });

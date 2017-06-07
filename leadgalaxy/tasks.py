@@ -7,6 +7,7 @@ import zipfile
 import os.path
 from simplejson import JSONDecodeError
 
+from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
@@ -674,3 +675,59 @@ def order_save_changes(self, data):
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True)
+def sync_product_exclude(self, store_id, product_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+
+        filtered_map = store.shopifyproduct_set.filter(is_excluded=True).values_list('shopify_id', flat=True)
+
+        orders = ShopifyOrder.objects.filter(store=store, shopifyorderline__product_id=product_id) \
+                                     .prefetch_related('shopifyorderline_set') \
+                                     .only('id', 'connected_items', 'need_fulfillment')
+
+        orders_count = orders.count()
+
+        start = 0
+        steps = 5000
+        count = 0
+        report = max(10, orders_count / 10)
+
+        while start <= orders_count:
+            with transaction.atomic():
+                for order in orders[start:start + steps]:
+                    lines = order.shopifyorderline_set.all()
+                    connected_items = 0
+                    need_fulfillment = len(lines)
+
+                    for line in lines:
+                        if line.product_id:
+                            connected_items += 1
+
+                        if line.track_id or line.fulfillment_status == 'fulfilled' or line.shopify_product in filtered_map:
+                            need_fulfillment -= 1
+
+                    if order.need_fulfillment != need_fulfillment or order.connected_items != connected_items:
+                        ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment, connected_items=connected_items)
+
+                    count += 1
+
+                    if count % report == 0:
+                        store.pusher_trigger('product-exclude', {
+                            'total': orders_count,
+                            'progress': count,
+                            'product': product_id,
+                        })
+
+            start += steps
+
+        store.pusher_trigger('product-exclude', {
+            'total': orders_count,
+            'progress': orders_count,
+            'product': product_id,
+        })
+
+    except Exception:
+        raven_client.captureException()
