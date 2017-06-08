@@ -1723,7 +1723,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment)
 
-            except ShopifyOrder.DoesNotExist
+            except ShopifyOrder.DoesNotExist:
                 pass
 
             if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
