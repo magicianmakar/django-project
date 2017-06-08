@@ -190,16 +190,28 @@ def update_shopify_order(store, data, sync_check=True):
     order.save()
 
 
-def update_line_export(store, product_id):
+def update_line_export(store, shopify_id):
     """
     Update ShopifyOrderLine.product when a supplier is added or changed
-    :param product_id: Shopify Product ID
+    :param shopify_id: Shopify Product ID
     """
 
-    product = store.shopifyproduct_set.filter(shopify_id=product_id).first()
+    product = store.shopifyproduct_set.filter(shopify_id=shopify_id).first()
+    for order in ShopifyOrder.objects.filter(store=store, shopifyorderline__shopify_product=shopify_id).distinct():
+        connected_items = 0
+        for line in order.shopifyorderline_set.all():
+            if line.shopify_product == safeInt(shopify_id):
+                line.product = product
+                line.save()
 
-    ShopifyOrderLine.objects.filter(order__store=store, shopify_product=product_id) \
-                            .update(product=product)
+                if product:
+                    connected_items += 1
+
+            elif line.product_id:
+                connected_items += 1
+
+        if order.connected_items != connected_items:
+            ShopifyOrder.objects.filter(id=order.id).update(connected_items=connected_items)
 
 
 def delete_shopify_order(store, data):

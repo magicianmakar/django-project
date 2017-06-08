@@ -31,7 +31,7 @@ from shopified_core.utils import (
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
-    ShopifyOrderLine,
+    ShopifyOrder,
     ShopifySyncStatus,
 )
 
@@ -350,6 +350,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         product.userupload_set.update(product=None)
         product.delete()
+
+        if product.shopify_id:
+            tasks.update_product_connection.delay(product.store.id, product.shopify_id)
 
         return self.api_success()
 
@@ -1707,11 +1710,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 }
             )
 
-            ShopifyOrderLine.objects.filter(
-                order__store=store,
-                order__order_id=order_id,
-                line_id=line_id
-            ).update(track=track)
+            order = ShopifyOrder.objects.get(store=store, order_id=order_id)
+            need_fulfillment = order.need_fulfillment
+
+            for line in order.shopifyorderline_set.all():
+                if line.line_id == safeInt(line_id):
+                    line.track = track
+                    line.save()
+
+                    need_fulfillment -= 1
+
+            ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment)
 
             if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
                 profile = user.models_user.profile
@@ -1747,17 +1756,28 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_id = data.get('order_id')
         line_id = data.get('line_id')
 
-        orders = ShopifyOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
+        tracks = ShopifyOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
+        deleted_ids = []
 
-        if len(orders):
-            for order in orders:
-                permissions.user_can_delete(user, order)
-                order.delete()
+        if len(tracks):
+            for track in tracks:
+                permissions.user_can_delete(user, track)
 
-                order.store.pusher_trigger('order-source-id-delete', {
-                    'store_id': order.store.id,
-                    'order_id': order.order_id,
-                    'line_id': order.line_id,
+                for order in ShopifyOrder.objects.filter(store=track.store, shopifyorderline__track_id=track.id).distinct():
+                    need_fulfillment = order.need_fulfillment
+                    for line in order.shopifyorderline_set.all():
+                        if line.track_id == track.id:
+                            order.need_fulfillment += 1
+
+                    ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment)
+
+                deleted_ids.append(track.id)
+                track.delete()
+
+                track.store.pusher_trigger('order-source-id-delete', {
+                    'store_id': track.store.id,
+                    'order_id': track.order_id,
+                    'line_id': track.line_id,
                 })
 
             return self.api_success()
