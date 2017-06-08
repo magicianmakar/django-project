@@ -2297,7 +2297,7 @@ def orders_view(request):
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
     store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
-    support_product_filter = shopify_orders_utils.support_product_filter(store)
+    support_product_filter = shopify_orders_utils.support_product_filter(store) and models_user.can('exclude_products.use')
 
     if not store_sync_enabled:
         if ',' in fulfillment:
