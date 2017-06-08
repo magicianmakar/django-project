@@ -1714,7 +1714,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             need_fulfillment = order.need_fulfillment
 
             for line in order.shopifyorderline_set.all():
-                if line.line_id == safeInt(line_id):
+                if line.line_id == utils.safeInt(line_id):
                     line.track = track
                     line.save()
 
