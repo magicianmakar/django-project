@@ -61,7 +61,7 @@
                 style="width: 40px"
                 src="//d2kadg5e284yn4.cloudfront.net/static/img/no-image-sm.png" />
 
-            <a :href="'/product/mapping/' + product.id" v-text="product.title" target="_blank"></a>
+            <a :href="'/product/mapping/' + product.id" target="_blank">{{product.title | truncate}}</a>
          </div>
 
          <div style="flex-grow:1">
@@ -77,8 +77,9 @@
 <script type="text/x-template" id="add-product-row-tpl">
     <div class="row" style="display: flex;align-items: center;margin-top: 15px;margin-bottom: 10px;margin-left: 0;margin-right: 0;">
          <div class="col-md-3 product-select-controls" aria-hidden="true" v-show="showControls">
-            <label>Product:</label>
-            <select class="product-select form-control" style="width: 100%"></select>
+            <label style="display:block">Product:</label>
+            <button class="product-select btn btn-white" v-text="new_product.short_title || 'Select Product'"
+                    style="padding: 5px 7px; max-width: 100%; overflow: hidden;"></button>
          </div>
 
          <div class="col-md-3 product-select-controls" v-show="new_product.id">

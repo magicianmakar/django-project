@@ -20,7 +20,8 @@ function shopifyProductSearch (e) {
         data: {
             store: store,
             query: query,
-            page: $(this).prop('page')
+            page: $(this).prop('page'),
+            connected: $('#modal-shopify-product').prop('connected'),
         },
         context: {
             store: store
@@ -34,11 +35,20 @@ function shopifyProductSearch (e) {
 
             var store = this.store;
             $.each(data.products, function () {
-                var el = $(product_template({product: this}));
+                var el = $(product_template({
+                    product: this,
+                    connected_only: $('#modal-shopify-product').prop('connected')
+                }));
 
-                $('a.shopify-product', el).click(function () {
+                $('a.shopify-product', el).click(function (e) {
+                    e.preventDefault();
+
                     if (window.shopifyProductSelected) {
-                        window.shopifyProductSelected(store, $(this).data('product-id'));
+                        window.shopifyProductSelected(store, $(this).data('product-id'), {
+                            title: $(this).data('product-title'),
+                            image: $(this).data('product-image'),
+                            shopified: $(this).data('shopified-id'),
+                        });
                     }
                 });
 
@@ -57,6 +67,8 @@ function shopifyProductSearch (e) {
 
                 productsContainer.append(moreBtn);
             }
+
+            $("[title]", productsContainer).bootstrapTooltip();
         },
         error: function (data) {
             productsContainer.append($('<div class="text-center"><h3>' +

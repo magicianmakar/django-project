@@ -792,6 +792,26 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 products.append(i)
 
+            if data.get('connected'):
+                connected = {}
+                for p in store.shopifyproduct_set.filter(shopify_id__in=[i['id'] for i in products]).values_list('id', 'shopify_id'):
+                    connected[p[1]] = p[0]
+
+                for idx, i in enumerate(products):
+                    products[idx]['connected'] = connected.get(i['id'])
+
+                def connected_cmp(a, b):
+                    if a['connected'] and b['connected']:
+                        return a['connected'] < b['connected']
+                    elif a['connected']:
+                        return 1
+                    elif b['connected']:
+                        return -1
+                    else:
+                        return 0
+
+                products = sorted(products, cmp=connected_cmp, reverse=True)
+
             return JsonResponse({
                 'products': products,
                 'page': page,

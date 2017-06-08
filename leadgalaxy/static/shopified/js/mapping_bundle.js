@@ -16,6 +16,17 @@
     }
 
 
+    var truncate = function(text, length, clamp) {
+        clamp = clamp || '...';
+        length = length || 60;
+        var node = document.createElement('div');
+        node.innerHTML = text;
+        var content = node.textContent;
+        return content.length > length ? content.slice(0, length) + clamp : content;
+    };
+
+    Vue.filter('truncate', truncate);
+
     Vue.component('bundle-mapping-table', {
         template: '#bundle-mapping-table-tpl',
         props: ['variants'],
@@ -100,60 +111,34 @@
             showSelection: function(e) {
                 e.preventDefault();
 
-                console.log('variant', this.variant.products.length);
                 this.showControls = !this.showControls;
                 var setupVariantSelection = this.setupVariantSelection;
                 var $v = this;
 
                 if (this.initSelect) {
-                    $('select.product-select', this.$el).select2({
-                        placeholder: 'Select a Product',
-                        ajax: {
-                            url: "/autocomplete/title",
-                            dataType: 'json',
-                            delay: 250,
-                            data: function(params) {
-                                return {
-                                    query: params.term, // search term,
-                                    store: store_id,
-                                    page: params.page,
-                                    trunc: 1
-                                };
-                            },
-                            processResults: function(data, params) {
-                                params.page = params.page || 1;
+                    $('.product-select', this.$el).click(function (e) {
+                        $('#modal-shopify-product').prop('connected', true);
+                        $('#modal-shopify-product').modal('show');
 
-                                return {
-                                    results: $.map(data.suggestions, function(el) {
-                                        return {
-                                            id: el.data,
-                                            text: el.value,
-                                            image: el.image,
-                                        };
-                                    }),
-                                    pagination: {
-                                        more: false
-                                    }
-                                };
-                            },
-                            cache: true
-                        },
-                        escapeMarkup: function(markup) {
-                            return markup;
-                        },
-                        minimumInputLength: 1,
-                        templateResult: formatRepo,
-                        templateSelection: formatRepoSelection
-                    }).on('select2:select', function(e) {
-                        console.log('ID:', e.params.data.id);
-                        setupVariantSelection(e.params.data.id);
-                        $v.new_product = {
-                            id: e.params.data.id,
-                            title: e.params.data.text,
-                            image: e.params.data.image,
-                            variant_id: 0,
-                            variant_title: '',
-                            variant_image: null,
+                        // Product Shopify Connect
+                        window.shopifyProductSelected = function (store, shopify_id, product_data) {
+                            if (!product_data.shopified) {
+                                toastr.error('Product is not connected');
+                                return;
+                            }
+
+                            setupVariantSelection(product_data.shopified);
+                            $v.new_product = {
+                                id: product_data.shopified,
+                                title: product_data.title,
+                                short_title: truncate(product_data.title, 40),
+                                image: product_data.image,
+                                variant_id: 0,
+                                variant_title: '',
+                                variant_image: null,
+                            };
+
+                            $('#modal-shopify-product').modal('hide');
                         };
                     });
 
@@ -167,6 +152,7 @@
                 $('select.variant-select option', el).remove();
                 $('select.variant-select', el).append($('<option>'));
                 $('select.variant-select', el).trigger('change.select2');
+                $('select.variant-select', el).prop('disabled', true);
 
                 $.ajax({
                     url: '/autocomplete/variants',
@@ -200,8 +186,11 @@
                         $v.new_product.variant_title = e.params.data.text;
                         $v.new_product.variant_image = e.params.data.image;
                     });
+
+                    $('select.variant-select', el).prop('disabled', false);
+
                 }).fail(function(data) {
-                    displayAjaxError('s', data);
+                    displayAjaxError('Variants Selection', data);
                 }).always(function() {
                 });
             },

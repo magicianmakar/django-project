@@ -80,14 +80,24 @@
 {% verbatim %}
 
 <script id="product-select-template" type="text/x-handlebars-template">
-    <div class="product-item row">
+    <div class="product-item row"
+        {{#connected_only}}
+            {{^product.connected}}
+                style="opacity: 0.3"
+                title="Product is not connected"
+            {{/product.connected}}
+        {{/connected_only}}>
         <div class="product-thumb col-md-1">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}">
+            <a class="shopify-product" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
+                data-product-title="{{product.title}}" data-product-image="{{product.image.src}}">
                 <img src="{{product.image.src}}">
             </a>
         </div>
         <div class="col-md-11">
-            <a class="shopify-product" href="#" data-product-id="{{product.id}}">{{product.title}}</a>
+            <a class="shopify-product" href="#" data-product-id="{{product.id}}" data-shopified-id="{{product.connected}}"
+                data-product-title="{{product.title}}" data-product-image="{{product.image.src}}">
+                {{product.title}}
+            </a>
         </div>
     </div>
 </script>
