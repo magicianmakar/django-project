@@ -1710,17 +1710,21 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 }
             )
 
-            order = ShopifyOrder.objects.get(store=store, order_id=order_id)
-            need_fulfillment = order.need_fulfillment
+            try:
+                order = ShopifyOrder.objects.get(store=store, order_id=order_id)
+                need_fulfillment = order.need_fulfillment
 
-            for line in order.shopifyorderline_set.all():
-                if line.line_id == utils.safeInt(line_id):
-                    line.track = track
-                    line.save()
+                for line in order.shopifyorderline_set.all():
+                    if line.line_id == utils.safeInt(line_id):
+                        line.track = track
+                        line.save()
 
-                    need_fulfillment -= 1
+                        need_fulfillment -= 1
 
-            ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment)
+                ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment)
+
+            except ShopifyOrder.DoesNotExist
+                pass
 
             if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
                 profile = user.models_user.profile
