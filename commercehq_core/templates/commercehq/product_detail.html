@@ -693,7 +693,8 @@ $(function() {
                 type: 'POST',
                 data: {
                     'url': newURL,
-                    'product': config.product_id
+                    'product': config.product_id,
+                    'chq': 1,
                 },
                 context: {'img': img, 'imageID': imageID},
                 success: function (data) {
