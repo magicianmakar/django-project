@@ -1796,8 +1796,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         tracking_number = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
 
-        order = ShopifyOrderTrack.objects.get(id=data.get('order'))
-        permissions.user_can_edit(user, order)
+        try:
+            order = ShopifyOrderTrack.objects.get(id=data.get('order'))
+            permissions.user_can_edit(user, order)
+
+        except ShopifyOrderTrack.DoesNotExist:
+            return self.api_error('Order Track Not Found', status=404)
 
         new_tracking_number = (tracking_number and tracking_number not in order.source_tracking)
 
