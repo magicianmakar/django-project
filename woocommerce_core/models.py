@@ -47,7 +47,8 @@ class WooStore(models.Model):
             consumer_secret=self.api_password,
             wp_api=True,
             version='wc/v2',
-            verify_ssl=not settings.DEBUG)
+            verify_ssl=not settings.DEBUG,
+            timeout=300)
 
     def save(self, *args, **kwargs):
         if not self.store_hash:

@@ -10,8 +10,14 @@ from app.celery import celery_app, CaptureFailure
 from shopified_core import utils
 from shopified_core import permissions
 
-from .utils import format_woo_errors
 from .models import WooStore, WooProduct
+from .utils import (
+    format_woo_errors,
+    get_product_api_data,
+    get_image_id_by_hash,
+    get_variants_api_data,
+    add_store_tags_to_data,
+)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -119,6 +125,57 @@ def product_save(req_data, user_id):
             'id': product.id,
         }
     }
+
+
+@celery_app.task(base=CaptureFailure)
+def product_export(store_id, product_id, user_id, publish=None):
+    try:
+        user = User.objects.get(id=user_id)
+        store = WooStore.objects.get(id=store_id)
+        product = WooProduct.objects.get(id=product_id)
+
+        permissions.user_can_view(user, store)
+        permissions.user_can_edit(user, product)
+
+        product.store = store
+        product.save()
+
+        saved_data = product.parsed
+        data = get_product_api_data(saved_data)
+        data = add_store_tags_to_data(data, store, saved_data.get('tags', []))
+
+        r = store.wcapi.post('products', data)
+        r.raise_for_status()
+
+        store_data = r.json()
+        product.source_id = store_data['id']
+        product.save()
+
+        if saved_data.get('variants', []):
+            image_id_by_hash = get_image_id_by_hash(store_data)
+            variant_list = get_variants_api_data(saved_data, image_id_by_hash)
+            path = 'products/{}/variations/batch'.format(product.source_id)
+            r = store.wcapi.post(path, {'create': variant_list})
+            r.raise_for_status()
+
+        store.pusher_trigger('product-export', {
+            'success': True,
+            'product': product.id,
+            'product_url': reverse('woo:product_detail', kwargs={'pk': product.id}),
+            'woocommerce_url': product.woocommerce_url
+        })
+
+    except Exception as e:
+        raven_client.captureException(extra={
+            'response': e.response.text if hasattr(e, 'response') else ''
+        })
+
+        store.pusher_trigger('product-export', {
+            'success': False,
+            'error': format_woo_errors(e),
+            'product': product.id,
+            'product_url': reverse('woo:product_detail', kwargs={'pk': product.id}),
+        })
 
 
 @celery_app.task(base=CaptureFailure)

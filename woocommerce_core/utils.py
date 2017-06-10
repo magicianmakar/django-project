@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat
+from shopified_core.utils import safeInt, safeFloat, hash_url_filename
 
 from .models import WooProduct, WooStore
 
@@ -79,3 +79,92 @@ def format_woo_errors(e):
         return 'Server Error'
 
     return e.response.json().get('message', '')
+
+
+def get_product_api_data(saved_data):
+    data = {'name': saved_data['title']}
+    data['status'] = 'publish' if saved_data['published'] else 'draft'
+    data['price'] = str(saved_data['price'])
+    data['regular_price'] = str(saved_data['compare_at_price'])
+    data['weight'] = str(saved_data['weight'])
+    data['description'] = saved_data.get('description')
+    data['images'] = []
+    for position, src in enumerate(saved_data.get('images', [])):
+        data['images'].append({'src': src, 'name': src, 'position': position})
+
+    variants = saved_data.get('variants', [])
+    if variants:
+        data['type'] = 'variable'
+        data['attributes'] = []
+        for num, variant in enumerate(variants):
+            name, options = variant.get('title'), variant.get('values', [])
+            attribute = {'position': num + 1, 'name': name, 'options': options, 'variation': True}
+            data['attributes'].append(attribute)
+
+    return data
+
+
+def get_image_id_by_hash(store_data):
+    image_id_by_hash = {}
+    for image in store_data.get('images', []):
+        hash_ = hash_url_filename(image['name'])
+        image_id_by_hash[hash_] = image['id']
+
+    return image_id_by_hash
+
+
+def get_variants_api_data(saved_data, image_id_by_hash):
+    variants = saved_data.get('variants', [])
+    variants_sku = saved_data.get('variants_sku', {})
+    variant_list = []
+
+    for variant in variants:
+        title = variant.get('title')
+        options = variant.get('values', [])
+
+        for option in options:
+            data = {
+                'sku': variants_sku.get(option),
+                'attributes': [
+                    {'name': title, 'option': option},
+                ],
+            }
+
+            if saved_data.get('compare_at_price'):
+                data['regular_price'] = str(saved_data['compare_at_price'])
+                data['sale_price'] = str(saved_data['price'])
+            else:
+                data['regular_price'] = str(saved_data['price'])
+
+            for image_hash, variant_option in saved_data.get('variants_images', {}).items():
+                if variant_option == option and image_hash in image_id_by_hash:
+                    data['image'] = {'id': image_id_by_hash[image_hash]}
+
+            variant_list.append(data)
+
+    return variant_list
+
+
+def add_store_tags_to_data(data, store, tags):
+    if not tags:
+        data['tags'] = []
+    else:
+        tags = tags.split(',')
+        create = [{'name': tag.strip()} for tag in tags if tag]
+
+        # Creates tags that haven't been created yet. Returns an error if tag exists.
+        r = store.wcapi.post('products/tags/batch', {'create': create})
+        r.raise_for_status()
+
+        store_tags = r.json()['create']
+        tag_ids = []
+        for store_tag in store_tags:
+            if 'id' in store_tag:
+                tag_ids.append(store_tag['id'])
+            if 'error' in store_tag:
+                if store_tag['error'].get('code', '') == 'term_exists':
+                    tag_ids.append(store_tag['error']['data']['resource_id'])
+
+        data['tags'] = [{'id': tag_id} for tag_id in tag_ids]
+
+    return data

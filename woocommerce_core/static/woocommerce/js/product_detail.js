@@ -118,7 +118,7 @@ function productExport(btn) {
                         toastr.success('Product Exported.','WooCommerce Export');
 
                         setTimeout(function () {
-                            window.location.reload();
+                            window.location.reload(true);
                         }, 1500);
                     } else {
                         displayAjaxError('WooCommerce Export', data);

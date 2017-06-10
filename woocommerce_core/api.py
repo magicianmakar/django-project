@@ -401,6 +401,27 @@ class WooStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_product_export(self, request, user, data):
+        try:
+            pk = safeInt(data.get('store', 0))
+            store = WooStore.objects.get(pk=pk)
+            permissions.user_can_view(user, store)
+
+            tasks.product_export.apply_async(
+                args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
+                countdown=0,
+                expires=120)
+
+            return self.api_success({
+                'pusher': {
+                    'key': settings.PUSHER_KEY,
+                    'channel': store.pusher_channel()
+                }
+            })
+
+        except ProductExportException as e:
+            return self.api_error(e.message)
+
     def post_product_update(self, request, user, data):
         try:
             pk = safeInt(data.get('product', 0))
