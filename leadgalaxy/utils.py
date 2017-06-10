@@ -1954,7 +1954,7 @@ class ShopifyOrderUpdater:
             order_data = {
                 'order': {
                     'id': int(self.order_id),
-                    'note': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()
+                    'note': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
                 }
             }
 
