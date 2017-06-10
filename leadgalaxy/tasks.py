@@ -407,9 +407,10 @@ def sync_shopify_orders(self, store_id):
         orders = ShopifyOrder.objects.filter(store=store)
         shopify_count = store.get_orders_count(all_orders=True)
         db_count = orders.count()
+        need_import = shopify_count - db_count
+
         if shopify_count > db_count:
             imported = 0
-            need_import = shopify_count - db_count
             page = 1
             countdown = 0
 
