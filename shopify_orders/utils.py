@@ -137,7 +137,6 @@ def update_shopify_order(store, data, sync_check=True):
             'financial_status': data['financial_status'],
             'fulfillment_status': data['fulfillment_status'],
             'total_price': data['total_price'],
-            'note': data.get('note'),
             'tags': data['tags'],
             'city': str_max(address.get('city'), 63),
             'zip_code': str_max(address.get('zip'), 31),

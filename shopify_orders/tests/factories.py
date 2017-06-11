@@ -19,7 +19,6 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     customer_id = factory.fuzzy.FuzzyInteger(1000000)
     created_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
     updated_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
-    note = factory.fuzzy.FuzzyText()
 
     class Meta:
         model = 'shopify_orders.ShopifyOrder'
