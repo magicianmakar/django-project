@@ -2190,7 +2190,8 @@ def save_image_s3(request):
         bucket_name=settings.S3_UPLOADS_BUCKET
     )
 
-    if not request.GET.get('chq'):
+    chq_product = request.GET.get('chq') or request.POST.get('chq')
+    if not chq_product:
         product = ShopifyProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)
         UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
