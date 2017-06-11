@@ -79,8 +79,8 @@ class ShopifyOrder(models.Model):
     customer_name = models.CharField(max_length=256, blank=True, null=True, default='')
     customer_email = models.CharField(max_length=256, blank=True, null=True, default='')
 
-    financial_status = models.CharField(max_length=32, blank=True, null=True, default='', db_index=True)
-    fulfillment_status = models.CharField(max_length=32, blank=True, null=True, default='', db_index=True)
+    financial_status = models.CharField(max_length=32, blank=True, null=True, default='')
+    fulfillment_status = models.CharField(max_length=32, blank=True, null=True, default='')
 
     note = models.TextField(blank=True, null=True, default='')
     tags = models.TextField(blank=True, null=True, default='')
@@ -94,8 +94,8 @@ class ShopifyOrder(models.Model):
 
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
-    closed_at = models.DateTimeField(null=True, blank=True, db_index=True)
-    cancelled_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
         return u'#{} | {}'.format(self.order_number + 1000, self.store.title)
