@@ -55,7 +55,7 @@
                       </td>
                       <td class="hidden-xs" style="white-space:nowrap">
                         {% cache 600 orders_status item.id %}
-                        {% with pending=0 awaiting_tracking=0 %}
+                        {% with pending=item.pending_orders awaiting_tracking=0 %}
                             {% if pending or awaiting_tracking %}
                                 {% if pending %}
                                 <a class="label "
