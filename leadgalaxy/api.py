@@ -2263,10 +2263,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         shopify_product = utils.safeInt(data.get('product'))
         supplier_url = data.get('supplier')
+        product = None
 
         if shopify_product:
-            if user.models_user.shopifyproduct_set.filter(store=store, shopify_id=shopify_product).count():
-                return self.api_error('Product is already imported/connected', status=422)
+            found_products = user.models_user.shopifyproduct_set.filter(store=store, shopify_id=shopify_product)
+            if len(found_products):
+                if len(found_products) == 1 and not found_products[0].have_supplier():
+                    product = found_products[0]
+                else:
+                    return self.api_error('Product is already imported/connected', status=422)
         else:
             return self.api_error('Shopify Product ID is missing', status=422)
 
@@ -2303,20 +2308,21 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         supplier_url = utils.remove_link_query(supplier_url)
 
-        product = ShopifyProduct(
-            store=store,
-            user=user.models_user,
-            shopify_id=shopify_product,
-            data=json.dumps({
-                'title': 'Importing...',
-                'variants': [],
-                'original_url': supplier_url
-            })
-        )
+        if not product:
+            product = ShopifyProduct(
+                store=store,
+                user=user.models_user,
+                shopify_id=shopify_product,
+                data=json.dumps({
+                    'title': 'Importing...',
+                    'variants': [],
+                    'original_url': supplier_url
+                })
+            )
 
-        permissions.user_can_add(user, product)
-        product.set_original_data('{}')
-        product.save()
+            permissions.user_can_add(user, product)
+            product.set_original_data('{}')
+            product.save()
 
         supplier = ProductSupplier.objects.create(
             store=product.store,
