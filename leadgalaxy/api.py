@@ -1726,18 +1726,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             except ShopifyOrder.DoesNotExist:
                 pass
 
-            if not settings.DEBUG and 'oberlo' not in request.META.get('HTTP_REFERER', ''):
-                profile = user.models_user.profile
+            profile = user.models_user.profile
 
-                # TODO: Handle mullti values in source_id
-                if profile.get_config_value('aliexpress_as_notes', True):
-                    order_updater.mark_as_ordered_note(line_id, source_id)
+            # TODO: Handle multi values in source_id
+            if profile.get_config_value('aliexpress_as_notes', True):
+                order_updater.mark_as_ordered_note(line_id, source_id)
 
-                if profile.get_config_value('aliexpress_as_custom_note'):
-                    order_updater.mark_as_ordered_attribute(source_id)
+            if profile.get_config_value('aliexpress_as_custom_note'):
+                order_updater.mark_as_ordered_attribute(source_id)
 
-                if profile.get_config_value('aliexpress_as_order_tag'):
-                    order_updater.mark_as_ordered_tag(source_id)
+            if profile.get_config_value('aliexpress_as_order_tag'):
+                order_updater.mark_as_ordered_tag(source_id)
 
             store.pusher_trigger('order-source-id-add', {
                 'track': track.id,
@@ -1752,7 +1751,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if aliexpress_order_tags:
             order_updater.add_tag(aliexpress_order_tags)
 
-        order_updater.delay_save(countdown=note_delay)
+        if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
+            order_updater.delay_save(countdown=note_delay)
 
         return self.api_success()
 
