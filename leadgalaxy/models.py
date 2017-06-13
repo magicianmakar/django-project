@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
-from django.db.models import Count, Max, Q, F
+from django.db.models import Q
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.utils.crypto import get_random_string
