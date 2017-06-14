@@ -289,3 +289,91 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
         padding-top: 0;
     }
 }
+
+/* Order Queue */
+
+.gly-spin {
+    animation: spin 2s infinite linear;
+}
+
+.time-spin {
+    animation: spin 2s infinite ease;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(359deg);
+    }
+}
+
+.order-queue-manager {
+    display: none;
+    width: 500px;
+    position: fixed;
+    bottom: 0;
+    right: 90px;
+    z-index: 1000;
+}
+
+.order-queue-manager .panel-heading  {
+    align-items: center;
+    display: flex;
+}
+
+.order-queue-manager .panel-heading .panel-title {
+    flex-grow: 1;
+}
+
+.order-queue-manager .panel-heading i {
+    cursor: pointer;
+}
+
+.order-queue-manager ul {
+    max-height: 400px;
+    overflow: auto;
+}
+
+.order-queue-manager .pending-order {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.order-queue-manager .panel-info {
+    box-shadow: 0 0 7px 4px #ccc;
+    border-color: #7dabc4 !important;
+}
+
+.order-queue-manager .panel-info > .panel-heading {
+    background-color: #7dabc4 !important;
+    border-color: #7dabc4 !important;
+}
+
+.order-queue-manager .pending-order {
+    align-items: baseline;
+    display: flex;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.order-queue-manager .pending-order .desc {
+    font-weight: bold;
+    margin: 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.order-queue-manager .pending-order .order-name {
+    margin-left: 5px;
+    padding: 4px 5px;
+}
+.order-queue-manager .pending-order label {
+    background-color: #93c47d !important;
+}

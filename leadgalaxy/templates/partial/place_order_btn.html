@@ -1,9 +1,12 @@
 {% load template_helper %}
 
 {% if original %}
-    <div class="btn-group dropup" {% if item.shipping_method %}style="display:flex"{% endif %}>
+    <div class="btn-group dropup order-line-group" {% if item.shipping_method %}style="display:flex"{% endif %}
+         order-id="{{order.id}}" line-id="{{item.id}}" order-data-id="{{ item.order_data_id }}"
+         order-number="{{order.name}}" line-title="{{item.title}}"
+    >
     {% if item.shipping_method %}
-        <a type="button" class="btn btn-success btn-xs itooltip" data-container="body" data-html="true"
+        <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
              href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
             target="_blank"
@@ -26,7 +29,9 @@
 
         <ul class="dropdown-menu pull-right">
             {% if item.shopify_order %}
-            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}" order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
+            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.shopify_order.source_id}}"
+                   order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}"
+                   >Order Details</a></li>
             {% else %}
             <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
             {% endif %}
@@ -35,20 +40,19 @@
 
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
-            <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
+            <li><a class="place-order-btn queue-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                     href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    >Step By Step Order</a></li>
-               <li><a class="place-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
+               <li><a class="place-order-btn queue-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
                     href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
                    >Add To Cart</a></li>
-            <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
+            <li><a class="place-order-btn queue-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                     href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    >Auto Place Order</a></li>
-            <li><a class="place-order-btn auto-shipping-btn" target="_blank"
+            <li><a class="place-order-btn auto-shipping-btn"
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping_address.country_code}}"
-                    href="#"
-                    data-href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&"
+                    href="{% url 'orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}

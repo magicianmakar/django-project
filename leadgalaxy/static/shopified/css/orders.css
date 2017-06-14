@@ -174,3 +174,9 @@ ul.shipping-method {
 .select2.select2-container.select2-container--default {
     width: 100% !important;
 }
+
+.bundle-items {
+    margin-bottom: 0;
+    border: 0;
+    border-radius: 0;
+}
