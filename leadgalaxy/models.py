@@ -1782,6 +1782,7 @@ def invalidate_acp_users(sender, instance, created, **kwargs):
 
     if not created and not instance.is_subuser:
         instance.get_shopify_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
+        instance.get_chq_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
 
 
 @receiver(post_save, sender=ShopifyOrderTrack)
