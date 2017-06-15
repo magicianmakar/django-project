@@ -147,7 +147,7 @@ $('#product-update-btn').click(function (e) {
         'published': $('#product-visible').prop('checked'),
 
         'price': parseFloat($('#product-price').val()),
-        'compare_price': parseFloat($('#product-compare-at').val()),
+        'compare_at_price': parseFloat($('#product-compare-at').val()),
 
         'weight': parseFloat($('#product-weight').val()),
         'weight_unit': $('#product-weight-unit').val(),
@@ -166,7 +166,7 @@ $('#product-update-btn').click(function (e) {
             };
 
             var attrs = [
-                'price', 'compare_price', 'sku'
+                'price', 'compare_at_price', 'sku'
             ];
 
             $.each(attrs, function(k, att) {

@@ -1,4 +1,5 @@
 import textwrap
+import urllib
 import json
 import re
 
@@ -181,35 +182,40 @@ class WooProduct(models.Model):
             return None
 
         r = self.store.wcapi.get('products/{}'.format(self.source_id))
-        if r.ok:
-            product = r.json()
-            r = self.store.wcapi.get('products/{}/variations'.format(self.source_id))
-            product['variants'] = r.json()
+        r.raise_for_status()
 
-            return product
+        product = r.json()
+        product['variants'] = self.retrieve_variants()
 
-    def get_tags(self, product_data):
-        tags = []
-        for tag in product_data.get('tags', []):
-            tags.append(tag['name'])
+        return product
 
-        return ','.join(tags)
+    def retrieve_variants(self):
+        variants = []
+        page = 1
+        while page:
+            params = urllib.urlencode({'page': page, 'per_page': 100})
+            path = 'products/{}/variations?{}'.format(self.source_id, params)
+            r = self.store.wcapi.get(path)
+            r.raise_for_status()
+            fetched_variants = r.json()
+            variants.extend(fetched_variants)
+            has_next = 'rel="next"' in r.headers.get('link', '')
+            page = page + 1 if has_next else 0
+
+        return variants
 
     def sync(self):
-        product = self.retrieve()
-        if not product:
+        if not self.source_id:
             return None
 
-        product['tags'] = self.get_tags(product)
+        product_data = self.retrieve()
+        product_data['tags'] = ','.join([tag['name'] for tag in product_data.get('tags', [])])
+        product_data['images'] = [img['src'] for img in product_data.get('images', [])]
+        product_data['title'] = product_data.pop('name')
+        product_data['compare_at_price'] = product_data.pop('regular_price')
+        product_data['published'] = product_data['status'] == 'publish'
 
-        for idx, img in enumerate(product['images']):
-            product['images'][idx] = img['src']
-
-        product['title'] = product['name']
-        product['compare_at_price'] = product.get('regular_price')
-        product['published'] = product['status'] == 'publish'
-
-        self.update_data(product)
+        self.update_data(product_data)
         self.save()
 
         product = json.loads(self.data)

@@ -81,41 +81,50 @@ def format_woo_errors(e):
     return e.response.json().get('message', '')
 
 
-def get_product_api_data(saved_data):
-    data = {'name': saved_data['title']}
-    data['status'] = 'publish' if saved_data['published'] else 'draft'
-    data['price'] = str(saved_data['price'])
-    data['regular_price'] = str(saved_data['compare_at_price'])
-    data['weight'] = str(saved_data['weight'])
-    data['description'] = saved_data.get('description')
-    data['images'] = []
-    for position, src in enumerate(saved_data.get('images', [])):
-        data['images'].append({'src': src, 'name': src, 'position': position})
+def update_product_api_data(api_data, data):
+    api_data['name'] = data['title']
+    api_data['status'] = 'publish' if data['published'] else 'draft'
+    api_data['price'] = str(data['price'])
+    api_data['regular_price'] = str(data['compare_at_price'])
+    api_data['weight'] = str(data['weight'])
+    api_data['description'] = data.get('description')
 
-    variants = saved_data.get('variants', [])
+    return api_data
+
+
+def add_product_images_to_api_data(api_data, data):
+    api_data['images'] = []
+    for position, src in enumerate(data.get('images', [])):
+        api_data['images'].append({'src': src, 'name': src, 'position': position})
+
+    return api_data
+
+
+def add_product_attributes_to_api_data(api_data, data):
+    variants = data.get('variants', [])
     if variants:
-        data['type'] = 'variable'
-        data['attributes'] = []
+        api_data['type'] = 'variable'
+        api_data['attributes'] = []
         for num, variant in enumerate(variants):
             name, options = variant.get('title'), variant.get('values', [])
             attribute = {'position': num + 1, 'name': name, 'options': options, 'variation': True}
-            data['attributes'].append(attribute)
+            api_data['attributes'].append(attribute)
 
-    return data
+    return api_data
 
 
-def get_image_id_by_hash(store_data):
+def get_image_id_by_hash(product_data):
     image_id_by_hash = {}
-    for image in store_data.get('images', []):
+    for image in product_data.get('images', []):
         hash_ = hash_url_filename(image['name'])
         image_id_by_hash[hash_] = image['id']
 
     return image_id_by_hash
 
 
-def get_variants_api_data(saved_data, image_id_by_hash):
-    variants = saved_data.get('variants', [])
-    variants_sku = saved_data.get('variants_sku', {})
+def create_variants_api_data(data, image_id_by_hash):
+    variants = data.get('variants', [])
+    variants_sku = data.get('variants_sku', {})
     variant_list = []
 
     for variant in variants:
@@ -123,31 +132,32 @@ def get_variants_api_data(saved_data, image_id_by_hash):
         options = variant.get('values', [])
 
         for option in options:
-            data = {
+            api_data = {
                 'sku': variants_sku.get(option),
+                'description': option,
                 'attributes': [
                     {'name': title, 'option': option},
                 ],
             }
 
-            if saved_data.get('compare_at_price'):
-                data['regular_price'] = str(saved_data['compare_at_price'])
-                data['sale_price'] = str(saved_data['price'])
+            if data.get('compare_at_price'):
+                api_data['regular_price'] = str(data['compare_at_price'])
+                api_data['sale_price'] = str(data['price'])
             else:
-                data['regular_price'] = str(saved_data['price'])
+                api_data['regular_price'] = str(data['price'])
 
-            for image_hash, variant_option in saved_data.get('variants_images', {}).items():
+            for image_hash, variant_option in data.get('variants_images', {}).items():
                 if variant_option == option and image_hash in image_id_by_hash:
-                    data['image'] = {'id': image_id_by_hash[image_hash]}
+                    api_data['image'] = {'id': image_id_by_hash[image_hash]}
 
-            variant_list.append(data)
+            variant_list.append(api_data)
 
     return variant_list
 
 
-def add_store_tags_to_data(data, store, tags):
+def add_store_tags_to_api_data(api_data, store, tags):
     if not tags:
-        data['tags'] = []
+        api_data['tags'] = []
     else:
         tags = tags.split(',')
         create = [{'name': tag.strip()} for tag in tags if tag]
@@ -165,6 +175,46 @@ def add_store_tags_to_data(data, store, tags):
                 if store_tag['error'].get('code', '') == 'term_exists':
                     tag_ids.append(store_tag['error']['data']['resource_id'])
 
-        data['tags'] = [{'id': tag_id} for tag_id in tag_ids]
+        api_data['tags'] = [{'id': tag_id} for tag_id in tag_ids]
 
-    return data
+    return api_data
+
+
+def update_product_images_api_data(api_data, data):
+    images = []
+    data_images = data.get('images', [])
+    product_images = api_data.get('images', [])
+    product_image_srcs = [img['src'] for img in product_images]
+
+    for product_image in product_images:
+        if product_image['id'] == 0:
+            continue  # Skips the placeholder image to avoid error
+        if product_image['src'] in data_images:
+            images.append({'id': product_image['id']})  # Keeps the current image
+
+    for data_image in data_images:
+        if data_image not in product_image_srcs:
+            images.append({'src': data_image})  # Adds the new image
+
+    if images:
+        images[0]['position'] = 0  # Sets as featured image
+
+    api_data['images'] = images if images else ''  # Deletes all images if empty
+
+    return api_data
+
+
+def update_variants_api_data(data):
+    variants = []
+    for item in data:
+        variant = {'id': item['id'], 'sku': item['sku']}
+
+        if item.get('compare_at_price'):
+            variant['sale_price'] = str(item['price'])
+            variant['regular_price'] = str(item['compare_at_price'])
+        else:
+            variant['regular_price'] = str(item['price'])
+
+        variants.append(variant)
+
+    return variants

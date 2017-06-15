@@ -13,10 +13,14 @@ from shopified_core import permissions
 from .models import WooStore, WooProduct
 from .utils import (
     format_woo_errors,
-    get_product_api_data,
     get_image_id_by_hash,
-    get_variants_api_data,
-    add_store_tags_to_data,
+    add_product_images_to_api_data,
+    add_product_attributes_to_api_data,
+    add_store_tags_to_api_data,
+    update_product_api_data,
+    update_variants_api_data,
+    update_product_images_api_data,
+    create_variants_api_data,
 )
 
 
@@ -141,19 +145,22 @@ def product_export(store_id, product_id, user_id, publish=None):
         product.save()
 
         saved_data = product.parsed
-        data = get_product_api_data(saved_data)
-        data = add_store_tags_to_data(data, store, saved_data.get('tags', []))
+        saved_data['published'] = saved_data['published'] if publish is None else publish
+        api_data = update_product_api_data({}, saved_data)
+        api_data = add_product_images_to_api_data(api_data, saved_data)
+        api_data = add_product_attributes_to_api_data(api_data, saved_data)
+        api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
-        r = store.wcapi.post('products', data)
+        r = store.wcapi.post('products', api_data)
         r.raise_for_status()
 
-        store_data = r.json()
-        product.source_id = store_data['id']
+        product_data = r.json()
+        product.source_id = product_data['id']
         product.save()
 
         if saved_data.get('variants', []):
-            image_id_by_hash = get_image_id_by_hash(store_data)
-            variant_list = get_variants_api_data(saved_data, image_id_by_hash)
+            image_id_by_hash = get_image_id_by_hash(product_data)
+            variant_list = create_variants_api_data(saved_data, image_id_by_hash)
             path = 'products/{}/variations/batch'.format(product.source_id)
             r = store.wcapi.post(path, {'create': variant_list})
             r.raise_for_status()
@@ -183,69 +190,23 @@ def product_update(product_id, data):
     try:
         product = WooProduct.objects.get(id=product_id)
         store = product.store
+        api_data = product.retrieve()
+        api_data = update_product_api_data(api_data, data)
+        api_data = add_store_tags_to_api_data(api_data, store, data.get('tags', []))
+        api_data = update_product_images_api_data(api_data, data)
 
-        p = product.retrieve()
-        p['name'] = data['title']
-        p['status'] = 'draft' if not data['published'] else 'publish'
-        p['price'] = data['price']
-        p['regular_price'] = data['compare_price']
-        p['weight'] = '{:.02f}'.format(data['weight'])
-
-        data_tags = data['tags'].split(',')
-        create = [{'name': data_tag} for data_tag in data_tags if data_tag]
-
-        # Creates tags that haven't been created yet. Returns an error if tag exists.
-        r = store.wcapi.post('products/tags/batch', {'create': create})
-        r.raise_for_status()
-
-        store_tags = r.json()['create']
-        tag_ids = []
-        for store_tag in store_tags:
-            if 'id' in store_tag:
-                tag_ids.append(store_tag['id'])
-            if 'error' in store_tag:
-                if store_tag['error'].get('code', '') == 'term_exists':
-                    tag_ids.append(store_tag['error']['data']['resource_id'])
-
-        p['tags'] = [{'id': tag_id} for tag_id in tag_ids]
-
-        variants = p.pop('variants', [])
-        if variants:
-            for variant in variants:
-                for variant_data in data['variants']:
-                    if variant_data['id'] == variant['id']:
-                        variant['price'] = variant_data['price']
-                        variant['regular_price'] = variant_data['compare_price']
-                        variant['sku'] = variant_data['sku']
-
-            target = 'products/%s/variations/batch' % product.source_id
-            r = store.wcapi.post(target, {'update': variants})
-            r.raise_for_status()
-
-        images = []
-        data_images = data.get('images', [])
-        product_images = p.get('images', [])
-        product_image_srcs = [img['src'] for img in product_images]
-
-        for product_image in product_images:
-            # Skips the placeholder image
-            if product_image['id'] == 0:
-                continue
-            # Keeps the images submitted in the data
-            if product_image['src'] in data_images:
-                images.append({'id': product_image['id'], 'position': product_image['position']})
-
-        for data_image in data_images:
-            if data_image not in product_image_srcs:
-                images.append({'src': data_image})
-
-        p['images'] = images if any(images) else ''
-
-        r = store.wcapi.put('products/{}'.format(product.source_id), p)
+        r = store.wcapi.put('products/{}'.format(product.source_id), api_data)
         r.raise_for_status()
 
         product.source_id = r.json()['id']
         product.save()
+
+        variants_data = data.get('variants', [])
+        if variants_data:
+            variants = update_variants_api_data(variants_data)
+            path = 'products/%s/variations/batch' % product.source_id
+            r = store.wcapi.post(path, {'update': variants})
+            r.raise_for_status()
 
         store.pusher_trigger('product-update', {
             'success': True,

@@ -1,3 +1,4 @@
+import urllib
 import urlparse
 import json
 
@@ -251,7 +252,7 @@ class WooStoreApi(ApiResponseMixin, View):
                 params['search'] = data['query']
 
             try:
-                r = store.wcapi.get('products', params)
+                r = store.wcapi.get('products?{}'.format(urllib.urlencode(params)))
                 r.raise_for_status()
             except HTTPError:
                 return self.api_error('WooCommerce API Error', status=500)
