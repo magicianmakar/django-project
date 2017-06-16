@@ -12,16 +12,22 @@ window.OrderExportAdd = {
         this.initializeFieldsSelect();
         this.initializeFieldsList();
         this.renderFoundProducts();
+        this.initializeDatepicker();
 
         // events
         this.onClickEdit();
         this.onUnselectField();
+        this.onStartingAtCreatedAt();
         this.onToggleUsername();
         this.onAddProductTitle();
         this.onRemoveProductTitle();
         this.onFindShopifyProductClick();
         this.onShopifyProductSelected();
         this.onFoundProductDeleteClick();
+        this.onAutocompleteVendor();
+        this.onSubuserClick();
+        this.onAutocompleteVendor();
+        this.onSubuserClick();
 
         var clockpickerInput = $('input[name="schedule"]');
         clockpickerInput.clockpicker({
@@ -35,6 +41,15 @@ window.OrderExportAdd = {
         });
 
         $('input[name="daterange"]').daterangepicker();
+    },
+    initializeDatepicker: function() {
+        $('.input-group.date').datepicker({
+            todayBtn: "linked",
+            keyboardNavigation: false,
+            forceParse: false,
+            calendarWeeks: true,
+            autoclose: true
+        });
     },
     onClickEdit: function() {
         $('.field-wrapper').hide();
@@ -50,6 +65,7 @@ window.OrderExportAdd = {
             $('#schedule .range').hide();
             $('#schedule .daily').show();
             $('input[name="receiver"]').parents('.form-group').show();
+            $('input[name="starting_at"]').parents('.form-group').show();
             $('#vendor-login').show();
         });
 
@@ -57,6 +73,7 @@ window.OrderExportAdd = {
             $('#schedule .range').show();
             $('#schedule .daily').hide();
             $('input[name="receiver"]').val('').parents('.form-group').hide();
+            $('input[name="starting_at"]').val('').parents('.form-group').hide();
             $('#vendor-login').hide();
         });
 
@@ -226,6 +243,16 @@ window.OrderExportAdd = {
             JSON.stringify(window.OrderExportAdd.foundProducts.data)
         );
     },
+    onStartingAtCreatedAt: function() {
+        $('input[name="starting_at_boolean"]').on('ifChecked', function() {
+            $('.starting-at-input').addClass('hidden');
+            $('input[name="starting_at"]').val('');
+        });
+
+        $('input[name="starting_at_boolean"]').on('ifUnchecked', function() {
+            $('.starting-at-input').removeClass('hidden');
+        });
+    },
     onToggleUsername: function() {
         $('[name="vendor_user"]').on('change', function() {
             if ($(this).val() != '') {
@@ -293,6 +320,74 @@ window.OrderExportAdd = {
             window.OrderExportAdd.updateFoundProducts();
 
             $(this).parents('.product-item.row').remove();
+        });
+    },
+    onAutocompleteVendor: function() {
+        $('[name="vendor"]').autocomplete({
+            serviceUrl: '/order/exports/vendor-autocomplete',
+            minChars: 1,
+            deferRequestBy: 500
+        });
+    },
+    onSubuserClick: function() {
+        $('.invite-subuser').click(function () {
+            var btn = $(this);
+
+            swal({
+                title: "Add Sub User",
+                text: "Add new sub user to your account",
+                type: "input",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                closeOnCancel: true,
+                animation: "slide-from-top",
+                inputPlaceholder: "Email address",
+                showLoaderOnConfirm: true
+            }, function(inputValue) {
+                if (inputValue === false) {
+                    return;
+                }
+
+                if (inputValue === '' || inputValue.trim() === '') {
+                    swal.showInputError("Email is required");
+                    return false
+                }
+
+                $.ajax({
+                    url: '/api/subuser-invite',
+                    type: 'POST',
+                    data: {
+                        'email': inputValue
+                    },
+                    context: {btn: btn},
+                    success: function (data) {
+                        if (data.status == 'ok') {
+                            var link = 'https://app.shopifiedapp.com/accounts/register/';
+                            link += data.hash;
+                            var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
+                                      '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
+
+                            swal({
+                                title: 'Invitation Sent',
+                                text: msg,
+                                type: 'success',
+                                html: true,
+                            }, function(r) {
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 500);
+                            });
+                        } else {
+                            displayAjaxError('Add Sub User', data);
+                        }
+                    },
+                    error: function (data) {
+                        displayAjaxError('Add Sub User', data);
+                    },
+                    complete: function () {
+                    }
+                });
+            });
         });
     }
 };

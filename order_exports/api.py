@@ -94,7 +94,11 @@ class ShopifyOrderExportAPI():
                 params[common_status] = value
 
         if self.order_export.previous_day:
-            params['created_at_min'] = self.order_export.created_at.strftime("%Y-%m-%dT%H:%M:%S%z")
+            if self.order_export.starting_at:
+                params['created_at_min'] = self.order_export.starting_at.strftime("%Y-%m-%dT%H:%M:%S%z")
+            else:
+                params['created_at_min'] = self.order_export.created_at.strftime("%Y-%m-%dT%H:%M:%S%z")
+
             if self.order_export.since_id:
                 params['since_id'] = self.order_export.since_id
         else:
@@ -358,9 +362,9 @@ class ShopifyOrderExportAPI():
         }
 
         send_email_from_template(
-            'order_export.html',
-            '[Shopified App] Order Export',
-            self.order_export.emails,
-            data,
+            tpl='order_export.html',
+            subject='[Shopified App] Order Export',
+            recipient=self.order_export.emails,
+            data=data,
             nl2br=False
         )

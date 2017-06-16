@@ -14,6 +14,7 @@
     <script type="text/javascript" src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'order_exports/js/fields.js' %}"></script>
@@ -23,6 +24,7 @@
 {% block extracss %}
     <link href="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
     <link href="{% static 'order_exports/css/fields.css' %}" rel="stylesheet">
 {% endblock %}
 
@@ -90,6 +92,31 @@
                 </div>
             </div>
 
+            <div class="form-group{% if form.starting_at.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
+                <label for="email" class="col-sm-2 control-label">Starting At</label>
+                <div class="col-sm-10">
+                    <div class="starting-at-input{% if not form.starting_at.value %} hidden{% endif %}">
+                        <div class="input-group date">
+                            <span class="input-group-addon">
+                                <i class="fa fa-calendar"></i>
+                            </span>
+                            <input type="text" class="form-control" name="starting_at" value="{{ form.starting_at.value|date:"m/d/Y"|default:"" }}">
+                        </div>
+                    </div>
+                    <div class="checkbox" style="padding: 0;">
+                        <label class="icheck" style="padding: 0;">
+                            <input type="checkbox" name="starting_at_boolean"{% if not form.starting_at.value %} checked="checked"{% endif %} autocomplete="off">
+                            Get orders created at the time this order export was created.
+                        </label>
+                    </div>
+                    {% for error in form.starting_at.errors %}
+                    <p class="help-block">
+                        {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+
             <div class="form-group{% if form.receiver.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
                 <label for="email" class="col-sm-2 control-label">Receiver E-mail(s)</label>
                 <div class="col-sm-10">
@@ -138,7 +165,7 @@
                             </div>
                             <input type="hidden" class="output" id="fields-output" name="fields" value="">
                             
-                            {% for field in order_fields %}
+                             {% for field in order_fields %}
                             <div class="field-wrapper" data-name="fields_{{ field.0 }}">
                                 {% if field.0 not in selected_fields %}
                                 <label class="icheck">
@@ -377,50 +404,30 @@
             </fieldset>
 
             <fieldset id="vendor-login">
-                <legend>Vendor Login</legend>
+                <legend>
+                    Vendor Login
+                    <a href="#" class="btn btn-success invite-subuser pull-right">
+                        <i class="fa fa-user-plus"></i> Add User
+                    </a>
+                </legend>
 
                 {% if vendor_users.count > 0 %}
-                <div class="form-group">
+                <div class="form-group{% if form.vendor_user.errors %} has-error{% endif %}">
                     <label for="vendor_user" class="col-sm-2 control-label">Select User</label>
                     <div class="col-sm-4">
                         <select class="form-control" name="vendor_user" autocomplete="off">
                             <option></option>
                             {% for vendor_user in vendor_users %}
-                            <option value="{{ vendor_user.id }}">{{ vendor_user.user.username }}</option>
+                            <option value="{{ vendor_user.id }}">{{ vendor_user.email }}</option>
                             {% endfor %}
                         </select>
                         <p class="help-block">Choose a login to access the page with the exported orders or create a new one below.</p>
+                        {% for error in form.vendor_user.errors %}
+                        <p class="help-block">{{ error }}</p>
+                        {% endfor %}
                     </div>
                 </div>
                 {% endif %}
-
-                <div id="add-vendor-login">
-                    <div class="form-group{% if form.vendor_email.errors %} has-error{% endif %}">
-                        <label for="vendor_email" class="col-sm-2 control-label">E-mail</label>
-                        <div class="col-sm-4">
-                            <input type="text" name="vendor_email" class="form-control" placeholder="Enter vendor e-mail" autocomplete="off"   value="{{ form.vendor_email.data|default:"" }}">
-                            <p class="help-block">Filling the e-mail will create a new vendor user for this export.</p>
-                            
-                            {% for error in form.vendor_email.errors %}
-                            <p class="help-block">
-                                {{ error }}
-                            </p>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="form-group{% if form.vendor_username.errors %} has-error{% endif %}">
-                        <label for="vendor_username" class="col-sm-2 control-label">Username</label>
-                        <div class="col-sm-4">
-                            <input type="text" name="vendor_username" class="form-control" placeholder="Enter vendor username" autocomplete="off"   value="{{ form.vendor_username.data|default:"" }}">
-                            
-                            {% for error in form.vendor_username.errors %}
-                            <p class="help-block">
-                                {{ error }}
-                            </p>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
             </fieldset>
 
             <div class="form-group">

@@ -120,8 +120,8 @@ def fix_fields(data, choices_list, prefix=''):
 
 
 class OrderExportVendor(models.Model):
-    owner = models.ForeignKey(User, related_name='vendors')
-    user = models.OneToOneField(User, related_name='vendor')
+    owner = models.ForeignKey(User, related_name='owned_vendors')
+    user = models.ForeignKey(User, related_name='vendors')
     raw_password = models.CharField(max_length=255, blank=True, null=True)
 
     def generate_password(self):
@@ -132,10 +132,7 @@ class OrderExportVendor(models.Model):
 
 
 def is_vendor(self):
-    try:
-        return self.vendor is not None
-    except OrderExportVendor.DoesNotExist:
-        return False
+    return self.vendors.exists()
 
 
 User.add_to_class("is_vendor", cached_property(is_vendor))
@@ -175,6 +172,7 @@ class OrderExport(models.Model):
     copy_me = models.BooleanField(default=False)
 
     previous_day = models.BooleanField(default=True)
+    starting_at = models.DateTimeField(null=True, blank=True)
     fields = models.TextField(blank=True, default='[]')
     line_fields = models.TextField(blank=True, default='[]')
     shipping_address = models.TextField(blank=True, default='[]')
@@ -206,6 +204,9 @@ class OrderExport(models.Model):
             return self.get_selected_choices(attr)
 
         super(OrderExport, self).__getattr__(name)
+
+    def __unicode__(self):
+        return '<OrderExport {}>'.format(self.store.title)
 
     @cached_property
     def emails(self):
@@ -304,9 +305,6 @@ class OrderExport(models.Model):
             return ','.join(str(x) for x in order_ids)
         else:
             return None
-
-    def __unicode__(self):
-        return '<OrderExport {}>'.format(self.store.title)
 
 
 class OrderExportFoundProduct(models.Model):

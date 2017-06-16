@@ -2,7 +2,6 @@ import re
 from json import loads
 
 from django import forms
-from django.contrib.auth.models import User
 from django.core.validators import validate_email, ValidationError
 
 
@@ -18,14 +17,13 @@ class OrderExportForm(forms.Form):
     daterange = forms.CharField(required=False)
     schedule = forms.TimeField(required=False, input_formats=['%H:%M'])
     previous_day = forms.BooleanField(required=False, initial=True)
+    starting_at = forms.DateTimeField(required=False, input_formats=['%m/%d/%Y'])
 
     fields = forms.CharField(required=False)
     line_fields = forms.CharField(required=False)
     shipping_address = forms.CharField(required=False)
 
     vendor_user = forms.IntegerField(required=False)
-    vendor_username = forms.CharField(required=False)
-    vendor_email = forms.EmailField(required=False)
 
     product_price_min = forms.FloatField(required=False)
     product_price_max = forms.FloatField(required=False)
@@ -64,16 +62,10 @@ class OrderExportForm(forms.Form):
             if not schedule:
                 self.add_error('schedule', 'This field is required for daily run exports.')
 
+            # Only checks if user is empty.
             vendor_user = form_data.get('vendor_user')
-            vendor_username = form_data.get('vendor_username')
-            vendor_email = form_data.get('vendor_email')
-            if not vendor_user and (not vendor_username or not vendor_email):
-                self.add_error('vendor_username', 'A user needs to be added to access the generated orders page.')
-            elif not vendor_user:
-                if not vendor_username:
-                    self.add_error('vendor_username', 'A user needs to be added to access the generated orders page.')
-                if not vendor_email:
-                    self.add_error('vendor_email', 'You need to set an e-mail for the user.')
+            if not vendor_user:
+                self.add_error('vendor_user', 'A sub-user needs to be selected to access the generated orders page.')
         else:
             # single
             daterange = form_data.get('daterange')
@@ -81,12 +73,3 @@ class OrderExportForm(forms.Form):
                 self.add_error('daterange', 'This field is required for single run exports.')
 
         return form_data
-
-    def clean_vendor_username(self):
-        vendor_username = self.cleaned_data.get('vendor_username')
-        if vendor_username:
-            found_user = User.objects.filter(username=vendor_username).count()
-            if found_user > 0:
-                self.add_error('vendor_username', 'Username already exists.')
-
-        return vendor_username

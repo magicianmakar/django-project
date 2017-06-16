@@ -21,8 +21,7 @@
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th>Username</th>
-                                            <th>Password</th>
+                                            <th>E-mail</th>
                                             <th>Exports</th>
                                             {% if not request.user.is_vendor %}
                                             <th></th>
@@ -32,8 +31,7 @@
                                     <tbody>
                                         {% for vendor_user in vendor_users %}
                                         <tr class="vendor-user-row">
-                                            <td>{{ vendor_user.user.username }}</td>
-                                            <td>{{ vendor_user.raw_password }}</td>
+                                            <td>{{ vendor_user.user.email }}</td>
                                             <td>
                                                 {% for export in vendor_user.exports.all %}
                                                     <span class="label label-success">{{ export.description }}</span>
@@ -107,7 +105,7 @@
                                                     </td>
                                                     <td>{{ export.store.title }}</td>
                                                     <td>
-                                                {% if not request.user.is_vendor %}
+                                                {% if request.user == export.store.user %}
                                                         <a href="{% url 'order_exports_edit' export.id %}" data-toggle="tooltip" data-placement="top" title="Edit" style="padding: 8px;">
                                                             <i class="fa fa-pencil"></i>
                                                         </a>
@@ -119,7 +117,7 @@
                                                         </a>
                                                     {% if export.previous_day %}
                                                         {% if export.sample_url %}
-                                                        <a href="{{ export.sample_url }}" data-toggle="tooltip" data-placement="top" title="Download sample file" style="margin-left: 5px; padding: 8px;">
+                                                        <a href="{{ export.sample_url }}" data-toggle="tooltip" data-placement="top" title="Download sample file (limits to 20 orders)" style="margin-left: 5px; padding: 8px;">
                                                             <i class="fa fa-download"></i>
                                                         </a>
                                                         {% endif %}

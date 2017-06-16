@@ -3,7 +3,6 @@ import simplejson as json
 from datetime import datetime
 
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -25,7 +24,7 @@ def index(request):
         order_exports = OrderExport.objects.filter(vendor_user__user=request.user.pk)
         vendor_users = OrderExportVendor.objects.filter(user=request.user.pk)
     else:
-        if not request.user.can('orders.view'):
+        if not request.user.can('orders.use'):
             raise PermissionDenied()
 
         order_exports = OrderExport.objects.filter(store__user=request.user.pk)
@@ -41,7 +40,7 @@ def index(request):
 
 @login_required
 def add(request):
-    if request.user.is_vendor:
+    if not request.user.can('orders.use'):
         raise PermissionDenied()
     else:
         if not request.user.can('orders.view'):
@@ -93,64 +92,48 @@ def add(request):
             if created_at_max:
                 created_at_max = datetime.strptime(created_at_max, '%m/%d/%Y')
 
-            filters = OrderExportFilter.objects.create(
-                vendor=request.POST.get('vendor'),
-                status=request.POST.get('status'),
-                fulfillment_status=request.POST.get('fulfillment_status'),
-                financial_status=request.POST.get('financial_status'),
-                created_at_min=created_at_min or None,
-                created_at_max=created_at_max or None,
-                product_price_min=request.POST.get('product_price_min') or None,
-                product_price_max=request.POST.get('product_price_max') or None,
-                product_title=','.join(product_titles) or None
-            )
+            vendor_user_id = create_vendor_user(request)
+            if vendor_user_id is not None:
+                filters = OrderExportFilter.objects.create(
+                    vendor=request.POST.get('vendor'),
+                    status=request.POST.get('status'),
+                    fulfillment_status=request.POST.get('fulfillment_status'),
+                    financial_status=request.POST.get('financial_status'),
+                    created_at_min=created_at_min or None,
+                    created_at_max=created_at_max or None,
+                    product_price_min=request.POST.get('product_price_min') or None,
+                    product_price_max=request.POST.get('product_price_max') or None,
+                    product_title=','.join(product_titles) or None
+                )
 
-            if request.POST.get('vendor_username'):
-                email = request.POST.get('vendor_email')
-                username = request.POST.get('vendor_username')
+                order_export = OrderExport.objects.create(
+                    store_id=request.POST.get('store'),
+                    schedule=request.POST.get('schedule') or None,
+                    receiver=request.POST.get('receiver'),
+                    description=request.POST.get('description'),
+                    previous_day=request.POST.get('previous_day', False) == 'on',
+                    fields=json.dumps(fields),
+                    shipping_address=json.dumps(shipping_address),
+                    line_fields=json.dumps(line_fields),
+                    filters=filters,
+                    vendor_user_id=vendor_user_id,
+                    starting_at=form.cleaned_data['starting_at']
+                )
 
-                assert not User.objects.filter(Q(email__iexact=email) | Q(username__iexact=username)).exists()
+                order_export.save()
 
-                user = User.objects.create(email=email, username=username)
+                for found_product in json.loads(found_products):
+                    OrderExportFoundProduct.objects.create(order_export=order_export,
+                                                           image_url=found_product.get('image_url'),
+                                                           title=found_product.get('title'),
+                                                           product_id=found_product.get('product_id'))
 
-                vendor_user = OrderExportVendor(user=user, owner=request.user)
-                vendor_user.generate_password()
-                vendor_user.save()
+                order_export.send_done_signal()
 
-                user.set_password(vendor_user.raw_password)
-                user.save()
+                messages.success(request, 'Created order exports successfuly')
+                return redirect(reverse('order_exports_index'))
 
-                vendor_user_id = vendor_user.pk
-            else:
-                vendor_user_id = request.POST.get('vendor_user')
-
-            order_export = OrderExport.objects.create(
-                store_id=request.POST.get('store'),
-                schedule=request.POST.get('schedule') or None,
-                receiver=request.POST.get('receiver'),
-                description=request.POST.get('description'),
-                previous_day=request.POST.get('previous_day', False) == 'on',
-                fields=json.dumps(fields),
-                shipping_address=json.dumps(shipping_address),
-                line_fields=json.dumps(line_fields),
-                filters=filters,
-                vendor_user_id=vendor_user_id
-            )
-
-            order_export.save()
-
-            for found_product in json.loads(found_products):
-                OrderExportFoundProduct.objects.create(order_export=order_export,
-                                                       image_url=found_product.get('image_url'),
-                                                       title=found_product.get('title'),
-                                                       product_id=found_product.get('product_id'))
-
-            order_export.send_done_signal()
-
-            messages.success(request, 'Created order exports successfuly')
-            return redirect(reverse('order_exports_index'))
-
-    vendor_users = OrderExportVendor.objects.filter(owner_id=request.user.pk)
+    vendor_users = User.objects.filter(profile__subuser_parent=request.user)
 
     return render(request, 'order_exports/add.html', {
         'form': form,
@@ -176,11 +159,8 @@ def add(request):
 
 @login_required
 def edit(request, order_export_id):
-    if request.user.is_vendor:
+    if not request.user.can('orders.use'):
         raise PermissionDenied()
-    else:
-        if not request.user.can('orders.view'):
-            raise PermissionDenied()
 
     order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                      store__user_id=request.user.id)
@@ -206,6 +186,7 @@ def edit(request, order_export_id):
         "vendor_user": order_export.vendor_user and order_export.vendor_user.pk or None,
         "product_price_min": order_export.filters.product_price_min,
         "product_price_max": order_export.filters.product_price_max,
+        "starting_at": order_export.starting_at,
     })
 
     fields = order_export.fields_data
@@ -243,70 +224,54 @@ def edit(request, order_export_id):
         )
 
         if form.is_valid():
-            if request.POST.get('vendor_username'):
-                email = request.POST.get('vendor_email')
-                username = request.POST.get('vendor_username')
+            vendor_user_id = create_vendor_user(request)
+            if vendor_user_id is not None:
+                order_export.store_id = request.POST.get('store')
+                order_export.schedule = request.POST.get('schedule') or None
+                order_export.receiver = request.POST.get('receiver')
+                order_export.description = request.POST.get('description')
+                order_export.previous_day = request.POST.get('previous_day', False) == 'on'
+                order_export.vendor_user_id = vendor_user_id
+                order_export.starting_at = form.cleaned_data['starting_at']
 
-                assert not User.objects.filter(Q(email__iexact=email) | Q(username__iexact=username)).exists()
+                order_export.fields = json.dumps(fields)
+                order_export.shipping_address = json.dumps(shipping_address)
+                order_export.line_fields = json.dumps(line_fields)
 
-                user = User.objects.create(email=email, username=username)
+                daterange = request.POST.get('daterange') or ' - '
+                created_at_min, created_at_max = daterange.split(' - ')
+                if created_at_min:
+                    created_at_min = datetime.strptime(created_at_min, '%m/%d/%Y')
+                if created_at_max:
+                    created_at_max = datetime.strptime(created_at_max, '%m/%d/%Y')
 
-                vendor_user = OrderExportVendor(user=user, owner=request.user)
-                vendor_user.generate_password()
-                vendor_user.save()
+                filters = order_export.filters
+                filters.vendor = request.POST.get('vendor')
+                filters.status = request.POST.get('status')
+                filters.fulfillment_status = request.POST.get('fulfillment_status')
+                filters.financial_status = request.POST.get('financial_status')
+                filters.created_at_min = created_at_min or None
+                filters.created_at_max = created_at_max or None
+                filters.product_price_min = request.POST.get('product_price_min') or None
+                filters.product_price_max = request.POST.get('product_price_max') or None
+                filters.product_title = ','.join(product_titles) or None
 
-                user.set_password(vendor_user.raw_password)
-                user.save()
+                filters.save()
+                order_export.save()
 
-                vendor_user_id = vendor_user.pk
-            else:
-                vendor_user_id = request.POST.get('vendor_user')
+                order_export.found_products.all().delete()
+                for found_product in json.loads(found_products):
+                    OrderExportFoundProduct.objects.create(order_export=order_export,
+                                                           image_url=found_product.get('image_url'),
+                                                           title=found_product.get('title'),
+                                                           product_id=found_product.get('product_id'))
 
-            order_export.store_id = request.POST.get('store')
-            order_export.schedule = request.POST.get('schedule') or None
-            order_export.receiver = request.POST.get('receiver')
-            order_export.description = request.POST.get('description')
-            order_export.previous_day = request.POST.get('previous_day', False) == 'on'
-            order_export.vendor_user_id = vendor_user_id
+                order_export.send_done_signal()
 
-            order_export.fields = json.dumps(fields)
-            order_export.shipping_address = json.dumps(shipping_address)
-            order_export.line_fields = json.dumps(line_fields)
+                messages.success(request, 'Edited order exports successfuly')
+                return redirect(reverse('order_exports_index'))
 
-            daterange = request.POST.get('daterange') or ' - '
-            created_at_min, created_at_max = daterange.split(' - ')
-            if created_at_min:
-                created_at_min = datetime.strptime(created_at_min, '%m/%d/%Y')
-            if created_at_max:
-                created_at_max = datetime.strptime(created_at_max, '%m/%d/%Y')
-
-            filters = order_export.filters
-            filters.vendor = request.POST.get('vendor')
-            filters.status = request.POST.get('status')
-            filters.fulfillment_status = request.POST.get('fulfillment_status')
-            filters.financial_status = request.POST.get('financial_status')
-            filters.created_at_min = created_at_min or None
-            filters.created_at_max = created_at_max or None
-            filters.product_price_min = request.POST.get('product_price_min') or None
-            filters.product_price_max = request.POST.get('product_price_max') or None
-            filters.product_title = ','.join(product_titles) or None
-
-            filters.save()
-            order_export.save()
-
-            order_export.found_products.all().delete()
-            for found_product in json.loads(found_products):
-                OrderExportFoundProduct.objects.create(order_export=order_export,
-                                                       image_url=found_product.get('image_url'),
-                                                       title=found_product.get('title'),
-                                                       product_id=found_product.get('product_id'))
-
-            order_export.send_done_signal()
-
-            messages.success(request, 'Edited order exports successfuly')
-            return redirect(reverse('order_exports_index'))
-
-    vendor_users = OrderExportVendor.objects.filter(owner=request.user.pk)
+    vendor_users = User.objects.filter(profile__subuser_parent=request.user)
 
     return render(request, 'order_exports/edit.html', {
         'order_export': order_export,
@@ -342,6 +307,9 @@ def delete(request, order_export_id):
 
 @login_required
 def logs(request, order_export_id):
+    if not request.user.can('orders.use'):
+        raise PermissionDenied()
+
     order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                      store__user_id=request.user.id)
     if len(order_export.description) > MAX_BREADCRUMB_TITLE:
@@ -368,6 +336,9 @@ def generated(request, order_export_id, code):
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          vendor_user__user_id=request.user.id)
     else:
+        if not request.user.can('orders.use'):
+            raise PermissionDenied()
+
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          store__user_id=request.user.id)
 
@@ -418,6 +389,9 @@ def fulfill_order(request, order_export_id, code, order_id, line_item_id):
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          vendor_user__user_id=request.user.id)
     else:
+        if not request.user.can('orders.use'):
+            raise PermissionDenied()
+
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          store__user_id=request.user.id)
 
@@ -427,3 +401,38 @@ def fulfill_order(request, order_export_id, code, order_id, line_item_id):
     success = api.fulfill(order_id, tracking_number, line_item_id, fulfillment_id)
 
     return JsonResponse({'success': success})
+
+
+def vendor_autocomplete(request):
+    vendor = request.GET.get('query', '').strip()
+    if not vendor:
+        vendor = request.GET.get('term', '').strip()
+
+    if not vendor:
+        return JsonResponse({'query': vendor, 'suggestions': []}, safe=False)
+
+    vendors = OrderExportFilter.objects.filter(
+        vendor__icontains=vendor,
+        orderexport__store__user=request.user.pk
+    ).values_list('vendor', flat=True)
+    return JsonResponse({'query': vendor, 'suggestions': [{'value': i, 'data': i} for i in vendors]}, safe=False)
+
+
+def create_vendor_user(request):
+    vendor_user_id = request.POST.get('vendor_user')
+
+    if vendor_user_id:
+        user = User.objects.get(pk=vendor_user_id)
+        vendors = user.vendors.filter(owner=request.user)
+
+        if not vendors.exists():
+            vendor_user = OrderExportVendor()
+            vendor_user.user = user
+            vendor_user.owner = request.user
+
+            vendor_user.save()
+            vendor_user_id = vendor_user.id
+        else:
+            vendor_user_id = vendors.first().id
+
+    return vendor_user_id
