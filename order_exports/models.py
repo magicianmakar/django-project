@@ -24,10 +24,11 @@ ORDER_STATUS = (
 
 
 ORDER_FULFILLMENT_STATUS = (
-    ("any", "Orders with any fulfillment_status."),
-    ("shipped", "Orders that have been shipped"),
+    ("unshipped,partial", "Unfulfilled / Partially fulfilled"),
+    ("unshipped", "Orders that have not yet been fulfilled"),
     ("partial", "Partially shipped orders"),
-    ("unshipped", "Orders that have not yet been shipped"),
+    ("shipped", "Orders that have been fulfilled"),
+    ("any", "Orders with any fulfillment status."),
 )
 
 
@@ -147,6 +148,9 @@ class OrderExportFilter(models.Model):
     financial_status = models.CharField(max_length=50, default="", blank=True)
     created_at_min = models.DateTimeField(null=True, blank=True)
     created_at_max = models.DateTimeField(null=True, blank=True)
+    product_price_min = models.FloatField(null=True, blank=True)
+    product_price_max = models.FloatField(null=True, blank=True)
+    product_title = models.TextField(blank=True, null=True, default='')
 
     def __unicode__(self):
         return '<OrderExportFilter {}>'.format(self.vendor)
@@ -215,6 +219,18 @@ class OrderExport(models.Model):
 
         return emails
 
+    @cached_property
+    def json_found_products(self):
+        products = []
+        for found_product in self.found_products.all():
+            products.append({
+                'image_url': found_product.image_url,
+                'title': found_product.title,
+                'product_id': found_product.product_id,
+            })
+
+        return json.dumps(products)
+
     def send_done_signal(self):
         order_export_done.send(sender=self.__class__, order_export_pk=self.id)
 
@@ -244,8 +260,60 @@ class OrderExport(models.Model):
     def query(self):
         return self.queries.first()
 
+    def get_orders_id_from_product_search(self):
+        from shopify_orders.models import ShopifyOrder
+        orders = ShopifyOrder.objects.filter(store=self.store)
+        search_for_products = False
+
+        if self.filters.product_price_min is not None:
+            search_for_products = True
+            orders = orders.filter(shopifyorderline__price__gte=self.filters.product_price_min)
+
+        if self.filters.product_price_max is not None:
+            search_for_products = True
+            orders = orders.filter(shopifyorderline__price__lte=self.filters.product_price_max)
+
+        # Start query for title OR id
+        query = None
+
+        # Search for product titles
+        if self.filters.product_title is not None:
+            titles = self.filters.product_title.split(',')
+            if len(titles) > 0:
+                search_for_products = True
+                query = models.Q(shopifyorderline__title__contains=titles[0])
+
+                for title in titles[1:]:
+                    query = query | models.Q(shopifyorderline__title__contains=title)
+
+        # Search for shopify exact found products
+        if self.found_products.count() > 0:
+            search_for_products = True
+            found_product_ids = list(self.found_products.values_list('product_id', flat=True))
+            if query is None:
+                query = models.Q(shopifyorderline__shopify_product__in=found_product_ids)
+            else:
+                query = query | models.Q(shopifyorderline__shopify_product__in=found_product_ids)
+
+        # Apply query filter for title OR id
+        if query is not None:
+            orders = orders.filter(query)
+
+        if search_for_products:
+            order_ids = list(orders.distinct().values_list('order_id', flat=True))
+            return ','.join(str(x) for x in order_ids)
+        else:
+            return None
+
     def __unicode__(self):
         return '<OrderExport {}>'.format(self.store.title)
+
+
+class OrderExportFoundProduct(models.Model):
+    order_export = models.ForeignKey(OrderExport, related_name='found_products')
+    image_url = models.TextField()
+    title = models.TextField()
+    product_id = models.BigIntegerField()
 
 
 class OrderExportQuery(models.Model):
@@ -260,7 +328,7 @@ class OrderExportQuery(models.Model):
         return json.loads(self.params)
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ['-created_at']
 
 
 class OrderExportLog(models.Model):
@@ -297,5 +365,6 @@ def generate_reports(sender, order_export_pk, **kwargs):
 
         # Generate Sample Export
         api.generate_sample_export()
+        api.generate_query(send_email=False)
     else:
         generate_order_export.delay(order_export_pk)

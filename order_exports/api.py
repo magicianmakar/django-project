@@ -101,6 +101,10 @@ class ShopifyOrderExportAPI():
             params['created_at_min'] = self.order_export.filters.created_at_min.strftime("%Y-%m-%dT%H:%M:%S%z")
             params['created_at_max'] = self.order_export.filters.created_at_max.strftime("%Y-%m-%dT%H:%M:%S%z")
 
+        ids = self.order_export.get_orders_id_from_product_search()
+        if ids is not None:
+            params['ids'] = ids
+
         return params
 
     def _get_orders_count(self, params):
@@ -146,17 +150,20 @@ class ShopifyOrderExportAPI():
 
         return self._post_fulfillment(fulfillment_params, order_id, fulfillment_id)
 
-    def generate_query(self):
-        params = self._create_url_params()
-        self.query = self.order_export.queries.create(
-            params=json.dumps(params),
-            code=self._get_unique_code,
-            count=self._get_orders_count(params)
-        )
+    def generate_query(self, send_email=True):
+        if self.order_export.previous_day:
+            params = self._create_url_params()
+            self.query = self.order_export.queries.create(
+                params=json.dumps(params),
+                code=self._get_unique_code,
+                count=self._get_orders_count(params)
+            )
 
-        orders = self._get_orders(params=self.query.params_dict, page=1, limit=1)
-        if len(orders) > 0 and self.order_export.previous_day:
-            self.send_email(code=self._get_unique_code)
+            if send_email:
+                # Only check for orders if an e-mail should be sent
+                orders = self._get_orders(params=self.query.params_dict, page=1, limit=1)
+                if len(orders) > 0:
+                    self.send_email(code=self._get_unique_code)
 
     def generate_sample_export(self):
         log = self.order_export.logs.create()

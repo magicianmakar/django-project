@@ -43,3 +43,7 @@
 .table tbody .order-info .order-info-wrapper {
     padding: 8px;
 }
+
+.line-items tr th:nth-child(7) {
+    width: 250px;
+}

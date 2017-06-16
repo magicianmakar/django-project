@@ -43,6 +43,9 @@ def index(request):
 def add(request):
     if request.user.is_vendor:
         raise PermissionDenied()
+    else:
+        if not request.user.can('orders.view'):
+            raise PermissionDenied()
 
     breadcrumbs = [{'title': 'Order Exports', 'url': reverse('order_exports_index')}, 'Add']
     form = OrderExportForm()
@@ -53,8 +56,12 @@ def add(request):
     shipping_address_choices = DEFAULT_SHIPPING_ADDRESS_CHOICES
     line_fields = DEFAULT_LINE_FIELDS
     line_fields_choices = DEFAULT_LINE_FIELDS_CHOICES
+    product_titles = ['']
+    found_products = "[]"
 
     if request.method == 'POST':
+        product_titles = request.POST.getlist('product_title')
+        found_products = request.POST.get('found_products')
         form = OrderExportForm(request.POST)
 
         fields = json.loads(request.POST.get('fields', '[]'))
@@ -92,7 +99,10 @@ def add(request):
                 fulfillment_status=request.POST.get('fulfillment_status'),
                 financial_status=request.POST.get('financial_status'),
                 created_at_min=created_at_min or None,
-                created_at_max=created_at_max or None
+                created_at_max=created_at_max or None,
+                product_price_min=request.POST.get('product_price_min') or None,
+                product_price_max=request.POST.get('product_price_max') or None,
+                product_title=','.join(product_titles) or None
             )
 
             if request.POST.get('vendor_username'):
@@ -128,6 +138,13 @@ def add(request):
             )
 
             order_export.save()
+
+            for found_product in json.loads(found_products):
+                OrderExportFoundProduct.objects.create(order_export=order_export,
+                                                       image_url=found_product.get('image_url'),
+                                                       title=found_product.get('title'),
+                                                       product_id=found_product.get('product_id'))
+
             order_export.send_done_signal()
 
             messages.success(request, 'Created order exports successfuly')
@@ -151,14 +168,27 @@ def add(request):
         'selected_line_fields': line_fields,
         'line_fields_choices': line_fields_choices,
         'breadcrumbs': breadcrumbs,
-        'vendor_users': vendor_users
+        'vendor_users': vendor_users,
+        'product_titles': product_titles,
+        'found_products': found_products,
     })
 
 
 @login_required
 def edit(request, order_export_id):
+    if request.user.is_vendor:
+        raise PermissionDenied()
+    else:
+        if not request.user.can('orders.view'):
+            raise PermissionDenied()
+
     order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                      store__user_id=request.user.id)
+
+    if order_export.filters.product_title is not None:
+        product_titles = order_export.filters.product_title.split(',')
+    else:
+        product_titles = ['']
 
     if len(order_export.description) > MAX_BREADCRUMB_TITLE:
         title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
@@ -173,7 +203,9 @@ def edit(request, order_export_id):
     form = OrderExportForm(initial={
         "previous_day": order_export.previous_day,
         "copy_me": order_export.copy_me,
-        "vendor_user": order_export.vendor_user and order_export.vendor_user.pk or None
+        "vendor_user": order_export.vendor_user and order_export.vendor_user.pk or None,
+        "product_price_min": order_export.filters.product_price_min,
+        "product_price_max": order_export.filters.product_price_max,
     })
 
     fields = order_export.fields_data
@@ -182,8 +214,11 @@ def edit(request, order_export_id):
     shipping_address_choices = order_export.shipping_address_choices
     line_fields = order_export.line_fields_data
     line_fields_choices = order_export.line_fields_choices
+    found_products = order_export.json_found_products
 
     if request.method == 'POST':
+        product_titles = request.POST.getlist('product_title')
+        found_products = request.POST.get('found_products')
         form = OrderExportForm(request.POST)
 
         fields = json.loads(request.POST.get('fields', '[]'))
@@ -252,9 +287,19 @@ def edit(request, order_export_id):
             filters.financial_status = request.POST.get('financial_status')
             filters.created_at_min = created_at_min or None
             filters.created_at_max = created_at_max or None
+            filters.product_price_min = request.POST.get('product_price_min') or None
+            filters.product_price_max = request.POST.get('product_price_max') or None
+            filters.product_title = ','.join(product_titles) or None
 
             filters.save()
             order_export.save()
+
+            order_export.found_products.all().delete()
+            for found_product in json.loads(found_products):
+                OrderExportFoundProduct.objects.create(order_export=order_export,
+                                                       image_url=found_product.get('image_url'),
+                                                       title=found_product.get('title'),
+                                                       product_id=found_product.get('product_id'))
 
             order_export.send_done_signal()
 
@@ -280,7 +325,9 @@ def edit(request, order_export_id):
         'selected_line_fields': line_fields,
         'line_fields_choices': line_fields_choices,
         'breadcrumbs': breadcrumbs,
-        'vendor_users': vendor_users
+        'vendor_users': vendor_users,
+        'product_titles': product_titles,
+        'found_products': found_products,
     })
 
 

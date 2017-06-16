@@ -2,14 +2,27 @@ window.OrderExportAdd = {
     fieldsSelect: $('.chosen-select'),
     selectableFields: $('.selectable'),
     fieldsList: $('.nestable'),
+    foundProducts: {
+        data: window.foundProducts,
+        list: $('#order-export-products .shopify-products'),
+        input: $('input[name="found_products"]'),
+        template: Handlebars.compile($("#product-found-template").html())
+    },
     init: function() {
         this.initializeFieldsSelect();
         this.initializeFieldsList();
+        this.renderFoundProducts();
 
         // events
         this.onClickEdit();
         this.onUnselectField();
         this.onToggleUsername();
+        this.onAddProductTitle();
+        this.onRemoveProductTitle();
+        this.onFindShopifyProductClick();
+        this.onShopifyProductSelected();
+        this.onFoundProductDeleteClick();
+
         var clockpickerInput = $('input[name="schedule"]');
         clockpickerInput.clockpicker({
             autoclose: true,
@@ -114,6 +127,22 @@ window.OrderExportAdd = {
             updateOutput($(this).data('output', $(this).next('[type="hidden"]')));
         });
     },
+    renderFoundProducts: function() {
+        var foundProductsLength = window.OrderExportAdd.foundProducts.data.length;
+
+        for (var i = 0; i < foundProductsLength; i++) {
+            var foundProduct = window.OrderExportAdd.foundProducts.data[i];
+
+            window.OrderExportAdd.addFoundProduct(foundProduct);
+        }
+
+        window.OrderExportAdd.updateFoundProducts();
+    },
+    addFoundProduct: function(foundProduct) {
+        productElement = $(window.OrderExportAdd.foundProducts.template({product: foundProduct}));
+
+        window.OrderExportAdd.foundProducts.list.append(productElement);
+    },
     updateFields: function(select) {
         var data = select.next().find('.search-choice').map(function(key, value) {
             var index = parseInt($(this).find('.search-choice-close').attr('data-option-array-index'));
@@ -176,6 +205,27 @@ window.OrderExportAdd = {
             }
         }
     },
+    deleteFoundProductById: function(productId) {
+        var foundProductsLength = window.OrderExportAdd.foundProducts.data.length;
+
+        for (var i = 0; i < foundProductsLength; i++) {
+            var foundProduct = window.OrderExportAdd.foundProducts.data[i];
+            if (foundProduct.product_id == productId) {
+                window.OrderExportAdd.foundProducts.data.splice(i, 1);
+                break;
+            }
+        }
+    },
+    updateFoundProducts: function(foundProduct) {
+        if (foundProduct) {
+            window.OrderExportAdd.foundProducts.data.push(foundProduct);
+            window.OrderExportAdd.addFoundProduct(foundProduct);
+        }
+
+        window.OrderExportAdd.foundProducts.input.val(
+            JSON.stringify(window.OrderExportAdd.foundProducts.data)
+        );
+    },
     onToggleUsername: function() {
         $('[name="vendor_user"]').on('change', function() {
             if ($(this).val() != '') {
@@ -195,7 +245,58 @@ window.OrderExportAdd = {
                 $('[name="vendor_user"]').val('');
             }
         });
+    },
+    onAddProductTitle: function() {
+        $('.add-product-title').on('click', function(e) {
+            e.preventDefault();
+
+            var productTitle = $('.product-title-clone').clone();
+            productTitle.removeClass('product-title-clone');
+            $('#product-title-contains').append(productTitle);
+
+            var input = productTitle.find('input[name="product_title_clone"]');
+            input.attr('name', input.attr('name').replace('_clone', ''));
+            input.trigger('focus');
+        });
+    },
+    onRemoveProductTitle: function() {
+        $('#product-title-contains').on('click', '.remove-product-title', function(e) {
+            e.preventDefault();
+
+            $(this).parents('.product-title').remove();
+        });
+    },
+    onFindShopifyProductClick: function() {
+        $('.find-shopify-product').on('click', function(e) {
+            e.preventDefault();
+
+            $('#modal-shopify-product .shopify-store').val($('select[name="store"]').val());
+            $('#modal-shopify-product').modal('show');
+        });
+    },
+    onShopifyProductSelected: function() {
+        window.shopifyProductSelected = function (store, shopify_id, product_data) {
+            var foundProduct = {
+                product_id: shopify_id,
+                title: product_data.title,
+                image_url: product_data.image
+            };
+
+            window.OrderExportAdd.updateFoundProducts(foundProduct);
+        }
+    },
+    onFoundProductDeleteClick: function() {
+        window.OrderExportAdd.foundProducts.list.on('click', '.delete-found-product', function() {
+            var productId = $(this).attr('data-product-id');
+
+            window.OrderExportAdd.deleteFoundProductById(parseInt(productId));
+            window.OrderExportAdd.updateFoundProducts();
+
+            $(this).parents('.product-item.row').remove();
+        });
     }
 };
 
-window.OrderExportAdd.init();
+$(function() {
+    window.OrderExportAdd.init();
+});

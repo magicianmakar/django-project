@@ -71,3 +71,89 @@ a.edit {
     margin: 0; 
     line-height: 18px;
 }
+
+#product_price_min {
+    position: relative;
+}
+
+#product_price_min::after {
+    content: "To";
+    position: absolute;
+    top: 8px;
+    right: -6px;
+}
+
+.product-title-clone {
+    display: none;
+}
+
+#order-export-products .product-item {
+    padding: 6px 4px 6px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+#order-export-products .product-item:hover {
+    background-color: #eff9fd;
+}
+
+#order-export-products .product-item .shopify-product:hover{
+    cursor: pointer;
+}
+
+#order-export-products .product-item .product-thumb {
+    width: 30px;
+    padding-bottom: 30px;
+    border: 1px solid #eee;
+}
+
+#order-export-products .product-item .product-thumb img {
+    bottom: 0;
+    display: block;
+    left: 0;
+    margin: auto;
+    max-height: 100%;
+    max-width: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.btn.delete-found-product {
+    margin-bottom: 0;
+    color: #ed5565;
+    -webkit-transition: color 0.4s;
+            transition: color 0.4s;
+}
+
+.btn.delete-found-product:hover {
+    color: #ad1525;
+}
+
+.marg {
+    text-align: center;
+    position: relative;
+    padding: 0;
+    margin: 0 60px;
+}
+
+.marg span.add-new-block {
+    line-height: 30px;
+    text-transform: uppercase;
+    padding: 0 40px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #c1c1c1;
+    background: #fff;
+    z-index: 10;
+    position: relative;
+}
+
+.marg .line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #e9e9e9;
+}

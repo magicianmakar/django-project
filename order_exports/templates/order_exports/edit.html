@@ -5,11 +5,19 @@
 {% load compress %}
 
 {% block extrajs %}
-    <script src="{% static 'libs/bower_components/nestable-fork/dist/jquery.nestable.min.js' %}"></script>
-    <script src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js' %}"></script>
-    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
-    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
-    <script src="{% static 'order_exports/js/fields.js' %}"></script>
+    <script type="text/javascript">
+        window.foundProducts = {{ found_products|safe }};
+    </script>
+
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'libs/bower_components/nestable-fork/dist/jquery.nestable.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'order_exports/js/fields.js' %}"></script>
+    {% endcompress %}
 {% endblock %}
 
 {% block extracss %}
@@ -227,18 +235,18 @@
             </fieldset>
 
             <fieldset>
-                <legend>Filters</legend>
+                <legend>Order Filters</legend>
 
                 <div class="form-group">
                     <label for="vendor" class="col-sm-2 control-label">Vendor</label>
-                    <div class="col-sm-10">
+                    <div class="col-sm-4">
                         <input type="text" name="vendor" class="form-control" placeholder="Enter vendor name" value="{{ order_export.vendor }}">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="status" class="col-sm-2 control-label">Status</label>
-                    <div class="col-sm-10">
+                    <div class="col-sm-4">
                         <select data-placeholder="Choose the order status" name="status" class="form-control m-b" autocomplete="off">
                             {% for status in order_status %}
                             <option value="{{ status.0 }}"{% if status.0 in order_export.filters.status %} selected="selected"{% endif %}>{{ status.1 }}</option>
@@ -249,7 +257,7 @@
 
                 <div class="form-group">
                     <label for="fulfillment_status" class="col-sm-2 control-label">Fulfillment Status</label>
-                    <div class="col-sm-10">
+                    <div class="col-sm-4">
                         <select data-placeholder="Choose the fulfillment status of the order" name="fulfillment_status" class="form-control m-b" autocomplete="off">
                             {% for status in order_fulfillment_status %}
                             <option value="{{ status.0 }}"{% if status.0 in order_export.filters.fulfillment_status %} selected="selected"{% endif %}>{{ status.1 }}</option>
@@ -260,12 +268,108 @@
 
                 <div class="form-group">
                     <label for="financial_status" class="col-sm-2 control-label">Financial Status</label>
-                    <div class="col-sm-10">
+                    <div class="col-sm-4">
                         <select data-placeholder="Choose the financial status of the order" name="financial_status" class="form-control m-b" autocomplete="off">
                             {% for status in order_financial_status %}
                             <option value="{{ status.0 }}"{% if status.0 in order_export.filters.financial_status %} selected="selected"{% endif %}>{{ status.1 }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Product Filters</legend>
+
+                <div class="form-group{% if form.product_price_min.errors or form.product_price_max.errors %} has-error{% endif %}">
+                    <label for="product_price_min" class="col-sm-2 control-label">Product Price Range</label>
+                    <div class="col-sm-2" id="product_price_min">
+                        <input type="number" name="product_price_min" class="form-control" placeholder="Min" autocomplete="off" value="{{ form.product_price_min.value|default:"" }}" step="0.01" min="0">
+                        {% for error in form.product_price_min.errors %}
+                        <p class="help-block">
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    <div class="col-sm-2">
+                        <input type="number" name="product_price_max" class="form-control" placeholder="Max" autocomplete="off" value="{{ form.product_price_max.value|default:"" }}" step="0.01" min="0">
+                        {% for error in form.product_price_max.errors %}
+                        <p class="help-block">
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-sm-12">
+                    <div class="marg col-sm-6">
+                        <span class="add-new-block" href="#">And</span>
+                        <div class="line"></div>
+                    </div>
+                </div>
+
+                <div class="col-sm-offset-2 col-sm-10">
+                    <p class="help-block">
+                        Enter a title that can match several products or 
+                        <a href="#" class="find-shopify-product">search for a specific one.</a>
+                    </p>
+                </div>
+
+                <div id="product-title-contains">
+                    <div class="form-group product-title product-title-clone">
+                        <label for="product_title" class="col-sm-2 control-label">Or Contains</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="product_title_clone" class="form-control" placeholder="Enter another possible title" autocomplete="off">
+                        </div>
+                        <div class="col-sm-1">
+                            <a class="btn btn-danger remove-product-title" href="#">
+                                <i class="fa fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% for product_title in product_titles %}
+                    {% if forloop.first %}
+                    <div class="form-group">
+                        <label for="product_title" class="col-sm-2 control-label">Product Title Contains</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="product_title" class="form-control" placeholder="Enter product title" autocomplete="off" value="{{ product_title }}">
+                        </div>
+                        <div class="col-sm-1">
+                            <a class="btn btn-primary add-product-title" href="#">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="form-group product-title">
+                        <label for="product_title" class="col-sm-2 control-label">Or Contains</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="product_title" class="form-control" placeholder="Enter another possible title" autocomplete="off" value="{{ product_title }}">
+                        </div>
+                        <div class="col-sm-1">
+                            <a class="btn btn-danger remove-product-title" href="#">
+                                <i class="fa fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                </div>
+
+                <div class="col-sm-12">
+                    <div class="marg col-sm-6">
+                        <span class="add-new-block" href="#">Or</span>
+                        <div class="line"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="product_title" class="col-sm-2 control-label" style="padding-top: 12px;">
+                        <a href="#" class="find-shopify-product">Find Exact Products</a>
+                    </label>
+                    <input type="hidden" name="found_products">
+                    <div id="order-export-products" class="col-sm-6">
+                        <div class="container-fluid shopify-products"></div>
                     </div>
                 </div>
             </fieldset>
@@ -294,7 +398,7 @@
                 {% if vendor_users.count > 0 %}
                 <div class="form-group">
                     <label for="vendor_user" class="col-sm-2 control-label">Select User</label>
-                    <div class="col-sm-10">
+                    <div class="col-sm-4">
                         <select class="form-control" name="vendor_user" autocomplete="off">
                             <option></option>
                             {% for vendor_user in vendor_users %}
@@ -309,9 +413,9 @@
                 <div id="add-vendor-login">
                     <div class="form-group{% if form.vendor_email.errors %} has-error{% endif %}">
                         <label for="vendor_email" class="col-sm-2 control-label">E-mail</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-4">
                             <input type="text" name="vendor_email" class="form-control" placeholder="Enter vendor e-mail" autocomplete="off"   value="{{ form.vendor_email.value|default:"" }}">
-                            <p class="help-block">Filling the e-mail will create a new vendor user for this export.</p>
+                            <p class="help-block">Filling the e-mail and the username will create a new vendor user for this export.</p>
                             
                             {% for error in form.vendor_email.errors %}
                             <p class="help-block">
@@ -322,7 +426,7 @@
                     </div>
                     <div class="form-group{% if form.vendor_username.errors %} has-error{% endif %}">
                         <label for="vendor_username" class="col-sm-2 control-label">Username</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-4">
                             <input type="text" name="vendor_username" class="form-control" placeholder="Enter vendor username" autocomplete="off"   value="{{ form.vendor_username.value|default:"" }}">
                             
                             {% for error in form.vendor_username.errors %}
@@ -343,4 +447,28 @@
         </div>
     </div>
 </form>
+
+{% include "partial/shopify_product_selector.html" %}
+
+{% verbatim %}
+
+<script id="product-found-template" type="text/x-handlebars-template">
+    <div class="product-item row">
+        <div class="col-md-1">
+            <a class="btn delete-found-product" data-product-id="{{product.product_id}}">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
+        <div class="product-thumb col-md-1">
+            <a class="shopify-product" href="#">
+                <img src="{{product.image_url}}">
+            </a>
+        </div>
+        <div class="col-md-10">
+            <span class="shopify-product">{{product.title}}</span>
+        </div>
+    </div>
+</script>
+
+{% endverbatim %}
 {% endblock %}

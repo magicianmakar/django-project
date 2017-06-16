@@ -27,6 +27,9 @@ class OrderExportForm(forms.Form):
     vendor_username = forms.CharField(required=False)
     vendor_email = forms.EmailField(required=False)
 
+    product_price_min = forms.FloatField(required=False)
+    product_price_max = forms.FloatField(required=False)
+
     def validate_email_list(self, value):
         SEPARATOR_RE = re.compile(r'[,;]+')
         emails = SEPARATOR_RE.split(value)
