@@ -133,7 +133,12 @@ def export_product(req_data, target, user_id):
                 r = requests.put(update_endpoint, json=api_data)
             else:
                 endpoint = store.get_link('/admin/products.json', api=True)
-                r = requests.post(endpoint, json=json.loads(data))
+                api_data = json.loads(data)
+
+                if api_data['product'].get('variants') and len(api_data['product']['variants']) > 100:
+                    api_data['product']['variants'] = api_data['product']['variants'][:100]
+
+                r = requests.post(endpoint, json=api_data)
 
                 if 'product' in r.json():
                     product_to_map = r.json()['product']
