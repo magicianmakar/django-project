@@ -353,7 +353,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-xs-2">
-                                        {% if order.lines_count > 1 %}
+                                        {% if order.lines_count > 1 and not order.have_bundle %}
                                             <div class="btn-group pull-right" style="display:flex">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc">
@@ -451,7 +451,8 @@
                                     {% for item in order.line_items %}
                                     {% with image=item.image original=item.product.get_original_info excluded_product=item.product.is_excluded %}
 
-                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %} {% if excluded_product %}excluded{% endif %}" line-id="{{item.id}}"
+                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %} {% if excluded_product %}excluded{% endif %}"
+                                         line-id="{{item.id}}" order-id="{{order.id}}" order-data-id="{{ item.order_data_id }}" order-number="{{order.name}}" line-title="{{item.title}}"
                                          line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}"
                                          fulfillment-status="{{item.fulfillment_status}}" {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
@@ -746,12 +747,6 @@
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",
     };
-
-    $('.order-bundle-btn').on('ext.click', function (e) {
-    })
-
-    window.addEventListener("message", function(event) {
-    });
 </script>
 
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>

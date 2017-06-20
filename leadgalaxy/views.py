@@ -2647,6 +2647,7 @@ def orders_view(request):
 
                     order['line_items'][i]['bundles'] = product_bundles
                     order['line_items'][i]['is_bundle'] = len(bundle_data) > 0
+                    order['have_bundle'] = True
 
                 order['connected_lines'] += 1
 

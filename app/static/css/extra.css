@@ -361,7 +361,8 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     width: 100%;
 }
 
-.order-queue-manager .pending-order .desc {
+.order-queue-manager .pending-order .desc,
+.order-queue-manager .pending-order .desc li {
     font-weight: bold;
     margin: 0 5px;
     overflow: hidden;
