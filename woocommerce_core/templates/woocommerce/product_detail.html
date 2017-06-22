@@ -257,13 +257,11 @@
                                 {% else %}
                                     <li><a id="view-btn" type="button" style="display:none">View in WooCommerce</a></li>
                                 {% endif %}
-                                {% comment %}
                                 {% if product.is_connected %}
-                                <li><a href="{% url 'chq:product_mapping' product.id %}" target="_blank">
+                                <li><a href="{% url 'woo:product_mapping' product.id %}" target="_blank">
                                     <i class="fa fa-chain"></i> Variants Mapping</a>
                                 </li>
                                 {% endif %}
-                                {% endcomment %}
                                 <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
 
                                 <li><a id="btn-split-variants" product-id="{{product.id}}" shopify-id="{{product.get_shopify_id}}"

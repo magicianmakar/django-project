@@ -312,15 +312,22 @@ class ProductSaveTestCase(TestCase):
 
         self.headers = {
             'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
-            'content_type': 'application/json'}
+            'content_type': 'application/json',
+        }
 
         self.product_data = {
-            'title': 'Test Product'}
+            'title': 'Test Product',
+            'store': {
+                'name': 'Test Store',
+                'url': 'http://teststore.com',
+            },
+        }
 
         self.data = {
             'store': self.store.id,
             'original_url': 'http://test.com',
-            'data': json.dumps(self.product_data)}
+            'data': json.dumps(self.product_data),
+        }
 
     def login(self):
         self.client.login(username=self.user.username, password=self.password)

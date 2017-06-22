@@ -116,6 +116,8 @@ class WooProduct(models.Model):
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='WooCommerce Product ID')
     default_supplier = models.ForeignKey('WooSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
+    variants_map = models.TextField(default='', blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -235,6 +237,60 @@ class WooProduct(models.Model):
 
         supplier.is_default = True
         supplier.save()
+
+    def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
+        mapping = {}
+
+        try:
+            if supplier and supplier.variants_map:
+                mapping = json.loads(supplier.variants_map)
+            elif self.variants_map:
+                mapping = json.loads(self.variants_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        if for_extension and type(mapping) in [str, unicode]:
+            mapping = mapping.split(',')
+
+        return mapping
+
+    def set_variant_mapping(self, mapping, supplier=None, update=False):
+        if supplier is None:
+            supplier = self.default_supplier
+
+        if update:
+            try:
+                current = json.loads(supplier.variants_map)
+            except:
+                current = {}
+
+            for k, v in mapping.items():
+                current[k] = v
+
+            mapping = current
+
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        if supplier:
+            supplier.variants_map = mapping
+            supplier.save()
+        else:
+            self.variants_map = mapping
+            self.save()
 
 
 class WooSupplier(models.Model):

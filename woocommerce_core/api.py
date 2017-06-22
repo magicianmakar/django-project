@@ -436,3 +436,13 @@ class WooStoreApi(ApiResponseMixin, View):
 
         except ProductExportException as e:
             return self.api_error(e.message)
+
+    def post_variants_mapping(self, request, user, data):
+        product = WooProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+        supplier = product.get_suppliers().get(id=data.get('supplier'))
+        mapping = {key: value for key, value in data.items() if key not in ['product', 'supplier']}
+        product.set_variant_mapping(mapping, supplier=supplier)
+        product.save()
+
+        return self.api_success()

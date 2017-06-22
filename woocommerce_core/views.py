@@ -1,3 +1,5 @@
+import json
+
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.utils.decorators import method_decorator
@@ -106,5 +108,58 @@ class ProductDetailView(DetailView):
         ]
 
         context.update(aws_s3_context())
+
+        return context
+
+
+class ProductMappingView(DetailView):
+    model = WooProduct
+    template_name = 'woocommerce/product_mapping.html'
+    context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        return super(ProductMappingView, self).dispatch(request, *args, **kwargs)
+
+    def get_product_suppliers(self, product):
+        suppliers = {}
+        for supplier in product.get_suppliers():
+            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
+            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+
+        return suppliers
+
+    def get_current_supplier(self, product):
+        pk = self.request.GET.get('supplier') or getattr(product.default_supplier, 'pk', None)
+        supplier = product.get_suppliers().get(pk=pk)
+
+        return supplier
+
+    def get_variants_map(self, woocommerce_product, product, supplier):
+        variants_map = product.get_variant_mapping(supplier=supplier)
+        variants_map = {key: json.loads(value) for key, value in variants_map.items()}
+        for variant in woocommerce_product.get('variants', []):
+            options = []
+            for option in variant.get('attributes', []):
+                options.append({'title': option['option']})
+                variant.setdefault('variant', []).append(option['option'])
+            variants_map.setdefault(str(variant['id']), options)
+
+        return variants_map
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductMappingView, self).get_context_data(**kwargs)
+        product = self.object
+        woocommerce_product = product.sync()
+        context['woocommerce_product'] = woocommerce_product
+        context['product'] = product
+        context['store'] = product.store
+        context['product_id'] = product.id
+        context['product_suppliers'] = self.get_product_suppliers(product)
+        context['current_supplier'] = current_supplier = self.get_current_supplier(product)
+        context['variants_map'] = self.get_variants_map(woocommerce_product, product, current_supplier)
 
         return context

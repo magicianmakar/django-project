@@ -10,7 +10,7 @@ from app.celery import celery_app, CaptureFailure
 from shopified_core import utils
 from shopified_core import permissions
 
-from .models import WooStore, WooProduct
+from .models import WooStore, WooProduct, WooSupplier
 from .utils import (
     format_woo_errors,
     get_image_id_by_hash,
@@ -112,10 +112,21 @@ def product_save(req_data, user_id):
         try:
             product = WooProduct(store=store, user=user.models_user)
             product.update_data(data)
-
             permissions.user_can_add(user, product)
-
             product.save()
+
+            store_info = json.loads(data).get('store')
+
+            supplier = WooSupplier.objects.create(
+                store=store,
+                product=product,
+                product_url=original_url,
+                supplier_name=store_info.get('name'),
+                supplier_url=store_info.get('url'),
+                is_default=True
+            )
+
+            product.set_default_supplier(supplier, commit=True)
 
         except PermissionDenied as e:
             raven_client.captureException()
