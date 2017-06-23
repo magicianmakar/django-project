@@ -1,9 +1,19 @@
 {% load template_helper %}
 
 {% if item.supplier %}
-    <div class="btn-group dropup" {% if item.shipping_method %}style="display:flex"{% endif %}>
+    <div class="btn-group dropup order-line-group"
+        order-id="{{order.id}}"
+        line-id="{{item.id}}"
+        order-data-id="{{ item.order_data_id }}"
+        order-number="{{order.id}}"
+        line-title="{{item.title}}"
+
+        {% if item.shipping_method %}
+            style="display:flex"
+        {% endif %}
+    >
     {% if item.shipping_method %}
-        <a type="button" class="btn btn-success btn-xs itooltip" data-container="body" data-html="true"
+        <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
              href="{% url 'chq:orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}"
             target="_blank"
@@ -35,13 +45,13 @@
 
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
-            <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
+            <li><a class="place-order-btn queue-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                     href="{% url 'chq:orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true"
                    >Step By Step Order</a></li>
-               <li><a class="place-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
+               <li><a class="place-order-btn queue-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
                     href="{% url 'chq:orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}&SAStep=true&SACart=true{% if item.shipping_method %}&SACompany={{item.shipping_method.method}}&SACountry={{item.shipping_method.country}}{% endif %}"
                    >Add To Cart</a></li>
-            <li><a class="place-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
+            <li><a class="place-order-btn queue-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
                     href="{% url 'chq:orders_place' %}?product={{item.supplier.short_product_url|urlencode}}&SAPlaceOrder={{ item.order_data_id|urlencode }}"
                    >Auto Place Order</a></li>
             <li><a class="place-order-btn auto-shipping-btn" target="_blank"

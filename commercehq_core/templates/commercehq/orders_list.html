@@ -413,9 +413,15 @@
                                     {% for item in order.items %}
                                     {% with original=item.product.get_original_info %}
 
-                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}" line-id="{{item.id}}"
-                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.order_track.id|default:''}}"
-                                         fulfillment-status="{{item.fulfillment_status}}">
+                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}"
+                                        line-id="{{item.id}}"
+                                        order-id="{{order.id}}"
+                                        order-data-id="{{ item.order_data_id }}"
+                                        order-number="{{order.id}}"
+                                        line-title="{{item.title}}"
+                                        line-data="{{item.order_data_id|default:''}}"
+                                        line-track="{{item.order_track.id|default:''}}"
+                                        fulfillment-status="{{item.fulfillment_status}}">
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">

@@ -1,9 +1,16 @@
 {% load template_helper %}
 
 {% if original %}
-    <div class="btn-group dropup order-line-group" {% if item.shipping_method %}style="display:flex"{% endif %}
-         order-id="{{order.id}}" line-id="{{item.id}}" order-data-id="{{ item.order_data_id }}"
-         order-number="{{order.name}}" line-title="{{item.title}}"
+    <div class="btn-group dropup order-line-group"
+        order-id="{{order.id}}"
+        line-id="{{item.id}}"
+        order-data-id="{{ item.order_data_id }}"
+        order-number="{{order.name}}"
+        line-title="{{item.title}}"
+
+        {% if item.shipping_method %}
+            style="display:flex"
+        {% endif %}
     >
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"

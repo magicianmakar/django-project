@@ -572,10 +572,63 @@ $('.hide-non-connected-btn').click(function () {
     }
 });
 
+function addOrderToQueue(order) {
+    window.extensionSendMessage({
+        subject: 'getVersion',
+        from: 'website',
+    }, function(rep) {
+        if (rep && rep.version) {
+            if (versionCompare('1.71.0', rep.version) <= 0) {
+                // New Version that support Ordes Queue
+                window.extensionSendMessage({
+                    subject: 'AddOrderToQueue',
+                    from: 'website',
+                    order: order
+                }, function(rep) {
+                    if (rep && rep.error == 'alread_in_queue') {
+                        toastr.error('Product is already in Orders Queue');
+                    }
+                });
+            } else {
+                window.extensionSendMessage({
+                    subject: 'InitOrderAll',
+                    url: order.url
+                }, function(rep) {});
+
+                setTimeout(function () {
+                    window.extensionSendMessage({
+                        subject: 'OpenWindowUrl',
+                        url: order.url
+                    }, function(rep) {});
+                }, 100);
+            }
+        } else {
+            swal('Please Reload the page and make sure you are using the latest version of the extension');
+        }
+    });
+}
+$('.queue-order-btn').click(function(e) {
+    e.preventDefault();
+    var btn = $(e.target);
+    var group = btn.parents('.order-line-group');
+
+    addOrderToQueue({
+        url: btn.prop('href'),
+        order_data: group.attr('order-data-id'),
+        order_name: group.attr('order-number'),
+        order_id: group.attr('order-id'),
+        line_id: group.attr('line-id'),
+        line_title: group.attr('line-title'),
+    });
+});
+
 $('.auto-shipping-btn').click(function (e) {
     e.preventDefault();
 
-    $('#shipping-modal').prop('data-href', $(this).attr('data-href'));
+    var btn = $(e.target);
+    var group = btn.parents('.order-line-group');
+
+    $('#shipping-modal').prop('data-href', $(this).prop('href'));
     $('#shipping-modal').prop('data-order', $(this).attr('data-order'));
 
     $('#shipping-modal .shipping-info').load('/shipping/info?' + $.param({
@@ -611,7 +664,15 @@ $('.auto-shipping-btn').click(function (e) {
                     SACountry: $(this).attr('country')   // country_code
                 });
 
-                window.open(url, '_blank');
+                addOrderToQueue({
+                    url: url,
+                    order_data: group.attr('order-data-id'),
+                    order_name: group.attr('order-number'),
+                    order_id: group.attr('order-id'),
+                    line_id: group.attr('line-id'),
+                    line_title: group.attr('line-title'),
+                });
+
                 $('#shipping-modal').modal('hide');
 
                 $('#shipping-modal').prop('data-href', null);

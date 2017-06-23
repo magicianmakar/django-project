@@ -452,9 +452,15 @@
                                     {% with image=item.image original=item.product.get_original_info excluded_product=item.product.is_excluded %}
 
                                     <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %} {% if excluded_product %}excluded{% endif %}"
-                                         line-id="{{item.id}}" order-id="{{order.id}}" order-data-id="{{ item.order_data_id }}" order-number="{{order.name}}" line-title="{{item.title}}"
-                                         line-data="{{item.order_data_id|default:''}}" line-track="{{item.shopify_order.id|default:''}}"
-                                         fulfillment-status="{{item.fulfillment_status}}" {% if excluded_product %}excluded-product="true"{% endif %}>
+                                        line-id="{{item.id}}"
+                                        order-id="{{order.id}}"
+                                        order-data-id="{{ item.order_data_id }}"
+                                        order-number="{{order.name}}"
+                                        line-title="{{item.title}}"
+                                        line-data="{{item.order_data_id|default:''}}"
+                                        line-track="{{item.shopify_order.id|default:''}}"
+                                        fulfillment-status="{{item.fulfillment_status}}"
+                                        {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
