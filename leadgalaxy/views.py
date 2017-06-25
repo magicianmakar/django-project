@@ -1537,20 +1537,33 @@ def get_shipping_info(request):
         country_code = 'MNE'
 
     if not aliexpress_id and supplier:
-        if not request.GET.get('chq'):
-            if int(supplier) == 0:
-                product = ShopifyProduct.objects.get(id=product)
-                permissions.user_can_view(request.user, product)
-                supplier = product.default_supplier
-            else:
-                supplier = ProductSupplier.objects.get(id=supplier)
-        else:
+        if request.GET.get('chq'):
+            from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
+
             if int(supplier) == 0:
                 product = CommerceHQProduct.objects.get(id=product)
                 permissions.user_can_view(request.user, product)
                 supplier = product.default_supplier
             else:
                 supplier = CommerceHQSupplier.objects.get(id=supplier)
+
+        elif request.GET.get('woo'):
+            from woocommerce_core.models import WooProduct, WooSupplier
+
+            if int(supplier) == 0:
+                product = WooProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = WooSupplier.objects.get(id=supplier)
+
+        else:
+            if int(supplier) == 0:
+                product = ShopifyProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = ProductSupplier.objects.get(id=supplier)
 
         aliexpress_id = supplier.get_source_id()
 

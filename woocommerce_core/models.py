@@ -117,6 +117,9 @@ class WooProduct(models.Model):
     default_supplier = models.ForeignKey('WooSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
     variants_map = models.TextField(default='', blank=True)
+    supplier_map = models.TextField(default='', null=True, blank=True)
+    shipping_map = models.TextField(default='', null=True, blank=True)
+    mapping_config = models.TextField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -204,6 +207,10 @@ class WooProduct(models.Model):
             has_next = 'rel="next"' in r.headers.get('link', '')
             page = page + 1 if has_next else 0
 
+        for variant in variants:
+            attributes = variant.get('attributes', [])
+            variant['variant'] = [option['option'] for option in attributes]
+
         return variants
 
     def sync(self):
@@ -238,8 +245,74 @@ class WooProduct(models.Model):
         supplier.is_default = True
         supplier.save()
 
+    def get_mapping_config(self):
+        try:
+            return json.loads(self.mapping_config)
+        except:
+            return {}
+
+    def set_mapping_config(self, config):
+        if type(config) is not str:
+            config = json.dumps(config)
+
+        self.mapping_config = config
+        self.save()
+
+    def get_suppliers_mapping(self, name=None, default=None):
+        mapping = {}
+        try:
+            if self.supplier_map:
+                mapping = json.loads(self.supplier_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if name:
+            mapping = mapping.get(str(name), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
+    def set_suppliers_mapping(self, mapping):
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.supplier_map = mapping
+        self.save()
+
+    def get_supplier_for_variant(self, variant_id):
+        """
+            Return the mapped Supplier for the given variant_id
+            or the default one if mapping is not set/found
+        """
+
+        config = self.get_mapping_config()
+        mapping = self.get_suppliers_mapping(name=variant_id)
+
+        if not variant_id or not mapping or config.get('supplier') == 'default':
+            return self.default_supplier
+
+        try:
+            return self.productsupplier_set.get(id=mapping['supplier'])
+        except:
+            return self.default_supplier
+
     def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
         mapping = {}
+
+        if supplier is None:
+            if mapping_supplier:
+                supplier = self.get_supplier_for_variant(name)
+            else:
+                supplier = self.default_supplier
 
         try:
             if supplier and supplier.variants_map:
@@ -291,6 +364,87 @@ class WooProduct(models.Model):
         else:
             self.variants_map = mapping
             self.save()
+
+    def get_shipping_mapping(self, supplier=None, variant=None, default=None):
+        mapping = {}
+        try:
+            if self.shipping_map:
+                mapping = json.loads(self.shipping_map)
+            else:
+                mapping = {}
+        except:
+            mapping = {}
+
+        if supplier and variant:
+            mapping = mapping.get('{}_{}'.format(supplier, variant), default)
+
+        try:
+            mapping = json.loads(mapping)
+        except:
+            pass
+
+        if type(mapping) is int:
+            mapping = str(mapping)
+
+        return mapping
+
+    def set_shipping_mapping(self, mapping, update=True):
+        if update:
+            try:
+                current = json.loads(self.shipping_map)
+            except:
+                current = {}
+
+            for k, v in mapping.items():
+                current[k] = v
+
+            mapping = current
+
+        if type(mapping) is not str:
+            mapping = json.dumps(mapping)
+
+        self.shipping_map = mapping
+        self.save()
+
+    def get_all_variants_mapping(self):
+        all_mapping = {}
+
+        product = self.sync()
+        if not product:
+            return None
+
+        for supplier in self.get_suppliers():
+            variants_map = self.get_variant_mapping(supplier=supplier)
+
+            seen_variants = []
+            for i, v in enumerate(product['variants']):
+                mapped = variants_map.get(str(v['id']))
+                if mapped:
+                    options = mapped
+                else:
+                    options = v['variant']
+
+                    options = map(lambda a: {'title': a}, options)
+
+                try:
+                    if type(options) not in [list, dict]:
+                        options = json.loads(options)
+
+                        if type(options) is int:
+                            options = str(options)
+                except:
+                    pass
+
+                variants_map[str(v['id'])] = options
+                seen_variants.append(str(v['id']))
+
+            for k in variants_map.keys():
+                if k not in seen_variants:
+                    del variants_map[k]
+
+            all_mapping[str(supplier.id)] = variants_map
+
+        return all_mapping
 
 
 class WooSupplier(models.Model):

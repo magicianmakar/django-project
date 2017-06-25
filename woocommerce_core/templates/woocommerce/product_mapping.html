@@ -13,13 +13,11 @@
             <li class="active">
                 <a data-toggle="tab" href="#tab-1"><i class="fa fa-chain"></i> Variants Mapping</a>
             </li>
-            {% comment %}
             {% if user|can:'suppliers_shipping_mapping.use' %}
             <li>
                 <a href="{% url 'woo:mapping_supplier' product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
             </li>
             {% endif %}
-            {% endcomment %}
        </ul>
        <div class="tab-content">
            <div id="tab-1" class="tab-pane active">

@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
+from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     aws_s3_context,
     safeInt,
@@ -133,19 +134,15 @@ class ProductMappingView(DetailView):
         return suppliers
 
     def get_current_supplier(self, product):
-        pk = self.request.GET.get('supplier') or getattr(product.default_supplier, 'pk', None)
-        supplier = product.get_suppliers().get(pk=pk)
-
-        return supplier
+        pk = self.request.GET.get('supplier') or product.default_supplier.id
+        return product.get_suppliers().get(pk=pk)
 
     def get_variants_map(self, woocommerce_product, product, supplier):
         variants_map = product.get_variant_mapping(supplier=supplier)
         variants_map = {key: json.loads(value) for key, value in variants_map.items()}
         for variant in woocommerce_product.get('variants', []):
-            options = []
-            for option in variant.get('attributes', []):
-                options.append({'title': option['option']})
-                variant.setdefault('variant', []).append(option['option'])
+            attributes = variant.get('attributes', [])
+            options = [{'title': option['option']} for option in attributes]
             variants_map.setdefault(str(variant['id']), options)
 
         return variants_map
@@ -161,5 +158,65 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(woocommerce_product, product, current_supplier)
+
+        return context
+
+
+class MappingSupplierView(DetailView):
+    model = WooProduct
+    template_name = 'woocommerce/mapping_supplier.html'
+    context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        return super(MappingSupplierView, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        product = super(MappingSupplierView, self).get_object(queryset)
+        permissions.user_can_view(self.request.user, product)
+
+        return product
+
+    def get_product_suppliers(self, product):
+        suppliers = {}
+        for supplier in product.get_suppliers():
+            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
+            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+
+        return suppliers
+
+    def add_supplier_info(self, variants, suppliers_map):
+        for index, variant in enumerate(variants):
+            default_supplier = {'supplier': self.object.default_supplier.id, 'shipping': {}}
+            supplier = suppliers_map.get(str(variant['id']), default_supplier)
+            suppliers_map[str(variant['id'])] = supplier
+            variants[index]['supplier'] = supplier['supplier']
+            variants[index]['shipping'] = supplier['shipping']
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingSupplierView, self).get_context_data(**kwargs)
+        product = self.object
+        woocommerce_product = product.sync()
+        context['woocommerce_product'] = woocommerce_product
+        context['product'] = product
+        context['store'] = product.store
+        context['product_id'] = product.id
+        context['countries'] = get_counrties_list()
+        context['product_suppliers'] = self.get_product_suppliers(product)
+        context['suppliers_map'] = suppliers_map = product.get_suppliers_mapping()
+        context['shipping_map'] = product.get_shipping_mapping()
+        context['variants_map'] = product.get_all_variants_mapping()
+        context['mapping_config'] = product.get_mapping_config()
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('woo:products_list')},
+            {'title': product.store.title, 'url': '{}?store={}'.format(reverse('woo:products_list'), product.store.id)},
+            {'title': product.title, 'url': reverse('woo:product_detail', args=[product.id])},
+            'Advanced Mapping'
+        ]
+
+        self.add_supplier_info(woocommerce_product.get('variants', []), suppliers_map)
 
         return context
