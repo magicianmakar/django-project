@@ -2701,6 +2701,9 @@ def orders_view(request):
                         shipping_address_asci['country_code'] = 'GU'
                         shipping_address_asci['country'] = 'Guam'
 
+                    if shipping_address_asci['country_code'] == 'CA' and shipping_address_asci.get('zip'):
+                        shipping_address_asci['zip'] = re.sub(r'[\n\r\t ]', '', shipping_address_asci['zip']).strip()
+
                     shipping_address_asci['name'] = utils.ensure_title(shipping_address_asci['name'])
 
                     if shipping_address_asci['company']:
