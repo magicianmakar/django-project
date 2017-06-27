@@ -350,7 +350,7 @@ class CommerceHQProduct(models.Model):
             return self.default_supplier
 
         try:
-            return self.productsupplier_set.get(id=mapping['supplier'])
+            return self.commercehqsupplier_set.get(id=mapping['supplier'])
         except:
             return self.default_supplier
 
