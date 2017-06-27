@@ -1924,17 +1924,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
                         'shopify_summary': "<br>".join(shopify_summary),
                     })
-
-                if track.source_id in orders:
-                    orders[track.source_id].append(info)
+                    
+                if str(track.source_id) in orders:
+                    orders[str(track.source_id)].append(info)
                 else:
-                    orders[track.source_id] = [info]
+                    orders[str(track.source_id)] = [info]
 
-        for i in aliexpress_ids:
+        for i in [str(k) for k in aliexpress_ids]:
             if i not in orders:
                 orders[i] = None
 
-        return HttpResponse(json.dumps(orders, indent=4), content_type='text/plain')
+        return JsonResponse(orders, safe=False)
 
     def post_order_add_note(self, request, user, data):
         # Append to the Order note
