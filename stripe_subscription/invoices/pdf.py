@@ -87,7 +87,7 @@ def header_paragraph(invoice):
 
 
 def invoice_id_paragraph(invoice):
-    if invoice.paid:
+    if invoice.paid and invoice.charge:
         source = invoice.charge.source
         title = 'Invoice ID: %s <br />Source: %s %s' % (invoice.id, source.brand, source.last4)
     else:
