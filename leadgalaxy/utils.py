@@ -1160,7 +1160,8 @@ def order_track_fulfillment(**kwargs):
     }
 
     if source_tracking:
-        have_custom_domain = store_id and type(user_config.get('aftership_domain')) is dict
+        user_aftership_domain = user_config.get('aftership_domain')
+        have_custom_domain = store_id and user_aftership_domain and type(user_aftership_domain) is dict
 
         if (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = "USPS"
@@ -1168,7 +1169,7 @@ def order_track_fulfillment(**kwargs):
             aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
 
             if have_custom_domain:
-                aftership_domain = user_config.get('aftership_domain').get(str(store_id), aftership_domain)
+                aftership_domain = user_aftership_domain.get(str(store_id), aftership_domain)
                 if '{{tracking_number}}' not in aftership_domain:
                     aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
                 elif not aftership_domain.startswith('http'):
