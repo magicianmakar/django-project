@@ -1924,7 +1924,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
                         'shopify_summary': "<br>".join(shopify_summary),
                     })
-                    
+
                 if str(track.source_id) in orders:
                     orders[str(track.source_id)].append(info)
                 else:
