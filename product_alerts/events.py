@@ -184,8 +184,10 @@ class ProductChangeEvent():
         try:
             response = requests.put(update_endpoint, json=data)
             response.raise_for_status()
-        except:
-            raven_client.captureException()
+        except Exception as e:
+            raven_client.captureException(extra={
+                'response': e.response.text if hasattr(e, 'response') and e.response else ''
+            })
 
     def product_actions(self, data):
         for product_change in self.product_changes:
