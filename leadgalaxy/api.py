@@ -1353,14 +1353,16 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_success()
 
         except:
-            if 'is already fulfilled' not in rep.text:
+            if 'is already fulfilled' not in rep.text and \
+               'please try again' not in rep.text and \
+               'Internal Server Error' not in rep.text:
                 raven_client.captureException(
                     level='warning',
                     extra={'response': rep.text})
 
             try:
                 errors = utils.format_shopify_error(rep.json())
-                return self.api_error('Shopify Error: {}'.format(errors))
+                return self.api_error('Shopify Error: \n{}'.format(errors))
             except:
                 return self.api_error('Shopify API Error')
 
