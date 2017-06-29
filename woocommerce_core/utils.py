@@ -1,4 +1,5 @@
 import re
+import itertools
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -124,33 +125,35 @@ def get_image_id_by_hash(product_data):
 
 def create_variants_api_data(data, image_id_by_hash):
     variants = data.get('variants', [])
-    variants_sku = data.get('variants_sku', {})
+    variants_images = data.get('variants_images', {}).items()
     variant_list = []
 
+    titles, values = [], []
     for variant in variants:
-        title = variant.get('title')
-        options = variant.get('values', [])
+        titles.append(variant.get('title', ''))
+        values.append(variant.get('values', []))
 
-        for option in options:
-            api_data = {
-                'sku': variants_sku.get(option),
-                'description': option,
-                'attributes': [
-                    {'name': title, 'option': option},
-                ],
-            }
+    # Iterates through all possible variants e.g. [(RED, LARGE), (RED, SMALL)]
+    for product in itertools.product(*values):
+        api_data = {'attributes': []}
+        descriptions = []
+        for name, option in itertools.izip(titles, product):
+            descriptions.append('{}: {}'.format(name, option))
+            api_data['attributes'].append({'name': name, 'option': option})
+            if 'image' not in api_data:
+                for image_hash, variant_option in variants_images:
+                    if image_hash in image_id_by_hash and variant_option == option:
+                        api_data['image'] = {'id': image_id_by_hash[image_hash]}
 
-            if data.get('compare_at_price'):
-                api_data['regular_price'] = str(data['compare_at_price'])
-                api_data['sale_price'] = str(data['price'])
-            else:
-                api_data['regular_price'] = str(data['price'])
+        api_data['description'] = ' | '.join(descriptions)
 
-            for image_hash, variant_option in data.get('variants_images', {}).items():
-                if variant_option == option and image_hash in image_id_by_hash:
-                    api_data['image'] = {'id': image_id_by_hash[image_hash]}
+        if data.get('compare_at_price'):
+            api_data['regular_price'] = str(data['compare_at_price'])
+            api_data['sale_price'] = str(data['price'])
+        else:
+            api_data['regular_price'] = str(data['price'])
 
-            variant_list.append(api_data)
+        variant_list.append(api_data)
 
     return variant_list
 
