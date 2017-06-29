@@ -651,7 +651,7 @@ function bindExportEvents(target) {
                 'shopify-link': $('.product-shopify-link', form).val(),
                 'supplier-name': $('.product-supplier-name', form).val(),
                 'supplier-link': $('.product-supplier-link', form).val(),
-                'supplier-notes': $('input[name="supplier-notes"]', form).val(),
+                'supplier-notes': $('.product-supplier-notes', form).val(),
                 'product': form.data('product-id'),
                 'export': form.data('export-id'),
             },

@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('leadgalaxy', '0144_shopifyproduct_is_excluded'),
+        ('leadgalaxy', '0147_auto_20170601_1554'),
     ]
 
     operations = [
