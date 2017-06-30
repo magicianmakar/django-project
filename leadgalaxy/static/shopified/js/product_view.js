@@ -1516,30 +1516,36 @@ var PusherSubscription = {
 
     bindExportEvents();
 
-    $('#modal-upload-image a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        if ( $(e.target).attr('href') == '#upload-tab2' ) {
-            if ( !$( '#loader', par ).hasClass( 'hide' ) && !$( '#loader .sk-spinner', par ).hasClass( 'hide' ) ) {
-                var par = $('#upload-tab2');
-                $.post('/api/youzign-images', {})
-                .done( function( data ) {
-                    $.each( data.data, function(i, image) {
-                        if ( i % 4 == 0 )
-                            $('<div>', {class: 'col-xs-12',}).appendTo($( '#images', par ));
+    $('#modal-upload-image a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        if ($(e.target).attr('href') == '#upload-tab2') {
+            var par = $('#upload-tab2');
 
-                        $('<div>', {
-                            class: 'col-xs-3 add-var-image-block',
-                            html: '<img src="/static/img/blank.gif" data-src="'+image.image_src[0]+'" class="add-var-image unveil" />'
-                        }).appendTo($( '#images', par ));
+            if (!$('#loader', par).hasClass('hide') && !$('#loader .sk-spinner', par).hasClass('hide')) {
+                $.post('/api/youzign-images')
+                    .done(function(data) {
+                        $.each(data.data, function(i, image) {
+                            if (i % 4 === 0) {
+                                $('<div>', {
+                                    'class': 'col-xs-12',
+                                }).appendTo($('#images', par));
+                            }
+
+                            $('<div>', {
+                                'class': 'col-xs-3 add-var-image-block',
+                                'html': '<img src="/static/img/blank.gif" data-src="' + image.image_src[0] + '" class="add-var-image unveil" />'
+                            }).appendTo($('#images', par));
+                        });
+
+                        $('#loader', par).addClass('hide');
+                        $('#images', par).removeClass('hide');
+                        $('.unveil', par).unveil();
+
+                        matchImagesWithExtra("modal-upload-image");
+                    })
+                    .fail(function(data) {
+                        $('#loader .sk-spinner', par).addClass('hide');
+                        displayAjaxError('YouZign', data);
                     });
-                    $( '#loader', par ).addClass( 'hide' );
-                    $( '#images', par ).removeClass( 'hide' );
-                    $('.unveil', par).unveil();
-                    matchImagesWithExtra( "modal-upload-image" );
-                })
-                .fail( function( data ) {
-                    $( '#loader .sk-spinner', par ).addClass( 'hide' );
-                    swal( 'Youzign', 'Please verify your API credentials and retry.', 'error');
-                });
             }
         }
     });

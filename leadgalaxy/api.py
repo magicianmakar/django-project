@@ -695,17 +695,31 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         api_url = 'https://www.youzign.com/api/designs/'
 
         auth_detils = {
-            "key": user.get_config()["yz_public_key"],
-            "token": user.get_config()["yz_access_token"],
+            'key': user.get_config('yz_public_key'),
+            'token': user.get_config('yz_access_token'),
         }
 
-        res = requests.post(api_url, data=auth_detils).json()
+        try:
+            assert auth_detils['key'] and auth_detils['token']
 
-        if isinstance(res, list):
-            return self.api_success({"data": res})
-        else:
-            return self.api_success({"data": []}) if not res.get('error') else self.api_error(
-                "Invalid API credentials.", status=500)
+            res = requests.post(api_url, data=auth_detils)
+            res.raise_for_status()
+
+            return self.api_success({"data": res.json()})
+
+        except AssertionError:
+            return self.api_error("Your YouZign API credentials is not set", status=402)
+
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                return self.api_error("Invalid YouZign API credentials", status=403)
+            else:
+                raven_client.captureException()
+
+        except Exception as e:
+            raven_client.captureException()
+
+        return self.api_error("YouZign API Error")
 
     def post_change_plan(self, request, user, data):
         if not user.is_superuser:
