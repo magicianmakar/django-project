@@ -541,8 +541,10 @@ $('#duplicate-btn').click(function (e) {
     });
 });
 
-function matchImagesWithExtra( parent ) {
-    if ( typeof parent === "undefined" ) parent = "modal-add-image";
+function matchImagesWithExtra(parent) {
+    if (typeof parent === "undefined") {
+        parent = "modal-add-image";
+    }
 
     $('#' + parent + ' .extra-added').remove();
     $('#' + parent + ' .add-var-image-block').each(function(i, el) {
