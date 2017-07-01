@@ -172,7 +172,7 @@ $('#board-product-send').click(function(e) {
 function changeBoard(board_id, options) {
     // options.$trigger.button('loading');
     $.ajax({
-        url: api_url('product-board', 'chq'),
+        url: api_url('product-board', 'woo'),
         type: 'POST',
         data: {
             'product': options.$trigger.attr("product-id"),
@@ -219,7 +219,7 @@ $('.delete-product-btn').click(function(e) {
         function(isConfirmed) {
             if (isConfirmed) {
                 $.ajax({
-                    url: api_url('product', 'chq') + '?' + $.param({product: product}),
+                    url: api_url('product', 'woo') + '?' + $.param({product: product}),
                     type: 'DELETE',
                     success: function(data) {
                         btn.parents('.col-md-3').remove();
@@ -329,7 +329,7 @@ function setupContextMenus() {
                     setupContextMenus();
                 };
 
-                $('#modal-board-add').prop('store-type', 'chq');
+                $('#modal-board-add').prop('store-type', 'woo');
                 $('#modal-board-add').modal('show');
             } else if (key == 'clear') {
                 changeBoard(0, options);
