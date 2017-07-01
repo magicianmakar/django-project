@@ -702,7 +702,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         try:
             assert auth_detils['key'] and auth_detils['token']
 
-            res = requests.post(api_url, data=auth_detils)
+            res = requests.get(api_url, params=auth_detils, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux i686)'})
+
             res.raise_for_status()
 
             return self.api_success({"data": res.json()})
