@@ -166,12 +166,12 @@
                                 <div class="form-group">
                                     <label for="auto_margin" class="col-sm-4 control-label">
                                         Price Markup
-                                        {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00" qtipstyle="color:#BBB" %}
+                                        {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00. For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-3">
-                                        <input style="padding:5px 2px;text-align:center" type="text"
-                                               class="form-control col-sm-2" id="auto_margin" name="auto_margin"
-                                               value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
+                                    <input style="padding:5px 2px;text-align:center" type="text"
+                                        class="form-control col-sm-2" id="auto_margin" name="auto_margin"
+                                        value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
                                     </div>
                                 </div>
                             </div>
@@ -189,6 +189,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-5">
                                 <div class="form-group">
@@ -246,6 +247,18 @@
                             </div>
                         </div>
 
+                        {% if user|can:'auto_margin.use' %}
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-5">
+                                <div class="form-group">
+                                    <label class="control-label">
+                                        <a class="edit-markup-rules-btn m-l" href="#">Advanced Markup Rules...</a>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div class="col-sm-offset-1"><hr /></div>
 
                         <div class="row">
@@ -293,7 +306,7 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
-                                    <label for="make_visisble" class="col-sm-4 col-xs-8 control-label">
+                                    <label class="col-sm-4 col-xs-8 control-label">
                                         <a class="edit-custom-templates-btn" href="#">Custom Product Descriptions...</a>
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
@@ -763,6 +776,142 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
+</div>
+
+<div id="markup-rule-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Price Markup Rule</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form" action="" method="post" id="add-rule-form">
+                            <input type="hidden" name="id" value="">
+                            <div class="row form-group">
+                                <label class="col-sm-2 control-label">Min Price</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="min_price" placeholder="Min Price" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="row form-group">
+                                <label class="col-sm-2 control-label">Max Price</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="max_price" placeholder="Max Price" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="row form-group">
+                                <label class="col-sm-2 control-label">Markup Type</label>
+                                <div class="col-sm-3">
+                                    <select name="markup_type" class="form-control">
+                                    {% for k,v in marktup_types %}
+                                    <option value="{{ k }}">{{ v }}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row form-group">
+                                <label class="col-sm-2 control-label">Price</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="markup_value" placeholder="Markup for Price" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="row form-group">
+                                <label class="col-sm-2 control-label">Compare Price</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="markup_compare_value" placeholder="Markup for Compare At" class="form-control" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-primary pull-left" id="add-markup-rule-button"><i class="fa fa-times"></i> Save</button>
+                <button type="button" data-dismiss="modal" class="btn btn-sm btn-default"><i class="fa fa-save"></i>  Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="markup-rules-list-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Price Markup Rules</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table class="table table-ligthborder" id="markup-rule-table">
+                            <thead>
+                                <tr>
+                                    <th class="rule-markup_type">Min Price</th>
+                                    <th>Max Price</th>
+                                    <th>Markup Type</th>
+                                    <th>Price</th>
+                                    <th>Compare Price</th>
+                                    <th style="width: 150px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-rule-id="" class="hidden clone rule-row">
+                                    <td class="rule-min_price" style="width:100px"></td>
+                                    <td class="rule-max_price"></td>
+                                    <td class="rule-markup_type text-nowrap"></td>
+                                    <td class="rule-markup_value"></td>
+                                    <td class="rule-markup_compare_value"></td>
+                                    <td class="text-right">
+                                        <a href="#" class="edit-rule" title="Edit" style="padding: 8px;" data-id="" data-target="#markup-rule-modal">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-rule" data-id="" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% for rule in markup_rules %}
+                                <tr data-rule-id="{{ rule.id }}" class="rule-row">
+                                    <td class="rule-min_price" style="width:100px">{{ rule.min_price | floatformat:2 }}</td>
+                                    <td class="rule-max_price">{% if rule.max_price >= 0 %}{{ rule.max_price | floatformat:2 }}{% endif %}</td>
+                                    <td class="rule-markup_type text-nowrap">{{ rule.get_markup_type_display }}</td>
+                                    <td class="rule-markup_value">{{ rule.markup_value | floatformat:2 }}</td>
+                                    <td class="rule-markup_compare_value">{{ rule.markup_compare_value | floatformat:2 }}</td>
+                                    <td class="text-right">
+                                        <a href="#" class="edit-rule" title="Edit" style="padding: 8px;" data-id="{{ rule.id }}" data-toggle="modal" data-target="#markup-rule-modal">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="itooltip delete-rule" data-id="{{ rule.id }}" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <a data-toggle="modal" data-target="#markup-rule-modal" class="btn btn-success btn-sm" style="margin: 0;">
+                            <i class="fa fa-plus"></i> Add New Rule
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>

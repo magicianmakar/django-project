@@ -82,6 +82,7 @@ def index_view(request):
         total_allowed != -1
 
     templates = DescriptionTemplate.objects.filter(user=request.user).defer('description')
+    markup_rules = PriceMarkupRule.objects.filter(user=request.user)
 
     return render(request, 'index.html', {
         'stores': stores,
@@ -89,6 +90,8 @@ def index_view(request):
         'first_visit': first_visit or request.GET.get('new'),
         'extra_stores': extra_stores,
         'templates': templates,
+        'markup_rules': markup_rules,
+        'marktup_types': PRICE_MARKUP_TYPES,
         'page': 'index',
         'breadcrumbs': ['Stores']
     })

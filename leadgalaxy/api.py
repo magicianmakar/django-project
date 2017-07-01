@@ -1142,6 +1142,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 if i not in config or config[i] == '%':
                     config[i] = ''
 
+            rules = PriceMarkupRule.objects.filter(user=user.models_user)
+            rules_dict = []
+            for i in rules:
+                i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_compare_value')
+                i_dict['markup_type_display'] = i.get_markup_type_display()
+                rules_dict.append(i_dict)
+
+            config['markup_rules'] = rules_dict
+
         if not user.can('auto_order.use'):
             for i in ['order_phone_number', 'order_custom_note', ]:
                 if i in config:
@@ -2429,6 +2438,83 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         template.delete()
 
         return self.api_success()
+
+    def get_markup_rules(self, request, user, data):
+        rules = PriceMarkupRule.objects.filter(user=user.models_user)
+        if data.get('id'):
+            rules = rules.filter(id=data.get('id'))
+
+        rules_dict = []
+
+        for i in rules:
+            i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_compare_value')
+            i_dict['markup_type_display'] = i.get_markup_type_display()
+            rules_dict.append(i_dict)
+
+        return self.api_success({
+            'markup_rules': rules_dict
+        })
+
+    def post_markup_rules(self, request, user, data):
+        """
+        Add or edit markup rules
+        """
+
+        min_price = 0
+        if data.get('min_price', '').strip():
+            min_price = utils.safeFloat(data.get('min_price', ''))
+
+        max_price = -1
+        if data.get('max_price', '').strip():
+            max_price = utils.safeFloat(data.get('max_price', ''))
+
+        if not data.get('markup_type', '').strip():
+            return self.api_error('Markup Type is not set', status=422)
+
+        if not data.get('markup_value', '').strip():
+            return self.api_error('Markup Value is not set', status=422)
+        markup_value = utils.safeFloat(data.get('markup_value', ''))
+
+        if not data.get('markup_compare_value', '').strip():
+            return self.api_error('Markup Value for Compare at price is not set', status=422)
+        markup_compare_value = utils.safeFloat(data.get('markup_compare_value', ''))
+
+        if data.get('id'):
+            rule, created = PriceMarkupRule.objects.update_or_create(
+                id=data.get('id'),
+                user=user,
+                defaults={
+                    'name': data.get('name'),
+                    'min_price': min_price,
+                    'max_price': max_price,
+                    'markup_type': data.get('markup_type'),
+                    'markup_value': markup_value,
+                    'markup_compare_value': markup_compare_value,
+                }
+            )
+        else:
+            PriceMarkupRule.objects.create(
+                user=user,
+                name=data.get('name'),
+                min_price=min_price,
+                max_price=max_price,
+                markup_type=data.get('markup_type'),
+                markup_value=markup_value,
+                markup_compare_value=markup_compare_value,
+            )
+
+        data = data.copy()
+        data.pop('id')
+        return self.get_markup_rules(request, user, data)
+
+    def delete_markup_rules(self, request, user, data):
+        id = int(data.get('id'))
+        rule = get_object_or_404(PriceMarkupRule, id=id, user=request.user)
+        rule.delete()
+        data = data.copy()
+        data.pop('id')
+
+        return self.get_markup_rules(request, user, data)
 
     def get_product_image_download(self, request, user, data):
         try:

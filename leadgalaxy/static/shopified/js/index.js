@@ -511,6 +511,150 @@ $('#description-template-table .delete-template').click(function(e) {
     );
 });
 
+$('.edit-markup-rules-btn').click(function (e) {
+    e.preventDefault();
+    
+    $('#markup-rules-list-modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+});
+
+$('#markup-rule-modal').on('show.bs.modal', function(event) {
+    $('#markup-rules-list-modal').hide();
+
+    $('#add-rule-form input').val('');
+
+    var button = $(event.relatedTarget);
+    var rule_id = button.attr('data-id');
+    if (button.hasClass('edit-rule')) {
+        $.ajax({
+            url: '/api/markup-rules',
+            data: {
+                'id': rule_id
+            },
+            success: function(data) {
+                for (var i = 0; i < data.markup_rules.length; i++) {
+                    var markup_rule = data.markup_rules[i];
+                    if (markup_rule.id.toString() == rule_id) {
+                        $('#add-rule-form input[name="id"]').val(markup_rule.id);
+                        $('#add-rule-form input[name="name"]').val(markup_rule.name);
+                        $('#add-rule-form input[name="min_price"]').val(markup_rule.min_price);
+                        $('#add-rule-form input[name="max_price"]').val(markup_rule.max_price);
+                        $('#add-rule-form input[name="markup_value"]').val(markup_rule.markup_value);
+                        $('#add-rule-form input[name="markup_compare_value"]').val(markup_rule.markup_compare_value);
+                        $('#add-rule-form select[name="markup_type"]').val(markup_rule.markup_type);
+                    }
+                }
+            },
+            error: function(data) {
+                displayAjaxError('Price markup rules', data);
+            }
+        });
+    }
+});
+
+$('#markup-rule-modal').on('hide.bs.modal', function (e) {
+    $('#markup-rules-list-modal').show();
+
+    $('#add-rule-form input').val('');
+});
+
+
+$('#markup-rules-list-modal').on('hide.bs.modal', function (e) {
+    if(window.configSyncRequired) {
+        syncConfig();
+
+        window.configSyncRequired = false;
+    }
+});
+
+var deleteMarkupRuleClicked = function(e) {
+    e.preventDefault();
+    var btn = $(this);
+
+    swal({
+            title: "Delete Price Markup Rule",
+            text: "This will remove the markup rule permanently. Are you sure you want to remove it?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Remove Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) {
+            if (isConfirmed) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/markup-rules?' + $.param({
+                        id: btn.attr('data-id')
+                    }),
+                    success: function(data) {
+                        btn.parents('.rule-row').remove();
+
+                        swal.close();
+                        toastr.success("The markup rule has been deleted.", "Deleted!");
+
+                        window.configSyncRequired = true;
+                    },
+                    error: function(data) {
+                        displayAjaxError('Delete Markup Rule', data);
+                    }
+                });
+            }
+        }
+    );
+};
+
+$('#add-markup-rule-button').click(function(e) {
+    $('#add-rule-form').trigger('submit');
+});
+
+$('#add-rule-form').on('submit', function(e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: '/api/markup-rules',
+        type: 'POST',
+        data: $('#add-rule-form').serialize(),
+        dataType: 'json',
+        success: function (result) {
+            $('#markup-rule-modal').modal('hide');
+            $.each(result.markup_rules, function(i, rule) {
+                var tr = $('#markup-rule-table tr[data-rule-id="'+rule.id+'"]');
+                if (tr.length === 0) {
+                    tr = $('#markup-rule-table tbody .clone').clone();
+                    tr.removeClass('hidden clone');
+                    $('#markup-rule-table tbody').append(tr);
+                }
+
+                tr.attr('data-rule-id', rule.id);
+                tr.find('.rule-name').text(rule.name);
+                tr.find('.rule-min_price').text(parseFloat(rule.min_price).toFixed(2));
+                tr.find('.rule-max_price').text(rule.max_price < 0 ? '' : parseFloat(rule.max_price).toFixed(2));
+                tr.find('.rule-markup_value').text(parseFloat(rule.markup_value).toFixed(2));
+                tr.find('.rule-markup_compare_value').text(parseFloat(rule.markup_compare_value).toFixed(2));
+                tr.find('.rule-markup_type').text(rule.markup_type_display);
+                
+                tr.find('.edit-rule').attr('data-id', rule.id);
+                tr.find('.delete-rule').attr('data-id', rule.id);
+                tr.find('.delete-rule').attr('href', rule.delete_url);
+                tr.find('.delete-rule').click(deleteMarkupRuleClicked);
+
+                window.configSyncRequired = true;
+            });
+        },
+        error: function (data) {
+            displayAjaxError('Price markup rules', data);
+        }
+    });
+
+});
+
+$('#markup-rule-table .delete-rule').click(deleteMarkupRuleClicked);
+
 $(function () {
     showDescriptionHelp();
     $('#auto_shopify_fulfill').trigger('change');
