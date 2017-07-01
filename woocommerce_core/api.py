@@ -575,3 +575,19 @@ class WooStoreApi(ApiResponseMixin, View):
         r.raise_for_status()
 
         return self.api_success()
+
+    def get_product_image_download(self, request, user, data):
+        try:
+            product = WooProduct.objects.get(id=int(data.get('product')))
+            permissions.user_can_view(user, product)
+
+        except WooProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        images = product.parsed.get('images')
+        if not images:
+            return self.api_error('Product doesn\'t have any images', status=422)
+
+        tasks.create_image_zip.delay(images, product.id)
+
+        return self.api_success()
