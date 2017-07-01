@@ -521,7 +521,7 @@ $('.edit-markup-rules-btn').click(function (e) {
 });
 
 $('#markup-rule-modal').on('show.bs.modal', function(event) {
-    $('#markup-rules-list-modal').modal('hide');
+    $('#markup-rules-list-modal').hide();
 
     $('#add-rule-form input').val('');
 
@@ -542,7 +542,7 @@ $('#markup-rule-modal').on('show.bs.modal', function(event) {
                         $('#add-rule-form input[name="min_price"]').val(markup_rule.min_price);
                         $('#add-rule-form input[name="max_price"]').val(markup_rule.max_price);
                         $('#add-rule-form input[name="markup_value"]').val(markup_rule.markup_value);
-                        $('#add-rule-form input[name="markup_value_for_compare"]').val(markup_rule.markup_value_for_compare);
+                        $('#add-rule-form input[name="markup_compare_value"]').val(markup_rule.markup_compare_value);
                         $('#add-rule-form select[name="markup_type"]').val(markup_rule.markup_type);
                     }
                 }
@@ -555,12 +555,18 @@ $('#markup-rule-modal').on('show.bs.modal', function(event) {
 });
 
 $('#markup-rule-modal').on('hide.bs.modal', function (e) {
-    $('#markup-rules-list-modal').modal({
-        backdrop: 'static',
-        keyboard: false
-    });
+    $('#markup-rules-list-modal').show();
 
     $('#add-rule-form input').val('');
+});
+
+
+$('#markup-rules-list-modal').on('hide.bs.modal', function (e) {
+    if(window.configSyncRequired) {
+        syncConfig();
+
+        window.configSyncRequired = false;
+    }
 });
 
 var deleteMarkupRuleClicked = function(e) {
@@ -590,6 +596,8 @@ var deleteMarkupRuleClicked = function(e) {
 
                         swal.close();
                         toastr.success("The markup rule has been deleted.", "Deleted!");
+
+                        window.configSyncRequired = true;
                     },
                     error: function(data) {
                         displayAjaxError('Delete Markup Rule', data);
@@ -600,37 +608,43 @@ var deleteMarkupRuleClicked = function(e) {
     );
 };
 
+$('#add-markup-rule-button').click(function(e) {
+    $('#add-rule-form').trigger('submit');
+});
+
 $('#add-rule-form').on('submit', function(e) {
     e.preventDefault();
 
     $.ajax({
         url: '/api/markup-rules',
         type: 'POST',
-        data: $(this).serialize(),
+        data: $('#add-rule-form').serialize(),
         dataType: 'json',
         success: function (result) {
             $('#markup-rule-modal').modal('hide');
-            for (var i = 0; i < result.markup_rules.length; i++) {
-                var rule = result.markup_rules[i];
+            $.each(result.markup_rules, function(i, rule) {
                 var tr = $('#markup-rule-table tr[data-rule-id="'+rule.id+'"]');
                 if (tr.length === 0) {
                     tr = $('#markup-rule-table tbody .clone').clone();
                     tr.removeClass('hidden clone');
                     $('#markup-rule-table tbody').append(tr);
                 }
+
                 tr.attr('data-rule-id', rule.id);
                 tr.find('.rule-name').text(rule.name);
                 tr.find('.rule-min_price').text(parseFloat(rule.min_price).toFixed(2));
                 tr.find('.rule-max_price').text(rule.max_price < 0 ? '' : parseFloat(rule.max_price).toFixed(2));
                 tr.find('.rule-markup_value').text(parseFloat(rule.markup_value).toFixed(2));
-                tr.find('.rule-markup_value_for_compare').text(parseFloat(rule.markup_value_for_compare).toFixed(2));
+                tr.find('.rule-markup_compare_value').text(parseFloat(rule.markup_compare_value).toFixed(2));
                 tr.find('.rule-markup_type').text(rule.markup_type_display);
                 
                 tr.find('.edit-rule').attr('data-id', rule.id);
                 tr.find('.delete-rule').attr('data-id', rule.id);
                 tr.find('.delete-rule').attr('href', rule.delete_url);
                 tr.find('.delete-rule').click(deleteMarkupRuleClicked);
-            }
+
+                window.configSyncRequired = true;
+            });
         },
         error: function (data) {
             displayAjaxError('Price markup rules', data);

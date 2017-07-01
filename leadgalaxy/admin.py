@@ -240,3 +240,4 @@ class CaptchaCreditAdmin(admin.ModelAdmin):
 
 admin.site.register(ClippingMagicPlan)
 admin.site.register(CaptchaCreditPlan)
+admin.site.register(PriceMarkupRule)

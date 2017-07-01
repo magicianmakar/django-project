@@ -64,9 +64,9 @@ SUBUSER_CHQ_STORE_PERMISSIONS = (
 )
 
 PRICE_MARKUP_TYPES = (
-    ('margin_percent', 'Increase by %'),
-    ('margin_amount', 'Increase by $'),
-    ('fixed_amount', 'Set to $'),
+    ('margin_percent', 'Increase by pecenatge'),
+    ('margin_amount', 'Increase by amount'),
+    ('fixed_amount', 'Set to fixed amount'),
 )
 
 
@@ -1768,15 +1768,23 @@ class DescriptionTemplate(models.Model):
 
 class PriceMarkupRule(models.Model):
     user = models.ForeignKey(User)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True, blank=True)
     min_price = models.FloatField(default=0.0)
     max_price = models.FloatField(default=0.0)
     markup_value = models.FloatField(default=0.0)
-    markup_value_for_compare = models.FloatField(default=0.0)
+    markup_compare_value = models.FloatField(default=0.0)
     markup_type = models.CharField(max_length=25, choices=PRICE_MARKUP_TYPES, default=PRICE_MARKUP_TYPES[0][0])
 
     def __unicode__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        name = u'{} for prices from {:0.2f} to {:0.2f}'.format(self.get_markup_type_display(), self.min_price, self.max_price)
+
+        if name != self.name:
+            self.name = name
+
+        super(PriceMarkupRule, self).save(*args, **kwargs)
 
 
 def user_is_subsuser(self):

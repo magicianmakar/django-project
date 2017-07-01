@@ -1141,12 +1141,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
                 if i not in config or config[i] == '%':
                     config[i] = ''
+
             rules = PriceMarkupRule.objects.filter(user=user.models_user)
             rules_dict = []
             for i in rules:
-                i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_value_for_compare')
+                i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_compare_value')
                 i_dict['markup_type_display'] = i.get_markup_type_display()
                 rules_dict.append(i_dict)
+
             config['markup_rules'] = rules_dict
 
         if not user.can('auto_order.use'):
@@ -2445,7 +2447,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         rules_dict = []
 
         for i in rules:
-            i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_value_for_compare')
+            i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_compare_value')
             i_dict['markup_type_display'] = i.get_markup_type_display()
             rules_dict.append(i_dict)
 
@@ -2457,9 +2459,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         """
         Add or edit markup rules
         """
-
-        if not data.get('name', '').strip():
-            return self.api_error('Name is not set', status=422)
 
         min_price = 0
         if data.get('min_price', '').strip():
@@ -2476,9 +2475,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Markup Value is not set', status=422)
         markup_value = utils.safeFloat(data.get('markup_value', ''))
 
-        if not data.get('markup_value_for_compare', '').strip():
+        if not data.get('markup_compare_value', '').strip():
             return self.api_error('Markup Value for Compare at price is not set', status=422)
-        markup_value_for_compare = utils.safeFloat(data.get('markup_value_for_compare', ''))
+        markup_compare_value = utils.safeFloat(data.get('markup_compare_value', ''))
 
         if data.get('id'):
             rule, created = PriceMarkupRule.objects.update_or_create(
@@ -2490,7 +2489,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'max_price': max_price,
                     'markup_type': data.get('markup_type'),
                     'markup_value': markup_value,
-                    'markup_value_for_compare': markup_value_for_compare,
+                    'markup_compare_value': markup_compare_value,
                 }
             )
         else:
@@ -2501,7 +2500,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 max_price=max_price,
                 markup_type=data.get('markup_type'),
                 markup_value=markup_value,
-                markup_value_for_compare=markup_value_for_compare,
+                markup_compare_value=markup_compare_value,
             )
 
         data = data.copy()
