@@ -449,7 +449,7 @@ $('#save-for-later-btn').click(function (e) {
         'weight': parseFloat($('#product-weight').val()),
         'weight_unit': $('#product-weight-unit').val(),
         'published': $('#product-visible').prop('checked'),
-
+        'boards': $('#boards').val(),
         'variants': []
     };
 
@@ -1551,6 +1551,35 @@ var PusherSubscription = {
             }
         }
     });
+
+    $('select#boards').select2({
+        language: {
+            noResults: function() {
+                return "Add New";
+            }
+        },
+        escapeMarkup: function(markup) {
+            return markup;
+        }
+    }).on('select2:select', function(evt) {
+        console.dir(evt);
+    });
+
+    $(document).on('click', '.select2-results__option.select2-results__message', function() {
+        $('#modal-board-add #add-board-name').val($('.select2-search__field').val());
+        $('#modal-board-add').modal('show');
+    });
+
+    window.onBoardAdd = function(board) {
+        $('<option>', {
+            value: board.id,
+            html: board.title,
+            text: board.title,
+            selected: true
+        }).appendTo($('select#boards'));
+
+        $('select#boards').trigger('change.select2');
+    };
 
 })();
 })(config, product);

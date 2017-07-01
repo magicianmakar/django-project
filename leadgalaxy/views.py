@@ -1019,6 +1019,11 @@ def product_view(request, pid):
     except:
         alert_config = {}
 
+    try:
+        board = ShopifyBoard.objects.filter(products=product)
+    except ShopifyBoard.DoesNotExist:
+        board = None
+
     p = {
         'qelem': product,
         'id': product.id,
@@ -1084,6 +1089,7 @@ def product_view(request, pid):
 
     return render(request, 'product_view.html', {
         'product': p,
+        'board': board,
         'original': original,
         'shopify_product': shopify_product,
         'aws_available': aws_available,

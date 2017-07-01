@@ -218,13 +218,6 @@
                     <div class="form-group col-xs-12" style="padding:0">
                         <textarea name="product-description" class="form-control"></textarea>
                     </div>
-
-                    <div class="form-group col-xs-12" style="padding:0">
-                        <label for="product-visible">
-                            <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
-                            Make Product Visible
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -259,9 +252,30 @@
                 </div>
             </div>
 
-            {% if not product.shopify_url %}
             <div class="form-group col-xs-12">
-                <label for="store-select">Export to:</label>
+                <label for="product-visible">
+                    <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
+                    Make Product Visible
+                </label>
+            </div>
+
+
+            <div class="form-group col-xs-12 flex-center">
+                <label for="boards" class="col-md-1" style="padding:0;width:50px">Boards</label>
+                <div class="col-md-3 board-selection">
+                    <select class="form-control" id="boards" style="width: 200px; display: inline-block; margin-left: 10px;" multiple>
+                        {% for item in request.user.get_boards %}
+                        <option value="{{item.id}}" {% for b in board %}{% if item.id == b.id %}selected{%endif%}{%endfor%}>
+                            {{item.title}}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {% if not product.shopify_url %}
+            <div class="form-group col-xs-12 flex-center">
+                <label for="store-select">Export to</label>
                 <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
                 {% for i in request.user.profile.get_shopify_stores %}
                     <option value="{{i.id}}" {% if i == product.store %}selected{% endif %}>{{i.title}}</option>
@@ -869,16 +883,30 @@
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 
 {% compress css %}
+<link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 <link href="{% static 'shopified/css/product_view.css' %}" rel="stylesheet">
+
+<style type="text/css">
+    .select2.select2-container.select2-container--default {
+        width: 100% !important;
+    }
+    .select2-dropdown .select2-results__option.select2-results__message:hover {
+        background-color: #5897fb;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
 {% endcompress %}
 {% endblock %}
 
 
 {% block extrajs %}
 <script type="text/javascript">
-    var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
-    $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
+    var bootstrapButton = $.fn.button.noConflict(); // return $.fn.button to previously assigned value
+    $.fn.bootstrapBtn = bootstrapButton;            // give $().bootstrapBtn the Bootstrap functionality
 
     var bootstrapTooltip = $.fn.tooltip.noConflict();
     $.fn.bootstrapTooltip = bootstrapTooltip;
@@ -892,6 +920,7 @@
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/pixlr.js' %}"></script>
 
 <!-- Load Feather code -->
