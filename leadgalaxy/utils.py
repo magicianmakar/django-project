@@ -1697,12 +1697,9 @@ def attach_boards_with_product(user, product, ids):
     boards = ShopifyBoard.objects.filter(id__in=ids)
     if boards:
         for board in boards:
-            try:
-                permissions.user_can_edit(user, board)
-                board.products.add(product)
-                board.save()
-            except PermissionDenied:
-                pass
+            permissions.user_can_edit(user, board)
+            board.products.add(product)
+            board.save()
 
 
 # Helper Classes

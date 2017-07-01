@@ -247,6 +247,11 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     white-space: nowrap;
 }
 
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
 #side-menu li .label-info {
    background-color: #7eabc3 ;
    color: #fff ;
