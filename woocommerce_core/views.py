@@ -5,6 +5,7 @@ from django.views.generic.detail import DetailView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.shortcuts import get_object_or_404, render
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -218,5 +219,45 @@ class MappingSupplierView(DetailView):
         ]
 
         self.add_supplier_info(woocommerce_product.get('variants', []), suppliers_map)
+
+        return context
+
+
+class VariantsEditView(DetailView):
+    model = WooProduct
+    template_name = 'woocommerce/variants_edit.html'
+    slug_field = 'source_id'
+    slug_url_kwarg = 'pid'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('product_variant_setup.use'):
+            return render(request, 'woocommerce/upgrade.html')
+
+        return super(VariantsEditView, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        product = super(VariantsEditView, self).get_object(queryset)
+        permissions.user_can_view(self.request.user, product)
+
+        return product
+
+    def get_store(self):
+        store = get_object_or_404(WooStore, pk=self.kwargs['store_id'])
+        permissions.user_can_view(self.request.user, store)
+
+        return store
+
+    def get_context_data(self, **kwargs):
+        context = super(VariantsEditView, self).get_context_data(**kwargs)
+        context['product'] = self.object.retrieve()
+        context['store'] = self.object.store
+        context['product_id'] = self.object.source_id
+        context['page'] = 'product'
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('woo:products_list')},
+            'Edit Variants',
+        ]
 
         return context

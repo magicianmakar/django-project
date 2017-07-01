@@ -10,6 +10,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils.crypto import get_random_string
+from django.core.urlresolvers import reverse
 
 
 def safeStr(v, default=''):
@@ -148,6 +149,13 @@ class WooProduct(models.Model):
         if self.is_connected:
             admin_url = self.store.get_admin_url().rstrip('/')
             return '{}/post.php?post={}&action=edit'.format(admin_url, self.source_id)
+
+        return None
+
+    @property
+    def variant_edit(self):
+        if self.is_connected:
+            return reverse('woo:variants_edit', args=(self.store.id, self.source_id))
 
         return None
 

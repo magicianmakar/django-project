@@ -550,3 +550,28 @@ class WooStoreApi(ApiResponseMixin, View):
         product.set_default_supplier(supplier, commit=True)
 
         return self.api_success()
+
+    def post_variant_image(self, request, user, data):
+        store_id = int(data.get('store'))
+        product_id = int(data.get('product'))
+        variant_id = int(data.get('variant'))
+        image_id = int(data.get('image'))
+
+        try:
+            store = WooStore.objects.get(id=store_id)
+            permissions.user_can_view(user, store)
+        except WooStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        try:
+            product = WooProduct.objects.get(source_id=product_id)
+            permissions.user_can_edit(user, product)
+        except WooProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        path = 'products/{}/variations/{}'.format(product_id, variant_id)
+        data = {'image': {'id': image_id}}
+        r = store.wcapi.put(path, data)
+        r.raise_for_status()
+
+        return self.api_success()
