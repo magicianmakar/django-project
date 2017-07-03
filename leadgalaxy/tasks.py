@@ -277,12 +277,14 @@ def export_product(req_data, target, user_id):
                     'error': "Product: {}".format(e.message)
                 }
 
-            utils.attach_boards_with_product(user, product, json.loads(data).get('boards', []))
-
             product.update_data(data)
             product.store = store
 
             product.save()
+
+            boards = json.loads(data).get('boards', [])
+            if boards:
+                utils.attach_boards_with_product(user, product, boards)
 
         else:  # New product to save
 
@@ -304,7 +306,9 @@ def export_product(req_data, target, user_id):
 
                 product.save()
 
-                utils.attach_boards_with_product(user, product, json.loads(data).get('boards', []))
+                boards = json.loads(data).get('boards', [])
+                if boards:
+                    utils.attach_boards_with_product(user, product, boards)
 
                 supplier_info = product.get_supplier_info()
                 supplier = ProductSupplier.objects.create(
