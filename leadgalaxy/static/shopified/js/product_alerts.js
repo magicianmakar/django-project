@@ -147,7 +147,7 @@
                 name: 'Shopify'
             },
             "shopified": {
-                name: 'Shopified App'
+                name: 'Dropified'
             },
         },
         events: {

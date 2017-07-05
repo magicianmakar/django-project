@@ -171,7 +171,7 @@ def export_product(req_data, target, user_id):
                 if 'requires write_products scope' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
                                       'Please follow this instructions to resolve this issue:'
-                                      '\nhttps://app.shopifiedapp.com/pages/view/15'
+                                      '\nhttps://app.dropified.com/pages/view/15'
                                       ).format(shopify_error)}
                 elif 'handle: has already been taken' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'

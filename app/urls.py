@@ -21,5 +21,5 @@ urlpatterns = patterns(
 )
 
 
-admin.site.site_header = 'Shopified App'
+admin.site.site_header = 'Dropified'
 admin.site.login_template = 'registration/login.html'

@@ -836,9 +836,9 @@ $(function() {
 
     if (window.location.hash == '#support' && window.intercomSettings /*&& !window.Intercom*/ ) {
         swal({
-            title: 'Shopified App Support',
+            title: 'Dropified Support',
             text: 'It look like our Support App is not loaded correctly, this could be because you are using and <b>Adblocker</b><br>' +
-                'Please try to whitelist Shopified App website in your adblocking extension.<br>' +
+                'Please try to whitelist Dropified website in your adblocking extension.<br>' +
                 'You can also contact use by email: <a href="mailto:support@shopifiedapp.com">support@shopifiedapp.com</a>',
             type: 'warning',
             html: true

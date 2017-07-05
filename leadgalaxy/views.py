@@ -130,7 +130,7 @@ def webhook(request, provider, option):
         except Exception:
             raven_client.captureException()
 
-            send_mail(subject='Shopified App: Webhook exception',
+            send_mail(subject='Dropified: Webhook exception',
                       recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
@@ -148,14 +148,14 @@ def webhook(request, provider, option):
 
             send_email_from_template(
                 tpl='webhook_register.html',
-                subject='Your Shopified App Access',
+                subject='Your Dropified Access',
                 recipient=data['email'],
                 data=data,
             )
 
             utils.slack_invite(data)
 
-            send_mail(subject='Shopified App: New Registration',
+            send_mail(subject='Dropified: New Registration',
                       recipient_list=['chase@shopifiedapp.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(
@@ -173,10 +173,10 @@ def webhook(request, provider, option):
                 data['previous_plan'] = plan.title
                 data['new_plan'] = free_plan.title
 
-                send_mail(subject='Shopified App: Cancel/Refund',
+                send_mail(subject='Dropified: Cancel/Refund',
                           recipient_list=['chase@shopifiedapp.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
-                          message='A Shopified App User has canceled his/her subscription.\n\nMore information:\n{}'.format(
+                          message='A Dropified User has canceled his/her subscription.\n\nMore information:\n{}'.format(
                               utils.format_data(data)))
 
                 return HttpResponse('ok')
@@ -184,7 +184,7 @@ def webhook(request, provider, option):
             except Exception:
                 raven_client.captureException()
 
-                send_mail(subject='Shopified App: Webhook Cancel/Refund exception',
+                send_mail(subject='Dropified: Webhook Cancel/Refund exception',
                           recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
@@ -278,7 +278,7 @@ def webhook(request, provider, option):
                     else:
                         send_email_from_template(
                             tpl='webhook_register.html',
-                            subject='Your Shopified App Access',
+                            subject='Your Dropified Access',
                             recipient=data['email'],
                             data=data)
 
@@ -297,7 +297,7 @@ def webhook(request, provider, option):
 
                     send_email_from_template(
                         tpl='webhook_bundle_purchase.html',
-                        subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                        subject='[Dropified] You Have Been Upgraded To {}'.format(bundle.title),
                         recipient=data['email'],
                         data=data)
 
@@ -477,7 +477,7 @@ def webhook(request, provider, option):
                 else:
                     send_email_from_template(
                         tpl='webhook_register.html',
-                        subject='Your Shopified App Access',
+                        subject='Your Dropified Access',
                         recipient=data['email'],
                         data=data)
 
@@ -496,7 +496,7 @@ def webhook(request, provider, option):
 
                 send_email_from_template(
                     tpl='webhook_bundle_purchase.html',
-                    subject='[Shopified App] You Have Been Upgraded To {}'.format(bundle.title),
+                    subject='[Dropified] You Have Been Upgraded To {}'.format(bundle.title),
                     recipient=data['email'],
                     data=data)
 
@@ -2054,13 +2054,13 @@ def user_profile(request):
         if 'b961a2a0f7101efa5c79b8ac80b75c47' not in bundles:  # JVZoo Elite Bundle
             extra_bundles.append({
                 'title': 'Add Elite Bundle',
-                'url': 'http://www.shopifiedapp.com/elite',
+                'url': 'http://www.dropified.com/elite',
             })
 
         if '2fba7df0791f67b61581cfe37e0d7b7d' not in bundles:  # JVZoo Unlimited
             extra_bundles.append({
                 'title': 'Add Unlimited Bundle',
-                'url': 'http://www.shopifiedapp.com/unlimited',
+                'url': 'http://www.dropified.com/unlimited',
             })
 
     bundles = profile.bundles.filter(hidden_from_user=False)

@@ -22,7 +22,7 @@ class ProductChangeEvent():
         )
         self.save_revision = False
         self.notify_events = []
-        self.base_product_url = 'https://app.shopifiedapp.com/product'
+        self.base_product_url = 'https://app.dropified.com/product'
 
         events = json.loads(product_change.data)
         self.product_changes = events['changes']['product']
@@ -103,7 +103,7 @@ class ProductChangeEvent():
 
         html_message = send_email_from_template(
             'product_change_notify.html',
-            '[Shopified App] AliExpress Product Alert',
+            '[Dropified] AliExpress Product Alert',
             self.user.email,
             data,
             nl2br=False

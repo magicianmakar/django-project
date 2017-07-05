@@ -153,7 +153,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True, from_ema
         recipient = [recipient]
 
     if from_email is None:
-        from_email = '"Shopified App" <support@shopifiedapp.com>'
+        from_email = '"Dropified" <support@shopifiedapp.com>'
 
     send_mail(subject=subject,
               recipient_list=recipient,

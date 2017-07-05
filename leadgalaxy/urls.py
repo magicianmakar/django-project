@@ -61,9 +61,9 @@ urlpatterns = patterns(
     url(r'^accounts/password/reset/$', password_reset,
         {'template_name': 'registration/password_reset.html', 'html_email_template_name': 'registration/password_reset_email2.html'}),
     url(r'^accounts/password_reset/done/$', 'django.contrib.auth.views.password_reset_done',
-        {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header': 'Shopified App'}}),
+        {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
     url(r'^accounts/password_change/done/$', 'django.contrib.auth.views.password_change_done',
-        {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header': 'Shopified App'}}),
+        {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
 
     url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
     url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),

@@ -288,7 +288,7 @@ function addOrderSourceRequest(data_api) {
     }).done(function(data) {
         if (data.status == 'ok') {
             swal.close();
-            toastr.success('Item was marked as ordered in Shopified App.', 'Marked as Ordered');
+            toastr.success('Item was marked as ordered in Dropified.', 'Marked as Ordered');
         } else {
             displayAjaxError('Mark as Ordered', data);
         }
@@ -833,7 +833,7 @@ $('#country-filter').chosen({
 function pusherSub() {
     if (typeof(Pusher) === 'undefined') {
         toastr.error('This could be due to using Adblocker extensions<br>' +
-            'Please whitelist Shopified App website and reload the page<br>' +
+            'Please whitelist Dropified website and reload the page<br>' +
             'Contact us for further assistance',
             'Pusher service is not loaded', {timeOut: 0});
         return;

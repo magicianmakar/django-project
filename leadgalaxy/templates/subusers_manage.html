@@ -90,12 +90,12 @@
                              </td>
                             <td class="no-wrap">
                                 {% if not item.expired %}
-                                    {% with reg_link="https://app.shopifiedapp.com/accounts/register/" %}
+                                    {% with reg_link="https://app.dropified.com/accounts/register/" %}
                                     <a class="btn btn-success btn-xs" href="{{reg_link}}{{item.register_hash}}" target="_blank">
                                         <i class="fa fa-external-link"></i> Link</a>
 
                                     <a class="btn btn-primary btn-xs email-link-btn"
-                                        href="mailto:{{item.email}}?subject=Invitation to join Shopified App&body=Hello%2C%0D%0AYou%20can%20register%20at%20Shopified%20App%20using%20this%20link%3A%0D%0A{{reg_link}}{{item.register_hash}}"><i class="fa fa-envelope-o"></i> Email Link</a>
+                                        href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%%20using%20this%20link%3A%0D%0A{{reg_link}}{{item.register_hash}}"><i class="fa fa-envelope-o"></i> Email Link</a>
                                     {% endwith %}
 
                                     <button class="btn btn-danger btn-xs itooltip cancel-invitation-user"
@@ -319,7 +319,7 @@
                     context: {btn: btn},
                     success: function (data) {
                         if (data.status == 'ok') {
-                            var link = 'https://app.shopifiedapp.com/accounts/register/';
+                            var link = 'https://app.dropified.com/accounts/register/';
                             link += data.hash;
                             var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
                                       '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';

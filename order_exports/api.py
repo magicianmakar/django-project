@@ -356,14 +356,14 @@ class ShopifyOrderExportAPI():
 
     def send_email(self, code):
         data = {
-            'url': 'https://app.shopifiedapp.com{}'.format(reverse('order_exports_generated', kwargs={
+            'url': 'https://app.dropified.com{}'.format(reverse('order_exports_generated', kwargs={
                 'order_export_id': self.order_export.id, 'code': code
             }))
         }
 
         send_email_from_template(
             tpl='order_export.html',
-            subject='[Shopified App] Order Export',
+            subject='[Dropified] Order Export',
             recipient=self.order_export.emails,
             data=data,
             nl2br=False

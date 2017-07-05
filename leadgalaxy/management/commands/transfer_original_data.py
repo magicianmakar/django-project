@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
         if total < 10:
             self.stdout.write('Products: ')
-            self.stdout.write('\n'.join(['\thttps://app.shopifiedapp.com/product/%d' % p.id for p in products]))
+            self.stdout.write('\n'.join(['\thttps://app.dropified.com/product/%d' % p.id for p in products]))
 
         self.write_success('Done')
 

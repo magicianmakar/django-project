@@ -21,9 +21,9 @@ def extra_bundles(request):
         bundles = profile.bundles.all().values_list('register_hash', flat=True)
         if profile.plan.register_hash == '5427f85640fb78728ec7fd863db20e4c':  # JVZoo Pro Plan
             if 'b961a2a0f7101efa5c79b8ac80b75c47' not in bundles:  # JVZoo Elite Bundle
-                extra_bundle = {'url': 'http://www.shopifiedapp.com/elite', 'title': 'Add Elite Bundle'}
+                extra_bundle = {'url': 'http://www.dropified.com/elite', 'title': 'Add Elite Bundle'}
             elif '2fba7df0791f67b61581cfe37e0d7b7d' not in bundles:  # JVZoo Unlimited
-                extra_bundle = {'url': 'http://www.shopifiedapp.com/unlimited', 'title': 'Add Unlimited Bundle'}
+                extra_bundle = {'url': 'http://www.dropified.com/unlimited', 'title': 'Add Unlimited Bundle'}
             else:
                 extra_bundle = False
 
@@ -31,7 +31,7 @@ def extra_bundles(request):
 
         elif profile.plan.register_hash == 'c0dee42b84c736bb62c61ad0f20b9f53':  # Free Plan for Promote Labs
             extra_bundle = {
-                'url': 'http://www.shopifiedapp.com/unlimited',
+                'url': 'http://www.dropified.com/unlimited',
                 'title': 'Upgrade To All Drop Shipping Features'
             }
 
@@ -75,7 +75,7 @@ def extra_bundles(request):
 
                         extra_bundle = {
                             'url': '/user/profile#billing',
-                            'title': 'Activate Shopified App Account',
+                            'title': 'Activate Dropified Account',
                             'attrs': 'qtip-tooltip="{}" xqtip-my="" xqtip-at=""'.format(msg),
                             'message': msg,
                             'sametab': True

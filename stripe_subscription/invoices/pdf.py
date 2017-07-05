@@ -44,7 +44,7 @@ def draw_pdf(buffer, invoice):
     invoice_pdf = SimpleDocTemplate(buffer, pagesize=A4)
     parts = []
     parts.append(Paragraph(format_date(invoice.date), STYLES['text-right']))
-    logo = os.path.join(settings.BASE_DIR2, 'static', 'Shopified-App2.png')
+    logo = os.path.join(settings.BASE_DIR2, 'static', 'dropified-logo.png')
     parts.append(Image(logo, width=150, height=37, hAlign='LEFT'))
     customer = StripeCustomer.objects.get(customer_id=invoice.customer)
     data = [[header_paragraph(invoice), '', ],
@@ -106,7 +106,7 @@ def invoice_total_paragraph(invoice):
 
 
 def invoicer_paragraph(invoice):
-    return Paragraph('Shopified App', STYLES['default'])
+    return Paragraph('Dropified', STYLES['default'])
 
 
 def invoice_due_paragraph(invoice):

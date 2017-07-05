@@ -895,7 +895,7 @@ def create_shopify_webhook(store, topic):
         'webhook': {
             'topic': topic,
             'format': 'json',
-            'address': 'http://app.shopifiedapp.com/webhook/shopify/{}?store={}&t={}'.format(topic.replace('/', '-'), store.id, token)
+            'address': 'https://app.dropified.com/webhook/shopify/{}?store={}&t={}'.format(topic.replace('/', '-'), store.id, token)
         }
     }
 

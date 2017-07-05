@@ -362,7 +362,7 @@ window.OrderExportAdd = {
                     context: {btn: btn},
                     success: function (data) {
                         if (data.status == 'ok') {
-                            var link = 'https://app.shopifiedapp.com/accounts/register/';
+                            var link = 'https://app.dropified.com/accounts/register/';
                             link += data.hash;
                             var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
                                       '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';

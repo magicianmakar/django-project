@@ -58,7 +58,7 @@
 
     function upgradeWarning() {
         swal('Upgrade Extension',
-            'Please upgrade to a newer version of Shopified App Chrome Extension to use this feature.',
+            'Please upgrade to a newer version of Dropified Chrome Extension to use this feature.',
             'warning');
     }
 

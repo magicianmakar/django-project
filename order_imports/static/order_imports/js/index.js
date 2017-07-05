@@ -148,7 +148,7 @@ window.OrderImportsIndex = {
     pusherSubscription: function(storeId) {
         if (typeof(Pusher) === 'undefined') {
             toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
                 'Contact us for further assistance',
                 'Pusher service is not loaded', {timeOut: 0});
             return;
@@ -185,7 +185,7 @@ window.OrderImportsIndex = {
     pusherApproveSubscription: function() {
         if (typeof(Pusher) === 'undefined') {
             toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
                 'Contact us for further assistance',
                 'Pusher service is not loaded', {timeOut: 0});
             return;

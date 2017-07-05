@@ -12,7 +12,7 @@
     <link rel="shortcut icon"  href="{% static 'favicon.png' %}">
     <link rel="icon" href="{% static 'favicon.png' %}" >
 
-    <title>Shopified App | Register</title>
+    <title>Dropified | Register</title>
 
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700" rel="stylesheet">
 
@@ -37,10 +37,10 @@
         <div>
             <div>
                 <h1 class="logo-name" style="font-size: 16px">
-                    <img width="220" height="50" src={% static 'Shopified-App2.png' %}>
+                    <img width="220" height="50" src={% static 'dropified-logo.png' %}>
                 </h1>
             </div>
-            <h3 class="welcome-title">Register to Shopified App</h3>
+            <h3 class="welcome-title">Register to Dropified</h3>
             <p class="welcome-text">
                 {% if registration %}
                     {{registration.get_description}}
@@ -100,7 +100,7 @@
                         <label for="accept_terms">
                             {% render_field form.accept_terms required="" %}
                             I agree to the
-                            <a href="https://app.shopifiedapp.com/pages/terms-of-service" target="_blank">
+                            <a href="https://app.dropified.com/pages/terms-of-service" target="_blank">
                                 Terms &amp; Conditions
                             </a>
                             {{ form.accept_terms.errors | safe }}
@@ -120,7 +120,7 @@
                 <p class="text-muted text-center no-account">Already have an account?</p>
                 <a class="btn big-btn btn-sm btn-info" href="{% url 'django.contrib.auth.views.login' %}">Login</a>
             </form>
-             <div class="m-t copyright"><img width="110" height="25" src={% static 'Shopified-App2.png' %}> &copy; {% now "Y" %}</div>
+             <div class="m-t copyright"><img width="110" height="25" src={% static 'dropified-logo.png' %}> &copy; {% now "Y" %}</div>
         </div>
     </div>
 
@@ -131,12 +131,12 @@
         <div class="constrain">
             <h3 class="support-title">
                 Support
-                <img width="30" height="30" src={% static 'logo-element.png' %}>
+                <img width="30" height="30" src={% static 'dropified-icon.png' %}>
             </h3>
             <p>
-                Need help? Visit our <a href="http://www.getshopifiedapp.com/training-videos/" title="Training Center" class="big-btn btn btn-info">Training Center</a> or create a ticket <a href="http://www.getshopifiedapp.com/support/" title="Support Center" class="big-btn btn btn-info">Support Center</a>
-                <a href="https://www.facebook.com/shopifiedapp/" target="_blank" title="Facebook" class="fa fa-facebook social"></a>
-                <a href="https://www.twitter.com/shopifiedapp" target="_blank" title="Twitter" class="fa fa-twitter social"></a>
+                Need help? Visit our <a href="http://www.dropified.com/training-videos/" title="Training Center" class="big-btn btn btn-info">Training Center</a> or create a ticket <a href="http://www.dropified.com/support/" title="Support Center" class="big-btn btn btn-info">Support Center</a>
+                <a href="https://www.facebook.com/dropified" target="_blank" title="Facebook" class="fa fa-facebook social"></a>
+                <a href="https://www.twitter.com/dropified" target="_blank" title="Twitter" class="fa fa-twitter social"></a>
             </p>
 
         </div>

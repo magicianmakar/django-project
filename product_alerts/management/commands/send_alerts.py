@@ -72,7 +72,7 @@ class Command(BaseCommand):
             common_data = {
                 'images': change.product.get_images(),
                 'title': change.product.title,
-                'url': 'https://app.shopifiedapp.com/product/{}'.format(change.product.id),
+                'url': 'https://app.dropified.com/product/{}'.format(change.product.id),
                 'shopify_url': change.product.store.get_link('/admin/products/{}'.format(change.product.get_shopify_id())),
                 'open_orders': change.orders_count()
             }
@@ -165,11 +165,11 @@ class Command(BaseCommand):
 
             send_email_from_template(
                 'product_change_notify.html',
-                '[Shopified App] AliExpress Product Alert',
+                '[Dropified] AliExpress Product Alert',
                 user.email,
                 data,
                 nl2br=False,
-                from_email='"Shopified App" <no-reply@shopifiedapp.com>'
+                from_email='"Dropified" <no-reply@shopifiedapp.com>'
             )
 
     def get_config(self, name, product, user, default='notify'):

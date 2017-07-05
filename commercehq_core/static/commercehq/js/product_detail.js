@@ -832,7 +832,7 @@ function renderImages() {
         // Pixlr Doesn't redirect to this page
         pixlr.settings.exit = window.location.origin + '/pixlr/close';
         pixlr.settings.method = 'POST';
-        pixlr.settings.referrer = 'Shopified App';
+        pixlr.settings.referrer = 'Dropified';
         // setting to false saves the image but doesn't run the redirect script on pixlr.html
         pixlr.settings.redirect = false;
     }
@@ -1262,7 +1262,7 @@ function clippingmagicEditImage(data, image) {
 
         if (typeof(Pusher) === 'undefined') {
             toastr.error('This could be due to using Adblocker extensions<br>' +
-                'Please whitelist Shopified App website and reload the page<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
                 'Contact us for further assistance',
                 'Pusher service is not loaded', {timeOut: 0, extendedTimeOut: 0});
         }

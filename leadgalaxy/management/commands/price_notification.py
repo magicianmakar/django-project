@@ -8,7 +8,7 @@ import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
-SHOPIFIEDAPP_WEBHOOK_BASE = 'http://app.shopifiedapp.com/webhook/price-notification/product'
+SHOPIFIEDAPP_WEBHOOK_BASE = 'https://app.dropified.com/webhook/price-notification/product'
 
 
 class Command(BaseCommand):

@@ -1,11 +1,11 @@
-Shopified App [![build status](https://gitlab.com/shopifiedapp/shopified-webapp/badges/master/build.svg)](https://gitlab.com/shopifiedapp/shopified-webapp/commits/master)
+Dropified
 ===================
 
-[app.shopifiedapp.com](https://app.shopifiedapp.com)
+[app.dropified.com](https://app.dropified.com)
 
 # Setup developement envirement
 
-The following apps are required for Shopified App:
+The following apps are required for Dropified:
 - Python 2.7.11 or higher
 - Python Pip
 - PostgreSQL 9.5
@@ -13,7 +13,7 @@ The following apps are required for Shopified App:
 
 ### Clone Repository
 ```
-git clone git@gitlab.com:shopifiedapp/shopified-webapp.git
+git clone git@github.com:ShopifiedApp/webapp.git
 ```
 
 ### Virtual envirement

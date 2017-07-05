@@ -170,7 +170,7 @@ class Command(BaseCommand):
                 tries -= 1
 
         if fulfilled:
-            note = "Auto Fulfilled by Shopified App (Line Item #{})".format(order.line_id)
+            note = "Auto Fulfilled by Dropified (Line Item #{})".format(order.line_id)
 
             countdown = self.store_countdown.get(store.id, 30)
             tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)

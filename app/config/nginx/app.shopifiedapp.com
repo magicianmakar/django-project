@@ -1,8 +1,9 @@
-# Production server configuration
 
-map $uri $redirect_https {
+map $uri $dropified_redirects {
     ~^/webhook/           0;
     ~^/marketing/feeds/   0;
+    ~^/api/               0;
+
     default               1;
 }
 
@@ -11,7 +12,7 @@ upstream shopifiedapp_backend  {
 }
 
 upstream shopifiedhelper_backend  {
-  server 127.0.0.1:9000;
+  server shopified-helper-app.herokuapp.com;
 }
 
 server {
@@ -22,6 +23,9 @@ server {
     listen [::]:443 ssl http2;
 
     server_name app.shopifiedapp.com;
+
+    client_body_timeout 5s;
+    client_header_timeout 5s;
 
     ssl_prefer_server_ciphers on;
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -46,11 +50,29 @@ server {
         try_files $uri $uri/ =404;
     }
 
+    #location /webhook/shopify/ {
+    #    return 500;
+    #}
+
+    #location /webhook/shopify/orders-update {
+    #    return 500;
+    #}
+
+    #location /webhook/shopify/products-update {
+    #  return 200;
+    #}
+
+    #location /webhook/shopify/products-delete {
+    #  return 200;
+    #}
+
+    #deny 93.95.82.12;
+
     location /api/ali/ {
         access_log  /var/log/nginx/helperapp.access.log;
         error_log   /var/log/nginx/helperapp.error.log;
 
-        proxy_set_header Host $server_name;
+        proxy_set_header Host shopified-helper-app.herokuapp.com;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -59,9 +81,9 @@ server {
         proxy_pass  http://shopifiedhelper_backend;
     }
 
-    #location /static {
-    #    root ~/shopify-app/staticfiles;
-    #}
+    if ($dropified_redirects = 1) {
+       return 302 https://app.dropified.com$request_uri;
+    }
 
     location / {
         rewrite /terms-of-service /pages/terms-of-service  break;

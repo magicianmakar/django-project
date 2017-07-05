@@ -93,8 +93,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return res
 
     def post_register(self, request, user, data):
-        return self.api_error('Please Visit Shopified App Website to register a new account:\n\n'
-                              'http://app.shopifiedapp.com/accounts/register\n.', status=501)
+        return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
+                              'http://app.dropified.com/accounts/register\n.', status=501)
 
     def get_stores(self, request, user, data):
         stores = []
@@ -243,7 +243,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     return self.api_error(
                         'The following permissions are missing: \n{}\n\n'
                         'You can find instructions to fix this issue here:\n'
-                        'https://app.shopifiedapp.com/pages/fix-private-app-permissions'
+                        'https://app.dropified.com/pages/fix-private-app-permissions'
                         .format('\n'.join(missing_perms)), status=403)
 
             return self.api_success({'store': info['name']})
@@ -2032,7 +2032,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             permissions.user_can_view(user, product)
 
             return self.api_success({
-                'url': 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
+                'url': 'https://app.dropified.com{}'.format(reverse('product_view', args=[product.id]))
             })
         except:
             return self.api_error('Product not found', status=404)
@@ -2052,14 +2052,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     response[str(i)] = None
 
                 for supplier in ProductSupplier.objects.filter(product__user=user.models_user, source_id__in=source_ids):
-                    response[str(supplier.source_id)] = 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[supplier.product_id]))
+                    response[str(supplier.source_id)] = 'https://app.dropified.com{}'.format(reverse('product_view', args=[supplier.product_id]))
 
             elif shopify_ids:
                 for i in shopify_ids:
                     response[str(i)] = None
 
                 for product in ShopifyProduct.objects.filter(user=user.models_user, shopify_id__in=shopify_ids):
-                    response[str(product.shopify_id)] = 'https://app.shopifiedapp.com{}'.format(reverse('product_view', args=[product.id]))
+                    response[str(product.shopify_id)] = 'https://app.dropified.com{}'.format(reverse('product_view', args=[product.id]))
 
             return self.api_success(response)
         except:
@@ -2219,7 +2219,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                     send_email_from_template(
                         tpl='subuser_added.html',
-                        subject='Invitation to join Shopified App',
+                        subject='Invitation to join Dropified',
                         recipient=subuser_email,
                         data=data,
                     )
@@ -2250,7 +2250,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         send_email_from_template(
             tpl='subuser_invite.html',
-            subject='Invitation to join Shopified App',
+            subject='Invitation to join Dropified',
             recipient=subuser_email,
             data=data,
         )

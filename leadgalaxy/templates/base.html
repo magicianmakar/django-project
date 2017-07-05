@@ -15,7 +15,7 @@
     <link rel="shortcut icon"  href="{% static 'favicon.png' %}">
     <link rel="icon" href="{% static 'favicon.png' %}" >
 
-    <title>{% block title %}Shopified App{% endblock %}</title>
+    <title>{% block title %}Dropified{% endblock %}</title>
 
     <style name="FontAwesome">
         @font-face {
@@ -66,8 +66,8 @@
 
     {% if tos_update and not user.is_subuser %}
         <div class="tos-update">
-            Shopified App has updated our Terms of Service.
-            You can view them by clicking the link in the Shopified App footer or by
+            Dropified has updated our Terms of Service.
+            You can view them by clicking the link in the Dropified footer or by
             <a href="/pages/terms-of-service" target="_blank">clicking here</a>.
 
             <a href="#" type="button" class="close-btn" data-dismiss="alert">×</a>
@@ -79,7 +79,7 @@
         <div class="sidebar-collapse">
             <ul class="nav metismenu" id="side-menu">
                 <li class="profile-element" style="padding:12px 5px 11px 5px;text-align:center;">
-                    <img src="{% static 'Shopified-App-White.png' %}" width="160" height="37" />
+                    <img src="{% static 'dropified-logo-white-s.png' %}" style="height:40px" />
                 </li>
 
                 {% if user.is_authenticated %}
@@ -101,7 +101,7 @@
                             </ul>
                     </div>
                     <div style="font-size: 0.9em;padding: 0;margin: 0;" class="logo-element">
-                        <img src="{% static 'logo-element.png' %}" style="width: 50%; ">
+                        <img src="{% static 'dropified-icon.png' %}" style="width: 50%; ">
                     </div>
                 </li>
                 {% endif %}
@@ -227,7 +227,7 @@
                         <li {% if page == 'acp_users_list' %}class="active"{% endif %}>
                             <a href="{% url 'acp_users_list' %}">Users
                             <span class="label label-info pull-right"
-                                  onclick="javascript:setTimeout(function(){var q=prompt('Query Shopified App Users');if(q.length) {window.location.href='/acp/users/list?q='+q;}},10);return false;">Search</span>
+                                  onclick="javascript:setTimeout(function(){var q=prompt('Query Dropified Users');if(q.length) {window.location.href='/acp/users/list?q='+q;}},10);return false;">Search</span>
                             </a>
                         </li>
                         <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans</a></li>
@@ -382,8 +382,8 @@
             </div>
 
             <div>
-                Shopified App &copy; {% now "Y" %} -
-                <a href="https://app.shopifiedapp.com/pages/terms-of-service" target="_blank">
+                Dropified &copy; {% now "Y" %} -
+                <a href="https://app.dropified.com/pages/terms-of-service" target="_blank">
                     Terms Of Service
                 </a>
             </div>
