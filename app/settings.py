@@ -29,6 +29,7 @@ DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
 ALLOWED_HOSTS = [
     '.shopifiedapp.com',
+    '.dropified.com',
 ]
 
 # Application definition
