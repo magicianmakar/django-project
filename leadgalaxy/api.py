@@ -337,10 +337,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'data': data
                 })
             else:
-                if issubclass(data, Exception):
-                    data = {
-                        'error': 'Export is taking too long'
-                    }
+                if type(data) is not dict:
+                    if issubclass(data, Exception):
+                        data = {
+                            'error': 'Export is taking too long'
+                        }
+                    else:
+                        data = {
+                            'error': 'Shopify Export Error.'
+                        }
 
                 return JsonResponse(data, safe=False, status=500)
 
