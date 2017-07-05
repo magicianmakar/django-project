@@ -337,6 +337,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'data': data
                 })
             else:
+                if issubclass(data, Exception):
+                    data = {
+                        'error': 'Export is taking too long'
+                    }
+
                 return JsonResponse(data, safe=False, status=500)
 
     def post_product_delete(self, request, user, data):

@@ -3035,7 +3035,7 @@ def locate(request, what):
     elif what == 'product':
         if request.GET.get('shop') and request.GET.get('id'):
             store = utils.get_store_from_request(request)
-            product = store.shopifyproduct_set.filter(shopify_id=request.GET.get('id')).first()
+            product = store.shopifyproduct_set.filter(shopify_id=request.GET.get('id')).first() if store else None
             if product:
                 return HttpResponseRedirect(reverse('product_view', kwargs={'pid': product.id}))
 
