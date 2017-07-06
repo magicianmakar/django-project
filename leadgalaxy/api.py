@@ -338,7 +338,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 })
             else:
                 if type(data) is not dict:
-                    if issubclass(data, Exception):
+                    if isinstance(data, Exception) or isinstance(data, basestring):
                         data = {
                             'error': 'Export is taking too long'
                         }
