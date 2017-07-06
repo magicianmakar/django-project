@@ -169,7 +169,7 @@ class Command(BaseCommand):
                 user.email,
                 data,
                 nl2br=False,
-                from_email='"Dropified" <no-reply@shopifiedapp.com>'
+                from_email='"Dropified" <no-reply@dropified.com>'
             )
 
     def get_config(self, name, product, user, default='notify'):

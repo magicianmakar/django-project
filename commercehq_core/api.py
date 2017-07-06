@@ -605,7 +605,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                         request.build_absolute_uri('/user/profile#plan'), status=401)
                 else:
                     return self.api_error('Your plan does not support connecting another Shopify store. '
-                                          'Please contact support@shopifiedapp.com to learn how to connect more stores.')
+                                          'Please contact support@dropified.com to learn how to connect more stores.')
 
         store = CommerceHQStore(
             title=data.get('title').strip(),

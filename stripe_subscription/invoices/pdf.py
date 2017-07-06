@@ -71,7 +71,7 @@ def format_date(date):
 
 def draw_footer(canvas, doc):
     canvas.saveState()
-    text = 'Questions? Email support@shopifiedapp.com'
+    text = 'Questions? Email support@dropified.com'
     contact = Paragraph(text, STYLES['text-center'])
     w, h = contact.wrap(doc.width, doc.bottomMargin)
     contact.drawOn(canvas, doc.leftMargin, h)

@@ -34,7 +34,7 @@
                                     Try for {{item.stripe_plan.trial_period_days}} days</button>
                             {% elif not user.can_trial and not user.stripe_customer.source and not current_plan.is_stripe %}
                                 <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
-                                    Enter You Billing Info
+                                    Enter Your Billing Info
                                 </button>
                             {% else %}
                                 <button class="btn btn-success choose-plan">Choose Plan</button>

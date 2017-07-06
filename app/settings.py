@@ -198,7 +198,7 @@ EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
 EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = "support@shopifiedapp.com"
+DEFAULT_FROM_EMAIL = "support@dropified.com"
 
 # Shopify App
 SHOPIFY_API_KEY = os.environ['SHOPIFY_API_KEY']

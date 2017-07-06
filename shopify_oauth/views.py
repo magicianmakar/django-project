@@ -176,7 +176,7 @@ def install(request, store):
                 messages.error(
                     request,
                     'Your plan does not support connecting another Shopify store. '
-                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@shopifiedapp.com">'
+                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@dropified.com">'
                     'contact support</a> to learn how to connect more stores'.format(plans_url))
 
             return HttpResponseRedirect('/')
@@ -241,7 +241,7 @@ def callback(request):
                 messages.error(
                     request,
                     'Your plan does not support connecting another Shopify store. '
-                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@shopifiedapp.com">'
+                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@dropified.com">'
                     'contact support</a> to learn how to connect more stores'.format(plans_url))
 
             return HttpResponseRedirect('/')

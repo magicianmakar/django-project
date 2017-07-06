@@ -131,7 +131,7 @@ def webhook(request, provider, option):
             raven_client.captureException()
 
             send_mail(subject='Dropified: Webhook exception',
-                      recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
+                      recipient_list=['chase@dropified.com', 'ma7dev@gmail.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
@@ -156,7 +156,7 @@ def webhook(request, provider, option):
             utils.slack_invite(data)
 
             send_mail(subject='Dropified: New Registration',
-                      recipient_list=['chase@shopifiedapp.com'],
+                      recipient_list=['chase@dropified.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(
                           utils.format_data(data)))
@@ -174,7 +174,7 @@ def webhook(request, provider, option):
                 data['new_plan'] = free_plan.title
 
                 send_mail(subject='Dropified: Cancel/Refund',
-                          recipient_list=['chase@shopifiedapp.com'],
+                          recipient_list=['chase@dropified.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message='A Dropified User has canceled his/her subscription.\n\nMore information:\n{}'.format(
                               utils.format_data(data)))
@@ -185,7 +185,7 @@ def webhook(request, provider, option):
                 raven_client.captureException()
 
                 send_mail(subject='Dropified: Webhook Cancel/Refund exception',
-                          recipient_list=['chase@shopifiedapp.com', 'ma7dev@gmail.com'],
+                          recipient_list=['chase@dropified.com', 'ma7dev@gmail.com'],
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
