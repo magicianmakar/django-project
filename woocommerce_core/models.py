@@ -104,7 +104,7 @@ class WooProduct(models.Model):
         verbose_name = 'WooCommerce Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('WooStore', related_name='products')
+    store = models.ForeignKey('WooStore', related_name='products', null=True)
     user = models.ForeignKey(User)
 
     data = models.TextField(default='{}', blank=True)
@@ -121,6 +121,8 @@ class WooProduct(models.Model):
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
     mapping_config = models.TextField(null=True, blank=True)
+
+    parent_product = models.ForeignKey('WooProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -456,7 +458,7 @@ class WooProduct(models.Model):
 
 
 class WooSupplier(models.Model):
-    store = models.ForeignKey('WooStore', related_name='suppliers')
+    store = models.ForeignKey('WooStore', null=True, related_name='suppliers')
     product = models.ForeignKey('WooProduct')
 
     product_url = models.CharField(max_length=512, null=True, blank=True)

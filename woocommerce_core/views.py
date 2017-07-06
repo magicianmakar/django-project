@@ -98,16 +98,18 @@ class ProductDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
         permissions.user_can_view(self.request.user, self.object)
+        products = reverse('woo:products_list')
 
         if self.object.source_id:
             context['woocommerce_product'] = self.object.sync()
 
         context['product_data'] = self.object.parsed
-        context['breadcrumbs'] = [
-            {'title': 'Products', 'url': reverse('woo:products_list')},
-            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('woo:products_list'), self.object.store.id)},
-            self.object.title
-        ]
+        context['breadcrumbs'] = [{'title': 'Products', 'url': products}, self.object.title]
+
+        if self.object.store:
+            store_title = self.object.store.title
+            store_products = '{}?store={}'.format(products, self.object.store.id)
+            context['breadcrumbs'].insert(1, {'title': store_title, 'url': store_products})
 
         context.update(aws_s3_context())
 

@@ -10,6 +10,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from django.views.generic import View
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.db import transaction
 
@@ -25,6 +26,7 @@ from shopified_core.utils import (
 
 from .models import WooStore, WooProduct, WooSupplier
 import tasks
+import utils
 
 
 class WooStoreApi(ApiResponseMixin, View):
@@ -404,12 +406,12 @@ class WooStoreApi(ApiResponseMixin, View):
 
     def post_product_export(self, request, user, data):
         try:
-            pk = safeInt(data.get('store', 0))
-            store = WooStore.objects.get(pk=pk)
+            store_id = safeInt(data.get('store'))
+            store = WooStore.objects.get(pk=store_id)
             permissions.user_can_view(user, store)
 
             tasks.product_export.apply_async(
-                args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
+                args=[store_id, data.get('product'), user.id, data.get('publish')],
                 countdown=0,
                 expires=120)
 
@@ -552,10 +554,10 @@ class WooStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def post_variant_image(self, request, user, data):
-        store_id = int(data.get('store'))
-        product_id = int(data.get('product'))
-        variant_id = int(data.get('variant'))
-        image_id = int(data.get('image'))
+        store_id = safeInt(data.get('store'))
+        product_id = safeInt(data.get('product'))
+        variant_id = safeInt(data.get('variant'))
+        image_id = safeInt(data.get('image'))
 
         try:
             store = WooStore.objects.get(id=store_id)
@@ -578,7 +580,7 @@ class WooStoreApi(ApiResponseMixin, View):
 
     def get_product_image_download(self, request, user, data):
         try:
-            product = WooProduct.objects.get(id=int(data.get('product')))
+            product = WooProduct.objects.get(id=safeInt(data.get('product')))
             permissions.user_can_view(user, product)
 
         except WooProduct.DoesNotExist:
@@ -591,3 +593,16 @@ class WooStoreApi(ApiResponseMixin, View):
         tasks.create_image_zip.delay(images, product.id)
 
         return self.api_success()
+
+    def post_product_duplicate(self, request, user, data):
+        pk = safeInt(data.get('product'))
+        product = WooProduct.objects.get(pk=pk)
+        permissions.user_can_view(user, product)
+        duplicate_product = utils.duplicate_product(product)
+
+        return self.api_success({
+            'product': {
+                'id': duplicate_product.id,
+                'url': reverse('woo:product_detail', args=[duplicate_product.id])
+            }
+        })

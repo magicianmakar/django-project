@@ -1,7 +1,9 @@
 import re
+import json
 import itertools
 
 from django.db.models import Q
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from shopified_core import permissions
@@ -221,3 +223,38 @@ def update_variants_api_data(data):
         variants.append(variant)
 
     return variants
+
+
+@transaction.atomic
+def duplicate_product(product, store=None):
+    parent_product = WooProduct.objects.get(id=product.id)
+    product.pk = None
+    product.parent_product = parent_product
+    product.source_id = 0
+    product.store = store
+
+    if product.parsed.get('id'):
+        data = product.parsed
+        data.pop('id')
+        data.pop('published')
+        data['status'] = 'draft'
+        data['variants'] = []
+
+        for attribute in data.pop('attributes', []):
+            title, values = attribute['name'], attribute['options']
+            data['variants'].append({'title': title, 'values': values})
+
+        product.data = json.dumps(data)
+
+    product.save()
+
+    for supplier in parent_product.woosupplier_set.all():
+        supplier.pk = None
+        supplier.product = product
+        supplier.store = product.store
+        supplier.save()
+
+        if supplier.is_default:
+            product.set_default_supplier(supplier, commit=True)
+
+    return product

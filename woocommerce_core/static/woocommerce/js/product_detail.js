@@ -98,8 +98,16 @@ function productExport(btn) {
         },
         context: {btn: btn},
         success: function (data) {
-            var pusher = new Pusher(config.sub_conf.key);
-            var channel = pusher.subscribe(config.sub_conf.channel);
+            if (config.sub_conf.key) {
+                var pusher = new Pusher(config.sub_conf.key);
+            } else {
+                var pusher = new Pusher(data.pusher.key);
+            }
+            if (config.sub_conf.channel) {
+                var channel = pusher.subscribe(config.sub_conf.channel);
+            } else {
+                var channel = pusher.subscribe(data.pusher.channel);
+            }
 
             channel.bind('product-export', function(data) {
                 console.dir(data);
@@ -401,7 +409,7 @@ $('#duplicate-btn').click(function (e) {
     $(this).bootstrapBtn('loading');
 
     $.ajax({
-        url: '/api/product-duplicate',
+        url: api_url('product-duplicate', 'woo'),
         type: 'POST',
         data: {
             product: product_id
