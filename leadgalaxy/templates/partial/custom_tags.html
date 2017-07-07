@@ -120,10 +120,6 @@
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
         })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-        ga('create', 'UA-16566267-6', 'auto');
-        ga('create', 'UA-16566267-7', 'auto');
-        ga('send', 'pageview');
-
         // Mixpanel
         (function(s,v){if(!v.__SV){var u=window;try{var t,f,p,o=u.location,r=o.hash;
         t=function(e,c){return(f=e.match(RegExp(c+"=([^&]*)")))?f[1]:null
@@ -152,10 +148,6 @@
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
         })(window,document,'script','https://www.google-analytics.com/analytics_debug.js','ga');
 
-        ga('create', 'UA-16566267-6', 'auto');
-        ga('create', 'UA-16566267-7', 'auto');
-        ga('send', 'pageview');
-
         // Mixpanel debug mode
         (function(s,v){if(!v.__SV){var u=window;try{var t,f,p,o=u.location,r=o.hash;
         t=function(e,c){return(f=e.match(RegExp(c+"=([^&]*)")))?f[1]:null
@@ -177,5 +169,12 @@
         t=s.getElementsByTagName("script")[0];t.parentNode.insertBefore(u,t)
         }})(document,window.mixpanel||[]);mixpanel.init("22f721367f7e162facd5c15efaea2ce2",{debug:true});
     {% endif %}
+
+
+    ga('create', 'UA-16566267-6', 'auto');
+    ga('create', 'UA-16566267-7', 'auto', 'clientTracker');
+
+    ga('send', 'pageview');
+
 
 </script>
