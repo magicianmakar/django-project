@@ -61,7 +61,12 @@ class RegistrationEvent(Event):
                 'eventLabel': event_data.get('plan'),
                 'eventValue': round(event_data.get('value', 0))}
 
-        return "<script>ga('send', 'event', %s);</script>" % json.dumps(data)
+        data = json.dumps(data)
+
+        return '''<script>
+            ga('send', 'event', {0});
+            ga('clientTracker.send', 'event', {0});
+            </script>'''.format(data)
 
     @cached_property
     def mixpanel_script(self):
@@ -97,7 +102,12 @@ class PlanSelectionEvent(Event):
     def google_analytics_script(self):
         data = {'eventCategory': 'User Actions', 'eventAction': 'Select Plan'}
 
-        return "<script>ga('send', 'event', %s);</script>" % json.dumps(data)
+        data = json.dumps(data)
+
+        return '''<script>
+            ga('send', 'event', {0});
+            ga('clientTracker.send', 'event', {0});
+            </script>'''.format(data)
 
     @cached_property
     def mixpanel_script(self):
@@ -128,8 +138,12 @@ class BillingInformationEntryEvent(Event):
     @cached_property
     def google_analytics_script(self):
         data = {'eventCategory': 'User Actions', 'eventAction': 'Entered Billing Information'}
+        data = json.dumps(data)
 
-        return "<script>ga('send', 'event', %s);</script>" % json.dumps(data)
+        return '''<script>
+            ga('send', 'event', {0});
+            ga('clientTracker.send', 'event', {0});
+            </script>'''.format(data)
 
     @cached_property
     def mixpanel_script(self):
@@ -162,7 +176,12 @@ class SuccessfulPaymentEvent(Event):
     def google_analytics_script(self):
         data = {'eventCategory': 'User Actions', 'eventAction': 'Successful Payment'}
 
-        return "<script>ga('send', 'event', %s);</script>" % json.dumps(data)
+        data = json.dumps(data)
+
+        return '''<script>
+            ga('send', 'event', {0});
+            ga('clientTracker.send', 'event', {0});
+            </script>'''.format(data)
 
     @cached_property
     def mixpanel_script(self):
