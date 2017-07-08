@@ -3,7 +3,7 @@ import json
 import itertools
 
 from measurement.measures import Weight
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.db.models import Q
 from django.db import transaction
@@ -273,6 +273,6 @@ def match_weight(weight, unit, store):
 
     if not unit == store_unit:
         converted = str(getattr(product_weight, store_unit))
-        return Decimal(converted).quantize(weight_decimal)
+        return Decimal(converted).quantize(weight_decimal, rounding=ROUND_HALF_UP)
 
     return weight_decimal
