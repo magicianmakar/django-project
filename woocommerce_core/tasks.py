@@ -162,7 +162,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         saved_data = product.parsed
         saved_data['published'] = saved_data['published'] if publish is None else publish
-        api_data = update_product_api_data({}, saved_data)
+        api_data = update_product_api_data({}, saved_data, store)
         api_data = add_product_images_to_api_data(api_data, saved_data)
         api_data = add_product_attributes_to_api_data(api_data, saved_data)
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
@@ -207,7 +207,7 @@ def product_update(product_id, data):
         product = WooProduct.objects.get(id=product_id)
         store = product.store
         api_data = product.retrieve()
-        api_data = update_product_api_data(api_data, data)
+        api_data = update_product_api_data(api_data, data, store)
         api_data = add_store_tags_to_api_data(api_data, store, data.get('tags', []))
         api_data = update_product_images_api_data(api_data, data)
 

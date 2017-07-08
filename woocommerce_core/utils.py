@@ -2,6 +2,9 @@ import re
 import json
 import itertools
 
+from measurement.measures import Weight
+from decimal import Decimal
+
 from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -84,12 +87,12 @@ def format_woo_errors(e):
     return e.response.json().get('message', '')
 
 
-def update_product_api_data(api_data, data):
+def update_product_api_data(api_data, data, store):
     api_data['name'] = data['title']
     api_data['status'] = 'publish' if data['published'] else 'draft'
     api_data['price'] = str(data['price'])
     api_data['regular_price'] = str(data['compare_at_price'])
-    api_data['weight'] = str(data['weight'])
+    api_data['weight'] = str(match_weight(data['weight'], data['weight_unit'], store))
     api_data['description'] = data.get('description')
 
     return api_data
@@ -258,3 +261,18 @@ def duplicate_product(product, store=None):
             product.set_default_supplier(supplier, commit=True)
 
     return product
+
+
+def match_weight(weight, unit, store):
+    r = store.wcapi.get('settings/products/woocommerce_weight_unit')
+    r.raise_for_status()
+    store_unit = r.json()['value']
+    store_unit = 'lb' if store_unit == 'lbs' else store_unit
+    product_weight = Weight(**{unit: weight})
+    weight_decimal = Decimal(str(weight))
+
+    if not unit == store_unit:
+        converted = str(getattr(product_weight, store_unit))
+        return Decimal(converted).quantize(weight_decimal)
+
+    return weight_decimal
