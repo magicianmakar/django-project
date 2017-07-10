@@ -1044,7 +1044,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                             'supplier_url': data.get('supplier')
                         })
 
-            supplier_url = remove_link_query(supplier_url)
+        supplier_url = remove_link_query(supplier_url)
 
         product = CommerceHQProduct(
             store=store,
