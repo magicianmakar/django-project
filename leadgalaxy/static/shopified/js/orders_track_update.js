@@ -139,6 +139,7 @@
             data: {
                 store: btn.data('store'),
                 all: true,
+                ids: window.syncOrderIds,
                 unfulfilled_only: $('#update-unfulfilled-only').is(':checked')
             }
         }).done(function(data) {
@@ -155,6 +156,8 @@
         }).fail(function(data) {
             displayAjaxError('Update Orders', data);
         });
+
+        window.syncOrderIds = null;
     });
 
     $('.stop-update-btn').click(function (e) {

@@ -34,6 +34,12 @@
                                 <ul class="dropdown-menu">
 
                                     <li>
+                                        <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
+                                            <i class="fa fa-refresh"></i> Sync Selected Orders
+                                        </a>
+                                    </li>
+
+                                    <li>
                                         <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
                                             <i class="fa fa-times"></i> Delete Order IDs
                                         </a>
@@ -187,8 +193,8 @@
                                             src="{% static 'img/blank.gif' %}"
                                             data-src="/api/product-variant-image?store={{item.store_id}}&product={{item.line.product_id}}&variant={{item.line.variant_id}}&redirect=1&thumb=1"
                                             style="width:64px" />
-                                            <input type="checkbox" class="icheck order-track" name="track"
-                                                   value="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
+                                            <input type="checkbox" class="icheck order-track" name="track" value="{{item.id}}"
+                                                track-id="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
                                     </div>
                                 </div>
                             </td>

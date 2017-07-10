@@ -1586,8 +1586,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         orders = []
 
-        all_orders = data.get('all') == 'true'
-        unfulfilled_only = data.get('unfulfilled_only') != 'false'
+        order_ids = data.get('ids')
+        unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
+        all_orders = data.get('all') == 'true' or order_ids
 
         shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
                                                   .defer('data') \
@@ -1596,6 +1597,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if unfulfilled_only:
             shopify_orders = shopify_orders.filter(source_tracking='') \
                                            .exclude(source_status='FINISH')
+
+        if order_ids:
+            shopify_orders = shopify_orders.filter(id__in=order_ids.split(','))
 
         if user.is_subuser:
             shopify_orders = shopify_orders.filter(store__in=user.profile.get_shopify_stores(flat=True))
