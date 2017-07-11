@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from django.conf import settings
 from django.test import TestCase
 from mock import Mock
 from collections import OrderedDict
 
 from shopified_core.utils import (
+    app_link,
     order_phone_number,
     hash_url_filename
 )
@@ -120,6 +122,12 @@ class UtilsTestCase(TestCase):
         self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m'
                                                             r'%C3%A4nner-digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-'
                                                             r'wasserdicht-relogio.jpg_50x50.jpg'))
+
+    def test_app_link(self):
+        self.assertEqual(app_link('orders'), settings.APP_URL + '/orders')
+        self.assertEqual(app_link('orders', 'track'), settings.APP_URL + '/orders/track')
+        self.assertEqual(app_link('orders/track'), settings.APP_URL + '/orders/track')
+        self.assertEqual(app_link('orders', qurey=1001), settings.APP_URL + '/orders?qurey=1001')
 
 
 class ShippingHelperTestCase(TestCase):

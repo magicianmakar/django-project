@@ -14,7 +14,7 @@ from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment
-from shopified_core.utils import send_email_from_template
+from shopified_core.utils import app_link, send_email_from_template
 
 
 # Get an instance of a logger
@@ -356,7 +356,7 @@ class ShopifyOrderExportAPI():
 
     def send_email(self, code):
         data = {
-            'url': 'https://app.dropified.com{}'.format(reverse('order_exports_generated', kwargs={
+            'url': app_link(reverse('order_exports_generated', kwargs={
                 'order_export_id': self.order_export.id, 'code': code
             }))
         }

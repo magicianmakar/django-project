@@ -34,6 +34,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from shopified_core import permissions
+from shopified_core.utils import app_link
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -895,7 +896,7 @@ def create_shopify_webhook(store, topic):
         'webhook': {
             'topic': topic,
             'format': 'json',
-            'address': 'https://app.dropified.com/webhook/shopify/{}?store={}&t={}'.format(topic.replace('/', '-'), store.id, token)
+            'address': app_link('webhook', 'shopify', topic.replace('/', '-'), store=store.id, t=token)
         }
     }
 

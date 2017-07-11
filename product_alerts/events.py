@@ -6,7 +6,7 @@ from django.template.defaultfilters import truncatewords
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import send_email_from_template
+from shopified_core.utils import app_link, send_email_from_template
 from shopify_revision.models import ProductRevision
 from leadgalaxy.utils import get_variant_name
 
@@ -20,9 +20,9 @@ class ProductChangeEvent():
             product_change=product_change,
             shopify_id=product_change.product.get_shopify_id()
         )
+
         self.save_revision = False
         self.notify_events = []
-        self.base_product_url = 'https://app.dropified.com/product'
 
         events = json.loads(product_change.data)
         self.product_changes = events['changes']['product']
@@ -123,26 +123,26 @@ class ProductChangeEvent():
             if product_change['category'] == 'Vendor' and self.config['product_disappears'] == 'notify':
                 availability = "Online" if not product_change['new_value'] else "Offline"
                 self.notify_events.append(
-                    u'Product <a href="{}/{}">{}</a> is {}.'.format(
-                        self.base_product_url, self.product.id, product_name, availability))
+                    u'Product <a href="{}">{}</a> is {}.'.format(
+                        app_link('product', self.product.id), product_name, availability))
 
         for variant in self.variants_changes:
             variant_name = get_variant_name(variant)
             for change in variant['changes']:
                 if self.config['variant_disappears'] == 'notify' and change['category'] == 'removed':
                     self.notify_events.append(
-                        u'Variant <a href="{}/{}">{}</a> were removed.'.format(
-                            self.base_product_url, self.product.id, variant_name))
+                        u'Variant <a href="{}">{}</a> were removed.'.format(
+                            app_link('product', self.product.id), variant_name))
 
                 elif self.config['price_change'] == 'notify' and change['category'] == 'Price':
                     self.notify_events.append(
-                        u'Variants <a href="{}/{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
-                            self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
+                        u'Variants <a href="{}">{}</a> has its Price changed from ${:,.2f} to ${:,.2f}.'.format(
+                            app_link('product', self.product.id), variant_name, change['old_value'], change['new_value']))
 
                 elif self.config['quantity_change'] == 'notify' and change['category'] == 'Availability':
                     self.notify_events.append(
-                        u'Variants <a href="{}/{}">{}</a> has its Availability changed from {} to {}.'.format(
-                            self.base_product_url, self.product.id, variant_name, change['old_value'], change['new_value']))
+                        u'Variants <a href="{}">{}</a> has its Availability changed from {} to {}.'.format(
+                            app_link('product', self.product.id), variant_name, change['old_value'], change['new_value']))
 
         self.notify_events = list(set(self.notify_events))
         if len(self.notify_events):

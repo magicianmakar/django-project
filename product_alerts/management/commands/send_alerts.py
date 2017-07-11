@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from shopified_core.utils import send_email_from_template
+from shopified_core.utils import app_link, send_email_from_template
 from leadgalaxy.models import AliexpressProductChange
 from leadgalaxy.utils import get_variant_name
 
@@ -72,7 +72,7 @@ class Command(BaseCommand):
             common_data = {
                 'images': change.product.get_images(),
                 'title': change.product.title,
-                'url': 'https://app.dropified.com/product/{}'.format(change.product.id),
+                'url': app_link('product', change.product.id),
                 'shopify_url': change.product.store.get_link('/admin/products/{}'.format(change.product.get_shopify_id())),
                 'open_orders': change.orders_count()
             }

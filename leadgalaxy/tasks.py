@@ -18,6 +18,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
+from shopified_core.utils import app_link
 
 from unidecode import unidecode
 
@@ -170,9 +171,8 @@ def export_product(req_data, target, user_id):
 
                 if 'requires write_products scope' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
-                                      'Please follow this instructions to resolve this issue:'
-                                      '\nhttps://app.dropified.com/pages/view/15'
-                                      ).format(shopify_error)}
+                                      'Please follow this instructions to resolve this issue:\n{}'
+                                      ).format(shopify_error, app_link('pages/view/15'))}
                 elif 'handle: has already been taken' in shopify_error:
                     return {'error': (u'Shopify Error: {}\n\n'
                                       'Please Change your product title by adding or removing one or more words'

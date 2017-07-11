@@ -32,6 +32,9 @@ ALLOWED_HOSTS = [
     '.dropified.com',
 ]
 
+APP_DOMAIN = os.environ.get('APP_DOMAIN', 'app.dropified.com')
+APP_URL = 'https://{}'.format(APP_DOMAIN)
+
 # Application definition
 
 INSTALLED_APPS = (

@@ -2,13 +2,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 
 from leadgalaxy.models import *
+from shopified_core.utils import app_link
+
 import simplejson as json
 import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
-SHOPIFIEDAPP_WEBHOOK_BASE = 'https://app.dropified.com/webhook/price-notification/product'
 
 
 class Command(BaseCommand):
@@ -135,7 +136,7 @@ class Command(BaseCommand):
         store_id: Source Store ID (ex. Aliexpress Store ID)
         """
 
-        webhook_url = '{}?product={}'.format(SHOPIFIEDAPP_WEBHOOK_BASE, product.id)
+        webhook_url = app_link('webhook/price-notification/product', product=product.id)
         notification_api_url = '{}/product/add'.format(ALI_WEB_API_BASE)
 
         try:

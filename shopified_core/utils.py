@@ -8,6 +8,7 @@ import mimetypes
 import urlparse
 import ctypes
 import simplejson as json
+from urllib import urlencode
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -43,6 +44,24 @@ def safeStr(v, default=''):
         return v
     else:
         return default
+
+
+def app_link(*args, **kwargs):
+    """
+    Get full link to a web app page
+
+    Example:
+        app_link('order')
+        app_link('order/track') or app_link('order', 'track')
+        app_link('order/track', query=1001)
+    """
+
+    path = u'/'.join([str(i) for i in args]).lstrip('/')
+
+    if kwargs:
+        path = u'{}?{}'.format(path, urlencode(kwargs))
+
+    return u'{}/{}'.format(settings.APP_URL, path.lstrip('/'))
 
 
 def hash_text(text):
@@ -211,7 +230,7 @@ def unlock_account_email(username):
         recipient=user.email,
         data={
             'username': user.get_first_name(),
-            'unlock_link': reverse('user_unlock', kwargs={'token': unlock_token})
+            'unlock_link': app_link(reverse('user_unlock', kwargs={'token': unlock_token}))
         },
         nl2br=False
     )

@@ -24,6 +24,7 @@ from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
+    app_link,
     send_email_from_template,
     version_compare,
     orders_update_limit,
@@ -94,7 +95,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_register(self, request, user, data):
         return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
-                              'http://app.dropified.com/accounts/register\n.', status=501)
+                              '{}'.format(app_link('accounts/register')), status=501)
 
     def get_stores(self, request, user, data):
         stores = []
@@ -242,9 +243,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 if not ok:
                     return self.api_error(
                         'The following permissions are missing: \n{}\n\n'
-                        'You can find instructions to fix this issue here:\n'
-                        'https://app.dropified.com/pages/fix-private-app-permissions'
-                        .format('\n'.join(missing_perms)), status=403)
+                        'You can find instructions to fix this issue here:\n{}'
+                        .format('\n'.join(missing_perms), app_link('pages/fix-private-app-permissions')), status=403)
 
             return self.api_success({'store': info['name']})
 
@@ -2036,7 +2036,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             permissions.user_can_view(user, product)
 
             return self.api_success({
-                'url': 'https://app.dropified.com{}'.format(reverse('product_view', args=[product.id]))
+                'url': app_link(reverse('product_view', args=[product.id]))
             })
         except:
             return self.api_error('Product not found', status=404)
@@ -2056,14 +2056,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     response[str(i)] = None
 
                 for supplier in ProductSupplier.objects.filter(product__user=user.models_user, source_id__in=source_ids):
-                    response[str(supplier.source_id)] = 'https://app.dropified.com{}'.format(reverse('product_view', args=[supplier.product_id]))
+                    response[str(supplier.source_id)] = app_link(reverse('product_view', args=[supplier.product_id]))
 
             elif shopify_ids:
                 for i in shopify_ids:
                     response[str(i)] = None
 
                 for product in ShopifyProduct.objects.filter(user=user.models_user, shopify_id__in=shopify_ids):
-                    response[str(product.shopify_id)] = 'https://app.dropified.com{}'.format(reverse('product_view', args=[product.id]))
+                    response[str(product.shopify_id)] = app_link(reverse('product_view', args=[product.id]))
 
             return self.api_success(response)
         except:
