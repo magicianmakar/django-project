@@ -1,5 +1,6 @@
 {% load widget_tweaks %}
 {% load static %}
+{% load template_helper %}
 {% load compress %}
 
 <!DOCTYPE html>
@@ -100,7 +101,7 @@
                         <label for="accept_terms">
                             {% render_field form.accept_terms required="" %}
                             I agree to the
-                            <a href="https://app.dropified.com/pages/terms-of-service" target="_blank">
+                            <a href="{% app_link 'pages/terms-of-service' %}" target="_blank">
                                 Terms &amp; Conditions
                             </a>
                             {{ form.accept_terms.errors | safe }}

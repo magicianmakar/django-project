@@ -111,8 +111,7 @@
                     context: {btn: btn},
                     success: function (data) {
                         if (data.status == 'ok') {
-                            var link = 'https://app.dropified.com/accounts/register/';
-                            link += data.hash;
+                            var link = app_link(['accounts/register/', data.hash]);
                             var msg = 'Registration Link:<br/>'+'<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
 
                             swal({

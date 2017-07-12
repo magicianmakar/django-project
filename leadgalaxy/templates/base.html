@@ -1,6 +1,7 @@
 {% load static %}
 {% load hijack_tags %}
 {% load perms_helper %}
+{% load template_helper %}
 {% load compress %}
 {% load cache %}
 
@@ -383,7 +384,7 @@
 
             <div>
                 Dropified &copy; {% now "Y" %} -
-                <a href="https://app.dropified.com/pages/terms-of-service" target="_blank">
+                <a href="{% app_link 'pages/terms-of-service' %}" target="_blank">
                     Terms Of Service
                 </a>
             </div>
@@ -421,6 +422,13 @@
 {% endblock modal-board-add %}
 
     {# Mainly scripts #}
+
+    <script type="text/javascript">
+        window.app_base_link = '{% app_link %}';
+        window.app_base_api = '{% app_link "api" %}';
+    </script>
+
+
     {% compress js %}
     <script src="{% static 'js/jquery.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/raven-js/dist/raven.min.js' %}"></script>

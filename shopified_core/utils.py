@@ -56,12 +56,12 @@ def app_link(*args, **kwargs):
         app_link('order/track', query=1001)
     """
 
-    path = u'/'.join([str(i) for i in args]).lstrip('/')
+    path = u'/'.join([str(i) for i in args]).lstrip('/') if args else ''
 
     if kwargs:
         path = u'{}?{}'.format(path, urlencode(kwargs))
 
-    return u'{}/{}'.format(settings.APP_URL, path.lstrip('/'))
+    return u'{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
 
 
 def hash_text(text):

@@ -26,6 +26,25 @@ function api_url(endpoint, store_type) {
     return url;
 }
 
+function app_link(page, query) {
+    var url = window.app_base_link;
+
+    if (page) {
+        if (Array.isArray(page)) {
+            page = page.reduce(function(a, b) {
+                return String(a).replace(/\/+$/, '').replace(/^\/+/, '') + '/' + String(b).replace(/\/+$/, '').replace(/^\/+/, '');
+            });
+        }
+
+        url = url + '/' + page.replace(/\/+$/, '').replace(/^\/+/, '');
+    }
+
+    if (query) {
+        url = url + '?' + $.param(query);
+    }
+
+    return url;
+}
 
 function allPossibleCases(arr, top) {
     top = typeof(top) === 'undefined' ? true : top;

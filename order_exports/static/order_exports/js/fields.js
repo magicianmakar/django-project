@@ -215,7 +215,7 @@ window.OrderExportAdd = {
             var item = data[i],
                 listItem = list.find('li:nth-child('+i+')');
 
-            if (listItem.length == 0) {
+            if (listItem.length === 0) {
                 list.append(this.createListItem(list, item));
             } else if (listItem.attr('data-id') != item) {
                 listItem.after(this.createListItem(list, item));
@@ -255,20 +255,20 @@ window.OrderExportAdd = {
     },
     onToggleUsername: function() {
         $('[name="vendor_user"]').on('change', function() {
-            if ($(this).val() != '') {
+            if ($(this).val() !== '') {
                 $('[name="vendor_username"]').val('');
                 $('[name="vendor_email"]').val('');
             }
         });
         
         $('[name="vendor_username"]').on('keyup', function() {
-            if ($(this).val() != '') {
+            if ($(this).val() !== '') {
                 $('[name="vendor_user"]').val('');
             }
         });
 
         $('[name="vendor_email"]').on('keyup', function() {
-            if ($(this).val() != '') {
+            if ($(this).val() !== '') {
                 $('[name="vendor_user"]').val('');
             }
         });
@@ -310,7 +310,7 @@ window.OrderExportAdd = {
             };
 
             window.OrderExportAdd.updateFoundProducts(foundProduct);
-        }
+        };
     },
     onFoundProductDeleteClick: function() {
         window.OrderExportAdd.foundProducts.list.on('click', '.delete-found-product', function() {
@@ -350,7 +350,7 @@ window.OrderExportAdd = {
 
                 if (inputValue === '' || inputValue.trim() === '') {
                     swal.showInputError("Email is required");
-                    return false
+                    return false;
                 }
 
                 $.ajax({
@@ -362,8 +362,7 @@ window.OrderExportAdd = {
                     context: {btn: btn},
                     success: function (data) {
                         if (data.status == 'ok') {
-                            var link = 'https://app.dropified.com/accounts/register/';
-                            link += data.hash;
+                            var link = app_link(['accounts/register/', data.hash]);
                             var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
                                       '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
 

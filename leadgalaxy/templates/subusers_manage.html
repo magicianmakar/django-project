@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load widget_tweaks %}
+{% load template_helper %}
 {% load compress %}
 
 {% block main-container %}
@@ -90,13 +91,11 @@
                              </td>
                             <td class="no-wrap">
                                 {% if not item.expired %}
-                                    {% with reg_link="https://app.dropified.com/accounts/register/" %}
-                                    <a class="btn btn-success btn-xs" href="{{reg_link}}{{item.register_hash}}" target="_blank">
+                                    <a class="btn btn-success btn-xs" href="{% app_link 'accounts/register' item.register_hash %}" target="_blank">
                                         <i class="fa fa-external-link"></i> Link</a>
 
                                     <a class="btn btn-primary btn-xs email-link-btn"
-                                        href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%%20using%20this%20link%3A%0D%0A{{reg_link}}{{item.register_hash}}"><i class="fa fa-envelope-o"></i> Email Link</a>
-                                    {% endwith %}
+                                        href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%%20using%20this%20link%3A%0D%0A{% app_link 'accounts/register' item.register_hash %}"><i class="fa fa-envelope-o"></i> Email Link</a>
 
                                     <button class="btn btn-danger btn-xs itooltip cancel-invitation-user"
                                             invite-id="{{item.id}}" title="Cancel This Invitation">
@@ -307,7 +306,7 @@
 
                 if (inputValue === '' || inputValue.trim() === '') {
                     swal.showInputError("Email is required");
-                    return false
+                    return false;
                 }
 
                 $.ajax({
@@ -319,8 +318,7 @@
                     context: {btn: btn},
                     success: function (data) {
                         if (data.status == 'ok') {
-                            var link = 'https://app.dropified.com/accounts/register/';
-                            link += data.hash;
+                            var link = app_link(['accounts/register', data.hash]);
                             var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
                                       '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
 

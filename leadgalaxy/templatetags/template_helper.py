@@ -2,6 +2,8 @@ from django import template
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
+from shopified_core.utils import app_link as utils_app_link
+
 import simplejson as json
 import re
 
@@ -10,14 +12,14 @@ import arrow
 register = template.Library()
 
 
-@register.filter
-def key_value(dict, key):
-    return dict.get(key, '')
-
-
 @register.simple_tag
 def app_setting(name):
     return getattr(settings, name, None)
+
+
+@register.simple_tag
+def app_link(*args, **kwargs):
+    return utils_app_link(*args, **kwargs)
 
 
 @register.simple_tag(takes_context=True)
@@ -219,3 +221,7 @@ def money_format(amount=None, store=None):
         currency_format = currency_format.replace('{{amount_no_decimals_with_comma_separator}}', amount_no_decimals)
 
     return currency_format.strip()
+
+@register.filter
+def key_value(dict, key):
+    return dict.get(key, '')

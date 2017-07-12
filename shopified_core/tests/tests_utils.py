@@ -124,6 +124,7 @@ class UtilsTestCase(TestCase):
                                                             r'wasserdicht-relogio.jpg_50x50.jpg'))
 
     def test_app_link(self):
+        self.assertEqual(app_link(), settings.APP_URL)
         self.assertEqual(app_link('orders'), settings.APP_URL + '/orders')
         self.assertEqual(app_link('orders', 'track'), settings.APP_URL + '/orders/track')
         self.assertEqual(app_link('orders/track'), settings.APP_URL + '/orders/track')
