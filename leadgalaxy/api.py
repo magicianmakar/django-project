@@ -2448,8 +2448,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success({'template': template_dict}, status=200)
 
     def delete_description_templates(self, request, user, data):
-        template = get_object_or_404(DescriptionTemplate, id=data.get('id'), user=request.user.models_user)
-        template.delete()
+        try:
+            template = DescriptionTemplate.objects.get(id=data.get('id'))
+            permissions.user_can_delete(user, template)
+
+            template.delete()
+
+        except ShopifyProduct.DoesNotExist:
+            return self.api_error('Template not found', status=404)
 
         return self.api_success()
 
@@ -2517,17 +2523,19 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 markup_compare_value=markup_compare_value,
             )
 
-        data = data.copy()
-        data.pop('id')
-        return self.get_markup_rules(request, user, data)
+        return self.get_markup_rules(request, user, {})
 
     def delete_markup_rules(self, request, user, data):
-        rule = get_object_or_404(PriceMarkupRule, id=data.get('id'), user=request.user.models_user)
-        rule.delete()
-        data = data.copy()
-        data.pop('id')
+        try:
+            rule = PriceMarkupRule.objects.get(id=data.get('id'))
+            permissions.user_can_delete(user, rule)
 
-        return self.get_markup_rules(request, user, data)
+        except ShopifyProduct.DoesNotExist:
+            return self.api_error('Markup not found', status=404)
+
+        rule.delete()
+
+        return self.get_markup_rules(request, user, {})
 
     def get_product_image_download(self, request, user, data):
         try:
