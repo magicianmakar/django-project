@@ -2430,7 +2430,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if data.get('id'):
             template, created = DescriptionTemplate.objects.update_or_create(
                 id=data.get('id'),
-                user=user,
+                user=user.models_user,
                 defaults={
                     'title': data.get('title'),
                     'description': data.get('description')
@@ -2438,7 +2438,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             )
         else:
             template = DescriptionTemplate.objects.create(
-                user=user,
+                user=user.models_user,
                 title=data.get('title'),
                 description=data.get('description')
             )
@@ -2448,8 +2448,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success({'template': template_dict}, status=200)
 
     def delete_description_templates(self, request, user, data):
-        id = int(data.get('id'))
-        template = get_object_or_404(DescriptionTemplate, id=id, user=request.user)
+        template = get_object_or_404(DescriptionTemplate, id=data.get('id'), user=request.user.models_user)
         template.delete()
 
         return self.api_success()
@@ -2497,7 +2496,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if data.get('id'):
             rule, created = PriceMarkupRule.objects.update_or_create(
                 id=data.get('id'),
-                user=user,
+                user=user.models_user,
                 defaults={
                     'name': data.get('name'),
                     'min_price': min_price,
@@ -2509,7 +2508,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             )
         else:
             PriceMarkupRule.objects.create(
-                user=user,
+                user=user.models_user,
                 name=data.get('name'),
                 min_price=min_price,
                 max_price=max_price,
@@ -2523,8 +2522,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.get_markup_rules(request, user, data)
 
     def delete_markup_rules(self, request, user, data):
-        id = int(data.get('id'))
-        rule = get_object_or_404(PriceMarkupRule, id=id, user=request.user)
+        rule = get_object_or_404(PriceMarkupRule, id=data.get('id'), user=request.user.models_user)
         rule.delete()
         data = data.copy()
         data.pop('id')
