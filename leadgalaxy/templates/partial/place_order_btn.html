@@ -15,9 +15,8 @@
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
-             href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
-            target="_blank"
-            style="border-right:1px solid #66a8cc"
+            data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+            href="#" style="border-right:1px solid #66a8cc"
             >
             {{item.shipping_method.method_short}}
         </a>
@@ -47,19 +46,19 @@
 
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
-            <li><a class="place-order-btn queue-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
-                    href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true %}"
+            <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                    data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true %}"
                    >Step By Step Order</a></li>
-               <li><a class="place-order-btn queue-order-btn add-to-cart" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
-                    href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true SACart=true SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+               <li><a class="place-order-btn queue-order-btn add-to-cart" href="#" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
+                    data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true SACart=true SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
                    >Add To Cart</a></li>
-            <li><a class="place-order-btn queue-order-btn" target="_blank" order-id="{{order.id}}" line-id="{{item.id}}"
-                    href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id %}"
+            <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                    data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id %}"
                    >Auto Place Order</a></li>
-            <li><a class="place-order-btn auto-shipping-btn"
+            <li><a class="place-order-btn auto-shipping-btn" href="#"
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping_address.country_code}}"
-                    href="{% app_link 'orders/place' product=item.supplier.short_product_url %}"
+                    data-href="{% app_link 'orders/place' product=item.supplier.short_product_url %}"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}

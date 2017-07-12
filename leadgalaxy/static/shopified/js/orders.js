@@ -621,7 +621,7 @@ $('.queue-order-btn').click(function(e) {
     var group = btn.parents('.order-line-group');
 
     addOrderToQueue({
-        url: btn.prop('href'),
+        url: btn.data('href'),
         order_data: group.attr('order-data-id'),
         order_name: group.attr('order-number'),
         order_id: group.attr('order-id'),
@@ -636,7 +636,7 @@ $('.auto-shipping-btn').click(function (e) {
     var btn = $(e.target);
     var group = btn.parents('.order-line-group');
 
-    $('#shipping-modal').prop('data-href', $(this).prop('href'));
+    $('#shipping-modal').prop('data-href', $(this).data('href'));
     $('#shipping-modal').prop('data-order', $(this).attr('data-order'));
 
     $('#shipping-modal .shipping-info').load('/shipping/info?' + $.param({
