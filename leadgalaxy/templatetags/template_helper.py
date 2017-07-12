@@ -222,6 +222,7 @@ def money_format(amount=None, store=None):
 
     return currency_format.strip()
 
+
 @register.filter
 def key_value(dict, key):
     return dict.get(key, '')
