@@ -1424,6 +1424,9 @@ def boards(request, board_id):
 
 
 def get_shipping_info(request):
+    if request.GET.get('chq'):
+        from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
+
     aliexpress_id = request.GET.get('id')
     product = request.GET.get('product')
     supplier = request.GET.get('supplier')
@@ -1443,8 +1446,6 @@ def get_shipping_info(request):
             else:
                 supplier = ProductSupplier.objects.get(id=supplier)
         else:
-            from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
-
             if int(supplier) == 0:
                 product = CommerceHQProduct.objects.get(id=product)
                 permissions.user_can_view(request.user, product)
@@ -1471,7 +1472,11 @@ def get_shipping_info(request):
         return HttpResponseRedirect('%s?%s' % (reverse('django.contrib.auth.views.login'),
                                                urllib.urlencode({'next': request.get_full_path()})))
 
-    product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
+    if request.GET.get('chq'):
+        product = get_object_or_404(CommerceHQProduct, id=request.GET.get('product'))
+    else:
+        product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
+
     permissions.user_can_view(request.user, product)
 
     product_data = json.loads(product.data)
