@@ -253,14 +253,19 @@
                         </div>
                         <div class="col-md-3">
                             <select name="financial" class="form-control help-select">
-                                <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all authorized, pending, and paid orders</option>
-                                <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only authorized orders</option>
-                                <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
+                                {% if store_sync_enabled %}
+                                    <option value="paid,partially_refunded" label="Paid / Partially Refunded"
+                                        {% if financial == 'paid,partially_refunded' %}selected="selected"{% endif %}>Show Paid and Partially Refunded orders</option>
+                                {% endif %}
+
                                 <option value="paid" {% if financial == 'paid' %}selected="selected"{% endif %}>Show only paid orders</option>
-                                <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only refunded orders</option>
-                                <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only partially refunded orders</option>
-                                <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only voided orders</option>
-                                <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all authorized, or partially paid orders</option>
+                                <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only Partially Refunded orders</option>
+                                <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only Refunded orders</option>
+                                <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only Authorized orders</option>
+                                <option value="pending" {% if financial == 'pending' %}selected="selected"{% endif %}>Show only pending orders</option>
+                                <option value="voided" {% if financial == 'voided' %}selected="selected"{% endif %}>Show only Voided orders</option>
+                                <option value="unpaid" {% if financial == 'unpaid' %}selected="selected"{% endif %}>Show all Authorized, or Partially Paid orders</option>
+                                <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Show all Authorized, Pending, and Paid orders</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">

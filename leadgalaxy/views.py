@@ -2271,7 +2271,7 @@ def orders_view(request):
     sort = utils.get_orders_filter(request, 'sort', 'desc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
-    financial = utils.get_orders_filter(request, 'financial', 'paid')
+    financial = utils.get_orders_filter(request, 'financial', 'paid,partially_refunded')
     sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
     sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
@@ -2410,7 +2410,9 @@ def orders_view(request):
         elif fulfillment == 'partial':
             orders = orders.filter(fulfillment_status='partial')
 
-        if financial != 'any':
+        if financial == 'paid,partially_refunded':
+            orders = orders.filter(Q(financial_status='paid') | Q(financial_status='partially_refunded'))
+        elif financial != 'any':
             orders = orders.filter(financial_status=financial)
 
         if connected_only == 'true':
