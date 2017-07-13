@@ -49,8 +49,8 @@
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
                     data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=True %}"
                    >Step By Step Order</a></li>
-               <li><a class="place-order-btn queue-order-btn add-to-cart" href="#" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
-                    data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=True SACart=True SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+               <li><a class="place-order-btn queue-order-btn add-to-cart" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
+                    href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=True SACart=True SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
                    >Add To Cart</a></li>
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
                     data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id %}"

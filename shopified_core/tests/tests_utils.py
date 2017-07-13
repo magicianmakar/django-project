@@ -129,6 +129,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(app_link('orders', 'track'), settings.APP_URL + '/orders/track')
         self.assertEqual(app_link('orders/track'), settings.APP_URL + '/orders/track')
         self.assertEqual(app_link('orders', qurey=1001), settings.APP_URL + '/orders?qurey=1001')
+        self.assertEqual(app_link('orders', 'place', SAStep=True, product=123456), settings.APP_URL + '/orders/place?SAStep=true&product=123456')
 
 
 class ShippingHelperTestCase(TestCase):
