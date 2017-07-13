@@ -1524,6 +1524,7 @@ def acp_users_list(request):
                 Q(username__icontains=q) |
                 Q(email__icontains=q) |
                 Q(profile__emails__icontains=q) |
+                Q(profile__ips__icontains=q) |
                 Q(shopifystore__title__icontains=q)
             )
         users = users.distinct()

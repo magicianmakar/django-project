@@ -1719,6 +1719,14 @@ class TimezoneMiddleware(object):
             timezone.deactivate()
 
 
+class UserIpSaverMiddleware(object):
+
+    def process_request(self, request):
+        if request.user.is_authenticated():
+            from shopified_core.utils import save_user_ip
+            save_user_ip(request)
+
+
 class ShopifyOrderPaginator(Paginator):
     reverse_order = False
     query = None

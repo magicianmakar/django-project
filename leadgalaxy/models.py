@@ -94,6 +94,7 @@ class UserProfile(models.Model):
     country = models.CharField(max_length=255, blank=True, default='')
     timezone = models.CharField(max_length=255, null=True, blank=True, default='')
     emails = models.TextField(null=True, blank=True, default='', verbose_name="Other Emails")
+    ips = models.TextField(null=True, blank=True, verbose_name="User IPs")
 
     config = models.TextField(default='', blank=True)
 
@@ -377,6 +378,21 @@ class UserProfile(models.Model):
             return False
 
         return self.subuser_chq_permissions.filter(codename=codename, store=store).exists()
+
+    def add_ip(self, ip):
+        if not ip:
+            return
+
+        try:
+            user_ips = json.loads(self.ips)
+        except:
+            user_ips = []
+
+        if ip not in user_ips:
+            user_ips.append(ip)
+
+            self.ips = json.dumps(user_ips[-9:])  # Save last 9 Ips
+            self.save()
 
 
 class UserCompany(models.Model):

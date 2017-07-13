@@ -341,3 +341,22 @@ def order_phone_number(request, user, phone_number, customer_country):
         pass
 
     return None, phone_number
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+    if forwarded_for:
+        ip = forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+
+    return ip
+
+
+def save_user_ip(request, user=None):
+    if user is None:
+        user = request.user
+
+    ip = get_client_ip(request)
+    user.profile.add_ip(ip)

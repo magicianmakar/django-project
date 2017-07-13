@@ -115,7 +115,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'country', 'timezone', 'status')
     list_filter = ('plan', 'status', 'bundles')
-    search_fields = ('emails', 'country', 'timezone') + USER_SEARCH_FIELDS
+    search_fields = ('emails', 'country', 'timezone', 'ips') + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'subuser_parent')
 
     fieldsets = (
@@ -125,7 +125,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         ('User Settings', {
             'classes': ('collapse',),
-            'fields': ('config', 'emails')
+            'fields': ('config', 'emails', 'ips')
         }),
 
         ('Custom Limits', {
