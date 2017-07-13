@@ -34,7 +34,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from shopified_core import permissions
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, save_user_ip
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -1723,7 +1723,6 @@ class UserIpSaverMiddleware(object):
 
     def process_request(self, request):
         if request.user.is_authenticated():
-            from shopified_core.utils import save_user_ip
             save_user_ip(request)
 
 
