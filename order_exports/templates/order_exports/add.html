@@ -11,7 +11,7 @@
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'libs/bower_components/nestable-fork/dist/jquery.nestable.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js?1' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
@@ -55,7 +55,6 @@
 
             <div class="form-group{% if form.schedule.errors %} has-error{% endif %}">
                 <label for="schedule" class="col-sm-2 control-label">Step 2: Select export time</label>
-
                 <div id="schedule" class="col-sm-10">
                     <div class="checkbox" style="padding: 0;">
                         <label class="icheck" style="padding: 0;">
@@ -65,7 +64,7 @@
                     </div>
                     
                     <div class="daily"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
-                        <div class="input-group clockpicker">
+                        <div class="input-group clock">
                             <input type="text" class="form-control" name="schedule" value="{{ form.schedule.data|default:"" }}" autocomplete="off">
                             <span class="input-group-addon">
                                 <span class="fa fa-clock-o"></span>

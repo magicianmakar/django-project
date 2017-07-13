@@ -15,7 +15,7 @@
     "vue": "^2.0.3",
     "pusher-websocket-iso": "pusher#^3.2.1",
     "bootstrap-daterangepicker": "^2.1.24",
-    "clockpicker": "^0.0.7",
+    "clockpicker": "little-gui/clockpicker#^0.0.8",
     "nestable-fork": "^1.0.3",
     "uuid-js": "^0.7.5",
     "dropzone": "^4.3.0",

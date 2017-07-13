@@ -29,19 +29,17 @@ window.OrderExportAdd = {
 
         this.autocompleteVendor.init();
 
+        $('input[name="daterange"]').daterangepicker();
 
         var clockpickerInput = $('input[name="schedule"]');
         clockpickerInput.clockpicker({
             autoclose: true,
-            afterHourSelect: function(e) {
-                clockpickerInput.clockpicker('done');
+            afterHourSelect: function () {
+                console.log('after hour select');
+                $('input[name="schedule"]').clockpicker('done');
             }
         });
-        clockpickerInput.on('change', function(e) {
-            $(this).val($(this).val().replace(/(\d\d):(\d\d)/, '$1:00'));
-        });
 
-        $('input[name="daterange"]').daterangepicker();
         $('#shopify-products-popover').popover({
             html: true,
             trigger: 'hover',
