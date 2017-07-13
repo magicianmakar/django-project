@@ -16,16 +16,16 @@ order_export_done = Signal(providing_args=["instance"])
 
 
 ORDER_STATUS = (
-    ("any", "Any order status"),
     ("open", "All open orders"),
+    ("any", "Any order status"),
     ("closed", "Only closed orders"),
     ("cancelled", "Only cancelled orders"),
 )
 
 
 ORDER_FULFILLMENT_STATUS = (
-    ("unshipped,partial", "Unfulfilled / Partially fulfilled"),
-    ("unshipped", "Orders that have not yet been fulfilled"),
+    ("unshipped,partial", "Unshipped or partially unshipped"),
+    ("unshipped", "Orders that have not yet been shipped"),
     ("partial", "Partially shipped orders"),
     ("shipped", "Orders that have been fulfilled"),
     ("any", "Orders with any fulfillment status."),
@@ -33,10 +33,10 @@ ORDER_FULFILLMENT_STATUS = (
 
 
 ORDER_FINANCIAL_STATUS = (
+    ("paid", "Only paid orders"),
     ("any", "All authorized, pending, and paid orders."),
     ("authorized", "Only authorized orders"),
     ("pending", "Only pending orders"),
-    ("paid", "Only paid orders"),
     ("partially_paid", "Only partially paid orders"),
     ("refunded", "Only refunded orders"),
     ("voided", "Only voided orders"),

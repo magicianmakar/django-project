@@ -302,6 +302,7 @@
                             <option value="{{ status.0 }}"{% if status.0 in form.financial_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
                             {% endfor %}
                         </select>
+                        <p class="help-block">Be careful when fulfilling an order that haven't been paid yet.</p>
                     </div>
                 </div>
             </fieldset>
