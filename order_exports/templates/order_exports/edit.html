@@ -92,22 +92,17 @@
             </div>
 
             <div class="form-group{% if form.starting_at.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
-                <label for="email" class="col-sm-2 control-label">Starting At</label>
+                <label for="email" class="col-sm-2 control-label">Orders Created Since</label>
                 <div class="col-sm-10">
-                    <div class="starting-at-input{% if not form.starting_at.value %} hidden{% endif %}">
-                        <div class="input-group date">
-                            <span class="input-group-addon">
-                                <i class="fa fa-calendar"></i>
-                            </span>
-                            <input type="text" class="form-control" name="starting_at" value="{{ form.starting_at.value|date:"m/d/Y"|default:"" }}">
-                        </div>
+                    <div class="input-group date">
+                        <span class="input-group-addon">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                        <input type="text" class="form-control" name="starting_at" value="{{ form.starting_at.value|date:"m/d/Y"|default:"" }}">
                     </div>
-                    <div class="checkbox" style="padding: 0;">
-                        <label class="icheck" style="padding: 0;">
-                            <input type="checkbox" name="starting_at_boolean"{% if not form.starting_at.value %} checked="checked"{% endif %} autocomplete="off">
-                            Get orders created at the time this order export was created.
-                        </label>
-                    </div>
+                    <p class="help-block">
+                        The generated page updates every day with new orders. Setting this date will get orders that were created since this day.
+                    </p>
                     {% for error in form.starting_at.errors %}
                     <p class="help-block">
                         {{ error }}
