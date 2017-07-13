@@ -59,6 +59,10 @@ def app_link(*args, **kwargs):
     path = u'/'.join([str(i) for i in args]).lstrip('/') if args else ''
 
     if kwargs:
+        for k, v in kwargs.items():
+            if type(v) is bool:
+                kwargs[k] = str(v).lower()
+
         path = u'{}?{}'.format(path, urlencode(kwargs))
 
     return u'{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
