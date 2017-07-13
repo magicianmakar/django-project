@@ -1525,6 +1525,8 @@ def boards(request, board_id):
 def get_shipping_info(request):
     if request.GET.get('chq'):
         from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
+    if request.GET.get('woo'):
+        from woocommerce_core.models import WooProduct, WooSupplier
 
     aliexpress_id = request.GET.get('id')
     product = request.GET.get('product')
@@ -1538,7 +1540,6 @@ def get_shipping_info(request):
 
     if not aliexpress_id and supplier:
         if request.GET.get('chq'):
-            from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
 
             if int(supplier) == 0:
                 product = CommerceHQProduct.objects.get(id=product)
@@ -1548,7 +1549,6 @@ def get_shipping_info(request):
                 supplier = CommerceHQSupplier.objects.get(id=supplier)
 
         elif request.GET.get('woo'):
-            from woocommerce_core.models import WooProduct, WooSupplier
 
             if int(supplier) == 0:
                 product = WooProduct.objects.get(id=product)
@@ -1558,6 +1558,7 @@ def get_shipping_info(request):
                 supplier = WooSupplier.objects.get(id=supplier)
 
         else:
+
             if int(supplier) == 0:
                 product = ShopifyProduct.objects.get(id=product)
                 permissions.user_can_view(request.user, product)
@@ -1586,6 +1587,8 @@ def get_shipping_info(request):
 
     if request.GET.get('chq'):
         product = get_object_or_404(CommerceHQProduct, id=request.GET.get('product'))
+    elif request.GET.get('woo'):
+        product = get_object_or_404(WooProduct, id=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 
