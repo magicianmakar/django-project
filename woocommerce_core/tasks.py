@@ -172,6 +172,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         product_data = r.json()
         product.source_id = product_data['id']
+        product.update_data({'original_images': saved_data.get('images', [])})
         product.save()
 
         if saved_data.get('variants', []):

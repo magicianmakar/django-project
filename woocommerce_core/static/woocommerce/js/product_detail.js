@@ -267,8 +267,8 @@ $('#modal-pick-variant .dropdown-menu li a').click(function(e) {
     } else {
         targetVariants = config.woocommerce_options.filter(function(o) { return o.name === val; });
         if (targetVariants.length > 0) {
-            $('#split-variants-count').text(targetVariants[0].values.length);
-            $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
+            $('#split-variants-count').text(targetVariants[0].options.length);
+            $('#split-variants-values').html(targetVariants[0].options.join('<br />'));
         }
     }
 });
@@ -294,7 +294,7 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
     $(this).bootstrapBtn('loading');
 
     $.ajax({
-        url: '/api/product-split-variants',
+        url: api_url('product-split-variants', 'woo'),
         type: 'POST',
         data: {
             product: product_id,
@@ -313,7 +313,7 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
                 } else {
                   toastr.success('The variants are splitted into new products now.', 'Product Split!');
                 }
-                setTimeout(function() { window.location.href = '/product'; }, 500);
+                setTimeout(function() { window.location.href = '/woo/products'; }, 500);
             }
         },
         error: function (data) {

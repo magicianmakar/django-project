@@ -482,9 +482,9 @@
                   </button>
                   <ul class="dropdown-menu">
                   {% if woocommerce_product %}
-                    {% for option in woocommerce_product.options %}
+                    {% for attribute in woocommerce_product.attributes %}
                       <li>
-                        <a type="button">{{ option.name }}</a>
+                        <a type="button">{{ attribute.name }}</a>
                       </li>
                     {% endfor %}
                   {% else %}
@@ -562,7 +562,7 @@ var config = {
 
 {% if woocommerce_product %}
     connected: true,
-    woocommerce_options: {% json_dumps woocommerce_product.attributes.options %},
+    woocommerce_options: {% json_dumps woocommerce_product.attributes %},
 {% else %}
     woocommerce_options: null,
 {% endif %}

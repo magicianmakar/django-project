@@ -242,6 +242,7 @@ def duplicate_product(product, store=None):
         data.pop('published')
         data['status'] = 'draft'
         data['variants'] = []
+        data['images'] = data.pop('original_images', data['images'])
 
         for attribute in data.pop('attributes', []):
             title, values = attribute['name'], attribute['options']
@@ -276,3 +277,48 @@ def match_weight(weight, unit, store):
         return Decimal(converted).quantize(weight_decimal, rounding=ROUND_HALF_UP)
 
     return weight_decimal
+
+
+def get_connected_options(product, split_factor):
+    for attribute in product.parsed.get('attributes', []):
+        if attribute['name'] == split_factor:
+            return attribute['options']
+
+
+def get_non_connected_options(product, split_factor):
+    for variant in product.parsed.get('variants', []):
+        if variant['title'] == split_factor:
+            return variant['values']
+
+
+def get_variant_options(product, split_factor):
+    if product.source_id:
+        return get_connected_options(product, split_factor)
+    else:
+        return get_non_connected_options(product, split_factor)
+
+
+def split_product(product, split_factor, store=None):
+    new_products = []
+    options = get_variant_options(product, split_factor)
+    parent_data = product.parsed
+    original_images = parent_data.get('original_images', parent_data.get('images', []))
+    variant_images = parent_data.get('variants_images', [])
+    title = parent_data.get('title', '')
+
+    for option in options:
+        new_product = duplicate_product(product, product.store)
+        new_data = {}
+        new_data['title'] = '{} ({})'.format(title, option)
+
+        variants = new_product.parsed.get('variants', [])
+        new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
+
+        hashes = [h for h, variant in variant_images.items() if variant == option]
+        new_data['images'] = [i for i in original_images if hash_url_filename(i) in hashes]
+
+        new_product.update_data(new_data)
+        new_product.save()
+        new_products.append(new_product)
+
+    return new_products

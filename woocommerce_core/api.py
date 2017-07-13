@@ -606,3 +606,13 @@ class WooStoreApi(ApiResponseMixin, View):
                 'url': reverse('woo:product_detail', args=[duplicate_product.id])
             }
         })
+
+    def post_product_split_variants(self, request, user, data):
+        product = WooProduct.objects.get(id=data.get('product'))
+        split_factor = data.get('split_factor')
+        permissions.user_can_view(user, product)
+        splitted_products = utils.split_product(product, split_factor)
+
+        return self.api_success({
+            'products_ids': [p.id for p in splitted_products]
+        })
