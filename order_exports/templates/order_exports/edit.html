@@ -264,10 +264,11 @@
             <fieldset>
                 <legend>Order Filters</legend>
 
-                <div class="form-group">
+                <div id="vendor-autocomplete" class="form-group">
                     <label for="vendor" class="col-sm-2 control-label">Vendor</label>
                     <div class="col-sm-4">
                         <input type="text" name="vendor" class="form-control" placeholder="Enter vendor name" value="{{ order_export.vendor }}">
+                        <p class="help-block">Write down the vendor full or partial name used in <a id="shopify-products-popover" href="#">shopify</a>.</p>
                     </div>
                 </div>
 
