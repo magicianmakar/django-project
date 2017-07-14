@@ -296,6 +296,15 @@ def process_webhook_event(request, event_id, raven_client):
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
             customer.can_trial = False
             customer.save()
+
+            reg_coupon = customer.user.get_config('registration_discount')
+            if reg_coupon and not reg_coupon.startswith(':'):
+                cus = stripe.Customer.retrieve(sub.customer)
+                cus.coupon = reg_coupon
+                cus.save()
+
+                customer.user.set_config('registration_discount', u':{}'.format(reg_coupon))
+
         except StripeCustomer.DoesNotExist:
             raven_client.captureException(level='warning')
             return HttpResponse('Customer Not Found')

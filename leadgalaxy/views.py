@@ -18,6 +18,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
+from django.core.signing import Signer
 from django.db import transaction
 from django.db.models import Count, Max, F
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -3304,6 +3305,10 @@ def register(request, registration=None, subscribe_plan=None):
 
         if form.is_valid():
             new_user = form.save()
+
+            reg_coupon = request.GET.get('cp')
+            if reg_coupon:
+                new_user.set_config('registration_discount', Signer().unsign(base64.decodestring(reg_coupon)))
 
             if subscribe_plan:
                 try:
