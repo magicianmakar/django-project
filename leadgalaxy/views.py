@@ -1569,8 +1569,10 @@ def acp_graph(request):
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
 
+    user = request.GET.get('user')
+
     if graph_type == 'products':
-        data.products = ShopifyProduct.objects.all() \
+        data.products = (ShopifyProduct.objects.filter(user=user) if user else ShopifyProduct.objects.all()) \
             .extra({'created': 'date(created_at)'}) \
             .values('created') \
             .annotate(created_count=Count('id')) \
@@ -1603,7 +1605,7 @@ def acp_graph(request):
             .order_by('-created')
 
     if graph_type == 'orders':
-        data.shopify_orders = ShopifyOrder.objects.all() \
+        data.shopify_orders = (ShopifyOrder.objects.filter(user=user) if user else ShopifyOrder.objects.all()) \
             .extra({'created': 'date(created_at)'}) \
             .values('created') \
             .annotate(created_count=Count('id')) \
