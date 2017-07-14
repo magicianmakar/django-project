@@ -22,11 +22,11 @@
                         <div class="col-md-6">
                             <label for="selected-actions">Range:</label>
                             <select class="form-control selected-actions" name="days" style="display: inline-block; width: 180px; ">
-                                <option value="" {% if not request.GET.days %}selected{% endif %}>All time</option>
-                                <option value="7" {% if request.GET.days == '7' %}selected{% endif %}>Past 7 days</option>
-                                <option value="30" {% if request.GET.days == '30' %}selected{% endif %}>Past 30 days</option>
-                                <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Past 90 days</option>
-                                <option value="365" {% if request.GET.days == '365' %}selected{% endif %}>Past Year</option>
+                                <option value="" {% if not days %}selected{% endif %}>All time</option>
+                                <option value="7" {% if days == '7' %}selected{% endif %}>Past 7 days</option>
+                                <option value="30" {% if days == '30' %}selected{% endif %}>Past 30 days</option>
+                                <option value="90" {% if days == '90' %}selected{% endif %}>Past 90 days</option>
+                                <option value="365" {% if days == '365' %}selected{% endif %}>Past Year</option>
                             </select>
 
                             <button type="submit" class="btn btn-primary apply-btn m-l">Apply</button>

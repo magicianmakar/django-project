@@ -1558,13 +1558,15 @@ def acp_graph(request):
 
     graph_type = request.GET.get('t', 'users')
 
-    if request.GET.get('days'):
-        time_threshold = timezone.now() - timezone.timedelta(days=int(request.GET.get('days')))
+    days = request.GET.get('days', '30')
+    if utils.safeInt(days):
+        time_threshold = timezone.now() - timezone.timedelta(days=utils.safeInt(days))
     else:
         time_threshold = None
 
     data = Munch({
         'graph_type': graph_type,
+        'days': days,
         'page': 'acp_graph',
         'breadcrumbs': ['ACP', 'Graph Analytics']
     })
@@ -1622,7 +1624,7 @@ def acp_graph(request):
                 data[key] = data[key].filter(**{val: time_threshold})
 
     data.stores_count = ShopifyStore.objects.count()
-    data.products_count = ShopifyProduct.objects.count()
+    data.products_count = (ShopifyProduct.objects.filter(user=user) if user else ShopifyProduct.objects.all()).count()
     data.users_count = User.objects.all().count()
 
     if graph_type == 'tracking':
