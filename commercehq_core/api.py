@@ -697,6 +697,40 @@ class CHQStoreApi(ApiResponseMixin, View):
             }
         })
 
+    def post_board_add_products(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        board = CommerceHQBoard.objects.get(id=data.get('board'))
+        permissions.user_can_edit(user, board)
+
+        for p in data.getlist('products[]'):
+            product = CommerceHQProduct.objects.get(id=p)
+            permissions.user_can_edit(user, product)
+
+            board.products.add(product)
+
+        board.save()
+
+        return self.api_success()
+
+    def post_product_remove_board(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        board = CommerceHQBoard.objects.get(id=data.get('board'))
+        permissions.user_can_edit(user, board)
+
+        for p in data.getlist('products[]'):
+            product = CommerceHQProduct.objects.get(id=p)
+            permissions.user_can_edit(user, product)
+
+            board.products.remove(product)
+
+        board.save()
+
+        return self.api_success()
+
     def post_product_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
