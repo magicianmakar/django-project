@@ -1417,7 +1417,7 @@ class ShopifyOrderTrack(models.Model):
 
     def get_source_ids(self):
         if self.source_id:
-            return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
+            return u', '.join(set([u'#{}'.format(i) for i in self.source_id.split(',')]))
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)

@@ -1676,6 +1676,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
+            source_id.encode('ascii')
+
             assert utils.safeInt(order_id), 'Order ID is not a numbers'
             # assert utils.safeInt(source_id), 'Aliexpress ID is not a numbers'
             # assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
@@ -1686,6 +1688,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             raven_client.captureMessage('Non valid Aliexpress Order ID')
 
             return self.api_error(e.message, status=501)
+
+        except UnicodeEncodeError as e:
+            return self.api_error('Order ID is not a valid', status=501)
 
         if not order_lines and order_line_sku:
             line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku)
