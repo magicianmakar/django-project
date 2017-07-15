@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
+import arrow
 import simplejson as json
-from datetime import datetime
 
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404

@@ -35,16 +35,19 @@
     <div class="ibox float-e-margins">
         <div class="ibox-title">
             <h5 id="title">Exports<small></small></h5>
-            <div class="ibox-tools">
-                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-            </div>
         </div>
         <div class="ibox-content">
+            <div class="form-group">
+                <label for="description" class="col-sm-2 control-label">Description</label>
+                <div class="col-sm-10">
+                    <input name="description" class="form-control" required>
+                </div>
+            </div>
 
             <div class="form-group">
                 <label for="store" class="col-sm-2 control-label">Step 1: Choose your store</label>
                 <div class="col-sm-10">
-                    <select class="form-control" name="store" autocomplete="off">
+                    <select class="form-control" name="store" autocomplete="off" style="width:250px">
                         {% for item in user.profile.get_shopify_stores %}
                         <option value="{{ item.id }}">{{ item.title }}</option>
                         {% endfor %}
@@ -64,11 +67,11 @@
                     </div>
                     
                     <div class="daily"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
-                        <div class="input-group clock">
-                            <input type="text" class="form-control" name="schedule" value="{{ form.schedule.data|default:"" }}" autocomplete="off">
+                        <div class="input-group clock"  style="width:150px">
                             <span class="input-group-addon">
                                 <span class="fa fa-clock-o"></span>
                             </span>
+                            <input type="text" class="form-control" name="schedule" value="{{ form.schedule.data|default:"" }}" autocomplete="off">
                         </div>
                         <p class="help-block">What time would you like the export notification to be sent?</p>
                     
@@ -80,8 +83,10 @@
                     </div>
 
                     <div class="range"{% if form.previous_day.value %} style="display: none;"{% endif %}>
-                        <input class="form-control" type="text" name="daterange" autocomplete="off" placeholder="Select date range" />
-                        <p class="help-block">Chose the created date for the orders being exported.</p>
+                        <input class="form-control" type="text" name="daterange"
+                            autocomplete="off" placeholder="Select date range"
+                            style="width:250px" />
+                        <p class="help-block">Choose the created date for the orders being exported.</p>
                         {% for error in form.daterange.errors %}
                         <p class="help-block">
                             {{ error }}
@@ -91,10 +96,11 @@
                 </div>
             </div>
 
-            <div class="form-group{% if form.starting_at.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
+            <div class="form-group{% if form.starting_at.errors %} has-error{% endif %}"
+                {% if not form.previous_day.value %} style="display: none;"{% endif %}>
                 <label for="email" class="col-sm-2 control-label">Orders Created Since</label>
                 <div class="col-sm-10">
-                    <div class="input-group date">
+                    <div class="input-group date" style="width:150px">
                         <span class="input-group-addon">
                             <i class="fa fa-calendar"></i>
                         </span>
@@ -113,7 +119,7 @@
 
             <div class="form-group{% if form.receiver.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
                 <label for="email" class="col-sm-2 control-label">Receiver E-mail(s)</label>
-                <div class="col-sm-10">
+                <div class="col-sm-5">
                     <input type="text" placeholder="Enter email" class="form-control" name="receiver" value="{{ form.receiver.data|default:"" }}">
                     <div class="checkbox" style="padding: 0;">
                         <label class="icheck" style="padding: 0;">
@@ -127,13 +133,6 @@
                         {{ error }}
                     </p>
                     {% endfor %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="description" class="col-sm-2 control-label">Description</label>
-                <div class="col-sm-10">
-                    <textarea name="description" class="form-control"></textarea>
                 </div>
             </div>
 
