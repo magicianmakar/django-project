@@ -11,20 +11,20 @@
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'libs/bower_components/nestable-fork/dist/jquery.nestable.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/clockpicker/bootstrap-clockpicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'order_exports/js/fields.js' %}"></script>
     {% endcompress %}
 {% endblock %}
 
 {% block extracss %}
-    <link href="{% static 'libs/bower_components/clockpicker/dist/bootstrap-clockpicker.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/clockpicker/bootstrap-clockpicker.min.css' %}" rel="stylesheet">
     <link href="{% static 'order_exports/css/fields.css' %}" rel="stylesheet">
 {% endblock %}
 
@@ -35,16 +35,19 @@
     <div class="ibox float-e-margins">
         <div class="ibox-title">
             <h5 id="title">Exports<small></small></h5>
-            <div class="ibox-tools">
-                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-            </div>
         </div>
         <div class="ibox-content">
+            <div class="form-group">
+                <label for="description" class="col-sm-2 control-label">Description</label>
+                <div class="col-sm-4">
+                    <input name="description" class="form-control" value="{{ order_export.description|default:'' }}" required>
+                </div>
+            </div>
 
             <div class="form-group">
                 <label for="store" class="col-sm-2 control-label">Step 1: Choose your store</label>
                 <div class="col-sm-10">
-                    <select class="form-control" name="store" autocomplete="off">
+                    <select class="form-control" name="store" autocomplete="off" style="width:250px">
                         {% for item in user.profile.get_shopify_stores %}
                         <option value="{{ item.id }}"{% if order_export.store.id == item.id %} selected="selected"{% endif %}>{{ item.title }}</option>
                         {% endfor %}
@@ -64,11 +67,11 @@
                     </div>
 
                     <div class="daily"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
-                        <div class="input-group clockpicker">
-                            <input type="text" class="form-control" name="schedule" value="{{ order_export.schedule|date:"H:i" }}" autocomplete="off">
+                        <div class="input-group clock" style="width:250px">
                             <span class="input-group-addon">
                                 <span class="fa fa-clock-o"></span>
                             </span>
+                            <input type="text" class="form-control" name="schedule" value="{{ order_export.schedule|date:"H:i" }}" autocomplete="off">
                         </div>
                         <p class="help-block">What time would you like the export notification to be sent?</p>
                     
@@ -80,8 +83,13 @@
                     </div>
 
                     <div class="range"{% if form.previous_day.value %} style="display: none;"{% endif %}>
-                        <input class="form-control" type="text" name="daterange" autocomplete="off" placeholder="Select date range"{% if order_export.filters.created_at_min %} value="{{ order_export.filters.created_at_min|date:'m/d/Y' }} - {{ order_export.filters.created_at_max|date:'m/d/Y' }}"{% endif %} />
-                        <p class="help-block">Chose the created date for the orders being exported.</p>
+                        <input class="form-control" type="text" name="daterange"
+                            autocomplete="off" placeholder="Select date range"
+                            {% if order_export.filters.created_at_min %}
+                                value="{{ order_export.filters.created_at_min|date:'m/d/Y' }} - {{ order_export.filters.created_at_max|date:'m/d/Y' }}"
+                            {% endif %}
+                            style="width:250px" />
+                        <p class="help-block">Choose the created date for the orders being exported.</p>
                         {% for error in form.daterange.errors %}
                         <p class="help-block">
                             {{ error }}
@@ -91,23 +99,19 @@
                 </div>
             </div>
 
-            <div class="form-group{% if form.starting_at.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
-                <label for="email" class="col-sm-2 control-label">Starting At</label>
+            <div class="form-group{% if form.starting_at.errors %} has-error{% endif %}"
+                {% if not form.previous_day.value %} style="display: none;"{% endif %}>
+                <label for="email" class="col-sm-2 control-label">Orders Created Since</label>
                 <div class="col-sm-10">
-                    <div class="starting-at-input{% if not form.starting_at.value %} hidden{% endif %}">
-                        <div class="input-group date">
-                            <span class="input-group-addon">
-                                <i class="fa fa-calendar"></i>
-                            </span>
-                            <input type="text" class="form-control" name="starting_at" value="{{ form.starting_at.value|date:"m/d/Y"|default:"" }}">
-                        </div>
+                    <div class="input-group date" style="width:150px">
+                        <span class="input-group-addon">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                        <input type="text" class="form-control" name="starting_at" value="{{ form.starting_at.value|date:"m/d/Y"|default:"" }}">
                     </div>
-                    <div class="checkbox" style="padding: 0;">
-                        <label class="icheck" style="padding: 0;">
-                            <input type="checkbox" name="starting_at_boolean"{% if not form.starting_at.value %} checked="checked"{% endif %} autocomplete="off">
-                            Get orders created at the time this order export was created.
-                        </label>
-                    </div>
+                    <p class="help-block">
+                        The generated page updates every day with new orders. Setting this date will get orders that were created since this day.
+                    </p>
                     {% for error in form.starting_at.errors %}
                     <p class="help-block">
                         {{ error }}
@@ -118,7 +122,7 @@
 
             <div class="form-group{% if form.receiver.errors %} has-error{% endif %}"{% if not form.previous_day.value %} style="display: none;"{% endif %}>
                 <label for="email" class="col-sm-2 control-label">Receiver E-mail(s)</label>
-                <div class="col-sm-10">
+                <div class="col-sm-5">
                     <input type="text" placeholder="Enter email" class="form-control" name="receiver" value="{{ order_export.receiver }}">
                     <div class="checkbox" style="padding: 0;">
                         <label class="icheck" style="padding: 0;">
@@ -132,13 +136,6 @@
                         {{ error }}
                     </p>
                     {% endfor %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="description" class="col-sm-2 control-label">Description</label>
-                <div class="col-sm-10">
-                    <textarea name="description" class="form-control">{{ order_export.description }}</textarea>
                 </div>
             </div>
 
@@ -264,10 +261,11 @@
             <fieldset>
                 <legend>Order Filters</legend>
 
-                <div class="form-group">
+                <div id="vendor-autocomplete" class="form-group">
                     <label for="vendor" class="col-sm-2 control-label">Vendor</label>
                     <div class="col-sm-4">
                         <input type="text" name="vendor" class="form-control" placeholder="Enter vendor name" value="{{ order_export.vendor }}">
+                        <p class="help-block">Write down the vendor full or partial name used in <a id="shopify-products-popover" href="#">shopify</a>.</p>
                     </div>
                 </div>
 
@@ -301,6 +299,7 @@
                             <option value="{{ status.0 }}"{% if status.0 in order_export.filters.financial_status %} selected="selected"{% endif %}>{{ status.1 }}</option>
                             {% endfor %}
                         </select>
+                        <p class="help-block">Be careful when fulfilling an order that haven't been paid yet.</p>
                     </div>
                 </div>
             </fieldset>

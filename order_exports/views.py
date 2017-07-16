@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
+import arrow
 import simplejson as json
-from datetime import datetime
 
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
@@ -84,10 +83,13 @@ def add(request):
         if form.is_valid():
             daterange = request.POST.get('daterange') or ' - '
             created_at_min, created_at_max = daterange.split(' - ')
+
+            tz = timezone.localtime(timezone.now()).strftime(' %z')
+
             if created_at_min:
-                created_at_min = datetime.strptime(created_at_min, '%m/%d/%Y')
+                created_at_min = arrow.get(created_at_min + tz, r'MM/DD/YYYY Z').datetime
             if created_at_max:
-                created_at_max = datetime.strptime(created_at_max, '%m/%d/%Y')
+                created_at_max = arrow.get(created_at_max + tz, r'MM/DD/YYYY Z').datetime
 
             vendor_user_id = create_vendor_user(request)
             if vendor_user_id is not None:
@@ -233,10 +235,12 @@ def edit(request, order_export_id):
 
                 daterange = request.POST.get('daterange') or ' - '
                 created_at_min, created_at_max = daterange.split(' - ')
+                tz = timezone.localtime(timezone.now()).strftime(' %z')
+
                 if created_at_min:
-                    created_at_min = datetime.strptime(created_at_min, '%m/%d/%Y')
+                    created_at_min = arrow.get(created_at_min + tz, r'MM/DD/YYYY Z').datetime
                 if created_at_max:
-                    created_at_max = datetime.strptime(created_at_max, '%m/%d/%Y')
+                    created_at_max = arrow.get(created_at_max + tz, r'MM/DD/YYYY Z').datetime
 
                 filters = order_export.filters
                 filters.vendor = request.POST.get('vendor')

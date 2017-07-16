@@ -7,6 +7,9 @@
 .unselect {
     font-size: 17px;
 }
+#vendor-autocomplete .popover {
+    max-width: none !important;
+}
 .popover.bottom > .arrow::after {
     margin-left: -11px;
 }

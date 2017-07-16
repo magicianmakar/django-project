@@ -17,30 +17,36 @@ window.OrderExportAdd = {
         // events
         this.onClickEdit();
         this.onUnselectField();
-        this.onStartingAtCreatedAt();
+        // this.onStartingAtCreatedAt();
         this.onToggleUsername();
         this.onAddProductTitle();
         this.onRemoveProductTitle();
         this.onFindShopifyProductClick();
         this.onShopifyProductSelected();
         this.onFoundProductDeleteClick();
-        this.onAutocompleteVendor();
         this.onSubuserClick();
-        this.onAutocompleteVendor();
-        this.onSubuserClick();
+        this.onStoreChange();
+
+        this.autocompleteVendor.init();
+
+        $('input[name="daterange"]').daterangepicker();
 
         var clockpickerInput = $('input[name="schedule"]');
         clockpickerInput.clockpicker({
             autoclose: true,
-            afterHourSelect: function(e) {
-                clockpickerInput.clockpicker('done');
+            afterHourSelect: function () {
+                console.log('after hour select');
+                $('input[name="schedule"]').clockpicker('done');
             }
         });
-        clockpickerInput.on('change', function(e) {
-            $(this).val($(this).val().replace(/(\d\d):(\d\d)/, '$1:00'));
-        });
 
-        $('input[name="daterange"]').daterangepicker();
+        $('#shopify-products-popover').popover({
+            html: true,
+            trigger: 'hover',
+            content: function () {
+                return '<img src="/static/img/shopify-products-list.png" width="600">';
+            }
+        });
     },
     initializeDatepicker: function() {
         $('.input-group.date').datepicker({
@@ -322,13 +328,6 @@ window.OrderExportAdd = {
             $(this).parents('.product-item.row').remove();
         });
     },
-    onAutocompleteVendor: function() {
-        $('[name="vendor"]').autocomplete({
-            serviceUrl: '/order/exports/vendor-autocomplete',
-            minChars: 1,
-            deferRequestBy: 500
-        });
-    },
     onSubuserClick: function() {
         $('.invite-subuser').click(function () {
             var btn = $(this);
@@ -388,6 +387,27 @@ window.OrderExportAdd = {
                 });
             });
         });
+    },
+    onStoreChange: function() {
+        $('[name="store"]').on('change', function() {
+            window.OrderExportAdd.autocompleteVendor.destroy();
+            window.OrderExportAdd.autocompleteVendor.init();
+        });
+    },
+    autocompleteVendor: {
+        init: function() {
+            $('[name="vendor"]').autocomplete({
+                serviceUrl: '/autocomplete/supplier-name?' + $.param({store: $('[name="store"]').val()}),
+                minChars: 1,
+                deferRequestBy: 300,
+                onSelect: function(suggestion) {
+                    $('[name="vendor"]').val(suggestion.value);
+                }
+            });
+        },
+        destroy: function() {
+            $('[name="vendor"]').autocomplete('destroy');
+        }
     }
 };
 
