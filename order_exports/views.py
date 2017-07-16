@@ -15,9 +15,6 @@ from order_exports.forms import OrderExportForm
 from order_exports.models import *
 
 
-MAX_BREADCRUMB_TITLE = 50
-
-
 @login_required
 def index(request):
     if request.user.is_vendor:
@@ -170,13 +167,9 @@ def edit(request, order_export_id):
     else:
         product_titles = ['']
 
-    if len(order_export.description) > MAX_BREADCRUMB_TITLE:
-        title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
-    else:
-        title = order_export.description
     breadcrumbs = [
         {'title': 'Order Exports', 'url': reverse('order_exports_index')},
-        {'title': title, 'url': reverse('order_exports_edit', kwargs={'order_export_id': order_export.id})},
+        {'title': order_export.description, 'url': reverse('order_exports_edit', kwargs={'order_export_id': order_export.id})},
         'Edit'
     ]
 
@@ -312,15 +305,13 @@ def logs(request, order_export_id):
 
     order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                      store__user_id=request.user.id)
-    if len(order_export.description) > MAX_BREADCRUMB_TITLE:
-        title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
-    else:
-        title = order_export.description
+
     breadcrumbs = [
         {'title': 'Order Exports', 'url': reverse('order_exports_index')},
-        {'title': title, 'url': reverse('order_exports_logs', kwargs={'order_export_id': order_export.id})},
+        {'title': order_export.description, 'url': reverse('order_exports_logs', kwargs={'order_export_id': order_export.id})},
         'Logs'
     ]
+
     logs = order_export.logs.all()
 
     return render(request, 'order_exports/logs.html', {
@@ -342,14 +333,9 @@ def generated(request, order_export_id, code):
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          store__user_id=request.user.id)
 
-    if len(order_export.description) > MAX_BREADCRUMB_TITLE:
-        title = order_export.description[:MAX_BREADCRUMB_TITLE] + '...'
-    else:
-        title = order_export.description
-
     breadcrumbs = [
         {'title': 'Order Exports', 'url': reverse('order_exports_index')},
-        {'title': title, 'url': reverse('order_exports_generated', kwargs={
+        {'title': order_export.description, 'url': reverse('order_exports_generated', kwargs={
             'order_export_id': order_export.id, 'code': code
         })},
         'Generated Page'
