@@ -30,16 +30,20 @@ class Event(PolymorphicModel):
 
 
 class RegistrationEvent(Event):
+
     def get_scripts(self):
         return ''.join([self.facebook_script,
                         self.google_analytics_script,
                         self.mixpanel_script])
 
     def get_data(self):
+        stripe_plan = getattr(self.user.profile.plan, 'stripe_plan', None)
+        amount = float(stripe_plan.amount) if stripe_plan else 0
+
         return {'username': self.user.username,
                 'email': self.user.email,
                 'plan': getattr(self.user.profile.plan, 'title', ''),
-                'value': 26.46,
+                'value': amount,
                 'currency': 'USD',
                 'status': dict(ENTITY_STATUS_CHOICES).get(self.user.profile.status, '')}
 
@@ -74,6 +78,7 @@ class RegistrationEvent(Event):
 
 
 class PlanSelectionEvent(Event):
+
     def get_scripts(self):
         return ''.join([self.facebook_script,
                         self.google_analytics_script,
