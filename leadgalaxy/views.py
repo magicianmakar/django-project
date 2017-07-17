@@ -2929,6 +2929,10 @@ def orders_place(request):
         assert request.GET['SAPlaceOrder']
 
         product = request.GET['product']
+
+        if utils.safeInt(product):
+            product = 'https://www.aliexpress.com/item//{}.html'.format(product)
+
     except:
         raven_client.captureException()
         raise Http404("Product or Order not set")
