@@ -12,6 +12,20 @@ $(function () {
         $('.billing-tab a').trigger('click');
     }
 
+    if(getQueryVariable('w') == '1' && Cookies.get('welcome') != '1') {
+        setTimeout(function() {
+            Cookies.set('welcome', '1', { expires: 1 });
+
+            swal({
+                title: "Congrats!",
+                type: "success",
+                confirmButtonText: "Yes I'm Ready",
+                text: "You are now registered. \nYour next step is to GET ROLLING on the START UP PLAN or \n" +
+                      "IF you're READY to open up all our Killer features, select the Plan best for you & lets show you what we've got",
+            });
+        }, 500);
+    }
+
     $('#company_country').chosen({
         search_contains: true,
         width: '250px'

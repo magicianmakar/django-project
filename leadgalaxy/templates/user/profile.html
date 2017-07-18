@@ -409,6 +409,15 @@
 {% block extracss %}
 {% compress css %}
     <link href="{% static 'shopified/css/payment.css' %}" rel="stylesheet">
+    <style type="text/css">
+        .sa-placeholder {
+            background-image: url(https://dev.dropified.com/static/dropified-icon.png) !important;
+            background-size: 100% !important;
+            background-repeat: no-repeat !important;
+            background-color: #fff !important;
+            border: none !important;
+        }
+    </style>
 {% endcompress %}
 {% endblock %}
 
