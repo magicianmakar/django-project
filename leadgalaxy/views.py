@@ -2120,14 +2120,12 @@ def user_profile(request):
 
 def user_unlock(request, token):
     data = cache.get('unlock_account_{}'.format(token))
-    if data is None:
-        raise Http404('Token Not Found')
+    if data:
+        username_hash = utils.hash_text(data['username'].lower())
 
-    username_hash = utils.hash_text(data['username'].lower())
-
-    cache.delete('login_attempts_{}'.format(username_hash))
-    cache.delete('unlock_email_{}'.format(username_hash))
-    cache.delete('unlock_account_{}'.format(token))
+        cache.delete('login_attempts_{}'.format(username_hash))
+        cache.delete('unlock_email_{}'.format(username_hash))
+        cache.delete('unlock_account_{}'.format(token))
 
     messages.success(request, 'Your account has been unlocked')
 
