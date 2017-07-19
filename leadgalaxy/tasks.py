@@ -365,7 +365,15 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             shopify_product = cache.get('webhook_product_{}_{}'.format(store_id, shopify_id))
 
         if shopify_product is None:
-            shopify_product = utils.get_shopify_product(store, shopify_id)
+            rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(shopify_id), api=True))
+
+            if rep.ok:
+                shopify_product = rep.json()['product']
+            else:
+                if rep.status_code in [401, 402, 403, 404]:
+                    return
+                else:
+                    rep.raise_for_status()
 
         product_data = json.loads(product.data)
         product_data['title'] = shopify_product['title']
