@@ -1808,7 +1808,7 @@ class ShopifyOrderPaginator(Paginator):
             params['created_at_max'] = self.created_at_end
 
         if self.query:
-            if type(self.query) is long:
+            if safeInt(self.query) and len(self.query) >= 9:
                 params['ids'] = [self.query]
             else:
                 params['name'] = self.query
