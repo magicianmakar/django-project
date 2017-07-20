@@ -82,8 +82,8 @@ def index_view(request):
         request.user.profile.get_shopify_stores().count() >= 1 and \
         total_allowed != -1
 
-    templates = DescriptionTemplate.objects.filter(user=request.user).defer('description')
-    markup_rules = PriceMarkupRule.objects.filter(user=request.user)
+    templates = DescriptionTemplate.objects.filter(user=request.user.models_user).defer('description')
+    markup_rules = PriceMarkupRule.objects.filter(user=request.user.models_user)
 
     return render(request, 'index.html', {
         'stores': stores,
