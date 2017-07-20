@@ -156,7 +156,7 @@ def can_add_store(user):
     return can_add, total_allowed, user_count
 
 
-def can_add_product(user):
+def can_add_product(user, ignore_daily_limit=False):
     """ Check if the user plan allow one more product saving """
 
     import arrow
@@ -183,22 +183,24 @@ def can_add_product(user):
         if not profile.can('unlimited_products.use'):
             can_add = False
 
-    # Check daily limit
-    now = arrow.utcnow()
-    limit_key = 'product_day_limit-{u.id}-{t.day}-{t.month}'.format(u=user, t=now)
-    day_count = cache.get(limit_key)
-    if day_count is None:
-        start, end = now.span('day')
-        day_count = profile.user.shopifyproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
-        day_count += profile.user.commercehqproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
+    if not ignore_daily_limit:
+        # Check daily limit
+        now = arrow.utcnow()
+        limit_key = 'product_day_limit-{u.id}-{t.day}-{t.month}'.format(u=user, t=now)
 
-    if day_count + 1 > 2000:
-        from raven.contrib.django.raven_compat.models import client as raven_client
+        day_count = cache.get(limit_key)
+        if day_count is None:
+            start, end = now.span('day')
+            day_count = profile.user.shopifyproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
+            day_count += profile.user.commercehqproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
 
-        raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
-        can_add = False
+        if day_count + 1 > 2000:
+            from raven.contrib.django.raven_compat.models import client as raven_client
 
-    cache.set(limit_key, day_count + 1, timeout=86400)
+            raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
+            can_add = False
+
+        cache.set(limit_key, day_count + 1, timeout=86400)
 
     return can_add, total_allowed, user_count
 

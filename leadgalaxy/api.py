@@ -2319,7 +2319,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
+        can_add, total_allowed, user_count = permissions.can_add_product(user.models_user, ignore_daily_limit=True)
         if not can_add:
             return self.api_error(
                 'Your current plan allow up to %d saved products, currently you have %d saved products.'
