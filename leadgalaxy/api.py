@@ -2404,7 +2404,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except:
             shopify_data = None
 
-        tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id, shopify_data=shopify_data)
+        tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id, shopify_product=shopify_data)
 
         return self.api_success({'product': product.id})
 
