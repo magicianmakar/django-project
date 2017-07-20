@@ -2399,7 +2399,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         product.set_default_supplier(supplier, commit=True)
 
-        tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id)
+        try:
+            shopify_data = json.loads(data.get('shopify_data'))
+        except:
+            shopify_data = None
+
+        tasks.update_shopify_product.delay(store.id, product.shopify_id, product_id=product.id, shopify_data=shopify_data)
 
         return self.api_success({'product': product.id})
 
