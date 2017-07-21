@@ -643,7 +643,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ClippingMagic.objects.create(user=request.user, remaining_credits=5)
 
         if user.clippingmagic.remaining_credits <= 0:
-                return self.api_error('Looks like your credits have run out', status=402)
+            return self.api_error('Looks like your credits have run out', status=402)
 
         if action == 'edit':
             res = requests.post(
