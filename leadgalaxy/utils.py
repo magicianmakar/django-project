@@ -585,14 +585,18 @@ def split_product(product, split_factor, store=None):
 
                 clone.save()
 
-                for i in product.productsupplier_set.all():
+                suppliers = product.productsupplier_set.all()
+                for i in suppliers:
                     i.pk = None
                     i.product = clone
                     i.store = clone.store
                     i.save()
 
-                    if i.is_default:
+                    if i.is_default or len(suppliers) == 1:
                         clone.set_default_supplier(i, commit=True)
+
+                if not clone.have_supplier() and len(suppliers):
+                    clone.set_default_supplier(suppliers[0], commit=True)
 
                 new_products.append(clone)
 
