@@ -83,7 +83,7 @@ def extra_bundles(request):
 
                         cache.set(extra_cache_key, extra_bundle, timeout=3600)
 
-        elif profile.plan.is_free and request.user.can_trial():
+        elif profile.plan.is_free and not profile.plan.is_startup and request.user.can_trial():
             extra_bundle = {
                 'url': '/user/profile#plan',
                 'title': 'Start Your 14 Days Free Trial!',

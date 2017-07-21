@@ -10,6 +10,7 @@ urlpatterns = patterns(
     url(r'^shopify/', include('shopify_oauth.urls')),
     url(r'^chq/', include('commercehq_core.urls', namespace='chq')),
     url(r'^subscription/', include('stripe_subscription.urls')),
+    url(r'^subscription/shopify/', include('shopify_subscription.urls')),
     url(r'^marketing/', include('product_feed.urls')),
     url(r'^pages/', include('article.urls')),
     url(r'^revision/', include('shopify_revision.urls')),

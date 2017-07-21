@@ -1,3 +1,6 @@
+import hmac
+from hashlib import sha256
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -8,14 +11,16 @@ from django.utils.crypto import get_random_string
 from django.contrib import messages
 from django.contrib.auth import login as user_login
 
+import shopify
 from requests_oauthlib import OAuth2Session
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
 
-from leadgalaxy.models import ShopifyStore, UserProfile, GroupPlan
-from leadgalaxy.utils import attach_webhooks
+from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
+from leadgalaxy.utils import attach_webhooks, get_plan
+
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
 TOKEN_URL = 'https://{}/admin/oauth/access_token'
@@ -46,10 +51,7 @@ def encoded_params_for_signature(params):
     return "&".join(sorted(encoded_pairs(params)))
 
 
-def verify_shopify_webhook(request):
-    import hmac
-    from hashlib import sha256
-
+def verify_hmac_signature(request):
     # message = "code={r[code]}&shop={r[shop]}&state={r[state]}&timestamp={r[timestamp]}".format(r=request.GET)
     message = encoded_params_for_signature(request.GET)
     message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), sha256).hexdigest()
@@ -104,7 +106,7 @@ def subscribe_user_to_default_plan(user):
 
 
 def index(request):
-    verify_shopify_webhook(request)
+    verify_hmac_signature(request)
 
     try:
         store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True)
@@ -137,49 +139,51 @@ def index(request):
         return HttpResponseRedirect('/')
 
 
-@login_required
 def install(request, store):
     if not store.endswith('myshopify.com'):
         store = '{}.myshopify.com'.format(store)
 
-    user = request.user
+    if request.user.is_authenticated():
+        user = request.user
 
-    if user.is_subuser:
-        messages.error(request, 'Sub-Users can not add new stores.')
-        return HttpResponseRedirect('/')
-
-    can_add, total_allowed, user_count = permissions.can_add_store(user)
-
-    if not can_add:
-        if user.profile.plan.is_free and user.can_trial():
-            subscribe_user_to_default_plan(user)
-
-        else:
-            raven_client.captureMessage(
-                'Add Extra Store',
-                level='warning',
-                extra={
-                    'user': user.email,
-                    'store': store,
-                    'plan': user.profile.plan.title,
-                    'stores': user.profile.get_shopify_stores().count()
-                }
-            )
-
-            plans_url = request.build_absolute_uri('/user/profile#plan')
-            if user.profile.plan.is_free:
-                messages.error(
-                    request,
-                    'Please Activate your account first by visiting '
-                    '<a href="{}">Profile page</a>'.format(plans_url))
-            else:
-                messages.error(
-                    request,
-                    'Your plan does not support connecting another Shopify store. '
-                    'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@dropified.com">'
-                    'contact support</a> to learn how to connect more stores'.format(plans_url))
-
+        if user.is_subuser:
+            messages.error(request, 'Sub-Users can not add new stores.')
             return HttpResponseRedirect('/')
+
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
+
+        if not can_add:
+            if user.profile.plan.is_free and user.can_trial():
+                subscribe_user_to_default_plan(user)
+
+            else:
+                raven_client.captureMessage(
+                    'Add Extra Store',
+                    level='warning',
+                    extra={
+                        'user': user.email,
+                        'store': store,
+                        'plan': user.profile.plan.title,
+                        'stores': user.profile.get_shopify_stores().count()
+                    }
+                )
+
+                plans_url = request.build_absolute_uri('/user/profile#plan')
+                if user.profile.plan.is_free:
+                    messages.error(
+                        request,
+                        'Please Activate your account first by visiting '
+                        '<a href="{}">Profile page</a>'.format(plans_url))
+                else:
+                    messages.error(
+                        request,
+                        'Your plan does not support connecting another Shopify store. '
+                        'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@dropified.com">'
+                        'contact support</a> to learn how to connect more stores'.format(plans_url))
+
+                return HttpResponseRedirect('/')
+    else:
+        print 'Not Logged in'
 
     state = get_random_string(16)
     request.session['shopify_state'] = state
@@ -189,10 +193,11 @@ def install(request, store):
     return HttpResponseRedirect(authorization_url)
 
 
-@login_required
 def callback(request):
-    verify_shopify_webhook(request)
+    verify_hmac_signature(request)
+
     if request.session.get('shopify_state', True) != request.GET.get('state', False):
+        print 'State does not match'
         raven_client.captureMessage(
             'State does not match',
             level='warning', request=request,
@@ -203,13 +208,40 @@ def callback(request):
 
     shop = request.GET['shop']
 
-    user = request.user
-    shopify = shopify_session(request)
+    oauth_session = shopify_session(request)
 
-    token = shopify.fetch_token(
+    token = oauth_session.fetch_token(
         token_url=TOKEN_URL.format(shop),
         client_secret=settings.SHOPIFY_API_SECRET,
         code=request.GET['code'])
+
+    user = request.user
+
+    if not user.is_authenticated():
+        # New User coming from Shopify Apps Store
+        shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
+
+        shop_info = shopify.Shop.current()
+        username = shop.split('.')[0]
+        n = 1
+
+        while User.objects.filter(username=username).exists():
+            username = '{}{}'.format(username, n)
+            n += 1
+
+        user = User.objects.create(
+            username=username,
+            email=shop_info.email)
+
+        user.set_password(get_random_string(20))
+        user.set_config('shopify_app_store', True)
+
+        user.profile.change_plan(get_plan(
+            payment_gateway='shopify',
+            plan_slug='startup-shopify'))
+
+        user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        user_login(request, user)
 
     try:
         store = ShopifyStore.objects.get(user=user, shop=shop, version=2, is_active=True)
@@ -262,13 +294,14 @@ def callback(request):
         try:
             store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
 
-            info = store.get_info
-            store.title = info['name']
-            store.currency_format = info['money_in_emails_format']
+            shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
 
-            owner = info.get('shop_owner')
-            if owner and not user.first_name and not user.last_name:
-                fullname = owner.split(' ')
+            shop_info = shopify.Shop.current()
+            store.title = shop_info.name
+            store.currency_format = shop_info.money_in_emails_format
+
+            if shop_info.shop_owner and not user.first_name and not user.last_name:
+                fullname = shop_info.shop_owner.split(' ')
                 user.first_name, user.last_name = fullname[0], ' '.join(fullname[1:])
                 user.save()
 

@@ -1,0 +1,95 @@
+{% load template_helper %}
+{% load perms_helper %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Manage Subscription
+            </div>
+            <div class="panel-body" style="padding:0">
+                <table class="plan-table table plans-monthly" style="display: table;">
+                    <thead>
+                        <tr>
+                            {% for item in shopify_plans %}
+                            <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
+                                data-plan-title="{{item.title}}" data-plan="{{item.id}}"
+                                data-trial-days="{{item.stripe_plan.trial_period_days}}"
+                                style="width: {% widthratio 100 stripe_plans|length 1 %}%"
+                                >
+
+                                <h3>{{item.title}}</h3>
+                                {% if item.monthly_price and not item.is_free %}
+                                    <p class="price">${{item.monthly_price}}<span>/mo</span></p>
+                                {% else %}
+                                    <p class="price"><span style="font-size:26px !important">Free</span></p>
+                                {% endif %}
+
+                                {% if item.stripe_plan.retail_amount %}
+                                    <p class="retail-price" title="Retail Price">
+                                        <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                    </p>
+                                {% else %}
+                                    <p class="retail-price"></p>
+                                {% endif %}
+
+                                <p class="cta">
+                                    {% if current_plan == item %}
+                                        <button class="btn btn-primary btn-outline">Current Plan</button>
+                                    {% else %}
+                                        <button class="btn btn-success choose-shopify-plan">Choose Plan</button>
+                                    {% endif %}
+                                </p>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="features">
+                        <tr>
+                        {% for item in shopify_plans %}
+                            <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}"
+                                class="plan-feature {% if current_plan == item %}selected{% endif %}">
+                                <p class="plan-feature">
+                                    {% plan_limit item 'stores' %}
+                                </p>
+
+                                <p class="plan-feature">
+                                {% if item|plan_have_feature:'orders.use' %}
+                                    {% plan_limit item 'orders' 'auto_fulfill_limit' %}
+                                {% else %}
+                                    <i>Auto Fulfill Unavailable</i>
+                                {% endif %}
+                                </p>
+
+                                <p class="plan-feature">
+                                    {% plan_limit item 'products' %}
+                                </p>
+
+                                <p class="plan-feature">
+                                    {% plan_limit item 'boards' %}
+                                </p>
+
+                                <p class="plan-feature">
+                                    1-Click import from <b>{{ item.import_stores|length }} Stores</b>
+                                    <i class="fa fa-fw fa-question-circle"
+                                        qtip-tooltip="You can import products from:<br><b>{{item.import_stores|join:', '}}</b>"
+                                        qtip-my="bottom center"
+                                        qtip-at="top center"
+                                        style="font-size:16px;color:#BBB"
+                                    ></i>
+                                </p>
+                                <div class="plan-more-features" style="">
+                                    <button class="btn btn-default btn-outline more-feature-list-btn">
+                                        <i class="fa fa-plus"></i> More Features
+                                    </button>
+                                </div>
+                                <div class="plan-feature-list" style="display:none">
+                                </div>
+                            </td>
+                        {% endfor %}
+                        </tr>
+                    </tbody>
+                  </table>
+            </div>
+        </div>
+    </div>
+</div>

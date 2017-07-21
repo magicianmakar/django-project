@@ -239,6 +239,31 @@
         );
     });
 
+    $('.choose-shopify-plan').click(function(e) {
+        var parent = $(this).parents('.subsciption-plan');
+        var plan = parent.data('data-plan');
+
+        $.ajax({
+            url: config.shopify_plan,
+            type: 'POST',
+            data: {
+                plan: parent.data('plan')
+            },
+            success: function(data) {
+                setTimeout(function() {
+                    if (data.location) {
+                        window.location.href = data.location;
+                    } else {
+                        window.location.reload();
+                    }
+                }, 500);
+            },
+            error: function(data) {
+                displayAjaxError('Plan Subscription', data);
+            }
+        });
+    });
+
     $('#modal-subscription-cancel .confirm-cancel-btn').click(function(e) {
         var parent = $(this).parents('.subsciption-plan');
         var plan = parent.data('data-plan');

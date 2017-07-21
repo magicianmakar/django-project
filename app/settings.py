@@ -62,6 +62,7 @@ INSTALLED_APPS = (
     'shopify_orders',
     'shopify_revision',
     'stripe_subscription',
+    'shopify_subscription',
     'product_feed',
     'data_store',
     'product_alerts',

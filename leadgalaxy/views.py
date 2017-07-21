@@ -82,6 +82,13 @@ def index_view(request):
         request.user.profile.get_shopify_stores().count() >= 1 and \
         total_allowed != -1
 
+    pending_sub = request.user.shopifysubscription_set.filter(status='pending')
+    if len(pending_sub):
+        charge = pending_sub[0].refresh()
+        if charge.status == 'pending':
+            request.session['active_subscription'] = charge.id
+            return HttpResponseRedirect(charge.confirmation_url)
+
     templates = DescriptionTemplate.objects.filter(user=request.user.models_user).defer('description')
     markup_rules = PriceMarkupRule.objects.filter(user=request.user.models_user)
 
@@ -2079,6 +2086,10 @@ def user_profile(request):
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 
+    shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify') \
+                                     .annotate(num_permissions=Count('permissions')) \
+                                     .order_by('num_permissions')
+
     clippingmagic_plans = ClippingMagicPlan.objects.all()
     clippingmagic = None
     if not request.user.profile.plan.is_free:
@@ -2098,6 +2109,7 @@ def user_profile(request):
             captchacredit = CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
 
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
+    shopify_apps_customer = request.user.get_config('shopify_app_store')
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
@@ -2108,7 +2120,9 @@ def user_profile(request):
         'extra_bundles': extra_bundles,
         'bundles': bundles,
         'stripe_plans': stripe_plans,
+        'shopify_plans': shopify_plans,
         'stripe_customer': stripe_customer,
+        'shopify_apps_customer': shopify_apps_customer,
         'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,
         'captchacredit_plans': captchacredit_plans,

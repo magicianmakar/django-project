@@ -124,14 +124,19 @@ def generate_plan_registration(plan, data={}, bundle=None, sender=None):
     return reg
 
 
-def get_plan(plan_hash=None, plan_slug=None):
+def get_plan(plan_hash=None, plan_slug=None, payment_gateway=None):
     try:
         assert plan_hash != plan_slug
 
+        plan = GroupPlan.objects
+
+        if payment_gateway:
+            plan = plan.filter(payment_gateway=payment_gateway)
+
         if plan_hash:
-            return GroupPlan.objects.get(register_hash=plan_hash)
+            return plan.get(register_hash=plan_hash)
         else:
-            return GroupPlan.objects.get(slug=plan_slug)
+            return plan.get(slug=plan_slug)
     except:
         raven_client.captureMessage('Plan Not Found',
                                     extra={'plan_hash': plan_hash, 'plan_slug': plan_slug})

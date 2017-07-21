@@ -1,0 +1,58 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Plan
+            </div>
+            <div class="panel-body">
+                <p style="margin:0">Your Subscribed to:</p>
+                <ul class="list-group">
+                    {% for item in user.stripesubscription_set.all %}
+                        {% with status=item.get_status %}
+
+                        <li class="list-group-item" style="border:0 none">
+                            <b>
+                            {{ item.plan.get_description }}
+                                {% if item.is_active %}
+                                    <span class="badge badge-primary">
+                                        {{status.status_str}}
+                                    </span>
+
+                                    {% with coupon=user.stripe_customer.get_coupon %}
+                                        {% if coupon %}
+                                            <span class="badge badge-success">{{coupon}}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="badge badge-warning">
+                                        {{status.status_str}}
+                                    </span>
+                                {% endif %}
+
+                                {% if status.cancel_at_period_end %}
+                                    <span class="badge badge-warning">
+                                    Canceleld
+                                    {% include 'partial/help_tooltip.html' with help="You have canceled your subscription, but it will stay active until the end of the billing period.<br>You will not be billed at the period end." nostyle=True %}
+                                    </span>
+                                {% endif %}
+                            </b>
+
+                            {% if status.status == 'active' or status.status == 'trialing' or status.status == 'past_due' %}
+                            <button class="btn btn-danger btn-outline btn-xs pull-right cancel-sub-btn itooltip"
+                                    title="Cancel Your Subscription"
+                                    data-subscription="{{item.id}}"
+                                    data-status="{{status.status}}"
+                                    data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
+                                    data-plan="{{item.plan.get_description}}">
+                                {# <i class="fa fa-times"></i>  #}
+                                Cancel
+                            </button>
+                            {% endif %}
+                        </li>
+                        {% endwith %}
+                    {% endfor %}
+                </ul>
+                </div>
+            </div>
+        </div>
+    </div>

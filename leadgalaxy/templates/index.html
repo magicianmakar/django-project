@@ -129,8 +129,12 @@
             </table>
 
         {% if not user.is_subuser %}
-            <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
-                Add Store</a>
+            {% if not user.profile.get_config.shopify_app_store %}
+            <a class="add-store-btn btn btn-primary btn-sm" href="#"
+                data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
+                Add Store
+            </a>
+            {% endif %}
 
             Need a new Shopify store?  <a href="http://bit.ly/2k0FdOI" class="itooltip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="21 day free trial with 10% off Shopify for 1 Year">Get your Free Trial here</a>
         {% endif %}

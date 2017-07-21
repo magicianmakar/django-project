@@ -37,6 +37,7 @@ YES_NO_CHOICES = (
 PLAN_PAYMENT_GATEWAY = (
     ('jvzoo', 'JVZoo'),
     ('stripe', 'Stripe'),
+    ('shopify', 'Shopify'),
 )
 
 SUBUSER_PERMISSIONS = (
@@ -618,6 +619,14 @@ class ShopifyStore(models.Model):
             url=self.get_link('/admin/orders/count.json', api=True),
             params=params
         ).json().get('count', 0)
+
+    @property
+    def shopify(self):
+        import shopify
+        session = shopify.Session(self.shop, self.access_token)
+        shopify.ShopifyResource.activate_session(session)
+
+        return shopify
 
     @cached_property
     def get_info(self):
@@ -1546,6 +1555,7 @@ class GroupPlan(models.Model):
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
     notes = models.TextField(null=True, blank=True, verbose_name='Admin Notes')
     features = models.TextField(null=True, blank=True, verbose_name='Features List')
+    monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, verbose_name='Monthly Price(in USD)')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
@@ -1566,7 +1576,11 @@ class GroupPlan(models.Model):
     def get_description(self):
         desc = self.description if self.description else self.title
         if self.is_stripe():
-            desc = '{} (${}/month)'.format(desc, self.stripe_plan.amount, self.stripe_plan.interval)
+            desc = '{} (${}/month)'.format(desc, self.stripe_plan.amount)
+        elif (not self.monthly_price and self.monthly_price is not None) or self.is_free:
+            desc = '{} (Free)'.format(desc)
+        elif self.monthly_price:
+            desc = '{} (${}/month)'.format(desc, self.monthly_price)
 
         return desc
 
@@ -1591,13 +1605,20 @@ class GroupPlan(models.Model):
         except:
             return False
 
+    def is_shopify(self):
+        return self.payment_gateway == 'shopify'
+
     @property
     def is_free(self):
-        return self.slug in ['free-stripe-plan', 'free-plan']
+        return self.slug in ['free-stripe-plan', 'free-plan'] or self.is_startup
 
     @property
     def is_lite(self):
         return self.slug in ['lite-stripe-plan', 'lite-plan']
+
+    @property
+    def is_startup(self):
+        return self.slug in ['startup', 'startup-shopify']
 
     @property
     def large_badge_image(self):
