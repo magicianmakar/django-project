@@ -45,7 +45,6 @@ def subscription_plan(request):
             "price": plan.monthly_price,
             "capped_amount": 100,
             "terms": "Dropified Monthly Subscription",
-            "test": True,
             "return_url": app_link(reverse('shopify_subscription.views.subscription_activated'))
         })
 
