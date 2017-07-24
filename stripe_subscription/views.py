@@ -150,7 +150,7 @@ def subscription_plan(request):
             try:
                 sub.save()
 
-            except (SubscriptionException, stripe.CardError) as e:
+            except (SubscriptionException, stripe.CardError, stripe.InvalidRequestError) as e:
                 raven_client.captureException(level='warning')
                 raise SubscriptionException('Subscription Error: {}'.format(e.message))
 
