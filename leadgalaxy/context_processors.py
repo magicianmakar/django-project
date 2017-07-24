@@ -35,63 +35,6 @@ def extra_bundles(request):
                 'title': 'Upgrade To All Drop Shipping Features'
             }
 
-        elif profile.plan.is_stripe() and request.user.have_stripe_billing():
-            from stripe_subscription.utils import eligible_for_trial_coupon, trial_coupon_offer_end
-            customer = request.user.stripe_customer
-            if not customer.have_source() and eligible_for_trial_coupon(customer.get_data()):
-                from stripe_subscription.stripe_api import stripe
-                from stripe_subscription.utils import format_coupon
-                from django.conf import settings
-
-                coupon_key = 'stripe_coupon_{}'.format(settings.STRIP_TRIAL_DISCOUNT_COUPON)
-                coupon = cache.get(coupon_key)
-                if coupon is None:
-                    coupon = stripe.Coupon.retrieve(settings.STRIP_TRIAL_DISCOUNT_COUPON).to_dict()
-                    cache.set(coupon_key, coupon, timeout=3600)
-
-                msg = ('Enter your credit card information today and get <b>{}</b><br/>'
-                       'You will not be charged until your 14 days Free Trial has ended.<br/><br/>'
-                       'This offer will end in <b>{}</b>').format(
-                    format_coupon(coupon), trial_coupon_offer_end(customer.get_data()))
-
-                extra_bundle = {
-                    'url': '/user/profile#billing',
-                    'title': 'Get {}'.format(format_coupon(coupon)),
-                    'attrs': 'qtip-tooltip="{}" xqtip-my="" xqtip-at=""'.format(msg),
-                    'message': msg,
-                    'sametab': True
-                }
-
-                cache.set(extra_cache_key, extra_bundle, timeout=3600)
-
-            elif not customer.have_source():
-                subscription = request.user.stripesubscription_set.first()
-                if subscription:
-                    status = subscription.get_status()
-                    if status.get('status') == 'trialing':
-                        msg = ('Hurry! Your <b>Free {}</b>. Enter your billing '
-                               'information to avoid being transported '
-                               'back to the Stone Age! :)').format(status.get('status_str'))
-
-                        extra_bundle = {
-                            'url': '/user/profile#billing',
-                            'title': 'Activate Dropified Account',
-                            'attrs': 'qtip-tooltip="{}" xqtip-my="" xqtip-at=""'.format(msg),
-                            'message': msg,
-                            'sametab': True
-                        }
-
-                        cache.set(extra_cache_key, extra_bundle, timeout=3600)
-
-        elif profile.plan.is_free and not profile.plan.is_startup and request.user.can_trial():
-            extra_bundle = {
-                'url': '/user/profile#plan',
-                'title': 'Start Your 14 Days Free Trial!',
-                'sametab': True
-            }
-
-            cache.set(extra_cache_key, extra_bundle, timeout=3600)
-
     # Terms of Service update message
     # 2016-08-24 is the date of adding agree to TOS before registering
     tos_update = not request.user.get_config('_tos-update') and \

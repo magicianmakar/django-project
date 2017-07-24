@@ -167,7 +167,7 @@
 
         swal({
                 title: parent.data('plan-title') + " Plan",
-                text: "Start the " + parent.data('trial-days') + ' days trial?',
+                text: "Subscribe to " + parent.data('plan-title') + ' Plan?',
                 showCancelButton: true,
                 closeOnConfirm: false,
                 animation: false,
