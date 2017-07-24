@@ -147,7 +147,16 @@ def subscription_plan(request):
             else:
                 sub.trial_end = arrow.get(sub.trial_end).timestamp
 
-            sub.save()
+            try:
+                sub.save()
+
+            except (SubscriptionException, stripe.CardError) as e:
+                raven_client.captureException(level='warning')
+                raise SubscriptionException('Subscription Error: {}'.format(e.message))
+
+            except:
+                raven_client.captureException()
+                return JsonResponse({'error': 'Server Error'}, status=500)
 
             profile = user.profile
             profile.plan = plan
