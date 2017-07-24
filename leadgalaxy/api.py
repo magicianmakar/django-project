@@ -1693,7 +1693,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Order ID is not a valid', status=501)
 
         if not order_lines and order_line_sku:
-            line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku)
+            try:
+                line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku)
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code in [401, 402, 403, 404, 429]:
+                    return self.api_error('Shopify API Error', status=e.response.status_code)
+                else:
+                    raven_client.captureException(level='warning')
+                    return self.api_error('Shopify API Error', status=500)
+
             if line:
                 order_lines = str(line['id'])
 
