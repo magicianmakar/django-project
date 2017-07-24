@@ -248,8 +248,7 @@
 
                         {% if shopify_apps_customer %}
                             {% include "partial/plans/shopify_subscription.html" with current_plan=user.profile.plan %}
-
-                        {% elif stripe_customer %}
+                        {% elif user.stripesubscription_set.exists %}
                             {% include "partial/plans/stripe_subscription.html" with current_plan=user.profile.plan %}
                         {% endif %}
 

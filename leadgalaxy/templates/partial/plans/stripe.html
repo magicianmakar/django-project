@@ -5,7 +5,7 @@
                 Plan
             </div>
             <div class="panel-body">
-                <p style="margin:0">Your Subscribed to:</p>
+                <p style="margin:0">You are Subscribed to:</p>
                 <ul class="list-group">
                     {% for item in user.stripesubscription_set.all %}
                         {% with status=item.get_status %}
