@@ -146,7 +146,11 @@ def subscription_plan(request):
 
             except (SubscriptionException, stripe.CardError, stripe.InvalidRequestError) as e:
                 raven_client.captureException(level='warning')
-                raise SubscriptionException('Subscription Error: {}'.format(e.message))
+                msg = 'Subscription Error: {}'.format(e.message)
+                if 'This customer has no attached payment source' in e.message:
+                    msg = 'Add your billing information first'
+
+                return JsonResponse({'error': msg}, status=500)
 
             except:
                 raven_client.captureException()
