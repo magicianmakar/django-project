@@ -1030,7 +1030,7 @@ def is_chinese_carrier(tarcking_number):
     return tarcking_number and re.search('(CN|SG|HK)$', tarcking_number) is not None
 
 
-def shipping_carrier(tracking_number):
+def shipping_carrier(tracking_number, all_matches=False):
     patterns = [{
         'name': "Royal Mail",
         'pattern': "^([A-Z]{2}\\d{9}GB)$"
@@ -1114,11 +1114,31 @@ def shipping_carrier(tracking_number):
         'pattern': "^[a-z]{2}\\d{9}JP|^\\d{11}$"
     }]
 
+    matches = []
     for p in patterns:
         if p['pattern'] and re.search(p['pattern'], tracking_number):
-            return p['name']
+            matches.append(p['name'])
+
+    if len(matches):
+        return matches if all_matches else matches[0]
 
     return None
+
+
+def is_shipping_carrier(tracking_number, carrier, any_match=False):
+    carriers = shipping_carrier(tracking_number, all_matches=any_match)
+    if not carriers:
+        return False
+
+    if any_match:
+        for i in carriers:
+            if i.lower() == carrier.lower():
+                return True
+    else:
+        if carriers.lower() == carrier.lower():
+            return True
+
+    return False
 
 
 def order_track_fulfillment(**kwargs):
@@ -1157,7 +1177,8 @@ def order_track_fulfillment(**kwargs):
                 order__order_id=order_id)
 
             is_usps = (is_chinese_carrier(source_tracking) or shipping_carrier(source_tracking) == 'USPS') \
-                and line.order.country_code == 'US'
+                and line.order.country_code == 'US' \
+                and not is_shipping_carrier(source_tracking, 'FedEx', any_match=True)
 
     except ShopifyOrderLine.DoesNotExist:
         pass
@@ -1179,6 +1200,8 @@ def order_track_fulfillment(**kwargs):
 
         if (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = "USPS"
+        elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
+            data['fulfillment']['tracking_company'] = "FedEx"
         else:
             aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
 

@@ -124,6 +124,12 @@ class FulfillmentTestCase(TestCase):
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
         self.assertIsNone(data['fulfillment'].get('tracking_url'))
 
+    def test_fedex_tracking_number(self):
+        track = self.create_track('5415135175', '1654811', '74899991206471196283', 'US')
+        data = utils.order_track_fulfillment(order_track=track, user_config={})
+        self.assertEqual(data['fulfillment']['tracking_company'], "FedEx")
+        self.assertIsNone(data['fulfillment'].get('tracking_url'))
+
     def test_unrecognized_carrier(self):
         track = self.create_track('5415135176', '1654812', 'YT1614016214415424', 'US')
         data = utils.order_track_fulfillment(order_track=track, user_config={})
