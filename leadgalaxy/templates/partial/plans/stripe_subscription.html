@@ -30,7 +30,7 @@
                                 <p class="cta">
                                     {% if current_plan == item %}
                                         <button class="btn btn-primary">Selected</button>
-                                    {% elif not user.is_recurring_customer and user.can_trial %}
+                                    {% elif not user.is_recurring_customer and user.can_trial and item.stripe_plan.trial_period_days %}
                                         <button class="btn btn-primary start-plan-trial" >
                                             Try for {{item.stripe_plan.trial_period_days}} days</button>
                                     {% elif not user.can_trial and not user.stripe_customer.source and not current_plan.is_stripe and not item.is_free %}
@@ -52,6 +52,13 @@
                                 class="plan-feature {% if current_plan == item %}selected{% endif %}">
                                 <p class="plan-feature">
                                     {% plan_limit item 'stores' %}
+
+                                    {% if 'elite' in item.slug %}
+                                    <p style="padding: 0 !important; margin: 0 !important; ">
+                                        $27/month per additional store
+                                    </p>
+                                    {% endif %}
+
                                 </p>
 
                                 <p class="plan-feature">
@@ -80,12 +87,9 @@
                                     ></i>
                                 </p>
                                 <div class="plan-more-features" style="">
-                                    <button class="btn btn-default btn-outline more-feature-list-btn">
+                                    <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
                                         <i class="fa fa-plus"></i> More Features
-                                    </button>
-                                </div>
-                                <div class="plan-feature-list" style="display:none">
-                                    {% plan_features item %}
+                                    </a>
                                 </div>
                             </td>
                         {% endfor %}
