@@ -782,8 +782,12 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
                 yield p
 
 
-def get_shopify_order_line(store, order_id, line_id, line_sku=None, note=False):
-    order = get_shopify_order(store, order_id)
+def get_shopify_order_line(store, order_id, line_id, line_sku=None, note=False, shopify_data=None):
+    if shopify_data is None:
+        order = get_shopify_order(store, order_id)
+    else:
+        order = shopify_data
+
     for line in order['line_items']:
         if line_id and int(line['id']) == int(line_id):
             if note:

@@ -1694,7 +1694,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if not order_lines and order_line_sku:
             try:
-                line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku)
+                shopify_data = json.loads(data.get('shopify_data')) if data.get('shopify_data') else None
+                line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku, shopify_data=shopify_data)
+
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code in [401, 402, 403, 404, 429]:
                     return self.api_error('Shopify API Error', status=e.response.status_code)
