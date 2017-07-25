@@ -464,7 +464,7 @@ $('#save-product-notes').click(function (e) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/product-notes',
+        url: api_url('product-notes', 'chq'),
         context: btn,
         data: {
             'notes': $('#product-notes').val(),

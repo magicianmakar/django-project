@@ -1186,3 +1186,12 @@ class CHQStoreApi(ApiResponseMixin, View):
         tasks.create_image_zip.delay(images, product.id)
 
         return self.api_success()
+
+    def post_product_notes(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        product.notes = data.get('notes')
+        product.save()
+
+        return self.api_success()
