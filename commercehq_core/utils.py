@@ -638,14 +638,19 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 
         for order in orders:
             total_quantity, total_shipped = 0, 0
+            country = ''
 
             for order_item in order.get('items', []):
                 total_quantity += order_item['status']['quantity']
                 total_shipped += order_item['status']['shipped']
 
+            if order.get('address') and order.get('address').get('shipping'):
+                country = order['address']['shipping']['country']
+
             args = store.id, order['id']
             cache_data['chq_auto_total_quantity_{}_{}'.format(*args)] = total_quantity
             cache_data['chq_auto_total_shipped_{}_{}'.format(*args)] = total_shipped
+            cache_data['chq_auto_country_{}_{}'.format(*args)] = country
 
             for line in order.get('items', []):
                 cache_data['chq_auto_quantity_{}_{}_{}'.format(store.id, order['id'], line['data']['id'])] = line['status']['quantity']
@@ -664,8 +669,6 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 def order_track_fulfillment(order_track, user_config=None):
     user_config = {} if user_config is None else user_config
     tracking_number = order_track.source_tracking
-    shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
-    shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
 
     kwargs = {
         'store_id': order_track.store_id,
@@ -678,6 +681,15 @@ def order_track_fulfillment(order_track, user_config=None):
     total_quantity = cache.get('chq_auto_total_quantity_{store_id}_{order_id}'.format(**kwargs))
     total_shipped = cache.get('chq_auto_total_shipped_{store_id}_{order_id}'.format(**kwargs))
     quantity = cache.get('chq_auto_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs))
+    country = cache.get('chq_auto_country_{store_id}_{order_id}'.format(**kwargs))
+
+    shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
+
+    if country and country == 'US':
+        if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
+            shipping_carrier_name = 'USPS'
+
+    shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
 
     if fulfilment_id is None:
         store = order_track.store
