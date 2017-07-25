@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
@@ -17,7 +16,6 @@ from .models import StripeSubscription
 from .stripe_api import stripe
 from .utils import (
     SubscriptionException,
-    eligible_for_trial_coupon,
     subscription_end_trial,
     update_subscription,
     get_recent_invoice,
@@ -58,10 +56,6 @@ def customer_source(request):
         return JsonResponse({
             'error': 'Credit Card Error, Please try again'
         }, status=500)
-
-    if eligible_for_trial_coupon(cus):
-        cus.coupon = settings.STRIP_TRIAL_DISCOUNT_COUPON
-        user.stripe_customer.stripe_save(cus)
 
     source = user.stripe_customer.source
     BillingInformationEntryEvent.objects.create(user=request.user, source=str(source))
