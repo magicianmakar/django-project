@@ -37,7 +37,7 @@
                                 {% endif %}
                             </b>
 
-                            {% if status.status == 'active' or status.status == 'trialing' or status.status == 'past_due' %}
+                            {% if status.status == 'active' or status.status == 'trialing' or status.status == 'past_due' and not item.is_free %}
                             <button class="btn btn-danger btn-outline btn-xs pull-right cancel-sub-btn itooltip"
                                     title="Cancel Your Subscription"
                                     data-subscription="{{item.id}}"
