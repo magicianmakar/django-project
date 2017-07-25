@@ -55,7 +55,17 @@ class RegistrationEvent(Event):
                 'status': event_data.get('status'),
                 'content_name': event_data.get('plan')}
 
-        return "<script>fbq('track', 'CompleteRegistration', %s);</script>" % json.dumps(data)
+        script = "<script>fbq('track', 'CompleteRegistration', %s);</script>" % json.dumps(data)
+
+        script += '''<script>
+        var wImg = document.createElement("img");
+        wImg.setAttribute('src', '//app.webinarjam.net/tracker?action=sale&webicode=40ee867159&productID=166239');
+        wImg.setAttribute('height', '0px');
+        wImg.setAttribute('width', '0px');
+        document.body.appendChild(wImg);
+        </script>'''
+
+        return script
 
     @cached_property
     def google_analytics_script(self):
@@ -101,7 +111,25 @@ class PlanSelectionEvent(Event):
                 'currency': 'USD',
                 'content_name': event_data['plan']}
 
-        return "<script>fbq('track', 'AddToCart', %s);</script>" % json.dumps(data)
+        script = "<script>fbq('track', 'AddToCart', %s);</script>" % json.dumps(data)
+
+        if 'elite' in self.user.profile.plan.slug:
+            webinarjam = '//app.webinarjam.net/tracker?action=sale&webicode=40ee867159&productID=166240'
+        elif 'unlimited' in self.user.profile.plan.slug:
+            webinarjam = '//app.webinarjam.net/tracker?action=sale&webicode=40ee867159&productID=166241'
+        else:
+            webinarjam = None
+
+        if webinarjam:
+            script += '''<script>
+            var wImg = document.createElement("img");
+            wImg.setAttribute('src', '{}');
+            wImg.setAttribute('height', '0px');
+            wImg.setAttribute('width', '0px');
+            document.body.appendChild(wImg);
+            </script>'''.format(webinarjam)
+
+        return script
 
     @cached_property
     def google_analytics_script(self):
@@ -166,6 +194,7 @@ class SuccessfulPaymentEvent(Event):
     def get_data(self):
         data = json.loads(self.charge)
         data['username'] = self.user.username
+        data['plan'] = self.user.profile.plan.title
 
         return data
 
