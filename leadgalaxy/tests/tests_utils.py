@@ -246,6 +246,10 @@ class FulfillmentTestCase(TestCase):
         data = utils.order_track_fulfillment(order_track=track2, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
         self.assertFalse(data['fulfillment']['notify_customer'])
 
+        track3 = self.create_track('5415135176', '1654815', '74899991206471196283', 'MA')
+        data = utils.order_track_fulfillment(order_track=track3, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
+        self.assertTrue(data['fulfillment']['notify_customer'])
+
     def test_custom_aftership_domain(self):
         track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
         data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})

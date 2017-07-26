@@ -445,7 +445,7 @@
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="validate_tracking_number" name="validate_tracking_number"
-                                        {% if config.validate_tracking_number or 'validate_tracking_number' not in config %}
+                                        {% if config.validate_tracking_number %}
                                             checked="checked"
                                         {% endif %}>
                                     </div>

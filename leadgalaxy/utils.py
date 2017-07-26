@@ -1023,7 +1023,11 @@ def get_tracking_orders(store, tracker_orders):
 
 
 def is_valide_tracking_number(tarcking_number):
-    return tarcking_number and re.match('^[0-9]+$', tarcking_number) is None
+    carrier = shipping_carrier(tarcking_number)
+    if not tarcking_number or (re.match('^[0-9]+$', tarcking_number) and (not carrier or (carrier and 'TNT' in carrier))):
+        return False
+    else:
+        return True
 
 
 def is_chinese_carrier(tarcking_number):
@@ -1215,7 +1219,7 @@ def order_track_fulfillment(**kwargs):
             data['fulfillment']['tracking_company'] = "Other"
             data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
-    if user_config.get('validate_tracking_number', True) \
+    if user_config.get('validate_tracking_number', False) \
             and not is_valide_tracking_number(source_tracking) \
             and not is_usps:
         notify_customer = 'no'
