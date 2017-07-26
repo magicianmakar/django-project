@@ -1862,7 +1862,10 @@ def userprofile_creation(sender, instance, created, **kwargs):
         if not plan:
             plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
 
-        UserProfile.objects.create(user=instance, plan=plan)
+        profile = UserProfile.objects.create(user=instance, plan=plan)
+
+        if plan.is_stripe():
+            profile.apply_subscription(plan)
 
     if not created and instance.have_stripe_billing():
         try:

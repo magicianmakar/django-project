@@ -3346,7 +3346,7 @@ def register(request, registration=None, subscribe_plan=None):
 
             utils.wicked_report_add_user(request, new_user)
 
-            if new_user.profile.plan.is_free:
+            if new_user.profile.plan.is_free and not new_user.profile.plan.is_startup:
                 return HttpResponseRedirect("/user/profile?w=1#plan")
             else:
                 return HttpResponseRedirect("/")
