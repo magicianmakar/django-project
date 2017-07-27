@@ -292,7 +292,7 @@ def version_compare(left, right):
     return cmp(normalize(left), normalize(right))
 
 
-def orders_update_limit(orders_count, check_freq=30, total_time=1440, min_count=20):
+def orders_update_limit(orders_count, check_freq=30, total_time=360, min_count=20):
     """
     Calculate Orders update check limit
 
