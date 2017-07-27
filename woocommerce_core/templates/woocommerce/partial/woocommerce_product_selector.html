@@ -1,3 +1,4 @@
+
 <div id="modal-woocommerce-product" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -7,7 +8,7 @@
           </div>
             <div class="modal-body">
                 <div class="row">
-                    {% with stores=user.profile.get_woo_stores.count %}
+                    {% with stores=user.profile.get_chq_stores.count %}
 
                     <div class="col-sm-8" style="padding-right:0">
                         <input type="text" class="form-control input-md woocommerce-find-product"
@@ -17,7 +18,7 @@
 
                     <div class="form-group col-sm-4" style="padding-left:5px">
                         <select class="form-control woocommerce-store">
-                        {% for i in user.profile.get_woo_stores %}
+                        {% for i in user.profile.get_chq_stores %}
                             <option value="{{i.id}}" {% if i == product.store or stores == 1 %}selected{% endif %}>
                                 {{i.title}}
                             </option>
@@ -88,7 +89,7 @@
             </a>
         </div>
         <div class="col-md-11">
-            <a class="woocommerce-product" href="#" data-product-id="{{product.id}}">{{product.name}}</a>
+            <a class="woocommerce-product" href="#" data-product-id="{{product.id}}">{{product.title}}</a>
         </div>
     </div>
 </script>

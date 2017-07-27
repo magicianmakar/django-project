@@ -1,6 +1,7 @@
 import re
 import json
 import itertools
+import urllib
 
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
@@ -8,6 +9,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
+from django.core.exceptions import PermissionDenied
 
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, hash_url_filename
@@ -322,3 +325,93 @@ def split_product(product, split_factor, store=None):
         new_products.append(new_product)
 
     return new_products
+
+
+def get_store_from_request(request):
+    store = None
+    stores = request.user.profile.get_woo_stores()
+
+    if request.GET.get('shop'):
+        try:
+            store = stores.get(shop=request.GET.get('shop'))
+        except (WooStore.DoesNotExist, WooStore.MultipleObjectsReturned):
+            pass
+
+    if not store and request.GET.get('store'):
+        store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
+
+    if store:
+        permissions.user_can_view(request.user, store)
+        request.session['last_store'] = store.id
+    else:
+        try:
+            if 'last_store' in request.session:
+                store = stores.get(id=request.session['last_store'])
+                permissions.user_can_view(request.user, store)
+
+        except (PermissionDenied, WooStore.DoesNotExist):
+            store = None
+
+    if not store:
+        store = stores.first()
+
+    return store
+
+
+def store_shipping_carriers(store):
+    rep = store.request.get(store.get_api_url('shipping-carriers'), params={'size': 100})
+    if rep.ok:
+        return rep.json()['items']
+    else:
+        carriers = [
+            {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
+            {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'}
+        ]
+
+        return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
+
+
+class WooListQuery(object):
+    def __init__(self, store, endpoint, params=None):
+        self._store = store
+        self._endpoint = endpoint
+        self._params = {} if params is None else params
+        self._response = None
+
+    @property
+    def response(self):
+        return self._response if self.has_response else self.get_response()
+
+    @property
+    def has_response(self):
+        return not self._response is None
+
+    def get_response(self):
+        params = urllib.urlencode(self._params)
+        endpoint = '{}?{}'.format(self._endpoint, params)
+        self._response = self._store.wcapi.get(endpoint)
+        self._response.raise_for_status()
+
+        return self._response
+
+    def items(self):
+        return self.response.json()
+
+    def count(self):
+        return int(self.response.headers['X-WP-Total'])
+
+    def update_params(self, update):
+        self._response = None
+        self._params.update(update)
+
+        return self
+
+
+class WooListPaginator(Paginator):
+    def page(self, number):
+        number = self.validate_number(number)
+        params = {'page': number, 'per_page': self.per_page}
+        # `self.object_list` is a `WooListQuery` instance
+        items = self.object_list.update_params(params).items()
+
+        return self._get_page(items, number, self)

@@ -1,10 +1,12 @@
 import json
 
+import arrow
+
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.shortcuts import get_object_or_404, render
 
 from shopified_core import permissions
@@ -16,7 +18,13 @@ from shopified_core.utils import (
 )
 
 from .models import WooStore, WooProduct
-from .utils import woocommerce_products
+from .utils import (
+    woocommerce_products,
+    # store_shipping_carriers,
+    get_store_from_request,
+    WooListPaginator,
+    WooListQuery,
+)
 
 
 class StoresList(ListView):
@@ -263,3 +271,105 @@ class VariantsEditView(DetailView):
         ]
 
         return context
+
+
+class OrdersList(ListView):
+    model = None
+    template_name = 'woocommerce/orders_list.html'
+    context_object_name = 'orders'
+    paginator_class = WooListPaginator
+    paginate_by = 20
+    products = {}
+    url = reverse_lazy('woo:orders_list')
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrdersList, self).dispatch(request, *args, **kwargs)
+
+    def get_store(self):
+        if not hasattr(self, 'store'):
+            self.store = get_store_from_request(self.request)
+
+        return self.store
+
+    def get_filters(self):
+        filters = {}
+        params = self.request.GET
+
+        if params.get('sort') in ['order_date', '!order_date']:
+            filters['orderby'] = 'date'
+            if params.get('sort') == 'order_date':
+                filters['order'] = 'asc'
+            if params.get('sort') == '!order_date':
+                filters['order'] = 'desc'
+
+        if params.get('status') and not params.get('status') == 'any':
+            filters['status'] = params.get('status')
+
+        if params.get('query'):
+            filters['include'] = params.get('query')
+
+        return filters
+
+    def get_queryset(self):
+        store, filters = self.get_store(), self.get_filters()
+
+        return WooListQuery(store, 'orders', filters)
+
+    def get_product_data(self, product_id):
+        if product_id not in self.products:
+            self.add_product_data_to_products(product_id)
+
+        return self.products.get(product_id)
+
+    def get_context_data(self, **kwargs):
+        context = super(OrdersList, self).get_context_data(**kwargs)
+        context['store'] = store = self.get_store()
+        context['status'] = self.request.GET.get('status', 'any')
+        # context['shipping_carriers'] = store_shipping_carriers(store)
+
+        context['breadcrumbs'] = [
+            {'title': 'Orders', 'url': self.url},
+            {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)},
+        ]
+
+        self.normalize_orders(context)
+
+        return context
+
+    def add_product_data_to_products(self, product_id):
+        r = self.get_store().wcapi.get('products/{}'.format(product_id))
+        if r.status_code == 200:
+            self.products.setdefault(product_id, r.json())
+
+    def normalize_orders(self, context):
+        store = self.get_store()
+        admin_url = store.get_admin_url()
+        timezone = self.request.session.get('django_timezone')
+
+        for order in context.get('orders', []):
+            date_created = arrow.get(order['date_created'])
+            if timezone:
+                date_created = date_created.to(timezone)
+                if order['date_paid']:
+                    order['date_paid'] = order['date_paid'].to(timezone)
+
+            order['date'] = date_created
+            order['date_str'] = date_created.format('MM/DD/YYYY')
+            order['date_tooltip'] = date_created.format('YYYY/MM/DD HH:mm:ss')
+            order['order_url'] = admin_url + '/post.php?post={}&action=edit'.format(order['id'])
+            order['store'] = store
+            order['placed_orders'] = 0
+            order['connected_lines'] = 0
+            order['items'] = order.pop('line_items')
+            order['lines_count'] = len(order['items'])
+
+            for item in order.get('items'):
+                product_id = item['product_id']
+                product = self.get_product_data(product_id)
+                if product:
+                    item['product'] = WooProduct.objects.filter(source_id=product_id).first()
+                    item['image'] = next(iter(product['images']), {}).get('src')

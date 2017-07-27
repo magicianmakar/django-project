@@ -54,6 +54,15 @@
                     </li>
                 </ul>
             </li>
+
+            {% if request.user|can:'orders.view' %}
+            <li {% if url_name == 'woo:orders_list' %}class="active"{% endif %}>
+                <a href="{% url 'woo:orders_list' %}" class="">
+                    <i class="fa fa-calendar-check-o"></i>
+                    <span class="nav-label">Orders</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
     </div>
 </nav>
