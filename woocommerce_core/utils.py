@@ -384,7 +384,7 @@ class WooListQuery(object):
 
     @property
     def has_response(self):
-        return not self._response is None
+        return self._response is not None
 
     def get_response(self):
         params = urllib.urlencode(self._params)
