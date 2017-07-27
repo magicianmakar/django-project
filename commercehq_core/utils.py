@@ -596,12 +596,12 @@ def check_notify_customer(source_tracking, user_config, shipping_carrier_name, l
 
     if send_shipping_confirmation == 'yes':
         notify_customer = True
-        validate_tracking_number = user_config.get('validate_tracking_number', True)
+        validate_tracking_number = user_config.get('validate_tracking_number', False)
         is_valid_tracking_number = leadgalaxy_utils.is_valide_tracking_number(source_tracking)
         if validate_tracking_number and not is_valid_tracking_number and not is_usps:
             notify_customer = False
 
-    if send_shipping_confirmation == 'default':
+    elif send_shipping_confirmation == 'default':
         notify_customer = True if last_shipment else False
 
     return notify_customer

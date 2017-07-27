@@ -52,7 +52,7 @@ class GetShippingCarrierTestCase(TestCase):
 
 class CheckNotifyCustomerTestCase(TestCase):
     def setUp(self):
-        self.invalid_tracking_number = '123456789'
+        self.invalid_tracking_number = '65141515'
 
     def test_must_notify_customer(self):
         user_config = {'send_shipping_confirmation': 'yes'}
@@ -65,7 +65,7 @@ class CheckNotifyCustomerTestCase(TestCase):
         self.assertFalse(notify)
 
     def test_must_not_notify_customer_if_not_valid_and_not_usps(self):
-        user_config = {'send_shipping_confirmation': 'yes'}
+        user_config = {'send_shipping_confirmation': 'yes', 'validate_tracking_number': True}
         notify = check_notify_customer(self.invalid_tracking_number, user_config, 'NOTUSPS')
         self.assertFalse(notify)
 
