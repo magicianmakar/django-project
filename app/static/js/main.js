@@ -878,6 +878,18 @@ $(function() {
             });
         }
     }, 5000);
+
+    $('#modal-shopify-send').on('shown.bs.modal', function() {
+        $('#modal-shopify-send .progress').hide();
+        $('#modal-shopify-send .progress').addClass('progress-striped active');
+        $('#modal-shopify-send .modal-footer').show();
+        $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', false);
+        $('#modal-shopify-send #shopify-send-btn').button('reset');
+
+        $('#modal-shopify-send .progress-bar-success').css('width', '0');
+        $('#modal-shopify-send .progress-bar-danger').css('width', '0');
+
+    });
 });
 
 var ravenOptions = {
