@@ -40,7 +40,7 @@ from analytic_events.models import RegistrationEvent
 from shopified_core import permissions
 from shopified_core.utils import send_email_from_template, version_compare, get_mimetype
 from shopified_core.paginators import SimplePaginator
-from shopified_core.shipping_helper import load_uk_provincess, missing_province, get_counrties_list
+from shopified_core.shipping_helper import get_counrties_list
 
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
@@ -2546,7 +2546,6 @@ def orders_view(request):
 
     products_cache = {}
     auto_orders = request.user.can('auto_order.use')
-    uk_provinces = None
 
     orders_cache = {}
     orders_ids = []
@@ -2693,71 +2692,14 @@ def orders_view(request):
 
             products_cache[el['product_id']] = product
 
-            if 'shipping_address' not in order \
-                    and order.get('customer') and order.get('customer').get('default_address'):
-                order['shipping_address'] = order['customer'].get('default_address')
+            order, customer_address = utils.shopify_customer_address(order)
 
-            if auto_orders and 'shipping_address' in order:
+            if auto_orders and customer_address:
                 try:
-                    shipping_address_asci = {}  # Aliexpress doesn't allow unicode
-                    shipping_address = order['shipping_address']
-                    for k in shipping_address.keys():
-                        if shipping_address[k] and type(shipping_address[k]) is unicode:
-                            shipping_address_asci[k] = unidecode(shipping_address[k])
-                        else:
-                            shipping_address_asci[k] = shipping_address[k]
-
-                    if not shipping_address_asci[u'province']:
-                        if shipping_address_asci[u'country'] == u'United Kingdom' and shipping_address_asci['city']:
-                            if not uk_provinces:
-                                uk_provinces = load_uk_provincess()
-
-                            province = uk_provinces.get(shipping_address_asci[u'city'].lower().strip(), u'')
-                            if not province:
-                                missing_province(shipping_address_asci['city'])
-
-                            shipping_address_asci[u'province'] = province
-                        else:
-                            shipping_address_asci[u'province'] = shipping_address_asci[u'country_code']
-
-                    elif shipping_address_asci[u'province'] == 'Washington DC':
-                        shipping_address_asci[u'province'] = u'Washington'
-
-                    elif shipping_address_asci['province'] == 'Puerto Rico':
-                        # Puerto Rico is a country in Aliexpress
-                        shipping_address_asci['province'] = 'PR'
-                        shipping_address_asci['country_code'] = 'PR'
-                        shipping_address_asci['country'] = 'Puerto Rico'
-
-                    elif shipping_address_asci['province'] == 'Virgin Islands':
-                        # Virgin Islands is a country in Aliexpress
-                        shipping_address_asci['province'] = 'VI'
-                        shipping_address_asci['country_code'] = 'VI'
-                        shipping_address_asci['country'] = 'Virgin Islands (U.S.)'
-
-                    elif shipping_address_asci['province'] == 'Guam':
-                        # Guam is a country in Aliexpress
-                        shipping_address_asci['province'] = 'GU'
-                        shipping_address_asci['country_code'] = 'GU'
-                        shipping_address_asci['country'] = 'Guam'
-
-                    if shipping_address_asci['country_code'] == 'CA':
-                        if shipping_address_asci.get('zip'):
-                            shipping_address_asci['zip'] = re.sub(r'[\n\r\t ]', '', shipping_address_asci['zip']).strip()
-
-                        if shipping_address_asci['province'] == 'Newfoundland':
-                            shipping_address_asci['province'] = 'Newfoundland and Labrador'
-
-                    shipping_address_asci['name'] = utils.ensure_title(shipping_address_asci['name'])
-
-                    if shipping_address_asci['company']:
-                        shipping_address_asci['name'] = '{} - {}'.format(shipping_address_asci['name'],
-                                                                         shipping_address_asci['company'])
-
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
                         'quantity': el['quantity'],
-                        'shipping_address': shipping_address_asci,
+                        'shipping_address': customer_address,
                         'order_id': order['id'],
                         'line_id': el['id'],
                         'product_id': product.id if product else None,
@@ -2766,8 +2708,8 @@ def orders_view(request):
                         'store': store.id,
                         'order': {
                             'phone': {
-                                'number': shipping_address_asci.get('phone'),
-                                'country': shipping_address_asci['country_code']
+                                'number': customer_address.get('phone'),
+                                'country': customer_address['country_code']
                             },
                             'note': order_custom_note,
                             'epacket': epacket_shipping,

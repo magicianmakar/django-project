@@ -21,6 +21,7 @@ from math import ceil
 
 from tld import get_tld
 from boto.s3.key import Key
+from unidecode import unidecode
 
 from django.conf import settings
 from django.utils import timezone
@@ -35,6 +36,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import app_link, save_user_ip
+from shopified_core.shipping_helper import load_uk_provincess, missing_province
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -886,6 +888,68 @@ def fix_order_variants(store, order, product):
             if match:
                 if real_id != match['id']:
                     set_real_variant(product, line['variant_id'], match['id'])
+
+
+def shopify_customer_address(order):
+    if 'shipping_address' not in order \
+            and order.get('customer') and order.get('customer').get('default_address'):
+        order['shipping_address'] = order['customer'].get('default_address')
+
+    if not order.get('shipping_address'):
+        return order, None
+
+    customer_address = {}
+    shipping_address = order['shipping_address']
+    for k in shipping_address.keys():
+        if shipping_address[k] and type(shipping_address[k]) is unicode:
+            customer_address[k] = unidecode(re.sub(u'\u00BA ?', r' ', shipping_address[k]))
+        else:
+            customer_address[k] = shipping_address[k]
+
+    if not customer_address['province']:
+        if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+            province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
+            if not province:
+                missing_province(customer_address['city'])
+
+            customer_address['province'] = province
+        else:
+            customer_address['province'] = customer_address['country_code']
+
+    elif customer_address['province'] == 'Washington DC':
+        customer_address['province'] = 'Washington'
+
+    elif customer_address['province'] == 'Puerto Rico':
+        # Puerto Rico is a country in Aliexpress
+        customer_address['province'] = 'PR'
+        customer_address['country_code'] = 'PR'
+        customer_address['country'] = 'Puerto Rico'
+
+    elif customer_address['province'] == 'Virgin Islands':
+        # Virgin Islands is a country in Aliexpress
+        customer_address['province'] = 'VI'
+        customer_address['country_code'] = 'VI'
+        customer_address['country'] = 'Virgin Islands (U.S.)'
+
+    elif customer_address['province'] == 'Guam':
+        # Guam is a country in Aliexpress
+        customer_address['province'] = 'GU'
+        customer_address['country_code'] = 'GU'
+        customer_address['country'] = 'Guam'
+
+    if customer_address['country_code'] == 'CA':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t ]', '', customer_address['zip']).strip()
+
+        if customer_address['province'] == 'Newfoundland':
+            customer_address['province'] = 'Newfoundland and Labrador'
+
+    customer_address['name'] = ensure_title(customer_address['name'])
+
+    if customer_address['company']:
+        customer_address['name'] = u'{} - {}'.format(customer_address['name'], customer_address['company'])
+
+    return order, customer_address
 
 
 def shopify_link_images(store, product):
