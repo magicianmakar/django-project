@@ -33,7 +33,7 @@
                                     {% elif not user.is_recurring_customer and user.can_trial and item.stripe_plan.trial_period_days %}
                                         <button class="btn btn-primary start-plan-trial" >
                                             Try for {{item.stripe_plan.trial_period_days}} days</button>
-                                    {% elif not user.can_trial and not user.stripe_customer.source and not current_plan.is_stripe and not item.is_free %}
+                                    {% elif not user.can_trial and not user.stripe_customer.source and not item.is_free %}
                                         <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
                                             Enter Your Billing Info
                                         </button>
