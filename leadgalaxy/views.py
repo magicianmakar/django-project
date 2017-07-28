@@ -2928,7 +2928,8 @@ def orders_place(request):
     plan = parent_user.profile.plan
     if plan.auto_fulfill_limit != -1:
         month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
-        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start).count()
+        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start, auto_fulfilled=True)
+        orders_count = orders_count.distinct('order_id').order_by('order_id').count()
 
         if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
             messages.error(request, "You have reached your plan auto fulfill limit")
