@@ -3330,10 +3330,10 @@ def register(request, registration=None, subscribe_plan=None):
             if subscribe_plan:
                 try:
                     if try_plan:
-                        target_user.set_config('try_plan', True)
+                        new_user.set_config('try_plan', True)
                     else:
-                        target_user.stripe_customer.can_trial = False
-                        target_user.stripe_customer.save()
+                        new_user.stripe_customer.can_trial = False
+                        new_user.stripe_customer.save()
 
                 except:
                     raven_client.captureException()
