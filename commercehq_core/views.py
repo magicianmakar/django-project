@@ -212,12 +212,15 @@ class ProductDetailView(DetailView):
             context['product_data'] = self.object.parsed
 
             common_images = []
-            for j in context['commercehq_product']['variants']:
-                for k in j['images']:
-                    if k in common_images and k['path'] not in context['product_data']['images']:
-                        context['product_data']['images'].append(k['path'])
+            if context['commercehq_product']:
+                for j in context['commercehq_product']['variants']:
+                    for k in j['images']:
+                        if k in common_images and k['path'] not in context['product_data']['images']:
+                            context['product_data']['images'].append(k['path'])
 
-                    common_images.append(k)
+                        common_images.append(k)
+            else:
+                messages.error(self.request, "Product Not Found in CommerceHQ")
 
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('chq:products_list')},
