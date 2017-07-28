@@ -127,7 +127,6 @@ def subscription_plan(request):
         sub = subscription.refresh()
 
         if sub.plan.id != plan.stripe_plan.stripe_id:
-
             if sub.status == 'trialing':
                 trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()
                 still_in_trial = sub.trial_end and trial_delta.days > 0
@@ -136,10 +135,14 @@ def subscription_plan(request):
 
             sub.plan = plan.stripe_plan.stripe_id
 
-            if not still_in_trial:
-                sub.trial_end = 'now'
+            if user.get_config('try_plan'):
+                sub.trial_end = arrow.utcnow().replace(days=14).timestamp
+                user.set_config('try_plan', False)
             else:
-                sub.trial_end = arrow.get(sub.trial_end).timestamp
+                if not still_in_trial:
+                    sub.trial_end = 'now'
+                else:
+                    sub.trial_end = arrow.get(sub.trial_end).timestamp
 
             try:
                 sub.save()

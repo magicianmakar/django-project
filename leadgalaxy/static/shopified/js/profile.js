@@ -26,6 +26,21 @@ $(function () {
         }, 500);
     }
 
+    if (getQueryVariable('auto')) {
+        $('a[data-auto-hash="billing"]').trigger('click');
+        $('.add-cc-btn').trigger('click');
+
+        window.sourceAddCallback = function (data) {
+            window.skipPlanSelectConfirmation = true;
+            $('[data-plan="' + getQueryVariable('auto') + '"] button').trigger('click');
+        };
+    }
+
+    if (getQueryVariable('try')) {
+        window.skipPlanSelectConfirmation = true;
+        $('[data-plan="' + getQueryVariable('try') + '"] button').trigger('click');
+    }
+
     $('#company_country').chosen({
         search_contains: true,
         width: '250px'

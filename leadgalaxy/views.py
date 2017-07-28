@@ -3297,8 +3297,9 @@ def register(request, registration=None, subscribe_plan=None):
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
 
-    if registration and registration.endswith('-subscribe'):
-        slug = registration.replace('-subscribe', '')
+    try_plan = registration and registration.endswith('-try')
+    if registration and (registration.endswith('-subscribe') or try_plan):
+        slug = registration.replace('-subscribe', '').replace('-try', '')
         subscribe_plan = get_object_or_404(GroupPlan, slug=slug, payment_gateway='stripe')
         if not subscribe_plan.is_stripe():
             raise Http404('Not a Stripe Plan')
@@ -3328,7 +3329,12 @@ def register(request, registration=None, subscribe_plan=None):
 
             if subscribe_plan:
                 try:
-                    new_user.profile.apply_subscription(subscribe_plan)
+                    if try_plan:
+                        target_user.set_config('try_plan', True)
+                    else:
+                        target_user.stripe_customer.can_trial = False
+                        target_user.stripe_customer.save()
+
                 except:
                     raven_client.captureException()
 
@@ -3346,10 +3352,13 @@ def register(request, registration=None, subscribe_plan=None):
 
             utils.wicked_report_add_user(request, new_user)
 
-            if new_user.profile.plan.is_free and not new_user.profile.plan.is_startup:
-                return HttpResponseRedirect("/user/profile?w=1#plan")
-            else:
-                return HttpResponseRedirect("/")
+            if subscribe_plan:
+                if not try_plan and not subscribe_plan.is_free:
+                    return HttpResponseRedirect("/user/profile?auto={}#billing".format(subscribe_plan.id))
+                elif try_plan and not subscribe_plan.is_free:
+                    return HttpResponseRedirect("/user/profile?try={}#plan".format(subscribe_plan.id))
+
+            return HttpResponseRedirect("/")
 
     else:
         try:

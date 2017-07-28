@@ -54,9 +54,13 @@
                     toastr.success("Billing Details have been updated.", "Billing Details");
                     $('#modal-billing').modal('hide');
 
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 1000);
+                    if (window.sourceAddCallback) {
+                        window.sourceAddCallback(data);
+                    } else {
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    }
                 },
                 error: function(data) {
                     displayAjaxError('Billing Details', data);
@@ -200,43 +204,51 @@
         );
     });
 
+    function selectPlan(plan) {
+        $.ajax({
+            url: config.subscription_plan,
+            type: 'POST',
+            data: {
+                plan: plan
+            },
+            success: function(data) {
+                toastr.success("Your Subscription has been updated.", "Plan Subscription");
+                swal.close();
+
+                setTimeout(function() {
+                    window.location.href = '/user/profile#plan';
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Plan Subscription', data);
+            }
+        });
+    }
+
     $('.choose-plan').click(function(e) {
         var parent = $(this).parents('.subsciption-plan');
         var plan = parent.data('data-plan');
 
-        swal({
-                title: parent.data('plan-title') + " Plan",
-                text: "Subscribe to " + parent.data('plan-title') + ' Plan?',
-                showCancelButton: true,
-                closeOnConfirm: false,
-                animation: false,
-                showLoaderOnConfirm: true,
-                confirmButtonText: "Choose Plan",
-                cancelButtonText: "No Thanks"
-            },
-            function(isConfirmed) {
-                if (isConfirmed) {
-                    $.ajax({
-                        url: config.subscription_plan,
-                        type: 'POST',
-                        data: {
-                            plan: parent.data('plan')
-                        },
-                        success: function(data) {
-                            toastr.success("Your Subscription has been updated.", "Plan Subscription");
-                            swal.close();
-
-                            setTimeout(function() {
-                                window.location.reload();
-                            }, 1500);
-                        },
-                        error: function(data) {
-                            displayAjaxError('Plan Subscription', data);
-                        }
-                    });
+        if (!window.skipPlanSelectConfirmation) {
+            swal({
+                    title: parent.data('plan-title') + " Plan",
+                    text: "Subscribe to " + parent.data('plan-title') + ' Plan?',
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: false,
+                    showLoaderOnConfirm: true,
+                    confirmButtonText: "Choose Plan",
+                    cancelButtonText: "No Thanks"
+                },
+                function(isConfirmed) {
+                    if (isConfirmed) {
+                        selectPlan(parent.data('plan'));
+                    }
                 }
-            }
-        );
+            );
+        } else {
+            selectPlan(parent.data('plan'));
+        }
     });
 
     $('.choose-shopify-plan').click(function(e) {
