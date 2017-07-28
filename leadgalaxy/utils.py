@@ -846,6 +846,48 @@ def add_shopify_order_note(store, order_id, new_note, current_note=False):
     return set_shopify_order_note(store, order_id, note)
 
 
+def fix_order_variants(store, order, product):
+    product_key = 'fix_product_{}_{}'.format(store.id, product.get_shopify_id())
+    shopify_product = cache.get(product_key)
+
+    if shopify_product is None:
+        shopify_product = get_shopify_product(store, product.get_shopify_id())
+        cache.set(product_key, shopify_product)
+
+    def normalize_name(n):
+        return n.lower().replace(' and ', '').replace(' or ', '').replace(' ', '')
+
+    def get_variant(product, variant_id=None, variant_title=None):
+        for v in product['variants']:
+            if variant_id and v['id'] == int(variant_id):
+                return v
+            elif variant_title and normalize_name(v['title']) == normalize_name(variant_title):
+                return v
+
+        return None
+
+    def set_real_variant(product, deleted_id, real_id):
+        config = product.get_config()
+        mapping = config.get('real_variant_map', {})
+        mapping[str(deleted_id)] = int(real_id)
+
+        config['real_variant_map'] = mapping
+
+        product.config = json.dumps(config, indent=4)
+        product.save()
+
+    for line in order['line_items']:
+        if line['product_id'] != product.get_shopify_id():
+            continue
+
+        if get_variant(shopify_product, variant_id=line['variant_id']) is None:
+            real_id = product.get_real_variant_id(line['variant_id'])
+            match = get_variant(shopify_product, variant_title=line['variant_title'])
+            if match:
+                if real_id != match['id']:
+                    set_real_variant(product, line['variant_id'], match['id'])
+
+
 def shopify_link_images(store, product):
     """
     Link Shopify variants with their images

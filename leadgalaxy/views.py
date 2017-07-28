@@ -2283,6 +2283,7 @@ def orders_view(request):
     epacket_shipping = bool(models_user.get_config('epacket_shipping'))
     auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
     order_custom_line_attr = bool(request.user.get_config('order_custom_line_attr'))
+    fix_order_variants = request.user.get_config('fix_order_variants')
 
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
@@ -2640,6 +2641,11 @@ def orders_view(request):
                 order['line_items'][i]['product'] = product
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
+
+                if fix_order_variants:
+                    mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                    if not mapped:
+                        utils.fix_order_variants(store, order, product)
 
                 bundles = product.get_bundle_mapping(variant_id)
                 if bundles:
