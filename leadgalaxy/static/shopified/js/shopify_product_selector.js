@@ -11,7 +11,11 @@ function shopifyProductSearch (e) {
         loadingContainer.show();
         productsContainer.empty();
     } else {
-        $(this).bootstrapBtn('loading');
+        if($.fn.hasOwnProperty('bootstrapBtn')) {
+            $(this).bootstrapBtn('loading');
+        } else {
+            $(this).button('loading');
+        }
     }
 
     $.ajax({
@@ -22,6 +26,7 @@ function shopifyProductSearch (e) {
             query: query,
             page: $(this).prop('page'),
             connected: $('#modal-shopify-product').prop('connected'),
+            hide_connected: $('#modal-shopify-product .hide-connected-product').prop('checked')
         },
         context: {
             store: store
@@ -68,7 +73,11 @@ function shopifyProductSearch (e) {
                 productsContainer.append(moreBtn);
             }
 
-            $("[title]", productsContainer).bootstrapTooltip();
+            if($.fn.hasOwnProperty('bootstrapTooltip')) {
+                $("[title]", productsContainer).bootstrapTooltip();
+            } else {
+                $("[title]", productsContainer).tooltip('loading');
+            }
         },
         error: function (data) {
             productsContainer.append($('<div class="text-center"><h3>' +
@@ -83,5 +92,6 @@ function shopifyProductSearch (e) {
 $(function () {
     $('#modal-shopify-product .shopify-find-product').bindWithDelay('keyup', shopifyProductSearch, 500);
     $('#modal-shopify-product .shopify-store').on('change', shopifyProductSearch);
+    $('#modal-shopify-product .hide-connected-product').on('change', shopifyProductSearch);
     $('#modal-shopify-product').on('show.bs.modal', shopifyProductSearch);
 });

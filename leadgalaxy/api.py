@@ -837,7 +837,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 products.append(i)
 
-            if data.get('connected'):
+            if data.get('connected') or data.get('hide_connected'):
                 connected = {}
                 for p in store.shopifyproduct_set.filter(shopify_id__in=[i['id'] for i in products]).values_list('id', 'shopify_id'):
                     connected[p[1]] = p[0]
@@ -857,10 +857,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 products = sorted(products, cmp=connected_cmp, reverse=True)
 
+                if data.get('hide_connected'):
+                    products = filter(lambda p: not p.get('connected'), products)
+
             return JsonResponse({
                 'products': products,
                 'page': page,
-                'next': page + 1 if len(products) == limit else None,
+                'next': page + 1 if (len(products) == limit or data.get('hide_connected')) else None,
             })
 
         except ShopifyStore.DoesNotExist:
