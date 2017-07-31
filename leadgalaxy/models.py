@@ -653,7 +653,10 @@ class ShopifyStore(models.Model):
         return self.shopifyproduct_set.exclude(shopify_id=0).count()
 
     def saved_count(self):
-        return self.shopifyproduct_set.filter(shopify_id=0).count()
+        if len(self.user.profile.get_shopify_stores()) == 1:
+            return self.user.shopifyproduct_set.filter(shopify_id=0).count()
+        else:
+            return self.shopifyproduct_set.filter(shopify_id=0).count()
 
     def pending_orders(self):
         return self.shopifyorder_set.filter(closed_at=None, cancelled_at=None) \

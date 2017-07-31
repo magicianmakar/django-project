@@ -31,7 +31,6 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
-from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
 import keen
 

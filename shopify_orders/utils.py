@@ -3,10 +3,8 @@ from django.core.cache import cache
 import re
 import arrow
 import requests
-from unidecode import unidecode
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopified_core.shipping_helper import load_uk_provincess, missing_province
 
 
 def safeInt(v, default=0):
@@ -41,6 +39,7 @@ def ensure_title(text):
         pass
 
     return text
+
 
 def get_datetime(isodate, default=None):
     return arrow.get(isodate).datetime if isodate else default
