@@ -1555,7 +1555,7 @@ class GroupPlan(models.Model):
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
     notes = models.TextField(null=True, blank=True, verbose_name='Admin Notes')
     features = models.TextField(null=True, blank=True, verbose_name='Features List')
-    monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, verbose_name='Monthly Price(in USD)')
+    monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
