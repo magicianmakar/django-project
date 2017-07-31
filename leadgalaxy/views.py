@@ -2704,6 +2704,7 @@ def orders_view(request):
                         'line_id': el['id'],
                         'product_id': product.id if product else None,
                         'source_id': supplier.get_source_id() if supplier else None,
+                        'supplier_id': supplier.get_store_id() if supplier else None,
                         'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
@@ -2729,7 +2730,7 @@ def orders_view(request):
                             item_note = u'{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
 
                         if item_note:
-                            item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+                            item_note = u'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
 
                             order_data['order']['item_note'] = item_note
                             order['line_items'][i]['item_note'] = item_note
