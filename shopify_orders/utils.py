@@ -42,50 +42,6 @@ def ensure_title(text):
 
     return text
 
-
-def get_customer_address(order):
-    customer_address = None
-
-    if 'shipping_address' not in order \
-            and order.get('customer') and order.get('customer').get('default_address'):
-        order['shipping_address'] = order['customer'].get('default_address')
-
-    if 'shipping_address' in order:
-        customer_address = {}  # Aliexpress doesn't allow unicode
-        shipping_address = order['shipping_address']
-        for k in shipping_address.keys():
-            if shipping_address[k] and type(shipping_address[k]) is unicode:
-                customer_address[k] = unidecode(shipping_address[k])
-            else:
-                customer_address[k] = shipping_address[k]
-
-        if not customer_address['province']:
-            if customer_address['country'] == 'United Kingdom':
-                province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
-                if not province:
-                    missing_province(customer_address['city'])
-
-                customer_address['province'] = province
-            else:
-                customer_address['province'] = customer_address['country_code']
-
-        elif customer_address['province'] == 'Washington DC':
-            customer_address['province'] = 'Washington'
-
-        elif customer_address['province'] == 'Puerto Rico':
-            # Puerto Rico is a country in Aliexpress
-            customer_address['province'] = 'PR'
-            customer_address['country_code'] = 'PR'
-            customer_address['country'] = 'Puerto Rico'
-
-        customer_address['name'] = ensure_title(customer_address['name'])
-
-        if customer_address['company']:
-            customer_address['name'] = u'{} - {}'.format(customer_address['name'], customer_address['company'])
-
-    return customer_address
-
-
 def get_datetime(isodate, default=None):
     return arrow.get(isodate).datetime if isodate else default
 

@@ -1997,7 +1997,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     info.update({
                         'shopify_number': track.order['name'],
                         'shopify_status': track.order['fulfillment_status'],
-                        'shopify_customer': shopify_orders_utils.get_customer_address(track.order),
+                        'shopify_customer': utils.shopify_customer_address(track.order)[1],
                         'shopify_summary': "<br>".join(shopify_summary),
                     })
 

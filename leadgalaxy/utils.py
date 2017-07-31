@@ -902,7 +902,7 @@ def shopify_customer_address(order):
     shipping_address = order['shipping_address']
     for k in shipping_address.keys():
         if shipping_address[k] and type(shipping_address[k]) is unicode:
-            customer_address[k] = unidecode(re.sub(u'\u00BA ?', r' ', shipping_address[k]))
+            customer_address[k] = unidecode(re.sub('\xc2\xb0 ?'.decode('utf-8'), r' ', shipping_address[k]))
         else:
             customer_address[k] = shipping_address[k]
 
