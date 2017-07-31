@@ -567,10 +567,12 @@
                                                                 {% if item.item_note %}
                                                                 <div class="custom-properties m-t-xs">
                                                                     {% for custom_property in item.properties %}
+                                                                    {% if custom_property.name and custom_property.name.0 != '_' %}
                                                                     <div class="badge badge-info property-line m-r">
                                                                         <span class="property-name">{{ custom_property.name }}:</span>
                                                                         <span class="property-value">{{ custom_property.value }}</span>
                                                                     </div>
+                                                                    {% endif %}
                                                                     {% endfor %}
                                                                 </div>
                                                                 {% endif %}

@@ -2720,11 +2720,19 @@ def orders_view(request):
                     }
 
                     if order_custom_line_attr and el.get('properties'):
-                        item_note = '\n'.join(['{name}: {value}'.format(**prop) for prop in el['properties']])
-                        item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note)
+                        item_note = ''
 
-                        order_data['order']['item_note'] = item_note
-                        order['line_items'][i]['item_note'] = item_note
+                        for prop in el['properties']:
+                            if not prop['name'] or prop['name'].startswith('_'):
+                                continue
+
+                            item_note = '{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
+
+                        if item_note:
+                            item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+
+                            order_data['order']['item_note'] = item_note
+                            order['line_items'][i]['item_note'] = item_note
 
                     if product:
                         mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
