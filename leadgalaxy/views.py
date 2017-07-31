@@ -2726,7 +2726,7 @@ def orders_view(request):
                             if not prop['name'] or prop['name'].startswith('_'):
                                 continue
 
-                            item_note = '{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
+                            item_note = u'{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
 
                         if item_note:
                             item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
