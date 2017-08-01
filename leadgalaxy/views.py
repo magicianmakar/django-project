@@ -2291,7 +2291,7 @@ def orders_view(request):
             request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
             '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
 
-    sort = utils.get_orders_filter(request, 'sort', 'desc')
+    sort = utils.get_orders_filter(request, 'sort', 'asc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
     financial = utils.get_orders_filter(request, 'financial', 'paid,partially_refunded')
@@ -2358,7 +2358,7 @@ def orders_view(request):
             created_at_start,
             created_at_end
         )
-        paginator.set_reverse_order(sort == 'desc')
+        paginator.set_reverse_order(sort == 'desc' and sort != 'created_at')
         paginator.set_query(utils.safeInt(query, query))
 
         page = min(max(1, page), paginator.num_pages)
