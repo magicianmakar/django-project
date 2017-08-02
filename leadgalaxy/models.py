@@ -200,8 +200,10 @@ class UserProfile(models.Model):
         self.plan = plan
         self.save()
 
-    def create_stripe_customer(self):
+    def create_stripe_customer(self, source=None):
         ''' Create a Stripe Customer for this a profile '''
+        from stripe_subscription.utils import update_customer
+
         try:
             customer = self.user.stripe_customer
         except:
@@ -211,10 +213,17 @@ class UserProfile(models.Model):
             customer = stripe.Customer.create(
                 description="Username: {}".format(self.user.username),
                 email=self.user.email,
-                metadata={'user_id': self.user.id}
+                metadata={'user_id': self.user.id},
+                source=source
             )
 
-            from stripe_subscription.utils import update_customer
+            update_customer(self.user, customer)
+
+        elif source:
+            customer = self.user.stripe_customer.retrieve()
+            customer.source = source
+            customer.save()
+
             update_customer(self.user, customer)
 
     def change_plan(self, plan):

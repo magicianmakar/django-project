@@ -1,0 +1,221 @@
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+{% load perms_helper %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Dropified Lifetime Access</title>
+
+        <style name="FontAwesome">
+            @font-face {
+              font-family: 'FontAwesome';
+              src: url('{% static "font-awesome/fonts/fontawesome-webfont.eot?v=4.6.3" %}');
+              src: url('{% static "font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.6.3" %}') format('embedded-opentype'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.woff2?v=4.6.3" %}') format('woff2'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.woff?v=4.6.3" %}') format('woff'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.ttf?v=4.6.3" %}') format('truetype'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.svg?v=4.6.3#fontawesomeregular" %}') format('svg');
+              font-weight: normal;
+              font-style: normal;
+            }
+        </style>
+
+        {% compress css %}
+        <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+        <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+        <link href="{% static 'plan_checkout/checkout.css' %}" rel="stylesheet">
+        {% endcompress %}
+    </head>
+    <body>
+        <section class="zx-header">
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-4">
+                <div class="logo">
+                  <a href=""></a>
+                </div>
+              </div>
+              <div class="col-sm-8">
+                <div class="navigation">
+                  <!-- support -->
+                  <ul class="list-inline">
+                    <li>Need support? </li>
+                    <li><i class="fa fa-life-ring"></i> <a href="http://support.dropified.com/">Helpdesk</a></li>
+                    <li><i class="fa fa-envelope-o"></i> <a href="mailto:support@dropified.com">Email</a></li>
+                  </ul>
+                  <!-- support -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="zx-content">
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-8 main-content">
+                <!-- product name and desc -->
+                <div class="row description">
+                  <div class="col-sm-4">
+                    <img src="{% static 'dropified-logo.png' %}" class="img-responsive img-product">
+                  </div>
+                  <div class="col-sm-8">
+                    <h3 style="margin:9px 0 0">Dropified Lifetime Access</h3>
+                    <p class="text-muted">Dropified Unlimited Lifetime Account Access</p>
+                  </div>
+                </div>
+
+                {% if messages %}
+                    <div class="wrapper wrapper-content">
+                      {% for message in messages %}
+                      <div class="alert
+                          {% if message.tags %}
+                              alert-{{ message.tags }}
+                              {% if message.tags == 'error' %}
+                                  alert-danger
+                              {% else %}
+                                  alert-{{ message.tags }}
+                              {% endif %}
+                          {% endif %}">
+                          {{ message|safe }}
+                      </div>
+                      {% endfor %}
+                    </div>
+                {% endif %}
+
+                  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                      <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingOne">
+                          <h4 class="panel-title">
+                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                              1 Time Payment of $997
+                            </a>
+                          </h4>
+                        </div>
+                        <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                            <div class="panel-body">
+                                <div class="payment">
+                                    <div class="well">
+                                      <table class="table">
+                                        <tbody>
+                                          <tr>
+                                            <td>Dropified Lifetime Offer</td>
+                                            <td>$997 USD one time payment</td>
+                                          </tr>
+                                        </tbody>
+                                        <tfoot>
+                                          <tr>
+                                            <td><strong>Total</strong></td>
+                                            <td><strong>$997 USD one time payment</strong></td>
+                                          </tr>
+                                        </tfoot>
+                                      </table>
+                                    </div>
+
+                                    <form action="{{request.path}}?option=1pay" method="POST">
+                                      <script
+                                        src="https://checkout.stripe.com/checkout.js"
+                                        class="stripe-button"
+                                        data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
+                                        data-email="{{request.user.email|default:''}}"
+                                        data-amount="99700"
+                                        data-name="Dropified"
+                                        data-description="One Time Payment of $997"
+                                        data-image="{% static 'dropified-icon.png' %}"
+                                        data-billing-address="true"
+                                        data-locale="auto">
+                                      </script>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+
+                    <div class="panel panel-default">
+                      <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                          <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                            3 Payments of $397
+                          </a>
+                        </h4>
+                      </div>
+                      <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                          <div class="panel-body">
+                              <div class="payment">
+                                  <div class="well">
+                                    <table class="table">
+                                      <tbody>
+                                        <tr>
+                                          <td>Dropified Lifetime Offer</td>
+                                          <td>$397 USD every month, for 3 payments</td>
+                                        </tr>
+                                      </tbody>
+                                      <tfoot>
+                                        <tr>
+                                          <td><strong>Total</strong></td>
+                                          <td><strong>$397 USD every month, for 3 payments</strong></td>
+                                        </tr>
+                                      </tfoot>
+                                    </table>
+                                  </div>
+
+                                  <form action="{{request.path}}?option=3pay" method="POST">
+                                    <script
+                                      src="https://checkout.stripe.com/checkout.js"
+                                      class="stripe-button"
+                                      data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
+                                      data-email="{{request.user.email|default:''}}"
+                                      data-amount="39700"
+                                      data-name="Dropified"
+                                      data-description="3 Payments of $397"
+                                      data-image="{% static 'dropified-icon.png' %}"
+                                      data-billing-address="true"
+                                      data-locale="auto">
+                                    </script>
+                                  </form>
+                              </div>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+              <div class="col-sm-4 main-sidebar">
+                <!-- refund badge -->
+                            <div class="relative zx-badge">
+                  <span>30</span>
+                  <img src="{% static 'plan_checkout/money-back.png' %}" class="img-responsive">
+                </div>
+                            <!-- benefit list -->
+                            <div class="list">
+                  <h3 class="headline"><span>You are absolutely going to love Dropified!</span></h3>
+                  <ul>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Add products to your store with 1-Click!</li>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Fulfill customer orders with 1-Click!</li>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> ePacket ID</li>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Image Editing</li>
+                    <li style=""><i class="fa fa-check-circle-o"></i> Connect Unlimited Shopify Stores To Your Account</li>
+                  </ul>
+                </div>
+                <!-- PSB sidebar -->
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="za-overlay"></div>
+
+        {% compress js %}
+            <script src="{% static 'js/jquery.min.js' %}"></script>
+            <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+            <script type="text/javascript">
+                setInterval(function () {
+                    $('.stripe-button-el').addClass('btn btn-lg btn-block btn-primary').removeClass('stripe-button-el').text('Purchase Now');
+                }, 100);
+            </script>
+        {% endcompress %}
+    </body>
+</html>
