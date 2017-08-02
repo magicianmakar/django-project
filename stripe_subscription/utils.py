@@ -413,33 +413,6 @@ def process_webhook_event(request, event_id, raven_client):
 
         return HttpResponse('Customer Deleted')
 
-    elif event.type == 'customer.subscription.trial_will_end':
-        try:
-            customer = StripeCustomer.objects.get(customer_id=event.data.object.customer)
-        except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
-            return HttpResponse('Customer Not Found')
-
-        if event.data.object.status == 'trialing' and not customer.have_source():
-            trial_delta = arrow.get(event.data.object.trial_end) - arrow.utcnow()
-            if trial_delta.days >= 2:  # Make sure it's not an activation event
-                from shopified_core.utils import send_email_from_template
-
-                send_email_from_template(
-                    tpl='trial_ending_soon.html',
-                    subject='Re: Trial Ends In 3 Days',
-                    recipient=customer.user.email,
-                    data={
-                        'username': customer.user.get_first_name(),
-                    },
-                    nl2br=False
-                )
-
-                return HttpResponse('Trial Ending Email Sent')
-
-        return HttpResponse('No Email Sent - Status: {} Have Source: {}'.format(
-            event.data.object.status, customer.have_source()))
-
     elif event.type in ['invoice.created', 'invoice.updated']:
         customer = event.data.object.customer
         try:
