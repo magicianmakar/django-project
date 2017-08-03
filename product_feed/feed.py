@@ -33,7 +33,7 @@ def safeInt(v, default=0):
 
 
 class ProductFeed():
-    def __init__(self, store, revision=1, all_variants=True, include_variants=True):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
         self.store = store
         self.info = store.get_info
 
@@ -43,6 +43,7 @@ class ProductFeed():
         self.revision = safeInt(revision, 1)
         self.all_variants = all_variants
         self.include_variants = include_variants
+        self.default_product_category = default_product_category
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -120,7 +121,7 @@ class ProductFeed():
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
         self._add_element('g:brand', product.get('vendor'))
-        self._add_element('g:google_product_category', product.get('product_type'))
+        self._add_element('g:google_product_category', product.get('product_type') or self.default_product_category)
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
 
@@ -147,7 +148,7 @@ class ProductFeed():
 
 
 class CommerceHQProductFeed():
-    def __init__(self, store, revision=1, all_variants=True, include_variants=True):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
         self.store = store
 
         domain = urlparse(store.api_url).netloc
@@ -159,6 +160,7 @@ class CommerceHQProductFeed():
         self.revision = safeInt(revision, 1)
         self.all_variants = all_variants
         self.include_variants = include_variants
+        self.default_product_category = default_product_category
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -241,7 +243,7 @@ class CommerceHQProductFeed():
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{product[shipping_weight]} kg'.format(product=product))
         self._add_element('g:brand', product.get('vendor') or '')
-        self._add_element('g:google_product_category', product.get('type') or '')
+        self._add_element('g:google_product_category', product.get('type') or self.default_product_category)
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
 
@@ -291,7 +293,8 @@ def generate_product_feed(feed_status, nocache=False):
         feed = ProductFeed(store,
                            feed_status.revision,
                            feed_status.all_variants,
-                           feed_status.include_variants_id)
+                           feed_status.include_variants_id,
+                           feed_status.default_product_category)
 
         feed.init()
 
@@ -336,7 +339,8 @@ def generate_chq_product_feed(feed_status, nocache=False):
         feed = CommerceHQProductFeed(store,
                                      feed_status.revision,
                                      feed_status.all_variants,
-                                     feed_status.include_variants_id)
+                                     feed_status.include_variants_id,
+                                     feed_status.default_product_category)
 
         feed.init()
 

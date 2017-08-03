@@ -39,6 +39,10 @@
                                 {% include 'partial/help_tooltip.html' with help="For each product, use both Variant and Product ID" %}
                             </th>
                             <th style="width:15%">
+                                Default Category
+                                {% include 'partial/help_tooltip.html' with help="This shows the default category of the product." %}
+                            </th>
+                            <th style="width:15%">
                                 Last Update
                                 {% include 'partial/help_tooltip.html' with help="This shows the date & time when the product feed was last updated." %}
                             </th>
@@ -66,6 +70,9 @@
                             </td>
                             <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
                             <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
+                            <td>
+                                <input id="filter-type" name="type" type="text" class="form-control" value="{{item.default_product_category}}" placeholder="">
+                            </td>
                             <td>
                                 {% if item.status == 2 %}
                                     Updating...
@@ -121,6 +128,25 @@
 
 <script type="text/javascript">
     $(function () {
+        $('#filter-type').autocomplete({
+            serviceUrl: '/autocomplete/types',
+            minChars: 1,
+            deferRequestBy: 1000,
+            onSelect: function(suggestion) {
+                $.ajax({
+                    type: 'POST',
+                    data: {feed: $(this).parents('tr').data('feed'), default_product_category: suggestion.value},
+                    context: {el: $(this)},
+                    success: function (data) {
+                        toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
+                    },
+                    error: function (data) {
+                        displayAjaxError('Feed Settings', data);
+                    }
+                });
+            }
+        });
+        
         $('.copy-feed-url').each(function (i, el) {
             var url = $(el).attr('data-clipboard-text').replace('http://', 'https://');
 
