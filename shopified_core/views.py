@@ -129,6 +129,16 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         return self.api_error('Unvalide username or password')
 
+    def get_me(self, request, **kwargs):
+        if not request.user.is_authenticated():
+            return self.api_error('Logging is required', status=403)
+        else:
+            return JsonResponse({
+                'id': request.user.id,
+                'username': request.user.username,
+                'email': request.user.email
+            })
+
     def get_all_stores(self, request, target, store_type, version):
         stores = []
         user = self.get_user(request, assert_login=True)

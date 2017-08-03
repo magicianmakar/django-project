@@ -714,6 +714,16 @@ $(function () {
     $(".tag-it").tagit({
         allowSpaces: true
     });
+
+    if (window.location.hash == '#extension') {
+        setTimeout(function () {
+            window.extensionSendMessage({
+                subject: 'OpenPage',
+                from: 'website',
+                page: 'options.html',
+            });
+        }, window.extensionSendMessage ? 100 : 1000);
+    }
 });
 
 })();

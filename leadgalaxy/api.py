@@ -1217,6 +1217,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'd': 0
         }
 
+        config['user'] = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        }
+
         return JsonResponse(config)
 
     def post_user_config(self, request, user, data):
