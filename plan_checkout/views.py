@@ -37,7 +37,7 @@ class PlanCheckoutView(TemplateView):
         fullname = request.POST['stripeBillingName'].split(' ')
 
         n = 1
-        while User.objects.filter(username=username).exists():
+        while User.objects.filter(username__iexact=username).exists():
             username = '{}{}'.format(username, n)
             n += 1
 

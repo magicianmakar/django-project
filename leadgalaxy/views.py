@@ -28,6 +28,7 @@ from django.shortcuts import render, get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
@@ -775,6 +776,49 @@ def webhook(request, provider, option):
 
             raven_client.captureException()
             return HttpResponse('Server Error', status=500)
+
+    elif provider == 'instapage' and option == 'register':
+        email = request.POST['Email']
+        fullname = request.POST['Name'].title().split(' ')
+        username = email.split('@')[0]
+        password = get_random_string(12)
+
+        n = 1
+        while User.objects.filter(username__iexact=username).exists():
+            username = '{}{}'.format(username, n)
+            n += 1
+
+        raven_client.captureMessage('InstaPage Registration', extra={
+            'name': request.POST['Name'],
+            'email': request.POST['Email'],
+            'exists': User.objects.filter(email__iexact=email).exists()
+        })
+
+        if not User.objects.filter(email__iexact=email).exists():
+            user = User.objects.create(
+                username=username,
+                email=email,
+                first_name=fullname[0],
+                last_name=u' '.join(fullname[1:]))
+
+            user.set_password(password)
+            user.save()
+
+            send_email_from_template(
+                tpl='register_credentials.html',
+                subject='Your Dropified Account',
+                recipient=email,
+                nl2br=False,
+                data={
+                    'user': user,
+                    'password': password
+                },
+            )
+
+            return HttpResponse('ok')
+        else:
+            return HttpResponse('Email is already registed to an other user')
+
     else:
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'})
 
