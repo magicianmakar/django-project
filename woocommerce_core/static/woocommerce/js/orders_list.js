@@ -9,6 +9,99 @@ $(function () {
     $(".itooltip").tooltip();
 });
 
+$(".more-info").click(function (e) {
+    e.preventDefault();
+
+    var element = $(this).find('i');
+    var target = $(this).parents('tr').next();
+
+    target.toggle('fade', function() {
+        if (target.is(":visible")) {
+            element.removeClass('fa-plus');
+            element.addClass('fa-minus');
+        } else {
+            element.removeClass('fa-minus');
+            element.addClass('fa-plus');
+        }
+    });
+});
+
+$('.fulfill-btn').click(function (e) {
+    $('#modal-fulfillment form').trigger('reset');
+
+    $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
+    $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
+    $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
+    $('#modal-fulfillment #fulfill-product-id').val($(this).attr('product-id'));
+    $('#modal-fulfillment #fulfill-tracking-number').val($(this).attr('tracking-number'));
+
+    if ($(this).prop('fulfilled')) {
+        return;
+    }
+
+    if(localStorage.fulfill_notify_customer && !$('#fulfill-notify-customer').prop('initialized')) {
+        $('#fulfill-notify-customer').val(localStorage.fulfill_notify_customer);
+        $('#fulfill-notify-customer').prop('initialized', true);
+    }
+
+    $('#modal-fulfillment').modal('show');
+});
+
+$('#fullfill-order-btn').click(function (e) {
+    e.preventDefault();
+    localStorage.fulfill_notify_customer = $('#fulfill-notify-customer').val();
+    $(this).button('loading');
+
+    var orderId = $('#modal-fulfillment #fulfill-order-id').val();
+    var lineId = $('#modal-fulfillment #fulfill-line-id').val();
+
+    $.ajax({
+        url: api_url('fulfill-order', 'woo'),
+        type: 'POST',
+        data:  $('#modal-fulfillment form').serialize(),
+        context: {btn: $(this), orderId: orderId, lineId: lineId},
+        success: function (data) {
+            if (data.status == 'ok') {
+                $('#modal-fulfillment').modal('hide');
+                swal.close();
+                toastr.success('Fulfillment Status changed to Fulfilled.', 'Fulfillment Status');
+
+                // Replace button with fulfilled button
+                var $newButton = $('<span/>').addClass('label label-success').html('Fulfilled');
+                $('#fulfill-line-btn-' + this.orderId + '-' + this.lineId).html($newButton);
+
+                var $order = $('#order-' + this.orderId);
+
+                // Increment placed orders by one
+                var placedOrders = parseInt($order.data('placed-orders')) + 1;
+                $order.data('placed-orders', placedOrders);
+
+                var linesCount = parseInt($order.data('lines-count'));
+
+                var $orderStatus = $('#fulfillment-status-order-' + this.orderId);
+                var $newStatus = $('<span/>').addClass('badge badge-primary');
+
+                if (placedOrders == linesCount) {
+                    $newStatus.html('Fulfilled');
+                } else {
+                    $newStatus.html('Partially Fulfilled');
+                }
+
+                // Update order status
+                $orderStatus.html($newStatus);
+            } else {
+                displayAjaxError('Fulfill Order', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Fulfill Order', data);
+        },
+        complete: function () {
+            this.btn.button('reset');
+        }
+    });
+});
+
 $('.filter-btn').click(function (e) {
     Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
 
@@ -436,6 +529,7 @@ $('.hide-ordered-btn').click(function () {
         $(this).text('Show Ordered');
 
         $('.pagination a').each(function (i, el) {
+            console.log(el)
             var url = $(el).attr('href');
             var hash = 'hide-compete';
             if (url.indexOf(hash)==-1) {
@@ -452,6 +546,7 @@ $('.hide-ordered-btn').click(function () {
         $(this).text('Hide Ordered');
 
         $('.pagination a').each(function (i, el) {
+            console.log(el)
             var url = $(el).attr('href');
             var hash = 'hide-compete';
             if (url.indexOf(hash)!=-1) {

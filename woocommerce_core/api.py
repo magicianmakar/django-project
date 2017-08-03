@@ -613,6 +613,53 @@ class WooStoreApi(ApiResponseMixin, View):
         permissions.user_can_view(user, product)
         splitted_products = utils.split_product(product, split_factor)
 
-        return self.api_success({
-            'products_ids': [p.id for p in splitted_products]
-        })
+        return self.api_success({'products_ids': [p.id for p in splitted_products]})
+
+    def post_fulfill_order(self, request, user, data):
+        try:
+            store = WooStore.objects.get(id=data.get('fulfill-store'))
+        except WooStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        permissions.user_can_view(user, store)
+        tracking_number = data.get('fulfill-tracking-number', '')
+        provider_id = int(data.get('fulfill-provider', 0))
+        tracking_link = data.get('fulfill-tracking-link', '')
+        order_id = int(data['fulfill-order-id'])
+        line_id = int(data['fulfill-line-id'])
+        product_id = int(data['fulfill-product-id'])
+        date_shipped = data.get('fulfill-date-shipped')
+        provider_name = utils.get_shipping_carrier_name(store, provider_id)
+
+        if provider_name == 'Custom Provider':
+            provider_name = data.get('fulfill-provider-name', provider_name)
+        if not provider_name:
+            return self.api_error('Invalid shipping provider')
+
+        if tracking_link:
+            try:
+                validate = URLValidator()
+                validate(tracking_link)
+            except ValidationError as e:
+                return self.api_error(','.join(e))
+
+        line_items = [{
+            'id': line_id,
+            'product_id': product_id,
+            'meta_data': [
+                {'key': 'Fulfillment Status', 'value': 'Fulfilled'},
+                {'key': 'Provider', 'value': provider_name},
+                {'key': 'Tracking Number', 'value': tracking_number},
+                {'key': 'Tracking Link', 'value': tracking_link},
+                {'key': 'Date Shipped', 'value': date_shipped},
+            ]
+        }]
+
+        try:
+            r = store.wcapi.put('orders/{}'.format(order_id), {'line_items': line_items})
+            r.raise_for_status()
+        except:
+            raven_client.captureException(level='warning', extra={'response': r.text})
+            return self.api_error('WooCommerce API Error')
+
+        return self.api_success()

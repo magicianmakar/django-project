@@ -245,7 +245,13 @@
 
                     <div class="orders">
                         {% for order in orders %}
-                        <div class="order" order-id="{{order.id}}" connected="{{order.connected_lines}}">
+                        <div
+                            class="order"
+                            id="order-{{order.id}}"
+                            order-id="{{order.id}}"
+                            connected="{{order.connected_lines}}"
+                            data-placed-orders="{{order.placed_orders}}"
+                            data-lines-count="{{order.lines_count}}">
                             <div class="header">
                                 <div class="row">
                                     <div class="col-xs-2">
@@ -264,6 +270,11 @@
                                         {% else %}
                                             <span class="badge badge-warning">Unpaid</span>
                                         {% endif %}
+                                    </div>
+                                    <div class="col-xs-2" id="fulfillment-status-order-{{order.id}}">
+                                        <span class="badge badge-{% if not order.fulfillment_status %}warning{% else %}primary{% endif %}">
+                                            {{order.fulfillment_status|default:"Unfulfilled"|title}}
+                                        </span>
                                     </div>
                                     <div class="col-xs-2 order-status">
                                         {% if order.status == 'on-hold' %}
@@ -418,7 +429,24 @@
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% include 'woocommerce/partial/place_order_btn.html' %}
                                                         </td>
-                                                        <td class="text-center no-wrap" style="width:10%"></td>
+                                                        <td class="text-center no-wrap" style="width:10%">
+                                                            <div id="fulfill-line-btn-{{ order.id }}-{{ item.id }}">
+                                                            {% if not item.fulfillment_status %}
+
+                                                                <div class="btn-group dropup">
+                                                                    <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                                                        Unfulfilled
+                                                                        <span class="caret"></span></button>
+
+                                                                        <ul class="dropdown-menu">
+                                                                            <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}" product-id="{{item.product_id}}">Fulfill in WooCommerce</a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                            {% else %}
+                                                                <span class="label label-success">{{item.fulfillment_status}}</span>
+                                                            {% endif %}
+                                                            </div>
+                                                        </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.order_track and item.order_track.source_tracking %}
                                                             <a href="{{item.order_track.get_tracking_link}}" target="_blank">
@@ -455,6 +483,10 @@
         </div>
     </div>
 
+    {% cache 600 woo_shipping_carriers2 store.id %}
+    {% include 'woocommerce/partial/fulfillment_modal.html' with notify=False shipping_carriers=shipping_carriers only %}
+    {% endcache %}
+
 <div id="shipping-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -477,12 +509,14 @@
 {% block extracss %}
 
 {% compress css %}
+    <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
     <link href="{% static 'woocommerce/css/orders_list.css' %}" rel="stylesheet">
 {% endcompress %}
 
 {% endblock %}
 
 {% block extrajs %}
+
 <script type="text/javascript">
     var user_filter = {
         sort: '{{ user_filter.sort }}',
@@ -501,6 +535,7 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
+    <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/orders_list.js' %}"></script>

@@ -20,7 +20,7 @@ from shopified_core.utils import (
 from .models import WooStore, WooProduct
 from .utils import (
     woocommerce_products,
-    # store_shipping_carriers,
+    store_shipping_carriers,
     get_store_from_request,
     WooListPaginator,
     WooListQuery,
@@ -325,11 +325,16 @@ class OrdersList(ListView):
 
         return self.products.get(product_id)
 
+    def get_item_fulfillment_status(self, item):
+        for meta in item.get('meta_data', []):
+            if meta['key'] == 'Fulfillment Status':
+                return meta['value']
+
     def get_context_data(self, **kwargs):
         context = super(OrdersList, self).get_context_data(**kwargs)
         context['store'] = store = self.get_store()
         context['status'] = self.request.GET.get('status', 'any')
-        # context['shipping_carriers'] = store_shipping_carriers(store)
+        context['shipping_carriers'] = store_shipping_carriers(store)
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
@@ -373,3 +378,14 @@ class OrdersList(ListView):
                 if product:
                     item['product'] = WooProduct.objects.filter(source_id=product_id).first()
                     item['image'] = next(iter(product['images']), {}).get('src')
+
+                item['fulfillment_status'] = self.get_item_fulfillment_status(item)
+                if item['fulfillment_status'] == 'Fulfilled':
+                    order['placed_orders'] += 1
+
+            if order['placed_orders'] == order['lines_count']:
+                order['fulfillment_status'] = 'Fulfilled'
+            elif order['placed_orders'] and order['placed_orders'] < order['lines_count']:
+                order['fulfillment_status'] = 'Partially Fulfilled'
+            else:
+                order['fulfillment_status'] = None

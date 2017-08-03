@@ -359,16 +359,20 @@ def get_store_from_request(request):
 
 
 def store_shipping_carriers(store):
-    rep = store.request.get(store.get_api_url('shipping-carriers'), params={'size': 100})
-    if rep.ok:
-        return rep.json()['items']
-    else:
-        carriers = [
-            {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
-            {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'}
-        ]
+    carriers = [
+        {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
+        {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'},
+        {8: 'Custom Provider'},
+    ]
 
-        return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
+    return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
+
+
+def get_shipping_carrier_name(store, carrier_id):
+    shipping_carriers = store_shipping_carriers(store)
+    for carrier in shipping_carriers:
+        if carrier['id'] == carrier_id:
+            return carrier['title']
 
 
 class WooListQuery(object):
