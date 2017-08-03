@@ -26,7 +26,7 @@ function shopifyProductSearch (e) {
             query: query,
             page: $(this).prop('page'),
             connected: $('#modal-shopify-product').prop('connected'),
-            hide_connected: $('#modal-shopify-product .hide-connected-product').prop('checked')
+            hide_connected: $('#modal-shopify-product .hide-connected-product').prop('checked') ? 'true' : ''
         },
         context: {
             store: store
