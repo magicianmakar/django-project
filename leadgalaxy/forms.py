@@ -1,7 +1,6 @@
 from django import forms
 
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
 from django.forms.utils import ErrorList
 
 # for login with email
@@ -24,26 +23,53 @@ class BsErrorList(ErrorList):
                                 for e in self])
 
 
-class RegisterForm(UserCreationForm):
+class RegisterForm(forms.ModelForm):
+    fullname = forms.CharField(required=False)
     email = forms.EmailField()
     accept_terms = forms.BooleanField(required=False)
+
+    error_messages = {
+        'password_mismatch': "The two password fields didn't match.",
+    }
+
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput)
+
+    password2 = forms.CharField(
+        label="Password confirmation",
+        widget=forms.PasswordInput,
+        help_text="Enter the same password as above, for verification.")
+
     plan_registration = None
+
+    class Meta:
+        model = User
+        fields = ()
 
     def __init__(self, *args, **kwargs):
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.error_class = BsErrorList
 
+    def set_plan_registration(self, plan):
+        self.plan_registration = plan
+
+    def clean_fullname(self):
+        name = self.cleaned_data["fullname"]
+        return name.title().strip() if name else ''
+
     def clean_username(self):
         try:
+            username = self.clean_email().split('@')[0]
+            assert username, 'Email is not set'
 
-            assert '@' not in self.cleaned_data["username"], '@ is not allowed in username'
-            assert len(self.cleaned_data["username"]) >= 5, 'Username should be at least 5 characters'
+            n = 1
+            while User.objects.filter(username__iexact=username).exists():
+                username = u'{}{}'.format(username, n)
+                n += 1
 
-            User.objects.get(username__iexact=self.cleaned_data["username"])
+            return username
 
-            raise forms.ValidationError('Username is already registred to an other account.')
-        except ObjectDoesNotExist:
-            return self.cleaned_data["username"]
         except AssertionError as e:
             raise forms.ValidationError(e.message)
         except Exception as e:
@@ -76,17 +102,39 @@ class RegisterForm(UserCreationForm):
             raise forms.ValidationError("You need to accept Terms & Conditions")
         return terms_accpeted
 
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(
+                self.error_messages['password_mismatch'],
+                code='password_mismatch',
+            )
+        return password2
+
     def save(self, commit=True):
         user = super(RegisterForm, self).save(commit=False)
+
+        username = self.cleaned_data["email"].split('@')[0]
+        fullname = self.cleaned_data['fullname'].split(' ')
+
+        n = 1
+        while User.objects.filter(username__iexact=username).exists():
+            username = u'{}{}'.format(username, n)
+            n += 1
+
+        if len(fullname):
+            user.first_name = fullname[0]
+            user.last_name = u' '.join(fullname[1:])
+
+        user.username = username
         user.email = self.cleaned_data["email"]
+        user.set_password(self.cleaned_data["password1"])
 
         if commit:
             user.save()
 
         return user
-
-    def set_plan_registration(self, plan):
-        self.plan_registration = plan
 
 
 class UserProfileForm(forms.Form):

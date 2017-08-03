@@ -3300,8 +3300,7 @@ def register(request, registration=None, subscribe_plan=None):
             else:
                 utils.apply_shared_registration(new_user, registration)
 
-            new_user = authenticate(username=form.cleaned_data['username'],
-                                    password=form.cleaned_data['password1'])
+            new_user = authenticate(username=new_user.username, password=form.cleaned_data['password1'])
 
             login(request, new_user)
 
@@ -3320,7 +3319,8 @@ def register(request, registration=None, subscribe_plan=None):
     else:
         try:
             initial = {
-                'email': registration.email,
+                'email': (registration.email if registration else request.GET.get('email', '')).strip(),
+                'fullname': (request.GET.get('name', '')).strip(),
             }
         except:
             initial = {}

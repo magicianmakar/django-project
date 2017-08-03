@@ -224,7 +224,7 @@ def callback(request):
         username = shop.split('.')[0]
         n = 1
 
-        while User.objects.filter(username=username).exists():
+        while User.objects.filter(username__iexact=username).exists():
             username = '{}{}'.format(username, n)
             n += 1
 
