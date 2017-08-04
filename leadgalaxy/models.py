@@ -1870,14 +1870,19 @@ def invalidate_orders_status(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def userprofile_creation(sender, instance, created, **kwargs):
     if created:
-        plan = GroupPlan.objects.filter(default_plan=1).first()
-        if not plan:
-            plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
+        try:
+            if instance.profile:
+                return
 
-        profile = UserProfile.objects.create(user=instance, plan=plan)
+        except UserProfile.DoesNotExist:
+            plan = GroupPlan.objects.filter(default_plan=1).first()
+            if not plan:
+                plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
 
-        if plan.is_stripe():
-            profile.apply_subscription(plan)
+            profile = UserProfile.objects.create(user=instance, plan=plan)
+
+            if plan.is_stripe():
+                profile.apply_subscription(plan)
 
     if not created and instance.have_stripe_billing():
         try:
