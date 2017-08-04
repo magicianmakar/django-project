@@ -40,7 +40,7 @@
                             </th>
                             <th style="width:15%">
                                 Default Category
-                                {% include 'partial/help_tooltip.html' with help="This shows the default category of the product." %}
+                                {% include 'partial/help_tooltip.html' with help="The Default Category that will be used for google_product_category if Product Type is not set" %}
                             </th>
                             <th style="width:15%">
                                 Last Update
@@ -71,7 +71,7 @@
                             <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
                             <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
                             <td>
-                                <input id="filter-type" name="type" type="text" class="form-control" value="{{item.default_product_category}}" placeholder="">
+                                <input name="type" type="text" class="form-control default-product-category" value="{{item.default_product_category|default:''}}" placeholder="">
                             </td>
                             <td>
                                 {% if item.status == 2 %}
@@ -128,25 +128,6 @@
 
 <script type="text/javascript">
     $(function () {
-        $('#filter-type').autocomplete({
-            serviceUrl: '/autocomplete/types',
-            minChars: 1,
-            deferRequestBy: 1000,
-            onSelect: function(suggestion) {
-                $.ajax({
-                    type: 'POST',
-                    data: {feed: $(this).parents('tr').data('feed'), default_product_category: suggestion.value},
-                    context: {el: $(this)},
-                    success: function (data) {
-                        toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
-                    },
-                    error: function (data) {
-                        displayAjaxError('Feed Settings', data);
-                    }
-                });
-            }
-        });
-        
         $('.copy-feed-url').each(function (i, el) {
             var url = $(el).attr('data-clipboard-text').replace('http://', 'https://');
 
@@ -201,6 +182,43 @@
                     displayAjaxError('Feed Settings', data);
                 }
             });
+        });
+
+        $('.default-product-category').autocomplete({
+            serviceUrl: '/autocomplete/types',
+            minChars: 1,
+            deferRequestBy: 1000,
+            onSelect: function(suggestion) {
+                $.ajax({
+                    type: 'POST',
+                    data: {
+                        feed: $(this).parents('tr').data('feed'),
+                        default_product_category: suggestion.value
+                    },
+                    success: function (data) {
+                        toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
+                    },
+                    error: function (data) {
+                        displayAjaxError('Feed Settings', data);
+                    }
+                });
+            }
+        }).on('keypress' ,function (e) {
+            if (e.keyCode == 13) {
+                $.ajax({
+                    type: 'POST',
+                    data: {
+                        feed: $(this).parents('tr').data('feed'),
+                        default_product_category: ($('.default-product-category').val() || ' ')
+                    },
+                    success: function (data) {
+                        toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
+                    },
+                    error: function (data) {
+                        displayAjaxError('Feed Settings', data);
+                    }
+                });
+            }
         });
 
         $('.update-feed-btn').on('click', function (e) {

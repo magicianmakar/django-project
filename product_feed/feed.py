@@ -11,6 +11,7 @@ from urlparse import urlparse
 
 from loxun import XmlWriter
 
+from shopified_core.utils import safeStr
 from leadgalaxy.utils import (
     aws_s3_upload,
     get_shopify_products_count,
@@ -121,7 +122,7 @@ class ProductFeed():
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
         self._add_element('g:brand', product.get('vendor'))
-        self._add_element('g:google_product_category', product.get('product_type') or self.default_product_category)
+        self._add_element('g:google_product_category', safeStr(product.get('product_type') or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
 
@@ -243,7 +244,7 @@ class CommerceHQProductFeed():
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{product[shipping_weight]} kg'.format(product=product))
         self._add_element('g:brand', product.get('vendor') or '')
-        self._add_element('g:google_product_category', product.get('type') or self.default_product_category)
+        self._add_element('g:google_product_category', safeStr(product.get('type') or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
 
