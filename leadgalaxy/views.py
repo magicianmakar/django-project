@@ -828,8 +828,8 @@ def webhook(request, provider, option):
                     "signed_up_at": arrow.utcnow().timestamp,
                     "custom_attributes": {
                         "plan": user.profile.plan.title,
-                        "register_source": "instapage",
-                        "register_medium": "webhook",
+                        "register_source": request.GET.get('register_source', 'instapage'),
+                        "register_medium": request.GET.get('register_medium', 'webhook'),
                     }
                 }
 
