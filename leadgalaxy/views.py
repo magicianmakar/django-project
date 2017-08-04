@@ -815,6 +815,29 @@ def webhook(request, provider, option):
                 },
             )
 
+            if settings.INTERCOM_ACCESS_TOKEN:
+                headers = {
+                    'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
+                    'Accept': 'application/json'
+                }
+
+                data = {
+                    "user_id": user.id,
+                    "email": user.email,
+                    "name": u' '.join(fullname),
+                    "signed_up_at": arrow.utcnow().timestamp,
+                    "custom_attributes": {
+                        "plan": user.profile.plan.title,
+                        "register_source": "instapage",
+                        "register_medium": "webhook",
+                    }
+                }
+
+                try:
+                    requests.post('https://api.intercom.io/users', headers=headers, json=data).text
+                except:
+                    raven_client.captureException()
+
             return HttpResponse('ok')
         else:
             return HttpResponse('Email is already registed to an other user')
