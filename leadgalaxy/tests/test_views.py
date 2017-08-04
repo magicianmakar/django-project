@@ -499,8 +499,7 @@ class AutoFulfillLimitsTestCase(TestCase):
 
 class RegisterTestCase(TestCase):
     def setUp(self):
-        self.credentials = {'username': 'johndoe',
-                            'password1': 'test',
+        self.credentials = {'password1': 'test',
                             'password2': 'test',
                             'email': 'fake@fake.com',
                             'accept_terms': True}
@@ -511,9 +510,10 @@ class RegisterTestCase(TestCase):
 
     def test_register_event_is_fired(self):
         self.client.post('/accounts/register', self.credentials)
-        user = User.objects.get(username=self.credentials['username'])
+        user = User.objects.get(email=self.credentials['email'])
         register_event = RegistrationEvent.objects.get(user=user)
         r = self.client.get('/')
+
         self.assertContains(r, register_event.fire())
 
     def test_events_are_removed_after_fire(self):
