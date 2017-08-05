@@ -182,8 +182,15 @@ class ProductChangeEvent():
         update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
             self.product.get_shopify_id()), api=True)
         try:
-            response = requests.put(update_endpoint, json=data)
-            response.raise_for_status()
+            r = requests.put(update_endpoint, json=data)
+
+            if not r.ok:
+                raven_client.captureMessage('Alert Update Error', extra={
+                    'product': self.product.id,
+                    'store': self.product.store,
+                    'rep': r.text
+                })
+
         except Exception as e:
             raven_client.captureException(extra={
                 'response': e.response.text if hasattr(e, 'response') and e.response else ''
