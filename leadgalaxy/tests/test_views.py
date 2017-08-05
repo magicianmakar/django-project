@@ -489,7 +489,7 @@ class AutoFulfillLimitsTestCase(TestCase):
         self.plan.save()
 
         for i in range(10):
-            f.ShopifyOrderTrackFactory(user=self.user)
+            f.ShopifyOrderTrackFactory(user=self.user, order_id=1000 + i)
 
         r = self.client.get('/orders/place', self.place_order_data)
 
