@@ -523,3 +523,65 @@ class WooSupplier(models.Model):
             name = u'Supplier #{}'.format(supplier_idx)
 
         return name
+
+
+class WooOrderTrack(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+        index_together = ['store', 'order_id', 'line_id']
+
+    user = models.ForeignKey(User)
+    store = models.ForeignKey(WooStore, null=True)
+    order_id = models.BigIntegerField()
+    line_id = models.BigIntegerField()
+    product_id = models.BigIntegerField()
+    woocommerce_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="WooCommerce Fulfillment Status")
+
+    source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
+    source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
+    source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
+    source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
+
+    hidden = models.BooleanField(default=False)
+    seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
+    auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
+    check_count = models.IntegerField(default=0)
+
+    data = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def save(self, *args, **kwargs):
+        try:
+            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+        except:
+            pass
+
+        super(WooOrderTrack, self).save(*args, **kwargs)
+
+    def encoded(self):
+        return json.dumps(self.data).encode('base64')
+
+    def get_tracking_link(self):
+        aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
+
+        if type(self.user.get_config('aftership_domain')) is dict:
+            aftership_domain = self.user.get_config('aftership_domain').get(str(self.store_id), aftership_domain)
+
+            if '{{tracking_number}}' not in aftership_domain:
+                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
+            elif not aftership_domain.startswith('http'):
+                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
+
+        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
+
+    def get_source_url(self):
+        if self.source_id:
+            return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
+        else:
+            return None
+
+    def __unicode__(self):
+        return u'{} | {}'.format(self.order_id, self.line_id)

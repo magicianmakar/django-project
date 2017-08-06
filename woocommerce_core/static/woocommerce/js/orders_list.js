@@ -244,6 +244,7 @@ function addOrderSourceID(e) {
     var orderData = {
         order_id: btn.attr('order-id'),
         line_id: btn.attr('line-id'),
+        product_id: btn.attr('product-id'),
         store: btn.attr('store'),
         btn: btn
     };
@@ -280,6 +281,7 @@ function addOrderSourceID(e) {
             'store': orderData.store,
             'order_id': orderData.order_id,
             'line_id': orderData.line_id,
+            'product_id': orderData.product_id,
             'aliexpress_order_id': inputValue,
         });
     });

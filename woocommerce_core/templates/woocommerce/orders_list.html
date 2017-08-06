@@ -388,9 +388,10 @@
                                                         source-order-id="{{item.order_track.source_id}}"
                                                         order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
+                                                        product-id="{{item.product_id}}
                                                         title="View Order Details">#{{item.order_track.source_id}}</a>
                                                 {% else %}
-                                                    <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
+                                                    <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product_id}}">Add</a>
                                                 {% endif %}
                                             </div>
                                         </div>

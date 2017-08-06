@@ -2,6 +2,7 @@ import re
 import json
 import itertools
 import urllib
+import arrow
 
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
@@ -11,9 +12,13 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
 from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
+from django.utils import timezone
 
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, hash_url_filename
+
+import leadgalaxy.utils as leadgalaxy_utils
 
 from .models import WooProduct, WooStore
 
@@ -373,6 +378,92 @@ def get_shipping_carrier_name(store, carrier_id):
     for carrier in shipping_carriers:
         if carrier['id'] == carrier_id:
             return carrier['title']
+
+
+def cache_fulfillment_data(order_tracks, orders_max=None):
+    """
+    Caches order data of given `WooOrderTrack` instances
+    """
+    order_tracks = order_tracks[:orders_max] if orders_max else order_tracks
+    stores = set()
+    store_orders = {}
+
+    for order_track in order_tracks:
+        stores.add(order_track.store)
+        store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
+
+    cache_data = {}
+    for store in stores:
+        order_ids = list(store_orders[store.id])
+        include = ','.join(str(order_id) for order_id in order_ids)
+
+        r = store.wcapi.get('orders?{}'.format(urllib.urlencode({'include': include})))
+        r.raise_for_status()
+
+        orders = r.json()
+
+        for order in orders:
+            country = order['shipping']['country']
+            cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
+
+            for item in order.get('line_items', []):
+                fulfilled = False
+                for meta in item.get('meta_data', []):
+                    if meta['key'] == 'Fulfillment Status' and meta['value'] == 'Fulfilled':
+                        fulfilled = True
+                        break
+
+                args = store.id, order['id'], item['id']
+                cache_key = 'woo_auto_fulfilled_order_{}_{}_{}'.format(*args)
+                cache_data[cache_key] = fulfilled
+
+    cache.set_many(cache_data, timeout=3600)
+
+    return cache_data.keys()
+
+
+def has_order_line_been_fulfilled(order_track):
+    args = order_track.store.id, order_track.order_id, order_track.line_id
+
+    return cache.get('woo_auto_fulfilled_order_{}_{}_{}'.format(*args))
+
+
+def order_track_fulfillment(order_track, user_config=None):
+    user_config = {} if user_config is None else user_config
+    tracking_number = order_track.source_tracking
+
+    kwargs = {
+        'store_id': order_track.store_id,
+        'order_id': order_track.order_id,
+        'line_id': order_track.line_id
+    }
+
+    # Keys are set by `woocommerce_core.utils.cache_fulfillment_data`
+    country = cache.get('woo_auto_country_{store_id}_{order_id}'.format(**kwargs))
+
+    shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
+    if country and country == 'US':
+        if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
+            shipping_carrier_name = 'USPS'
+
+    shipping_carrier_name = 'AfterShip' if not shipping_carrier_name else shipping_carrier_name
+    date_shipped = arrow.get(timezone.now()).format('MM/DD/YYYY')
+
+    data = {
+        'line_items': [{
+            'id': order_track.line_id,
+            'product_id': order_track.product_id,
+            'meta_data': [
+                {'key': 'Fulfillment Status', 'value': 'Fulfilled'},
+                {'key': 'Provider', 'value': shipping_carrier_name},
+                {'key': 'Tracking Number', 'value': tracking_number},
+                {'key': 'Tracking Link', 'value': order_track.get_tracking_link()},
+                {'key': 'Date Shipped', 'value': date_shipped},
+            ]
+        }]
+    }
+
+    return data
 
 
 class WooListQuery(object):

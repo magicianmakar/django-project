@@ -17,7 +17,7 @@ from shopified_core.utils import (
     safeInt,
 )
 
-from .models import WooStore, WooProduct
+from .models import WooStore, WooProduct, WooOrderTrack
 from .utils import (
     woocommerce_products,
     store_shipping_carriers,
@@ -382,6 +382,12 @@ class OrdersList(ListView):
                 item['fulfillment_status'] = self.get_item_fulfillment_status(item)
                 if item['fulfillment_status'] == 'Fulfilled':
                     order['placed_orders'] += 1
+
+                item['order_track'] = WooOrderTrack.objects.filter(
+                    store=store,
+                    order_id=order['id'],
+                    line_id=item['id'],
+                    product_id=product_id).first()
 
             if order['placed_orders'] == order['lines_count']:
                 order['fulfillment_status'] = 'Fulfilled'

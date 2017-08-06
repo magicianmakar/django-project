@@ -3,6 +3,7 @@ import urlparse
 import json
 
 import requests
+import arrow
 
 from requests.exceptions import HTTPError
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -12,6 +13,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.utils import timezone
 from django.db import transaction
 
 from shopified_core.exceptions import ProductExportException
@@ -24,7 +26,7 @@ from shopified_core.utils import (
     remove_link_query,
 )
 
-from .models import WooStore, WooProduct, WooSupplier
+from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack
 import tasks
 import utils
 
@@ -536,9 +538,7 @@ class WooStoreApi(ApiResponseMixin, View):
 
         product.save()
 
-        return self.api_success({
-            'reload': not data.get('export')
-        })
+        return self.api_success({'reload': not data.get('export')})
 
     def post_supplier_default(self, request, user, data):
         product = WooProduct.objects.get(id=data.get('product'))
@@ -661,5 +661,103 @@ class WooStoreApi(ApiResponseMixin, View):
         except:
             raven_client.captureException(level='warning', extra={'response': r.text})
             return self.api_error('WooCommerce API Error')
+
+        return self.api_success()
+
+    def post_order_fulfill(self, request, user, data):
+        try:
+            store = WooStore.objects.get(id=int(data.get('store')))
+        except WooStore.DoesNotExist:
+            raven_client.captureException()
+            return self.api_error('Store {} not found'.format(data.get('store')), status=404)
+
+        if not user.can('place_orders.sub', store):
+            raise PermissionDenied()
+
+        permissions.user_can_view(user, store)
+
+        order_id = data.get('order_id')
+        line_id = data.get('line_id')
+        product_id = data.get('product_id')
+        source_id = data.get('aliexpress_order_id')
+
+        if not (order_id and line_id and product_id):
+            return self.api_error('Required input is missing')
+
+        try:
+            assert len(source_id) > 0, 'Empty Order ID'
+            assert utils.safeInt(order_id), 'Order ID is not a numeric'
+            source_id.encode('ascii')
+        except AssertionError as e:
+            raven_client.captureMessage('Non valid Aliexpress Order ID')
+            return self.api_error(e.message, status=501)
+        except UnicodeEncodeError as e:
+            return self.api_error('Order ID is not a valid', status=501)
+
+        tracks = WooOrderTrack.objects.filter(store=store,
+                                              order_id=order_id,
+                                              line_id=line_id,
+                                              product_id=product_id)
+        tracks_count = tracks.count()
+
+        if tracks_count > 1:
+            extra = {
+                'store': store.title,
+                'order_id': order_id,
+                'line_id': line_id,
+                'count': tracks_count}
+
+            raven_client.captureMessage('More Than One Order Track', level='warning', extra=extra)
+            tracks.delete()
+
+        if tracks_count == 1:
+            saved_track = tracks.first()
+
+            if saved_track.source_id and source_id != saved_track.source_id:
+                extra = {
+                    'store': store.title,
+                    'order_id': order_id,
+                    'line_id': line_id,
+                    'old': {
+                        'id': saved_track.source_id,
+                        'date': arrow.get(saved_track.created_at).humanize(),
+                    },
+                    'new': source_id,
+                }
+                raven_client.captureMessage('Possible Double Order', level='warning', extra=extra)
+                return self.api_error('This Order already have an Aliexpress Order ID', status=422)
+
+        seen_source_orders = WooOrderTrack.objects.filter(store=store, source_id=source_id)
+        seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
+
+        if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
+            extra = {
+                'store': store.title,
+                'order_id': order_id,
+                'line_id': line_id,
+                'source_id': source_id,
+                'seen_source_orders': list(seen_source_orders)}
+
+            raven_client.captureMessage('Linked to an other Order', level='warning', extra=extra)
+            return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
+
+        track, created = WooOrderTrack.objects.update_or_create(
+            store=store,
+            order_id=order_id,
+            line_id=line_id,
+            product_id=product_id,
+            defaults={
+                'user': user.models_user,
+                'source_id': source_id,
+                'created_at': timezone.now(),
+                'updated_at': timezone.now(),
+                'status_updated_at': timezone.now()})
+
+        store.pusher_trigger('order-source-id-add', {
+            'track': track.id,
+            'order_id': order_id,
+            'line_id': line_id,
+            'product_id': product_id,
+            'source_id': source_id})
 
         return self.api_success()
