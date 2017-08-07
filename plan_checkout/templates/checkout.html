@@ -30,6 +30,9 @@
         <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
         <link href="{% static 'plan_checkout/checkout.css' %}" rel="stylesheet">
         {% endcompress %}
+
+        {% include "partial/custom_tags.html" with disable_appcuse=True %}
+
     </head>
     <body>
         <section class="zx-header">
