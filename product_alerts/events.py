@@ -188,7 +188,8 @@ class ProductChangeEvent():
                 raven_client.captureMessage('Alert Update Error', extra={
                     'product': self.product.id,
                     'store': self.product.store,
-                    'rep': r.text
+                    'rep': r.text,
+                    'data': data,
                 })
 
         except Exception as e:
