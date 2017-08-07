@@ -1868,7 +1868,7 @@ class TimezoneMiddleware(object):
 class UserIpSaverMiddleware(object):
 
     def process_request(self, request):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated() and not request.session.get('is_hijacked_user'):
             save_user_ip(request)
 
 
