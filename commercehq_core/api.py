@@ -23,6 +23,7 @@ from shopified_core.utils import (
     get_domain,
     remove_link_query,
     version_compare,
+    order_data_cache,
     orders_update_limit,
     order_phone_number
 )
@@ -903,7 +904,7 @@ class CHQStoreApi(ApiResponseMixin, View):
         except CommerceHQStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        order = cache.get(order_key)
+        order = order_data_cache(order_key)
         if order:
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''

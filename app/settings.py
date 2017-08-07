@@ -142,6 +142,10 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "{0}/{1}".format(os.environ['REDISCLOUD_CACHE'], 0),
+    },
+    "orders": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "{0}/{1}".format(os.environ['REDISCLOUD_ORDERS'], 0),
     }
 }
 

@@ -4,9 +4,11 @@ from django.conf import settings
 from django.test import TestCase
 from mock import Mock
 from collections import OrderedDict
+from django.core.cache import cache, caches
 
 from shopified_core.utils import (
     app_link,
+    order_data_cache,
     order_phone_number,
     hash_url_filename
 )
@@ -130,6 +132,67 @@ class UtilsTestCase(TestCase):
         self.assertEqual(app_link('orders/track'), settings.APP_URL + '/orders/track')
         self.assertEqual(app_link('orders', qurey=1001), settings.APP_URL + '/orders?qurey=1001')
         self.assertEqual(app_link('orders', 'place', SAStep=True, product=123456), settings.APP_URL + '/orders/place?SAStep=true&product=123456')
+
+    def test_order_data(self):
+        orders = {
+            'order_1_222_333333': {
+                'id': '1_222_333333',
+                'product': 3
+            },
+            'order_1_222_444444': {
+                'id': '1_222_44444',
+                'product': 4
+            },
+            'order_1_333_111111': {
+                'id': '1_333_111111',
+                'product': 5
+            }
+        }
+
+        caches['orders'].set_many(orders)
+
+        self.assertEqual(order_data_cache(1, 333, 111111), orders['order_1_333_111111'])
+        self.assertEqual(order_data_cache('1', '333', '111111'), orders['order_1_333_111111'])
+
+        self.assertEqual(order_data_cache('1_333_111111'), orders['order_1_333_111111'])
+        self.assertEqual(order_data_cache('order_1_333_111111'), orders['order_1_333_111111'])
+
+        self.assertEqual(order_data_cache(1, '222', 444444), orders['order_1_222_444444'])
+        self.assertEqual(order_data_cache(3, '222', 444444), None)
+
+        self.assertEqual(order_data_cache(1, 333, '*').values(), [orders['order_1_333_111111']])
+        self.assertEqual(order_data_cache(1, 222, '*').values(), [orders['order_1_222_333333'], orders['order_1_222_444444']])
+
+    def test_order_data_backward_compatibility(self):
+        orders = {
+            'order_1_222_333333': {
+                'id': '1_222_333333',
+                'product': 3
+            },
+            'order_1_222_444444': {
+                'id': '1_222_44444',
+                'product': 4
+            },
+            'order_1_333_111111': {
+                'id': '1_333_111111',
+                'product': 5
+            }
+        }
+
+        cache.set_many(orders)
+
+        self.assertEqual(order_data_cache(1, 333, 111111), orders['order_1_333_111111'])
+        self.assertEqual(order_data_cache('1', '333', '111111'), orders['order_1_333_111111'])
+
+        self.assertEqual(order_data_cache('1_333_111111'), orders['order_1_333_111111'])
+        self.assertEqual(order_data_cache('order_1_333_111111'), orders['order_1_333_111111'])
+
+        self.assertEqual(order_data_cache(1, '222', 444444), orders['order_1_222_444444'])
+        self.assertEqual(order_data_cache(3, '222', 444444), None)
+
+        self.assertEqual(order_data_cache(1, 333, '*').values(), [orders['order_1_333_111111']])
+        self.assertEqual(order_data_cache(1, 222, '*').values(), [orders['order_1_222_333333'], orders['order_1_222_444444']])
+
 
 
 class ShippingHelperTestCase(TestCase):

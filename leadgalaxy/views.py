@@ -15,6 +15,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache, caches
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
@@ -31,18 +32,23 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-
 from raven.contrib.django.raven_compat.models import client as raven_client
 import keen
 
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.utils import send_email_from_template, version_compare, get_mimetype
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
-
 from shopify_orders import utils as shopify_orders_utils
+
+from shopified_core.utils import (
+    send_email_from_template,
+    version_compare,
+    get_mimetype,
+    order_data_cache
+)
+
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
@@ -683,7 +689,8 @@ def webhook(request, provider, option):
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
-                if not new_order and cache.get('active_order_{}'.format(shopify_order['id'])):
+                active_order_key = 'active_order_{}'.format(shopify_order['id'])
+                if not new_order and (caches['orders'].get(active_order_key) or cache.get(active_order_key)):
                     order_note = shopify_order.get('note')
                     if not order_note:
                         order_note = ''
@@ -2825,8 +2832,8 @@ def orders_view(request):
     for i in orders_ids:
         active_orders['active_order_{}'.format(i)] = True
 
-    cache.set_many(orders_cache, timeout=3600)
-    cache.set_many(active_orders, timeout=3600)
+    caches['orders'].set_many(orders_cache, timeout=21600)
+    caches['orders'].set_many(active_orders, timeout=3600)
 
     if store_order_synced:
         countries = get_counrties_list()
@@ -3018,7 +3025,7 @@ def orders_place(request):
     if not order_key.startswith('order_'):
         order_key = 'order_{}'.format(order_key)
 
-    order_data = cache.get(order_key)
+    order_data = order_data_cache(order_key)
     prefix, store, order, line = order_key.split('_')
 
     if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):

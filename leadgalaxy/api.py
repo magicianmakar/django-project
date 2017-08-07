@@ -6,6 +6,7 @@ import copy
 
 from django.contrib.auth import authenticate, login
 from django.core import serializers
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -27,6 +28,7 @@ from shopified_core.utils import (
     app_link,
     send_email_from_template,
     version_compare,
+    order_data_cache,
     orders_update_limit,
     order_phone_number
 )
@@ -1458,7 +1460,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        order = cache.get(order_key)
+        order = order_data_cache(order_key)
         if order:
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
@@ -1723,9 +1725,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if data.get('combined'):
             order_lines = order_lines.split(',')
-            current_line = cache.get('order_{}_{}_{}'.format(store.id, order_id, order_lines[0]))
-            for key, order_data in cache.get_many(cache.keys('order_{}_{}_*'.format(store.id, order_id))).items():
-                if str(order_data['line_id']) not in order_lines and \
+            current_line = order_data_cache(store.id, order_id, order_lines[0])
+            for key, order_data in order_data_cache(store.id, order_id, '*').items():
+                if current_line and str(order_data['line_id']) not in order_lines and \
                         str(order_data['source_id']) == str(current_line['source_id']):
                         order_lines.append(str(order_data['line_id']))
 

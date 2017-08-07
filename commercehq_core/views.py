@@ -5,7 +5,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
+from django.core.cache import caches
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse, Http404
@@ -632,7 +632,7 @@ class OrdersList(ListView):
 
             orders[odx] = order
 
-        cache.set_many(orders_cache, timeout=3600)
+        caches['orders'].set_many(orders_cache, timeout=21600)
 
         return orders
 

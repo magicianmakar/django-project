@@ -12,7 +12,7 @@ from urllib import urlencode
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.crypto import get_random_string
@@ -290,6 +290,26 @@ def version_compare(left, right):
         return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
 
     return cmp(normalize(left), normalize(right))
+
+
+def order_data_cache(*args, **kwargs):
+    order_key = '_'.join([str(i) for i in args])
+
+    if not order_key.startswith('order_'):
+        order_key = 'order_{}'.format(order_key)
+
+    if '*' in order_key:
+        data = caches['orders'].get_many(caches['orders'].keys(order_key))
+    else:
+        data = caches['orders'].get(order_key)
+
+    if not data:
+        if '*' in order_key:
+            data = cache.get_many(cache.keys(order_key))
+        else:
+            data = cache.get(order_key)
+
+    return data
 
 
 def orders_update_limit(orders_count, check_freq=30, total_time=360, min_count=20):
