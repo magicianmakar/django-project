@@ -213,7 +213,7 @@
                     <p style="position: absolute;font-size: 18px;text-align: center;top: 22px;left: 0;right: 0;z-index: 1;color: #ffffff;padding: 0 50px;">
                     Simplify &amp; Automate<br>
                     Your DropShipping or Your Money Back!</p>
-                    <img src="{% static 'plan_checkout/money-back.png' %}" class="img-responsive">
+                    <img src="{% static 'plan_checkout/money_back2.png' %}" class="img-responsive">
                 </div>
                 <div class="list">
                   <h3 class="headline"><span >You are absolutely </span><span style="white-space:nowrap;">going to love Dropified!</span></h3>
@@ -236,7 +236,10 @@
 
             <script type="text/javascript">
                 setInterval(function () {
-                    $('.stripe-button-el').addClass('btn btn-lg btn-block btn-primary').removeClass('stripe-button-el').text('Purchase Now');
+                    $('.stripe-button-el').addClass('btn btn-lg btn-block btn-primary')
+                        .removeClass('stripe-button-el')
+                        .text('YES! I Want Lifetime Access To Both!')
+                        .css('white-space', 'normal');
                 }, 100);
             </script>
         {% endcompress %}
