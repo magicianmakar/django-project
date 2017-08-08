@@ -2380,7 +2380,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if '/deep_link.htm' in supplier_url.lower():
                 supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
 
-            if 's.aliexpress.com' in supplier_url.lower():
+            if '//s.aliexpress.com' in supplier_url.lower():
                 rep = requests.get(supplier_url, allow_redirects=False)
                 rep.raise_for_status()
 
