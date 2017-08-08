@@ -161,7 +161,11 @@ class UtilsTestCase(TestCase):
         self.assertEqual(order_data_cache(3, '222', 444444), None)
 
         self.assertEqual(order_data_cache(1, 333, '*').values(), [orders['order_1_333_111111']])
-        self.assertEqual(order_data_cache(1, 222, '*').values(), [orders['order_1_222_333333'], orders['order_1_222_444444']])
+
+        data = order_data_cache(1, 222, '*').values()
+        self.assertEqual(len(data), 2)
+        self.assertIn(data[0], [orders['order_1_222_333333'], orders['order_1_222_444444']])
+        self.assertIn(data[1], [orders['order_1_222_333333'], orders['order_1_222_444444']])
 
 
 class ShippingHelperTestCase(TestCase):
