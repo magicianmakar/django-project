@@ -505,7 +505,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 json={
                     "items": [{
                         "id": line_id,
-                        "quantity": cache.get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id), 0),
+                        "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id), 0),
                     }]
                 }
             )
@@ -513,7 +513,6 @@ class CHQStoreApi(ApiResponseMixin, View):
             if rep.ok:
                 for fulfilment in rep.json()['fulfilments']:
                     for item in fulfilment['items']:
-                        cache.set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=3600)
                         caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=604800)
 
             # CommerceHQOrderTrack.objects.filter(
@@ -551,7 +550,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 order.store.request.patch(
                     url=order.store.get_api_url('orders', order_id, 'fulfilments'),
                     json=[{
-                        "id": cache.get('chq_fulfilments_{}_{}_{}'.format(order.store.id, order_id, line_id)),
+                        "id": caches['orders'].get('chq_fulfilments_{}_{}_{}'.format(order.store.id, order_id, line_id)),
                         "items": [{
                             "id": line_id,
                             "quantity": 0,
@@ -1009,12 +1008,12 @@ class CHQStoreApi(ApiResponseMixin, View):
         # api_data = utils.order_track_fulfillment(**fulfillment_data)
         api_data = {
             "data": [{
-                "fulfilment_id": cache.get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
+                "fulfilment_id": caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
                 "tracking_number": fulfillment_data['source_tracking'],
                 "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
                 "items": [{
                     "id": fulfillment_data['line_id'],
-                    "quantity": cache.get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                    "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
                 }]
             }],
             "notify": (data.get('fulfill-notify-customer') == 'yes')
