@@ -690,7 +690,7 @@ def webhook(request, provider, option):
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
                 active_order_key = 'active_order_{}'.format(shopify_order['id'])
-                if not new_order and (caches['orders'].get(active_order_key) or cache.get(active_order_key)):
+                if not new_order and caches['orders'].get(active_order_key):
                     order_note = shopify_order.get('note')
                     if not order_note:
                         order_note = ''

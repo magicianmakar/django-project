@@ -303,12 +303,6 @@ def order_data_cache(*args, **kwargs):
     else:
         data = caches['orders'].get(order_key)
 
-    if not data:
-        if '*' in order_key:
-            data = cache.get_many(cache.keys(order_key))
-        else:
-            data = cache.get(order_key)
-
     return data
 
 

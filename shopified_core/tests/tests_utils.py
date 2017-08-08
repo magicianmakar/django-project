@@ -163,37 +163,6 @@ class UtilsTestCase(TestCase):
         self.assertEqual(order_data_cache(1, 333, '*').values(), [orders['order_1_333_111111']])
         self.assertEqual(order_data_cache(1, 222, '*').values(), [orders['order_1_222_333333'], orders['order_1_222_444444']])
 
-    def test_order_data_backward_compatibility(self):
-        orders = {
-            'order_1_222_333333': {
-                'id': '1_222_333333',
-                'product': 3
-            },
-            'order_1_222_444444': {
-                'id': '1_222_44444',
-                'product': 4
-            },
-            'order_1_333_111111': {
-                'id': '1_333_111111',
-                'product': 5
-            }
-        }
-
-        cache.set_many(orders)
-
-        self.assertEqual(order_data_cache(1, 333, 111111), orders['order_1_333_111111'])
-        self.assertEqual(order_data_cache('1', '333', '111111'), orders['order_1_333_111111'])
-
-        self.assertEqual(order_data_cache('1_333_111111'), orders['order_1_333_111111'])
-        self.assertEqual(order_data_cache('order_1_333_111111'), orders['order_1_333_111111'])
-
-        self.assertEqual(order_data_cache(1, '222', 444444), orders['order_1_222_444444'])
-        self.assertEqual(order_data_cache(3, '222', 444444), None)
-
-        self.assertEqual(order_data_cache(1, 333, '*').values(), [orders['order_1_333_111111']])
-        self.assertEqual(order_data_cache(1, 222, '*').values(), [orders['order_1_222_333333'], orders['order_1_222_444444']])
-
-
 
 class ShippingHelperTestCase(TestCase):
     def setUp(self):
