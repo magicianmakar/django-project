@@ -5,7 +5,7 @@ import simplejson as json
 
 from django.conf import settings
 from django.core import serializers
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.db import transaction
 from django.db.models import F
 from django.views.generic import View
@@ -514,6 +514,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 for fulfilment in rep.json()['fulfilments']:
                     for item in fulfilment['items']:
                         cache.set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=3600)
+                        caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=604800)
 
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,

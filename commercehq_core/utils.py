@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
-from django.core.cache import cache
+from django.core.cache import cache, caches
 
 from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -260,6 +260,7 @@ def get_tracking_orders(store, tracker_orders):
 
     if len(orders_cache):
         cache.set_many(orders_cache, timeout=3600)
+        caches['orders'].set_many(orders_cache, timeout=604800)
 
     new_tracker_orders = []
     for tracked in tracker_orders:
@@ -662,6 +663,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
                     cache_data['chq_auto_quantity_{}_{}_{}'.format(*args)] = item['quantity']
 
     cache.set_many(cache_data, timeout=3600)
+    caches['orders'].set_many(cache_data, timeout=604800)
 
     return cache_data.keys()
 
@@ -707,6 +709,8 @@ def order_track_fulfillment(order_track, user_config=None):
             for fulfilment in rep.json()['fulfilments']:
                 for item in fulfilment['items']:
                     cache.set('chq_auto_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']), fulfilment['id'], timeout=3600)
+                    caches['orders'].set('chq_auto_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']),
+                                         fulfilment['id'], timeout=604800)
 
             fulfilment_id = cache.get('chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
 
