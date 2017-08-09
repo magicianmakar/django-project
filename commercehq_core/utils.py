@@ -648,18 +648,18 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
                 country = order['address']['shipping']['country']
 
             args = store.id, order['id']
-            cache_data['chq_auto_total_quantity_{}_{}'.format(*args)] = total_quantity
-            cache_data['chq_auto_total_shipped_{}_{}'.format(*args)] = total_shipped
-            cache_data['chq_auto_country_{}_{}'.format(*args)] = country
+            cache_data['chq_total_quantity_{}_{}'.format(*args)] = total_quantity
+            cache_data['chq_total_shipped_{}_{}'.format(*args)] = total_shipped
+            cache_data['chq_country_{}_{}'.format(*args)] = country
 
             for line in order.get('items', []):
-                cache_data['chq_auto_quantity_{}_{}_{}'.format(store.id, order['id'], line['data']['id'])] = line['status']['quantity']
+                cache_data['chq_quantity_{}_{}_{}'.format(store.id, order['id'], line['data']['id'])] = line['status']['quantity']
 
             for fulfilment in order.get('fulfilments', []):
                 for item in fulfilment.get('items', []):
                     args = store.id, order['id'], item['id']
-                    cache_data['chq_auto_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
-                    cache_data['chq_auto_quantity_{}_{}_{}'.format(*args)] = item['quantity']
+                    cache_data['chq_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
+                    cache_data['chq_quantity_{}_{}_{}'.format(*args)] = item['quantity']
 
     caches['orders'].set_many(cache_data, timeout=604800)
 
@@ -677,11 +677,11 @@ def order_track_fulfillment(order_track, user_config=None):
     }
 
     # Keys are set by `commercehq_core.utils.cache_fulfillment_data`
-    fulfilment_id = caches['orders'].get('chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
-    total_quantity = caches['orders'].get('chq_auto_total_quantity_{store_id}_{order_id}'.format(**kwargs))
-    total_shipped = caches['orders'].get('chq_auto_total_shipped_{store_id}_{order_id}'.format(**kwargs))
-    quantity = caches['orders'].get('chq_auto_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs))
-    country = caches['orders'].get('chq_auto_country_{store_id}_{order_id}'.format(**kwargs))
+    fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
+    total_quantity = caches['orders'].get('chq_total_quantity_{store_id}_{order_id}'.format(**kwargs))
+    total_shipped = caches['orders'].get('chq_total_shipped_{store_id}_{order_id}'.format(**kwargs))
+    quantity = caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**kwargs))
+    country = caches['orders'].get('chq_country_{store_id}_{order_id}'.format(**kwargs))
 
     shipping_carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
 
@@ -698,7 +698,7 @@ def order_track_fulfillment(order_track, user_config=None):
             json={
                 "items": [{
                     "id": order_track.line_id,
-                    "quantity": caches['orders'].get('chq_auto_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id), 0),
+                    "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id), 0),
                 }]
             }
         )
@@ -706,10 +706,10 @@ def order_track_fulfillment(order_track, user_config=None):
         if rep.ok:
             for fulfilment in rep.json()['fulfilments']:
                 for item in fulfilment['items']:
-                    caches['orders'].set('chq_auto_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']),
+                    caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']),
                                          fulfilment['id'], timeout=604800)
 
-            fulfilment_id = caches['orders'].get('chq_auto_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
+            fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
 
     try:
         last_shipment = (total_quantity - total_shipped - quantity) == 0

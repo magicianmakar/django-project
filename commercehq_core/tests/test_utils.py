@@ -195,8 +195,8 @@ class CacheFulfillmentData(TestCase):
         track2 = CommerceHQOrderTrackFactory(store=self.store, order_id=2, line_id=3)
         tracks = [track1, track2]
         cache_keys = cache_fulfillment_data(tracks)
-        total1 = caches['orders'].get('chq_auto_total_quantity_{}_{}'.format(self.store.id, 1))
-        total2 = caches['orders'].get('chq_auto_total_quantity_{}_{}'.format(self.store.id, 2))
+        total1 = caches['orders'].get('chq_total_quantity_{}_{}'.format(self.store.id, 1))
+        total2 = caches['orders'].get('chq_total_quantity_{}_{}'.format(self.store.id, 2))
         self.assertEqual(total1, 5)
         self.assertEqual(total2, 9)
         caches['orders'].delete_many(cache_keys)
@@ -208,8 +208,8 @@ class CacheFulfillmentData(TestCase):
         track2 = CommerceHQOrderTrackFactory(store=self.store, order_id=2, line_id=3)
         tracks = [track1, track2]
         cache_keys = cache_fulfillment_data(tracks)
-        total1 = caches['orders'].get('chq_auto_total_shipped_{}_{}'.format(self.store.id, 1))
-        total2 = caches['orders'].get('chq_auto_total_shipped_{}_{}'.format(self.store.id, 2))
+        total1 = caches['orders'].get('chq_total_shipped_{}_{}'.format(self.store.id, 1))
+        total2 = caches['orders'].get('chq_total_shipped_{}_{}'.format(self.store.id, 2))
         self.assertEqual(total1, 9)
         self.assertEqual(total2, 13)
         caches['orders'].delete_many(cache_keys)
@@ -227,10 +227,10 @@ class CacheFulfillmentData(TestCase):
         cache_keys = cache_fulfillment_data(tracks)
 
         fulfilment_ids = [
-            caches['orders'].get('chq_auto_fulfilments_{}_{}_{}'.format(self.store.id, 1, 1)),
-            caches['orders'].get('chq_auto_fulfilments_{}_{}_{}'.format(self.store.id, 1, 2)),
-            caches['orders'].get('chq_auto_fulfilments_{}_{}_{}'.format(self.store.id, 2, 3)),
-            caches['orders'].get('chq_auto_fulfilments_{}_{}_{}'.format(self.store.id, 2, 4)),
+            caches['orders'].get('chq_fulfilments_{}_{}_{}'.format(self.store.id, 1, 1)),
+            caches['orders'].get('chq_fulfilments_{}_{}_{}'.format(self.store.id, 1, 2)),
+            caches['orders'].get('chq_fulfilments_{}_{}_{}'.format(self.store.id, 2, 3)),
+            caches['orders'].get('chq_fulfilments_{}_{}_{}'.format(self.store.id, 2, 4)),
         ]
 
         self.assertEqual(fulfilment_ids, [1, 1, 2, 2])
@@ -249,10 +249,10 @@ class CacheFulfillmentData(TestCase):
         cache_keys = cache_fulfillment_data(tracks)
 
         quantities = [
-            caches['orders'].get('chq_auto_quantity_{}_{}_{}'.format(self.store.id, 1, 1)),
-            caches['orders'].get('chq_auto_quantity_{}_{}_{}'.format(self.store.id, 1, 2)),
-            caches['orders'].get('chq_auto_quantity_{}_{}_{}'.format(self.store.id, 2, 3)),
-            caches['orders'].get('chq_auto_quantity_{}_{}_{}'.format(self.store.id, 2, 4)),
+            caches['orders'].get('chq_quantity_{}_{}_{}'.format(self.store.id, 1, 1)),
+            caches['orders'].get('chq_quantity_{}_{}_{}'.format(self.store.id, 1, 2)),
+            caches['orders'].get('chq_quantity_{}_{}_{}'.format(self.store.id, 2, 3)),
+            caches['orders'].get('chq_quantity_{}_{}_{}'.format(self.store.id, 2, 4)),
         ]
 
         self.assertEqual(quantities, [2, 4, 3, 5])
