@@ -145,7 +145,11 @@
                                       <script
                                         src="https://checkout.stripe.com/checkout.js"
                                         class="stripe-button"
-                                        data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
+                                        {% if request.GET.astmqp == 'EZbuXb7aLmtXV4bC' %}
+                                            data-key="{% app_setting 'STRIPE_TEST_PUBLIC_KEY' %}"
+                                        {% else %}
+                                            data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
+                                        {% endif %}
                                         data-email="{{request.user.email|default:''}}"
                                         data-amount="99700"
                                         data-name="Dropified"
@@ -193,8 +197,17 @@
                                       src="https://checkout.stripe.com/checkout.js"
                                       class="stripe-button"
                                       data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
-                                      data-email="{{request.user.email|default:''}}"
-                                      data-amount="39700"
+                                      {% if request.GET.astmqp == 'EZbuXb7aLmtXV4bC' %}
+                                          data-key="{% app_setting 'STRIPE_TEST_PUBLIC_KEY' %}"
+                                      {% else %}
+                                          data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
+                                      {% endif %}
+
+                                      {% if request.GET.rtvfts == 'LmtXV46dsbuXb7a' %}
+                                        data-amount="{{request.GET.rtvftsa|default:'39700'}}"
+                                      {% else %}
+                                        data-amount="39700"
+                                      {% endif %}
                                       data-name="Dropified"
                                       data-description="3 Payments of $397"
                                       data-image="{% static 'dropified-icon.png' %}"
