@@ -940,7 +940,7 @@ var config = {
     product_notes: '{{product.notes|default:''|escapejs}}',
 
     clipping_magic: {
-	    api_id: '{{user.clippingmagic.api_id|default:""}}',
+        api_id: '{{user.clippingmagic.api_id|default:""}}',
         clippingmagic_editor: {{ user|can:'clippingmagic.use'|lower }},
     },
     sub_conf: {

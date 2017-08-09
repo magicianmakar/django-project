@@ -541,6 +541,45 @@ def duplicate_product(product, store=None):
     if store is not None:
         product.store = store
 
+    product_data = json.loads(product.data)
+
+    if parent_product.shopify_id and parent_product.store:
+        try:
+            shopify_product = get_shopify_product(parent_product.store, parent_product.shopify_id, raise_for_status=True)
+
+            product_data['variants'] = []
+
+            for option in shopify_product['options']:
+                product_data['variants'].append({
+                    'values': option['values'],
+                    'title': option['name']
+                })
+
+            product_data['variants_sku'] = {}
+            product_data['variants_images'] = {}
+            for variant in shopify_product['variants']:
+                if len(variant['sku']) > 0:
+                    titles = variant['title'].split(' / ')
+                    values = variant['sku'].split(';')
+                    if titles:
+                        if values:
+                            variants_sku[titles[0]] = variant['sku']
+                        else:
+                            for k, v in titles:
+                                if values.length > k:
+                                    variants_sku[titles[k]] = values[k]
+                    else:
+                        product_data['variants_sku'][variant['title']] = variant['sku']
+
+                for image in shopify_product['images']:
+                    if image['id'] == variant['image_id']:
+                        product_data['variants_images'][variant['title']] = image['src']
+
+            product.data = json.dumps(product_data)
+
+        except Exception:
+            raven_client.captureException(level='warning')
+
     product.save()
 
     for i in parent_product.productsupplier_set.all():
