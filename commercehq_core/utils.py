@@ -698,7 +698,7 @@ def order_track_fulfillment(order_track, user_config=None):
             json={
                 "items": [{
                     "id": order_track.line_id,
-                    "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id), 0),
+                    "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id)),
                 }]
             }
         )

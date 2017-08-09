@@ -505,7 +505,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 json={
                     "items": [{
                         "id": line_id,
-                        "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id), 0),
+                        "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id)),
                     }]
                 }
             )
@@ -1006,9 +1006,29 @@ class CHQStoreApi(ApiResponseMixin, View):
         }
 
         # api_data = utils.order_track_fulfillment(**fulfillment_data)
+        fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+        if fulfilment_id is None:
+            rep = store.request.post(
+                url=store.get_api_url('orders', fulfillment_data['order_id'], 'fulfilments'),
+                json={
+                    "items": [{
+                        "id": fulfillment_data['line_id'],
+                        "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
+                    }]
+                }
+            )
+
+            if rep.ok:
+                for fulfilment in rep.json()['fulfilments']:
+                    for item in fulfilment['items']:
+                        caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, fulfillment_data['order_id'], item['id']),
+                                             fulfilment['id'], timeout=604800)
+
+                fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+
         api_data = {
             "data": [{
-                "fulfilment_id": caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
+                "fulfilment_id": fulfilment_id,
                 "tracking_number": fulfillment_data['source_tracking'],
                 "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
                 "items": [{
