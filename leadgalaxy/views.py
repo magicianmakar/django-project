@@ -784,73 +784,85 @@ def webhook(request, provider, option):
             raven_client.captureException()
             return HttpResponse('Server Error', status=500)
 
-    elif provider == 'instapage' and option == 'register':
-        email = request.POST['Email']
-        fullname = request.POST['Name'].title().split(' ')
-        username = email.split('@')[0]
-        password = get_random_string(12)
+    elif provider in ['instapage', 'instantpage'] and option == 'register':
+        try:
+            email = request.POST['Email']
+            fullname = request.POST['Name'].title().split(' ')
+            username = email.split('@')[0]
+            password = get_random_string(12)
 
-        n = 1
-        while User.objects.filter(username__iexact=username).exists():
-            username = '{}{}'.format(username, n)
-            n += 1
+            n = 1
+            while User.objects.filter(username__iexact=username).exists():
+                username = '{}{}'.format(username, n)
+                n += 1
 
-        raven_client.captureMessage('InstaPage Registration', extra={
-            'name': request.POST['Name'],
-            'email': request.POST['Email'],
-            'exists': User.objects.filter(email__iexact=email).exists()
-        })
+            raven_client.captureMessage('InstaPage Registration',
+                                        level='warning',
+                                        extra={
+                                            'name': request.POST['Name'],
+                                            'email': request.POST['Email'],
+                                            'exists': User.objects.filter(email__iexact=email).exists()
+                                        })
 
-        if not User.objects.filter(email__iexact=email).exists():
-            user = User.objects.create(
-                username=username,
-                email=email,
-                first_name=fullname[0],
-                last_name=u' '.join(fullname[1:]))
+            if not User.objects.filter(email__iexact=email).exists():
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    first_name=fullname[0],
+                    last_name=u' '.join(fullname[1:]))
 
-            user.set_password(password)
-            user.save()
+                user.set_password(password)
+                user.save()
 
-            send_email_from_template(
-                tpl='register_credentials.html',
-                subject='Your Dropified Account',
-                recipient=email,
-                nl2br=False,
-                data={
-                    'user': user,
-                    'password': password
-                },
-            )
+                send_email_from_template(
+                    tpl='register_credentials.html',
+                    subject='Your Dropified Account',
+                    recipient=email,
+                    nl2br=False,
+                    data={
+                        'user': user,
+                        'password': password
+                    },
+                )
 
-            if settings.INTERCOM_ACCESS_TOKEN:
-                headers = {
-                    'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
-                    'Accept': 'application/json'
-                }
-
-                data = {
-                    "user_id": user.id,
-                    "email": user.email,
-                    "name": u' '.join(fullname),
-                    "signed_up_at": arrow.utcnow().timestamp,
-                    "custom_attributes": {
-                        "plan": user.profile.plan.title,
-                        "register_source": request.GET.get('register_source', 'instapage'),
-                        "register_medium": request.GET.get('register_medium', 'webhook'),
+                if settings.INTERCOM_ACCESS_TOKEN:
+                    headers = {
+                        'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
+                        'Accept': 'application/json'
                     }
-                }
 
-                try:
-                    requests.post('https://api.intercom.io/users', headers=headers, json=data).text
-                except:
-                    raven_client.captureException()
+                    data = {
+                        "user_id": user.id,
+                        "email": user.email,
+                        "name": u' '.join(fullname),
+                        "signed_up_at": arrow.utcnow().timestamp,
+                        "custom_attributes": {
+                            "plan": user.profile.plan.title,
+                            "register_source": request.GET.get('register_source', 'instapage'),
+                            "register_medium": request.GET.get('register_medium', 'webhook'),
+                        }
+                    }
 
-            return HttpResponse('ok')
-        else:
-            return HttpResponse('Email is already registed to an other user')
+                    try:
+                        requests.post('https://api.intercom.io/users', headers=headers, json=data).text
+                    except:
+                        raven_client.captureException()
+
+                return HttpResponse('ok')
+            else:
+                raven_client.captureMessage('InstaPage registration email exists', extra={
+                    'name': request.POST['Name'],
+                    'email': request.POST['Email'],
+                    'exists': User.objects.filter(email__iexact=email).exists()
+                })
+
+                return HttpResponse('Email is already registed to an other user')
+        except:
+            raven_client.captureException()
 
     else:
-        return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'})
+        raven_client.captureMessage('Unknown Webhook Provider')
+        return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status_code=500)
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
