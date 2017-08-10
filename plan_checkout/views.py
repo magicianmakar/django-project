@@ -21,8 +21,6 @@ class PlanCheckoutView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        print request.POST
-
         if request.GET['option'] == '3pay':
             amount = 397
             description = 'Dropified Lifetime Offer - 3 Payment Option'
@@ -98,4 +96,13 @@ class PlanCheckoutView(TemplateView):
 
         request.session['lead_dyno_record'] = True
 
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/lifetime/ty')
+
+
+class LifetimePurchaseThankYouView(TemplateView):
+    template_name = 'lifetime_purchase_ty.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LifetimePurchaseThankYouView, self).get_context_data(**kwargs)
+        context['lead_dyno_record'] = self.request.session.pop('lead_dyno_record', False)
+        return context
