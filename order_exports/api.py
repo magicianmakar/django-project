@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import csv
 import logging
-import tempfile
 import os
-import uuid
+import re
 import simplejson as json
+import tempfile
+import uuid
 from math import ceil
 
 import requests
@@ -163,6 +164,8 @@ class ShopifyOrderExportAPI():
                 count=self._get_orders_count(params)
             )
 
+            self.save_generated_export_order_ids()
+
             if send_email:
                 # Only check for orders if an e-mail should be sent
                 orders = self._get_orders(params=self.query.params_dict, page=1, limit=1)
@@ -241,12 +244,16 @@ class ShopifyOrderExportAPI():
             'count': count
         }
 
-    def get_data(self, page=1):
+    def get_data(self, page=1, limit=GENERATED_PAGE_LIMIT):
         if not self.query:
             return []
 
-        orders = self._get_orders(params=self.query.params_dict, page=page, limit=GENERATED_PAGE_LIMIT)
-        vendor = slugify(self.order_export.filters.vendor.strip())
+        params = {'ids': self.query.found_order_ids}
+        orders = self._get_orders(params=params, page=page, limit=limit)
+
+        vendor = self.order_export.filters.vendor.lower()
+        vendor_no_spaces = re.sub(r'\s+', '.*?', vendor)
+        vendor_compiled = re.compile(vendor_no_spaces, re.I)
 
         fields = self.order_export.fields_choices
         line_fields = self.order_export.line_fields_choices
@@ -255,11 +262,6 @@ class ShopifyOrderExportAPI():
         lines = []
         for order in orders:
             line = {'fields': {}, 'shipping_address': {}, 'line_items': []}
-            if vendor != '':
-                vendor_found = [l for l in order['line_items'] if l['vendor'] == vendor]
-                if len(vendor_found) == 0:  # vendor not found on line items
-                    continue
-
             line['fields']['id'] = unicode(order['id']).encode("utf-8")
 
             if len(fields):
@@ -272,7 +274,7 @@ class ShopifyOrderExportAPI():
 
             if len(line_fields) and 'line_items' in order:
                 for line_item in order['line_items']:
-                    if vendor.strip() != '' and slugify(line_item['vendor']) != vendor:
+                    if vendor.strip() != '' and vendor_compiled.search(line_item['vendor']) is None:
                         continue
 
                     items = {}
@@ -368,3 +370,42 @@ class ShopifyOrderExportAPI():
             data=data,
             nl2br=False
         )
+
+    def save_generated_export_order_ids(self):
+        count = self._get_orders_count(self.query.params_dict)
+        max_pages = int(ceil(float(count) / 250.0) + 1)
+
+        vendor_no_spaces = re.sub(r'\s+', '.*?', self.order_export.filters.vendor.lower())
+        vendor_compiled = re.compile(vendor_no_spaces, re.I)
+
+        order_ids = []
+        vendors = []
+
+        for page in range(1, max_pages):
+            orders = self._get_orders(params=self.query.params_dict, page=page, limit=250)
+            for order in orders:
+                for order_line_item in order['line_items']:
+                    # Filter by vendor only if needed
+                    if self.order_export.filters.vendor != '':
+                        # Only process when vendor name exists
+                        vendor_name = order_line_item.get('vendor', '') or ''
+                        if vendor_name != '':
+                            # Found vendor
+                            if vendor_compiled.search(vendor_name) is not None:
+                                order_ids.append(str(order['id']))
+
+                                if vendor_name not in vendors:
+                                    vendors.append(vendor_name)
+
+                                break  # Leave loop on line_items
+                    else:
+                        # Get all order ids and vendor names
+                        order_ids.append(str(order['id']))
+                        vendor_name = order_line_item.get('vendor', '') or ''
+
+                        if vendor_name != '' and vendor_name not in vendors:
+                            vendors.append(vendor_name)
+
+        self.query.found_order_ids = ','.join(order_ids)
+        self.query.found_vendors = ', '.join(vendors)
+        self.query.save()

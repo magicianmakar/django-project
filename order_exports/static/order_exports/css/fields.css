@@ -164,3 +164,11 @@ a.edit {
 .invite-subuser {
     padding: 3px 6px;
 }
+
+.alert.alert-success .form-group {
+    margin-bottom: 0;
+}
+
+.alert.alert-success .col-sm-offset-2.col-sm-10 {
+    padding-left: 0;
+}

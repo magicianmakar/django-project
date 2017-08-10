@@ -6,8 +6,18 @@
 
 {% block extrajs %}
     <script type="text/javascript">
+        // Fix js errors with shopify_product_selector
+        var bootstrapButton = $.fn.button.noConflict();
+        $.fn.bootstrapBtn = bootstrapButton;
+
+        var bootstrapTooltip = $.fn.tooltip.noConflict();
+        $.fn.bootstrapTooltip = bootstrapTooltip;
+
         window.foundProducts = {{ found_products|safe }};
     </script>
+
+    <!-- Fix js errors with shopify_product_selector -->
+    <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'libs/bower_components/nestable-fork/dist/jquery.nestable.min.js' %}"></script>
@@ -133,6 +143,14 @@
                         {{ error }}
                     </p>
                     {% endfor %}
+                </div>
+            </div>
+
+            <div class="alert alert-success">
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10" id="export-description">
+                        <span class="description"></span><span class="store"></span><span class="time"></span><span class="created_at"></span><span class="receiver"></span>
+                    </div>
                 </div>
             </div>
 
@@ -262,7 +280,8 @@
                     <label for="vendor" class="col-sm-2 control-label">Vendor</label>
                     <div class="col-sm-4">
                         <input type="text" name="vendor" class="form-control" placeholder="Enter vendor name" autocomplete="off" value="{{ form.vendor.data|default:"" }}">
-                        <p class="help-block">Write down the vendor's full or partial name that's being used at <a id="shopify-products-popover" href="#">shopify</a>.</p>
+                        <p class="help-block"><span class="label">optional</span> Write down the vendor's full or partial name that's being used at <a id="shopify-products-popover" href="#">shopify</a>.</p>
+                        <p class="help-block"><span class="label">optional</span> Use the character <span class="label">|</span> without spaces to separate different names a Vendor might have.</p>
                     </div>
                 </div>
 
@@ -271,7 +290,7 @@
                     <div class="col-sm-4">
                         <select data-placeholder="Choose the order status" name="status" class="form-control m-b" autocomplete="off">
                             {% for status in order_status %}
-                            <option value="{{ status.0 }}"{% if status.0 in form.status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
+                            <option value="{{ status.0 }}" data-explanation="{{ status.2 }}"{% if status.0 in form.status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -282,7 +301,7 @@
                     <div class="col-sm-4">
                         <select data-placeholder="Choose the fulfillment status of the order" name="fulfillment_status" class="form-control m-b" autocomplete="off">
                             {% for status in order_fulfillment_status %}
-                            <option value="{{ status.0 }}"{% if status.0 in form.fulfillment_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
+                            <option value="{{ status.0 }}" data-explanation="{{ status.2 }}"{% if status.0 in form.fulfillment_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -293,10 +312,18 @@
                     <div class="col-sm-4">
                         <select data-placeholder="Choose the financial status of the order" name="financial_status" class="form-control m-b" autocomplete="off">
                             {% for status in order_financial_status %}
-                            <option value="{{ status.0 }}"{% if status.0 in form.financial_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
+                            <option value="{{ status.0 }}" data-explanation="{{ status.2 }}"{% if status.0 in form.financial_status.data %} selected="selected"{% endif %}>{{ status.1 }}</option>
                             {% endfor %}
                         </select>
                         <p class="help-block">Be careful when fulfilling an order that haven't been paid yet.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10" id="order-filters-description">
+                            Filter on shopify store<span class="vendor"></span><span class="status"></span><span class="fulfillment"></span><span class="financial"></span>.
+                        </div>
                     </div>
                 </div>
             </fieldset>
@@ -396,6 +423,14 @@
                         <div class="container-fluid shopify-products"></div>
                     </div>
                 </div>
+
+                <div class="alert alert-success hidden">
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10" id="product-filters-description">
+                            <span class="price-range"></span><span class="product-contains"></span><span class="exact-product"></span>
+                        </div>
+                    </div>
+                </div>
             </fieldset>
 
             <fieldset id="vendor-login">
@@ -437,7 +472,6 @@
 {% include "partial/shopify_product_selector.html" %}
 
 {% verbatim %}
-
 <script id="product-found-template" type="text/x-handlebars-template">
     <div class="product-item row">
         <div class="col-md-1">
@@ -455,6 +489,5 @@
         </div>
     </div>
 </script>
-
 {% endverbatim %}
 {% endblock %}

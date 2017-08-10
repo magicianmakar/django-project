@@ -24,6 +24,21 @@
         <div class="ibox-content">
              <div class="row">
                 <div class="col-md-12">
+                    <ul id="pagination-limit" class="pull-right">
+                        <li>
+                            <label>Orders per page:</label>
+                        </li>
+                        <li{% if limit == 10 or limit == None %} class="active"{% endif %}>
+                            <a href="{% url 'order_exports_generated' order_export_id=order_export_id code=code %}?page={{ current_page }}">10</a>
+                        </li>
+                        <li{% if limit == 30 %} class="active"{% endif %}>
+                            <a href="?limit=30&page={{ current_page }}">30</a>
+                        </li>
+                        <li{% if limit == 50 %} class="active"{% endif %}>
+                            <a href="?limit=50&page={{ current_page }}">50</a>
+                        </li>
+                    </ul>
+
                     <table class="table">
                         <thead>
                             <tr>

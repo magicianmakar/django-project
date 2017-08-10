@@ -30,7 +30,7 @@ def index(request):
     breadcrumbs = ['Order Exports']
 
     return render(request, 'order_exports/index.html', {
-        'order_exports': order_exports, 'page': "order_exports",
+        'order_exports': order_exports, 'page': "orders",
         'breadcrumbs': breadcrumbs, 'vendor_users': vendor_users
     })
 
@@ -103,7 +103,7 @@ def add(request):
                     created_at_max=created_at_max or None,
                     product_price_min=request.POST.get('product_price_min') or None,
                     product_price_max=request.POST.get('product_price_max') or None,
-                    product_title=','.join(product_titles) or None
+                    product_title=json.dumps(product_titles) or None
                 )
 
                 order_export = OrderExport.objects.create(
@@ -137,7 +137,7 @@ def add(request):
 
     return render(request, 'order_exports/add.html', {
         'form': form,
-        'page': "order_exports",
+        'page': "orders",
         'order_status': ORDER_STATUS,
         'order_fulfillment_status': ORDER_FULFILLMENT_STATUS,
         'order_financial_status': ORDER_FINANCIAL_STATUS,
@@ -166,7 +166,7 @@ def edit(request, order_export_id):
                                      store__user_id=request.user.id)
 
     if order_export.filters.product_title is not None:
-        product_titles = order_export.filters.product_title.split(',')
+        product_titles = json.loads(order_export.filters.product_title)
     else:
         product_titles = ['']
 
@@ -252,7 +252,7 @@ def edit(request, order_export_id):
                 filters.created_at_max = created_at_max or None
                 filters.product_price_min = request.POST.get('product_price_min') or None
                 filters.product_price_max = request.POST.get('product_price_max') or None
-                filters.product_title = ','.join(product_titles) or None
+                filters.product_title = json.dumps(product_titles) or None
 
                 filters.save()
                 order_export.save()
@@ -274,7 +274,7 @@ def edit(request, order_export_id):
     return render(request, 'order_exports/edit.html', {
         'order_export': order_export,
         'form': form,
-        'page': "order_exports",
+        'page': "orders",
         'order_status': ORDER_STATUS,
         'order_fulfillment_status': ORDER_FULFILLMENT_STATUS,
         'order_financial_status': ORDER_FINANCIAL_STATUS,
@@ -321,7 +321,7 @@ def logs(request, order_export_id):
 
     return render(request, 'order_exports/logs.html', {
         'logs': logs,
-        'page': "order_exports",
+        'page': "orders",
         'breadcrumbs': breadcrumbs
     })
 
@@ -338,6 +338,10 @@ def generated(request, order_export_id, code):
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          store__user_id=request.user.id)
 
+    limit = int(request.GET.get('limit', '10'))
+    if limit not in [10, 30, 50]:
+        limit = 10
+
     breadcrumbs = [
         {'title': 'Order Exports', 'url': reverse('order_exports_index')},
         {'title': order_export.description, 'url': reverse('order_exports_generated', kwargs={
@@ -351,16 +355,17 @@ def generated(request, order_export_id, code):
     api = ShopifyOrderExportAPI(order_export, code=code)
 
     info = api.get_query_info()
-    data = api.get_data(page=page)
+    data = api.get_data(page=page, limit=limit)
 
     return render(request, 'order_exports/generated.html', {
         'info': info,
         'data': data,
-        'page': "order_exports",
+        'page': "orders",
         'breadcrumbs': breadcrumbs,
         'current_page': page,
         'order_export_id': order_export_id,
-        'code': code
+        'code': code,
+        'limit': limit,
     })
 
 

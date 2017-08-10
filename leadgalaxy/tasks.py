@@ -654,6 +654,19 @@ def generate_order_export(self, order_export_id):
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
+def generate_order_export_query(self, order_export_id):
+    try:
+        order_export = OrderExport.objects.get(pk=order_export_id)
+
+        api = ShopifyOrderExportAPI(order_export)
+        api.generate_query(send_email=False)
+    except Exception as exc:
+        raven_client.captureException()
+
+        raise self.retry(exc=exc, countdown=5, max_retries=3)
+
+
+@celery_app.task(bind=True, base=CaptureFailure)
 def create_image_zip(self, images, product_id):
     try:
         product = ShopifyProduct.objects.get(pk=product_id)

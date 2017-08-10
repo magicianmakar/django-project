@@ -1,4 +1,4 @@
-window.OrderExportAdd = {
+window.OrderExport = {
     fieldsSelect: $('.chosen-select'),
     selectableFields: $('.selectable'),
     fieldsList: $('.nestable'),
@@ -35,7 +35,6 @@ window.OrderExportAdd = {
         clockpickerInput.clockpicker({
             autoclose: true,
             afterHourSelect: function () {
-                console.log('after hour select');
                 $('input[name="schedule"]').clockpicker('done');
             }
         });
@@ -47,6 +46,11 @@ window.OrderExportAdd = {
                 return '<img src="/static/img/shopify-products-list.png" width="600">';
             }
         });
+
+        // Order export descriptions
+        this.helpText.general.execute();
+        this.helpText.orderFilters.execute();
+        this.helpText.productFilters.execute();
     },
     initializeDatepicker: function() {
         $('.input-group.date').datepicker({
@@ -66,13 +70,14 @@ window.OrderExportAdd = {
         });
     },
     initializeFieldsSelect: function() {
-        var OrderExportAdd = this;
+        var OrderExport = this;
         $('input[name="previous_day"]').on('ifChecked', function() {
             $('#schedule .range').hide();
             $('#schedule .daily').show();
             $('input[name="receiver"]').parents('.form-group').show();
             $('input[name="starting_at"]').parents('.form-group').show();
             $('#vendor-login').show();
+            window.OrderExport.helpText.general.fill.execute();
         });
 
         $('input[name="previous_day"]').on('ifUnchecked', function() {
@@ -81,6 +86,7 @@ window.OrderExportAdd = {
             $('input[name="receiver"]').val('').parents('.form-group').hide();
             $('input[name="starting_at"]').val('').parents('.form-group').hide();
             $('#vendor-login').hide();
+            window.OrderExport.helpText.general.fill.execute();
         });
 
         this.selectableFields.on("ifChecked", function() {
@@ -119,7 +125,7 @@ window.OrderExportAdd = {
         });
     },
     initializeFieldsList: function() {
-        var OrderExportAdd = this;
+        var OrderExport = this;
 
         this.fieldsList.nestable({
             maxDepth: 1
@@ -151,20 +157,20 @@ window.OrderExportAdd = {
         });
     },
     renderFoundProducts: function() {
-        var foundProductsLength = window.OrderExportAdd.foundProducts.data.length;
+        var foundProductsLength = window.OrderExport.foundProducts.data.length;
 
         for (var i = 0; i < foundProductsLength; i++) {
-            var foundProduct = window.OrderExportAdd.foundProducts.data[i];
+            var foundProduct = window.OrderExport.foundProducts.data[i];
 
-            window.OrderExportAdd.addFoundProduct(foundProduct);
+            window.OrderExport.addFoundProduct(foundProduct);
         }
 
-        window.OrderExportAdd.updateFoundProducts();
+        window.OrderExport.updateFoundProducts();
     },
     addFoundProduct: function(foundProduct) {
-        productElement = $(window.OrderExportAdd.foundProducts.template({product: foundProduct}));
+        productElement = $(window.OrderExport.foundProducts.template({product: foundProduct}));
 
-        window.OrderExportAdd.foundProducts.list.append(productElement);
+        window.OrderExport.foundProducts.list.append(productElement);
     },
     updateFields: function(select) {
         var data = select.next().find('.search-choice').map(function(key, value) {
@@ -173,7 +179,7 @@ window.OrderExportAdd = {
             return select.find('option:nth-child('+(index+1)+')').val();
         });
 
-        OrderExportAdd.updateList(select.parents('.form-group').next().find('.nestable'), data);
+        window.OrderExport.updateList(select.parents('.form-group').next().find('.nestable'), data);
     },
     onUnselectField: function() {
         $('.unselect').on('mousedown', function(e) {
@@ -206,7 +212,7 @@ window.OrderExportAdd = {
             'select option[value="'+id+'"]').text().trim();
         return $('<li class="dd-item" data-id="'+id+'">').append(
             $('<div class="dd-handle">').append(
-                text, 
+                text,
                 $('<a href="#" class="unselect close">').append(
                     $('<i class="fa fa-times">')
                 )
@@ -229,25 +235,27 @@ window.OrderExportAdd = {
         }
     },
     deleteFoundProductById: function(productId) {
-        var foundProductsLength = window.OrderExportAdd.foundProducts.data.length;
+        var foundProductsLength = window.OrderExport.foundProducts.data.length;
 
         for (var i = 0; i < foundProductsLength; i++) {
-            var foundProduct = window.OrderExportAdd.foundProducts.data[i];
+            var foundProduct = window.OrderExport.foundProducts.data[i];
             if (foundProduct.product_id == productId) {
-                window.OrderExportAdd.foundProducts.data.splice(i, 1);
+                window.OrderExport.foundProducts.data.splice(i, 1);
                 break;
             }
         }
     },
     updateFoundProducts: function(foundProduct) {
         if (foundProduct) {
-            window.OrderExportAdd.foundProducts.data.push(foundProduct);
-            window.OrderExportAdd.addFoundProduct(foundProduct);
+            window.OrderExport.foundProducts.data.push(foundProduct);
+            window.OrderExport.addFoundProduct(foundProduct);
         }
 
-        window.OrderExportAdd.foundProducts.input.val(
-            JSON.stringify(window.OrderExportAdd.foundProducts.data)
+        window.OrderExport.foundProducts.input.val(
+            JSON.stringify(window.OrderExport.foundProducts.data)
         );
+
+        window.OrderExport.helpText.productFilters.exactProductInput.event();
     },
     onStartingAtCreatedAt: function() {
         $('input[name="starting_at_boolean"]').on('ifChecked', function() {
@@ -315,15 +323,15 @@ window.OrderExportAdd = {
                 image_url: product_data.image
             };
 
-            window.OrderExportAdd.updateFoundProducts(foundProduct);
+            window.OrderExport.updateFoundProducts(foundProduct);
         };
     },
     onFoundProductDeleteClick: function() {
-        window.OrderExportAdd.foundProducts.list.on('click', '.delete-found-product', function() {
+        window.OrderExport.foundProducts.list.on('click', '.delete-found-product', function() {
             var productId = $(this).attr('data-product-id');
 
-            window.OrderExportAdd.deleteFoundProductById(parseInt(productId));
-            window.OrderExportAdd.updateFoundProducts();
+            window.OrderExport.deleteFoundProductById(parseInt(productId));
+            window.OrderExport.updateFoundProducts();
 
             $(this).parents('.product-item.row').remove();
         });
@@ -381,8 +389,6 @@ window.OrderExportAdd = {
                     },
                     error: function (data) {
                         displayAjaxError('Add Sub User', data);
-                    },
-                    complete: function () {
                     }
                 });
             });
@@ -390,8 +396,8 @@ window.OrderExportAdd = {
     },
     onStoreChange: function() {
         $('[name="store"]').on('change', function() {
-            window.OrderExportAdd.autocompleteVendor.destroy();
-            window.OrderExportAdd.autocompleteVendor.init();
+            window.OrderExport.autocompleteVendor.destroy();
+            window.OrderExport.autocompleteVendor.init();
         });
     },
     autocompleteVendor: {
@@ -408,9 +414,425 @@ window.OrderExportAdd = {
         destroy: function() {
             $('[name="vendor"]').autocomplete('destroy');
         }
+    },
+    helpText: {
+        general: {
+            execute: function() {
+                window.OrderExport.helpText.general.descriptionInput.event();
+                window.OrderExport.helpText.general.storeSelect.event();
+                window.OrderExport.helpText.general.timeField.event();
+                window.OrderExport.helpText.general.createdAtInput.event();
+                window.OrderExport.helpText.general.fill.execute();
+            },
+            isPreviousDay: function() {
+                // Only fill export time, created since and receiver e-mail if previous day is active
+                return $('[name="previous_day"]').is(':checked');
+            },
+            descriptionInput: {
+                event: function() {
+                    $('[name="description"]').on('change', function() {
+                        window.OrderExport.helpText.general.fill.description();
+                    });
+                },
+                text: function() {
+                    var value = $('[name="description"]').val(),
+                        label = $('<span class="label">').text(value);
+
+                    return ['Your ', label, ' export will'];
+                }
+            },
+            storeSelect: {
+                event: function() {
+                    $('[name="store"]').on('change', function() {
+                        window.OrderExport.helpText.general.fill.store();
+                    });
+                },
+                text: function() {
+                    var value = $('[name="store"] option:selected').text(),
+                        label = $('<span class="label">').text(value),
+                        startText = ' look for orders on ';
+
+                    return [startText, label, ' store'];
+                }
+            },
+            timeField: {
+                event: function() {
+                    $('[name="schedule"], [name="daterange"]').on('change', function() {
+                        window.OrderExport.helpText.general.fill.time(true);
+                    });
+                },
+                text: function() {
+                    if (window.OrderExport.helpText.general.isPreviousDay()) {
+                        if (this.isEmpty()) {
+                            return '';
+                        }
+
+                        var value = $('[name="schedule"]').val(),
+                            label = $('<span class="label">').text(value);
+
+                        return [', update everyday at ', label];
+                    } else {
+                        var value = $('[name="daterange"]').val().split('-'),
+                            pre = $('<span class="label">').text(value[0]),
+                            post = $('<span class="label">').text(value[1]);
+
+                        return [', from ', pre, ' until ', post, '.'];
+                    }
+                },
+                isEmpty: function() {
+                    if (window.OrderExport.helpText.general.isPreviousDay()) {
+                        return $('[name="schedule"]').val() == '';
+                    }
+
+                    return false;
+                }
+            },
+            createdAtInput: {
+                event: function() {
+                    $('[name="starting_at"]').on('change', function() {
+                        window.OrderExport.helpText.general.fill.createdAt(true);
+                    });
+                },
+                text: function() {
+                    if (!window.OrderExport.helpText.general.isPreviousDay()) {
+                        return '';
+                    }
+
+                    var value = $('[name="starting_at"]').val();
+                    if (value == '') {
+                        var today = new Date().toISOString().slice(0, 10).split('-');
+                        value = today[1] + '/' + today[2] + '/' + today[0];
+                    }
+
+                    var label = $('<span class="label">').text(value),
+                        startWith = ', ';
+
+                    if (!window.OrderExport.helpText.general.timeField.isEmpty()) {
+                        startWith = ' and ';
+                    }
+
+                    return [startWith, 'starting with orders created at ', label, '.'];
+                }
+            },
+            fill: {
+                description: function() {
+                    window.OrderExport.helpText.general.fill.common('.description',
+                        window.OrderExport.helpText.general.descriptionInput.text());
+                },
+                store: function() {
+                    window.OrderExport.helpText.general.fill.common('.store',
+                        window.OrderExport.helpText.general.storeSelect.text());
+                },
+                time: function(createdAt) {
+                    window.OrderExport.helpText.general.fill.common('.time',
+                        window.OrderExport.helpText.general.timeField.text());
+
+                    if (createdAt) {
+                        window.OrderExport.helpText.general.fill.createdAt();
+                    }
+                },
+                createdAt: function(time) {
+                    window.OrderExport.helpText.general.fill.common('.created_at',
+                        window.OrderExport.helpText.general.createdAtInput.text());
+
+                    if (time) {
+                        window.OrderExport.helpText.general.fill.time();
+                    }
+                },
+                common: function(tagClass, newText) {
+                    var placeholder = $('#export-description').find(tagClass);
+                    placeholder.text('');
+                    placeholder.append(newText);
+                },
+                execute: function() {
+                    window.OrderExport.helpText.general.fill.description();
+                    window.OrderExport.helpText.general.fill.store();
+                    window.OrderExport.helpText.general.fill.time();
+                    window.OrderExport.helpText.general.fill.createdAt();
+                }
+            }
+        },
+        orderFilters: {
+            execute: function() {
+                window.OrderExport.helpText.orderFilters.vendorInput.event();
+                window.OrderExport.helpText.orderFilters.statusSelect.event();
+                window.OrderExport.helpText.orderFilters.fulfillmentStatusSelect.event();
+                window.OrderExport.helpText.orderFilters.financialStatusSelect.event();
+                window.OrderExport.helpText.orderFilters.fill.execute();
+            },
+            textForSelect: function(selectName, checkComma) {
+                var values = $(selectName+' option:selected').attr('data-explanation').match(/(.*)(\|.*)\|(.*)?/);
+                if (values == null) {
+                    return '';
+                }
+
+                var pre = values[1],
+                    value = values[2].slice(1),
+                    post = values[3];
+
+                if (values[1][0] == '|') {
+                    pre = '';
+                    value = values[1].slice(1);
+                    post = values[2];
+                }
+                if (!post) {
+                    post = '';
+                }
+
+                var label = $('<span class="label">').text(value);
+                if (checkComma) {
+                    if ($(checkComma).val() != '') {
+                        pre = ',' + pre;
+                    }
+                } else {
+                    pre = ' and' + pre;
+                }
+
+                return [pre, label, post];
+            },
+            vendorInput: {
+                event: function() {
+                    $('[name="vendor"]').on('change', function() {
+                        window.OrderExport.helpText.orderFilters.fill.vendor();
+                    });
+                },
+                text: function() {
+                    var value = $('[name="vendor"]').val();
+                    if (value == '') {
+                        return '';
+                    }
+
+                    var label = $('<span class="label">').text(value);
+
+                    return [' for products having ', label, ' as partial or full vendor name'];
+                }
+            },
+            statusSelect: {
+                event: function() {
+                    $('[name="status"]').on('change', function() {
+                        window.OrderExport.helpText.orderFilters.fill.status();
+                    });
+                },
+                text: function() {
+                    return window.OrderExport.helpText.orderFilters.textForSelect('[name="status"]', '[name="vendor"]');
+                }
+            },
+            fulfillmentStatusSelect: {
+                event: function() {
+                    $('[name="fulfillment_status"]').on('change', function() {
+                        window.OrderExport.helpText.orderFilters.fill.fulfillmentStatus();
+                    });
+                },
+                text: function() {
+                    return window.OrderExport.helpText.orderFilters.textForSelect('[name="fulfillment_status"]', '[name="status"]');
+                }
+            },
+            financialStatusSelect: {
+                event: function() {
+                    $('[name="financial_status"]').on('change', function() {
+                        window.OrderExport.helpText.orderFilters.fill.financialStatus();
+                    });
+                },
+                text: function() {
+                    return window.OrderExport.helpText.orderFilters.textForSelect('[name="financial_status"]', null);
+                }
+            },
+            fill: {
+                vendor: function() {
+                    window.OrderExport.helpText.orderFilters.fill.common('.vendor',
+                        window.OrderExport.helpText.orderFilters.vendorInput.text());
+
+                    window.OrderExport.helpText.orderFilters.fill.status();
+                },
+                status: function() {
+                    window.OrderExport.helpText.orderFilters.fill.common('.status',
+                        window.OrderExport.helpText.orderFilters.statusSelect.text());
+                },
+                fulfillmentStatus: function() {
+                    window.OrderExport.helpText.orderFilters.fill.common('.fulfillment',
+                        window.OrderExport.helpText.orderFilters.fulfillmentStatusSelect.text());
+                },
+                financialStatus: function() {
+                    window.OrderExport.helpText.orderFilters.fill.common('.financial',
+                        window.OrderExport.helpText.orderFilters.financialStatusSelect.text());
+                },
+                common: function(tagClass, newText) {
+                    var placeholder = $('#order-filters-description').find(tagClass);
+                    placeholder.text('');
+                    placeholder.append(newText);
+                },
+                execute: function() {
+                    window.OrderExport.helpText.orderFilters.fill.vendor();
+                    window.OrderExport.helpText.orderFilters.fill.status();
+                    window.OrderExport.helpText.orderFilters.fill.fulfillmentStatus();
+                    window.OrderExport.helpText.orderFilters.fill.financialStatus();
+                }
+            }
+        },
+        productFilters: {
+            empty: true,
+            execute: function() {
+                window.OrderExport.helpText.productFilters.checkEmpty();
+                window.OrderExport.helpText.productFilters.priceRangeInput.event();
+                window.OrderExport.helpText.productFilters.titleContainInput.event();
+                window.OrderExport.helpText.productFilters.fill.execute();
+            },
+            checkEmpty: function() {
+                var titles = window.OrderExport.helpText.productFilters.titleContainInput.getTitles(),
+                    priceMin = $('[name="product_price_min"]').val(),
+                    priceMax = $('[name="product_price_max"]').val(),
+                    products = window.OrderExport.foundProducts.data;
+                
+                if (titles.length == 0 && priceMin == '' && priceMax == '' && products.length == 0) {
+                    $('#product-filters-description').parents('.alert.alert-success').addClass('hidden');
+                    this.empty = true;
+                } else {
+                    $('#product-filters-description').parents('.alert.alert-success').removeClass('hidden');
+                    this.empty = false;
+                }
+            },
+            priceRangeInput: {
+                event: function() {
+                    $('[name="product_price_min"], [name="product_price_max"]').on('change', function() {
+                        window.OrderExport.helpText.productFilters.fill.priceRange();
+                    });
+                },
+                text: function() {
+                    var minValue = $('[name="product_price_min"]').val(),
+                        maxValue = $('[name="product_price_max"]').val(),
+                        result = [];
+
+                    if (minValue) {
+                        result.push(' starting at price of ');
+                        result.push($('<span class="label">').text(minValue));
+                    }
+
+                    if (maxValue) {
+                        if (result.length > 0) {
+                            result.push(' and');
+                        }
+                        result.push(' ending at price of ');
+                        result.push($('<span class="label">').text(maxValue));
+                    }
+
+                    if (result.length > 0) {
+                        result.unshift('Filter orders by products');
+                        result.push('.');
+
+                        if (window.OrderExport.helpText.productFilters.empty) {
+                            window.OrderExport.helpText.productFilters.checkEmpty();
+                        }
+                    } else {
+                        window.OrderExport.helpText.productFilters.checkEmpty();
+                    }
+
+                    return result;
+                }
+            },
+            titleContainInput: {
+                event: function() {
+                    $('#product-title-contains').on('change', '[name="product_title"]', function() {
+                        window.OrderExport.helpText.productFilters.fill.titleContain();
+                    });
+                },
+                text: function() {
+                    var titles = this.getTitles();
+
+                    if (titles.length == 0) {
+                        window.OrderExport.helpText.productFilters.checkEmpty();
+                        return '';
+                    }
+
+                    if (window.OrderExport.helpText.productFilters.empty) {
+                        window.OrderExport.helpText.productFilters.checkEmpty();
+                    }
+
+                    var result = [];
+                    if ($('[name="product_price_min"]').val() != '' && $('[name="product_price_max"]').val() != '') {
+                        result.push($('<br>'));
+                    }
+                    result.push('Your search will be restricted by products that contains the full or partial name(s): ');
+
+                    for (var i = 0, iLength = titles.length; i < iLength; i++) {
+                        var title = $('<span class="label">').text(titles[i]);
+
+                        if (i > 0) {
+                            result.push(', ');
+                        }
+                        result.push(title);
+                    }
+                    result.push('.');
+
+                    return result;
+                },
+                getTitles: function() {
+                    return $('[name="product_title"]').map(function(key, element) {
+                        var value = $(element).val();
+                        if (value) return value;
+                    }).get();
+                }
+            },
+            exactProductInput: {
+                event: function() {
+                    window.OrderExport.helpText.productFilters.fill.exactProduct();
+                },
+                text: function() {
+                    if (window.OrderExport.foundProducts.data.length == 0) {
+                        window.OrderExport.helpText.productFilters.checkEmpty();
+                        return ''
+                    } else {
+                        if (window.OrderExport.helpText.productFilters.empty) {
+                            window.OrderExport.helpText.productFilters.checkEmpty();
+                        }
+
+                        var result = [];
+                        if (window.OrderExport.helpText.productFilters.titleContainInput.getTitles().length == 0) {
+                            if ($('[name="product_price_min"]').val() != '' && $('[name="product_price_max"]').val() != '') {
+                                result.push($('<br>'));
+                            }
+
+                            result.push('Your search will be restricted by products from the list above.');
+                        } else {
+                            result.push($('<br>'));
+                            result.push('Or by exact products from the list above.');
+                        }
+
+                        return result;
+                    }
+                }
+            },
+            fill: {
+                priceRange: function() {
+                    window.OrderExport.helpText.productFilters.fill.common('.price-range',
+                        window.OrderExport.helpText.productFilters.priceRangeInput.text());
+
+                    window.OrderExport.helpText.productFilters.fill.titleContain();
+                },
+                titleContain: function() {
+                    window.OrderExport.helpText.productFilters.fill.common('.product-contains',
+                        window.OrderExport.helpText.productFilters.titleContainInput.text());
+
+                    window.OrderExport.helpText.productFilters.fill.exactProduct();
+                },
+                exactProduct: function() {
+                    window.OrderExport.helpText.productFilters.fill.common('.exact-product',
+                        window.OrderExport.helpText.productFilters.exactProductInput.text());
+                },
+                common: function(tagClass, newText) {
+                    var placeholder = $('#product-filters-description').find(tagClass);
+                    placeholder.text('');
+                    placeholder.append(newText);
+                },
+                execute: function() {
+                    window.OrderExport.helpText.productFilters.fill.priceRange();
+                    window.OrderExport.helpText.productFilters.fill.titleContain();
+                    window.OrderExport.helpText.productFilters.fill.exactProduct();
+                }
+            }
+        }
     }
 };
 
 $(function() {
-    window.OrderExportAdd.init();
+    window.OrderExport.init();
 });

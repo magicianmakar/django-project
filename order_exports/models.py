@@ -15,33 +15,34 @@ from order_exports.api import ShopifyOrderExportAPI
 order_export_done = Signal(providing_args=["instance"])
 
 
+# status, text, explanation
 ORDER_STATUS = (
-    ("open", "All open orders"),
-    ("any", "Any order status"),
-    ("closed", "Only closed orders"),
-    ("cancelled", "Only cancelled orders"),
+    ("open", "All open orders", " for |all open| orders"),
+    ("any", "Any order status", " for orders with |any status|"),
+    ("closed", "Only closed orders", " for only |closed| orders"),
+    ("cancelled", "Only cancelled orders", " for only |cancelled| orders"),
 )
 
 
 ORDER_FULFILLMENT_STATUS = (
-    ("unshipped,partial", "Unshipped or partially unshipped"),
-    ("unshipped", "Orders that have not yet been shipped"),
-    ("partial", "Partially shipped orders"),
-    ("shipped", "Orders that have been fulfilled"),
-    ("any", "Orders with any fulfillment status."),
+    ("unshipped,partial", "Unshipped or partially unshipped", " with |unshipped or partially unshipped| products"),
+    ("unshipped", "Orders that have not yet been shipped", " with only |unshipped| products"),
+    ("partial", "Partially shipped orders", " with |partially shipped| products"),
+    ("shipped", "Orders that have been fulfilled", " with all products |shipped|"),
+    ("any", "Orders with any fulfillment status.", ""),
 )
 
 
 ORDER_FINANCIAL_STATUS = (
-    ("paid", "Only paid orders"),
-    ("any", "All authorized, pending, and paid orders."),
-    ("authorized", "Only authorized orders"),
-    ("pending", "Only pending orders"),
-    ("partially_paid", "Only partially paid orders"),
-    ("refunded", "Only refunded orders"),
-    ("voided", "Only voided orders"),
-    ("partially_refunded", "Only partially_refunded orders"),
-    ("unpaid", "All authorized, or partially_paid orders."),
+    ("paid", "Only paid orders", " with |paid| finances"),
+    ("any", "All authorized, pending, and paid orders.", ""),
+    ("authorized", "Only authorized orders", " with |authorized| finances"),
+    ("pending", "Only pending orders", " with |all pending| finances"),
+    ("partially_paid", "Only partially paid orders", " with |partially paid| finances"),
+    ("refunded", "Only refunded orders", " with |refunded| finances"),
+    ("voided", "Only voided orders", " where finances have been |voided|"),
+    ("partially_refunded", "Only partially refunded orders", " where finances have been |partially refunded|"),
+    ("unpaid", "All authorized, or partially paid orders.", " where orders have |all authorized or partially paid| finances"),
 )
 
 
@@ -279,13 +280,13 @@ class OrderExport(models.Model):
 
         # Search for product titles
         if self.filters.product_title is not None:
-            titles = self.filters.product_title.split(',')
+            titles = json.loads(self.filters.product_title or '[]')
             if len(titles) > 0:
                 search_for_products = True
-                query = models.Q(shopifyorderline__title__contains=titles[0])
+                query = models.Q(shopifyorderline__title__icontains=titles[0])
 
                 for title in titles[1:]:
-                    query = query | models.Q(shopifyorderline__title__contains=title)
+                    query = query | models.Q(shopifyorderline__title__icontains=title)
 
         # Search for shopify exact found products
         if self.found_products.count() > 0:
@@ -320,6 +321,8 @@ class OrderExportQuery(models.Model):
     code = models.CharField(max_length=50, null=True, blank=True)
     params = models.TextField(default="")
     count = models.IntegerField(default=0)
+    found_order_ids = models.TextField(default='')
+    found_vendors = models.TextField(default='')
 
     @cached_property
     def params_dict(self):
@@ -351,7 +354,7 @@ class OrderExportLog(models.Model):
 
 @receiver(order_export_done)
 def generate_reports(sender, order_export_pk, **kwargs):
-    from leadgalaxy.tasks import generate_order_export
+    from leadgalaxy.tasks import generate_order_export, generate_order_export_query
     order_export = OrderExport.objects.get(pk=order_export_pk)
     order_export.url = ''
     order_export.sample_url = ''
@@ -363,6 +366,6 @@ def generate_reports(sender, order_export_pk, **kwargs):
 
         # Generate Sample Export
         api.generate_sample_export()
-        api.generate_query(send_email=False)
+        generate_order_export_query.delay(order_export_pk)
     else:
         generate_order_export.delay(order_export_pk)

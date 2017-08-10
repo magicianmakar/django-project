@@ -22,6 +22,7 @@
                                     <th>Description</th>
                                     <th>Schedule</th>
                                     <th>Receiver</th>
+                                    <th style="width: 25%;">Vendor(s) matching daily search</th>
                                     <th>Store</th>
                                     <th></th>
                                 </tr>
@@ -48,6 +49,7 @@
                                             -
                                         {% endif %}
                                     </td>
+                                    <td>{% if export.previous_day %}{{ export.query.found_vendors }}{% else %}-{% endif %}</td>
                                     <td>{{ export.store.title }}</td>
                                     <td>
                                 {% if request.user == export.store.user %}
