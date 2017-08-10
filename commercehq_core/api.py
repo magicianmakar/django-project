@@ -1005,55 +1005,65 @@ class CHQStoreApi(ApiResponseMixin, View):
             }
         }
 
-        # api_data = utils.order_track_fulfillment(**fulfillment_data)
-        fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
-        if fulfilment_id is None:
-            rep = store.request.post(
-                url=store.get_api_url('orders', fulfillment_data['order_id'], 'fulfilments'),
-                json={
+        while True:
+            # api_data = utils.order_track_fulfillment(**fulfillment_data)
+            fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+            if fulfilment_id is None:
+                rep = store.request.post(
+                    url=store.get_api_url('orders', fulfillment_data['order_id'], 'fulfilments'),
+                    json={
+                        "items": [{
+                            "id": fulfillment_data['line_id'],
+                            "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1,
+                        }]
+                    }
+                )
+
+                if rep.ok:
+                    for fulfilment in rep.json()['fulfilments']:
+                        for item in fulfilment['items']:
+                            caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, fulfillment_data['order_id'], item['id']),
+                                                 fulfilment['id'], timeout=604800)
+
+                    fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+
+            api_data = {
+                "data": [{
+                    "fulfilment_id": fulfilment_id,
+                    "tracking_number": fulfillment_data['source_tracking'],
+                    "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
                     "items": [{
                         "id": fulfillment_data['line_id'],
-                        "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1,
+                        "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1
                     }]
-                }
+                }],
+                "notify": (data.get('fulfill-notify-customer') == 'yes')
+            }
+
+            rep = store.request.post(
+                url=store.get_api_url('orders', data.get('fulfill-order-id'), 'shipments'),
+                json=api_data
             )
 
-            if rep.ok:
-                for fulfilment in rep.json()['fulfilments']:
-                    for item in fulfilment['items']:
-                        caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, fulfillment_data['order_id'], item['id']),
-                                             fulfilment['id'], timeout=604800)
+            try:
+                rep.raise_for_status()
+            except:
+                raven_client.captureException(
+                    level='warning',
+                    extra={'response': rep.text})
 
-                fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                if fulfilment_id and 'status fulfilled must be no less than' in rep.text.lower():
+                    store.request.delete(url=store.get_api_url('orders', fulfillment_data['order_id'], 'fulfilments', fulfilment_id))
+                    caches['orders'].delete('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                    continue
 
-        api_data = {
-            "data": [{
-                "fulfilment_id": fulfilment_id,
-                "tracking_number": fulfillment_data['source_tracking'],
-                "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
-                "items": [{
-                    "id": fulfillment_data['line_id'],
-                    "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1
-                }]
-            }],
-            "notify": (data.get('fulfill-notify-customer') == 'yes')
-        }
+                elif 'fulfilment id is invalid' in rep.text.lower():
+                    caches['orders'].delete('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                    continue
 
-        rep = store.request.post(
-            url=store.get_api_url('orders', data.get('fulfill-order-id'), 'shipments'),
-            json=api_data
-        )
+                return self.api_error('CommerceHQ API Error')
 
-        try:
-            rep.raise_for_status()
-        except:
-            raven_client.captureException(
-                level='warning',
-                extra={'response': rep.text})
-
-            return self.api_error('CommerceHQ API Error')
-
-        return self.api_success()
+            return self.api_success()
 
     def post_import_product(self, request, user, data):
         try:
