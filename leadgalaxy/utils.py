@@ -563,11 +563,11 @@ def duplicate_product(product, store=None):
                     values = variant['sku'].split(';')
                     if titles:
                         if values:
-                            variants_sku[titles[0]] = variant['sku']
+                            product_data['variants_sku'][titles[0]] = variant['sku']
                         else:
                             for k, v in titles:
                                 if values.length > k:
-                                    variants_sku[titles[k]] = values[k]
+                                    product_data['variants_sku'][titles[k]] = values[k]
                     else:
                         product_data['variants_sku'][variant['title']] = variant['sku']
 
