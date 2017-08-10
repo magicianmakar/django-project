@@ -659,7 +659,14 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
                 for item in fulfilment.get('items', []):
                     args = store.id, order['id'], item['id']
                     cache_data['chq_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
-                    cache_data['chq_quantity_{}_{}_{}'.format(*args)] = item['quantity']
+
+                    if item['quantity'] == 0:
+                        rep = store.request.delete(url=store.get_api_url('orders', order_track.order_id, 'fulfilments', fulfilment.get('id')))
+                        rep.raise_for_status()
+                        caches['orders'].delete('chq_fulfilments_{}_{}_{}'.format(*args))
+
+                    if 'chq_quantity_{}_{}_{}'.format(*args) not in cache_data and item['quantity']:
+                        cache_data['chq_quantity_{}_{}_{}'.format(*args)] = item['quantity']
 
     caches['orders'].set_many(cache_data, timeout=604800)
 

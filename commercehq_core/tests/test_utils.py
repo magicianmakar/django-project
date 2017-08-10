@@ -255,7 +255,7 @@ class CacheFulfillmentData(TestCase):
             caches['orders'].get('chq_quantity_{}_{}_{}'.format(self.store.id, 2, 4)),
         ]
 
-        self.assertEqual(quantities, [2, 4, 3, 5])
+        self.assertEqual(sorted(quantities), sorted([2, 4, 3, 5]))
         caches['orders'].delete_many(cache_keys)
 
 
