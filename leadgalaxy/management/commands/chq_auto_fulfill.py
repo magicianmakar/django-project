@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.core.cache import caches
 
 import requests
 import time
@@ -96,13 +97,16 @@ class Command(BaseCommand):
         store = order_track.store
         user = store.user
         url = store.get_api_url('orders', order_track.order_id, 'shipments')
-        api_data = utils.order_track_fulfillment(order_track=order_track, user_config=user.get_config())
+        api_data = None
 
         fulfilled = False
         tries = 3
 
         while tries > 0:
             try:
+                if not api_data:
+                    api_data = utils.order_track_fulfillment(order_track=order_track, user_config=user.get_config())
+
                 rep = store.request.post(url=url, json=api_data)
                 rep.raise_for_status()
                 fulfilled = 'shipments' in rep.json()
@@ -127,6 +131,12 @@ class Command(BaseCommand):
                         order_track.save()
 
                         return False
+                    elif 'fulfilment id is invalid' in e.response.text.lower():
+                        api_data = None
+                        caches['orders'].delete('chq_fulfilments_{}_{}_{}'.format(
+                            store.id, order_track.order_id, api_data['data'][0]['items'][0]['id']))
+
+                        continue
                     else:
                         raven_client.captureException(
                             level='warning',
