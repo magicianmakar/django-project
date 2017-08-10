@@ -670,18 +670,23 @@ def generate_order_export_query(self, order_export_id):
 def create_image_zip(self, images, product_id):
     try:
         product = ShopifyProduct.objects.get(pk=product_id)
-        filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product_id))
+        cache_key = 'image_zip_{}_{}'.format(product_id, utils.hash_list(images))
+        url = cache.get(cache_key)
+        if not url:
+            filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product_id))
 
-        with zipfile.ZipFile(filename, 'w') as images_zip:
-            for i, img_url in enumerate(images):
-                if img_url.startswith('//'):
-                    img_url = u'http:{}'.format(img_url)
+            with zipfile.ZipFile(filename, 'w') as images_zip:
+                for i, img_url in enumerate(images):
+                    if img_url.startswith('//'):
+                        img_url = u'http:{}'.format(img_url)
 
-                image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
-                images_zip.writestr(image_name, requests.get(img_url).content)
+                    image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                    images_zip.writestr(image_name, requests.get(img_url).content)
 
-        s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
-        url = utils.aws_s3_upload(s3_path, input_filename=filename)
+            s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
+            url = utils.aws_s3_upload(s3_path, input_filename=filename)
+
+            cache.set(cache_key, url, timeout=3600 * 24)
 
         product.store.pusher_trigger('images-download', {
             'success': True,
