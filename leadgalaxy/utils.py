@@ -978,7 +978,7 @@ def shopify_customer_address(order):
 
     if customer_address['country_code'] == 'CA':
         if customer_address.get('zip'):
-            customer_address['zip'] = re.sub(r'[\n\r\t ]', '', customer_address['zip']).strip()
+            customer_address['zip'] = re.sub(r'[\n\r\t ]', '', customer_address['zip']).upper().strip()
 
         if customer_address['province'] == 'Newfoundland':
             customer_address['province'] = 'Newfoundland and Labrador'
