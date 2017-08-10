@@ -1220,4 +1220,10 @@
 </script>
 {% endif %}
 
+{% if lead_dyno_record %}
+<script type="text/javascript">
+    LeadDyno.recordPurchase();
+</script>
+{% endif %}
+
 {% endblock %}

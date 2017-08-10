@@ -96,4 +96,6 @@ class PlanCheckoutView(TemplateView):
 
         user_login(request, user)
 
+        request.session['lead_dyno_record'] = True
+
         return HttpResponseRedirect('/')

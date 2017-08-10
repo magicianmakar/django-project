@@ -106,6 +106,7 @@ def index_view(request):
         'templates': templates,
         'markup_rules': markup_rules,
         'marktup_types': PRICE_MARKUP_TYPES,
+        'lead_dyno_record': request.session.pop('lead_dyno_record', False),
         'page': 'index',
         'breadcrumbs': ['Stores']
     })
