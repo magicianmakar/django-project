@@ -89,7 +89,7 @@ class StoresList(ListView):
         context = super(StoresList, self).get_context_data(**kwargs)
         can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
         is_stripe = self.request.user.profile.plan.is_stripe()
-        context['extra_stores'] = can_add and is_stripe and self.get_store_count() >= 1
+        context['extra_stores'] = can_add and is_stripe and self.get_store_count() >= 1 and total_allowed != -1
         context['breadcrumbs'] = ['Stores']
 
         return context
