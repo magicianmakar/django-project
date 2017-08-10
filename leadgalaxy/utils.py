@@ -1194,7 +1194,7 @@ def shipping_carrier(tracking_number, all_matches=False):
         'pattern': "^(R|CP|E|L)\\w+CN$"
     }, {
         'name': "FedEx",
-        'pattern': "^(\\d{12}$)|^(\\d{15}$)|^(96\\d{20}$)|^(7489\\d{16}$)"
+        'pattern': "^(\\d{12}$)|^(\\d{15}$)|^(96\\d{20}$)|^(7489\\d{16}$)|^(6129\\d{16}$)"
     }, {
         'name': "Post Danmark",
         'pattern': "\\d{3}5705983\\d{10}|DK$"
