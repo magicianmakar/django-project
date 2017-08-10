@@ -131,12 +131,14 @@ class Command(BaseCommand):
                         order_track.save()
 
                         return False
+
                     elif 'fulfilment id is invalid' in e.response.text.lower():
-                        api_data = None
                         caches['orders'].delete('chq_fulfilments_{}_{}_{}'.format(
                             store.id, order_track.order_id, api_data['data'][0]['items'][0]['id']))
 
+                        api_data = None
                         continue
+
                     else:
                         raven_client.captureException(
                             level='warning',
