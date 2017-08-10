@@ -505,7 +505,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 json={
                     "items": [{
                         "id": line_id,
-                        "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id)),
+                        "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id)) or 1,
                     }]
                 }
             )
@@ -1013,7 +1013,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 json={
                     "items": [{
                         "id": fulfillment_data['line_id'],
-                        "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)),
+                        "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1,
                     }]
                 }
             )
@@ -1033,7 +1033,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                 "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
                 "items": [{
                     "id": fulfillment_data['line_id'],
-                    "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                    "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1
                 }]
             }],
             "notify": (data.get('fulfill-notify-customer') == 'yes')

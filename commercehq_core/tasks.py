@@ -270,7 +270,7 @@ def product_export(store_id, product_id, user_id, publish=None):
             # 'seo_title': p['title'],
 
             'vendor': p['vendor'],
-            'tags': p['tags'].split(','),
+            'tags': p.get('tags', '').split(','),
             'type': p['type'],
             'shipping_weight': weight,
 
@@ -380,7 +380,7 @@ def product_update(product_id, data):
         p = product.retrieve()
         p['title'] = data['title']
         p['type'] = data['type']
-        p['tags'] = data['tags'].split(',')
+        p['tags'] = data.get('tags', '').split(',')
         p['vendor'] = data['vendor']
         p['is_draft'] = not data['published']
         p['price'] = data['price']

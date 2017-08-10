@@ -661,8 +661,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
                     cache_data['chq_fulfilments_{}_{}_{}'.format(*args)] = fulfilment['id']
 
                     if item['quantity'] == 0:
-                        rep = store.request.delete(url=store.get_api_url('orders', order_track.order_id, 'fulfilments', fulfilment.get('id')))
-                        rep.raise_for_status()
+                        store.request.delete(url=store.get_api_url('orders', order['id'], 'fulfilments', fulfilment.get('id')))
                         caches['orders'].delete('chq_fulfilments_{}_{}_{}'.format(*args))
 
                     if 'chq_quantity_{}_{}_{}'.format(*args) not in cache_data and item['quantity']:
@@ -705,7 +704,7 @@ def order_track_fulfillment(order_track, user_config=None):
             json={
                 "items": [{
                     "id": order_track.line_id,
-                    "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id)),
+                    "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id)) or 1,
                 }]
             }
         )
