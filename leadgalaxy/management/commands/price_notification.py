@@ -31,6 +31,8 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
+        self.ignored_users = [16088, 10052, 10889, 13366, 8869, 6680, 8699, 11765, 14651, 12755, 10142]
+
         action = options['action'][0]
 
         if not options['plan_id']:
@@ -87,6 +89,12 @@ class Command(BaseCommand):
         products_count = len(products)
 
         if products_count:
+            if user.id in self.ignored_users:
+                self.stdout.write(u'Ignore {} product for user: {}'.format(products_count, user.username))
+
+                products.update(price_notification_id=-7)
+                return
+
             self.stdout.write(u'{} webhooks to {} product for user: {}'.format(
                 action.title(), products_count, user.username), self.style.HTTP_INFO)
 
