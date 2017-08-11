@@ -341,9 +341,10 @@
                                         {% endif %}
                                         <br>
                                         {{order.customer_address.address1}}<br>
-                                        {{order.customer_address.address2}}
 
-                                        {% if order.customer_address.address2 %}<br>{% endif %}
+                                        {% if order.customer_address.address2 %}
+                                        {{order.customer_address.address2}}<br>
+                                        {% endif %}
 
                                         {{order.customer_address.city}},
                                             {{order.customer_address.province_code|default:''}}
