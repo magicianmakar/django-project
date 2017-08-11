@@ -182,6 +182,9 @@ class ProductChangeEvent():
         update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
             self.product.get_shopify_id()), api=True)
         try:
+            if data and data['product'].get('variants') == []:
+                del data['product']['variants']
+
             r = requests.put(update_endpoint, json=data)
 
             if not r.ok:
@@ -213,10 +216,13 @@ class ProductChangeEvent():
                             self.save_revision = True
                     else:
                         # Try to find variants from previous revision
-                        revision = self.get_previous_product_revision('Vendor', True)
                         revision_variants = []
+                        revision = self.get_previous_product_revision('Vendor', True)
                         if revision is not None:
-                            revision_variants = json.loads(revision.data)['product']['variants']
+                            try:
+                                revision_variants = json.loads(revision.data)['product']['variants']
+                            except:
+                                revision_variants = []
 
                         for idx, variant in enumerate(data['product']['variants']):
                             # look for previous revision variant or use old_inventory_quantity
