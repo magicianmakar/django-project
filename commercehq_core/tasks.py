@@ -501,6 +501,9 @@ def create_image_zip(self, images, product_id):
 
         with ZipFile(filename, 'w') as images_zip:
             for i, img_url in enumerate(images):
+                if img_url.startswith('//'):
+                    img_url = u'http:{}'.format(img_url)
+
                 image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
                 images_zip.writestr(image_name, requests.get(img_url).content)
 
