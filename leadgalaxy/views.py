@@ -2593,6 +2593,8 @@ def orders_view(request):
                         api_error = 'API Rate Limit'
                     elif e.response.status_code == 404:
                         api_error = 'Store Not Found'
+                    elif e.response.status_code == 402:
+                        api_error = 'Your Shopify Store is not on a paid plan'
                     else:
                         api_error = 'Unknown Error {}'.format(e.response.status_code)
                         raven_client.captureException()
