@@ -380,6 +380,16 @@ def get_shipping_carrier_name(store, carrier_id):
             return carrier['title']
 
 
+def get_order_line_fulfillment_status(order_line):
+    for meta in order_line.get('meta_data', []):
+        if meta['key'] == 'Fulfillment Status':
+            return meta['value']
+
+
+def has_order_line_been_fulfilled(order_line):
+    return get_order_line_fulfillment_status(order_line) == 'Fulfilled'
+
+
 def cache_fulfillment_data(order_tracks, orders_max=None):
     """
     Caches order data of given `WooOrderTrack` instances
@@ -407,22 +417,16 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
             cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
 
             for item in order.get('line_items', []):
-                fulfilled = False
-                for meta in item.get('meta_data', []):
-                    if meta['key'] == 'Fulfillment Status' and meta['value'] == 'Fulfilled':
-                        fulfilled = True
-                        break
-
                 args = store.id, order['id'], item['id']
                 cache_key = 'woo_auto_fulfilled_order_{}_{}_{}'.format(*args)
-                cache_data[cache_key] = fulfilled
+                cache_data[cache_key] = has_order_line_been_fulfilled(item)
 
     cache.set_many(cache_data, timeout=3600)
 
     return cache_data.keys()
 
 
-def has_order_line_been_fulfilled(order_track):
+def cached_order_line_fulfillment_status(order_track):
     args = order_track.store.id, order_track.order_id, order_track.line_id
 
     return cache.get('woo_auto_fulfilled_order_{}_{}_{}'.format(*args))
@@ -464,6 +468,101 @@ def order_track_fulfillment(order_track, user_config=None):
     }
 
     return data
+
+
+def order_id_from_name(store, order_name, default=None):
+    ''' Get Order ID from Order Name '''
+
+    order_rx = store.user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
+    order_number = re.findall(order_rx, order_name)
+    if not order_number:
+        return default
+
+    r = store.wcapi.get('orders?{}'.format(urllib.urlencode({'search': order_name})))
+
+    if r.ok:
+        orders = r.json()
+
+        if len(orders):
+            return orders.pop()['id']
+
+    return default
+
+
+def get_tracking_products(store, tracker_orders, per_page=50):
+    ids = []
+    for i in tracker_orders:
+        ids.append(str(i.product_id))
+
+    if not len(ids):
+        return tracker_orders
+
+    params = {'include': ','.join(ids), 'per_page': per_page}
+    r = store.wcapi.get('products?{}'.format(urllib.urlencode(params)))
+    r.raise_for_status()
+
+    products = {}
+    for product in r.json():
+        products[product['id']] = product
+
+    new_tracker_orders = []
+    for tracked in tracker_orders:
+        tracked.product = product = products.get(tracked.product_id)
+        if product:
+            image = next(iter(product['images']), {})
+            tracked.line['image'] = image.get('src')
+            variation_id = tracked.line.get('variation_id')
+            if variation_id:
+                path = 'products/{}/variations/{}'.format(product['id'], variation_id)
+                r = store.wcapi.get(path)
+                r.raise_for_status()
+                tracked.variation = r.json()
+                variation_image = tracked.variation.get('image', {}).get('src')
+                if 'placeholder.png' not in variation_image:
+                    tracked.line['image'] = variation_image
+
+        new_tracker_orders.append(tracked)
+
+    return new_tracker_orders
+
+
+def get_tracking_orders(store, tracker_orders, per_page=50):
+    ids = []
+    for i in tracker_orders:
+        ids.append(str(i.order_id))
+
+    if not len(ids):
+        return tracker_orders
+
+    params = {'include': ','.join(ids), 'per_page': per_page}
+    r = store.wcapi.get('orders?{}'.format(urllib.urlencode(params)))
+    r.raise_for_status()
+
+    orders = {}
+    lines = {}
+
+    for order in r.json():
+        orders[order['id']] = order
+        for line in order['line_items']:
+            line['image'] = line.get('image', {}).get('src', '')
+            lines['{}-{}'.format(order['id'], line['id'])] = line
+
+    new_tracker_orders = []
+    for tracked in tracker_orders:
+        tracked.order = orders.get(tracked.order_id)
+        tracked.line = lines.get('{}-{}'.format(tracked.order_id, tracked.line_id))
+
+        if tracked.line:
+            fulfillment_status = (get_order_line_fulfillment_status(tracked.line) or '').lower()
+            tracked.line['fulfillment_status'] = fulfillment_status
+
+            if tracked.woocommerce_status != fulfillment_status:
+                tracked.woocommerce_status = fulfillment_status
+                tracked.save()
+
+        new_tracker_orders.append(tracked)
+
+    return new_tracker_orders
 
 
 class WooListQuery(object):

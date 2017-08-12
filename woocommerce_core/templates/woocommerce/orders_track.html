@@ -1,20 +1,21 @@
-{% extends "base.html" %}
+{% extends "base_woocommerce_core.html" %}
 
 {% load static %}
 {% load template_helper %}
 {% load perms_helper %}
 {% load url_tools %}
 {% load compress %}
+{% load cache %}
 
 {% block main-container %}
 
     <div class="tabs-container">
         <ul class="nav nav-tabs">
-            {% for item in user.profile.get_shopify_stores %}
+            {% for item in user.profile.get_woo_stores %}
                 {% if store == item or item.id|stringformat:"i" == request.GET.store %}
                     <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}
-                    <li class=""><a href="/orders/track?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>
@@ -32,12 +33,6 @@
                                 <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle" aria-expanded="false">
                                     <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
-
-                                    <li>
-                                        <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
-                                            <i class="fa fa-refresh"></i> Sync Selected Orders
-                                        </a>
-                                    </li>
 
                                     <li>
                                         <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
@@ -63,21 +58,16 @@
                                 <i class="fa fa-refresh"></i> Sync with Aliexpress</button>
                         </div>
                     </div>
-                    <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm"
-                        {% if request.COOKIES.orders_filter != 'true' %}
-                              style="display:none"
-                        {% endif %}
-                    >
-
-                    <div class="row" style="display:flex;align-items:center;">
+                    <form method="get" class="filter-form m-t-sm" style="display:none;">
+                    <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Query:{{request.COOKIES.orders_filter}}:</label>
+                            <label>Query:</label>
                         </div>
                         <div class="col-md-4">
                             <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
                         </div>
                     </div>
-                    <div class="row" style="display:flex;align-items:center;">
+                    <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Tracking #:</label>
                         </div>
@@ -89,9 +79,9 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row" style="display:flex;align-items:center;">
+                    <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Shopify Status:</label>
+                            <label>WooCommerce Status:</label>
                         </div>
                         <div class="col-md-2">
                             <select name="fulfillment" class="form-control" style="padding: 6px 0px">
@@ -102,9 +92,9 @@
                         </div>
                     </div>
 
-                    <div class="row" style="display:flex;align-items:center;">
+                    <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>WooCommerce Status:</label>
+                            <label>Aliexpress Status:</label>
                         </div>
                         <div class="col-md-2">
                             <select name="reason" class="form-control" style="padding: 6px 0px">
@@ -143,24 +133,7 @@
                         </div>
                     </div>
 
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Order Errors:</label>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="errors" class="form-control" style="padding: 6px 0px" data-placeholder="Errors Filter" multiple>
-                                <option value=""></option>
-                                <option {% if 'none' in errors %}selected="selected"{% endif %} value="none">No Errors</option>
-                                <option {% if 'any' in errors %}selected="selected"{% endif %} value="any">Any Errors</option>
-                                <option {% if 'pending' in errors %}selected="selected"{% endif %} value="pending">Pending Errors Verification</option>
-                                <option {% if '1' in errors %}selected="selected"{% endif %} value="1">Customer Name</option>
-                                <option {% if '2' in errors %}selected="selected"{% endif %} value="2">Customer City</option>
-                                <option {% if '4' in errors %}selected="selected"{% endif %} value="4">Customer Country</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row" style="display:flex;align-items:center;">
+                    <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Archived:</label>
                         </div>
@@ -173,7 +146,7 @@
                         </div>
                     </div>
 
-                    <div class="row m-t">
+                    <div class="row">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
                             {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}
@@ -195,7 +168,7 @@
                               </div>
                           </th>
                           <th  class="no-wrap" style="width:26%">
-                              <a href="{% url_toggle 'sort' '-order,order' %}">Shopify Order {% sort_icon 'sort' 'order' %}</a></th>
+                              <a href="{% url_toggle 'sort' '-order,order' %}">WooCommerce Order {% sort_icon 'sort' 'order' %}</a></th>
                           <th class="no-wrap"><a href="{% url_toggle 'sort' '-source,source' %}">Aliexpress Order {% sort_icon 'sort' 'source' %}</a></th>
                           <th class="no-wrap"><a href="{% url_toggle 'sort' '-status,status' %}">Aliexpress Status {% sort_icon 'sort' 'status' %}</a></th>
                           <th class="no-wrap"><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
@@ -206,25 +179,24 @@
                       </thead>
                       <tbody>
                         {% for item in orders %}
-                        <tr id="{{item.id}}" {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}>
+                        <tr id="{{item.id}}">
                             <td style="min-width:30px">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <img class="no-img no-img-sm unveil visible-md-inline visible-lg-inline"
-                                            store="{{item.store_id}}" product="{{item.line.product_id}}" variant="{{item.line.variant_id}}"
                                             src="{% static 'img/blank.gif' %}"
-                                            data-src="/api/product-variant-image?store={{item.store_id}}&product={{item.line.product_id}}&variant={{item.line.variant_id}}&redirect=1&thumb=1"
+                                            data-src="{{item.line.image}}"
                                             style="width:64px" />
-                                            <input type="checkbox" class="icheck order-track" name="track" value="{{item.id}}"
-                                                track-id="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
+                                            <input type="checkbox" class="icheck order-track" name="track"
+                                                   value="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <a class="itooltip" href="{{item.get_shopify_link}}" target="_blank" title="{{item.line.title}}">
-                                    <span class="badge badge-primary">{{item.order.name}}</span>
+                                <a class="itooltip" href="{{item.get_woocommerce_link}}" target="_blank" title="{{item.line.title}}">
+                                    <span class="badge badge-primary">#{{item.order_id}}</span>
                                     <span class="m-l-xs visible-lg-inline">
-                                        {{item.line.title|truncatewords:10}}
+                                        {{item.line.name|truncatewords:10}}
                                     </span>
                                 </a>
                             </td>
@@ -241,21 +213,15 @@
                             <td class="no-wrap">{% date_humanize item.created_at %}</td>
                             <td class="no-wrap">{% date_humanize item.updated_at %}</td>
                             <td class="no-wrap">
-                                {% if item.errors > 0 %}
-                                <span class="badge badge-warning" qtip-my="right center" qtip-at="left center"
-                                    qtip-tooltip="{{item.get_errors_details|join:'<br>'}}">
-                                    {{item.get_errors|join:", "}}
-                                </span>
-                                {% endif %}
-
                                 {% if item.line.fulfillment_status != 'fulfilled' %}
                                 <button class="btn btn-success btn-xs fulfill-btn itooltip"
                                         store="{{item.store_id}}"
                                         order-id="{{item.order.id}}"
                                         line-id="{{item.line.id}}"
+                                        product-id="{{item.line.product_id}}"
                                         quantity="{{item.line.quantity}}"
                                         tracking-number="{{item.source_tracking|default:''}}"
-                                        title="Fulfill this item in Shopify"
+                                        title="Fulfill this item in WooCommerce"
                                         >Fulfill</button>
                                 {% else %}
                                     <span class="badge badge-primary">
@@ -295,7 +261,10 @@
         </div>
     </div>
 
-{% include 'partial/fulfillment_modal.html' with notify=True only %}
+{% cache 600 woo_shipping_carriers2 store.id %}
+{% include 'woocommerce/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+{% endcache %}
+
 {% include 'partial/tracking_update_modal.html' with store=store only %}
 
 {% endblock %}
@@ -319,8 +288,8 @@
 
 {% compress js %}
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
-    <script src="{% static 'shopified/js/orders_track.js' %}" type="text/javascript"></script>
-    <script src="{% static 'shopified/js/orders_track_update.js' %}" type="text/javascript"></script>
+    <script src="{% static 'woocommerce/js/orders_track.js' %}" type="text/javascript"></script>
+    <script src="{% static 'woocommerce/js/orders_track_update.js' %}" type="text/javascript"></script>
 {% endcompress %}
 
 {% endblock %}

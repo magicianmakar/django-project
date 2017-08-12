@@ -1,3 +1,4 @@
+import re
 import urllib
 import urlparse
 import json
@@ -9,12 +10,15 @@ from requests.exceptions import HTTPError
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.views.generic import View
+from django.core import serializers
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.urlresolvers import reverse
+from django.core.cache import cache
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import F
 
 from shopified_core.exceptions import ProductExportException
 from shopified_core.mixins import ApiResponseMixin
@@ -24,6 +28,7 @@ from shopified_core.utils import (
     safeFloat,
     get_domain,
     remove_link_query,
+    orders_update_limit,
 )
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack
@@ -664,6 +669,75 @@ class WooStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def get_order_fulfill(self, request, user, data):
+        if int(data.get('count', 0)) >= 30:
+            raise self.api_error('Not found', status=404)
+
+        # Get Orders marked as Ordered
+
+        orders = []
+
+        all_orders = data.get('all') == 'true'
+        unfulfilled_only = data.get('unfulfilled_only') != 'false'
+
+        shopify_orders = WooOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                              .defer('data') \
+                                              .order_by('updated_at')
+
+        if unfulfilled_only:
+            shopify_orders = shopify_orders.filter(source_tracking='') \
+                                           .exclude(source_status='FINISH')
+
+        if user.is_subuser:
+            shopify_orders = shopify_orders.filter(store__in=user.profile.get_shopify_stores(flat=True))
+
+        if data.get('store'):
+            shopify_orders = shopify_orders.filter(store=data.get('store'))
+
+        if not data.get('order_id') and not data.get('line_id') and not all_orders:
+            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
+            limit = cache.get(limit_key)
+
+            if limit is None:
+                limit = orders_update_limit(orders_count=shopify_orders.count())
+
+                if limit != 20:
+                    cache.set(limit_key, limit, timeout=3600)
+
+            if data.get('forced') == 'true':
+                limit = limit * 2
+
+            shopify_orders = shopify_orders[:limit]
+
+        elif data.get('all') == 'true':
+            shopify_orders = shopify_orders.order_by('created_at')
+
+        if data.get('order_id') and data.get('line_id'):
+            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
+
+        if data.get('count_only') == 'true':
+            return self.api_success({'pending': shopify_orders.count()})
+
+        shopify_orders = serializers.serialize('python', shopify_orders,
+                                               fields=('id', 'order_id', 'line_id',
+                                                       'source_id', 'source_status',
+                                                       'source_tracking', 'created_at'))
+
+        for i in shopify_orders:
+            fields = i['fields']
+            fields['id'] = i['pk']
+
+            if all_orders:
+                fields['created_at'] = arrow.get(fields['created_at']).humanize()
+
+            orders.append(fields)
+
+        if not data.get('order_id') and not data.get('line_id'):
+            WooOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
+                                 .update(check_count=F('check_count') + 1, updated_at=timezone.now())
+
+        return self.api_success(orders, safe=False)
+
     def post_order_fulfill(self, request, user, data):
         try:
             store = WooStore.objects.get(id=int(data.get('store')))
@@ -759,5 +833,64 @@ class WooStoreApi(ApiResponseMixin, View):
             'line_id': line_id,
             'product_id': product_id,
             'source_id': source_id})
+
+        return self.api_success()
+
+    def post_order_fullfill_hide(self, request, user, data):
+        order = WooOrderTrack.objects.get(id=data.get('order'))
+        permissions.user_can_edit(user, order)
+
+        order.hidden = data.get('hide') == 'true'
+        order.save()
+
+        return self.api_success()
+
+    def post_order_fulfill_update(self, request, user, data):
+        if data.get('store'):
+            store = WooStore.objects.get(pk=safeInt(data['store']))
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied()
+
+        order = WooOrderTrack.objects.get(id=data.get('order'))
+        permissions.user_can_edit(user, order)
+
+        order.source_status = data.get('status')
+        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.status_updated_at = timezone.now()
+
+        try:
+            order_data = json.loads(order.data)
+            if 'aliexpress' not in order_data:
+                order_data['aliexpress'] = {}
+        except:
+            order_data = {'aliexpress': {}}
+
+        order_data['aliexpress']['end_reason'] = data.get('end_reason')
+
+        try:
+            order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
+        except:
+            pass
+
+        order.data = json.dumps(order_data)
+
+        order.save()
+
+        return self.api_success()
+
+    def delete_order_fulfill(self, request, user, data):
+        order_id, line_id = int(data.get('order_id')), int(data.get('line_id'))
+        orders = WooOrderTrack.objects.filter(user=user.models_user,
+                                              order_id=order_id,
+                                              line_id=line_id)
+        if not len(orders) > 0:
+            return self.api_error('Order not found.', status=404)
+
+        for order in orders:
+            permissions.user_can_delete(user, order)
+            order.delete()
+            store, order_id, line_id = order.store, order.order_id, order.line_id
+            data = {'store_id': store.id, 'order_id': order_id, 'line_id': line_id}
+            store.pusher_trigger('order-source-id-delete', data)
 
         return self.api_success()

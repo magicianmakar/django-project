@@ -2,6 +2,7 @@ import json
 
 import arrow
 
+from django.db.models import Q
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.utils.decorators import method_decorator
@@ -15,6 +16,7 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     aws_s3_context,
     safeInt,
+    clean_query_id,
 )
 
 from .models import WooStore, WooProduct, WooOrderTrack
@@ -24,6 +26,10 @@ from .utils import (
     get_store_from_request,
     WooListPaginator,
     WooListQuery,
+    order_id_from_name,
+    get_tracking_orders,
+    get_tracking_products,
+    get_order_line_fulfillment_status,
 )
 
 
@@ -325,11 +331,6 @@ class OrdersList(ListView):
 
         return self.products.get(product_id)
 
-    def get_item_fulfillment_status(self, item):
-        for meta in item.get('meta_data', []):
-            if meta['key'] == 'Fulfillment Status':
-                return meta['value']
-
     def get_context_data(self, **kwargs):
         context = super(OrdersList, self).get_context_data(**kwargs)
         context['store'] = store = self.get_store()
@@ -379,7 +380,7 @@ class OrdersList(ListView):
                     item['product'] = WooProduct.objects.filter(source_id=product_id).first()
                     item['image'] = next(iter(product['images']), {}).get('src')
 
-                item['fulfillment_status'] = self.get_item_fulfillment_status(item)
+                item['fulfillment_status'] = get_order_line_fulfillment_status(item)
                 if item['fulfillment_status'] == 'Fulfilled':
                     order['placed_orders'] += 1
 
@@ -395,3 +396,110 @@ class OrdersList(ListView):
                 order['fulfillment_status'] = 'Partially Fulfilled'
             else:
                 order['fulfillment_status'] = None
+
+
+class OrdersTrackList(ListView):
+    model = WooOrderTrack
+    paginator_class = SimplePaginator
+    template_name = 'woocommerce/orders_track.html'
+    context_object_name = 'orders'
+    paginate_by = 20
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        if not self.request.user.can('orders.use'):
+            return render(self.request, 'upgrade.html')
+
+        order_map = {
+            'order': 'order_id',
+            'source': 'source_id',
+            'status': 'source_status',
+            'tracking': 'source_tracking',
+            'add': 'created_at',
+            'reason': 'source_status_details',
+            'update': 'status_updated_at',
+        }
+
+        for k, v in order_map.items():
+            order_map['-' + k] = '-' + v
+
+        sorting = self.request.GET.get('sort', '-update')
+        sorting = order_map.get(sorting, 'status_updated_at')
+
+        query = self.request.GET.get('query')
+        tracking_filter = self.request.GET.get('tracking')
+        fulfillment_filter = self.request.GET.get('fulfillment')
+        hidden_filter = self.request.GET.get('hidden')
+        completed = self.request.GET.get('completed')
+        source_reason = self.request.GET.get('reason')
+
+        store = self.get_store()
+
+        orders = WooOrderTrack.objects.select_related('store') \
+                                      .filter(user=self.request.user.models_user, store=store) \
+                                      .defer('data')
+        if query:
+            order_id = order_id_from_name(store, query)
+
+            if order_id:
+                query = str(order_id)
+
+            orders = orders.filter(Q(order_id=clean_query_id(query)) |
+                                   Q(source_id=clean_query_id(query)) |
+                                   Q(source_tracking__icontains=query))
+
+        if tracking_filter == '0':
+            orders = orders.filter(source_tracking='')
+        elif tracking_filter == '1':
+            orders = orders.exclude(source_tracking='')
+
+        if fulfillment_filter == '1':
+            orders = orders.filter(woocommerce_status='fulfilled')
+        elif fulfillment_filter == '0':
+            orders = orders.exclude(woocommerce_status='fulfilled')
+
+        if hidden_filter == '1':
+            orders = orders.filter(hidden=True)
+        elif not hidden_filter or hidden_filter == '0':
+            orders = orders.exclude(hidden=True)
+
+        if completed == '1':
+            orders = orders.exclude(source_status='completed')
+
+        if source_reason:
+            orders = orders.filter(source_status_details=source_reason)
+
+        return orders.order_by(sorting)
+
+    def get_context_data(self, **kwargs):
+        context = super(OrdersTrackList, self).get_context_data(**kwargs)
+
+        context['store'] = self.get_store()
+        context['orders'] = get_tracking_orders(self.get_store(), context['orders'], self.paginate_by)
+        context['orders'] = get_tracking_products(self.get_store(), context['orders'], self.paginate_by)
+        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+
+        context['breadcrumbs'] = [{
+            'title': 'Orders',
+            'url': reverse('woo:orders_list')
+        }, {
+            'title': 'Tracking',
+            'url': reverse('woo:orders_track')
+        }, {
+            'title': context['store'].title,
+            'url': '{}?store={}'.format(reverse('woo:orders_list'), context['store'].id)
+        }]
+
+        return context
+
+    def get_store(self):
+        if not hasattr(self, 'store'):
+            self.store = get_store_from_request(self.request)
+
+        return self.store

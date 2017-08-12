@@ -71,7 +71,7 @@ class Command(BaseCommand):
             try:
                 counter['need_fulfill'] += 1
 
-                if utils.has_order_line_been_fulfilled(order):
+                if utils.cached_order_line_fulfillment_status(order):
                     self.write(u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
                     order.woocommerce_status = 'fulfilled'
                     order.save()

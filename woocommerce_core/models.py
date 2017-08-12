@@ -583,5 +583,25 @@ class WooOrderTrack(models.Model):
         else:
             return None
 
+    def get_source_status(self):
+        status_map = {
+            "PLACE_ORDER_SUCCESS": "Awaiting Payment",
+            "IN_CANCEL": "Awaiting Cancellation",
+            "WAIT_SELLER_SEND_GOODS": "Awaiting Shipment",
+            "SELLER_PART_SEND_GOODS": "Partial Shipment",
+            "WAIT_BUYER_ACCEPT_GOODS": "Awaiting delivery",
+            "WAIT_GROUP_SUCCESS": "Pending operation success",
+            "FINISH": "Order Completed",
+            "IN_ISSUE": "Dispute Orders",
+            "IN_FROZEN": "Frozen Orders",
+            "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
+            "RISK_CONTROL": "Payment being verified",
+            "IN_PRESELL_PROMOTION": "Promotion is on",
+        }
+
+        return status_map.get(self.source_status)
+
+    get_source_status.admin_order_field = 'source_status'
+
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
