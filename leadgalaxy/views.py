@@ -1227,6 +1227,14 @@ def product_mapping(request, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
     permissions.user_can_edit(request.user, product)
 
+    if not product.default_supplier:
+        suppliers = product.get_suppliers()
+        if len(suppliers):
+            product.set_default_supplier(suppliers[0], commit=True)
+        else:
+            messages.error(request, 'You have to add at least one supplier before using Variants Mapping')
+            return HttpResponseRedirect('/product/{}'.format(product.id))
+
     current_supplier = utils.safeInt(request.GET.get('supplier'))
     if not current_supplier and product.default_supplier:
         current_supplier = product.default_supplier.id
@@ -1331,6 +1339,14 @@ def mapping_supplier(request, product_id):
         for var in i['variant_ids']:
             images[var] = i['src']
 
+    if not product.default_supplier:
+        suppliers = product.get_suppliers()
+        if len(suppliers):
+            product.set_default_supplier(suppliers[0], commit=True)
+        else:
+            messages.error(request, 'You have to add at least one supplier before using Variants Mapping')
+            return HttpResponseRedirect('/product/{}'.format(product.id))
+
     default_supplier_id = product.default_supplier.id
     for i, v in enumerate(shopify_product['variants']):
         supplier = suppliers_map.get(str(v['id']), {'supplier': default_supplier_id, 'shipping': {}})
@@ -1377,6 +1393,14 @@ def mapping_supplier(request, product_id):
 def mapping_bundle(request, product_id):
     product = get_object_or_404(ShopifyProduct, id=product_id)
     permissions.user_can_edit(request.user, product)
+
+    if not product.default_supplier:
+        suppliers = product.get_suppliers()
+        if len(suppliers):
+            product.set_default_supplier(suppliers[0], commit=True)
+        else:
+            messages.error(request, 'You have to add at least one supplier before using Variants Mapping')
+            return HttpResponseRedirect('/product/{}'.format(product.id))
 
     shopify_id = product.get_shopify_id()
     if not shopify_id:
