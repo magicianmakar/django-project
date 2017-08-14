@@ -2818,12 +2818,12 @@ def orders_view(request):
                             'product': b_product,
                             'supplier': b_supplier,
                             'shipping_method': b_shipping_method,
-                            'quantity': b['quantity'],
+                            'quantity': b['quantity'] * el['quantity'],
                             'data': b
                         })
 
                         bundle_data.append({
-                            'quantity': b['quantity'],
+                            'quantity': b['quantity'] * el['quantity'],
                             'product_id': b_product.id,
                             'source_id': b_supplier.get_source_id(),
                             'variants': b_variants,
