@@ -1836,6 +1836,18 @@ class PriceMarkupRule(models.Model):
         super(PriceMarkupRule, self).save(*args, **kwargs)
 
 
+class AdminEvent(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+    event_type = models.CharField(max_length=30, blank=True, null=True)
+    data = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 def user_is_subsuser(self):
     return self.profile.is_subuser
 

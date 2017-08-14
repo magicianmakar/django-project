@@ -1615,7 +1615,7 @@ def get_shipping_info(request):
 
 @login_required
 def acp_users_list(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser and not request.user.is_staff:
         raise PermissionDenied()
 
     random_cache = 0
@@ -1645,19 +1645,56 @@ def acp_users_list(request):
             )
         users = users.distinct()
 
+        if not request.user.is_superuser:
+            if len(users) > 10:
+                limited_users = []
+
+                for i in users:
+                    limited_users.append(i)
+
+                    if len(limited_users) > 10:
+                        break
+
+                users = limited_users
+
+        profiles = UserProfile.objects.filter(user__in=users)
+
+        AdminEvent.objects.create(user=request.user, event_type='user_search', data=json.dumps({'query': q}))
+
+    else:
+        if not request.user.is_superuser:
+            users = User.objects.none()
+
+        profiles = UserProfile.objects.all()
+
+    charges = []
+    subscribtions = []
+    if len(users) == 1 and users[0].have_stripe_billing():
+        for i in users[0].stripe_customer.get_charges():
+            charges.append({
+                'id': i.id,
+                'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
+                'date_str': arrow.get(i.created).humanize(),
+                'status': i.status,
+                'failure_message': i.failure_message,
+                'amount': u'${:0.2f}'.format(i.amount / 100.0),
+                'amount_refunded': u'${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
+            })
+
+        for i in stripe.Subscription.list(customer=users[0].stripe_customer.customer_id).data:
+            subscribtions.append(i)
+
     plans = GroupPlan.objects.all()
     bundles = FeatureBundle.objects.all()
-    profiles = UserProfile.objects.all()
-
-    if q:
-        profiles = profiles.filter(user__in=users)
 
     return render(request, 'acp/users_list.html', {
         'users': users,
         'plans': plans,
         'bundles': bundles,
         'profiles': profiles,
-        'users_count': users.count(),
+        'users_count': len(users),
+        'last_charges': charges,
+        'subscribtions': subscribtions,
         'random_cache': random_cache,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',

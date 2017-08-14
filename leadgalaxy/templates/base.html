@@ -223,7 +223,7 @@
                 </li>
                 {% endif %}
 
-                {% if request.user.is_superuser %}
+                {% if request.user.is_superuser or request.user.is_staff %}
                 <li {% if 'acp' in page %}class="active"{% endif %}>
                     <a href="#">
                         <i class="fa fa-cogs"></i>
@@ -234,25 +234,24 @@
                         <li {% if page == 'acp_users_list' %}class="active"{% endif %}>
                             <a href="{% url 'acp_users_list' %}">Users
                             <span class="label label-info pull-right"
-                                  onclick="javascript:setTimeout(function(){var q=prompt('Query Dropified Users');if(q.length) {window.location.href='/acp/users/list?q='+q;}},10);return false;">Search</span>
+                                  onclick="javascript:setTimeout(
+                                    function(){
+                                        var q=prompt('Query Dropified Users');
+                                        if(q.length) {
+                                            window.location.href='/acp/users/list?q=' + encodeURIComponent(q.trim());
+                                        }
+                                    }, 10);
+                                    return false;">Search</span>
                             </a>
                         </li>
+
+                        {% if request.user.is_superuser %}
                         <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans</a></li>
                         <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Analytics</a></li>
                         <li {% if page == 'acp_pages' %}class="active"{% endif %}><a href="/pages/">Pages</a></li>
                         <li><a href="/admin/article/sidebarlink/">Sidebar Links</a></li>
                         <li><a href="/admin/leadgalaxy/featurebundle/">Bundles</a></li>
-                    </ul>
-                </li>
-                {% elif user|can:'leadgalaxy.add_planregistration' %}
-                    <li {% if 'acp' in page %}class="active"{% endif %}>
-                    <a href="#">
-                        <i class="fa fa-cogs"></i>
-                        <span class="nav-label">Admin</span>
-                        <span class="fa arrow"></span>
-                    </a>
-                    <ul class="nav nav-second-level collapse">
-                        <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans &amp; Groups</a></li>
+                        {% endif %}
                     </ul>
                 </li>
                 {% endif %}

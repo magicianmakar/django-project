@@ -238,6 +238,14 @@ class CaptchaCreditAdmin(admin.ModelAdmin):
     search_fields = USER_SEARCH_FIELDS
 
 
+@admin.register(AdminEvent)
+class AdminEventAdmin(admin.ModelAdmin):
+    list_display = ('user', 'event_type', 'created_at')
+    raw_id_fields = ('user',)
+    list_filter = ('event_type',)
+    search_fields = USER_SEARCH_FIELDS + ('event_type', 'data')
+
+
 admin.site.register(ClippingMagicPlan)
 admin.site.register(CaptchaCreditPlan)
 admin.site.register(PriceMarkupRule)

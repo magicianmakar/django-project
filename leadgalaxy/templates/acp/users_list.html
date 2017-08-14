@@ -22,6 +22,7 @@
 
             <div class="ibox-content">
                 <table class="table  dataTables">
+                    {% if users_count %}
                     <thead>
                         <tr>
                             <th>Username</th>
@@ -37,18 +38,23 @@
                             <th style="width:25%">Actions</th>
                         </tr>
                     </thead>
+                    {% endif %}
                     <tbody>
-                    {% cache 600 acp_users_table user.id users_count request.GET.plan request.GET.q random_cache %}
                     {% for item in users %}
                         <tr>
-                            <td><a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
+                            <td>
+                                {% if not user.is_superuser %}
+                                    <a href="{% url 'acp_users_list' %}?q={{item.email|urlencode}}">{{item.username}}</a></td>
+                                {% else %}
+                                    <a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
+                                {% endif %}
                             <td>{{item.email}}</td>
                             {% if users_count == 1 %}
                             <td>
                                 {{item.profile.plan.title}}
                                 {% if item.is_subuser %}
                                 <br><b>{{item.profile.subuser_parent.profile.plan.title}}</b><br>
-                                Parent: <a href="/admin/leadgalaxy/userprofile/{{item.profile.subuser_parent.profile.id}}"
+                                Parent: <a href="{% url 'acp_users_list' %}?q={{item.profile.subuser_parent.email}}"
                                            target="_blank">
                                         {{item.profile.subuser_parent.username}}</a>
                                 {% endif %}
@@ -68,36 +74,109 @@
                             {% endif %}
                             <td>{{item.date_joined|date}}</td>
                             <td>
+                                {% if user.is_superuser %}
                                 <a href="#" class="btn btn-primary btn-outline btn-xs user-profile-btn" user-id="{{item.id}}">Profile</a>
                                 <a href="/hijack/{{item.id}}/" class="btn btn-success btn-outline btn-xs m-r-xs">Login with</a>
+                                {% endif %}
 
                                 <div class="btn-group">
                                         <a class="btn btn-default btn-outline btn-xs m-l-xs dropdown-toggle" data-toggle="dropdown" href="#">
-                                            More <span class="caret"></span>
+                                            Options <span class="caret"></span>
                                         </a>
                                         <ul class="dropdown-menu dropdown-user">
+                                            {% if user.is_superuser %}
                                             <li><a href="/admin/leadgalaxy/planregistration/?q={{item.email|urlencode}}" target="_blank">Registration Links</a></li>
                                             <li><a href="/admin/leadgalaxy/planpayment/?q={{item.email|urlencode}}" target="_blank">Payments</a></li>
                                             <li><a href="/admin/leadgalaxy/shopifystore/?q={{item.email|urlencode}}" target="_blank">Stores</a></li>
                                             <li><a href="/admin/stripe_subscription/extrastore/?q={{item.email|urlencode}}" target="_blank">Extra Stores</a></li>
                                             <li class="divider"></li>
                                             <li><a href="https://dashboard.stripe.com/search?query={{item.email|urlencode}}" target="_blank">Stripe</a></li>
+                                            {% endif %}
                                             <li><a href="#" class="intercom-btn" data-email="{{item.email}}" target="_blank">Intercom</a></li>
                                             <li class="divider"></li>
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
                                             <li><a href="#" class="add-bundle-btn" user-id="{{item.id}}">Add Bundle</a></li>
                                             <li><a href="#" class="allow-trial-btn" user-id="{{item.id}}">Allow Free Trial</a></li>
+                                            {% if user.is_superuser %}
                                             <li class="divider"></li>
                                             <li><a href="text-danger" class="clear-sessions btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Sessions</a></li>
                                             <li><a href="text-danger" class="clear-access-tokens btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Access Tokens</a></li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                             </td>
                         </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center" style="border-top:none">
+                            <i>No User Found</i>
+                        </td>
+                   </tr>
                     {% endfor %}
-                    {% endcache %}
                     </tbody>
                 </table>
+
+                {% if subscribtions %}
+                    <hr/>
+                    <h2>Subscribtions:</h2>
+                    <table class="table  dataTables">
+                        <thead>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in subscribtions %}
+                            <tr>
+                                <td>{{ i.plan.name }}</td>
+                                <td>{{ i.status }}</td>
+                                <td>
+                                    <a href="text-danger" class="btn btn-xs btn-danger cancel-subscription-btn"
+                                        user-id="{{users.0.id}}" charge-id="{{i.id}}">Cancel Subscription</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
+                {% if last_charges %}
+                    <hr/>
+                    <h2>Last Charges:</h2>
+                    <table class="table  dataTables">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Refunded</th>
+                                <th>Status</th>
+                                <th>Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in last_charges %}
+                            <tr>
+                                <td><span class="itooltip" title="{{i.date}}">{{ i.date_str }}</span></td>
+                                <td>{{ i.amount }}</td>
+                                <td>{{ i.amount_refunded|default:'' }}</td>
+                                <td>
+                                    {{ i.status|title }}
+
+                                    {% if i.failure_message %}
+                                    Failure Message: {{i.failure_message|title}}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="text-danger" class="btn btn-xs btn-warning refund-charge-btn" user-id="{{users.0.id}}" charge-id="{{i.id}}">Refund</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
             </div>
         </div>
     </div>
@@ -379,6 +458,88 @@
                 };
 
                 window.open('https://app.intercom.io/a/apps/k9cb5frr/users/segments/all:' + btoa(JSON.stringify(data)), '_blank');
+            });
+
+            $('.cancel-subscription-btn').click(function (e) {
+                e.preventDefault();
+
+                swal({
+                    title: "Cancel Subscription",
+                    text: "Are you sure you want to cancel this user subscription?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false || !inputValue) return false;
+
+                    $.ajax({
+                        url: '/api/stripe-cancel-subscription',
+                        type: 'POST',
+                        data: {
+                            id: $(e.target).attr('charge-id'),
+                            user: $(e.target).attr('user-id'),
+                        },
+                    }).done(function (data) {
+                        toastr.success('Reloading page...', 'Subscription Canceled');
+                        swal.close();
+
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    }).fail(function(data) {
+                        displayAjaxError('Cancel Subscription', data);
+                    });
+                });
+            });
+
+            $('.refund-charge-btn').click(function (e) {
+                e.preventDefault();
+
+                swal({
+                    title: "Refund Charge",
+                    text: "Amount to Refund:",
+                    type: "input",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    inputPlaceholder: "Amount",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false) return false;
+                    inputValue = inputValue.trim();
+
+                    if (inputValue === "") {
+                        swal.showInputError("You need to enter an amount.");
+                        return false;
+                    }
+
+                    inputValue = parseFloat(inputValue)
+                    if (!inputValue) {
+                        swal.showInputError("The entered amount is invalid.");
+                        return false;
+                    }
+
+                    $.ajax({
+                        url: '/api/stripe-refund-charge',
+                        type: 'POST',
+                        data: {
+                            id: $(e.target).attr('charge-id'),
+                            user: $(e.target).attr('user-id'),
+                            amount: inputValue
+                        },
+                    }).done(function (data) {
+                        toastr.success('$' + inputValue + ' Refunded', 'Amount Refunded');
+                        swal.close();
+
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    }).fail(function(data) {
+                        displayAjaxError('Charge Refund', data);
+                    });
+                });
             });
 
             handleEvents();

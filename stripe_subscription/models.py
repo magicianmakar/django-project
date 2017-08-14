@@ -119,6 +119,9 @@ class StripeCustomer(models.Model):
 
         return invoices
 
+    def get_charges(self):
+        return stripe.Charge.list(limit=10, customer=self.customer_id).data
+
 
 class StripePlan(models.Model):
     class Meta:

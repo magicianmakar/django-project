@@ -735,7 +735,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_error("YouZign API Error")
 
     def post_change_plan(self, request, user, data):
-        if not user.is_superuser:
+        if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
@@ -743,6 +743,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if data.get('allow_trial'):
             target_user.stripe_customer.can_trial = True
             target_user.stripe_customer.save()
+
+            AdminEvent.objects.create(user=user, event_type='allow_trial', data=json.dumps({
+                'user_email': target_user.email,
+                'user_id': target_user.id}))
+
             return self.api_success()
 
         if target_user.is_recurring_customer():
@@ -761,6 +766,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         target_user.profile.save()
 
+        AdminEvent.objects.create(user=user, event_type='change_plan', data=json.dumps({
+            'new_plan': plan.title,
+            'user_email': target_user.email,
+            'user_id': target_user.id}))
+
         return self.api_success({
             'plan': {
                 'id': plan.id,
@@ -769,7 +779,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         })
 
     def post_add_bundle(self, request, user, data):
-        if not user.is_superuser:
+        if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
@@ -777,7 +787,55 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if target_user.is_subuser:
             return self.api_error('Sub User Account', status=422)
+
+        AdminEvent.objects.create(user=user, event_type='add_bundle', data=json.dumps({
+            'bundle': bundle.title,
+            'user_email': target_user.email,
+            'user_id': target_user.id}))
+
         target_user.profile.bundles.add(bundle)
+
+        return self.api_success()
+
+    def post_stripe_refund_charge(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+
+        amount = utils.safeFloat(data.get('amount'))
+        if not amount:
+            return self.api_error('Invalid Refund Amount')
+
+        charge = stripe.Charge.retrieve(id=data.get('id'))
+
+        AdminEvent.objects.create(user=user, event_type='refund_charge', data=json.dumps({
+            'amount': amount,
+            'charge': charge.id,
+            'user_email': target_user.email,
+            'user_id': target_user.id}))
+
+        try:
+            charge.refund(amount=int(amount * 100))
+        except stripe.InvalidRequestError as e:
+            raven_client.captureException(level='warning')
+            return self.api_error(e.message)
+
+        return self.api_success()
+
+    def post_stripe_cancel_subscription(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        sub = stripe.Subscription.retrieve(id=data.get('id'))
+
+        AdminEvent.objects.create(user=user, event_type='subscription_cancel', data=json.dumps({
+            'subscription': sub.id,
+            'user_email': target_user.email,
+            'user_id': target_user.id}))
+
+        sub.delete()
 
         return self.api_success()
 
