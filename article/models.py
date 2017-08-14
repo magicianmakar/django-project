@@ -41,9 +41,6 @@ class Article(models.Model):
     def __unicode__(self):
         return self.title
 
-    def comments_count(self):
-        return Comment.objects.filter(article=self).count()
-
     def get_status(self):
         return PUBLISH_STAT[int(self.stat)][1]
 

@@ -30,25 +30,6 @@ class ArticleAdmin(admin.ModelAdmin):
         return '/pages/{}'.format(obj.slug)
 
 
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'stat', 'created_at', 'updated_at',)
-    list_filter = ('stat', 'author')
-    date_hierarchy = 'created_at'
-    ordering = ('created_at', 'updated_at', 'stat')
-    search_fields = ('title', 'body')
-    raw_id_fields = ('author', 'article')
-
-    fieldsets = (
-        ('General', {
-            'fields': ('title', 'author', 'stat', 'article', 'parent')
-        }),
-        ('Blog content', {
-            'description': 'HTML tags are accepeted',
-            'fields': ('body', )
-        }),
-    )
-
-
 class SidebarLinkAdmin(admin.ModelAdmin):
     list_display = ('title', 'order', 'link')
     search_fields = ('title', 'link')
