@@ -1841,6 +1841,7 @@ class AdminEvent(models.Model):
         ordering = ['-created_at']
 
     user = models.ForeignKey(User)
+    target_user = models.ForeignKey(User, null=True, related_name='target_user')
     event_type = models.CharField(max_length=30, blank=True, null=True)
     data = models.TextField(null=True, blank=True)
 

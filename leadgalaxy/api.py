@@ -744,9 +744,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             target_user.stripe_customer.can_trial = True
             target_user.stripe_customer.save()
 
-            AdminEvent.objects.create(user=user, event_type='allow_trial', data=json.dumps({
-                'user_email': target_user.email,
-                'user_id': target_user.id}))
+            AdminEvent.objects.create(
+                user=user,
+                target_user=target_user,
+                event_type='allow_trial', data='{}')
 
             return self.api_success()
 
@@ -766,10 +767,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         target_user.profile.save()
 
-        AdminEvent.objects.create(user=user, event_type='change_plan', data=json.dumps({
-            'new_plan': plan.title,
-            'user_email': target_user.email,
-            'user_id': target_user.id}))
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='change_plan',
+            data=json.dumps({'new_plan': plan.title}))
 
         return self.api_success({
             'plan': {
@@ -788,10 +790,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if target_user.is_subuser:
             return self.api_error('Sub User Account', status=422)
 
-        AdminEvent.objects.create(user=user, event_type='add_bundle', data=json.dumps({
-            'bundle': bundle.title,
-            'user_email': target_user.email,
-            'user_id': target_user.id}))
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='add_bundle',
+            data=json.dumps({'bundle': bundle.title}))
 
         target_user.profile.bundles.add(bundle)
 
@@ -809,11 +812,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         charge = stripe.Charge.retrieve(id=data.get('id'))
 
-        AdminEvent.objects.create(user=user, event_type='refund_charge', data=json.dumps({
-            'amount': amount,
-            'charge': charge.id,
-            'user_email': target_user.email,
-            'user_id': target_user.id}))
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='refund_charge',
+            data=json.dumps({'amount': amount, 'charge': charge.id}))
 
         try:
             charge.refund(amount=int(amount * 100))
@@ -830,10 +833,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         target_user = User.objects.get(id=data.get('user'))
         sub = stripe.Subscription.retrieve(id=data.get('id'))
 
-        AdminEvent.objects.create(user=user, event_type='subscription_cancel', data=json.dumps({
-            'subscription': sub.id,
-            'user_email': target_user.email,
-            'user_id': target_user.id}))
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='subscription_cancel',
+            data=json.dumps({'subscription': sub.id}))
 
         sub.delete()
 

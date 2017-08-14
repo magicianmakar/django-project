@@ -1659,7 +1659,11 @@ def acp_users_list(request):
 
         profiles = UserProfile.objects.filter(user__in=users)
 
-        AdminEvent.objects.create(user=request.user, event_type='user_search', data=json.dumps({'query': q}))
+        AdminEvent.objects.create(
+            user=request.user,
+            event_type='user_search',
+            target_user=users[0] if len(users) == 1 else None,
+            data=json.dumps({'query': q}))
 
     else:
         if not request.user.is_superuser:
