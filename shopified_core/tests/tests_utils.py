@@ -5,11 +5,13 @@ from django.test import TestCase
 from mock import Mock
 from collections import OrderedDict
 from django.core.cache import cache, caches
+from django.contrib.auth.models import User
 
 from shopified_core.utils import (
     app_link,
     order_data_cache,
     order_phone_number,
+    unique_username,
     hash_url_filename
 )
 
@@ -166,6 +168,36 @@ class UtilsTestCase(TestCase):
         self.assertEqual(len(data), 2)
         self.assertIn(data[0], [orders['order_1_222_333333'], orders['order_1_222_444444']])
         self.assertIn(data[1], [orders['order_1_222_333333'], orders['order_1_222_444444']])
+
+    def test_unique_username(self):
+        username = unique_username()
+        self.assertEqual(username, 'user')
+        User.objects.create(username=username)
+
+        username = unique_username()
+        self.assertEqual(username, 'user1')
+        User.objects.create(username=username)
+
+        username = unique_username('john')
+        self.assertEqual(username, 'john')
+        User.objects.create(username=username)
+
+        username = unique_username('john@example.com')
+        self.assertEqual(username, 'john1')
+        User.objects.create(username=username)
+
+        username = unique_username('John@example.com')
+        self.assertEqual(username, 'john2')
+        User.objects.create(username=username)
+
+        username = unique_username('John')
+        self.assertEqual(username, 'john3')
+        User.objects.create(username=username)
+
+        for i in range(30):
+            username = unique_username('john')
+            self.assertEqual(username, 'john%d' % (4 + i))
+            User.objects.create(username=username)
 
 
 class ShippingHelperTestCase(TestCase):

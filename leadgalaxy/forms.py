@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
 
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission
-from shopified_core.utils import login_attempts_exceeded, unlock_account_email
+from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username
 
 
 class BsErrorList(ErrorList):
@@ -60,15 +60,7 @@ class RegisterForm(forms.ModelForm):
 
     def clean_username(self):
         try:
-            username = self.clean_email().split('@')[0]
-            assert username, 'Email is not set'
-
-            n = 1
-            while User.objects.filter(username__iexact=username).exists():
-                username = u'{}{}'.format(username, n)
-                n += 1
-
-            return username
+            return unique_username(self.clean_email())
 
         except AssertionError as e:
             raise forms.ValidationError(e.message)
@@ -115,14 +107,9 @@ class RegisterForm(forms.ModelForm):
     def save(self, commit=True):
         user = super(RegisterForm, self).save(commit=False)
 
-        username = self.cleaned_data["email"].split('@')[0]
+        username = unique_username(self.cleaned_data["email"])
+
         fullname = self.cleaned_data['fullname'].split(' ')
-
-        n = 1
-        while User.objects.filter(username__iexact=username).exists():
-            username = u'{}{}'.format(username, n)
-            n += 1
-
         if len(fullname):
             user.first_name = fullname[0]
             user.last_name = u' '.join(fullname[1:])

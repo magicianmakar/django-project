@@ -16,6 +16,7 @@ from requests_oauthlib import OAuth2Session
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
+from shopified_core.utils import unique_username
 
 from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks, get_plan
@@ -222,11 +223,7 @@ def callback(request):
 
         shop_info = shopify.Shop.current()
         username = shop.split('.')[0]
-        n = 1
-
-        while User.objects.filter(username__iexact=username).exists():
-            username = '{}{}'.format(username, n)
-            n += 1
+        username = unique_username(username)
 
         user = User.objects.create(
             username=username,

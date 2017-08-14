@@ -46,6 +46,7 @@ from shopified_core.utils import (
     send_email_from_template,
     version_compare,
     get_mimetype,
+    unique_username,
     order_data_cache
 )
 
@@ -789,13 +790,10 @@ def webhook(request, provider, option):
         try:
             email = request.POST['Email']
             fullname = request.POST['Name'].title().split(' ')
-            username = email.split('@')[0]
-            password = get_random_string(12)
 
-            n = 1
-            while User.objects.filter(username__iexact=username).exists():
-                username = '{}{}'.format(username, n)
-                n += 1
+            username = unique_username(email)
+
+            password = get_random_string(12)
 
             raven_client.captureMessage('InstaPage Registration',
                                         level='warning',

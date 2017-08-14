@@ -9,6 +9,7 @@ from django.db.models.signals import post_save
 import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.utils import unique_username
 from stripe_subscription.stripe_api import stripe
 from leadgalaxy.models import User, UserProfile, GroupPlan, userprofile_creation
 
@@ -31,7 +32,8 @@ class PlanCheckoutView(TemplateView):
         error = None
 
         email = request.POST['stripeEmail']
-        username = email.split('@')[0]
+        username = unique_username(email)
+
         fullname = request.POST['stripeBillingName'].split(' ')
 
         n = 1
