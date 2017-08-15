@@ -165,7 +165,7 @@
                                     {{ i.status|title }}
 
                                     {% if i.failure_message %}
-                                    Failure Message: {{i.failure_message|title}}
+                                    - Reason: {{i.failure_message|title}}
                                     {% endif %}
                                 </td>
                                 <td>
@@ -317,7 +317,7 @@
             var user_id = $(this).attr('user-id');
             swal({
                 title: "Allow Free Trial",
-                text: 'Allow user to have an other trial subscribtion?',
+                text: 'Allow user to have an other trial subscription?',
                 type: "warning",
                 showCancelButton: true,
                 closeOnCancel: true,
