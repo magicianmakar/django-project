@@ -1440,7 +1440,6 @@ function clippingmagicEditImage(data, image) {
 
 var PusherSubscription = {
     init: function() {
-        alert('INIT');
         if (!window.pusher || !window.channel) {
             window.pusher = new Pusher(config.sub_conf.key);
             window.channel = window.pusher.subscribe(config.sub_conf.channel);
