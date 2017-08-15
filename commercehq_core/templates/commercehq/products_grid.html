@@ -98,8 +98,18 @@
                                     </div>
                                     <div class="product-desc">
                                         <span class="product-price">
-                                            {% money_format item.price %}
+
                                         </span>
+                                        <span class="product-price">
+                                            {% if item.parsed.price_range %}
+                                                {% money_format item.parsed.price_range.0 %}
+                                                -
+                                                {% money_format item.parsed.price_range.1 %}
+                                            {% else %}
+                                                {% money_format item.price %}
+                                            {% endif %}
+                                        </span>
+
                                         <small class="text-muted">{{item.parsed.type}}</small>
                                         {% if item.have_supplier %}
                                         <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">

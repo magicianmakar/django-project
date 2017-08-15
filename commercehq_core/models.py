@@ -274,7 +274,19 @@ class CommerceHQProduct(models.Model):
             if i['name'] == 'Description':
                 product['description'] = i['text']
 
-        product['compare_at_price'] = product.get('compare_price')
+        if not product['is_multi']:
+            product['price'] = product.get('price')
+            product['compare_at_price'] = product.get('compare_price')
+        else:
+            prices = []
+            for v in product['variants']:
+                prices.append(v['price'])
+
+            if len(set(prices)) == 1:
+                product['price'] = prices[0]
+            else:
+                product['price_range'] = [min(prices), max(prices)]
+
         product['weight'] = product['shipping_weight']
         product['published'] = not product['is_draft']
         product['textareas'] = []
