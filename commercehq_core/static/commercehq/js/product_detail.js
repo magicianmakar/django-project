@@ -983,13 +983,19 @@ function launchEditor(id, src) {
 }
 
 var PusherSubscription = {
+    init: function() {
+        if (!window.pusher || !window.channel) {
+            window.pusher = new Pusher(config.sub_conf.key);
+            window.channel = window.pusher.subscribe(config.sub_conf.channel);
+        }
+    },
     imagesDownload: function() {
-        var pusher = new Pusher(config.sub_conf.key);
-        var channel = pusher.subscribe(config.sub_conf.channel);
-        channel.bind('images-download', function(data) {
+        this.init();
+
+        window.channel.bind('images-download', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                pusher.unsubscribe(config.sub_conf.channel);
+                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
@@ -1002,13 +1008,13 @@ var PusherSubscription = {
         });
     },
     pixlrEditor: function(imageId) {
-        var pusher = new Pusher(config.sub_conf.key);
-        var channel = pusher.subscribe(config.sub_conf.channel);
-        channel.bind('pixlr-editor', function(data) {
+        this.init();
+
+        window.channel.bind('pixlr-editor', function(data) {
             console.log(data.product, config.product_id);
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                pusher.unsubscribe(config.sub_conf.channel);
+                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
@@ -1031,6 +1037,8 @@ var PusherSubscription = {
 $('#download-images').on('click', function(e) {
     e.preventDefault();
 
+    PusherSubscription.imagesDownload();
+
     var btn = $(e.target);
     btn.bootstrapBtn('loading');
 
@@ -1041,7 +1049,6 @@ $('#download-images').on('click', function(e) {
             product: btn.attr('product')
         },
         success: function(result) {
-            PusherSubscription.imagesDownload();
         },
         error: function(data) {
             displayAjaxError('Images Download', data);

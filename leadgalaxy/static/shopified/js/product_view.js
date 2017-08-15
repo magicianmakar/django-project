@@ -1115,6 +1115,8 @@ function launchEditor(id, src) {
 $('#download-images').on('click', function(e) {
     e.preventDefault();
 
+    PusherSubscription.imagesDownload();
+
     var btn = $(e.target);
     btn.bootstrapBtn('loading');
 
@@ -1125,7 +1127,6 @@ $('#download-images').on('click', function(e) {
             product: btn.attr('product')
         },
         success: function(result) {
-            PusherSubscription.imagesDownload();
         },
         error: function(data) {
             displayAjaxError('Images Download', data);
@@ -1438,14 +1439,20 @@ function clippingmagicEditImage(data, image) {
 }
 
 var PusherSubscription = {
+    init: function() {
+        alert('INIT');
+        if (!window.pusher || !window.channel) {
+            window.pusher = new Pusher(config.sub_conf.key);
+            window.channel = window.pusher.subscribe(config.sub_conf.channel);
+        }
+    },
     imagesDownload: function() {
-        var pusher = new Pusher(config.sub_conf.key);
-        var channel = pusher.subscribe(config.sub_conf.channel);
+        this.init();
 
-        channel.bind('images-download', function(data) {
+        window.channel.bind('images-download', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                pusher.unsubscribe(config.sub_conf.channel);
+                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
@@ -1458,13 +1465,12 @@ var PusherSubscription = {
         });
     },
     pixlrEditor: function(imageId) {
-        var pusher = new Pusher(config.sub_conf.key);
-        var channel = pusher.subscribe(config.sub_conf.channel);
+        this.init();
 
-        channel.bind('pixlr-editor', function(data) {
+        window.channel.bind('pixlr-editor', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                pusher.unsubscribe(config.sub_conf.channel);
+                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
