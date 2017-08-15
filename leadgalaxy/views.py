@@ -2845,7 +2845,7 @@ def orders_view(request):
 
             order, customer_address = utils.shopify_customer_address(order)
 
-            if auto_orders and customer_address:
+            if auto_orders and customer_address and order['financial_status'] != 'pending':
                 try:
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
