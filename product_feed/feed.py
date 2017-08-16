@@ -116,7 +116,7 @@ class ProductFeed():
             variant_id = variant['id']
 
         if var_image and variant.get('image_id') in self.images_map:
-            image = self.images_map[variant_id['image_id']]
+            image = self.images_map[variant['image_id']]
 
         if self.revision == 1:
             self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
