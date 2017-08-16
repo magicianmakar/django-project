@@ -15,7 +15,7 @@ from leadgalaxy.models import User, UserProfile, GroupPlan, userprofile_creation
 
 
 class PlanCheckoutView(TemplateView):
-    template_name = 'checkout.html'
+    template_name = 'lifetime_checkout.html'
 
     def get_context_data(self, **kwargs):
         context = super(PlanCheckoutView, self).get_context_data(**kwargs)
