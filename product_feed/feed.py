@@ -88,17 +88,22 @@ class ProductFeed():
 
     def add_product(self, product):
         if len(product['variants']) and product.get('published_at'):
+            self.images_map = {}
+
+            for i in product['images']:
+                self.images_map[i['id']] = i['src']
+
             # Add the first variant with Product ID
             self._add_variant(product, product['variants'][0], variant_id=product['id'])
 
             if self.include_variants:
                 for variant in product['variants']:
-                    self._add_variant(product, variant)
+                    self._add_variant(product, variant, var_image=True)
 
                     if not self.all_variants:
                         break
 
-    def _add_variant(self, product, variant, variant_id=None):
+    def _add_variant(self, product, variant, variant_id=None, var_image=False):
         image = product.get('image')
         if image:
             image = image.get('src')
@@ -109,6 +114,9 @@ class ProductFeed():
 
         if variant_id is None:
             variant_id = variant['id']
+
+        if var_image and variant.get('image_id') in self.images_map:
+            image = self.images_map[variant_id['image_id']]
 
         if self.revision == 1:
             self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
