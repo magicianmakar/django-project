@@ -12,7 +12,7 @@
             style="display:flex"
         {% endif %}
     >
-    {% if item.shipping_method %}
+    {% if item.shipping_method and not order.pending_payment %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
             data-href="{% app_link 'orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
@@ -25,11 +25,16 @@
         </button>
 
     {% else %}
-        <button data-toggle="dropdown" class="btn {% if item.refunded %}btn-danger{% else %}btn-success{% endif %} btn-xs dropdown-toggle" aria-expanded="false">
+        <button data-toggle="dropdown" class="btn {% if item.refunded or order.pending_payment %}btn-danger{% else %}btn-success{% endif %} btn-xs dropdown-toggle" aria-expanded="false">
             Place Order
             {% if item.refunded %}
                 {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
             {% endif %}
+
+            {% if order.pending_payment %}
+                {% include 'partial/help_tooltip.html' with help="Auto Fulfill is disabled because payment is still pending" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
+            {% endif %}
+
             <span class="caret"></span></button>
     {% endif %}
 

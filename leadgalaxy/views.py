@@ -2734,6 +2734,8 @@ def orders_view(request):
         order['connected_lines'] = 0
         order['lines_count'] = len(order['line_items'])
         order['refunded_lines'] = []
+        order['pending_payment'] = (order['financial_status'] == 'pending' and
+                                    (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
 
         if type(order['refunds']) is list:
             for refund in order['refunds']:
@@ -2845,7 +2847,7 @@ def orders_view(request):
 
             order, customer_address = utils.shopify_customer_address(order)
 
-            if auto_orders and customer_address and order['financial_status'] != 'pending':
+            if auto_orders and customer_address and not order['pending_payment']:
                 try:
                     order_data = {
                         'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
