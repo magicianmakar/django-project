@@ -983,6 +983,11 @@ def shopify_customer_address(order):
         if customer_address['province'] == 'Newfoundland':
             customer_address['province'] = 'Newfoundland and Labrador'
 
+    if customer_address['country'] == 'United Kingdom':
+        if customer_address.get('zip'):
+            if not re.findall('^([0-9A-Za-z]{2,4}\s[0-9A-Za-z]{3})$', customer_address['zip']):
+                customer_address['zip'] = re.sub(r'(.+)([0-9A-Za-z]{3})$', r'\1 \2', customer_address['zip'])
+
     customer_address['name'] = ensure_title(customer_address['name'])
 
     if customer_address['company']:
