@@ -85,9 +85,9 @@
                   </div>
                 </div>
 
-                <h1 class="text-center">Congrats on your purchase of Dropified!</h1>
+                <h1 class="text-center">Congrats on your {% if plan_price %}subscription to{% else %}purchase of{% endif %} Dropified!</h1>
                 <h2 class="text-center" style="margin-bottom:45px;">
-                    You should be receiving an email confirmation of your purchase.
+                    You should be receiving an email confirmation of your {% if plan_price %}subscription{% else %}purchase{% endif %}.
                 </h2>
 
                 <h2>Here's what to do next:</h2>

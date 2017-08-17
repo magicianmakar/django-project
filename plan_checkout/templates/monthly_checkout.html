@@ -1,0 +1,202 @@
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+{% load perms_helper %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Dropified {{monthly_plan}} Subscription</title>
+
+        <style name="FontAwesome">
+            @font-face {
+              font-family: 'FontAwesome';
+              src: url('{% static "font-awesome/fonts/fontawesome-webfont.eot?v=4.6.3" %}');
+              src: url('{% static "font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.6.3" %}') format('embedded-opentype'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.woff2?v=4.6.3" %}') format('woff2'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.woff?v=4.6.3" %}') format('woff'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.ttf?v=4.6.3" %}') format('truetype'),
+                   url('{% static "font-awesome/fonts/fontawesome-webfont.svg?v=4.6.3#fontawesomeregular" %}') format('svg');
+              font-weight: normal;
+              font-style: normal;
+            }
+        </style>
+
+        {% compress css %}
+        <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+        <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+        <link href="{% static 'plan_checkout/checkout.css' %}" rel="stylesheet">
+        {% endcompress %}
+
+        <script type="text/javascript" src="https://static.leaddyno.com/js"></script>
+        <script>
+                LeadDyno.key = "be5d77f4d08a0aa53f3696f40f056889461cf5be";
+                LeadDyno.recordVisit();
+                LeadDyno.autoWatch();
+        </script>
+
+        {% include "partial/custom_tags.html" with disable_appcuse=True %}
+
+    </head>
+    <body>
+        <section class="zx-header">
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-4">
+                <div class="logo">
+                  <a href=""></a>
+                </div>
+              </div>
+              <div class="col-sm-8">
+                <div class="navigation">
+                  <!-- support -->
+                  <ul class="list-inline">
+                    <li>Need support? </li>
+                    <li><i class="fa fa-life-ring"></i> <a href="http://support.dropified.com/">Helpdesk</a></li>
+                    <li><i class="fa fa-envelope-o"></i> <a href="mailto:support@dropified.com">Email</a></li>
+                  </ul>
+                  <!-- support -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="zx-content">
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-8 main-content">
+                <!-- product name and desc -->
+                <div class="row description" style="margin-bottom: 30px; ">
+                    <div class="col-sm-4">
+                        <img src="{% static 'dropified-logo.png' %}"
+                            class="img-responsive img-product"
+                            style="">
+                    </div>
+                    <div class="col-sm-8">
+                        <h3 style="margin:9px 0 0">Dropified Monthly Access</h3>
+                        <p class="text-muted" style="white-space:nowrap;">Dropified <b>Monthly</b> <i>subscribtion</i> <span style="color:red">(Priceless)</span></p>
+                    </div>
+
+                    {% if ecom_jam %}
+                        <i class="fa fa-plus hidden-xs" style="position:absolute;left:130px;top:95px;font-size:25px;color:rgba(134, 135, 135, 0.73);"></i>
+                    {% endif %}
+                </div>
+
+                {% if ecom_jam %}
+                <div class="row description">
+                  <div class="col-sm-4">
+                    <img src="{% static 'plan_checkout/ecomjam.png' %}"
+                        class="img-responsive img-product"
+                        style="padding: 0;margin: -14px 0;">
+                  </div>
+                  <div class="col-sm-8">
+                    <h3 style="margin:9px 0 0">eCom Jam Training</h3>
+                    <p class="text-muted" style="white-space:nowrap;">The ability to have you own profitable online business <span style="color:red">(Priceless)</span></p>
+                  </div>
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                    <div class="wrapper wrapper-content">
+                      {% for message in messages %}
+                      <div class="alert
+                          {% if message.tags %}
+                              alert-{{ message.tags }}
+                              {% if message.tags == 'error' %}
+                                  alert-danger
+                              {% else %}
+                                  alert-{{ message.tags }}
+                              {% endif %}
+                          {% endif %}">
+                          {{ message|safe }}
+                      </div>
+                      {% endfor %}
+                    </div>
+                {% endif %}
+
+                  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                      <div class="panel panel-default">
+                        <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                            <div class="panel-body">
+                                <div class="payment">
+                                    <div class="well">
+                                      <table class="table">
+                                        <tbody>
+                                          <tr>
+                                            <td>Dropified {{monthly_plan}} Plan</td>
+                                            <td>${{monthly_price}} / Month</td>
+                                          </tr>
+                                        </tbody>
+                                        <tfoot>
+                                          <tr>
+                                            <td><strong>Total</strong></td>
+                                            <td><strong>${{monthly_price}} / Month</strong></td>
+                                          </tr>
+                                        </tfoot>
+                                      </table>
+                                    </div>
+
+                                    <form action="{{request.path}}?option={{monthly_price}}" method="POST">
+                                      <script
+                                        src="https://checkout.stripe.com/checkout.js"
+                                        class="stripe-button"
+                                        {% if request.GET.astmqp == 'EZbuXb7aLmtXV4bC' %}
+                                            data-key="{% app_setting 'STRIPE_TEST_PUBLIC_KEY' %}"
+                                        {% else %}
+                                            data-key="{% app_setting 'STRIPE_PUBLIC_KEY' %}"
+                                        {% endif %}
+                                        data-email="{{request.user.email|default:''}}"
+                                        data-amount="{{ monthly_price }}00"
+                                        data-name="Dropified"
+                                        data-description="${{monthly_price}} / Month"
+                                        data-image="{% static 'dropified-icon.png' %}"
+                                        data-billing-address="true"
+                                        data-locale="auto">
+                                      </script>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-sm-4 main-sidebar">
+                <div class="relative zx-badge hidden-xs">
+                    <p style="position: absolute;font-size: 18px;text-align: center;top: 22px;left: 0;right: 0;z-index: 1;color: #ffffff;padding: 0 50px;">
+                    Simplify &amp; Automate<br>
+                    Your DropShipping or Your Money Back!</p>
+                    <img src="{% static 'plan_checkout/money_back2.png' %}" class="img-responsive">
+                </div>
+                <div class="list">
+                  <h3 class="headline"><span >You are absolutely </span><span style="white-space:nowrap;">going to love Dropified!</span></h3>
+                  <ul>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Automates Product Research</li>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Automates Adding Products To Your Store</li>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Automates Fulfilling Customer Orders</li>
+                    <li style="white-space:nowrap"><i class="fa fa-check-circle-o"></i> Automates Scaling Your Business</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="za-overlay"></div>
+
+        {% compress js %}
+            <script src="{% static 'js/jquery.min.js' %}"></script>
+            <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+            <script type="text/javascript">
+                setInterval(function () {
+                    $('.stripe-button-el').addClass('btn btn-lg btn-block btn-primary')
+                        .removeClass('stripe-button-el')
+                        .text('Subscribe Now!')
+                        .css('white-space', 'normal');
+                }, 100);
+            </script>
+        {% endcompress %}
+    </body>
+</html>
