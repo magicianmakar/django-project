@@ -35,6 +35,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-sm-12 progress-table-row" style="display:none;height:300px;max-height:300px;overflow:auto;">
+                        <table class="table progress-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer" style="">
                 <button id="shopify-send-btn" class="btn btn-primary"
@@ -43,3 +58,20 @@
         </div>
     </div>
 </div>
+{% verbatim %}
+<script id="product-send-template" type="text/x-handlebars-template">
+    <tr>
+        <td>
+            {{#if success}}
+                <i class="fa fa-check-circle text-success"></i>
+            {{else}}
+                <i class="fa fa-times-circle text-danger"></i>
+            {{/if}}
+        </td>
+        <td>
+            <a href="/product/{{product.id}}" target="_blank">{{product.title}}</a>
+        </td>
+        <td>{{status}}</td>
+    </tr>
+</script>
+{% endverbatim %}

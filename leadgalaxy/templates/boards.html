@@ -51,7 +51,7 @@
     {% for item in board.products %}
     <div class="col-xs-3 col-md-3 ">
         <div class="ibox">
-            <div class="ibox-content product-box" product-id="{{item.id}}">
+            <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.product.title}}">
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
                     <label for="product_{{item.id}}"><img class="unveil"  src="{% static 'img/blank.gif' %}" data-src="{{item.images|first}}" style="width: 100%"></label>
@@ -171,6 +171,8 @@
 
 {% block extrajs %}
 {% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/boards.js' %}"></script>
 {% endcompress %}
 {% endblock %}

@@ -41,7 +41,7 @@
                     </thead>
                     <tbody>
                     {% for item in products %}
-                        <tr product-id="{{item.id}}">
+                        <tr product-id="{{item.id}}" product-title="{{item.product.title}}">
                             <!-- <td>
                                 <input class="item-select icheck" style="" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
                                 <label class="pull-left" for="product_{{item.id}}"></label>
@@ -131,6 +131,8 @@
 
 {% block extrajs %}
 {% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/products_table.js' %}"></script>
 {% endcompress %}
 {% endblock %}

@@ -40,16 +40,17 @@ function sendToShopify() {
     });
 
     if (products_ids.length) {
-        $('#modal-shopify-send').modal({backdrop: 'static', keyboard: false});v
+        $('#modal-shopify-send').modal({backdrop: 'static', keyboard: false});
     }
 }
 
 $('#shopify-send-btn').click(function(e) {
+    var btn = $(this);
+    btn.button('loading');
+    initializeShopifySendModal(btn);
+
     var products = [];
     var products_ids = [];
-
-    $('#modal-shopify-send .progress').show();
-    $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', true);
 
     $('.send-to-shopify').each(function(i, el) {
         if (el.checked) {
@@ -63,12 +64,10 @@ $('#shopify-send-btn').click(function(e) {
     });
 
     if (products.length === 0) {
-        //swal('Please select a product(s) first', '', "warning");
+        swal('Please select a product(s) first', '', "warning");
+        btn.button('reset');
         return;
     }
-
-    $('#modal-shopify-send').prop('total_sent_success', 0);
-    $('#modal-shopify-send').prop('total_sent_error', 0);
 
     $.ajax({
         url: '/api/products-info',
@@ -84,32 +83,8 @@ $('#shopify-send-btn').click(function(e) {
             return new P(function(resolve, reject) {
                 sendProductToShopify(data[el.product], $('#send-select-store').val(), el.product,
                     function(product, data, callback_data, req_success) {
-                        var total_sent_success = parseInt($('#modal-shopify-send').prop('total_sent_success'));
-                        var total_sent_error = parseInt($('#modal-shopify-send').prop('total_sent_error'));
-
-
-                        if (req_success && 'product' in data) {
-                            total_sent_success += 1;
-                            var chk_el = callback_data.element.find('input.item-select[type=checkbox]');
-                            chk_el.iCheck('uncheck');
-                            chk_el.parents('td').html('<span class="label label-success">Sent</span>');
-                        } else {
-                            total_sent_error += 1;
-                        }
-
-                        $('#modal-shopify-send').prop('total_sent_success', total_sent_success);
-                        $('#modal-shopify-send').prop('total_sent_error', total_sent_error);
-
-                        $('#modal-shopify-send .progress-bar-success').css('width', ((total_sent_success * 100.0) / products.length) + '%');
-                        $('#modal-shopify-send .progress-bar-danger').css('width', ((total_sent_error * 100.0) / products.length) + '%');
-
-                        if ((total_sent_success + total_sent_error) == products.length) {
-                            $('#modal-shopify-send .progress').removeClass('progress-striped active');
-                            $('#modal-shopify-send .modal-footer').hide();
-                        }
-
+                        setShopifySendModalProgress(products.length, callback_data, req_success, data);
                         resolve(product);
-
                     }, {
                         'element': el.element,
                         'product': el.product

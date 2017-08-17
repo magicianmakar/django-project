@@ -301,12 +301,10 @@ $('#smartboard-save-changes').click(function(e) {
 $('#shopify-send-btn').click(function(e) {
     var btn = $(this);
     btn.button('loading');
+    initializeShopifySendModal(btn);
 
     var products = [];
     var products_ids = [];
-
-    $('#modal-shopify-send .progress').show();
-    $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', true);
 
     $('input.item-select[type=checkbox]', currentBoardBox).each(function(i, el) {
         if (el.checked) {
@@ -325,9 +323,6 @@ $('#shopify-send-btn').click(function(e) {
         return;
     }
 
-    $('#modal-shopify-send').prop('total_sent_success', 0);
-    $('#modal-shopify-send').prop('total_sent_error', 0);
-
     $.ajax({
         url: '/api/products-info',
         type: 'GET',
@@ -342,31 +337,8 @@ $('#shopify-send-btn').click(function(e) {
             return new P(function(resolve, reject) {
                 sendProductToShopify(data[el.product], $('#send-select-store').val(), el.product,
                     function(product, data, callback_data, req_success) {
-                        var total_sent_success = parseInt($('#modal-shopify-send').prop('total_sent_success'));
-                        var total_sent_error = parseInt($('#modal-shopify-send').prop('total_sent_error'));
-
-
-                        if (req_success && 'product' in data) {
-                            callback_data.element.find('input.item-select[type=checkbox]').iCheck('uncheck');
-
-                            total_sent_success += 1;
-                        } else {
-                            total_sent_error += 1;
-                        }
-
-                        $('#modal-shopify-send').prop('total_sent_success', total_sent_success);
-                        $('#modal-shopify-send').prop('total_sent_error', total_sent_error);
-
-                        $('#modal-shopify-send .progress-bar-success').css('width', ((total_sent_success * 100.0) / products.length) + '%');
-                        $('#modal-shopify-send .progress-bar-danger').css('width', ((total_sent_error * 100.0) / products.length) + '%');
-
-                        if ((total_sent_success + total_sent_error) == products.length) {
-                            $('#modal-shopify-send .progress').removeClass('progress-striped active');
-                            $('#modal-shopify-send .modal-footer').hide();
-                        }
-
+                        setShopifySendModalProgress(products.length, callback_data, req_success, data);
                         resolve(product);
-
                     }, {
                         'element': el.element,
                         'product': el.product
