@@ -2653,6 +2653,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not images:
             return self.api_error('Product doesn\'t have any images', status=422)
 
-        tasks.create_image_zip.delay(images, product.id)
+        tasks.create_image_zip.apply_async(args=[images, product.id], countdown=5)
 
         return self.api_success()

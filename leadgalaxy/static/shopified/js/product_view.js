@@ -1451,7 +1451,6 @@ var PusherSubscription = {
         window.channel.bind('images-download', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
@@ -1469,7 +1468,6 @@ var PusherSubscription = {
         window.channel.bind('pixlr-editor', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {

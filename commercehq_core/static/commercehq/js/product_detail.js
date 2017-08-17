@@ -995,7 +995,6 @@ var PusherSubscription = {
         window.channel.bind('images-download', function(data) {
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
@@ -1014,7 +1013,6 @@ var PusherSubscription = {
             console.log(data.product, config.product_id);
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
-                window.pusher.unsubscribe(config.sub_conf.channel);
 
                 if (data.success) {
                     setTimeout(function() {
