@@ -74,20 +74,38 @@
           </div>
         </section>
         <section class="zx-content">
-          <div class="container">
+          <div class="container" style="max-width:1100px;">
             <div class="row">
               <div class="col-sm-12 main-content">
-                <div class="row description" style="margin-bottom: 30px; ">
-                  <div class="col-sm-12 text-center">
+                <div class="row description" style="margin-bottom:30px;{% if ecom_jam %}display:flex;align-items:baseline{% endif %}">
+                  <div class="{% if ecom_jam %}col-sm-6{% else %}col-sm-12{% endif %} text-center" {% if ecom_jam %}style="padding:10px"{% endif %}>
                     <img src="{% static 'dropified-logo.png' %}"
                         class="img-responsive "
-                        style="display:inline-block">
+                        style="display:inline-block;max-height: 95px">
                   </div>
+
+                {% if ecom_jam %}
+                  <div class="col-sm-6 text-center">
+                    <img src="{% static 'plan_checkout/ecomjam.png' %}"
+                        class="img-responsive "
+                        style="display:inline-block;max-height:115px">
+                  </div>
+                {% endif %}
                 </div>
 
-                <h1 class="text-center">Congrats on your {% if plan_price %}subscription to{% else %}purchase of{% endif %} Dropified!</h1>
+                <h1 class="text-center">
+                {% if ecom_jam %}
+                    Congrats on your purchase of the {{monthly_plan}} Dropified Plan + LIFETIME Access To ECOM JAM training special offer!
+                {% else %}
+                    Congrats on your {% if plan_price %}subscription to{% else %}purchase of{% endif %} Dropified!
+                {% endif %}
+                </h1>
                 <h2 class="text-center" style="margin-bottom:45px;">
-                    You should be receiving an email confirmation of your {% if plan_price %}subscription{% else %}purchase{% endif %}.
+                    You should be receiving an email confirmation of your {% if plan_price %}subscription{% else %}purchase{% endif %}
+                    {% if ecom_jam %}
+                    <br>
+                    along with login details for the lifetime training access arriving within 24 hours
+                    {% endif %}
                 </h2>
 
                 <h2>Here's what to do next:</h2>

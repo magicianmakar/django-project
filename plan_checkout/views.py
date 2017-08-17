@@ -105,6 +105,12 @@ class PurchaseThankYouView(TemplateView):
         context = super(PurchaseThankYouView, self).get_context_data(**kwargs)
         context['lead_dyno_record'] = self.request.session.pop('lead_dyno_record', False)
         context['plan_price'] = kwargs.get('plan_price')
+        context['ecom_jam'] = kwargs['ecom_jam']
+
+        if kwargs['plan_price'] == '47':
+            context['monthly_plan'] = 'Elite'
+        elif kwargs['plan_price'] == '99':
+            context['monthly_plan'] = 'Unlimited'
 
         return context
 
