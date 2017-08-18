@@ -152,7 +152,7 @@ class Command(BaseCommand):
 
                     return False
 
-                elif e.response.status_code == 402:
+                elif e.response.status_code in [401, 402, 403]:
                     order.hidden = True
                     order.save()
 
