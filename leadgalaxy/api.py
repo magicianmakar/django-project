@@ -1356,6 +1356,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             elif key == 'admitad_site_id':
                 if data[key].startswith('http'):
                     config[key] = utils.remove_link_query(data[key]).strip('/ ').split('/').pop()
+                elif not data[key]:
+                    config[key] = ''
             else:
                 if key != 'access_token':
                     config[key] = data[key]
