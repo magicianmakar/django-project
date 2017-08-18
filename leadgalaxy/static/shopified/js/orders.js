@@ -231,44 +231,30 @@ function deleteOrderID(tr_parent, order_id, line_id) {
 
 function placeOrder(e) {
     e.preventDefault();
-    var btn = $(e.target);
 
-    var orderData = {
-        order_id: btn.attr('order-id'),
-        line_id: btn.attr('line-id'),
-        store: btn.attr('store'),
-        btn: btn
-    };
+    var btn = $(e.target);
 
     swal({
         title: "Place Order",
-        text: "Try Again?",
+        text: "Do you want to order is item?",
         type: "warning",
         showCancelButton: true,
         closeOnConfirm: false,
+        showLoaderOnConfirm: true,
         animation: "slide-from-top",
     }, function() {
-        var data_api = {
-            'store': orderData.store,
-            'order_id': orderData.order_id,
-            'line_id': orderData.line_id,
-        };
         $.ajax({
             url: '/api/order-place',
             type: 'POST',
-            data: data_api,
+            data: {
+                'store': btn.attr('store'),
+                'order_id': btn.attr('order-id'),
+                'line_id': btn.attr('line-id'),
+            },
         }).done(function(data) {
-            if (data.status == 'ok') {
-                var line_ids = data.line_ids;
-                for (var i = 0; i < line_ids.length; i++) {
-                    $('.place-order[line-id='+ line_ids[i] + ']').html('<a class="placed-order-details" href="#" order-id="' + orderData.order_id + '" source-order-id="' + data.order_id +'" line-id="' + line_ids[i] +'" title="View Order Details">' + data.order_id + '</a>');
-                }
-                
-                swal.close();
-                toastr.success('Item was ordered.', 'Order Placed');
-            } else {
-                displayAjaxError('Place Order', data);
-            }
+            swal.close();
+            toastr.success('Item was ordered.', 'Order Placed');
+
         }).fail(function(data) {
             displayAjaxError('Place Order', data);
         });

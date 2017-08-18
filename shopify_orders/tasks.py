@@ -10,7 +10,7 @@ from dropwow_core.models import DropwowOrderStatus
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def fulfill_shopify_order_line(self, store_id, order, customer_address):
+def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=None):
     """ Try to Auto fulfill a Shopify Order if an item within this product support it
 
     This function look at each item in the order and try to detect lines that need to be
@@ -20,6 +20,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address):
         store_id: Shopify Store ID
         order: Shopify Order Data (recieved from order create/update webhook)
         customer_address: address from shopify_customer_address
+        line_id: (optional) Fulfil only this line ID
     """
 
     store = ShopifyStore.objects.get(id=store_id)
@@ -29,6 +30,9 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address):
         order_tracks['{}-{}'.format(i.order_id, i.line_id)] = i
 
     for el in order['line_items']:
+        if line_id and int(line_id) != el['id']:
+            continue
+
         variant_id = el['variant_id']
         if not el['product_id']:
             if variant_id:
@@ -58,4 +62,4 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address):
             }
         )
 
-        fulfill_dropwow_order(store, order_status, order, el, supplier)
+        return fulfill_dropwow_order(store, order_status, order, el, supplier)

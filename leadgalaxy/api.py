@@ -34,6 +34,7 @@ from shopified_core.utils import (
 )
 
 from shopify_orders import utils as shopify_orders_utils
+from shopify_orders.tasks import fulfill_shopify_order_line
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
@@ -1749,34 +1750,28 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
     def post_order_place(self, request, user, data):
         try:
-            store = ShopifyStore.objects.get(id=int(data.get('store')))
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
-            permissions.user_can_view(user, store)
+
         except ShopifyStore.DoesNotExist:
             raven_client.captureException()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         order_id = data.get('order_id')
         line_id = data.get('line_id')
-        try:
-            track = ShopifyOrderTrack.objects.get(
-                store=store,
-                order_id=order_id,
-                line_id=line_id,
-            )
-            if track.source_type.lower() == 'dropwow':
-                dropwow_order_statuses = DropwowOrderStatus.objects.filter(
-                    store=store,
-                    shopify_order_id=order_id,
-                    line_ids__contains=str(line_id) + ','
-                )
-                for dropwow_order_status in dropwow_order_statuses:
-                    res = fulfill_dropwow_order(dropwow_order_status)
-                    return self.api_success(res)
-        except ShopifyOrderTrack.DoesNotExist:
-            raven_client.captureException()
-            return self.api_error('Store {}, Order {}, Line {} not found'.format(data.get('store'), order_id, line_id), status=404)
+
+        shopify_order = utils.get_shopify_order(store, order_id)
+
+        _order, customer_address = utils.shopify_customer_address(shopify_order)
+        if customer_address['country_code'] != 'US':
+            return self.api_error('Dropwow support US customers only')
+
+        if not fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id):
+            return self.api_error('Auto fulfill error')
+
         return self.api_success()
 
     def post_order_fulfill(self, request, user, data):
