@@ -1049,3 +1049,21 @@ class WooStoreApi(ApiResponseMixin, View):
         board.save()
 
         return self.api_success()
+
+    def post_product_board(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        product = WooProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        if data.get('board') == '0':
+            product.wooboard_set.clear()
+            product.save()
+            return self.api_success()
+        else:
+            board = WooBoard.objects.get(id=data.get('board'))
+            permissions.user_can_edit(user, board)
+            board.products.add(product)
+            board.save()
+            return self.api_success({'board': {'id': board.id, 'title': board.title}})
