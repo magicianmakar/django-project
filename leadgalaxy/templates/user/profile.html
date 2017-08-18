@@ -36,6 +36,12 @@
                 <li class="invoices-tab">
                     <a data-toggle="tab" href="#tab-5" data-auto-hash="invoices" data-auto-click="true" aria-expanded="false">Invoices</a>
                 </li>
+
+                {% if request.user|can:'dropwow.use' %}
+                <li class="integration-tab">
+                    <a data-toggle="tab" href="#tab-6" data-auto-hash="integration" data-auto-click="true" aria-expanded="false">Integrations</a>
+                </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -324,6 +330,42 @@
                         </div>
                     </div>
                 </div>
+
+                {% if request.user|can:'dropwow.use' %}
+                <div id="tab-6" class="tab-pane">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class=" col-md-12 col-md-offset-0 ">
+                                <form id="dropwow-integration" method="get" class="form-horizontal">
+                                    <div class="hr-line-dashed"></div>
+
+                                    <h4>Dropwow Account</h4>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Email</label>
+                                        <div class="col-sm-4">
+                                            <input type="email" name="dropwow_account_email" value="{{ user.dropwow_account.email }}" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Api Key</label>
+
+                                        <div class="col-sm-4">
+                                            <input type="password" name="dropwow_account_api_key" value="{{ user.dropwow_account.api_key }}" class="form-control">
+                                        </div>
+                                    </div>
+
+                                    <div class="hr-line-dashed"></div>
+                                </form>
+
+                                <div class=" col-md-10 col-md-offset-1 ">
+                                      <button id="save-dropwow-integration" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

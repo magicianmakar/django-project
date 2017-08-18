@@ -72,6 +72,7 @@ INSTALLED_APPS = (
     'order_imports',
 
     'commercehq_core',
+    'dropwow_core',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -338,3 +339,8 @@ FACEBOOK_PIXEL_ID = os.environ.get('FACEBOOK_PIXEL_ID')
 KEEN_PROJECT_ID = os.environ.get('KEEN_PROJECT_ID')
 
 WICKED_REPORTS_API = os.environ.get('WICKED_REPORTS_API')
+
+# Dropwow
+DROPWOW_API_HOSTNAME = os.environ.get('DROPWOW_API_HOSTNAME')
+DROPWOW_API_USERNAME = os.environ.get('DROPWOW_API_USERNAME')
+DROPWOW_API_PASSWORD = os.environ.get('DROPWOW_API_PASSWORD')

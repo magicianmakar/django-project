@@ -38,6 +38,8 @@ from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
 )
+from dropwow_core.models import DropwowAccount, DropwowOrderStatus
+from dropwow_core.utils import fulfill_dropwow_order
 
 import tasks
 import utils
@@ -299,6 +301,18 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             task = tasks.export_product.apply_async(args=[data, self.target, user.id], expires=60)
 
             return self.api_success({'id': str(task.id)})
+
+    def post_save_for_later_products(self, request, user, data):
+        self.target = 'save-for-later'
+        products = {}
+        for p in data.get('products', []):
+            result = self.post_shopify(request, user, p)
+            result = json.loads(result.content)
+            id = result['product']['id']
+            product = ShopifyProduct.objects.get(id=id)
+            products[p['original_id']] = json.loads(product.data)
+            products[p['original_id']]['id'] = id
+        return JsonResponse(products, safe=False)
 
     def post_shopify_update(self, request, user, data):
         return self.post_shopify(request, user, data)
@@ -1733,6 +1747,38 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success(orders, safe=False)
 
+    def post_order_place(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=int(data.get('store')))
+            if not user.can('place_orders.sub', store):
+                raise PermissionDenied()
+            permissions.user_can_view(user, store)
+        except ShopifyStore.DoesNotExist:
+            raven_client.captureException()
+            return self.api_error('Store {} not found'.format(data.get('store')), status=404)
+
+        order_id = data.get('order_id')
+        line_id = data.get('line_id')
+        try:
+            track = ShopifyOrderTrack.objects.get(
+                store=store,
+                order_id=order_id,
+                line_id=line_id,
+            )
+            if track.source_type.lower() == 'dropwow':
+                dropwow_order_statuses = DropwowOrderStatus.objects.filter(
+                    store=store,
+                    shopify_order_id=order_id,
+                    line_ids__contains=str(line_id) + ','
+                )
+                for dropwow_order_status in dropwow_order_statuses:
+                    res = fulfill_dropwow_order(dropwow_order_status)
+                    return self.api_success(res)
+        except ShopifyOrderTrack.DoesNotExist:
+            raven_client.captureException()
+            return self.api_error('Store {}, Order {}, Line {} not found'.format(data.get('store'), order_id, line_id), status=404)
+        return self.api_success()
+
     def post_order_fulfill(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=int(data.get('store')))
@@ -2260,6 +2306,25 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'email': email_change,
                 'password': password
             })
+        else:
+            errors = []
+            for key, val in form.errors.items():
+                errors.append(u'{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
+
+            return self.api_error('\n\n'.join(errors), status=422)
+
+    def post_dropwow_integration(self, request, user, data):
+        form = DropwowIntegrationForm(data=data, user=user)
+        if form.is_valid():
+            dropwow_account_email = form.cleaned_data['dropwow_account_email']
+            dropwow_account_api_key = form.cleaned_data['dropwow_account_api_key']
+
+            dropwow_account, created = DropwowAccount.objects.get_or_create(user=user)
+            dropwow_account.email = dropwow_account_email
+            dropwow_account.api_key = dropwow_account_api_key
+            dropwow_account.save()
+
+            return self.api_success()
         else:
             errors = []
             for key, val in form.errors.items():

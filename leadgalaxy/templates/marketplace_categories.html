@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <div class="tab-content">
+            {% include 'partial/marketplace_search_form.html' %}
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                <table class='dropwow-categories-table' border='1px'>
+                    <tr>
+                        <td>
+                    {% for category in dropwow_categories %}
+                        {{category.label}}<br/>
+                        {% if forloop.last %}
+                        {% elif forloop.counter|divisibleby:"6" %}
+                            </td></tr><tr><td>
+                        {% elif forloop.counter|divisibleby:"2" %}
+                            </td><td>
+                        {% endif %}
+                    {% endfor %}
+                        </td>
+                    </tr>
+                </table>
+                <br/><br/>
+                <div class='dropwow-categories'>
+                {% for category in dropwow_categories %}
+                    <div class='dropwow-category m-b-md'>
+                    <h3 class='color-green m-t-sm m-b-sm'>{{category.label}}</h3>
+                    {% for subcategory in category.subcategories %}
+                        <div class='col-md-4 m-t-sm m-b-sm'>
+                        <a href="{% url 'marketplace' %}?category_id={{subcategory.id}}">{{subcategory.label}}</a>
+                        </div>
+                    {% endfor %}
+                    <div class='clear'></div>
+                    </div>
+                {% endfor %}
+                </div>
+                </div><!-- div.panel-body -->
+            </div> <!-- div.tab-pane -->
+        </div> <!-- div.tab-content -->
+    </div> <!-- div.tabs-container -->
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        .dropwow-categories-table {
+            width: 100%;
+        }
+        .dropwow-categories-table td {
+            padding: 10px;
+        }
+        .dropwow-category {
+            border-bottom: 1px solid silver;
+        }
+    </style>
+{% endblock %}

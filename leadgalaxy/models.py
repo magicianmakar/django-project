@@ -960,6 +960,19 @@ class ShopifyProduct(models.Model):
         try:
             if supplier and supplier.variants_map:
                 mapping = json.loads(supplier.variants_map)
+                # if supplier.supplier_name.lower() == 'dropwow':
+                #     data = json.loads(self.data)
+                #     new_mapping = {}
+                #     variants = data.get('variants', [])
+                #     for variant_id, options in mapping.iteritems():
+                #         new_options = []
+                #         for index, option in enumerate(options):
+                #             new_options.append({
+                #                 'title': variants[index]['title'],
+                #                 'value': option['title']
+                #             })
+                #         new_mapping[variant_id] = new_options
+                #     mapping = new_mapping
             elif self.variants_map:
                 mapping = json.loads(self.variants_map)
             else:
@@ -1239,14 +1252,16 @@ class ProductSupplier(models.Model):
 
     def get_source_id(self):
         try:
-            if 'aliexpress.com' in self.product_url.lower():
+            if self.is_aliexpress:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+            elif self.is_dropwow:
+                return int(re.findall('[/_]([0-9]+)', self.product_url)[0])
         except:
             return None
 
     def get_store_id(self):
         try:
-            if 'aliexpress.com' in self.supplier_url.lower():
+            if self.is_aliexpress:
                 return int(re.findall('/([0-9]+)', self.supplier_url).pop())
         except:
             return None
@@ -1281,6 +1296,14 @@ class ProductSupplier(models.Model):
             name = u'Supplier #{}'.format(supplier_idx)
 
         return name
+
+    @property
+    def is_aliexpress(self):
+        return 'aliexpress.com' in self.product_url.lower()
+
+    @property
+    def is_dropwow(self):
+        return 'dropified.com/marketplace/' in self.product_url.lower()
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():
@@ -1337,6 +1360,8 @@ class ShopifyOrderTrack(models.Model):
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
     source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
+
+    source_type = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Type")
 
     hidden = models.BooleanField(default=False)
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
@@ -1413,6 +1438,16 @@ class ShopifyOrderTrack(models.Model):
             "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
+
+            # Dropwow Status
+            'P': "In Process",
+            'C': "Complete",
+            'O': "Open",
+            'F': "Failed",
+            'D': "Declined",
+            'B': "Backordered",
+            'I': "Cancelled",
+            'Y': "Awaiting Call",
         }
 
         if self.source_status and ',' in self.source_status:

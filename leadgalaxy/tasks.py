@@ -704,6 +704,7 @@ def create_image_zip(self, images, product_id):
 
 @celery_app.task(base=CaptureFailure, bind=True)
 def order_save_changes(self, data):
+    order_id = None
     try:
         updater = utils.ShopifyOrderUpdater()
         updater.fromJSON(data)

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+    <div class="tabs-container">
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                <div class="row" style="margin-bottom: 20px">
+                    <div class="col-md-11">
+                        <p>
+                            {{product.category.label_path}} / 
+                            <strong>{{product.title}}</strong>
+                        </p>
+                    </div>
+                </div>
+                {% if not product.active %}
+                <div class="row">
+                    <div class="col-md-11">
+                        <p class="alert alert-danger">This Product is Offline</p>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <div id='product-image'>
+                        {% for item in combinations %}
+                            <img id='product-image-{{item.id}}' class="media-object unveil"
+                                 src="{{item.image_path}}" alt="">
+                        {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <h2>{{product.title}}</h2>
+                        <p>{{product.brand}}</p>
+                        <h3 id='product-price'></h3>
+                        {% for option_id, option in product.options.items %}
+                        <div class="form-group">
+                            <label for="option_{{option.option_id}}">{{option.option_name}}:</label>
+                            <select id='option_{{option.option_id}}' class="form-control dropwow-product-option" data-option="{{option.option_id}}" style='width: 200px; display: inline-block; margin-left: 10px;'>
+                            {% for variant_id, variant in option.variants.items %}
+                                <option value='{{variant_id}}'>{{variant}}</option>
+                            {% endfor %}
+                            </select>
+                        </div>
+                        {% endfor %}
+                        <div class="form-group">
+                            <label>Vendor:</label>
+                            <span>{{product.vendor}}</span>
+                        </div>
+                    </div>
+                </div>
+                </div><!-- div.panel-body -->
+            </div> <!-- div.tab-pane -->
+        </div> <!-- div.tab-content -->
+    </div> <!-- div.tabs-container -->
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        #product-image {
+            max-width: 280px;
+            display: none;
+        }
+        #product-image img {
+            width: 100%;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var dropwow_product = {% json_dumps product %};
+    </script>
+{% compress js %}
+    <script type="text/javascript" src="{% static 'shopified/js/dropwow_product.js' %}"></script>
+{% endcompress %}
+{% endblock %}

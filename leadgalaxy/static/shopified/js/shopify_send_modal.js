@@ -1,5 +1,5 @@
 var shopify_send_tpl;
-function initializeShopifySendModal(btn) {
+function initializeShopifySendModal() {
     $('#modal-shopify-send .progress').show();
     $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', true);
     $('#modal-shopify-send').prop('total_sent_success', 0);

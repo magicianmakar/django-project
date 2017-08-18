@@ -1,0 +1,78 @@
+<form action="{% url 'marketplace' %}" class="form-inline m-b-md">
+    <div class="form-group" style='width: 100%;'>
+        <label for="title">Search</label>
+        <input type="text" placeholder="I'm Looking For..." class="form-control" name="title" value="{{request.GET.title}}" style='width: 50%;'>
+        <select class="form-control filter-col-item" name="category_id">
+            <option value="">All Categories</option>
+            {% for category in dropwow_categories %}
+                <option value='{{category.id}}' {% if category.id == category_id %}selected="selected"{% endif %}>{{category.label}}</option>
+                {% for subcategory in category.subcategories %}
+                    <option value='{{subcategory.id}}' {% if subcategory.id == category_id %}selected="selected"{% endif %}>&nbsp;&nbsp;&nbsp;{{subcategory.label}}</option>
+                {% endfor %}
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary m-r-xs">Submit</button>
+        <button class="btn btn-success btn-outline filter-btn">Advanced</button>
+    </div>
+</form>
+<div id="modal-filter" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Filter</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <form id="product-filter-form" action="{% url 'marketplace' %}" class="form-inline" method="get">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Title</label>
+                                <input name="title" type="text" class="form-control" value="{{request.GET.title}}" placeholder="">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Category</label>
+                                <select class="form-control filter-col-item" name="category_id">
+                                    <option value="">All Categories</option>
+                                    {% for category in dropwow_categories %}
+                                        <option value='{{category.id}}' {% if category.id == category_id %}selected="selected"{% endif %}>{{category.label}}</option>
+                                        {% for subcategory in category.subcategories %}
+                                            <option value='{{subcategory.id}}' {% if subcategory.id == category_id %}selected="selected"{% endif %}>&nbsp;&nbsp;&nbsp;{{subcategory.label}}</option>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </select>
+                                <a href="{% url 'marketplace_categories' %}">See All Categories</a>
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Price</label>
+                                <input name="min_price" type="text" class="form-control" value="{{request.GET.min_price}}" style="width: 80px;padding: 0 5px" placeholder="Min.">
+                                <input name="max_price" type="text" class="form-control" value="{{request.GET.max_price}}" style="width: 80px;padding: 0 5px" placeholder="Max.">
+                            </div>
+                        </div>
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Brand</label>
+                                <input id="filter-brand" name="brand" type="text" class="form-control" value="{{request.GET.brand}}" placeholder="">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group">
+                                <label class="m-r-sm" style="width: 95px">Vendor</label>
+                                <input id="filter-vendor" name="vendor" type="text" class="form-control" value="{{request.GET.vendor}}" placeholder="">
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 col-md-offset-8 m-t-md">
+                            <button id="product-filter-form-btn" class="btn btn-primary">Apply</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -301,7 +301,7 @@ $('#smartboard-save-changes').click(function(e) {
 $('#shopify-send-btn').click(function(e) {
     var btn = $(this);
     btn.button('loading');
-    initializeShopifySendModal(btn);
+    initializeShopifySendModal();
 
     var products = [];
     var products_ids = [];

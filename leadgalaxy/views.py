@@ -41,6 +41,8 @@ from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopify_orders import utils as shopify_orders_utils
+from shopify_orders.tasks import fulfill_shopify_order_line
+from dropwow_core.models import DropwowOrderStatus
 
 from shopified_core.utils import (
     send_email_from_template,
@@ -61,6 +63,13 @@ from stripe_subscription.utils import (
     sync_subscription,
     get_stripe_invoice,
     get_stripe_invoice_list,
+)
+
+from dropwow_core.utils import (
+    get_dropwow_products,
+    get_dropwow_featured_products,
+    get_dropwow_product,
+    get_dropwow_categories,
 )
 
 import tasks
@@ -688,6 +697,11 @@ def webhook(request, provider, option):
                     args=[store.id, shopify_order['id']],
                     queue=queue,
                     countdown=countdown)
+
+                if store.user.can('dropwow.use'):
+                    _order, customer_address = utils.shopify_customer_address(shopify_order)
+                    if topic == 'orders/create' and customer_address['country_code'] == 'US' and shopify_order['financial_status'] == 'paid':
+                        fulfill_shopify_order_line(store.id, shopify_order, customer_address)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
@@ -2707,10 +2721,13 @@ def orders_view(request):
             line_id = line.get('product_id')
             products_ids.append(line_id)
 
-    orders_list = {}
-    res = ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data')
-    for i in res:
-        orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
+    orders_track = {}
+    for i in ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data'):
+        orders_track['{}-{}'.format(i.order_id, i.line_id)] = i
+
+    dropwow_status = {}
+    for i in DropwowOrderStatus.objects.filter(store=store, shopify_order_id__in=orders_ids):
+        dropwow_status['{}-{}'.format(i.shopify_order_id, i.shopify_line_id)] = i
 
     images_list = {}
     res = ShopifyProductImage.objects.filter(store=store, product__in=products_ids)
@@ -2756,8 +2773,11 @@ def orders_view(request):
 
             order['line_items'][i]['image_src'] = images_list.get('{}-{}'.format(el['product_id'], el['variant_id']))
 
-            shopify_order = orders_list.get('{}-{}'.format(order['id'], el['id']))
+            shopify_order = orders_track.get('{}-{}'.format(order['id'], el['id']))
+            dropwow_order = dropwow_status.get('{}-{}'.format(order['id'], el['id']))
+
             order['line_items'][i]['shopify_order'] = shopify_order
+            order['line_items'][i]['dropwow_status'] = dropwow_order
 
             variant_id = el['variant_id']
             if not el['product_id']:
@@ -3340,6 +3360,94 @@ def products_collections(request, collection):
 
         'page': 'products_collections',
         'breadcrumbs': ['Products', 'Collections', 'US']
+    })
+
+
+@login_required
+def marketplace(request):
+    if not request.user.can('dropwow.use'):
+        raise PermissionDenied()
+
+    page = utils.safeInt(request.GET.get('page', 1))
+    title = request.GET.get('title', '')
+    category_id = utils.safeInt(request.GET.get('category_id', 0))
+    min_price = utils.safeInt(request.GET.get('min_price'), '')
+    max_price = utils.safeInt(request.GET.get('max_price'), '')
+    brand = request.GET.get('brand')
+    vendor = request.GET.get('vendor')
+    order_by = request.GET.get('order_by', 'title')
+
+    if not hasattr(request.user, 'dropwow_account'):
+        messages.error(request, 'Dropwow Account not found')
+        return HttpResponseRedirect('/user/profile#integration')
+
+    try:
+        featured_products = get_dropwow_featured_products(4).get('results', [])
+        categories = get_dropwow_categories().get('results', [])
+        post_per_page = request.GET.get('ppp', 25)
+        feed = get_dropwow_products(page, post_per_page, title, category_id, min_price, max_price, brand, vendor, order_by)
+        total_items = feed.get('count', 0)
+        all_products = [[] for i in range(1, total_items)]
+        paginator = SimplePaginator(all_products, post_per_page)
+        page = paginator.page(page)
+        products = feed.get('results', [])
+
+    except:
+        raven_client.captureException()
+        return HttpResponseRedirect('/')
+
+    return render(request, 'marketplace.html', {
+        'dropwow_categories': categories,
+        'dropwow_products': products,
+        'dropwow_featured_products': featured_products,
+        'paginator': paginator,
+        'current_page': page,
+        'category_id': category_id,
+
+        'page': 'marketplace',
+        'breadcrumbs': ['Marketplace']
+    })
+
+
+@login_required
+def marketplace_categories(request):
+    if not request.user.can('marketplace.use'):
+        raise PermissionDenied()
+
+    if not hasattr(request.user, 'dropwow_account'):
+        messages.error(request, 'Dropwow Account not found')
+        return HttpResponseRedirect('/user/profile#integration')
+
+    try:
+        categories = get_dropwow_categories().get('results', [])
+
+    except:
+        raven_client.captureException()
+        return HttpResponseRedirect('/')
+
+    return render(request, 'marketplace_categories.html', {
+        'dropwow_categories': categories,
+
+        'page': 'marketplace',
+        'breadcrumbs': ['Marketplace', 'All Categories']
+    })
+
+
+@login_required
+def dropwow_product(request, dropwow_product_id):
+    try:
+        product = get_dropwow_product(dropwow_product_id)
+
+    except ValidationError:
+        raven_client.captureException()
+        return HttpResponseRedirect('/')
+
+    return render(request, 'dropwow_product.html', {
+        'product': product,
+        'combinations': product['combinations'],
+
+        'page': 'marketplace',
+        'breadcrumbs': ['Marketplace', 'Dropwow Products', product['title']]
     })
 
 

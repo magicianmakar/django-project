@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <div class="tab-content">
+            {% include 'partial/marketplace_search_form.html' %}
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                <div class="row">
+                {% for item in dropwow_featured_products %}
+                <div class="col-xs-12 col-md-3">
+                    <div class="ibox">
+                        <div class="ibox-content product-box product-wrapper" product-id="{{item.id}}" product-title="{{item.title}}">
+                            <div class="product-imitation" style="padding: 0;">
+                                <input class="item-select icheck" id="dropwow_product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
+                                <a href="{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}">
+                                    <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.image_path}}" style="width: 100%">
+                                </a>
+                            </div>
+                            <div class="product-desc">
+                                <span class="product-price">
+                                    ${{item.price}}
+                                </span>
+                                <a href="{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}" class="hidden-xs product-name"> {{item.title|truncatewords:13}}</a>
+                                <a href="{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
+
+                                <div class="small m-t-xs">
+                                    Submitted at {{item.created_at|get_datetime|date:"M d, Y"}}
+                                </div>
+                                <div class="m-t row">
+                                    <div class="col-md-4" style="padding-right:0">
+                                    <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{item.id}}">Save</button>
+                                    </div>
+                                    <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
+                                    <button class="btn btn-success btn-rounded import-btn" product-id="{{item.id}}">Send</button>
+                                    </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:"4" %}
+                </div>
+                <div class="row">
+                {% endif %}
+                {% endfor %}
+                </div>
+
+                <div class="row" style="margin-bottom: 20px">
+                    <div class="col-md-8"></div>
+                    <div class="col-md-4 pull-right text-right">
+                        <button class="btn btn-success btn-outline" id="bulk-save-for-later-btn">Save for later</button>
+                        <button class="btn btn-success btn-outline" id="bulk-import-btn">Send</button>
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th style="width:64px"></th>
+                            <th style="width:40%"><a href="{% url_toggle 'order_by' '-title,title' %}">Title {% sort_icon 'order_by' 'title' %}</a></th>
+                            <th><a href="{% url_toggle 'order_by' '-category__label_path,category__label_path' %}">Categories {% sort_icon 'order_by' 'category__label_path' %}</a></th>
+                            <th><a href="{% url_toggle 'order_by' '-combinations__price,combinations__price' %}">Price {% sort_icon 'order_by' 'combinations__price' %}</a></th>
+                            <th><a href="{% url_toggle 'order_by' '-brand,brand' %}">Brand {% sort_icon 'order_by' 'brand' %}</a></th>
+                            <th><a href="{% url_toggle 'order_by' '-vendor,vendor' %}">Vendor {% sort_icon 'order_by' 'vendor' %}</a></th>
+                            <th style="width:190px">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in dropwow_products %}
+                        <tr product-id="{{item.id}}" product-title="{{item.title}}" class='product-wrapper'>
+                            <td>
+                                <input class="item-select icheck" style="" id="dropwow_product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
+                                <label class="pull-left" for="dropwow_product_{{item.id}}"></label>
+                            </td>
+                            <td>
+                                <img style="width: 64px; height: 64px;"
+                                     class="media-object unveil"
+                                     src="{% static 'img/blank.gif' %}"
+                                     data-src="{{item.image_path}}" alt="">
+                            </td>
+                            <td><a href='{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}' class='product-title'>{{item.title}}</a></td>
+                            <td class='product-category'>{{item.category.label_path}}</td>
+                            <td>${{item.price}}</td>
+                            <td>{{item.brand}}</td>
+                            <td>{{item.vendor}}</td>
+                            <td>
+                                <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{item.id}}">Save</button>&nbsp;&nbsp;
+                                <button class="btn btn-success btn-rounded import-btn" product-id="{{item.id}}">Send</button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="8">
+                                No products found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "partial/paginator.html" %}
+                </div><!-- div.panel-body -->
+            </div> <!-- div.tab-pane -->
+        </div> <!-- div.tab-content -->
+    </div> <!-- div.tabs-container -->
+
+{% include 'partial/shopify_send_modal.html' %}
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        td .icheckbox_square-blue {
+            margin: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var dropwow_products = {% json_dumps dropwow_featured_products %};
+        dropwow_products = dropwow_products.concat({% json_dumps dropwow_products %});
+    </script>
+{% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/marketplace.js' %}"></script>
+{% endcompress %}
+{% endblock %}

@@ -495,19 +495,24 @@
 
                                             <div class="col-xs-3 line-order-id">
                                                 Order ID:
+                                                
                                                 {% if item.shopify_order %}
+                                                    {% if item.shopify_order.source_id %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
                                                         source-order-id="{{item.shopify_order.source_id}}"
                                                         order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
                                                         title="View Order Details">{{item.shopify_order.get_source_ids}}</a>
+                                                    {% elif item.shopify_order.source_error_code %}
+                                                    <a class="place-order" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Error happened</a>
+                                                    {% endif %}
                                                 {% else %}
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
                                                 {% endif %}
                                             </div>
                                             <div class="col-xs-3 line-ordered">
-                                                <span class="badge badge-{% if item.shopify_order or item.fulfillment_status == 'fulfilled' or excluded_product %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
-                                                {% if item.shopify_order %}
+                                                <span class="badge badge-{% if item.shopify_order and item.shopify_order.source_id %}primary{% elif item.shopify_order and item.shopify_order.source_error_code %}danger{% elif item.fulfillment_status == 'fulfilled' or excluded_product %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
+                                                {% if item.shopify_order and item.shopify_order.source_id %}
                                                     <span class="ordered-status"
                                                     {% if item.shopify_order.source_id %}
                                                         title="{{original.source|title}} Order ID: #{{item.shopify_order.source_id}}"
@@ -519,6 +524,10 @@
                                                             {% date_humanize item.shopify_order.created_at %}
                                                         </span>
                                                         {% endif %}
+                                                    </span>
+                                                {% elif item.dropwow_status and item.dropwow_status.error_message %}
+                                                    <span class="ordered-status">
+                                                        <span class="badge badge-danger">Dropwow Error: {{item.dropwow_status.error_message}}</span>
                                                     </span>
                                                 {% elif item.fulfillment_status == 'fulfilled' %}
                                                     <span class="ordered-status">Fulfilled in Shopify</span>

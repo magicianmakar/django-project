@@ -156,6 +156,30 @@ $('#save-email').click(function () {
     });
 });
 
+$('#save-dropwow-integration').click(function() {
+    var btn = $(this);
+    btn.button('loading');
+
+    $.ajax({
+        url: '/api/dropwow-integration',
+        type: 'POST',
+        data: $('form#dropwow-integration').serialize(),
+        context: {
+            btn: btn
+        },
+        success: function(data) {
+            toastr.success('Dropwow Account Saved', 'Dropwow Account');
+            window.location.reload();
+        },
+        error: function(data) {
+            displayAjaxError('Dropwow Account', data);
+        },
+        complete: function() {
+            this.btn.button('reset');
+        }
+    });
+});
+
 $('#renew_clippingmagic, #renew_captchacredit').click(function() {
     var type = $(this).attr('id').split('_')[1];
     var title = $(this).data('title');
