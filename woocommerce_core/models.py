@@ -13,6 +13,12 @@ from django.utils.crypto import get_random_string
 from django.core.urlresolvers import reverse
 
 
+def add_to_class(cls, name):
+    def _decorator(*args, **kwargs):
+        cls.add_to_class(name, args[0])
+    return _decorator
+
+
 def safeStr(v, default=''):
     """ Always return a str object """
 
@@ -20,6 +26,14 @@ def safeStr(v, default=''):
         return v
     else:
         return default
+
+
+@add_to_class(User, 'get_woo_boards')
+def user_get_woo_boards(self):
+    if self.is_subuser:
+        return self.profile.subuser_parent.get_woo_boards()
+    else:
+        return self.wooboard_set.all().order_by('title')
 
 
 class WooStore(models.Model):
@@ -228,9 +242,10 @@ class WooProduct(models.Model):
             return None
 
         product_data = self.retrieve()
-        product_data['tags'] = ','.join([tag['name'] for tag in product_data.get('tags', [])])
+        product_data['tags'] = self.merge_tags(product_data)
         product_data['images'] = [img['src'] for img in product_data.get('images', [])]
         product_data['title'] = product_data.pop('name')
+        product_data['product_type'] = product_data.pop('type')
         product_data['compare_at_price'] = product_data.pop('regular_price')
         product_data['published'] = product_data['status'] == 'publish'
 
@@ -240,6 +255,12 @@ class WooProduct(models.Model):
         product = json.loads(self.data)
 
         return product
+
+    def merge_tags(self, product_data):
+        woocommerce_tags = [tag['name'] for tag in product_data.get('tags', [])]
+        dropified_tags = self.tags.split(',')
+
+        return ','.join(set(dropified_tags + woocommerce_tags))
 
     def get_suppliers(self):
         return self.woosupplier_set.all().order_by('-is_default')
@@ -605,3 +626,26 @@ class WooOrderTrack(models.Model):
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
+
+
+class WooBoard(models.Model):
+    class Meta:
+        verbose_name = "WooCommerce Board"
+        verbose_name_plural = "WooCommerce Boards"
+
+    user = models.ForeignKey(User)
+    title = models.CharField(max_length=512)
+    products = models.ManyToManyField('WooProduct', blank=True)
+    config = models.CharField(max_length=512, blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.title
+
+    def saved_count(self):
+        return self.products.filter(store__is_active=True, source_id=0).count()
+
+    def connected_count(self):
+        return self.products.exclude(store__is_active=True, source_id=0).count()

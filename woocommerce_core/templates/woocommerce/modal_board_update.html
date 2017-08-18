@@ -1,0 +1,39 @@
+<div id="woo-modal-board-update" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Update board</h3>
+                        <form id="woo-board-update-form" method="post" role="form">
+                            <div class="form-group">
+                                <label for="">Board Title:</label>
+                                <input type="text" id="board-title" name="title" class="form-control">
+                            </div>
+                            <input type="hidden" name="board-id" />
+                            <h3 class="m-t-none m-b">Smart Board</h3>
+                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
+                            <div class="form-group">
+                                <label for="">Product Title contains:</label>
+                                <input type="text" id="smartboard-product-title" name="product-title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Tags contains:</label>
+                                <input type="text" id="smartboard-product-tags" name="product-tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Type contains:</label>
+                                <input type="text" id="smartboard-product-type" name="product-type" class="form-control">
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-primary pull-right m-t-n-xs" type="submit">
+                                    <strong>Save</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

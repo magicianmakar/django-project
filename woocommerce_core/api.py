@@ -31,7 +31,7 @@ from shopified_core.utils import (
     orders_update_limit,
 )
 
-from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack
+from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
 import tasks
 import utils
 
@@ -413,24 +413,29 @@ class WooStoreApi(ApiResponseMixin, View):
 
     def post_product_export(self, request, user, data):
         try:
-            store_id = safeInt(data.get('store'))
-            store = WooStore.objects.get(pk=store_id)
+            store = WooStore.objects.get(pk=safeInt(data.get('store')))
+        except WooStore.DoesNotExist:
+            return self.api_error('Store does not exist')
+        else:
             permissions.user_can_view(user, store)
 
-            tasks.product_export.apply_async(
-                args=[store_id, data.get('product'), user.id, data.get('publish')],
-                countdown=0,
-                expires=120)
+        try:
+            product = WooProduct.objects.get(pk=safeInt(data.get('product')))
+        except WooProduct.DoesNotExist:
+            return self.api_error('Product does not exist')
+        else:
+            permissions.user_can_view(user, product)
 
-            return self.api_success({
-                'pusher': {
-                    'key': settings.PUSHER_KEY,
-                    'channel': store.pusher_channel()
-                }
-            })
-
+        try:
+            publish = data.get('publish')
+            publish = publish if publish is None else publish == 'true'
+            args = [store.id, product.id, user.id, publish]
+            tasks.product_export.apply_async(args=args, countdown=0, expires=120)
         except ProductExportException as e:
             return self.api_error(e.message)
+        else:
+            pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
+            return self.api_success({'pusher': pusher})
 
     def post_product_update(self, request, user, data):
         try:
@@ -680,26 +685,26 @@ class WooStoreApi(ApiResponseMixin, View):
         all_orders = data.get('all') == 'true'
         unfulfilled_only = data.get('unfulfilled_only') != 'false'
 
-        shopify_orders = WooOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                              .defer('data') \
-                                              .order_by('updated_at')
+        woocommerce_orders = WooOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                                  .defer('data') \
+                                                  .order_by('updated_at')
 
         if unfulfilled_only:
-            shopify_orders = shopify_orders.filter(source_tracking='') \
-                                           .exclude(source_status='FINISH')
+            woocommerce_orders = woocommerce_orders.filter(source_tracking='') \
+                                                   .exclude(source_status='FINISH')
 
         if user.is_subuser:
-            shopify_orders = shopify_orders.filter(store__in=user.profile.get_shopify_stores(flat=True))
+            woocommerce_orders = woocommerce_orders.filter(store__in=user.profile.get_woo_stores(flat=True))
 
         if data.get('store'):
-            shopify_orders = shopify_orders.filter(store=data.get('store'))
+            woocommerce_orders = woocommerce_orders.filter(store=data.get('store'))
 
         if not data.get('order_id') and not data.get('line_id') and not all_orders:
             limit_key = 'order_fulfill_limit_%d' % user.models_user.id
             limit = cache.get(limit_key)
 
             if limit is None:
-                limit = orders_update_limit(orders_count=shopify_orders.count())
+                limit = orders_update_limit(orders_count=woocommerce_orders.count())
 
                 if limit != 20:
                     cache.set(limit_key, limit, timeout=3600)
@@ -707,23 +712,23 @@ class WooStoreApi(ApiResponseMixin, View):
             if data.get('forced') == 'true':
                 limit = limit * 2
 
-            shopify_orders = shopify_orders[:limit]
+            woocommerce_orders = woocommerce_orders[:limit]
 
         elif data.get('all') == 'true':
-            shopify_orders = shopify_orders.order_by('created_at')
+            woocommerce_orders = woocommerce_orders.order_by('created_at')
 
         if data.get('order_id') and data.get('line_id'):
-            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
+            woocommerce_orders = woocommerce_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
 
         if data.get('count_only') == 'true':
-            return self.api_success({'pending': shopify_orders.count()})
+            return self.api_success({'pending': woocommerce_orders.count()})
 
-        shopify_orders = serializers.serialize('python', shopify_orders,
-                                               fields=('id', 'order_id', 'line_id',
-                                                       'source_id', 'source_status',
-                                                       'source_tracking', 'created_at'))
+        woocommerce_orders = serializers.serialize('python', woocommerce_orders,
+                                                   fields=('id', 'order_id', 'line_id',
+                                                           'source_id', 'source_status',
+                                                           'source_tracking', 'created_at'))
 
-        for i in shopify_orders:
+        for i in woocommerce_orders:
             fields = i['fields']
             fields['id'] = i['pk']
 
@@ -892,5 +897,155 @@ class WooStoreApi(ApiResponseMixin, View):
             store, order_id, line_id = order.store, order.order_id, order.line_id
             data = {'store_id': store.id, 'order_id': order_id, 'line_id': line_id}
             store.pusher_trigger('order-source-id-delete', data)
+
+        return self.api_success()
+
+    def post_boards_add(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        can_add, total_allowed, user_count = permissions.can_add_board(user)
+
+        if not can_add:
+            return self.api_error(
+                'Your current plan allow up to %d boards, currently you have %d boards.'
+                % (total_allowed, user_count))
+
+        board_name = data.get('title', '').strip()
+
+        if not len(board_name):
+            return self.api_error('Board name is required', status=501)
+
+        board = WooBoard(title=board_name, user=user.models_user)
+        permissions.user_can_add(user, board)
+        board.save()
+
+        return self.api_success({'board': {'id': board.id, 'title': board.title}})
+
+    def get_board_config(self, request, user, data):
+        if not user.can('view_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = WooBoard.objects.get(pk=pk)
+        except WooBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_edit(user, board)
+
+        try:
+            config = json.loads(board.config)
+        except:
+            config = {'title': '', 'tags': '', 'type': ''}
+
+        return self.api_success({'title': board.title, 'config': config})
+
+    def post_board_config(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = WooBoard.objects.get(pk=pk)
+        except WooBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_edit(user, board)
+
+        board.title = data.get('title')
+        board.config = json.dumps({
+            'title': data.get('product_title'),
+            'tags': data.get('product_tags'),
+            'type': data.get('product_type')})
+        board.save()
+
+        utils.smart_board_by_board(user.models_user, board)
+
+        return self.api_success()
+
+    def delete_board(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = WooBoard.objects.get(pk=pk)
+        except WooBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_delete(user, board)
+            board.delete()
+            return self.api_success()
+
+    def post_board_empty(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = WooBoard.objects.get(pk=pk)
+        except WooBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_edit(user, board)
+            board.products.clear()
+            return self.api_success()
+
+    def get_products_info(self, request, user, data):
+        products = {}
+        for p in data.getlist('products[]'):
+            pk = safeInt(p)
+            try:
+                product = WooProduct.objects.get(pk=pk)
+            except WooProduct.DoesNotExist:
+                return self.api_error('Product not found')
+            else:
+                permissions.user_can_view(user, product)
+                products[p] = json.loads(product.data)
+
+        return self.api_success({'products': products})
+
+    def delete_board_products(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safeInt(data.get('board_id'))
+            board = WooBoard.objects.get(pk=pk)
+        except WooBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_edit(user, board)
+
+        for p in data.getlist('products[]'):
+            pk = safeInt(p)
+            product = WooProduct.objects.filter(pk=pk).first()
+            if product:
+                permissions.user_can_edit(user, product)
+                board.products.remove(product)
+
+        return self.api_success()
+
+    def post_board_add_products(self, request, user, data):
+        if not user.can('edit_product_boards.sub'):
+            raise PermissionDenied()
+
+        try:
+            pk = safeInt(data.get('board'))
+            board = WooBoard.objects.get(pk=pk)
+        except WooBoard.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+        else:
+            permissions.user_can_edit(user, board)
+
+        for p in data.getlist('products[]'):
+            pk = safeInt(p)
+            product = WooProduct.objects.filter(pk=pk).first()
+            if product:
+                permissions.user_can_edit(user, product)
+                board.products.add(product)
+
+        board.save()
 
         return self.api_success()

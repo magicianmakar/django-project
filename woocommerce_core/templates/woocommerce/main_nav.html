@@ -39,7 +39,7 @@
                     <span class="nav-label">Stores</span>
                 </a>
             </li>
-            <li {% if url_name == 'woo:products_list' %}class="active"{% endif %}>
+            <li {% if url_name == 'woo:products_list' or url_name == 'woo:boards_list' %}class="active"{% endif %}>
                 <a href="{% url 'woo:products_list' %}">
                     <i class="fa fa-shopping-cart"></i>
                     <span class="nav-label">Products</span>
@@ -52,6 +52,14 @@
                             <span class="nav-label">All Products</span>
                         </a>
                     </li>
+                    {% if user|can:'view_product_boards.sub' %}
+                    <li {% if url_name == 'woo:boards_list' %}class="active"{% endif %}>
+                        <a href="{% url 'woo:boards_list' %}">
+                            <i class="fa fa-edit"></i>
+                            <span class="nav-label">Boards</span>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </li>
 

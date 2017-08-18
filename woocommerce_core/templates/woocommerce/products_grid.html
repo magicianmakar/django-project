@@ -55,10 +55,10 @@
                                 {% if request.GET.store != 'c' and user|can:'myshopify_integration.use' %}
                                 <option value="edit">Edit...</option>
                                 {% endif %}
-                                {% comment %}
                                 <option value="board">Add to Board...</option>
+                                {% comment %}
                                 {% if not request.GET.store or request.GET.store == 'n' %}
-                                    <option value="shopify-send">Send To WooCommerce...</option>
+                                    <option value="woocommerce-send">Send To WooCommerce...</option>
                                 {% endif %}
                                 {% endcomment %}
                                 <option value="delete">Delete</option>
@@ -102,6 +102,7 @@
                                         <span class="product-price">
                                             {% money_format item.price %}
                                         </span>
+                                        <small class="text-muted">{{item.parsed.type}}</small>
                                         {% if item.default_supplier %}
                                         <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
                                             <a href="{{item.parsed.original_url}}" target="_blank">{{item.default_supplier.supplier_name}}</a>
@@ -117,7 +118,6 @@
                                             <div class="col-md-4" style="padding-right:0">
                                             <a href="{% url 'woo:product_detail' pk=item.id %}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
                                             </div>
-                                            {% comment %}
                                             <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
                                             <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
                                                 {% with board=item.wooboard_set.first %}
@@ -130,7 +130,6 @@
 
                                             </button>
                                             </div>
-                                            {% endcomment %}
                                         </div>
                                     </div>
                                 </div>

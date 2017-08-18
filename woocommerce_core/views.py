@@ -19,7 +19,7 @@ from shopified_core.utils import (
     clean_query_id,
 )
 
-from .models import WooStore, WooProduct, WooOrderTrack
+from .models import WooStore, WooProduct, WooOrderTrack, WooBoard
 from .utils import (
     woocommerce_products,
     store_shipping_carriers,
@@ -503,3 +503,59 @@ class OrdersTrackList(ListView):
             self.store = get_store_from_request(self.request)
 
         return self.store
+
+
+class BoardsList(ListView):
+    model = WooBoard
+    context_object_name = 'boards'
+    template_name = 'woocommerce/boards_list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('view_product_boards.sub'):
+            raise permissions.PermissionDenied()
+
+        return super(BoardsList, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(BoardsList, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardsList, self).get_context_data(**kwargs)
+        context['breadcrumbs'] = ['Boards']
+
+        return context
+
+
+class BoardDetailView(DetailView):
+    model = WooBoard
+    context_object_name = 'board'
+    template_name = 'woocommerce/board.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('view_product_boards.sub'):
+            raise permissions.PermissionDenied()
+
+        return super(BoardDetailView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(BoardDetailView, self).get_queryset()
+        return qs.filter(user=self.request.user.models_user)
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardDetailView, self).get_context_data(**kwargs)
+        permissions.user_can_view(self.request.user, self.object)
+
+        products = woocommerce_products(self.request, store=None, board=self.object.id)
+        paginator = SimplePaginator(products, 25)
+        page = safeInt(self.request.GET.get('page'), 1)
+        page = paginator.page(page)
+
+        context['paginator'] = paginator
+        context['products'] = page
+        context['current_page'] = page
+        context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('woo:boards_list')}, self.object.title]
+
+        return context

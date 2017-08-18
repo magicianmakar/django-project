@@ -154,6 +154,9 @@ def product_export(store_id, product_id, user_id, publish=None):
         store = WooStore.objects.get(id=store_id)
         product = WooProduct.objects.get(id=product_id)
 
+        if product.source_id and product.store.id == store.id:
+            raise ValueError('Product already connected to WooCommerce store.')
+
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
 
@@ -187,6 +190,14 @@ def product_export(store_id, product_id, user_id, publish=None):
             'product': product.id,
             'product_url': reverse('woo:product_detail', kwargs={'pk': product.id}),
             'woocommerce_url': product.woocommerce_url
+        })
+
+    except ValueError as e:
+        store.pusher_trigger('product-export', {
+            'success': False,
+            'error': str(e),
+            'product': product.id,
+            'product_url': reverse('woo:product_detail', kwargs={'pk': product.id}),
         })
 
     except Exception as e:

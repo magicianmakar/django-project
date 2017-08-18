@@ -48,7 +48,7 @@ $('#apply-btn').click(function(e) {
         wooProductsEditModal(getSelectProduct());
         return;
     } else if (action == 'board') {
-        // $('#modal-board-product').modal('show');
+        $('#modal-board-product').modal('show');
         return;
     } else if (action == 'woocommerce-send') {
         // $('#modal-woocommerce-send').modal('show');
@@ -156,6 +156,7 @@ $('#board-product-send').click(function(e) {
         success: function(data) {
             if ('status' in data && data.status == 'ok') {
                 $('#modal-board-product').modal('hide');
+                toastr.success('Added to board');
             } else {
                 displayAjaxError('Add to board', data);
             }

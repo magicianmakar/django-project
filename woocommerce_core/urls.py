@@ -12,4 +12,6 @@ urlpatterns = patterns(
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', woocommerce_core.views.VariantsEditView.as_view(), name='variants_edit'),
     url(r'^orders$', woocommerce_core.views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/track$', woocommerce_core.views.OrdersTrackList.as_view(), name='orders_track'),
+    url(r'^boards/list$', woocommerce_core.views.BoardsList.as_view(), name='boards_list'),
+    url(r'^boards/(?P<pk>[0-9]+)$', woocommerce_core.views.BoardDetailView.as_view(), name='board_detail'),
 )

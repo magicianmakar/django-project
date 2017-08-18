@@ -83,7 +83,7 @@ $('#product-export-btn').click(function (e) {
 function productExport(btn) {
     var store_id = $('#store-select').val();
     if (!store_id || store_id.length === 0) {
-        swal('Product Export', 'Please choose a Shopify store first!', 'error');
+        swal('Product Export', 'Please choose a WooCommerce store first!', 'error');
         return;
     }
 

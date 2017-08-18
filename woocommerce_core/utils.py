@@ -20,7 +20,7 @@ from shopified_core.utils import safeInt, safeFloat, hash_url_filename
 
 import leadgalaxy.utils as leadgalaxy_utils
 
-from .models import WooProduct, WooStore
+from .models import WooProduct, WooStore, WooBoard
 
 
 def filter_products(res, fdata):
@@ -78,6 +78,10 @@ def woocommerce_products(request, post_per_page=25, sort=None, board=None, store
             res = res.filter(source_id__gt=0, store=store)
 
             permissions.user_can_view(request.user, store)
+
+    if board:
+        res = res.filter(wooboard=board)
+        permissions.user_can_view(request.user, get_object_or_404(WooBoard, id=board))
 
     res = filter_products(res, request.GET)
 
@@ -236,6 +240,24 @@ def update_variants_api_data(data):
     return variants
 
 
+def disconnect_data(product):
+    data = product.parsed
+    data.pop('id')
+    data.pop('published')
+    data.pop('product_type')
+    data['status'] = 'draft'
+    data['variants'] = []
+    data['images'] = data.pop('original_images', data['images'])
+
+    for attribute in data.pop('attributes', []):
+        title, values = attribute['name'], attribute['options']
+        data['variants'].append({'title': title, 'values': values})
+
+    product.data = json.dumps(data)
+
+    return product
+
+
 @transaction.atomic
 def duplicate_product(product, store=None):
     parent_product = WooProduct.objects.get(id=product.id)
@@ -243,21 +265,7 @@ def duplicate_product(product, store=None):
     product.parent_product = parent_product
     product.source_id = 0
     product.store = store
-
-    if product.parsed.get('id'):
-        data = product.parsed
-        data.pop('id')
-        data.pop('published')
-        data['status'] = 'draft'
-        data['variants'] = []
-        data['images'] = data.pop('original_images', data['images'])
-
-        for attribute in data.pop('attributes', []):
-            title, values = attribute['name'], attribute['options']
-            data['variants'].append({'title': title, 'values': values})
-
-        product.data = json.dumps(data)
-
+    product = disconnect_data(product) if product.parsed.get('id') else product
     product.save()
 
     for supplier in parent_product.woosupplier_set.all():
@@ -563,6 +571,39 @@ def get_tracking_orders(store, tracker_orders, per_page=50):
         new_tracker_orders.append(tracked)
 
     return new_tracker_orders
+
+
+def smart_board_by_board(user, board):
+    for product in user.wooproduct_set.all():
+        product_info = json.loads(product.data)
+        product_info = {
+            'title': product_info.get('title', '').lower(),
+            'tags': product_info.get('tags', '').lower(),
+            'type': product_info.get('type', '').lower(),
+        }
+
+        try:
+            config = json.loads(board.config)
+        except:
+            continue
+
+        product_added = False
+        for j in ['title', 'tags', 'type']:
+            if product_added:
+                break
+
+            if not len(config.get(j, '')) or not len(product_info[j]):
+                continue
+
+            for f in config.get(j, '').split(','):
+                if f.lower() in product_info[j]:
+                    board.products.add(product)
+                    product_added = True
+
+                    break
+
+        if product_added:
+            board.save()
 
 
 class WooListQuery(object):
