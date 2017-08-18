@@ -19,7 +19,7 @@ from shopified_core import permissions
 from shopified_core.utils import unique_username
 
 from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
-from leadgalaxy.utils import attach_webhooks, get_plan
+from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan
 
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
@@ -143,6 +143,9 @@ def install(request, store):
     if not store.endswith('myshopify.com'):
         store = '{}.myshopify.com'.format(store)
 
+    reinstall_store = request.GET.get('reinstall') and \
+        permissions.user_can_view(request.user, ShopifyStore.objects.get(id=request.GET.get('reinstall')))
+
     if request.user.is_authenticated():
         user = request.user
 
@@ -152,7 +155,7 @@ def install(request, store):
 
         can_add, total_allowed, user_count = permissions.can_add_store(user)
 
-        if not can_add:
+        if not can_add and not reinstall_store:
             if user.profile.plan.is_free and user.can_trial():
                 subscribe_user_to_default_plan(user)
 
@@ -187,6 +190,10 @@ def install(request, store):
 
     state = get_random_string(16)
     request.session['shopify_state'] = state
+
+    if reinstall_store:
+        request.session['shopify_reinstall'] = request.GET.get('reinstall')
+
     shopify = shopify_session(request, state=state)
     authorization_url, state = shopify.authorization_url(AUTHORIZATION_URL.format(store))
 
@@ -216,6 +223,34 @@ def callback(request):
         code=request.GET['code'])
 
     user = request.user
+
+    if request.session.get('shopify_reinstall'):
+        store = ShopifyStore.objects.get(id=request.session['shopify_reinstall'])
+
+        del request.session['shopify_reinstall']
+
+        if not permissions.user_can_view(request.user, store):
+            messages.success(request, u'You don\'t have access to this store')
+            return HttpResponseRedirect('/')
+
+        try:
+            detach_webhooks(store)
+        except:
+            raven_client.captureException(level='warning')
+
+        store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
+        store.access_token = token['access_token']
+        store.version = 2
+        store.save()
+
+        try:
+            attach_webhooks(store)
+        except:
+            raven_client.captureException(level='warning')
+
+        messages.success(request, u'Your store <b>{}</b> has been re-installed!'.format(store.title))
+
+        return HttpResponseRedirect('/')
 
     if not user.is_authenticated():
         # New User coming from Shopify Apps Store

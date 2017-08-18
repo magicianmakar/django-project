@@ -305,6 +305,14 @@ $('.verify-api-url').click(function (e) {
     });
 });
 
+$('.re-install-store').click(function (e) {
+    e.preventDefault();
+
+    $(this).bootstrapBtn('loading');
+
+    window.location.href = '/shopify/install/' + $(this).attr('store-shop') + '?reinstall=' + $(this).attr('store-id');
+});
+
 $('.change-tracking-url').click(function(e) {
     e.preventDefault();
 

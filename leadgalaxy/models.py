@@ -599,6 +599,11 @@ class ShopifyStore(models.Model):
             'api_secret': api_secret
         }
 
+    def get_shop(self):
+        from leadgalaxy.utils import get_domain
+
+        return get_domain(self.get_link(), full=True).split('.')[0]
+
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any',
                          query='', all_orders=False, created_range=None):
         if all_orders:

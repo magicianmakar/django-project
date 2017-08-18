@@ -35,7 +35,7 @@
               </thead>
               <tbody id="stores-table-body">
                     {% for item in stores %}
-                    <tr class="store-item" store-id="{{item.id}}">
+                    <tr class="store-item" store-id="{{item.id}}" store-shop="{{item.get_shop}}">
                         <td class="drag-show">
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
@@ -91,6 +91,13 @@
                             <a store-id="{{item.id}}" class="verify-api-url btn-success btn-outline"
                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                 <i class="fa fa-check-circle-o"></i> Verify
+                            </a>
+                        </li>
+
+
+                        <li>
+                            <a store-id="{{item.id}}" store-shop="{{item.get_shop}}" class="re-install-store btn-info btn-outline">
+                                <i class="fa fa-refresh"></i> Re-Install
                             </a>
                         </li>
 
