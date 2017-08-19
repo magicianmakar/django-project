@@ -39,8 +39,7 @@ from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
 )
-from dropwow_core.models import DropwowAccount, DropwowOrderStatus
-from dropwow_core.utils import fulfill_dropwow_order
+from dropwow_core.models import DropwowAccount
 
 import tasks
 import utils
