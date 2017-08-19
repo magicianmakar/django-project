@@ -1067,3 +1067,24 @@ class WooStoreApi(ApiResponseMixin, View):
             board.products.add(product)
             board.save()
             return self.api_success({'board': {'id': board.id, 'title': board.title}})
+
+    def delete_supplier(self, request, user, data):
+        product = WooProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        try:
+            supplier = WooSupplier.objects.get(id=data.get('supplier'), product=product)
+        except WooSupplier.DoesNotExist:
+            return self.api_error('Supplier not found.\nPlease reload the page and try again.')
+
+        need_update = product.default_supplier == supplier
+
+        supplier.delete()
+
+        if need_update:
+            other_supplier = product.get_suppliers().first()
+            if other_supplier:
+                product.set_default_supplier(other_supplier)
+                product.save()
+
+        return self.api_success()

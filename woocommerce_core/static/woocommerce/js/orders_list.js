@@ -29,7 +29,7 @@ $(".more-info").click(function (e) {
 $('#fulfill-provider-name').prop('disabled', true);
 
 $('#fulfill-provider').change(function(e) {
-    var value = $('#fulfill-provider option:selected').text();
+    var value = $(this).find('option:selected').text();
     if (value == 'Custom Provider') {
         $('#fulfill-provider-name').prop('disabled', false);
     } else {

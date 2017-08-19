@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('woocommerce_core', '0001_initial'),
-        ('leadgalaxy', '0154_adminevent_target_user'),
+        ('leadgalaxy', '0155_shopifyordertrack_source_type'),
     ]
 
     operations = [
