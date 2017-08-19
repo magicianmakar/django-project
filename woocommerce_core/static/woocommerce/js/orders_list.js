@@ -26,6 +26,17 @@ $(".more-info").click(function (e) {
     });
 });
 
+$('#fulfill-provider-name').prop('disabled', true);
+
+$('#fulfill-provider').change(function(e) {
+    var value = $('#fulfill-provider option:selected').text();
+    if (value == 'Custom Provider') {
+        $('#fulfill-provider-name').prop('disabled', false);
+    } else {
+        $('#fulfill-provider-name').prop('disabled', true);
+    }
+});
+
 $('.fulfill-btn').click(function (e) {
     $('#modal-fulfillment form').trigger('reset');
 
