@@ -127,6 +127,7 @@ class WooProduct(models.Model):
     title = models.CharField(max_length=300, blank=True, db_index=True)
     price = models.FloatField(blank=True, null=True, db_index=True)
     tags = models.TextField(blank=True, default='', db_index=True)
+    product_type = models.CharField(max_length=300, blank=True, default='', db_index=True)
 
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='WooCommerce Product ID')
     default_supplier = models.ForeignKey('WooSupplier', on_delete=models.SET_NULL, null=True, blank=True)
@@ -184,6 +185,7 @@ class WooProduct(models.Model):
 
         self.title = data.get('title', '')
         self.tags = safeStr(data.get('tags', ''))[:1024]
+        self.product_type = safeStr(data.get('type', ''))[:254]
 
         try:
             self.price = '%.02f' % float(data['price'])
