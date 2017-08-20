@@ -73,9 +73,17 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="form-group col-xs-3">
+                        <label for="product-type">Type</label>
+                        <input type="text" class="form-control" id="product-type" placeholder="Product Type">
+                    </div>
                     <div class="form-group col-xs-6">
                         <label for="product-type">Tags</label>
                         <input type="text" class="form-control tag-it" value="{{ product.parsed.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
+                    </div>
+                    <div class="form-group col-xs-3">
+                        <label for="product-vendor">Vendor</label>
+                        <input type="text" class="form-control" value="" id="product-vendor" placeholder="Product Vendor" disabled />
                     </div>
                 </div>
 

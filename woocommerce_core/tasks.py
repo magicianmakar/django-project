@@ -226,6 +226,7 @@ def product_update(product_id, data):
         r = store.wcapi.put('products/{}'.format(product.source_id), api_data)
         r.raise_for_status()
 
+        product.update_data({'type': data.get('type', '')})
         product.source_id = r.json()['id']
         product.save()
 
