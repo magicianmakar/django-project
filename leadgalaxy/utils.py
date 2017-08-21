@@ -229,7 +229,7 @@ def smart_board_by_product(user, product):
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j].lower():
+                if f.lower() and f.lower() in product_info[j].lower():
                     i.products.add(product)
                     product_added = True
 
