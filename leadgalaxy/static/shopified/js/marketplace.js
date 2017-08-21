@@ -122,7 +122,7 @@ $('#shopify-send-btn').click(function(e) {
             'images': $.map(original_product.combinations, function(c) {
                 return c.image_path;
             }),
-            'original_url': app_link('marketplace/product/', original_product.id),
+            'original_url': app_link(['marketplace/product/', original_product.id]),
             'store': {
                 url: app_link('marketplace'),
                 name: 'Dropwow'
