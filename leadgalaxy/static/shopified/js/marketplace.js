@@ -173,7 +173,7 @@ $('#shopify-send-btn').click(function(e) {
                 if (action == 'save') {
                     setShopifySendModalProgress(products.length, {
                         'element': el.element,
-                        'product': el.product
+                        'product': data[el.product]['id']
                     }, true, { 'product': el.product });
                 } else {
                     sendProductToShopify(data[el.product], $('#send-select-store').val(), data[el.product].id,
@@ -181,7 +181,7 @@ $('#shopify-send-btn').click(function(e) {
                             setShopifySendModalProgress(products.length, callback_data, req_success, data);
                         }, {
                             'element': el.element,
-                            'product': el.product
+                            'product': data[el.product]['id']
                         }
                     );
                 }
