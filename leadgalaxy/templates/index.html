@@ -595,6 +595,20 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="alert_to_sub_users" class="col-sm-4 col-xs-8 control-label">
+                                        Send Alert to Sub Users too
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="alert_to_sub_users"
+                                               name="alert_to_sub_users" {% if config.alert_to_sub_users %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {% endif %}
 
                         {% if user|can:'aliexpress_captcha.use' %}

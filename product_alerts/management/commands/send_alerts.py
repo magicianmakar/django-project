@@ -149,6 +149,10 @@ class Command(BaseCommand):
         cache.set(notify_key, True, timeout=86400)
 
         self.send_email(user, changes_map)
+        if self.get_config('alert_to_sub_users', None, user, False):
+            sub_users = User.objects.filter(profile__subuser_parent=user)
+            for sub_user in sub_users:
+                self.send_email(sub_user, changes_map)
         return changes_map
 
     def send_email(self, user, changes_map):
@@ -173,7 +177,9 @@ class Command(BaseCommand):
             )
 
     def get_config(self, name, product, user, default='notify'):
-        value = product.get_config().get(name)
+        value = None
+        if product:
+            value = product.get_config().get(name)
         if value is None:
             value = user.get_config(name, default)
 
