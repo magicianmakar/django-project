@@ -2349,6 +2349,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         profile.subuser_parent = None
         profile.subuser_stores.clear()
+        profile.subuser_chq_stores.clear()
         profile.plan = utils.get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
         profile.save()
 

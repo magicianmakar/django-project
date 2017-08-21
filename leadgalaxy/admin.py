@@ -124,25 +124,22 @@ class UserProfileAdmin(admin.ModelAdmin):
         }),
 
         ('User Settings', {
-            'classes': ('collapse',),
             'fields': ('config', 'emails', 'ips')
+        }),
+
+        ('Sub User', {
+            'fields': ('subuser_parent', 'subuser_stores', 'subuser_chq_stores')
         }),
 
         ('Custom Limits', {
             'description': 'Special Values:<br/>-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores<br/>'
                            '&nbsp;&nbsp;0 or more are the new limits for this user',
-            'classes': ('collapse',),
             'fields': ('stores', 'products', 'boards'),
         }),
 
         ('Plan Expire', {
             'classes': ('collapse',),
             'fields': ('plan_after_expire', 'plan_expire_at')
-        }),
-
-        ('Sub User', {
-            'classes': ('collapse',),
-            'fields': ('subuser_parent', 'subuser_stores', 'subuser_chq_stores')
         }),
     )
 
@@ -159,6 +156,15 @@ class UserProfileAdmin(admin.ModelAdmin):
             # restrict role queryset to those related to this instance:
             if self.instance.subuser_parent is not None:
                 kwargs['queryset'] = self.instance.subuser_parent.profile.get_shopify_stores()
+            else:
+                kwargs['queryset'] = ShopifyStore.objects.none()
+
+        elif db_field.name == 'subuser_chq_stores' and self.instance:
+            kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
+
+            # restrict role queryset to those related to this instance:
+            if self.instance.subuser_parent is not None:
+                kwargs['queryset'] = self.instance.subuser_parent.profile.get_chq_stores()
             else:
                 kwargs['queryset'] = ShopifyStore.objects.none()
 
