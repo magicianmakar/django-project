@@ -1768,7 +1768,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if customer_address['country_code'] != 'US':
             return self.api_error('Dropwow support US customers only')
 
-        if not fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id):
+        result = fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id)
+        if not result:
             return self.api_error('Auto fulfill error')
 
         return self.api_success()

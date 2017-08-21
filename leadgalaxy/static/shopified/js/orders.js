@@ -236,11 +236,12 @@ function placeOrder(e) {
 
     swal({
         title: "Place Order",
-        text: "Do you want to order is item?",
+        text: "Do you want to order this item?",
         type: "warning",
         showCancelButton: true,
         closeOnConfirm: false,
         showLoaderOnConfirm: true,
+        confirmButtonText: "Place Order",
         animation: "slide-from-top",
     }, function() {
         $.ajax({
