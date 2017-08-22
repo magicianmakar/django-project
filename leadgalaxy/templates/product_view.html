@@ -222,6 +222,12 @@
             </div>
 
             <div class="buttons col-xs-12">
+                <div id="editing-image-processing" class="alert alert-info hidden">
+                    You just started editing an image. When it finishes, your old image will be replaced.
+                </div>
+                <div id="editing-image-done" class="alert alert-success hidden">
+                    We noticed you just changed an image and this change is not permanent yet. Please click on <b>Save for Later</b> or <b>Send to Shopify</b> for the changes to take place.
+                </div>
                 <div class="row text-center" id="var-images">
                 </div>
 
@@ -958,7 +964,7 @@ var config = {
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
     photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
-    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
+    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.use'|lower }},
     feather_editor: null,
     shopify_variants: {
     {% for variant in shopify_product.variants %}
