@@ -724,6 +724,8 @@ def order_track_fulfillment(order_track, user_config=None):
         )
 
         try:
+            rep.raise_for_status()
+
             for fulfilment in rep.json()['fulfilments']:
                 for item in fulfilment['items']:
                     caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']),
@@ -731,8 +733,10 @@ def order_track_fulfillment(order_track, user_config=None):
 
             fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
 
-        except:
-            raven_client.captureException(level='warning')
+        except Exception as e:
+            raven_client.captureException(level='warning', extra={
+                'response': e.response.text if hasattr(e, 'response') else ''
+            })
 
     try:
         last_shipment = (total_quantity - total_shipped - quantity) == 0
