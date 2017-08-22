@@ -30,7 +30,7 @@ def safeStr(v, default=''):
 @add_to_class(User, 'get_chq_boards')
 def user_get_chq_boards(self):
     if self.is_subuser:
-        return self.profile.subuser_parent.get_boards()
+        return self.profile.subuser_parent.get_chq_boards()
     else:
         return self.commercehqboard_set.all().order_by('title')
 
