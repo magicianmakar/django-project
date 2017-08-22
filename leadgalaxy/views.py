@@ -3460,8 +3460,11 @@ def subusers(request):
         raise PermissionDenied()
 
     sub_users = User.objects.filter(profile__subuser_parent=request.user)
-    invitation = PlanRegistration.objects.filter(sender=request.user) \
-                                         .filter(Q(user__isnull=True) | Q(user__profile__subuser_parent=request.user))
+    invitation = []
+    for i in PlanRegistration.objects.filter(sender=request.user).filter(Q(user__isnull=True) | Q(user__profile__subuser_parent=request.user)):
+        i.have_access = (i.expired and (i.user.profile.subuser_stores.count() or i.user.profile.subuser_chq_stores.count()))
+
+        invitation.append(i)
 
     return render(request, 'subusers_manage.html', {
         'sub_users': sub_users,

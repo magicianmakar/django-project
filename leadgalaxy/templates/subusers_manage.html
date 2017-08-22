@@ -57,7 +57,7 @@
     </div>
 </div>
 
-{% if invitation.exists %}
+{% if invitation %}
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
@@ -78,7 +78,7 @@
                     </thead>
                     <tbody>
                         {% for item in invitation %}
-                        {% if not item.expired or not item.user.profile.subuser_stores.count or not item.user.profile.subuser_chq_stores.count %}
+                        {% if not item.have_access %}
                         <tr>
                             <td class="no-wrap">{{item.email|urlize}}</td>
                             <td class="no-wrap">{{item.created_at|date}}</td>
