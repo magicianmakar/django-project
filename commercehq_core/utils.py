@@ -711,23 +711,28 @@ def order_track_fulfillment(order_track, user_config=None):
 
     if fulfilment_id is None:
         store = order_track.store
+        api_data = {
+            "items": [{
+                "id": order_track.line_id,
+                "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id)) or 1,
+            }]
+        }
+
         rep = store.request.post(
             url=store.get_api_url('orders', order_track.order_id, 'fulfilments'),
-            json={
-                "items": [{
-                    "id": order_track.line_id,
-                    "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_track.order_id, order_track.line_id)) or 1,
-                }]
-            }
+            json=api_data
         )
 
-        if rep.ok:
+        try:
             for fulfilment in rep.json()['fulfilments']:
                 for item in fulfilment['items']:
                     caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_track.order_id, item['id']),
                                          fulfilment['id'], timeout=604800)
 
             fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
+
+        except:
+            raven_client.captureException(level='warning')
 
     try:
         last_shipment = (total_quantity - total_shipped - quantity) == 0
