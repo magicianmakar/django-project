@@ -91,7 +91,7 @@ class ShopifyOrderTrackAdmin(admin.ModelAdmin):
 
 @admin.register(ShopifyStore)
 class ShopifyStoreAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'is_active', 'auto_fulfill', 'created_at', 'updated_at')
+    list_display = ('title', 'user', 'is_active', 'shop', 'auto_fulfill', 'created_at', 'updated_at')
     search_fields = ('title', 'api_url', 'store_hash') + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
     readonly_fields = ('store_hash',)

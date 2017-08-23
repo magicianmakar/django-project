@@ -562,6 +562,9 @@ class ShopifyStore(models.Model):
         except User.DoesNotExist:
             pass
 
+        if not self.shop and self.api_url:
+            self.shop = self.get_shop(full_domain=True)
+
         super(ShopifyStore, self).save(*args, **kwargs)
 
     def __unicode__(self):
@@ -599,10 +602,12 @@ class ShopifyStore(models.Model):
             'api_secret': api_secret
         }
 
-    def get_shop(self):
+    def get_shop(self, full_domain=False):
         from leadgalaxy.utils import get_domain
 
-        return get_domain(self.get_link(), full=True).split('.')[0]
+        shop = get_domain(self.get_link(), full=True)
+
+        return shop if full_domain else shop.split('.')[0]
 
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any',
                          query='', all_orders=False, created_range=None):
