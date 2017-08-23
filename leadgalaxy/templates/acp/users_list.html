@@ -96,7 +96,10 @@
                                             <li class="divider"></li>
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
                                             <li><a href="#" class="add-bundle-btn" user-id="{{item.id}}">Add Bundle</a></li>
+                                            <li class="divider"></li>
                                             <li><a href="#" class="allow-trial-btn" user-id="{{item.id}}">Allow Free Trial</a></li>
+                                            <li><a href="#" class="release-sub-user" user-id="{{item.id}}">Release Sub User</a></li>
+                                            <li><a href="#" class="reset-auto-fulfill" user-id="{{item.id}}">Reset Auto Fulfill Limit</a></li>
                                             {% if user.is_superuser %}
                                             <li class="divider"></li>
                                             <li><a href="text-danger" class="clear-sessions btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Clear Sessions</a></li>
@@ -322,7 +325,7 @@
                 showCancelButton: true,
                 closeOnCancel: true,
                 closeOnConfirm: false,
-                confirmButtonText: "Yes,",
+                confirmButtonText: "Yes",
                 cancelButtonText: "Cancel"
             },
             function(isConfirmed) {
@@ -343,6 +346,70 @@
             });
         }
 
+        function resetAutoFulfill(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            swal({
+                title: "Auto Fulfill Limit",
+                text: 'Reset this month auto fulfill limit?',
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonText: "Yes",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/auto-fulfill-limit-reset',
+                        data: {'user': user_id},
+                        success: function(data) {
+                            swal('Auto Fulfill Limit', 'Limit was reseted', 'success');
+                        },
+                        error: function(data) {
+                            displayAjaxError('Auto Fulfill Limit', data);
+                        },
+                    });
+                }
+            });
+        }
+
+        function releaseSubUser(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            swal({
+                title: "Release Sub User",
+                text: 'Release this Sub User?',
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonText: "Yes",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/release-subuser',
+                        data: {'user': user_id},
+                        success: function(data) {
+                            swal('Release Sub User', 'User has been released', 'success');
+                        },
+                        error: function(data) {
+                            displayAjaxError('Release Sub User', data);
+                        },
+                    });
+                }
+            });
+        }
+
         var profiles = {
 {% for profile in profiles  %}
     {{profile.user_id}}: {{profile.id}},
@@ -356,6 +423,8 @@
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.clear-access-tokens').unbind('click').click(clearAccessToken);
                 $('.allow-trial-btn').unbind('click').click(allowFreeTrial);
+                $('.release-sub-user').unbind('click').click(releaseSubUser);
+                $('.reset-auto-fulfill').unbind('click').click(resetAutoFulfill);
             }
 
             {% if users_count > 1 %}

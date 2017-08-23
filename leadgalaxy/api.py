@@ -857,6 +857,54 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_auto_fulfill_limit_reset(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        target_user.models_user.set_config('auto_fulfill_limit_start', arrow.utcnow().timestamp)
+
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='refund_charge',
+            data=json.dumps({'fulfill_limit_reset': arrow.utcnow().timestamp}))
+
+        return self.api_success()
+
+    def post_release_subuser(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        try:
+            target_user = User.objects.get(id=data.get('user'))
+        except User.DoesNotExist:
+            return self.api_error('User not found', status=404)
+        except:
+            return self.api_error('Unknown Error', status=500)
+
+        profile = target_user.profile
+
+        if not profile.subuser_parent:
+            return self.api_error('User is not a Sub User', status=422)
+
+        profile.subuser_parent = None
+        profile.subuser_stores.clear()
+        profile.subuser_chq_stores.clear()
+
+        if profile.plan.slug == 'subuser-plan':
+            profile.apply_subscription(utils.get_plan(plan_slug='startup'))
+
+        profile.save()
+
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='release_subuser',
+            data='{}')
+
+        return self.api_success()
+
     def delete_access_token(self, request, user, data):
         if not user.is_superuser:
             raise PermissionDenied()
