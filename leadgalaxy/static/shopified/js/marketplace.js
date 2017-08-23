@@ -20,6 +20,9 @@ function getSelectProduct() {
 function setShopifySendModalTitle() {
     $('#modal-shopify-send .modal-title').text(action == 'save' ? 'Save for later' : 'Sending To Shopify');
     $('#modal-shopify-send').modal('show');
+    if (targetProducts.length == 1) {
+        $('#modal-shopify-send .product-details').show();
+    }
 }
 
 $('#shopify-close-btn').click(function(e) {

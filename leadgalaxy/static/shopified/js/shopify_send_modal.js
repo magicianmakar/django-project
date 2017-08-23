@@ -1,7 +1,7 @@
 var shopify_send_tpl;
 function initializeShopifySendModal() {
     $('#modal-shopify-send .progress').show();
-    $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', true);
+    $('#modal-shopify-send input, #modal-shopify-send select, #modal-shopify-send textarea').prop('disabled', true);
     $('#modal-shopify-send').prop('total_sent_success', 0);
     $('#modal-shopify-send').prop('total_sent_error', 0);
 }
@@ -57,6 +57,7 @@ $(function() {
         $('.progress-table-row').hide();
         $('.progress-table tbody').html('');
         $('#modal-shopify-send .progress').hide();
+        $('#modal-shopify-send .product-details').hide();
         $('#modal-shopify-send .progress').addClass('progress-striped active');
         $('#modal-shopify-send .modal-footer').show();
         $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', false);
