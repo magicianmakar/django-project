@@ -258,7 +258,7 @@ def callback(request):
 
         shop_info = shopify.Shop.current()
         username = shop.split('.')[0]
-        username = unique_username(username)
+        username = unique_username(username, fullname=shop_info.shop_owner)
 
         user = User.objects.create(
             username=username,

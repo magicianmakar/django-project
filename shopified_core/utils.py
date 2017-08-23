@@ -376,14 +376,23 @@ def save_user_ip(request, user=None):
     user.profile.add_ip(ip)
 
 
-def unique_username(username='user'):
+def unique_username(username='user', fullname=None):
 
     if '@' in username:
         username = username.split('@')[0]
 
     n = 0
+
+    if fullname:
+        if type(fullname) is list:
+            fullname = u' '.join(fullname)
+
+        fullname = re.sub(r'[^a-zA-Z0-9_ -]', '', fullname).strip()
+        username = re.sub(r'[ ]+', '.', fullname)
+
     username = username.lower()
     new_username = username
+
     while User.objects.filter(username__iexact=new_username).exists():
         n += 1
         new_username = u'{}{}'.format(username, n)

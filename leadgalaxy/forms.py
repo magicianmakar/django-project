@@ -60,7 +60,7 @@ class RegisterForm(forms.ModelForm):
 
     def clean_username(self):
         try:
-            return unique_username(self.clean_email())
+            return unique_username(self.clean_email(), fullname=self.clean_fullname())
 
         except AssertionError as e:
             raise forms.ValidationError(e.message)
@@ -107,9 +107,9 @@ class RegisterForm(forms.ModelForm):
     def save(self, commit=True):
         user = super(RegisterForm, self).save(commit=False)
 
-        username = unique_username(self.cleaned_data["email"])
-
         fullname = self.cleaned_data['fullname'].split(' ')
+        username = unique_username(self.cleaned_data["email"], fullname=fullname)
+
         if len(fullname):
             user.first_name = fullname[0]
             user.last_name = u' '.join(fullname[1:])

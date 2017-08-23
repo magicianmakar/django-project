@@ -35,9 +35,8 @@ class PlanCheckoutView(TemplateView):
         error = None
 
         email = request.POST['stripeEmail']
-        username = unique_username(email)
-
         fullname = request.POST['stripeBillingName'].split(' ')
+        username = unique_username(email, fullname=fullname)
 
         created = False
         try:
@@ -142,9 +141,8 @@ class MonthlyCheckoutView(TemplateView):
         error = None
 
         email = request.POST['stripeEmail']
-        username = unique_username(email)
-
         fullname = request.POST['stripeBillingName'].split(' ')
+        username = unique_username(email, fullname=fullname)
 
         created = False
         try:

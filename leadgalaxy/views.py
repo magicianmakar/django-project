@@ -805,7 +805,7 @@ def webhook(request, provider, option):
             email = request.POST['Email']
             fullname = request.POST['Name'].title().split(' ')
 
-            username = unique_username(email)
+            username = unique_username(email, fullname=fullname)
 
             password = get_random_string(12)
 

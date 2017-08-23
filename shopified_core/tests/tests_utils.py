@@ -199,6 +199,22 @@ class UtilsTestCase(TestCase):
             self.assertEqual(username, 'john%d' % (4 + i))
             User.objects.create(username=username)
 
+    def test_unique_username_fullname(self):
+        username = unique_username('john', fullname="John Smith")
+        self.assertEqual(username, 'john.smith')
+
+        username = unique_username('john', fullname="John & Smith")
+        self.assertEqual(username, 'john.smith')
+
+        User.objects.create(username='john.smith')
+
+        username = unique_username('john', fullname="John & Smith")
+        self.assertEqual(username, 'john.smith1')
+        User.objects.create(username=username)
+
+        username = unique_username('john', fullname=['John', 'Smith'])
+        self.assertEqual(username, 'john.smith2')
+
 
 class ShippingHelperTestCase(TestCase):
     def setUp(self):
