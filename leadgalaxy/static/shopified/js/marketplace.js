@@ -20,6 +20,24 @@ function getSelectProduct() {
 function setShopifySendModalTitle() {
     $('#modal-shopify-send .modal-title').text(action == 'save' ? 'Save for later' : 'Sending To Shopify');
     $('#modal-shopify-send').modal('show');
+    if (targetProducts.length == 1) {
+        var original_product;
+        for (var i = 0; i < dropwow_products.length; i++) {
+            if (targetProducts[0] == dropwow_products[i].id) {
+                original_product = dropwow_products[i];
+                break;
+            }
+        }
+
+        $('#modal-shopify-send #product-title').val(original_product.title);
+        $('#modal-shopify-send #product-price').val(original_product.combinations[0].price);
+        $('#modal-shopify-send #product-compare-at').val('');
+        $('#modal-shopify-send #product-weight').val('');
+        $('#modal-shopify-send #product-type').val(original_product.category ? original_product.category.label : '');
+        $('#modal-shopify-send #product-tag').val('');
+        $('#modal-shopify-send #product-vendor').val(original_product.vendor);
+        $('#modal-shopify-send .product-details').show();
+    }
 }
 
 $('#shopify-close-btn').click(function(e) {
@@ -114,11 +132,33 @@ $('#shopify-send-btn').click(function(e) {
             variants.push(variant);
         });
 
+        var title, price, compare_at_price, weight, weight_unit, type, tag, vendor;
+
+        if (targetProducts.length == 1 && $('#modal-shopify-send .product-details').is(':visible')) {
+            title = $('#modal-shopify-send #product-title').val();
+            price = $('#modal-shopify-send #product-price').val();
+            compare_at_price = $('#modal-shopify-send #product-compare-at').val();
+            weight = $('#modal-shopify-send #product-weight').val();
+            weight_unit = weight ? $('#modal-shopify-send #product-weight-unit').val() : '';
+            type = $('#modal-shopify-send #product-type').val();
+            tag = $('#modal-shopify-send #product-tag').val();
+            vendor = $('#modal-shopify-send #product-vendor').val();
+        } else {
+            title = original_product.title;
+            price = original_product.combinations[0].price;
+            compare_at_price = null;
+            weight = '';
+            weight_unit = '';
+            type = original_product.category ? original_product.category.label : '';
+            tag = '';
+            vendor = '';
+        }
+
         var api_data = {
-            'title': original_product.title,
+            'title': title,
             'description': original_product.description,
-            'price': original_product.combinations[0].price,
-            'compare_at_price': null,
+            'price': price,
+            'compare_at_price': compare_at_price ? compare_at_price : null,
             'images': $.map(original_product.combinations, function(c) {
                 return c.image_path;
             }),
@@ -127,12 +167,12 @@ $('#shopify-send-btn').click(function(e) {
                 url: app_link('marketplace'),
                 name: 'Dropwow'
             },
-            'type': original_product.category ? original_product.category.label : '',
-            'tags': '',
-            'vendor': original_product.vendor,
+            'type': type,
+            'tags': tag,
+            'vendor': vendor,
             "published": $('#send-product-visible')[0].checked,
-            'weight': '',
-            'weight_unit': '',
+            'weight': weight,
+            'weight_unit': weight_unit,
             'variants_images': {},
             'variants_sku': {},
 

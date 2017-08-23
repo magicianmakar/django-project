@@ -34,7 +34,7 @@ def get_dropwow_products(page, post_per_page, title, category_id, min_price, max
 def get_dropwow_featured_products(count):
     feed = requests.get(
         url='{}/dropwow-products/random'.format(settings.DROPWOW_API_HOSTNAME),
-        params={'random': count},
+        params={'count': count},
         auth=HTTPBasicAuth(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
     )
 
