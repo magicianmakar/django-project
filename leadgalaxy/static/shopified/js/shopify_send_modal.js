@@ -60,7 +60,7 @@ $(function() {
         $('#modal-shopify-send .product-details').hide();
         $('#modal-shopify-send .progress').addClass('progress-striped active');
         $('#modal-shopify-send .modal-footer').show();
-        $('#modal-shopify-send input, #modal-shopify-send select').prop('disabled', false);
+        $('#modal-shopify-send input, #modal-shopify-send select, #modal-shopify-send textarea').prop('disabled', false);
         $('#modal-shopify-send #shopify-send-btn').button('reset');
 
         $('#modal-shopify-send .progress-bar-success').css('width', '0');
