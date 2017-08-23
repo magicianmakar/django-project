@@ -1,9 +1,10 @@
-/* global $, toastr, swal, displayAjaxError, dropwow_product */
+/* global $, toastr, swal, displayAjaxError, dropwow_products */
 
 (function() {
     'use strict';
 
     function showCombination() {
+        var dropwow_product = dropwow_products[0];
         var current;
         for (var i = 0; i < dropwow_product.combinations.length; i++) {
             var combination = dropwow_product.combinations[i].combination;
