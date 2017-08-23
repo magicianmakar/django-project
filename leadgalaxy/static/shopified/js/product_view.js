@@ -1481,7 +1481,7 @@ var PusherSubscription = {
 
                 if (data.success) {
                     setTimeout(function() {
-                        var image = $('#' + imageId);
+                        var image = $('#' + data.image_id);
                         image.attr('src', data.url);
                         product.images[parseInt(image.attr('image-id'), 10)] = data.url;
 

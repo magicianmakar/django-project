@@ -2403,7 +2403,8 @@ def save_image_s3(request):
         product.store.pusher_trigger('pixlr-editor', {
             'success': True,
             'product': product_id,
-            'url': upload_url
+            'url': upload_url,
+            'image_id': request.GET.get('image_id'),
         })
 
     return JsonResponse({
