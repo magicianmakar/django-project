@@ -576,7 +576,7 @@ var config = {
 
     image_uploader: {{ request.user|can:'image_uploader.use'|lower }},
     photo_editor: {{ request.user|can:'aviary_photo_editor.view'|lower }},
-    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.view'|lower }},
+    advanced_photo_editor: {{ request.user|can:'pixlr_photo_editor.use'|lower }},
     feather_editor: null,
 
     product_extra_images: [

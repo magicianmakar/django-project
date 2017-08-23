@@ -1379,6 +1379,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         for key in bool_config:
             config[key] = (key in data)
 
+        if config.get('aliexpress_order_tags'):
+            if re.findall('https?://', config.get('aliexpress_order_tags')):
+                return self.api_error('Invalid Custom Tag - Order Placed', status=422)
+
+        if config.get('tracking_number_tags'):
+            if re.findall('https?://', config.get('tracking_number_tags')):
+                return self.api_error('Invalid Custom Tag - Tracking Number Added', status=422)
+
         profile.config = json.dumps(config)
         profile.save()
 
@@ -2349,6 +2357,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         profile.subuser_parent = None
         profile.subuser_stores.clear()
+        profile.subuser_chq_stores.clear()
         profile.plan = utils.get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
         profile.save()
 

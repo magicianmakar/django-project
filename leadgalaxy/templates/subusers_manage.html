@@ -78,7 +78,7 @@
                     </thead>
                     <tbody>
                         {% for item in invitation %}
-                        {% if not item.expired or not item.user.profile.subuser_stores.count %}
+                        {% if not item.expired or not item.user.profile.subuser_stores.count or not item.user.profile.subuser_chq_stores.count %}
                         <tr>
                             <td class="no-wrap">{{item.email|urlize}}</td>
                             <td class="no-wrap">{{item.created_at|date}}</td>
