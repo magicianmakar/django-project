@@ -3110,8 +3110,15 @@ def orders_place(request):
     parent_user = request.user.models_user
     plan = parent_user.profile.plan
     if plan.auto_fulfill_limit != -1 and not settings.DEBUG:
-        month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
-        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start)
+        month_start = arrow.utcnow().span('month')[0]
+
+        # This is used for Oberlo migration
+        if parent_user.get_config('auto_fulfill_limit_start'):
+            auto_start = arrow.get(parent_user.get_config('auto_fulfill_limit_start'))
+            if auto_start > month_start:
+                month_start = auto_start
+
+        orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start.datetime)
         orders_count = orders_count.distinct('order_id').order_by('order_id').count()
 
         if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
