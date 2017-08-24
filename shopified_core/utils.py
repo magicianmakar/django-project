@@ -381,8 +381,8 @@ def unique_username(username='user', fullname=None):
     if '@' in username:
         username = username.split('@')[0]
 
-    if not User.objects.filter(username__iexact=username).exists():
-        return username
+    if username.strip() and not User.objects.filter(username__iexact=username.strip()).exists():
+        return username.lower().strip()
 
     n = 0
 
@@ -396,11 +396,14 @@ def unique_username(username='user', fullname=None):
         if len(fullname) > len(username):
             username = fullname
 
-    username = username.lower()
+    if not username:
+        username = 'user'
+
+    username = username.lower().strip()
     new_username = username
 
     while User.objects.filter(username__iexact=new_username).exists():
         n += 1
-        new_username = u'{}{}'.format(username, n)
+        new_username = u'{}{}'.format(username.strip(), n)
 
     return new_username

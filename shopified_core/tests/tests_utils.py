@@ -219,20 +219,23 @@ class UtilsTestCase(TestCase):
         username = unique_username('john', fullname=['John', 'Smith'])
         self.assertEqual(username, 'john.smith2')
 
-        username = unique_username('john', fullname=[])
-        self.assertEqual(username, 'john1')
+        username = unique_username('john2', fullname=[])
+        self.assertEqual(username, 'john2')
 
-        username = unique_username('john', fullname=[' '])
-        self.assertEqual(username, 'john1')
+        username = unique_username('john2', fullname=[' '])
+        self.assertEqual(username, 'john2')
 
-        username = unique_username('john', fullname=[' ', ' '])
-        self.assertEqual(username, 'john1')
+        username = unique_username('john2', fullname=[' ', ' '])
+        self.assertEqual(username, 'john2')
 
-        username = unique_username('john', fullname=[''])
-        self.assertEqual(username, 'john1')
+        username = unique_username('john2', fullname=[''])
+        self.assertEqual(username, 'john2')
 
-        username = unique_username('john', fullname=['A', 'B'])
-        self.assertEqual(username, 'john1')
+        username = unique_username('john2', fullname=['A', 'B'])
+        self.assertEqual(username, 'john2')
+
+        username = unique_username('', fullname=[])
+        self.assertEqual(username, 'user')
 
 
 class ShippingHelperTestCase(TestCase):
