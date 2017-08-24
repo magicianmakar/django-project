@@ -338,7 +338,10 @@ def export_product(req_data, target, user_id):
         }
 
     if target == 'shopify':
-        record_import_metric(time.time() - start)
+        try:
+            record_import_metric(time.time() - start)
+        except:
+            raven_client.captureException(level='warning')
 
     return {
         'product': {
