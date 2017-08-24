@@ -120,8 +120,6 @@ class MonthlyCheckoutView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(MonthlyCheckoutView, self).get_context_data(**kwargs)
 
-        print kwargs
-
         if kwargs['plan_price'] == '47':
             context['monthly_plan'] = 'Elite'
         elif kwargs['plan_price'] == '99':
@@ -215,6 +213,9 @@ class MonthlyCheckoutView(TemplateView):
 
         profile.set_config_value('monthly_subscribe', request.GET['option'])
         profile.set_config_value('monthly_charge', arrow.utcnow().timestamp)
+
+        if kwargs.get('ecom_jam'):
+            profile.set_config_value('monthly_ecom_jam', True)
 
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
 

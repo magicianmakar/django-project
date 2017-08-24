@@ -51,6 +51,10 @@
 
     </head>
     <body>
+      {% for event in analytic_events %}
+          {{ event.fire|safe }}
+      {% endfor %}
+
         <section class="zx-header">
           <div class="container">
             <div class="row">
