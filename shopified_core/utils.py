@@ -381,6 +381,9 @@ def unique_username(username='user', fullname=None):
     if '@' in username:
         username = username.split('@')[0]
 
+    if not User.objects.filter(username__iexact=username).exists():
+        return username
+
     n = 0
 
     if type(fullname) is list:

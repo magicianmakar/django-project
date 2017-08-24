@@ -201,6 +201,10 @@ class UtilsTestCase(TestCase):
 
     def test_unique_username_fullname(self):
         username = unique_username('john', fullname="John Smith")
+        self.assertEqual(username, 'john')
+        User.objects.create(username=username)
+
+        username = unique_username('john', fullname="John Smith")
         self.assertEqual(username, 'john.smith')
 
         username = unique_username('john', fullname="John & Smith")
@@ -216,19 +220,19 @@ class UtilsTestCase(TestCase):
         self.assertEqual(username, 'john.smith2')
 
         username = unique_username('john', fullname=[])
-        self.assertEqual(username, 'john')
+        self.assertEqual(username, 'john1')
 
         username = unique_username('john', fullname=[' '])
-        self.assertEqual(username, 'john')
+        self.assertEqual(username, 'john1')
 
         username = unique_username('john', fullname=[' ', ' '])
-        self.assertEqual(username, 'john')
+        self.assertEqual(username, 'john1')
 
         username = unique_username('john', fullname=[''])
-        self.assertEqual(username, 'john')
+        self.assertEqual(username, 'john1')
 
         username = unique_username('john', fullname=['A', 'B'])
-        self.assertEqual(username, 'john')
+        self.assertEqual(username, 'john1')
 
 
 class ShippingHelperTestCase(TestCase):
