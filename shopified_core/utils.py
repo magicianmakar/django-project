@@ -383,12 +383,15 @@ def unique_username(username='user', fullname=None):
 
     n = 0
 
-    if fullname:
-        if type(fullname) is list:
-            fullname = u' '.join(fullname)
+    if type(fullname) is list:
+        fullname = u' '.join(fullname).strip()
 
+    if fullname:
         fullname = re.sub(r'[^a-zA-Z0-9_ -]', '', fullname).strip()
-        username = re.sub(r'[ ]+', '.', fullname)
+        fullname = re.sub(r'[ ]+', '.', fullname)
+
+        if len(fullname) > len(username):
+            username = fullname
 
     username = username.lower()
     new_username = username
