@@ -43,8 +43,8 @@
                     {% for item in users %}
                         <tr>
                             <td>
-                                {% if not user.is_superuser %}
-                                    <a href="{% url 'acp_users_list' %}?q={{item.email|urlencode}}">{{item.username}}</a></td>
+                                {% if not user.is_superuser or users_count > 1 %}
+                                    <a href="{% url 'acp_users_list' %}?user={{item.id}}">{{item.username}}</a></td>
                                 {% else %}
                                     <a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
                                 {% endif %}

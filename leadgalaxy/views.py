@@ -1633,7 +1633,7 @@ def acp_users_list(request):
         raise PermissionDenied()
 
     random_cache = 0
-    q = request.GET.get('q')
+    q = request.GET.get('q') or request.GET.get('user') or request.GET.get('store')
 
     if q or cache.get('template.cache.acp_users.invalidate'):
         random_cache = arrow.now().timestamp
@@ -1644,10 +1644,16 @@ def acp_users_list(request):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
 
     if q:
-        qid = utils.safeInt(q)
-        if qid:
+        if request.GET.get('store'):
             users = users.filter(
-                Q(shopifystore__id=qid)
+                Q(shopifystore__id=utils.safeInt(request.GET.get('store'))) |
+                Q(shopifystore__shop__iexact=q) |
+                Q(commercehqstore__api_url__icontains=q) |
+                Q(shopifystore__title__icontains=q)
+            )
+        elif request.GET.get('user'):
+            users = users.filter(
+                Q(id=request.GET.get('user'))
             )
         else:
             users = users.filter(
@@ -1655,8 +1661,11 @@ def acp_users_list(request):
                 Q(email__icontains=q) |
                 Q(profile__emails__icontains=q) |
                 Q(profile__ips__icontains=q) |
+                Q(shopifystore__shop__iexact=q) |
+                Q(commercehqstore__api_url__icontains=q) |
                 Q(shopifystore__title__icontains=q)
             )
+
         users = users.distinct()
 
         if not request.user.is_superuser:
