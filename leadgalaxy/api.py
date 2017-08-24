@@ -765,7 +765,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             return self.api_success()
 
-        if target_user.is_recurring_customer():
+        if target_user.is_recurring_customer() and target_user.have_billing_info():
             return self.api_error(
                 ('Plan should be changed from Stripe Dashboard:\n'
                  'https://dashboard.stripe.com/customers/{}').format(target_user.stripe_customer.customer_id),
