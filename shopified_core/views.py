@@ -6,6 +6,7 @@ from django.contrib.auth import logout as user_logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.validators import validate_email, ValidationError
 from django.http import JsonResponse
 from django.views.generic import View
 
@@ -84,27 +85,31 @@ class ShopifiedApi(ApiResponseMixin, View):
     def post_login(self, request, **kwargs):
         data = self.request_data(request)
 
-        username = data.get('username')
+        email = data.get('username')
         password = data.get('password')
 
-        if not username or not password:
-            return self.api_error('Username or password not set', status=403)
+        if not email or not password:
+            return self.api_error('Email or password are not set', status=403)
 
-        if core_utils.login_attempts_exceeded(username):
-            unlock_email = core_utils.unlock_account_email(username)
+        try:
+            validate_email(email)
+        except ValidationError:
+            return self.api_error('Invalid email address', status=403)
+
+        if core_utils.login_attempts_exceeded(email):
+            unlock_email = core_utils.unlock_account_email(email)
 
             raven_client.context.merge(raven_client.get_data_from_request(request))
             raven_client.captureMessage('Maximum login attempts reached',
-                                        extra={'username': username, 'from': 'API', 'unlock_email': unlock_email},
+                                        extra={'email': email, 'from': 'API', 'unlock_email': unlock_email},
                                         level='warning')
 
             return self.api_error('You have reached the maximum login attempts.\nPlease try again later.', status=403)
 
-        if '@' in username:
-            try:
-                username = User.objects.get(email__iexact=username).username
-            except:
-                return self.api_error('Unvalide email or password')
+        try:
+            username = User.objects.get(email__iexact=email).username
+        except:
+            return self.api_error('Invalid email or password')
 
         user = authenticate(username=username, password=password)
         if user is not None:
@@ -127,7 +132,7 @@ class ShopifiedApi(ApiResponseMixin, View):
                     }
                 }, safe=False)
 
-        return self.api_error('Unvalide username or password')
+        return self.api_error('Invalid Email or password')
 
     def get_me(self, request, **kwargs):
         if not request.user.is_authenticated():

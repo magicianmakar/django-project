@@ -6,7 +6,7 @@ from django.forms.utils import ErrorList
 # for login with email
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
-from django.forms import ValidationError
+from django.core.validators import validate_email, ValidationError
 
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username
@@ -198,6 +198,9 @@ class DropwowIntegrationForm(forms.Form):
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']
+
+        validate_email(username)
+
         if login_attempts_exceeded(username):
             unlock_email = unlock_account_email(username)
 
@@ -212,16 +215,12 @@ class EmailAuthenticationForm(AuthenticationForm):
                 params={'username': self.username_field.verbose_name},
             )
 
-        email_login = '@' in username
         try:
-            if email_login:
-                return User.objects.get(email__iexact=username).username
-            else:
-                return User.objects.get(username__iexact=username).username
+            return User.objects.get(email__iexact=username).username
 
         except ObjectDoesNotExist as e:
             raise ValidationError(
-                "The {} you've entered doesn't match any account.".format('Email' if email_login else 'Username'),
+                "The Email you've entered doesn't match any account.",
                 code='invalid_login',
                 params={'username': self.username_field.verbose_name},
             )
