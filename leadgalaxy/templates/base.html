@@ -93,7 +93,7 @@
                 <li class="nav-header">
                     <div class="dropdown profile-element">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.get_full_name|default:user.username}}</strong>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
                              </span> <span class="text-muted text-xs block profile-options">Options <b class="caret"></b></span> </span> </a>
                             <ul class="dropdown-menu m-t-xs">
                                 {% if user.is_superuser %}

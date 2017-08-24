@@ -19,7 +19,7 @@
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
-                            <th>Username</th>
+                            <th>Name</th>
                             <th>Email</th>
                             <th>Join Date</th>
                             <th style="width:100px">Actions</th>
@@ -31,7 +31,7 @@
                             <td>
                                 <a class="edit-user-prems" user-id="{{item.id}}" href="#">
                                 {% if item.get_full_name %}
-                                    {{item.get_full_name}} ({{item.username}})
+                                    {{item.get_full_name}}
                                 {% else %}
                                     {{item.username}}
                                 {% endif %}
