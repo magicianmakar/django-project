@@ -43,14 +43,12 @@ def cache_shopify_profits(self, user_id, store_id, found_orders):
     try:
         # Get data from shopify orders
         orders = ShopifyOrder.objects.filter(pk__in=found_orders)
-        tracks = ShopifyOrderTrack.objects.filter(store_id=store_id)
-
         result = {}
         for order in orders:
             date_key = order.created_at.date()
 
             fulfillment_cost = 0.0
-            for track in tracks.filter(order_id=order.order_id):
+            for track in ShopifyOrderTrack.objects.filter(order_id=order.order_id, store_id=store_id):
                 try:
                     data = json.loads(track.data)
                 except:

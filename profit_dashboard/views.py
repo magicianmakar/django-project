@@ -105,6 +105,8 @@ def save_other_costs(request):
 def profits(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
+    filter_end = request.GET.get('filter_end')
+    filter_start = request.GET.get('filter_start')
     limit = None
     current_page = 1
 
@@ -116,6 +118,8 @@ def profits(request):
     tz = timezone.localtime(timezone.now()).strftime(' %z')
     end = arrow.get(end + tz, r'MM/DD/YYYY Z').datetime
     start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
+    filter_end = arrow.get(filter_end + tz, r'MM/DD/YYYY Z').datetime
+    filter_start = arrow.get(filter_start + tz, r'MM/DD/YYYY Z').datetime
 
     profits, max_results, pages, totals = retrieve_current_profits(
         request.user.pk,
@@ -123,7 +127,8 @@ def profits(request):
         start,
         end,
         current_page,
-        limit
+        limit,
+        filter_date=[filter_start, filter_end]
     )
 
     return JsonResponse({'profits': profits, 'totals': totals})
