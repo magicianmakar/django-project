@@ -72,7 +72,7 @@ def cache_shopify_profits(self, user_id, store_id, found_orders):
                 result[date_key] = {
                     'revenue': order.total_price,
                     'fulfillment_cost': fulfillment_cost,
-                    'order_ids': [order.order_ids]
+                    'order_ids': [order.order_id]
                 }
 
         for date, profit_data in result.items():
