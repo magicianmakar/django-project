@@ -8,7 +8,7 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('leadgalaxy', '0150_userprofile_ips'),
+        ('leadgalaxy', '0155_shopifyordertrack_source_type'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -45,12 +45,22 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='OtherCost',
+            name='ShopifyProfit',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('amount', models.FloatField()),
                 ('date', models.DateField()),
+                ('revenue', models.DecimalField(default=0, max_digits=9, decimal_places=2)),
+                ('fulfillment_cost', models.DecimalField(default=0, max_digits=9, decimal_places=2)),
+                ('other_costs', models.DecimalField(default=0, max_digits=9, decimal_places=2)),
                 ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='ShopifyProfitImportedOrder',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('order_id', models.BigIntegerField()),
+                ('profit', models.ForeignKey(related_name='imported_orders', to='profit_dashboard.ShopifyProfit')),
             ],
         ),
     ]
