@@ -31,7 +31,7 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
-        self.ignored_users = [16088, 10052, 10889, 13366, 8869, 6680, 8699, 11765, 14651, 12755, 10142]
+        self.ignored_users = [16088, 10052, 10889, 13366, 8869, 6680, 8699, 11765, 14651, 12755, 10142, 14970]
 
         action = options['action'][0]
 
