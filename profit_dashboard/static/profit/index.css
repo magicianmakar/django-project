@@ -76,3 +76,19 @@
 #facebook-insights .row p {
   margin: 0 15px 0 0;
 }
+
+#generating-data {
+  padding-top: 3px;
+}
+
+#generating-data label {
+    line-height: 30px;
+    text-indent: 10px;
+    margin: 0;
+}
+
+#generating-data .finished i {
+    font-size: 27px;
+    float: left;
+    color: #79aa63;
+}

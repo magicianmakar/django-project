@@ -108,6 +108,12 @@ class ProfitSyncTestCase(TestCase):
 
 
 """
+from django.contrib.auth.models import User
+from leadgalaxy.models import ShopifyStore
+from random import randint
+from django.utils import timezone
+from datetime import timedelta
+from leadgalaxy.tests import factories as f
 user = User.objects.get(username='admin')
 store = ShopifyStore.objects.get(title='Uncommon Now')
 price_by_day = {}
@@ -116,7 +122,6 @@ end_date = start_date + timedelta(days=30)
 for day in range((end_date - start_date).days):
     date = start_date + timedelta(days=day)
     date_string = date.strftime('%m/%d/%Y')
-
     for times in range(randint(2, 5)):
         shopify_order = f.ShopifyOrderFactory(
             user=user,
@@ -126,6 +131,5 @@ for day in range((end_date - start_date).days):
         )
         shopify_order.save()
         price_by_day[date_string] = price_by_day.get(date_string, 0.0) + shopify_order.total_price
-
     print date_string, ': imported ', times, 'times'
 """

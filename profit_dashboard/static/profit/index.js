@@ -308,8 +308,17 @@ window.ProfitDashboard = {
             }
         });
     },
+    showDataGenerationLoading: function() {
+        $('#generating-data .finished').addClass('hidden');
+        $('#generating-data .generating').removeClass('hidden');
+    },
+    showDataGenerationFinished: function() {
+        $('#generating-data .finished').removeClass('hidden');
+        $('#generating-data .generating').addClass('hidden');
+    },
     checkCalculationPusher: function() {
         if (config.runningCalculation) {
+            window.ProfitDashboard.showDataGenerationLoading();
             var pusher = new Pusher(config.sub_conf.key);
             var channel = pusher.subscribe(config.sub_conf.channel);
 
@@ -356,6 +365,7 @@ window.ProfitDashboard = {
                     $('#profits tbody').append(profitRow({'profit': profitData}));
                 }
 
+                window.ProfitDashboard.showDataGenerationFinished();
                 window.ProfitDashboard.reloadExpandable();
                 window.ProfitDashboard.fixStripes();
             }
