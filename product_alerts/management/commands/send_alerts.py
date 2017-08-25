@@ -148,14 +148,17 @@ class Command(BaseCommand):
 
         cache.set(notify_key, True, timeout=86400)
 
-        self.send_email(user, changes_map)
-        if self.get_config('alert_to_sub_users', None, user, False):
-            sub_users = User.objects.filter(profile__subuser_parent=user)
-            for sub_user in sub_users:
-                self.send_email(sub_user, changes_map)
+        cc_list = []
+        if self.get_config('send_alerts_to_subusers', None, user, default=False):
+            for sub_user in User.objects.filter(profile__subuser_parent=user):
+                if sub_user.get_shopify_stores().count():
+                    cc_list.append(sub_user.email)
+
+        self.send_email(user, changes_map, cc_list=cc_list)
+
         return changes_map
 
-    def send_email(self, user, changes_map):
+    def send_email(self, user, changes_map, cc_list=[]):
         # send changes_map to email template
         data = {
             'username': user.username,
@@ -167,10 +170,14 @@ class Command(BaseCommand):
                 changes_map['quantity'],
                 changes_map['removed']]):
 
+            recipient_list = [user.email]
+            if len(cc_list):
+                recipient_list = recipient_list + cc_list
+
             send_email_from_template(
                 'product_change_notify.html',
                 '[Dropified] AliExpress Product Alert',
-                user.email,
+                recipient_list,
                 data,
                 nl2br=False,
                 from_email='"Dropified" <no-reply@dropified.com>'
@@ -178,8 +185,10 @@ class Command(BaseCommand):
 
     def get_config(self, name, product, user, default='notify'):
         value = None
+
         if product:
-            value = product.get_config().get(name)
+            product.get_config().get(name)
+
         if value is None:
             value = user.get_config(name, default)
 
