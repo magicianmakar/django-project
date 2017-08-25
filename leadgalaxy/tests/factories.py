@@ -92,3 +92,17 @@ class AppPermissionFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'leadgalaxy.AppPermission'
+
+
+class ShopifyOrderFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    order_id = factory.fuzzy.FuzzyInteger(99999999)
+    order_number = factory.fuzzy.FuzzyInteger(999)
+    total_price = factory.fuzzy.FuzzyFloat(1000.0)
+    customer_id = factory.fuzzy.FuzzyInteger(999)
+    created_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
+    updated_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
+
+    class Meta:
+        model = 'shopify_orders.ShopifyOrder'

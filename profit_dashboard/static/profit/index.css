@@ -1,0 +1,78 @@
+.tooltip {
+  left: 120px !important;
+}
+
+.table > tbody > tr > td {
+  padding: 10px 8px !important;
+}
+
+.table > tbody > tr > td.other-costs {
+  padding: 2px 8px !important;
+}
+
+.table > tbody > tr.odd {
+  background-color: #f9f9f9;
+}
+
+.table > tbody > tr td.actions a.open-dates,
+.table > tbody > tr td.actions a.close-dates {
+  padding: 11px;
+}
+
+.table > tbody > tr.closed .other-costs-form {
+  visibility: hidden;
+}
+
+#pagination-limit {
+  list-style-type: none;
+}
+
+#pagination-limit li {
+  float: left;
+  display: inline-block;
+  margin: 2px 2px 0;
+}
+
+#pagination-limit li label {
+  display: inline-block;
+  padding: 7px 7px 3px;
+}
+
+#pagination-limit li a,
+#pagination-limit li input {
+  display: inline-block;
+  padding: 7px 7px 3px;
+  border: 1px solid #93c47d;
+  color: #93c47d;
+  border-radius: 3px;
+  max-width: 80px;
+  text-align: center;
+  -webkit-transition: color 0.4s, background-color 0.4s;
+          transition: color 0.4s, background-color 0.4s;
+}
+
+#pagination-limit li a:hover {
+  background-color: #699a53;
+  color: #fff;
+}
+
+#pagination-limit li.active a {
+  background-color: #699a53;
+  color: #fff;
+}
+
+#pagination-limit li input {
+  color: #396a23;
+}
+
+.table.totals {
+  margin-bottom: 0;
+}
+
+.table.totals td {
+  border: none;
+}
+
+#facebook-insights .row p {
+  margin: 0 15px 0 0;
+}

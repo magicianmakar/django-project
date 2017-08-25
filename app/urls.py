@@ -21,6 +21,7 @@ urlpatterns = patterns(
     url(r'^order/exports/', include('order_exports.urls')),
     url(r'^order/imports/', include('order_imports.urls')),
     url(r'^marketplace/', include('dropwow_core.urls', namespace='marketplace')),
+    url(r'^profit-dashboard/', include('profit_dashboard.urls')),
 )
 
 

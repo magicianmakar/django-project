@@ -193,7 +193,7 @@ def render_markdown(text, render_help=True):
 
 
 @register.simple_tag
-def money_format(amount=None, store=None):
+def money_format(amount=None, store=None, allow_empty=False):
     currency_format = '${{amount}}'
 
     if store and getattr(store, 'currency_format', None):
@@ -212,6 +212,9 @@ def money_format(amount=None, store=None):
     else:
         amount = ''
         amount_no_decimals = ''
+
+        if allow_empty:
+            return amount
 
     currency_format = currency_format.replace('{{amount}}', amount)
 

@@ -70,6 +70,7 @@ INSTALLED_APPS = (
     'analytic_events',
     'order_exports',
     'order_imports',
+    'profit_dashboard',
 
     'commercehq_core',
     'dropwow_core',
@@ -345,3 +346,7 @@ WICKED_REPORTS_API = os.environ.get('WICKED_REPORTS_API')
 DROPWOW_API_HOSTNAME = os.environ.get('DROPWOW_API_HOSTNAME')
 DROPWOW_API_USERNAME = os.environ.get('DROPWOW_API_USERNAME')
 DROPWOW_API_PASSWORD = os.environ.get('DROPWOW_API_PASSWORD')
+
+# Profits Dashboard FB Ads
+FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID')
+FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')

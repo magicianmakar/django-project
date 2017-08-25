@@ -58,6 +58,7 @@ test:
 
   override:
     - flake8
+    - ./scripts/common_issues.sh
     - python manage.py test
     
     - python manage.py collectstatic --noinput --traceback 2>&1 | sed '/^Post-processed/d;/^Copying/d;/^$/d'

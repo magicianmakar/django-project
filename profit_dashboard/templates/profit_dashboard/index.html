@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load perms_helper %}
+{% load compress %}
+{% load template_helper %}
+{% load url_tools %}
+
+{% block main-container %}
+<div class="ibox float-e-margins" id="facebook-insights" style="display: none;">
+  <div class="ibox-title">
+      <h5>Facebook Ad Costs</h5>
+  </div>
+  <div class="ibox-content">
+    <div class="row">
+      <div class="col-md-12" id="connect-facebook">
+        <p class="pull-left" style="line-height: 28px;">For loading Ad Costs data please</p>
+        <fb:login-button class="fb-login-button" scope="ads_read" onlogin="window.ProfitDashboard.checkLoginState();" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false">
+        </fb:login-button>
+      </div>
+      <div class="col-md-12" id="loading-facebook">
+        <div class="sk-spinner sk-spinner-wave pull-left">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+        <p style="line-height: 30px;">Loading Ad Costs from facebook insights</p>
+      </div>
+      <div class="col-md-12" id="facebook-logged-in">
+        <p class="pull-left" style="line-height: 35px;">You are logged in with facebook.</p>
+        <form id="facebook-sync" method="post" action="{% url 'profit_dashboard_facebook_insights' %}" class="pull-left">
+          <input type="hidden" name="access_token" value="">
+          <button type="submit" class="btn btn-primary">Sync Again</button>
+        </form>
+        <p class="pull-left" style="line-height: 35px; margin-left: 15px;">or</p>
+        <div style="padding: 3px 0 0;">
+          <fb:login-button autologoutlink="true" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" onlogin="window.ProfitDashboard.checkLoginState();"></fb:login-button>
+        </div>
+      </div>
+      <br>
+      <div class="col-md-12" id="facebook-logged-in">
+        <h4>Accounts Synced</h4>
+        {% for account in accounts %}
+        <p><i>Account:</i> {{ account.account_name }} <i> - last time synced at:</i> {{ account.last_sync|date:"m/d/Y" }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-container">
+  <ul class="nav nav-tabs">
+    {% for item in user.profile.get_shopify_stores %}
+      {% if store == item or item.id|stringformat:"i" == request.GET.store %}
+        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+      {% else %}
+        <li class=""><a href="{% url 'profit_dashboard_index' %}?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+
+  <div class="tab-content">
+    <div id="tab-1" class="tab-pane active">
+      <div class="panel-body">
+        <form class="form-inline" method="get">
+          <input type="hidden" name="store" value="{{ store.id }}">
+          <div class="form-group" id="profit-range">
+            <label>Range date</label>
+            <div class="input-daterange input-group" id="datepicker" style="width: auto;">
+              <input type="text" class="form-control" name="start" value="{{ start }}"/>
+              <span class="input-group-addon">to</span>
+              <input type="text" class="form-control" name="end" value="{{ end }}" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-success">Filter</button>
+
+          <ul id="pagination-limit" class="pull-right">
+            <li>
+              <label>Items per page:</label>
+            </li>
+            <li{% if limit == 10 %} class="active"{% endif %}>
+              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=10">10</a>
+            </li>
+            <li{% if limit == 50 %} class="active"{% endif %}>
+              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=50">50</a>
+            </li>
+            <li{% if limit == 100 %} class="active"{% endif %}>
+              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=100">100</a>
+            </li>
+            <li{% if limit == None %} class="active"{% endif %}>
+              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&nolimit=1">All</a>
+            </li>
+            <li>
+              <input type="text" name="limit" placeholder="Type here" value="{{ limit|default:"" }}" />
+            </li>
+          </ul>
+        </form>
+
+        <br>
+
+        <div class="col-lg-12" style="padding-right: 0; padding-left: 0;">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              Totals
+            </div>
+            <div class="panel-body">
+              <table class="table totals">
+                <tbody>
+                  <tr>
+                    <td><button type="button" class="btn btn-info m-r-sm">{% money_format totals.revenue store True %}</button>Revenue</td>
+                    <td><button type="button" class="btn btn-warning m-r-sm">{% money_format totals.ad_spend store True %}</button>Ad Spend</td>
+                    <td>
+                      <button type="button" class="btn btn-primary m-r-sm">
+                        {% money_format None store %}
+                        <span id="totals-profit" data-original-amount="{{ totals.profit|default:"0"|floatformat:2 }}">
+                          {{ totals.profit|default:"0"|floatformat:2 }}
+                        </span>
+                      </button>
+                      Profit
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><button type="button" class="btn btn-warning m-r-sm">{% money_format totals.fulfillment_cost store True %}</button>Fulfillment Cost</td>
+                    <td>
+                      <button type="button" class="btn btn-warning m-r-sm">
+                        {% money_format None store %}
+                        <span id="totals-other-costs" data-original-amount="{{ totals.other_costs|default:"0"|floatformat:2 }}">
+                          {{ totals.other_costs|default:"0"|floatformat:2 }}
+                        </span>
+                      </button>
+                      Other Costs
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-danger m-r-sm">
+                        {% money_format None store %}
+                        <span id="totals-total-costs" data-original-amount="{{ totals.outcome|default:"0"|floatformat:2 }}">
+                          {{ totals.outcome|default:"0"|floatformat:2 }}
+                        </span>
+                      </button>
+                      Total Costs
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <table id="profits" class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Revenue</th>
+              <th>Fulfillment Cost</th>
+              <th>Ad Spend</th>
+              <th>Other Costs</th>
+              <th>Total Costs</th>
+              <th>Profit</th>
+              <th>ROI</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for profit in profits %}
+            <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}>
+              <td>{{ profit.date_as_string }}</td>
+              <td class="revenue" data-original-amount="{{ profit.item.revenue|default:"0"|floatformat:2 }}">
+                {% money_format profit.item.revenue store True %}
+              </td>
+              <td>{% money_format profit.item.fulfillment_cost store True %}</td>
+              <td>{% money_format profit.item.ad_spend store True %}</td>
+              <td class="other-costs" data-original-amount="{{ profit.item.other_costs|default:'0'|floatformat:2 }}">
+                <form class="form-inline other-costs-form" action="{% url 'profit_dashboard_save_other_costs' %}?store={{ store.id }}">
+                  <div class="form-group">
+                    <label class="sr-only" for="other_costs">Amount</label>
+                    <div class="input-group">
+                      <div class="input-group-addon">{% money_format None store %}</div>
+                      <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.item.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="form-group loading hidden">
+                    <div class="sk-spinner sk-spinner-wave">
+                        <div class="sk-rect1"></div>
+                        <div class="sk-rect2"></div>
+                        <div class="sk-rect3"></div>
+                        <div class="sk-rect4"></div>
+                        <div class="sk-rect5"></div>
+                    </div>
+                  </div>
+                </form>
+              </td>
+              <td class="total-costs">
+                {% money_format None store %}<span data-original-amount="{{ profit.item.outcome|default:"0"|floatformat:2 }}">{{ profit.item.outcome|default:"0"|floatformat:2 }}</span>
+              </td>
+              <td class="profit-amount">
+                {% money_format None store %}<span data-original-amount="{{ profit.item.profit|default:"0"|floatformat:2 }}">{{ profit.item.profit|default:"0"|floatformat:2 }}</span>
+              </td>
+              <td class="percentage">{{ profit.item.return_over_investment }}</td>
+              <td class="actions"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <nav style="text-align: center;">
+          <ul class="pagination pagination-lg">
+          {% for page_number in pages %}
+            {% if forloop.first and current_page != 1 %}
+            <li>
+              <a href="{% url_replace 'page' current_page|add:'-1' %}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            {% endif %}
+
+            {% if page_number == current_page %}
+            <li class="active"><span>{{ page_number }}</span></li>
+            {% else %}
+            <li><a href="{% url_replace 'page' page_number %}">{{ page_number }}</a></li>
+            {% endif %}
+
+            {% if forloop.last and current_page != page_number %}
+            <li>
+              <a href="{% url_replace 'page' current_page|add:'1' %}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if current_page.has_next %}
+          {% endif %}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+{% verbatim %}
+<script id="profit" type="text/x-handlebars-template">
+  <tr id="date-{{profit.date_as_slug}}" class="profit {{profit.css_empty}}" data-toggle="profit-tooltip" data-placement="right" title="{{profit.week_day}}">
+    <td>{{profit.date_as_string}}</td>
+    <td class="revenue" data-original-amount="{{profit.item.revenue}}">{{profit.item.currency_revenue}}</td>
+    <td>{{profit.item.currency_fulfillment_cost}}</td>
+    <td>{{profit.item.currency_ad_spend}}</td>
+    <td class="other-costs" data-original-amount="{{profit.item.other_costs}}">
+      <form class="form-inline other-costs-form" action="{{profit.other_costs_url}}">
+        <div class="form-group">
+          <label class="sr-only" for="other_costs">Amount</label>
+          <div class="input-group">
+            <div class="input-group-addon">{{profit.currency_sign}}</div>
+            <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{profit.item.other_costs}}" size="10" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group loading hidden">
+          <div class="sk-spinner sk-spinner-wave">
+              <div class="sk-rect1"></div>
+              <div class="sk-rect2"></div>
+              <div class="sk-rect3"></div>
+              <div class="sk-rect4"></div>
+              <div class="sk-rect5"></div>
+          </div>
+        </div>
+      </form>
+    </td>
+    <td class="total-costs">
+      {{profit.currency_sign}}<span data-original-amount="{{profit.item.outcome}}">{{profit.item.currency_outcome}}</span>
+    </td>
+    <td class="profit-amount">
+      {{profit.currency_sign}}<span data-original-amount="{{profit.item.profit}}">{{profit.item.currency_profit}}</span>
+    </td>
+    <td class="percentage">{{profit.item.return_over_investment}}</td>
+    <td class="actions"></td>
+  </tr>
+</script>
+{% endverbatim %}
+{% endblock %}
+
+{% block extracss %}
+{% compress css %}
+  <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css' %}" rel="stylesheet">
+  <link href="{% static 'profit/index.css' %}" rel="stylesheet">
+{% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+  <script type="text/javascript">
+    var config = {
+      facebook: {
+        appId: "{% app_setting 'FACEBOOK_APP_ID' %}"
+      },
+      sub_conf: {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "{{ store.pusher_channel }}",
+      },
+      runningCalculation: {{ running_calculation|yesno:'true,false' }},
+      profitsAjaxUrl: "{% url 'profit_dashboard_profits' %}",
+      profitOtherCostsAjaxUrl: "{% url 'profit_dashboard_save_other_costs' %}?store={{ store.id }}",
+      currencySign: "{% money_format None store %}"
+    };
+  </script>
+
+  <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+
+{% compress js %}
+  <script src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+  <script src="{% static 'profit/index.js' %}"></script>
+  <script type="text/javascript">
+    window.Currency.defineFormat("{{ store.currency_format|default:'' }}");
+  </script>
+{% endcompress %}
+{% endblock %}
