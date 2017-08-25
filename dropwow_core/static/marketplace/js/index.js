@@ -1,6 +1,7 @@
 /* global $, toastr, swal, displayAjaxError, sendProductToShopify */
 
 (function() {
+setup_full_editor('product-description');
 'use strict';
 var action = 'save'; // import
 var targetProducts = [];
@@ -36,6 +37,7 @@ function setShopifySendModalTitle() {
         $('#modal-shopify-send #product-type').val(original_product.category ? original_product.category.label : '');
         $('#modal-shopify-send #product-tag').val('');
         $('#modal-shopify-send #product-vendor').val(original_product.vendor);
+        CKEDITOR.instances['product-description'].setData(original_product.description);
         $('#modal-shopify-send .product-details').show();
     }
 }
@@ -132,7 +134,7 @@ $('#shopify-send-btn').click(function(e) {
             variants.push(variant);
         });
 
-        var title, price, compare_at_price, weight, weight_unit, type, tag, vendor;
+        var title, price, compare_at_price, weight, weight_unit, type, tag, vendor, description;
 
         if (targetProducts.length == 1 && $('#modal-shopify-send .product-details').is(':visible')) {
             title = $('#modal-shopify-send #product-title').val();
@@ -143,6 +145,7 @@ $('#shopify-send-btn').click(function(e) {
             type = $('#modal-shopify-send #product-type').val();
             tag = $('#modal-shopify-send #product-tag').val();
             vendor = $('#modal-shopify-send #product-vendor').val();
+            description = CKEDITOR.instances['product-description'].getData();;
         } else {
             title = original_product.title;
             price = original_product.combinations[0].price;
@@ -152,11 +155,12 @@ $('#shopify-send-btn').click(function(e) {
             type = original_product.category ? original_product.category.label : '';
             tag = '';
             vendor = '';
+            description = original_product.description;
         }
 
         var api_data = {
             'title': title,
-            'description': original_product.description,
+            'description': description,
             'price': price,
             'compare_at_price': compare_at_price ? compare_at_price : null,
             'images': $.map(original_product.combinations, function(c) {

@@ -20,6 +20,7 @@ urlpatterns = patterns(
     url(r'^hijack/', include('hijack.urls')),
     url(r'^order/exports/', include('order_exports.urls')),
     url(r'^order/imports/', include('order_imports.urls')),
+    url(r'^marketplace/', include('dropwow_core.urls', namespace='marketplace')),
 )
 
 

@@ -85,10 +85,11 @@
     <script type="text/javascript">
         var dropwow_products = [{% json_dumps product %}];
     </script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 {% compress js %}
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/marketplace.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/dropwow_product.js' %}"></script>
+    <script type="text/javascript" src="{% static 'marketplace/js/index.js' %}"></script>
+    <script type="text/javascript" src="{% static 'marketplace/js/dropwow_product.js' %}"></script>
 {% endcompress %}
 {% endblock %}

@@ -18,18 +18,17 @@
                 <div class="col-xs-12 col-md-3">
                     <div class="ibox">
                         <div class="ibox-content product-box product-wrapper" product-id="{{item.id}}" product-title="{{item.title}}">
-                            <div class="product-imitation" style="padding: 0;">
-                                <input class="item-select icheck" id="dropwow_product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
-                                <a href="{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}">
-                                    <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.image_path}}" style="width: 100%">
+                            <div class="product-imitation" style="padding: 0; height: 280px;">
+                                <a href="{% url 'marketplace:product' dropwow_product_id=item.id %}">
+                                    <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.image_path}}" style="height: 100%; max-width: 100%;">
                                 </a>
                             </div>
                             <div class="product-desc">
                                 <span class="product-price">
                                     ${{item.price}}
                                 </span>
-                                <a href="{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}" class="hidden-xs product-name"> {{item.title|truncatewords:13}}</a>
-                                <a href="{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
+                                <a href="{% url 'marketplace:product' dropwow_product_id=item.id %}" class="hidden-xs product-name"> {{item.title|truncatechars:80}}</a>
+                                <a href="{% url 'marketplace:product' dropwow_product_id=item.id %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:25}}</a>
 
                                 <div class="small m-t-xs">
                                     Submitted at {{item.created_at|get_datetime|date:"M d, Y"}}
@@ -69,7 +68,6 @@
                             <th style="width:40%"><a href="{% url_toggle 'order_by' '-title,title' %}">Title {% sort_icon 'order_by' 'title' %}</a></th>
                             <th><a href="{% url_toggle 'order_by' '-category__label_path,category__label_path' %}">Categories {% sort_icon 'order_by' 'category__label_path' %}</a></th>
                             <th><a href="{% url_toggle 'order_by' '-combinations__price,combinations__price' %}">Price {% sort_icon 'order_by' 'combinations__price' %}</a></th>
-                            <th><a href="{% url_toggle 'order_by' '-brand,brand' %}">Brand {% sort_icon 'order_by' 'brand' %}</a></th>
                             <th><a href="{% url_toggle 'order_by' '-vendor,vendor' %}">Vendor {% sort_icon 'order_by' 'vendor' %}</a></th>
                             <th style="width:190px">Action</th>
                         </tr>
@@ -87,10 +85,9 @@
                                      src="{% static 'img/blank.gif' %}"
                                      data-src="{{item.image_path}}" alt="">
                             </td>
-                            <td><a href='{% url 'leadgalaxy.views.dropwow_product' dropwow_product_id=item.id %}' class='product-title'>{{item.title}}</a></td>
-                            <td class='product-category'>{{item.category.label_path}}</td>
+                            <td><a href='{% url 'marketplace:product' dropwow_product_id=item.id %}' class='product-title'>{{item.title}}</a></td>
+                            <td class='product-category'>{{item.category.label}}</td>
                             <td>${{item.price}}</td>
-                            <td>{{item.brand}}</td>
                             <td>{{item.vendor}}</td>
                             <td>
                                 <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{item.id}}">Save</button>&nbsp;&nbsp;
@@ -130,9 +127,10 @@
         var dropwow_products = {% json_dumps dropwow_featured_products %};
         dropwow_products = dropwow_products.concat({% json_dumps dropwow_products %});
     </script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 {% compress js %}
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/marketplace.js' %}"></script>
+    <script type="text/javascript" src="{% static 'marketplace/js/index.js' %}"></script>
 {% endcompress %}
 {% endblock %}

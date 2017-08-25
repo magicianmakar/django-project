@@ -35,7 +35,7 @@
                     <h3 class='color-green m-t-sm m-b-sm'>{{category.label}}</h3>
                     {% for subcategory in category.subcategories %}
                         <div class='col-md-4 m-t-sm m-b-sm'>
-                        <a href="{% url 'marketplace' %}?category_id={{subcategory.id}}">{{subcategory.label}}</a>
+                        <a href="{% url 'marketplace:index' %}?category_id={{subcategory.id}}">{{subcategory.label}}</a>
                         </div>
                     {% endfor %}
                     <div class='clear'></div>
