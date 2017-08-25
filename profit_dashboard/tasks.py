@@ -38,7 +38,6 @@ def fetch_facebook_insights(self, user_id, store_id, access_token):
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def cache_shopify_profits(self, user_id, store_id, found_orders):
-    sleep(5)  # Waiting for page to reload so cache doesn't finish first and no profits are sent
     user = User.objects.get(pk=user_id)
     store = user.profile.get_shopify_stores().filter(pk=store_id).first()
     try:

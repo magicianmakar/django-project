@@ -216,6 +216,7 @@ def calculate_shopify_profit(user_id, store_id, start_date, end_date):
         store_id=store_id,
         date__range=(start_date, end_date)
     ).values_list('imported_orders__order_id', flat=True)
+
     found_orders = list(ShopifyOrder.objects.filter(
         ~Q(order_id__in=imported_order_ids),
         store_id=store_id,
@@ -224,10 +225,9 @@ def calculate_shopify_profit(user_id, store_id, start_date, end_date):
 
     running_calculation = len(found_orders) > 1
     if running_calculation:
-        cache_shopify_profits.delay(
-            user_id,
-            store_id,
-            found_orders
+        cache_shopify_profits.apply_async(
+            args=[user_id, store_id, found_orders],
+            countdown=5,  # Waiting for page to reload so cache doesn't finish first and no profits are sent
         )
 
     return running_calculation
