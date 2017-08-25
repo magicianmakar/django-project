@@ -1074,8 +1074,6 @@ function renderImages() {
         });
 
         d.find('.advanced-edit-photo').on('click', function (e) {
-            $('#editing-image-done').addClass('hidden');
-            $('#editing-image-processing').removeClass('hidden');
             var imageId = $(this).parents('.var-image-block').find('img').attr('id');
 
             PusherSubscription.pixlrEditor(imageId);
@@ -1141,23 +1139,6 @@ $('#download-images').on('click', function(e) {
         }
     });
 });
-
-/*$('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e) {
-    if (config.advanced_photo_editor) {
-        var image = $(this).siblings('img'),
-            imageUrl = image.attr('src'),
-            imageId = image.attr('id');
-
-        if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
-            imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: image.attr('src')});
-        }
-
-        PusherSubscription.pixlrEditor(imageId);
-    } else {
-        e.preventDefault();
-        swal('Advanced Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
-    }
-});*/
 
 $('.add-images-btn').click(function (e) {
     e.preventDefault();
@@ -1474,8 +1455,6 @@ var PusherSubscription = {
         this.init();
 
         window.channel.bind('pixlr-editor', function(data) {
-            $('#editing-image-processing').addClass('hidden');
-            $('#editing-image-done').removeClass('hidden');
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
 
