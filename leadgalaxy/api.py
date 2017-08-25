@@ -1380,7 +1380,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'aliexpress_as_notes',
                 'aliexpress_as_order_tag',
                 'aliexpress_as_custom_note',
-                'order_custom_line_attr'
+                'order_custom_line_attr',
+                'send_alerts_to_subusers'
             ]
 
         for key in data:
