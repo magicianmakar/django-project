@@ -96,6 +96,29 @@
               <input type="text" name="limit" placeholder="Type here" value="{{ limit|default:"" }}" />
             </li>
           </ul>
+
+          <div id="generating-data" class="pull-right">
+            <div class="finished hidden">
+              <label>
+                <i class="fa fa-check"></i>
+                Done generating data for search criteria
+              </label>
+            </div>
+            <div class="generating hidden">
+              <div class="sk-spinner sk-spinner-cube-grid pull-left">
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+                <div class="sk-cube"></div>
+              </div>
+              <label>Generating data for date</label>
+            </div>
+          </div>
         </form>
 
         <br>

@@ -2,6 +2,7 @@ import json
 from time import sleep
 
 from django.contrib.auth.models import User
+from django.db.models import F
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -80,8 +81,8 @@ def cache_shopify_profits(self, user_id, store_id, found_orders):
                 date=date,
                 store_id=store_id,
                 defaults={
-                    'revenue': profit_data['revenue'],
-                    'fulfillment_cost': profit_data['fulfillment_cost'],
+                    'revenue': F('revenue') + profit_data['revenue'],
+                    'fulfillment_cost': F('fulfillment_cost') + profit_data['fulfillment_cost'],
                 }
             )
 
