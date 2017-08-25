@@ -335,12 +335,15 @@ window.ProfitDashboard = {
         }
     },
     reloadTable: function() {
-        var endDate = $('#profits tbody tr:first').attr('id').replace(/date\-(\d{2}).?(\d{2}).?(\d{4})$/, '$1/$2/$3'),
-            startDate = $('#profits tbody tr:last').attr('id').replace(/date\-(\d{2}).?(\d{2}).?(\d{4})$/, '$1/$2/$3');
+        var endDate = $('input[name="end"]').val(),
+            startDate = $('input[name="start"]').val(),
+            filterEndDate = $('#profits tbody tr:first').attr('id').replace(/date\-(\d{2}).?(\d{2}).?(\d{4})$/, '$1/$2/$3'),
+            filterStartDate = $('#profits tbody tr:last').attr('id').replace(/date\-(\d{2}).?(\d{2}).?(\d{4})$/, '$1/$2/$3');
+
         $.ajax({
             type: 'get',
             url: '/profit-dashboard/profits',
-            data: {start: startDate, end: endDate},
+            data: {start: startDate, end: endDate, filter_start: filterStartDate, filter_end: filterEndDate},
             dataType: 'json',
             success: function(result) {
                 $('#profits tbody tr').remove();
@@ -364,6 +367,19 @@ window.ProfitDashboard = {
 
                     $('#profits tbody').append(profitRow({'profit': profitData}));
                 }
+
+                $('#total-revenue').text(window.Currency.format(result.totals.revenue));
+                $('#total-ad-spend').text(window.Currency.format(result.totals.ad_spend));
+                $('#totals-profit').attr(
+                    'data-original-amount', result.totals.profit.toFixed(2)).text(
+                        window.Currency.format(result.totals.profit, true));
+                $('#totals-fulfillment-cost').text(window.Currency.format(result.totals.fulfillment_cost));
+                $('#totals-other-costs').attr(
+                    'data-original-amount', result.totals.other_costs.toFixed(2)).text(
+                        window.Currency.format(result.totals.other_costs, true));
+                $('#totals-total-costs').attr(
+                    'data-original-amount', result.totals.outcome.toFixed(2)).text(
+                        window.Currency.format(result.totals.outcome, true));
 
                 window.ProfitDashboard.showDataGenerationFinished();
                 window.ProfitDashboard.reloadExpandable();

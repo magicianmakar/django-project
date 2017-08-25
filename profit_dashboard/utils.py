@@ -233,9 +233,15 @@ def calculate_shopify_profit(user_id, store_id, start_date, end_date):
     return running_calculation
 
 
-def retrieve_current_profits(user_id, store_id, start, end, current_page, limit=None):
+def retrieve_current_profits(user_id, store_id, start, end, current_page, limit=None, filter_date=None):
     meta = get_meta(start, end, current_page, limit)
-    result = initialize_base_dict(meta['start'], meta['end'])
+    base_start_date = meta['start']
+    base_end_date = meta['end']
+
+    if filter_date is not None:
+        base_start_date, base_end_date = filter_date
+
+    result = initialize_base_dict(base_start_date, base_end_date)
 
     facebook_data = get_facebook_profit(user_id, start, end)
     shopify_data = get_shopify_profit(store_id, start, end)

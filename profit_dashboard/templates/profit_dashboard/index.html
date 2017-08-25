@@ -132,8 +132,8 @@
               <table class="table totals">
                 <tbody>
                   <tr>
-                    <td><button type="button" class="btn btn-info m-r-sm">{% money_format totals.revenue store True %}</button>Revenue</td>
-                    <td><button type="button" class="btn btn-warning m-r-sm">{% money_format totals.ad_spend store True %}</button>Ad Spend</td>
+                    <td><button type="button" class="btn btn-info m-r-sm" id="total-revenue">{% money_format totals.revenue store True %}</button>Revenue</td>
+                    <td><button type="button" class="btn btn-warning m-r-sm" id="total-ad-spend">{% money_format totals.ad_spend store True %}</button>Ad Spend</td>
                     <td>
                       <button type="button" class="btn btn-primary m-r-sm">
                         {% money_format None store %}
@@ -145,7 +145,7 @@
                     </td>
                   </tr>
                   <tr>
-                    <td><button type="button" class="btn btn-warning m-r-sm">{% money_format totals.fulfillment_cost store True %}</button>Fulfillment Cost</td>
+                    <td><button type="button" class="btn btn-warning m-r-sm" id="totals-fulfillment-cost">{% money_format totals.fulfillment_cost store True %}</button>Fulfillment Cost</td>
                     <td>
                       <button type="button" class="btn btn-warning m-r-sm">
                         {% money_format None store %}
