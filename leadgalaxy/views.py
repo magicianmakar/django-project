@@ -1631,7 +1631,7 @@ def acp_users_list(request):
     if q or cache.get('template.cache.acp_users.invalidate'):
         random_cache = arrow.now().timestamp
 
-    users = User.objects.select_related('profile', 'profile__plan').order_by('-date_joined')
+    users = User.objects.select_related('profile').defer('profile__config').order_by('-date_joined')
 
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
