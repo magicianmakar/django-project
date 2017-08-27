@@ -45,7 +45,7 @@ $('#apply-btn').click(function(e) {
                 }
             });
     } else if (action == 'edit') {
-        wooProductsEditModal(getSelectProduct());
+        $('#modal-products-edit-form').modal('show');
         return;
     } else if (action == 'board') {
         $('#modal-board-product').modal('show');
