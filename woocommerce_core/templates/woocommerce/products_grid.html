@@ -56,11 +56,9 @@
                                 <option value="edit">Edit...</option>
                                 {% endif %}
                                 <option value="board">Add to Board...</option>
-                                {% comment %}
                                 {% if not request.GET.store or request.GET.store == 'n' %}
                                     <option value="woocommerce-send">Send To WooCommerce...</option>
                                 {% endif %}
-                                {% endcomment %}
                                 <option value="delete">Delete</option>
                             </select>
                             <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
@@ -193,6 +191,8 @@
 
 {% include 'partial/filter_modal.html' %}
 
+{% include 'woocommerce/woocommerce_send_modal.html' %}
+
 {% include "woocommerce/partial/woocommerce_product_selector.html" %}
 
 {% endblock %}
@@ -232,7 +232,8 @@
         "clear": {name: "Clear", icon: 'quit'}
     };
 </script>
-
+<script src="https://js.pusher.com/4.0/pusher.min.js"></script>
+<script>var PUSHER_KEY = "{% app_setting 'PUSHER_KEY' %}";</script>
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
