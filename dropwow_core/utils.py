@@ -86,6 +86,7 @@ def fulfill_dropwow_order(store, order_status, order, line_item, supplier):
             defaults={
                 'user': store.user,
                 'source_id': source_id,
+                'source_type': 'dropwow',
                 'source_status': source_status,
                 'source_tracking': source_tracking,
                 'created_at': timezone.now(),
