@@ -149,95 +149,89 @@ class PlanSelectionEvent(Event):
                 adword = u'''
                 <!-- Google Code for Monthly Elite Subscribers w/ eCom ($47/mo) Conversion Page -->
                 <script type="text/javascript">
-                /* <![CDATA[ */
-                var google_conversion_id = 922441909;
-                var google_conversion_language = "en";
-                var google_conversion_format = "3";
-                var google_conversion_color = "ffffff";
-                var google_conversion_label = "id8aCNORinQQtbHttwM";
-                var google_remarketing_only = false;
-                /* ]]> */
+                    /* <![CDATA[ */
+                    var google_conversion_id = 922441909;
+                    var google_conversion_language = "en";
+                    var google_conversion_format = "3";
+                    var google_conversion_color = "ffffff";
+                    var google_conversion_label = "id8aCNORinQQtbHttwM";
+                    var google_remarketing_only = false;
+                    /* ]]> */
                 </script>
-                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
-                </script>
+                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
                 <noscript>
-                <div style="display:inline;">
-                <img height="1" width="1" style="border-style:none;" alt=""
-                    src="//www.googleadservices.com/pagead/conversion/922441909/?label=id8aCNORinQQtbHttwM&amp;guid=ON&amp;script=0"/>
-                </div>
+                    <div style="display:inline;">
+                    <img height="1" width="1" style="border-style:none;" alt=""
+                        src="//www.googleadservices.com/pagead/conversion/922441909/?label=id8aCNORinQQtbHttwM&amp;guid=ON&amp;script=0"/>
+                    </div>
                 </noscript>'''
 
             elif 'unlimited' in self.user.profile.plan.slug:
                 adword = u'''
                 <!-- Google Code for Monthly Unlimited Subscribers w/ eCom ($99/mo) Conversion Page -->
                 <script type="text/javascript">
-                /* <![CDATA[ */
-                var google_conversion_id = 922441909;
-                var google_conversion_language = "en";
-                var google_conversion_format = "3";
-                var google_conversion_color = "ffffff";
-                var google_conversion_label = "b9TnCNSU-XMQtbHttwM";
-                var google_remarketing_only = false;
-                /* ]]> */
+                    /* <![CDATA[ */
+                    var google_conversion_id = 922441909;
+                    var google_conversion_language = "en";
+                    var google_conversion_format = "3";
+                    var google_conversion_color = "ffffff";
+                    var google_conversion_label = "b9TnCNSU-XMQtbHttwM";
+                    var google_remarketing_only = false;
+                    /* ]]> */
                 </script>
-                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
-                </script>
+                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
                 <noscript>
-                <div style="display:inline;">
-                <img height="1" width="1" style="border-style:none;" alt=""
-                    src="//www.googleadservices.com/pagead/conversion/922441909/?label=b9TnCNSU-XMQtbHttwM&amp;guid=ON&amp;script=0"/>
-                </div>
+                    <div style="display:inline;">
+                    <img height="1" width="1" style="border-style:none;" alt=""
+                        src="//www.googleadservices.com/pagead/conversion/922441909/?label=b9TnCNSU-XMQtbHttwM&amp;guid=ON&amp;script=0"/>
+                    </div>
                 </noscript>'''
         else:
             if 'elite' in self.user.profile.plan.slug:
                 adword = u'''
                 <!-- Google Code for Monthly Elite Subscribers ($47/mo) Conversion Page -->
                 <script type="text/javascript">
-                /* <![CDATA[ */
-                var google_conversion_id = 922441909;
-                var google_conversion_language = "en";
-                var google_conversion_format = "3";
-                var google_conversion_color = "ffffff";
-                var google_conversion_label = "qE6wCKiV-XMQtbHttwM";
-                var google_remarketing_only = false;
-                /* ]]> */
+                    /* <![CDATA[ */
+                    var google_conversion_id = 922441909;
+                    var google_conversion_language = "en";
+                    var google_conversion_format = "3";
+                    var google_conversion_color = "ffffff";
+                    var google_conversion_label = "qE6wCKiV-XMQtbHttwM";
+                    var google_remarketing_only = false;
+                    /* ]]> */
                 </script>
-                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
-                </script>
+                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
                 <noscript>
-                <div style="display:inline;">
-                <img height="1" width="1" style="border-style:none;" alt=""
-                    src="//www.googleadservices.com/pagead/conversion/922441909/?label=qE6wCKiV-XMQtbHttwM&amp;guid=ON&amp;script=0"/>
-                </div>
+                    <div style="display:inline;">
+                    <img height="1" width="1" style="border-style:none;" alt=""
+                        src="//www.googleadservices.com/pagead/conversion/922441909/?label=qE6wCKiV-XMQtbHttwM&amp;guid=ON&amp;script=0"/>
+                    </div>
                 </noscript>'''
 
             elif 'unlimited' in self.user.profile.plan.slug:
                 adword = u'''
                 <!-- Google Code for Monthly Unlimited Subscribers ($99/mo) Conversion Page -->
                 <script type="text/javascript">
-                /* <![CDATA[ */
-                var google_conversion_id = 922441909;
-                var google_conversion_language = "en";
-                var google_conversion_format = "3";
-                var google_conversion_color = "ffffff";
-                var google_conversion_label = "zIv7CLq9kXQQtbHttwM";
-                var google_remarketing_only = false;
-                /* ]]> */
+                    /* <![CDATA[ */
+                    var google_conversion_id = 922441909;
+                    var google_conversion_language = "en";
+                    var google_conversion_format = "3";
+                    var google_conversion_color = "ffffff";
+                    var google_conversion_label = "zIv7CLq9kXQQtbHttwM";
+                    var google_remarketing_only = false;
+                    /* ]]> */
                 </script>
-                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
-                </script>
+                <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
                 <noscript>
-                <div style="display:inline;">
-                <img height="1" width="1" style="border-style:none;" alt=""
-                    src="//www.googleadservices.com/pagead/conversion/922441909/?label=zIv7CLq9kXQQtbHttwM&amp;guid=ON&amp;script=0"/>
-                </div>
+                    <div style="display:inline;">
+                    <img height="1" width="1" style="border-style:none;" alt=""
+                        src="//www.googleadservices.com/pagead/conversion/922441909/?label=zIv7CLq9kXQQtbHttwM&amp;guid=ON&amp;script=0"/>
+                    </div>
                 </noscript>
                 '''
 
         if adword:
-            script = u'''{}
-            <script>{}</script>
-            '''.format(script, adword)
+            script = u'''{}\n{}'''.format(script, adword)
 
         return script
 
