@@ -299,12 +299,6 @@ class ExtraStore(models.Model):
 
 # Signals Handling
 
-@receiver(post_save, sender=StripeCustomer)
-def stripe_customer_signal(sender, instance, created, **kwargs):
-    from django.core.cache import cache
-    cache.delete('extra_bundle_{}'.format(instance.user.id))
-
-
 @receiver(post_save, sender=ShopifyStore)
 def add_store_signal(sender, instance, created, **kwargs):
     if created:

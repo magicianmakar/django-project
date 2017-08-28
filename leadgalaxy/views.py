@@ -3466,6 +3466,7 @@ def register(request, registration=None, subscribe_plan=None):
 
         if form.is_valid():
             new_user = form.save()
+            new_user.set_config('_tos-accept', True)
 
             reg_coupon = request.GET.get('cp')
             if reg_coupon:
