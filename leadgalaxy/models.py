@@ -685,8 +685,9 @@ class ShopifyStore(models.Model):
     def awaiting_tracking(self):
         return self.shopifyordertrack_set.filter(hidden=False) \
                                          .filter(source_tracking='') \
+                                         .filter(check_count__lte=250) \
+                                         .exclude(shopify_status='fulfilled') \
                                          .exclude(source_status='FINISH') \
-                                         .exclude(hidden=True) \
                                          .count()
 
     def pusher_channel(self):

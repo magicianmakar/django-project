@@ -1742,6 +1742,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if unfulfilled_only:
             shopify_orders = shopify_orders.filter(source_tracking='') \
+                                           .filter(check_count__lte=250) \
+                                           .exclude(shopify_status='fulfilled') \
                                            .exclude(source_status='FINISH')
 
         if order_ids:
