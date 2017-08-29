@@ -1026,6 +1026,12 @@ class CHQStoreApi(ApiResponseMixin, View):
                                                  fulfilment['id'], timeout=604800)
 
                     fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data))
+                else:
+                    msg = ''
+                    if 'Warehouse ID' in rep.text:
+                        msg = 'Inventroy Tracking is enabled for this product'
+
+                    return self.api_error('CommerceHQ API Error\n{}'.format(msg))
 
             api_data = {
                 "data": [{

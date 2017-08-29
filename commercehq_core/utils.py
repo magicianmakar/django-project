@@ -734,6 +734,9 @@ def order_track_fulfillment(order_track, user_config=None):
             fulfilment_id = caches['orders'].get('chq_fulfilments_{store_id}_{order_id}_{line_id}'.format(**kwargs))
 
         except Exception as e:
+            if not rep.ok and 'Warehouse ID' in rep.text:
+                raise
+
             raven_client.captureException(level='warning', extra={
                 'response': e.response.text if hasattr(e, 'response') else ''
             })

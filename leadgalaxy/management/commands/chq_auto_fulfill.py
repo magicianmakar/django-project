@@ -139,6 +139,12 @@ class Command(BaseCommand):
                         api_data = None
                         continue
 
+                    elif 'warehouse id' in e.response.text.lower():
+                        order_track.hidden = True
+                        order_track.save()
+
+                        return False
+
                     else:
                         raven_client.captureException(
                             level='warning',
