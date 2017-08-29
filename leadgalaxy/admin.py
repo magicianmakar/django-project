@@ -246,10 +246,27 @@ class CaptchaCreditAdmin(admin.ModelAdmin):
 
 @admin.register(AdminEvent)
 class AdminEventAdmin(admin.ModelAdmin):
-    list_display = ('user', 'event_type', 'target_user', 'created_at')
+    list_display = ('user', 'event_type', 'target_user', 'details', 'created_at')
     raw_id_fields = ('user', 'target_user')
     list_filter = ('event_type',)
     search_fields = USER_SEARCH_FIELDS + ('event_type', 'data', 'target_user__id', 'target_user__username', 'target_user__email')
+
+    def details(self, obj):
+        try:
+            data = json.loads(obj.data)
+
+            if data.get('bundle'):
+                return data['bundle']
+            elif data.get('new_plan'):
+                return data.get('new_plan')
+            elif data.get('amount'):
+                return '$%0.2f' % data.get('amount')
+            elif data.get('query'):
+                return data.get('query')
+        except:
+            pass
+
+        return ''
 
 
 admin.site.register(ClippingMagicPlan)
