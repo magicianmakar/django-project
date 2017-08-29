@@ -196,6 +196,14 @@
                         .text('Subscribe Now!')
                         .css('white-space', 'normal');
                 }, 100);
+
+                fbq('track', 'AddToCart', {
+                    'value': {{monthly_price}},
+                    'currency': 'USD',
+                    'content_type': 'product',
+                    'content_name': '{{monthly_plan}}'
+                });
+
             </script>
         {% endcompress %}
     </body>

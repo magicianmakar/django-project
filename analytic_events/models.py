@@ -109,9 +109,10 @@ class PlanSelectionEvent(Event):
         event_data = self.get_data()
         data = {'value': event_data['amount'],
                 'currency': 'USD',
+                'content_type': 'product',
                 'content_name': event_data['plan']}
 
-        script = "<script>fbq('track', 'AddToCart', %s);</script>" % json.dumps(data)
+        script = "<script>fbq('track', 'Purchase', %s);</script>" % json.dumps(data)
 
         if 'elite' in self.user.profile.plan.slug:
             webinarjam = '//app.webinarjam.net/tracker?action=sale&webicode=40ee867159&productID=166240'
