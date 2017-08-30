@@ -34,7 +34,7 @@ from shopified_core.utils import (
 )
 
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.tasks import fulfill_shopify_order_line
+from shopify_orders import tasks as shopify_orders_tasks
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
@@ -1827,7 +1827,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if customer_address['country_code'] != 'US':
             return self.api_error('Dropwow support US customers only')
 
-        result = fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id)
+        result = shopify_orders_tasks.fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id)
         if not result:
             return self.api_error('Auto fulfill error')
 
