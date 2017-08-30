@@ -1409,6 +1409,15 @@ class ShopifyOrderTrack(models.Model):
             else:
                 self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
 
+        if self.source_id:
+            source_id = self.source_id.strip(' ,')
+            if ',' in source_id:
+                source_id = [i.strip() for i in list(filter(len, re.split('[, ]+', self.source_id)))]
+                source_id = ','.join(source_id)
+
+            if self.source_id != source_id:
+                self.source_id = source_id
+
         super(ShopifyOrderTrack, self).save(*args, **kwargs)
 
     def encoded(self):
