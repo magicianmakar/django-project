@@ -142,7 +142,11 @@ def fulfill_dropwow_products(dropwow_account, order_status, supplier, quantity):
         auth=HTTPBasicAuth(dropwow_account.email, dropwow_account.api_key)
     )
 
-    r.raise_for_status()
+    try:
+        r.raise_for_status()
+    except:
+        raven_client.captureException()
+        raise
 
     return r.json()
 
