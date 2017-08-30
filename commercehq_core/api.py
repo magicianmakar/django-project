@@ -803,7 +803,7 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         board.save()
 
-        # utils.smart_board_by_board(user.models_user, board)
+        utils.smart_board_by_board(user.models_user, board)
 
         return self.api_success()
 
