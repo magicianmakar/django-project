@@ -10,6 +10,8 @@
 
 
     <div class="modal-content text-center col-sm-12 col-md-8 col-md-offset-2">
+        <img src="https://d2kadg5e284yn4.cloudfront.net/static/dropified-logo.png" style="margin-top:50px;width:300px">
+
         <h1 style="margin-top:50px">Welcome to Dropified!</h1>
         <h1 style="margin-top:20px">Before you continue, please read and agree to the <a href="/tos" style="font-weight:initial;" target="_blank">Terms &amp; Conditions</a></h1>
 
@@ -50,6 +52,13 @@
                 } else {
                     $('#animatedModal .close-animatedModal').button('loading');
                 }
+
+                $('#animatedModal').css('background-color', '#93c47d');
+                $('#animatedModal').css('opacity', '0.9');
+            },
+            afterOpen: function () {
+                $('#animatedModal').css('background-color', '#93c47d');
+                $('#animatedModal').css('opacity', '0.9');
             }
         });
 
