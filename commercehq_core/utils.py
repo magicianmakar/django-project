@@ -523,7 +523,7 @@ class CommerceHQOrdersPaginator(Paginator):
 
 
 def smart_board_by_board(user, board):
-    for product in user.commercehqproduct_set.all():
+    for product in user.commercehqproduct_set.all()[:1000]:
         product_info = json.loads(product.data)
         product_info = {
             'title': product_info.get('title', '').lower(),

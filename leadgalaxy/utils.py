@@ -240,7 +240,7 @@ def smart_board_by_product(user, product):
 
 
 def smart_board_by_board(user, board):
-    for product in user.shopifyproduct_set.only('id', 'title', 'product_type', 'tag').all():
+    for product in user.shopifyproduct_set.only('id', 'title', 'product_type', 'tag').all()[:1000]:
         product_info = {
             'title': product.title,
             'tags': product.tag,
