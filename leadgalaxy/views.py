@@ -891,7 +891,10 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             in_store = utils.safeInt(request.GET.get('in'))
             if in_store:
                 in_store = get_object_or_404(ShopifyStore, id=in_store)
-                res = res.filter(store=in_store)
+                if len(user_stores) == 1:
+                    res = res.filter(Q(store=in_store) | Q(store=None))
+                else:
+                    res = res.filter(store=in_store)
 
                 permissions.user_can_view(user, in_store)
         else:
