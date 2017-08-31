@@ -122,6 +122,34 @@
                     </tbody>
                 </table>
 
+                {% if registrations %}
+                    <hr/>
+                    <h2>Lifetime Purchases</h2>
+                    <table class="table  dataTables">
+                        <thead>
+                            <tr>
+                                <th>Purchases</th>
+                                <th>Date</th>
+                                <th>Used</th>
+                                <th>Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in registrations %}
+                            <tr>
+                                <td>{{ i }}</td>
+                                <td><span class="itooltip" title="{{i.date}}">{{ i.date_str }}</span></td>
+                                <td>{{ i.expired|yesno:'Yes,No' }}</td>
+                                <td>
+                                    <a href="text-danger" class="btn btn-xs btn-info registration-apply-btn"
+                                        user-id="{{users.0.id}}" register-id="{{i.id}}">Apply</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
                 {% if subscribtions %}
                     <hr/>
                     <h2>Subscriptions</h2>
@@ -577,6 +605,40 @@
                         }, 1000);
                     }).fail(function(data) {
                         displayAjaxError('Cancel Subscription', data);
+                    });
+                });
+            });
+
+            $('.registration-apply-btn').click(function (e) {
+                e.preventDefault();
+
+                swal({
+                    title: "Apply Registration",
+                    text: "Are you sure you want to apply this Registration?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false || !inputValue) return false;
+
+                    $.ajax({
+                        url: '/api/apply-registration',
+                        type: 'POST',
+                        data: {
+                            id: $(e.target).attr('register-id'),
+                            user: $(e.target).attr('user-id'),
+                        },
+                    }).done(function (data) {
+                        toastr.success('Reloading page...', 'Registration Applied');
+                        swal.close();
+
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    }).fail(function(data) {
+                        displayAjaxError('Apply Registration', data);
                     });
                 });
             });

@@ -905,6 +905,26 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_apply_registration(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        reg = PlanRegistration.objects.get(id=data.get('id'))
+
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='apply_registration',
+            data=json.dumps({'register_id': reg.id, 'register_title': str(reg)}))
+
+        if reg.get_usage_count() is not None:
+            return self.api_error('Multi User Registration')
+
+        target_user.profile.apply_registration(reg)
+
+        return self.api_success()
+
     def delete_access_token(self, request, user, data):
         if not user.is_superuser:
             raise PermissionDenied()

@@ -1692,20 +1692,31 @@ def acp_users_list(request):
 
     charges = []
     subscribtions = []
-    if len(users) == 1 and users[0].have_stripe_billing():
-        for i in users[0].stripe_customer.get_charges():
-            charges.append({
-                'id': i.id,
-                'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
-                'date_str': arrow.get(i.created).humanize(),
-                'status': i.status,
-                'failure_message': i.failure_message,
-                'amount': u'${:0.2f}'.format(i.amount / 100.0),
-                'amount_refunded': u'${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
-            })
+    registrations = []
+    if len(users) == 1:
+        if users[0].have_stripe_billing():
+            for i in users[0].stripe_customer.get_charges():
+                charges.append({
+                    'id': i.id,
+                    'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
+                    'date_str': arrow.get(i.created).humanize(),
+                    'status': i.status,
+                    'failure_message': i.failure_message,
+                    'amount': u'${:0.2f}'.format(i.amount / 100.0),
+                    'amount_refunded': u'${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
+                })
 
-        for i in stripe.Subscription.list(customer=users[0].stripe_customer.customer_id).data:
-            subscribtions.append(i)
+            for i in stripe.Subscription.list(customer=users[0].stripe_customer.customer_id).data:
+                subscribtions.append(i)
+
+        for i in PlanRegistration.objects.filter(email__iexact=users[0].email):
+            i.date = arrow.get(i.created_at).format('MM/DD/YYYY HH:mm')
+            i.date_str = arrow.get(i.created_at).humanize()
+
+            registrations.append(i)
+
+        if subscribtions and registrations:
+            messages.warning(request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
 
     plans = GroupPlan.objects.all()
     bundles = FeatureBundle.objects.all()
@@ -1718,6 +1729,7 @@ def acp_users_list(request):
         'users_count': len(users),
         'last_charges': charges,
         'subscribtions': subscribtions,
+        'registrations': registrations,
         'random_cache': random_cache,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
