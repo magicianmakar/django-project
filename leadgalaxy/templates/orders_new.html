@@ -389,8 +389,8 @@
                                         <br>
                                         {{order.shipping_address.address1}}<br>
 
-                                        {% if order.customer_address.address2 %}
-                                        {{order.customer_address.address2}}<br>
+                                        {% if order.shipping_address.address2 %}
+                                        {{order.shipping_address.address2}}<br>
                                         {% endif %}
 
                                         {{order.shipping_address.city}},
