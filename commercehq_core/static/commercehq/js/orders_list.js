@@ -825,7 +825,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'placed-order-details',
-            'text': '#' + data.source_id.split(',').join(' #'),
+            'text': '#' + String(data.source_id).split(',').join(' #'),
             'order-id': data.order_id,
             'line-id': data.line_id,
             'source-order-id': data.source_id,
