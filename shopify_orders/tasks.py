@@ -25,6 +25,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
 
     store = ShopifyStore.objects.get(id=store_id)
 
+    results = []
     order_tracks = {}
     for i in ShopifyOrderTrack.objects.filter(store=store, order_id=order['id']).defer('data'):
         order_tracks['{}-{}'.format(i.order_id, i.line_id)] = i
@@ -62,4 +63,6 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
             }
         )
 
-        return fulfill_dropwow_order(store, order_status, order, el, supplier)
+        results.append(fulfill_dropwow_order(store, order_status, order, el, supplier))
+
+    return all(results)
