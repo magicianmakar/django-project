@@ -1410,7 +1410,7 @@ class ShopifyOrderTrack(models.Model):
                 self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
 
         if self.source_id:
-            source_id = self.source_id.strip(' ,')
+            source_id = str(self.source_id).strip(' ,')
             if ',' in source_id:
                 source_id = [i.strip() for i in list(filter(len, re.split('[, ]+', self.source_id)))]
                 source_id = ','.join(source_id)
