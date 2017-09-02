@@ -650,4 +650,4 @@ class WooBoard(models.Model):
         return self.products.filter(store__is_active=True, source_id=0).count()
 
     def connected_count(self):
-        return self.products.exclude(store__is_active=True, source_id=0).count()
+        return self.products.filter(store__is_active=True).exclude(source_id=0).count()
