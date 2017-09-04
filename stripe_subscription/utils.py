@@ -178,7 +178,7 @@ def extra_store_invoice(store, extra=None, chq=False):
         customer=store.user.stripe_customer.customer_id,
         amount=2700,
         currency="usd",
-        description=u"Additional Store: {}".format(store.title)
+        description=u"Additional {} Store: {}".format('Shopify' if not chq else 'CHQ', store.title)
     )
 
     extra.status = 'active'
