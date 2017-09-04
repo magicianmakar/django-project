@@ -16,6 +16,7 @@ import stripe.error
 
 from shopified_core import permissions
 from leadgalaxy.models import GroupPlan, ShopifyStore
+from commercehq_core.models import CommerceHQStore
 
 PLAN_INTERVAL = (
     ('day', 'daily'),
@@ -297,6 +298,26 @@ class ExtraStore(models.Model):
         return u"{}".format(self.store.title)
 
 
+class ExtraCHQStore(models.Model):
+    class Meta:
+        verbose_name = "Extra CHQ Store"
+        verbose_name_plural = "Extra CHQ Stores"
+
+    user = models.ForeignKey(User)
+    store = models.ForeignKey(CommerceHQStore)
+
+    status = models.CharField(max_length=64, null=True, blank=True, default='pending')
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, verbose_name='Last Invoice Item')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return u"{}".format(self.store.title)
+
+
 # Signals Handling
 
 @receiver(post_save, sender=ShopifyStore)
@@ -304,13 +325,38 @@ def add_store_signal(sender, instance, created, **kwargs):
     if created:
         try:
             can_add, total_allowed, user_count = permissions.can_add_store(instance.user)
+
+            stores_count = instance.user.shopifystore_set.filter(is_active=True).count()
+            stores_count += instance.user.commercehqstore_set.filter(is_active=True).count()
+
         except User.DoesNotExist:
             return
 
         if instance.user.profile.plan.is_stripe() \
                 and total_allowed > -1 \
-                and total_allowed < instance.user.shopifystore_set.count():
+                and total_allowed < stores_count:
             ExtraStore.objects.create(
+                user=instance.user,
+                store=instance,
+                period_start=timezone.now())
+
+
+@receiver(post_save, sender=CommerceHQStore)
+def add_chqstore_signal(sender, instance, created, **kwargs):
+    if created:
+        try:
+            can_add, total_allowed, user_count = permissions.can_add_store(instance.user)
+
+            stores_count = instance.user.shopifystore_set.filter(is_active=True).count()
+            stores_count += instance.user.commercehqstore_set.filter(is_active=True).count()
+
+        except User.DoesNotExist:
+            return
+
+        if instance.user.profile.plan.is_stripe() \
+                and total_allowed > -1 \
+                and total_allowed < stores_count:
+            ExtraCHQStore.objects.create(
                 user=instance.user,
                 store=instance,
                 period_start=timezone.now())

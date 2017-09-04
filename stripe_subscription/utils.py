@@ -13,7 +13,7 @@ from django.db.models import Q
 
 import arrow
 
-from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore
+from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore, ExtraCHQStore
 from .stripe_api import stripe
 
 from leadgalaxy.models import GroupPlan, UserProfile
@@ -162,12 +162,17 @@ def resubscribe_customer(customer_id):
 
 
 def have_extra_stores(user):
-    return user.profile.plan.stores != -1 and user.profile.get_shopify_stores().count() > user.profile.plan.stores
+    stores_count = user.profile.get_shopify_stores().count() + user.profile.get_chq_stores().count()
+
+    return user.profile.plan.stores != -1 and stores_count > user.profile.plan.stores
 
 
-def extra_store_invoice(store, extra=None):
+def extra_store_invoice(store, extra=None, chq=False):
     if extra is None:
-        extra = ExtraStore.objects.get(store=store)
+        if chq:
+            extra = ExtraCHQStore.objects.get(store=store)
+        else:
+            extra = ExtraStore.objects.get(store=store)
 
     invoice_item = stripe.InvoiceItem.create(
         customer=store.user.stripe_customer.customer_id,
@@ -200,14 +205,13 @@ def invoice_extra_stores():
     """
     Find Extra Stores that need to be invoiced
     """
+    invoiced = 0
 
     extra_stores = ExtraStore.objects.filter(status__in=['pending', 'active']) \
                                      .exclude(store__is_active=False) \
                                      .exclude(user__profile__plan__stores=-1) \
                                      .filter(Q(period_end__lte=arrow.utcnow().datetime) |
                                              Q(period_end=None))
-
-    invoiced = 0
     for extra in extra_stores:
         ignore = False
         if not extra.store.is_active or extra.user.profile.plan.is_free:
@@ -215,14 +219,38 @@ def invoice_extra_stores():
             extra.save()
             ignore = True
 
-        if extra.user.profile.get_shopify_stores().count() <= 1:
+        if extra.user.profile.get_shopify_stores().count() + extra.user.profile.get_chq_stores().count() <= 1:
             extra.user.extrastore_set.all().update(status='disabled')
+            extra.user.extrachqstore_set.all().update(status='disabled')
             ignore = True
 
         if ignore:
             continue
 
         extra_store_invoice(extra.store, extra=extra)
+        invoiced += 1
+
+    extra_stores = ExtraCHQStore.objects.filter(status__in=['pending', 'active']) \
+        .exclude(store__is_active=False) \
+        .exclude(user__profile__plan__stores=-1) \
+        .filter(Q(period_end__lte=arrow.utcnow().datetime) |
+                Q(period_end=None))
+    for extra in extra_stores:
+        ignore = False
+        if not extra.store.is_active or extra.user.profile.plan.is_free:
+            extra.status = 'disabled'
+            extra.save()
+            ignore = True
+
+        if extra.user.profile.get_shopify_stores().count() + extra.user.profile.get_chq_stores().count() <= 1:
+            extra.user.extrastore_set.all().update(status='disabled')
+            extra.user.extrachqstore_set.all().update(status='disabled')
+            ignore = True
+
+        if ignore:
+            continue
+
+        extra_store_invoice(extra.store, extra=extra, chq=True)
         invoiced += 1
 
     return invoiced
