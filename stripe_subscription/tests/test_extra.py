@@ -90,7 +90,7 @@ class ExtraStoreTestCase(TestCase):
         utils.stripe.InvoiceItem.create.assert_called_once_with(
             amount=2700, currency='usd',
             customer=self.customer.customer_id,
-            description=u'Additional Store: {}'.format(extra_store.title)
+            description=u'Additional Shopify Store: {}'.format(extra_store.title)
         )
 
         extra = ExtraStore.objects.get(store=extra_store)

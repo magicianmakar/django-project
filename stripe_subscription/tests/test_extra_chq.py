@@ -97,7 +97,7 @@ class ExtraCHQStoreTestCase(TestCase):
         utils.stripe.InvoiceItem.create.assert_called_once_with(
             amount=2700, currency='usd',
             customer=self.customer.customer_id,
-            description=u'Additional Store: {}'.format(extra_chq_store.title)
+            description=u'Additional CHQ Store: {}'.format(extra_chq_store.title)
         )
 
         extra_chq = ExtraCHQStore.objects.get(store=extra_chq_store)
