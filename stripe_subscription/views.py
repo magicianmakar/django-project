@@ -1,3 +1,5 @@
+from math import ceil
+
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
@@ -342,6 +344,7 @@ def subscription_cancel(request):
 
                 if invoice.paid and invoice.closed and invoice.amount_due:
                     refound_amount = invoice.amount_due - ((usage_duration * invoice.amount_due) / invoiced_duration)
+                    refound_amount = int(ceil(refound_amount / 100.0) * 100)
 
                     if 0 < refound_amount and refound_amount <= invoice.amount_due:
                         try:
