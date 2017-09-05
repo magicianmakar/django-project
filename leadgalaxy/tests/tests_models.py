@@ -5,6 +5,7 @@ from django.test import TestCase
 from factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
 from leadgalaxy.models import *
+from leadgalaxy.utils import create_user_without_signals
 from factories import ShopifyProductFactory
 
 
@@ -32,6 +33,23 @@ class UserTestCase(TestCase):
         self.assertIsNotNone(user.profile.plan)
 
         self.assertEqual(user.profile.plan.slug, 'free-plan')
+
+    def test_userprofile_signal_disconnect(self):
+        _user, _profile = create_user_without_signals(
+            username='john2',
+            email='john.test2@gmail.com',
+            password='123456')
+
+        self.assertEqual(_user.profile, _profile)
+        self.assertIsNotNone(_user.profile)
+        self.assertIsNone(_user.profile.plan)
+
+        user = User.objects.create_user(username='john',
+                                        email='john.test@gmail.com',
+                                        password='123456')
+
+        self.assertIsNotNone(user.profile)
+        self.assertIsNotNone(user.profile.plan)
 
     def test_add_to_class_decorator(self):
         @add_to_class(User, 'func_test')

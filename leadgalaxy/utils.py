@@ -35,7 +35,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from shopified_core import permissions
-from shopified_core.utils import app_link, save_user_ip
+from shopified_core.utils import app_link, save_user_ip, unique_username, send_email_from_template
 from shopified_core.shipping_helper import load_uk_provincess, missing_province
 from shopify_orders.models import ShopifyOrderLine
 
@@ -205,6 +205,112 @@ def apply_shared_registration(user, registration):
         profile.bundles.add(registration.bundle)
 
     registration.save()
+
+
+def create_user_without_signals(**kwargs):
+    post_save.disconnect(userprofile_creation, User, dispatch_uid="userprofile_creation")
+
+    password = kwargs.get('password')
+    if password:
+        del kwargs['password']
+
+    user = User(**kwargs)
+
+    if password:
+        user.set_password(password)
+
+    user.save()
+
+    profile = UserProfile.objects.create(user=user)
+
+    post_save.connect(userprofile_creation, User, dispatch_uid="userprofile_creation")
+
+    return user, profile
+
+
+def register_new_user(email, fullname, intercom_attributes=None, without_signals=False):
+    first_name = ''
+    last_name = ''
+
+    if fullname:
+        fullname = fullname.title().split(' ')
+
+        if len(fullname):
+            first_name = fullname[0]
+            last_name = u' '.join(fullname[1:])
+
+    username = unique_username(email, fullname=fullname)
+    password = get_random_string(12)
+
+    if not User.objects.filter(email__iexact=email).exists():
+        if not without_signals:
+            user = User.objects.create(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name)
+
+            user.set_password(password)
+            user.save()
+
+        else:
+            user, profile = create_user_without_signals(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password=password)
+
+        send_email_from_template(
+            tpl='register_credentials.html',
+            subject='Your Dropified Account',
+            recipient=email,
+            nl2br=False,
+            data={
+                'user': user,
+                'password': password
+            },
+        )
+
+        if settings.INTERCOM_ACCESS_TOKEN:
+            headers = {
+                'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
+                'Accept': 'application/json'
+            }
+
+            data = {
+                "user_id": user.id,
+                "email": user.email,
+                "name": u' '.join(fullname),
+                "signed_up_at": arrow.utcnow().timestamp,
+                "custom_attributes": {}
+            }
+
+            try:
+                data['custom_attributes'].update({
+                    'plan': user.profile.plan.title
+                })
+            except:
+                pass
+
+            if intercom_attributes:
+                data['custom_attributes'].update(intercom_attributes)
+
+            try:
+                requests.post('https://api.intercom.io/users', headers=headers, json=data).text
+            except:
+                raven_client.captureException()
+
+        return user, True
+
+    else:
+        raven_client.captureMessage('New User Registration Exists', extra={
+            'name': fullname,
+            'email': email,
+            'count': User.objects.filter(email__iexact=email).count()
+        })
+
+        return User.objects.get(email__iexact=email), False
 
 
 def smart_board_by_product(user, product):

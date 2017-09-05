@@ -200,7 +200,7 @@ class StripeSubscription(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return u"{} {}".format(self.user.username, self.plan.title)
+        return u"{} {}".format(self.user.username, self.plan.title if self.plan else 'None')
 
     def retrieve(self, commit=True):
         return stripe.Subscription.retrieve(self.subscription_id)

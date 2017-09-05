@@ -108,7 +108,7 @@ class UserProfile(models.Model):
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
 
     def __str__(self):
-        return '{} | {}'.format(self.user.username, self.plan.title)
+        return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
 
     def save(self, *args, **kwargs):
         if self.config:
@@ -1920,6 +1920,7 @@ User.add_to_class("models_user", cached_property(user_models_user))
 
 
 # Signals Handling
+# TODO: Move signals to singlas.py and load them in AppConfig.ready
 
 @receiver(post_save, sender=UserProfile)
 def invalidate_acp_users(sender, instance, created, **kwargs):
@@ -1935,7 +1936,7 @@ def invalidate_orders_status(sender, instance, created, **kwargs):
     cache.delete(make_template_fragment_key('orders_status', [instance.store_id]))
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=User, dispatch_uid="userprofile_creation")
 def userprofile_creation(sender, instance, created, **kwargs):
     if created:
         try:

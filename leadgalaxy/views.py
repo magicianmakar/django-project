@@ -29,7 +29,6 @@ from django.shortcuts import render, get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
-from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -48,7 +47,6 @@ from shopified_core.utils import (
     send_email_from_template,
     version_compare,
     get_mimetype,
-    unique_username,
     order_data_cache
 )
 
@@ -796,73 +794,35 @@ def webhook(request, provider, option):
     elif provider in ['instapage', 'instantpage'] and option == 'register':
         try:
             email = request.POST['Email']
-            fullname = request.POST['Name'].title().split(' ')
+            fullname = request.POST['Name']
 
-            username = unique_username(email, fullname=fullname)
+            intercom_attrs = {
+                "register_source": request.GET.get('register_source', 'instapage'),
+                "register_medium": request.GET.get('register_medium', 'webhook'),
+            }
 
-            password = get_random_string(12)
+            user, created = utils.register_new_user(email, fullname, intercom_attributes=intercom_attrs)
 
-            raven_client.captureMessage('InstaPage Registration',
-                                        level='warning',
-                                        extra={
-                                            'name': request.POST['Name'],
-                                            'email': request.POST['Email'],
-                                            'exists': User.objects.filter(email__iexact=email).exists()
-                                        })
-
-            if not User.objects.filter(email__iexact=email).exists():
-                user = User.objects.create(
-                    username=username,
-                    email=email,
-                    first_name=fullname[0],
-                    last_name=u' '.join(fullname[1:]))
-
-                user.set_password(password)
-                user.save()
-
-                send_email_from_template(
-                    tpl='register_credentials.html',
-                    subject='Your Dropified Account',
-                    recipient=email,
-                    nl2br=False,
-                    data={
-                        'user': user,
-                        'password': password
-                    },
-                )
-
-                if settings.INTERCOM_ACCESS_TOKEN:
-                    headers = {
-                        'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
-                        'Accept': 'application/json'
-                    }
-
-                    data = {
-                        "user_id": user.id,
-                        "email": user.email,
-                        "name": u' '.join(fullname),
-                        "signed_up_at": arrow.utcnow().timestamp,
-                        "custom_attributes": {
-                            "plan": user.profile.plan.title,
-                            "register_source": request.GET.get('register_source', 'instapage'),
-                            "register_medium": request.GET.get('register_medium', 'webhook'),
-                        }
-                    }
-
-                    try:
-                        requests.post('https://api.intercom.io/users', headers=headers, json=data).text
-                    except:
-                        raven_client.captureException()
+            if created:
+                raven_client.captureMessage(
+                    'InstaPage Registration',
+                    level='warning',
+                    extra={
+                        'name': fullname,
+                        'email': email,
+                        'exists': User.objects.filter(email__iexact=email).exists()
+                    })
 
                 return HttpResponse('ok')
             else:
                 raven_client.captureMessage('InstaPage registration email exists', extra={
-                    'name': request.POST['Name'],
-                    'email': request.POST['Email'],
+                    'name': fullname,
+                    'email': email,
                     'exists': User.objects.filter(email__iexact=email).exists()
                 })
 
                 return HttpResponse('Email is already registed to an other user')
+
         except:
             raven_client.captureException()
 

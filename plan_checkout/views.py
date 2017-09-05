@@ -4,14 +4,14 @@ from django.views.generic import TemplateView
 from django.contrib.auth import login as user_login
 from django.contrib import messages
 from django.conf import settings
-from django.db.models.signals import post_save
 
 import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.utils import unique_username
 from stripe_subscription.stripe_api import stripe
-from leadgalaxy.models import User, UserProfile, GroupPlan, userprofile_creation
+from leadgalaxy.models import User, GroupPlan
+from leadgalaxy.utils import create_user_without_signals
 from analytic_events.models import PlanSelectionEvent
 from stripe_subscription.models import StripeSubscription
 from stripe_subscription.utils import SubscriptionException, subscription_end_trial, update_subscription
@@ -43,17 +43,12 @@ class PlanCheckoutView(TemplateView):
             user = User.objects.get(email__iexact=email)
             profile = user.profile
         except User.DoesNotExist:
-            post_save.disconnect(userprofile_creation, User)
-            user = User(
+            user, profile = create_user_without_signals(
                 username=username,
                 email=email,
                 first_name=fullname[0],
-                last_name=u' '.join(fullname[1:]))
-
-            user.set_password(get_random_string(20))
-            user.save()
-
-            profile = UserProfile.objects.create(user=user)
+                last_name=u' '.join(fullname[1:]),
+                password=get_random_string(20))
 
             created = True
 
@@ -147,17 +142,12 @@ class MonthlyCheckoutView(TemplateView):
             user = User.objects.get(email__iexact=email)
             profile = user.profile
         except User.DoesNotExist:
-            post_save.disconnect(userprofile_creation, User)
-            user = User(
+            user, profile = create_user_without_signals(
                 username=username,
                 email=email,
                 first_name=fullname[0],
-                last_name=u' '.join(fullname[1:]))
-
-            user.set_password(get_random_string(20))
-            user.save()
-
-            profile = UserProfile.objects.create(user=user)
+                last_name=u' '.join(fullname[1:]),
+                password=get_random_string(20))
 
             created = True
 

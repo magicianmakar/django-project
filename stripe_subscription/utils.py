@@ -17,6 +17,7 @@ from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore,
 from .stripe_api import stripe
 
 from leadgalaxy.models import GroupPlan, UserProfile
+from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
 
 
@@ -25,7 +26,7 @@ class SubscriptionException(Exception):
 
 
 def update_subscription(user, plan, subscription):
-    StripeSubscription.objects.update_or_create(
+    return StripeSubscription.objects.update_or_create(
         subscription_id=subscription['id'],
         defaults={
             'user': user,
@@ -40,7 +41,7 @@ def update_subscription(user, plan, subscription):
 
 
 def update_customer(user, customer):
-    StripeCustomer.objects.update_or_create(
+    return StripeCustomer.objects.update_or_create(
         customer_id=customer['id'],
         defaults={
             'user': user,
@@ -319,6 +320,7 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
+        created = False
 
         try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
@@ -334,8 +336,29 @@ def process_webhook_event(request, event_id, raven_client):
                 customer.user.set_config('registration_discount', u':{}'.format(reg_coupon))
 
         except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
-            return HttpResponse('Customer Not Found')
+            if sub.plan.metadata.get('click_funnels'):
+                stripe_customer = stripe.Customer.retrieve(sub.customer)
+
+                fullname = ''
+                email = stripe_customer.email
+                intercom_attrs = {
+                    "register_source": 'clickfunnels',
+                    "register_medium": 'webhook',
+                }
+
+                if stripe_customer.sources and stripe_customer.sources.data:
+                    fullname = stripe_customer.sources.data[0].name
+
+                user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
+
+                if created:
+                    customer = update_customer(user, stripe_customer)[0]
+                else:
+                    raven_client.captureException()
+                    return HttpResponse('Cloud Not Register User')
+            else:
+                raven_client.captureException(level='warning')
+                return HttpResponse('Customer Not Found')
 
         try:
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
@@ -346,9 +369,16 @@ def process_webhook_event(request, event_id, raven_client):
                 plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) |
                                              Q(stripe_plan__stripe_id=sub.plan.id))
 
+                if plan.is_stripe():
+                    customer.user.profile.change_plan(plan)
+
                 update_subscription(customer.user, plan, sub)
+
             except stripe.InvalidRequestError:
                 pass
+
+        if created:
+            return HttpResponse('New User Registered')
 
     elif event.type == 'customer.subscription.updated':
         sub = event.data.object
