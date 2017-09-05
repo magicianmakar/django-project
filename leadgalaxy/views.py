@@ -54,6 +54,7 @@ from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
     ShopifyOrderShippingLine,
+    ShopifyOrderVariant,
 )
 
 from stripe_subscription.utils import (
@@ -2703,6 +2704,10 @@ def orders_view(request):
     for i in ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data'):
         orders_track['{}-{}'.format(i.order_id, i.line_id)] = i
 
+    changed_variants = {}
+    for i in ShopifyOrderVariant.objects.filter(store=store, order_id__in=orders_ids):
+        changed_variants['{}-{}'.format(i.order_id, i.line_id)] = i
+
     dropwow_status = {}
     for i in DropwowOrderStatus.objects.filter(store=store, shopify_order_id__in=orders_ids):
         dropwow_status['{}-{}'.format(i.shopify_order_id, i.shopify_line_id)] = i
@@ -2738,9 +2743,6 @@ def orders_view(request):
                     order['refunded_lines'].append(refund_line['line_item_id'])
 
         for i, el in enumerate((order['line_items'])):
-            var_link = store.get_link('/admin/products/{}/variants/{}'.format(el['product_id'],
-                                                                              el['variant_id']))
-            order['line_items'][i]['variant_link'] = var_link
             order['line_items'][i]['refunded'] = el['id'] in order['refunded_lines']
 
             order['line_items'][i]['image'] = {
@@ -2753,11 +2755,17 @@ def orders_view(request):
 
             shopify_order = orders_track.get('{}-{}'.format(order['id'], el['id']))
             dropwow_order = dropwow_status.get('{}-{}'.format(order['id'], el['id']))
+            changed_variant = changed_variants.get('{}-{}'.format(order['id'], el['id']))
 
             order['line_items'][i]['shopify_order'] = shopify_order
             order['line_items'][i]['dropwow_status'] = dropwow_order
+            order['line_items'][i]['changed_variant'] = changed_variant
 
-            variant_id = el['variant_id']
+            variant_id = changed_variant.variant_id if changed_variant else el['variant_id']
+            variant_title = changed_variant.variant_title if changed_variant else el['variant_title']
+
+            order['line_items'][i]['variant_link'] = store.get_link('/admin/products/{}/variants/{}'.format(el['product_id'], variant_id))
+
             if not el['product_id']:
                 if variant_id:
                     product = ShopifyProduct.objects.filter(store=store, title=el['title'], shopify_id__gt=0).first()
@@ -2778,7 +2786,15 @@ def orders_view(request):
             supplier = None
             bundle_data = []
             if product and product.have_supplier():
-                variant_id = product.get_real_variant_id(variant_id)
+                if changed_variant:
+                    variant_id = changed_variant.variant_id
+                    variant_title = changed_variant.variant_title
+
+                    order['line_items'][i]['variant_id'] = variant_id
+                    order['line_items'][i]['variant_title'] = variant_title
+                else:
+                    variant_id = product.get_real_variant_id(variant_id)
+
                 supplier = product.get_suppier_for_variant(variant_id)
                 if supplier:
                     shipping_method = product.get_shipping_for_variant(
@@ -2891,7 +2907,8 @@ def orders_view(request):
                         if variant_id and mapped:
                             order_data['variant'] = mapped
                         else:
-                            order_data['variant'] = el['variant_title'].split('/') if el['variant_title'] else ''
+
+                            order_data['variant'] = variant_title.split('/') if variant_title else ''
 
                     if product and product.have_supplier():
                         orders_cache['order_{}'.format(order_data['id'])] = order_data

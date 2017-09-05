@@ -964,6 +964,76 @@ function pusherSub() {
     */
 }
 
+$('.changed-variant').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(this);
+    btn.button('loading');
+
+    $('#save-variant-change').data('store', $(this).data('store'));
+    $('#save-variant-change').data('order', $(this).data('order'));
+    $('#save-variant-change').data('line', $(this).data('line'));
+
+    $.ajax({
+        url: api_url('shopify-variants'),
+        type: 'GET',
+        data: {
+            product: $(this).data('product')
+        },
+    }).done(function (data) {
+        var variant_template = Handlebars.compile($("#variant-change-item-template").html());
+
+        var list = $('.variants-list');
+        list.empty();
+
+        $.each(data.variants, function (i, el) {
+            list.append(variant_template(el));
+        });
+
+        list.append(variant_template({
+            id: -1,
+            title: 'Reset To Customer Selected Variant'
+        }));
+
+        $('#change-variant-modal').modal('show');
+
+    }).fail(function(data) {
+        displayAjaxError('Change Variant', data);
+    }).always(function() {
+        btn.button('reset');
+    });
+});
+
+$('#save-variant-change').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(this);
+    btn.button('loading');
+
+    var variant = $('input[name="new-variant-id"]:checked');
+    $.ajax({
+        url: api_url('change-order-variant'),
+        type: 'POST',
+        data: {
+            store: $('#save-variant-change').data('store'),
+            order: $('#save-variant-change').data('order'),
+            line: $('#save-variant-change').data('line'),
+            variant: variant.val(),
+            title: variant.attr('title'),
+        },
+    }).done(function (data) {
+        toastr.success('Variant Cahnged!');
+        $('#change-variant-modal').modal('hide');
+
+        setTimeout(function() {
+            window.location.reload();
+        }, 500);
+    }).fail(function(data) {
+        displayAjaxError('Change Variant', data);
+    }).always(function() {
+        btn.button('reset');
+    });
+});
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {

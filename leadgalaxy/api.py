@@ -38,6 +38,7 @@ from shopify_orders import tasks as shopify_orders_tasks
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
+    ShopifyOrderVariant,
 )
 from dropwow_core.models import DropwowAccount
 
@@ -1671,6 +1672,63 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             })
         else:
             return self.api_error('Image not found', status=404)
+
+    def get_shopify_variants(self, request, user, data):
+        try:
+            product = ShopifyProduct.objects.get(id=data.get('product'))
+            permissions.user_can_view(user, product)
+        except ShopifyProduct.DoesNotExist:
+            return self.api_error('Product not found', status=404)
+
+        shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
+
+        images = {}
+        for i in shopify_product['images']:
+            for var in i['variant_ids']:
+                images[var] = i['src']
+
+        variants = []
+        for i in shopify_product['variants']:
+            variants.append({
+                'id': i['id'],
+                'title': i['title'],
+                'image': shopify_image_thumb(images.get(i['id']))
+            })
+
+        return self.api_success({'variants': variants})
+
+    def post_change_order_variant(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        order_updater = utils.ShopifyOrderUpdater(store, data.get('order'))
+
+        if data.get('variant') == '-1':
+            ShopifyOrderVariant.objects.filter(store=store, order_id=data.get('order'), line_id=data.get('line')) \
+                                       .delete()
+
+            order_updater.add_note('Variant reseted to customer selection for line #{} by {}'.format(
+                data.get('line'), user.first_name or user.username))
+        else:
+            ShopifyOrderVariant.objects.update_or_create(
+                store=store,
+                order_id=data.get('order'),
+                line_id=data.get('line'),
+                defaults={
+                    'variant_id': data.get('variant'),
+                    'variant_title': data.get('title'),
+                }
+            )
+
+            order_updater.add_note("Variant to '{}' for line #{} by {}".format(
+                data.get('title'), data.get('line'), user.first_name or user.username))
+
+        order_updater.delay_save()
+
+        return self.api_success()
 
     def post_variants_mapping(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))

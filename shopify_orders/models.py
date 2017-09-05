@@ -136,3 +136,20 @@ class ShopifyOrderShippingLine(models.Model):
 
     def __unicode__(self):
         return self.title
+
+
+class ShopifyOrderVariant(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    changed_by = models.ForeignKey(User, null=True, on_delete=models.deletion.SET_NULL)
+
+    order_id = models.BigIntegerField(verbose_name='Shopify Order ID')
+    line_id = models.BigIntegerField(verbose_name='Shopify Line ID')
+
+    variant_id = models.BigIntegerField()
+    variant_title = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '{}'.format(self.variant_title)

@@ -590,7 +590,20 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
+                                                            {% if item.changed_variant %}
                                                             <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
+                                                            {% include 'partial/help_tooltip.html' with help="Variant was changed" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
+
+                                                            {% else %}
+                                                            <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
+                                                            {% endif %}
+
+                                                            {% if item.product %}
+                                                            <a href="#" class="btn changed-variant itooltip m-l-xs" title="Change Variant"
+                                                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" data-store="{{store.id}}"
+                                                                data-order="{{order.id}}" data-line="{{item.id}}" data-product="{{item.product.id}}">
+                                                                <i class="fa fa-edit"></i></a>
+                                                            {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             <span style="font-weight:bolder;{% if item.quantity > 1 %}color:blue{% endif %}">
@@ -709,7 +722,7 @@
 
     {% include 'partial/fulfillment_modal.html' with notify=True only %}
 
-<div id="shipping-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="shipping-modal" class="modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="m-t-none modal-header">
@@ -723,7 +736,7 @@
     </div>
 </div>
 
-<div id="bundle-order-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="bundle-order-modal" class="modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="m-t-none modal-header">
@@ -735,6 +748,44 @@
         </div>
     </div>
 </div>
+
+<div id="change-variant-modal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Change Variant</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="variants-list"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button id="save-variant-change" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+<script id="variant-change-item-template" type="text/x-handlebars-template">
+    <div class="row" style="display:flex;align-items:center;justify-content:start;">
+        <div class="product-thumb _col-md-1">
+            <input id="new-variant-id-{{id}}" name="new-variant-id" type="radio" value="{{id}}" title="{{title}}" />
+        </div>
+        <div class="_col-md-1">
+            <label for="new-variant-id-{{id}}">
+                <img src="{{image}}" style="max-height:50px; margin: 0 15px;">
+            </label>
+        </div>
+        <div class="_col-md-10">
+            <label for="new-variant-id-{{id}}" data-product-id="{{id}}">{{title}}</label>
+        </div>
+    </div>
+</script>
+{% endverbatim %}
 
 {% include "partial/shopify_product_selector.html" %}
 
