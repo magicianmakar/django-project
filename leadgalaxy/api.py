@@ -1710,7 +1710,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ShopifyOrderVariant.objects.filter(store=store, order_id=data.get('order'), line_id=data.get('line')) \
                                        .delete()
 
-            order_updater.add_note('Variant reseted to customer selection for line #{} by {}'.format(
+            order_updater.add_note('Variant reset to customer selection for line #{} by {}'.format(
                 data.get('line'), user.first_name or user.username))
         else:
             ShopifyOrderVariant.objects.update_or_create(
@@ -1723,10 +1723,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 }
             )
 
-            order_updater.add_note("Variant to '{}' for line #{} by {}".format(
+            order_updater.add_note("Variant changed to '{}' for line #{} by {}".format(
                 data.get('title'), data.get('line'), user.first_name or user.username))
 
-        order_updater.delay_save()
+        order_updater.save_changes()
 
         return self.api_success()
 

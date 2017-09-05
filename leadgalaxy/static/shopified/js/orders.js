@@ -990,10 +990,12 @@ $('.changed-variant').click(function (e) {
             list.append(variant_template(el));
         });
 
-        list.append(variant_template({
-            id: -1,
-            title: 'Reset To Customer Selected Variant'
-        }));
+        if (btn.data('changed')) {
+            list.append(variant_template({
+                id: -1,
+                title: 'Reset To Customer Selected Variant'
+            }));
+        }
 
         $('#change-variant-modal').modal('show');
 
@@ -1022,7 +1024,11 @@ $('#save-variant-change').click(function (e) {
             title: variant.attr('title'),
         },
     }).done(function (data) {
-        toastr.success('Variant Cahnged!');
+        var msg = (variant.attr('title').match('Reset To') ?
+            'Variant Reset To Customer Selection' :
+            'Variant changed to: ' + variant.attr('title'));
+
+        toastr.success(msg, 'Change Variant');
         $('#change-variant-modal').modal('hide');
 
         setTimeout(function() {

@@ -601,7 +601,8 @@
                                                             {% if item.product %}
                                                             <a href="#" class="btn changed-variant itooltip m-l-xs" title="Change Variant"
                                                                 data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" data-store="{{store.id}}"
-                                                                data-order="{{order.id}}" data-line="{{item.id}}" data-product="{{item.product.id}}">
+                                                                data-order="{{order.id}}" data-line="{{item.id}}" data-product="{{item.product.id}}"
+                                                                data-changed="{{item.changed_variant|yesno:'true,false'}}">
                                                                 <i class="fa fa-edit"></i></a>
                                                             {% endif %}
                                                         </td>
