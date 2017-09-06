@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from raven.contrib.django.raven_compat.models import client as raven_client
+from tqdm import tqdm
 
 import time
 import math
@@ -8,6 +10,7 @@ import requests
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max
+from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import get_shopify_order
 
 
@@ -36,9 +39,33 @@ class Command(BaseCommand):
 
     def reset_stores(self, store_ids):
         for store in store_ids:
-            self.write_success('Reset Store: {}'.format(store))
-            ShopifyOrder.objects.filter(store_id=store).delete()
-            ShopifySyncStatus.objects.filter(store_id=store).update(sync_status=0, pending_orders=None)
+            store = ShopifyStore.objects.get(id=store)
+
+            self.write_success('Reset Store: {}'.format(store.title))
+
+            orders = ShopifyOrder.objects.filter(store=store)
+            orders_count = orders.count()
+            obar = tqdm(total=orders_count)
+
+            steps = 10000
+            count = 0
+
+            while count <= orders_count:
+                with transaction.atomic():
+                    order_ids = orders[:steps].values_list('id', flat=True)
+                    ShopifyOrder.objects.filter(id__in=order_ids).delete()
+
+                    obar.update(len(order_ids))
+                    count += len(order_ids)
+
+                    if not len(order_ids):
+                        break
+
+            obar.close()
+
+            self.write_success('Deleted Orders: {}'.format(count))
+
+            ShopifySyncStatus.objects.filter(store_id=store.id).update(sync_status=0, pending_orders=None)
             self.write_success('Done')
 
     def start_command(self, *args, **options):
