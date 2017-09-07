@@ -35,6 +35,7 @@
                             <th>Bundles</th>
                             {% endif %}
                             <th style="width:13%">Join Date</th>
+                            <th style="width:13%">Last Login</th>
                             <th style="width:25%">Actions</th>
                         </tr>
                     </thead>
@@ -76,6 +77,7 @@
                             </td>
                             {% endif %}
                             <td>{{item.date_joined|date}}</td>
+                            <td>{{item.last_login|date}}</td>
                             <td>
                                 {% if user.is_superuser %}
                                 <a href="#" class="btn btn-primary btn-outline btn-xs user-profile-btn" user-id="{{item.id}}">Profile</a>
