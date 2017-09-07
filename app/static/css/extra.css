@@ -261,6 +261,15 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     background-color: #93c47d !important;
 }
 
+.product-imitation {
+    max-height: 400px !important;
+    overflow: hidden !important;
+}
+
+.product-box {
+    overflow: hidden !important;
+}
+
 @media only screen and (max-width: 760px) {
     .extension-version {
         display: none;

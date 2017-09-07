@@ -20,7 +20,7 @@
                         <div class="ibox-content product-box product-wrapper" product-id="{{item.id}}" product-title="{{item.title}}">
                             <div class="product-imitation" style="padding: 0; height: 280px;">
                                 <a href="{% url 'marketplace:product' dropwow_product_id=item.id %}">
-                                    <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="{{item.image_path}}" style="height: 100%; max-width: 100%;">
+                                    <img {% if forloop.counter > 4 %}class="no-img unveil" src="{% static 'img/blank.gif' %}" data-{% else %}class="no-img" {%endif%}src="https://drrak0mvje5ie.cloudfront.net?url={{item.image_path|urlencode}}" style="width: 100%">
                                 </a>
                             </div>
                             <div class="product-desc">
@@ -37,7 +37,7 @@
                                     <div class="col-md-4" style="padding-right:0">
                                     <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{item.id}}">Save</button>
                                     </div>
-                                    <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
+                                    <div class="col-md-8 text-right" style="padding-left:5px">
                                     <button class="btn btn-success btn-rounded import-btn" product-id="{{item.id}}">Add To Store</button>
                                     </button>
                                     </div>
