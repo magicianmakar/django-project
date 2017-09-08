@@ -827,7 +827,6 @@ def calculate_sales(self, user_id, period):
                     source_id = None
 
                 if not source_id or source_id in seen_source_ids or 'aliexpress' not in order_track.data:
-                    print 'IGnroe', source_id
                     continue
 
                 sale = 0
