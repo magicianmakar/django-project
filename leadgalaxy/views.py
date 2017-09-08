@@ -829,7 +829,7 @@ def webhook(request, provider, option):
 
     else:
         raven_client.captureMessage('Unknown Webhook Provider')
-        return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status_code=500)
+        return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status=500)
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
