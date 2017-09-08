@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load template_helper %}
+{% load compress %}
 
 {% block main-container %}
 
@@ -97,7 +99,30 @@
         </div>
     </div>
     {% endif %}
+    {% if request.GET.t == 'tracking' %}
+    <div id='sales' class="col-md-12" style='display:none;'>
+        <div class="ibox float-e-margins">
+             <div class="ibox-title">
+                <h5>Sales</h5>
+            </div>
 
+            <div class="ibox-content">
+                <p>
+                    <label>Total Dropified Affiliate Sale: </label>
+                    <span id='dropified'></span>&nbsp;&nbsp;
+                    <label>Commission (12%): </label>
+                    <span id='dropified_commission'></span>
+                </p>
+                <p>
+                    <label>Total Users Affiliate Sale: </label>
+                    <span id='users'></span>&nbsp;&nbsp;
+                    <label>Commission (4%): </label>
+                    <span id='users_commission'></span>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}
@@ -125,6 +150,15 @@
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.min.js"></script>
+
+    <script type="text/javascript">
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "user_{{user.id}}",
+        };
+    </script>
+
+    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     <script type="text/javascript">
         function gd(year, month, day) {
@@ -284,5 +318,8 @@
         });
 
     </script>
+    {% compress js %}
+    <script src="{% static 'shopified/js/acp_graph.js' %}"></script>
+    {% endcompress %}
 {% endblock %}
 

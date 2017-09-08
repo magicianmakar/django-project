@@ -2856,3 +2856,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         tasks.create_image_zip.apply_async(args=[images, product.id], countdown=5)
 
         return self.api_success()
+
+    def post_calculate_sales(self, request, user, data):
+        if not user.is_superuser:
+            raise PermissionDenied()
+        task = tasks.calculate_sales.apply_async(
+            args=[user.id, data['period']],
+            queue='priority_high')
+
+        return self.api_success({'task': task.id})

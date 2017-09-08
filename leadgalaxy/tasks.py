@@ -6,12 +6,14 @@ import tempfile
 import zipfile
 import os.path
 from simplejson import JSONDecodeError
+from datetime import timedelta
 
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
 from django.template.defaultfilters import truncatewords
+from django.utils import timezone
 from django.utils.text import slugify
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -789,3 +791,58 @@ def sync_product_exclude(self, store_id, product_id):
 
     except Exception:
         raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def calculate_sales(self, user_id, period):
+    sales_dropified = cache.get('sales_dropified_{}'.format(period))
+    sales_users = cache.get('sales_users_{}'.format(period))
+    users_affiliate = cache.get('users_affiliate', {})
+    since = None
+    if period:
+        since = timezone.now() - timedelta(days=period)
+    if sales_dropified is None or sales_users is None:
+        sales_dropified = 0
+        sales_users = 0
+        order_tracks = ShopifyOrderTrack.objects.select_related('user')
+        if since:
+            order_tracks = order_tracks.filter(created_at__gte=since)
+        for order_track in order_tracks:
+            user = order_track.user
+            affiliate = users_affiliate.get(user.id, None)
+            if not affiliate:
+                ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(user.models_user)
+                admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(user.models_user)
+                affiliate = 'ShopifiedApp'
+                if user_admitad_credentials:
+                    affiliate = 'UserAdmitad'
+                elif user_ali_credentials:
+                    affiliate = 'UserAliexpress'
+            users_affiliate[user.id] = affiliate
+            sale = 0
+            try:
+                data = json.loads(order_track.data)
+                if data['aliexpress']['cost']['products']:
+                    sale = data['aliexpress']['cost']['products']
+            except:
+                sale = 0
+            if affiliate == 'ShopifiedApp':
+                sales_dropified += sale
+            if affiliate == 'UserAdmitad':
+                sales_users += sale
+    cache.set('sales_dropified_{}'.format(period), sales_dropified, timeout=3600 * 12)
+    cache.set('sales_users_{}'.format(period), sales_users, timeout=3600 * 12)
+    cache.set('users_affiliate', users_affiliate, timeout=3600 * 12)
+    data = {
+        'task': self.request.id,
+        'sales_dropified': "%.2f" % sales_dropified,
+        'sales_users': "%.2f" % sales_users,
+        'sales_dropified_commission': "%.2f" % (sales_dropified * 0.12),
+        'sales_users_commission': "%.2f" % (sales_users * 0.04),
+        'period': period,
+    }
+    pusher = Pusher(
+        app_id=settings.PUSHER_APP_ID,
+        key=settings.PUSHER_KEY,
+        secret=settings.PUSHER_SECRET)
+    pusher.trigger("user_%s" % user_id, 'sales-calculated', data)
