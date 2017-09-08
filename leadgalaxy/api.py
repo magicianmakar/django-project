@@ -2860,8 +2860,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
     def post_calculate_sales(self, request, user, data):
         if not user.is_superuser:
             raise PermissionDenied()
-        task = tasks.calculate_sales.apply_async(
-            args=[user.id, data['period']],
-            queue='priority_high')
+
+        task = tasks.calculate_sales.apply_async(args=[user.id, data['period']])
 
         return self.api_success({'task': task.id})
