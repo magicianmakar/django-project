@@ -1776,7 +1776,7 @@ def acp_graph(request):
     data.products_count = (ShopifyProduct.objects.filter(user=user) if user else ShopifyProduct.objects.all()).count()
     data.users_count = User.objects.all().count()
 
-    if graph_type == 'tracking':
+    if graph_type == 'tracking' and not request.GET.get('aff_only'):
         if time_threshold:
             tracking_count = {
                 'all': ShopifyOrderTrack.objects.filter(created_at__gt=time_threshold).count(),
