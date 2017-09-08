@@ -27,6 +27,9 @@ class Command(BaseCommand):
         parser.add_argument('--reset', dest='reset',
                             action='store_true', help='Delete All Imported Orders and queue stores for re-import')
 
+        parser.add_argument('--progress', dest='progress',
+                            action='store_true', help='Shopw Reset Progress')
+
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--max_orders', dest='max_orders', type=int, help='Sync Stores with Maximum Orders count')
         parser.add_argument('--max_import', dest='max_import', type=int, help='Maximum number of orders to import')
@@ -37,7 +40,7 @@ class Command(BaseCommand):
         except:
             raven_client.captureException()
 
-    def reset_stores(self, store_ids):
+    def reset_stores(self, store_ids, progress=False):
         for store in store_ids:
             store = ShopifyStore.objects.get(id=store)
 
@@ -45,7 +48,9 @@ class Command(BaseCommand):
 
             orders = ShopifyOrder.objects.filter(store=store)
             orders_count = orders.count()
-            obar = tqdm(total=orders_count)
+
+            if progress:
+                obar = tqdm(total=orders_count)
 
             steps = 10000
             count = 0
@@ -55,13 +60,16 @@ class Command(BaseCommand):
                     order_ids = orders[:steps].values_list('id', flat=True)
                     ShopifyOrder.objects.filter(id__in=order_ids).delete()
 
-                    obar.update(len(order_ids))
+                    if progress:
+                        obar.update(len(order_ids))
+
                     count += len(order_ids)
 
                     if not len(order_ids):
                         break
 
-            obar.close()
+            if progress:
+                obar.close()
 
             self.write_success('Deleted Orders: {}'.format(count))
 
@@ -71,7 +79,7 @@ class Command(BaseCommand):
     def start_command(self, *args, **options):
         if options['reset']:
             if options['store_id']:
-                self.reset_stores(options['store_id'])
+                self.reset_stores(options['store_id'], options['progress'])
             return
 
         if not options['sync_status']:
