@@ -1736,7 +1736,7 @@ def acp_graph(request):
             .annotate(created_count=Count('id')) \
             .order_by('-created')
 
-    if graph_type == 'tracking':
+    if graph_type == 'tracking' and not request.GET.get('aff_only'):
         data.tracking_fulfilled = ShopifyOrderTrack.objects.filter(shopify_status='fulfilled') \
             .extra({'updated': 'date(updated_at)'}) \
             .values('updated') \
