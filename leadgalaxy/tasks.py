@@ -809,7 +809,7 @@ def calculate_sales(self, user_id, period):
         if not period:
             return
 
-        order_tracks = ShopifyOrderTrack.objects.select_related('user', 'user__profile')
+        order_tracks = ShopifyOrderTrack.objects.exclude(data='').select_related('user', 'user__profile')
         if period:
             period = timezone.now() - timedelta(days=int(period))
             order_tracks = order_tracks.filter(created_at__gte=period)
@@ -818,21 +818,17 @@ def calculate_sales(self, user_id, period):
         start = 0
         total_count = order_tracks.count()
 
+        seen_source_ids = []
         while start <= total_count:
             for order_track in order_tracks[start:start + steps]:
-                user = order_track.user
-                affiliate = users_affiliate.get(user.id)
-                if not affiliate:
-                    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(user.models_user)
-                    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(user.models_user)
+                try:
+                    source_id = int(order_track.source_id)
+                except:
+                    source_id = None
 
-                    affiliate = 'ShopifiedApp'
-                    if user_admitad_credentials:
-                        affiliate = 'UserAdmitad'
-                    elif user_ali_credentials:
-                        affiliate = 'UserAliexpress'
-
-                users_affiliate[user.id] = affiliate
+                if not source_id or source_id in seen_source_ids or 'aliexpress' not in order_track.data:
+                    print 'IGnroe', source_id
+                    continue
 
                 sale = 0
                 try:
@@ -844,10 +840,28 @@ def calculate_sales(self, user_id, period):
                 except:
                     sale = 0
 
+                if not sale:
+                    continue
+
+                affiliate = users_affiliate.get(order_track.user.id)
+                if not affiliate:
+                    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(order_track.user)
+                    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(order_track.user)
+
+                    affiliate = 'ShopifiedApp'
+                    if user_admitad_credentials:
+                        affiliate = 'UserAdmitad'
+                    elif user_ali_credentials:
+                        affiliate = 'UserAliexpress'
+
+                users_affiliate[order_track.user.id] = affiliate
+
                 if affiliate == 'ShopifiedApp':
                     sales_dropified += sale
                 if affiliate == 'UserAdmitad':
                     sales_users += sale
+
+                seen_source_ids.append(source_id)
 
             start += steps
 
