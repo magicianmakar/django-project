@@ -809,7 +809,7 @@ def calculate_sales(self, user_id, period):
         if not period:
             return
 
-        order_tracks = ShopifyOrderTrack.objects.select_related('user')
+        order_tracks = ShopifyOrderTrack.objects.select_related('user', 'user__profile')
         if period:
             period = timezone.now() - timedelta(days=int(period))
             order_tracks = order_tracks.filter(created_at__gte=period)
