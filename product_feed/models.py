@@ -69,3 +69,17 @@ class CommerceHQFeedStatus(FeedStatusAbstract):
 
         feed_hash = hashlib.md5('u{}/{}/{}'.format('chq', self.store.user.id, self.store.id)).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
+
+
+class WooFeedStatus(FeedStatusAbstract):
+    store = models.OneToOneField('woocommerce_core.WooStore', related_name='feedstatus')
+
+    class Meta:
+        verbose_name = 'WooCommerce Feed Status'
+        verbose_name_plural = 'WooCommerce Feed Statuses'
+
+    def get_filename(self):
+        import hashlib
+
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('woo', self.store.user.id, self.store.id)).hexdigest()
+        return 'feeds/{}.xml'.format(feed_hash)

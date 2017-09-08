@@ -4,6 +4,7 @@ import itertools
 import urllib
 import arrow
 
+from math import ceil
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -604,6 +605,31 @@ def smart_board_by_board(user, board):
 
         if product_added:
             board.save()
+
+
+def get_woo_products_count(store):
+    return WooListQuery(store, 'products').count()
+
+
+def get_woo_products(store, page=1, limit=50, all_products=False):
+    if not all_products:
+        path = 'products?{}'.format(urllib.urlencode({'page': page, 'per_page': limit}))
+        r = store.wcapi.get(path)
+        r.raise_for_status()
+        for product in r.json():
+            yield product
+    else:
+        limit = 100
+        count = get_woo_products_count(store)
+
+        if not count:
+            return
+
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
+            products = get_woo_products(store=store, page=page, limit=limit, all_products=False)
+            for product in products:
+                yield product
 
 
 class WooListQuery(object):

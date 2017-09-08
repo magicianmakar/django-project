@@ -14,3 +14,10 @@ class CommerceHQFeedStatusFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'product_feed.CommerceHQFeedStatus'
+
+
+class WooFeedStatusFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
+
+    class Meta:
+        model = 'product_feed.WooFeedStatus'

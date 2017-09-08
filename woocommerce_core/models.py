@@ -72,8 +72,11 @@ class WooStore(models.Model):
 
         super(WooStore, self).save(*args, **kwargs)
 
+    def get_store_url(self):
+        return self.api_url.rstrip('/')
+
     def get_admin_url(self):
-        return self.api_url.rstrip('/') + '/wp-admin'
+        return self.get_store_url() + '/wp-admin'
 
     def get_suppliers(self):
         return self.woosupplier_set.all().order_by('-is_default')

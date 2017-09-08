@@ -5,7 +5,13 @@
             type="button" id="dropdownMenu1" data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="true">
         {% if request.resolver_match.namespace == '' %}
-            Shopify
+            {% if request.resolver_match.kwargs.store_type == 'chq' %}
+                CommerceHQ
+            {% elif request.resolver_match.kwargs.store_type == 'woo' %}
+                WooCommerce
+            {% else %}
+                Shopify
+            {% endif %}
         {% elif request.resolver_match.namespace == 'chq' %}
             CommerceHQ
         {% elif request.resolver_match.namespace == 'woo' %}
