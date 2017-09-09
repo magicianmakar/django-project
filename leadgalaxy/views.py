@@ -1772,9 +1772,10 @@ def acp_graph(request):
             if key in data:
                 data[key] = data[key].filter(**{val: time_threshold})
 
-    data.stores_count = ShopifyStore.objects.count()
-    data.products_count = (ShopifyProduct.objects.filter(user=user) if user else ShopifyProduct.objects.all()).count()
-    data.users_count = User.objects.all().count()
+    if not not request.GET.get('aff_only'):
+        data.stores_count = ShopifyStore.objects.count()
+        data.products_count = (ShopifyProduct.objects.filter(user=user) if user else ShopifyProduct.objects.all()).count()
+        data.users_count = User.objects.all().count()
 
     if graph_type == 'tracking' and not request.GET.get('aff_only'):
         if time_threshold:
