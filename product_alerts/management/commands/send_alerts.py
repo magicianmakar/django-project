@@ -151,7 +151,7 @@ class Command(BaseCommand):
         cc_list = []
         if self.get_config('send_alerts_to_subusers', None, user, default=False):
             for sub_user in User.objects.filter(profile__subuser_parent=user):
-                if sub_user.get_shopify_stores().count():
+                if sub_user.subuser_stores.filter(is_active=True).count():
                     cc_list.append(sub_user.email)
 
         self.send_email(user, changes_map, cc_list=cc_list)
