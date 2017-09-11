@@ -351,7 +351,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                                        .exclude(source_status='FINISH')
 
         if user.is_subuser:
-            order_tracks = order_tracks.filter(store__in=user.profile.get_shopify_stores(flat=True))
+            order_tracks = order_tracks.filter(store__in=user.profile.get_chq_stores(flat=True))
 
         if data.get('store'):
             order_tracks = order_tracks.filter(store=data.get('store'))
