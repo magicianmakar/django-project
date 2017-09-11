@@ -147,6 +147,22 @@ def export_product(req_data, target, user_id):
                     product_to_map = r.json()['product']
 
                     try:
+                        if product_to_map.get('images') and api_data['product'].get('images'):
+                            images_fix_data = {
+                                'product': {
+                                    'id': product_to_map['id'],
+                                    'images': api_data['product']['images']
+                                }
+                            }
+
+                            try:
+                                requests.put(
+                                    url=store.get_link('/admin/products/{}.json'.format(product_to_map['id']), api=True),
+                                    json=images_fix_data
+                                ).raise_for_status()
+                            except:
+                                raven_client.captureException(level='warning')
+
                         # Variant mapping
                         variants_mapping = utils.get_mapping_from_product(product_to_map)
                         variants_mapping = json.dumps(variants_mapping)
