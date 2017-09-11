@@ -197,7 +197,7 @@ class ProductChangeEvent():
 
         except Exception as e:
             raven_client.captureException(extra={
-                'response': e.response.text if hasattr(e, 'response') and e.response else ''
+                'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
             })
 
     def product_actions(self, data):

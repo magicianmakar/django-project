@@ -333,7 +333,7 @@ def order_id_from_name(store, order_name, default=None):
 
 
 def format_chq_errors(e):
-    if not hasattr(e, 'response') or e.response.status_code != 422:
+    if not hasattr(e, 'response') or not hasattr(e.response, 'status_code') or e.response.status_code != 422:
         return 'Server Error'
 
     msg = []
@@ -743,7 +743,7 @@ def order_track_fulfillment(order_track, user_config=None):
                 raise
 
             raven_client.captureException(level='warning', extra={
-                'response': e.response.text if hasattr(e, 'response') else ''
+                'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
             })
 
     try:
