@@ -147,7 +147,7 @@ def export_product(req_data, target, user_id):
                     product_to_map = r.json()['product']
 
                     try:
-                        if product_to_map.get('images') and api_data['product'].get('images'):
+                        if not product_to_map.get('images') and api_data['product'].get('images'):
                             images_fix_data = {
                                 'product': {
                                     'id': product_to_map['id'],
