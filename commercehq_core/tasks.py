@@ -271,7 +271,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
             'vendor': p['vendor'],
             'tags': p.get('tags', '').split(','),
-            'type': p['type'],
+            'type': p.get('type') or 'Default',
             'shipping_weight': weight,
 
             'price': utils.safeFloat(p['price']),

@@ -336,24 +336,29 @@ def format_chq_errors(e):
     if not hasattr(e, 'response') or e.response.status_code != 422:
         return 'Server Error'
 
-    errors = e.response.json().get('errors') or e.response.json().get('message')
-
-    if not errors:
-        return 'Server Error'
-    elif isinstance(errors, basestring):
-        return errors
-
     msg = []
-    for k, v in errors.items():
-        if type(v) is list:
-            error = u','.join(v)
-        else:
-            error = v
+    errors_list = e.response.json()
+    if type(errors_list) is not list:
+        errors_list = [errors_list]
 
-        if k == 'base':
-            msg.append(error)
+    for errors in errors_list:
+        errors = errors.get('errors') or e.response.json().get('message')
+
+        if not errors:
+            msg.append('Server Error')
+        elif isinstance(errors, basestring):
+            msg.append(errors)
         else:
-            msg.append(u'{}: {}'.format(k, error))
+            for k, v in errors.items():
+                if type(v) is list:
+                    error = u','.join(v)
+                else:
+                    error = v
+
+                if k == 'base':
+                    msg.append(error)
+                else:
+                    msg.append(u'{}: {}'.format(k, error))
 
     return u' | '.join(msg)
 
