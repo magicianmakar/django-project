@@ -1814,31 +1814,31 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
         all_orders = data.get('all') == 'true' or order_ids
 
-        shopify_orders = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                                  .defer('data') \
-                                                  .order_by('updated_at')
+        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
+                                                .defer('data') \
+                                                .order_by('updated_at')
 
         if unfulfilled_only:
-            shopify_orders = shopify_orders.filter(source_tracking='') \
-                                           .filter(check_count__lte=250) \
-                                           .exclude(shopify_status='fulfilled') \
-                                           .exclude(source_status='FINISH')
+            order_tracks = order_tracks.filter(source_tracking='') \
+                                       .filter(check_count__lte=250) \
+                                       .exclude(shopify_status='fulfilled') \
+                                       .exclude(source_status='FINISH')
 
         if order_ids:
-            shopify_orders = shopify_orders.filter(id__in=order_ids.split(','))
+            order_tracks = order_tracks.filter(id__in=order_ids.split(','))
 
         if user.is_subuser:
-            shopify_orders = shopify_orders.filter(store__in=user.profile.get_shopify_stores(flat=True))
+            order_tracks = order_tracks.filter(store__in=user.profile.get_shopify_stores(flat=True))
 
         if data.get('store'):
-            shopify_orders = shopify_orders.filter(store=data.get('store'))
+            order_tracks = order_tracks.filter(store=data.get('store'))
 
         if not data.get('order_id') and not data.get('line_id') and not all_orders:
             limit_key = 'order_fulfill_limit_%d' % user.models_user.id
             limit = cache.get(limit_key)
 
             if limit is None:
-                limit = orders_update_limit(orders_count=shopify_orders.count())
+                limit = orders_update_limit(orders_count=order_tracks.count())
 
                 if limit != 20:
                     cache.set(limit_key, limit, timeout=3600)
@@ -1846,23 +1846,23 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if data.get('forced') == 'true':
                 limit = limit * 2
 
-            shopify_orders = shopify_orders[:limit]
+            order_tracks = order_tracks[:limit]
 
         elif data.get('all') == 'true':
-            shopify_orders = shopify_orders.order_by('created_at')
+            order_tracks = order_tracks.order_by('created_at')
 
         if data.get('order_id') and data.get('line_id'):
-            shopify_orders = shopify_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
+            order_tracks = order_tracks.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
 
         if data.get('count_only') == 'true':
-            return self.api_success({'pending': shopify_orders.count()})
+            return self.api_success({'pending': order_tracks.count()})
 
-        shopify_orders = serializers.serialize('python', shopify_orders,
-                                               fields=('id', 'order_id', 'line_id',
-                                                       'source_id', 'source_status',
-                                                       'source_tracking', 'created_at'))
+        order_tracks = serializers.serialize('python', order_tracks,
+                                             fields=('id', 'order_id', 'line_id',
+                                                     'source_id', 'source_status',
+                                                     'source_tracking', 'created_at'))
 
-        for i in shopify_orders:
+        for i in order_tracks:
             fields = i['fields']
             fields['id'] = i['pk']
 
