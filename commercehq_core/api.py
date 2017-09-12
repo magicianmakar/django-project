@@ -543,6 +543,9 @@ class CHQStoreApi(ApiResponseMixin, View):
 
             cache.set(note_delay_key, note_delay + 5, timeout=5)
 
+        if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
+            order_updater.delay_save(countdown=note_delay)
+
         return self.api_success()
 
     def delete_order_fulfill(self, request, user, data):
