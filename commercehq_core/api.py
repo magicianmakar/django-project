@@ -1243,3 +1243,12 @@ class CHQStoreApi(ApiResponseMixin, View):
         product.save()
 
         return self.api_success()
+
+    def post_order_note(self, request, user, data):
+        store = CommerceHQStore.objects.get(id=data.get('store'))
+        permissions.user_can_view(user, store)
+
+        if utils.set_chq_order_note(store, data.get('order_id'), data['note']):
+            return self.api_success()
+        else:
+            return self.api_error('CommerceHQ API Error', status=500)

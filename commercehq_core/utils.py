@@ -767,6 +767,14 @@ def order_track_fulfillment(order_track, user_config=None):
     }
 
 
+def set_chq_order_note(store, order_id, note):
+    api_url = store.get_api_url('orders', order_id)
+    r = store.request.patch(api_url, {'notes': note})
+    r.raise_for_status()
+
+    return r.json().get('id')
+
+
 class CHQOrderUpdater:
 
     def __init__(self, store=None, order_id=None):
