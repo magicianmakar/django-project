@@ -121,7 +121,8 @@ class ProductFeed():
         if self.revision == 1:
             self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         else:
-            self._add_element('g:id', '{}'.format(variant_id))
+            self._add_element('g:id', 'shopify_{}'.format(variant_id))
+            self._add_element('g:item_group_id', '{}'.format(variant_id))
 
         self._add_element('g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element('g:title', product.get('title'))
