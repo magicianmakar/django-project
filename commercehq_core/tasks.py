@@ -10,7 +10,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from unidecode import unidecode
 
-from app.celery import celery_app, CaptureFailure
+from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import utils
 from shopified_core import permissions
 
@@ -522,3 +522,28 @@ def create_image_zip(self, images, product_id):
             'success': False,
             'product': product_id,
         })
+
+
+@celery_app.task(base=CaptureFailure, bind=True)
+def order_save_changes(self, data):
+    order_id = None
+    try:
+        updater = utils.CHQOrderUpdater()
+        updater.fromJSON(data)
+
+        order_id = updater.order_id
+
+        updater.save_changes()
+
+    except Exception as e:
+        response = ''
+        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+            response = e.response.text
+
+        raven_client.captureException(
+            extra={'response': response}
+        )
+
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)

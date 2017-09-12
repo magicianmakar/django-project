@@ -765,3 +765,91 @@ def order_track_fulfillment(order_track, user_config=None):
             }]
         }],
     }
+
+
+class CHQOrderUpdater:
+
+    def __init__(self, store=None, order_id=None):
+        self.store = store
+        self.order_id = order_id
+
+        self.notes = []
+
+    def add_note(self, n):
+        self.notes.append(n)
+
+    def mark_as_ordered_note(self, line_id, source_id):
+        note = 'Aliexpress Order ID: {0}\n' \
+               'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+
+        if line_id:
+            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+
+        self.add_note(note)
+
+    def save_changes(self):
+        with cache.lock('updater_lock_{}_{}'.format(self.store.id, self.order_id), timeout=15):
+            self._do_save_changes()
+
+    def _do_save_changes(self):
+        order_url = self.store.get_api_url('orders', self.order_id, api=True)
+        rep = self.store.request.get(
+            url=order_url,
+        )
+        rep.raise_for_status()
+
+        order = rep.json()
+
+        if self.notes:
+            current_note = order.get('notes', '') or ''
+            new_note = '\n'.join(self.notes)
+
+            order_data = {
+                'notes': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
+            }
+
+            rep = self.store.request.patch(
+                url=order_url,
+                json=order_data
+            )
+
+            rep.raise_for_status()
+
+    def delay_save(self, countdown=None):
+        from commercehq_core.tasks import order_save_changes
+
+        order_save_changes.apply_async(
+            args=[self.toJSON()],
+            countdown=countdown
+        )
+
+    def reset(self, what):
+        order_data = {}
+
+        if 'notes' in what:
+            order_data['note'] = ''
+
+        if len(order_data.keys()) > 1:
+            order_url = self.store.get_api_url('orders', self.order_id, api=True)
+            rep = self.store.request.patch(
+                url=order_url,
+                json=order_data
+            )
+
+            rep.raise_for_status()
+
+    def toJSON(self):
+        return json.dumps({
+            "notes": self.notes,
+            "order": self.order_id,
+            "store": self.store.id,
+        }, sort_keys=True, indent=4)
+
+    def fromJSON(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        self.store = CommerceHQStore.objects.get(id=data.get("store"))
+        self.order_id = data.get("order")
+
+        self.notes = data.get("notes")

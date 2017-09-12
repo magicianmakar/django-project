@@ -432,6 +432,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         note_delay_key = 'chq_store_{}_order_{}'.format(store.id, order_id)
         note_delay = cache.get(note_delay_key, 0)
 
+        order_updater = utils.CHQOrderUpdater(store, order_id)
+
         for line_id in order_lines.split(','):
             if not line_id:
                 return self.api_error('Order Line Was Not Found.', status=501)
@@ -514,6 +516,12 @@ class CHQStoreApi(ApiResponseMixin, View):
                 for fulfilment in rep.json()['fulfilments']:
                     for item in fulfilment['items']:
                         caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=604800)
+
+                profile = user.models_user.profile
+
+                # TODO: Handle multi values in source_id
+                if profile.get_config_value('aliexpress_as_notes', True):
+                    order_updater.mark_as_ordered_note(line_id, source_id)
 
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,
