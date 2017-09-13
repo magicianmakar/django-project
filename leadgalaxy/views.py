@@ -2427,7 +2427,7 @@ def orders_view(request):
     auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
     order_custom_line_attr = bool(request.user.get_config('order_custom_line_attr'))
     fix_order_variants = request.user.get_config('fix_order_variants')
-    fix_aliexpress_address = request.user.get_config('fix_aliexpress_address', True)
+    fix_aliexpress_address = request.user.get_config('fix_aliexpress_address', False)
 
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
