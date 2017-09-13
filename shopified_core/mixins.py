@@ -1,9 +1,6 @@
 from django.http import JsonResponse
-from django.contrib.auth.models import User
 
 import simplejson as json
-
-from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .exceptions import ApiLoginException
 
