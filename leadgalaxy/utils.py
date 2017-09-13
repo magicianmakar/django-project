@@ -2389,3 +2389,63 @@ class ShopifyOrderUpdater:
         self.notes = data.get("notes")
         self.tags = data.get("tags")
         self.attributes = data.get("attributes")
+
+
+class ProductCollections(object):
+    shopify_api_urls = {
+        'custom_collections': '/admin/custom_collections.json',
+        'collection_products': '/admin/collects.json?collection_id={}',
+        'product_collections': '/admin/collects.json?product_id={}',
+        'link_collection': '/admin/collects.json',
+        'unlink_collection': '/admin/collects/{}.json',
+    }
+
+    @classmethod
+    def get_collections(cls, store):
+        try:
+            response = requests.get(url=store.get_link(cls.shopify_api_urls.get('custom_collections'), api=True)).json()
+            collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
+                           response.get('custom_collections', [])]
+        except Exception:
+            collections = []
+
+        return collections
+
+    def link_product_collection(self, product, collections):
+        self.unlink_product_collection(product=product, selected=collections)
+
+        for collection in collections:
+            requests.post(
+                product.store.get_link(self.shopify_api_urls.get('link_collection'), api=True),
+                json={
+                    'collect': {
+                        'product_id': product.shopify_id,
+                        'collection_id': collection
+                    }
+                }).json()
+
+        # update already linked collections
+        self.update_product_collects_shopify_id(product)
+
+    def unlink_product_collection(self, product, selected):
+        response = requests.get(url=product.store.get_link(self.shopify_api_urls.get('product_collections'), api=True)).json()
+        collections = [{'title': collection.get('title'), 'id': collection.get('collection_id')} for collection in
+                       response.get('collects', [])]
+
+        for product_collection in collections:
+            if product_collection.id not in selected:
+                response = requests.delete(product.store.get_link(
+                    self.shopify_api_urls.get('unlink_collection').format(product_collection.id),
+                    api=True))
+
+    def update_product_collects_shopify_id(self, product):
+        # check if we have any unlinked product collection
+        try:
+            url = product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id), api=True)
+            response = requests.get(url=url).json()
+            data = json.loads(product.data)
+            data['collections'] = [collection.get('collection_id') for collection in response.get('collects', [])]
+            product.data = json.dumps(data)
+            product.save()
+        except Exception:
+            pass

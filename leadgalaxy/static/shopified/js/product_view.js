@@ -54,6 +54,25 @@ function showProductInfo(rproduct) {
     }
 }
 
+$( '#store-select' ).change(function(){
+    $( '#collection-select' ).html('');
+});
+
+$( '#collection-select' ).select2({
+    ajax:{
+        url: '/autocomplete/collections',
+        dataType: 'json',
+        delay: 250,
+        escapeMarkup: function (markup) { return markup; },
+        data: function (params) {
+            return { query: params.term, store: $( '#store-select' ).val() };
+        },
+        processResults: function (data, params) {
+            return {results: data.suggestions};
+        }
+    },
+    minimumInputLength: 1,
+});
 
 $("a.add-variant").click(function (e) {
     e.preventDefault();
@@ -159,6 +178,7 @@ $('#export-btn').click(function () {
         "vendor": $('#product-vendor').val(),
         "published": $('#product-visible')[0].checked,
         "tags": $('#product-tag').val(),
+        "collections": [0],
         "variants": [],
         "options": [],
         "images" :[]
@@ -319,6 +339,9 @@ $('#export-btn').click(function () {
         api_data.product.images = new_images;
     }
 
+    if( $('#collection-select').val() !== null )
+        api_data.collections = $('#collection-select').val();
+
     $.ajax({
         url: '/api/' + target,
         type: 'POST',
@@ -449,6 +472,7 @@ $('#save-for-later-btn').click(function (e) {
         'weight': parseFloat($('#product-weight').val()),
         'weight_unit': $('#product-weight-unit').val(),
         'published': $('#product-visible').prop('checked'),
+        'collections': [0],
         'boards': $('#boards').val(),
         'variants': []
     };
@@ -462,6 +486,9 @@ $('#save-for-later-btn').click(function (e) {
 
         });
     }
+
+    if( $('#collection-select').val() !== null )
+        api_data.collections = $('#collection-select').val();
 
     $.ajax({
         url: '/api/' + target,

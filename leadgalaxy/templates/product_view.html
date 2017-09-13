@@ -261,7 +261,7 @@
 
 
             <div class="form-group col-xs-12 flex-center">
-                <label for="boards" class="col-md-1" style="padding:0;width:50px">Boards</label>
+                <label for="boards" class="col-md-1" style="padding:0;width:50px;margin-right: 10px;">Boards</label>
                 <div class="col-md-3 board-selection">
                     <select class="form-control" id="boards" style="width: 200px; display: inline-block; margin-left: 10px;" multiple>
                         {% for item in request.user.get_boards %}
@@ -275,8 +275,9 @@
 
             {% if not product.shopify_url %}
             <div class="form-group col-xs-12 flex-center">
-                <label for="store-select">Export to</label>
-                <select id="store-select"  class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
+                <label for="store-select" style="margin-right: 10px;">Export to</label>
+                  <select id="store-select"  class="form-control" style="width: 185px;border-radius:4px; display: inline-block; margin-left: 10px;">
+
                 {% for i in request.user.profile.get_shopify_stores %}
                     <option value="{{i.id}}" {% if i == product.store %}selected{% endif %}>{{i.title}}</option>
                 {% endfor %}
@@ -285,6 +286,17 @@
             {% else %}
             <input type="hidden" id="store-select" name="store-select" value="{{product.qelem.store_id}}">
             {% endif %}
+
+             <div class="form-group col-xs-12 flex-center">
+                <label for="boards" class="col-md-1" style="padding:0;width:50px;margin-right: 10px;">Collections</label>
+                <div class="col-md-3 board-selection">
+                    <select class="form-control" id="collection-select" style="width: 200px; display: inline-block; margin-left: 10px;" multiple>
+                        {% for collection in collections %}
+                            <option value="{{collection.id}}" {% if collection.id in product.product.collections %}selected{% endif %} >{{collection.title}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
             <div class="buttons col-xs-12">
                 <div class="row">
