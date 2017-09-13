@@ -16,8 +16,8 @@ from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat
 from shopified_core.shipping_helper import (
-    load_uk_provincess,
-    missing_province,
+    get_uk_province,
+    valide_aliexpress_province,
     country_from_code,
     province_from_code
 )
@@ -164,7 +164,7 @@ def filter_products(res, fdata):
     return res
 
 
-def chq_customer_address(order):
+def chq_customer_address(order, aliexpress_fix=False):
     customer_address = {}
     shipping_address = order['shipping_address']
 
@@ -184,9 +184,7 @@ def chq_customer_address(order):
 
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
-            province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
-            if not province:
-                missing_province(customer_address['city'])
+            province = get_uk_province(customer_address['city'])
 
             customer_address['province'] = province
         else:
@@ -231,6 +229,11 @@ def chq_customer_address(order):
     # if customer_address['company']:
     #     customer_address['name'] = '{} - {}'.format(customer_address['name'],
     #                                                 customer_address['company'])
+
+    if aliexpress_fix:
+        if not valide_aliexpress_province(customer_address['country'], customer_address['province']):
+            customer_address['province'] = 'Other'
+
     return customer_address
 
 

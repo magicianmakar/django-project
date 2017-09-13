@@ -457,6 +457,7 @@ class OrdersList(ListView):
     def get_orders(self, ctx):
         models_user = self.request.user.models_user
         auto_orders = self.request.user.can('auto_order.use')
+        fix_aliexpress_address = self.request.user.get_config('fix_aliexpress_address', True)
 
         products_cache = {}
         orders_list = {}
@@ -590,7 +591,7 @@ class OrdersList(ListView):
                     order['items'][ldx] = line
                     continue
 
-                customer_address = chq_customer_address(order)
+                customer_address = chq_customer_address(order, aliexpress_fix=fix_aliexpress_address)
 
                 order['customer_address'] = customer_address
 

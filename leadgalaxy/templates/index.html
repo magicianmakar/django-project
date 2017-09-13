@@ -411,6 +411,21 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
+                                    <label for="fix_aliexpress_address" class="col-sm-4 col-xs-8 control-label">
+                                        Fix Aliexpress Address Province Selection issues
+                                        {% include 'partial/help_tooltip.html' with help="Select 'Other' in Aliexpress province if the customer entered province is not found (for UK and Spain customers)" qtipstyle="color:#BBB" %}
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="fix_aliexpress_address"
+                                               name="fix_aliexpress_address" {% if config.fix_aliexpress_address == None or config.fix_aliexpress_address %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
                                     <label for="auto_shopify_fulfill" class="col-sm-4 control-label">
                                         Automatically Fulfill
                                         {% include 'partial/help_tooltip.html' with help="Tracked Orders will be fulfilled in Shopify if the Application detect a tracking number." qtipstyle="color:#BBB" %}
