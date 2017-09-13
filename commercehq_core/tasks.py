@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.utils.text import slugify
+from django.template.defaultfilters import truncatewords
 
 import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -14,7 +15,7 @@ from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import utils
 from shopified_core import permissions
 
-from .utils import format_chq_errors
+from .utils import format_chq_errors, CHQOrderUpdater
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
@@ -528,12 +529,19 @@ def create_image_zip(self, images, product_id):
 def order_save_changes(self, data):
     order_id = None
     try:
-        updater = utils.CHQOrderUpdater()
+        updater = CHQOrderUpdater()
         updater.fromJSON(data)
 
         order_id = updater.order_id
 
         updater.save_changes()
+
+        order_note = '\n'.join(updater.notes)
+        updater.store.pusher_trigger('order-note-update', {
+            'order_id': order_id,
+            'note': order_note,
+            'note_snippet': truncatewords(order_note, 10),
+        })
 
     except Exception as e:
         response = ''
