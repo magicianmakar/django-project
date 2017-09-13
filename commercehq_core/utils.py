@@ -775,6 +775,19 @@ def set_chq_order_note(store, order_id, note):
     return r.json().get('id')
 
 
+def get_chq_order(store, order_id):
+    order_url = store.get_api_url('orders', order_id, api=True)
+    rep = store.request.get(url=order_url)
+    rep.raise_for_status()
+
+    return rep.json()
+
+
+def get_chq_order_note(store, order_id):
+    order = get_chq_order(store, order_id)
+    return order.get('notes')
+
+
 class CHQOrderUpdater:
 
     def __init__(self, store=None, order_id=None):
@@ -795,33 +808,22 @@ class CHQOrderUpdater:
 
         self.add_note(note)
 
-    def save_changes(self):
+    def save_changes(self, add=True):
         with cache.lock('updater_lock_{}_{}'.format(self.store.id, self.order_id), timeout=15):
-            self._do_save_changes()
+            self._do_save_changes(add=add)
 
-    def _do_save_changes(self):
-        order_url = self.store.get_api_url('orders', self.order_id, api=True)
-        rep = self.store.request.get(
-            url=order_url,
-        )
-        rep.raise_for_status()
-
-        order = rep.json()
-
+    def _do_save_changes(self, add=True):
         if self.notes:
-            current_note = order.get('notes', '') or ''
             new_note = '\n'.join(self.notes)
-
-            order_data = {
-                'notes': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
-            }
-
-            rep = self.store.request.patch(
-                url=order_url,
-                json=order_data
-            )
-
-            rep.raise_for_status()
+            current_note = ''
+            if add:
+                order = get_chq_order(self.store, self.order_id)
+                current_note = order.get('notes', '') or ''
+            if current_note:
+                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
+            else:
+                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:500]
+            set_chq_order_note(self.store, self.order_id, new_note)
 
     def delay_save(self, countdown=None):
         from commercehq_core.tasks import order_save_changes
@@ -835,14 +837,11 @@ class CHQOrderUpdater:
         order_data = {}
 
         if 'notes' in what:
-            order_data['note'] = ''
+            order_data['notes'] = ''
 
         if len(order_data.keys()) > 1:
             order_url = self.store.get_api_url('orders', self.order_id, api=True)
-            rep = self.store.request.patch(
-                url=order_url,
-                json=order_data
-            )
+            rep = self.store.request.patch(order_url, order_data)
 
             rep.raise_for_status()
 

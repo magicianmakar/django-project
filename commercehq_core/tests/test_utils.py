@@ -4,6 +4,12 @@ from requests.exceptions import HTTPError
 from django.test import TestCase
 from django.core.cache import cache, caches
 
+from leadgalaxy.models import User
+from commercehq_core import utils
+from commercehq_core.models import CommerceHQStore
+from leadgalaxy.utils import (
+    random_hash
+)
 from .factories import CommerceHQStoreFactory, CommerceHQOrderTrackFactory
 from ..utils import (
     get_shipping_carrier,
@@ -11,6 +17,11 @@ from ..utils import (
     add_aftership_to_store_carriers,
     cache_fulfillment_data,
 )
+
+
+CHQ_API_URL = 'chq-shopified-dev.commercehqdev.com'
+CHQ_API_KEY = 'i7_-EFt8qb8MPb4ey0nTQ2BRT88DjSaH'
+CHQ_API_PASSWORD = 'UVJJqis5sWxSLxoEXOuAM672n2d66xfs'
 
 
 class GetShippingCarrierTestCase(TestCase):
@@ -259,3 +270,34 @@ class CacheFulfillmentData(TestCase):
         caches['orders'].delete_many(cache_keys)
 
 
+class OrdersTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username='me', email='me@localhost.com')
+        self.store = CommerceHQStore.objects.create(
+            user=self.user, title="test1", api_url=CHQ_API_URL,
+            api_key=CHQ_API_KEY, api_password=CHQ_API_PASSWORD)
+
+    def test_order_notes(self):
+        order_id = 1016
+        line_id = 9309669834
+
+        store = self.store
+        order = utils.get_chq_order(store, order_id)
+        self.assertEqual(order['id'], order_id)
+
+        note1 = 'Test Note #%s' % random_hash()
+        utils.set_chq_order_note(store, order_id, note1)
+
+        self.assertEqual(note1, utils.get_chq_order_note(store, order_id))
+
+    def test_order_updater_note(self):
+        store = self.store
+        order_id = 1015
+
+        note = 'Test Note #%s' % random_hash()
+
+        updater = utils.CHQOrderUpdater(store, order_id)
+        updater.add_note(note)
+        updater.save_changes(add=False)
+
+        self.assertEqual(note, utils.get_chq_order_note(store, order_id))
