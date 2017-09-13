@@ -279,8 +279,8 @@ def export_product(req_data, target, user_id):
             pass
 
         # update product collections
-        product.update_data(data)
         product_collections.link_product_collection(product, collections)
+        product.update_data(data)
 
     elif target == 'save-for-later':  # save for later
         if 'product' in req_data:
