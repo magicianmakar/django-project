@@ -1927,6 +1927,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_lines = data.get('line_id', '')
         order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
+        from_oberlo = 'oberlo.com' in request.META.get('HTTP_REFERER', '')
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
@@ -2006,7 +2007,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     # Line is already fulfilled
                     return self.api_success()
 
-                if saved_track.source_id and source_id != saved_track.source_id:
+                if saved_track.source_id and source_id != saved_track.source_id and not from_oberlo:
                     raven_client.captureMessage('Possible Double Order', level='warning', extra={
                         'store': store.title,
                         'order_id': order_id,
@@ -2025,7 +2026,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 source_id=source_id
             ).values_list('order_id', flat=True)
 
-            if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced'):
+            if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced') and not from_oberlo:
                 raven_client.captureMessage('Linked to an other Order', level='warning', extra={
                     'store': store.title,
                     'order_id': order_id,
@@ -2090,7 +2091,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if aliexpress_order_tags:
             order_updater.add_tag(aliexpress_order_tags)
 
-        if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
+        if not settings.DEBUG and not from_oberlo:
             order_updater.delay_save(countdown=note_delay)
 
         return self.api_success()
