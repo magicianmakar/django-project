@@ -50,7 +50,7 @@ mock==2.0.0
 munch==2.0.4
 MySQL-python==1.2.5
 ndg-httpsclient==0.4.1
-newrelic==2.90.0.75
+newrelic==2.92.0.78
 oauth2client==1.4.11
 oauthlib==1.1.2
 pbr==1.10.0
@@ -81,7 +81,7 @@ six==1.10.0
 slimit==0.8.1
 SQLAlchemy==1.0.12
 sqlparse==0.2.1
-stripe==1.62.1
+stripe==1.65.0
 tld==0.7.6
 tqdm==4.8.4
 Twisted==15.4.0
