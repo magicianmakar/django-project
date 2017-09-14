@@ -464,12 +464,11 @@ class CommerceHQOrdersPaginator(Paginator):
     num_pages = property(_get_num_pages)
 
     def _request_filters(self):
-        paid_status = self.request.GET.get('financial', '1,-1')
-        if paid_status == 'any':
-            paid_status = None
+        fulfillment_status = self.request.GET.get('fulfillment', '0,1,2')
+        paid_status = self.request.GET.get('financial', '1')
         filters = {
             'id': re.sub(r'[^0-9]', '', self.request.GET.get('query') or ''),
-            'status': self.request.GET.get('fulfillment'),
+            'status': fulfillment_status,
             'paid': paid_status,
         }
 
@@ -478,6 +477,14 @@ class CommerceHQOrdersPaginator(Paginator):
                 del filters[k]
             elif ',' in v:
                 filters[k] = v.split(',')
+
+        for k, v in filters.items():
+            if type(filters[k]) is list:
+                filters[k] = list(map((lambda x: safeInt(x)), filters[k]))
+            else:
+                filters[k] = safeInt(v, None)
+            if not filters[k]:
+                del filters[k]
 
         return filters
 
