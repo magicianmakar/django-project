@@ -36,7 +36,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import app_link, save_user_ip, unique_username, send_email_from_template
-from shopified_core.shipping_helper import load_uk_provincess, missing_province
+from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -1035,7 +1035,7 @@ def fix_order_variants(store, order, product):
                     set_real_variant(product, line['variant_id'], match['id'])
 
 
-def shopify_customer_address(order):
+def shopify_customer_address(order, aliexpress_fix=False):
     if 'shipping_address' not in order \
             and order.get('customer') and order.get('customer').get('default_address'):
         order['shipping_address'] = order['customer'].get('default_address')
@@ -1053,10 +1053,7 @@ def shopify_customer_address(order):
 
     if not customer_address['province']:
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
-            province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
-            if not province:
-                missing_province(customer_address['city'])
-
+            province = get_uk_province(customer_address['city'])
             customer_address['province'] = province
         else:
             customer_address['province'] = customer_address['country_code']
@@ -1101,6 +1098,10 @@ def shopify_customer_address(order):
 
     if customer_address['company']:
         customer_address['name'] = u'{} - {}'.format(customer_address['name'], customer_address['company'])
+
+    if aliexpress_fix:
+        if not valide_aliexpress_province(customer_address['country'], customer_address['province']):
+            customer_address['province'] = 'Other'
 
     return order, customer_address
 

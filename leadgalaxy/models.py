@@ -659,7 +659,7 @@ class ShopifyStore(models.Model):
 
     def saved_count(self):
         if len(self.user.profile.get_shopify_stores()) == 1:
-            return self.user.shopifyproduct_set.filter(shopify_id=0).count()
+            return self.user.shopifyproduct_set.filter(shopify_id=0).filter(Q(store__is_active=True) | Q(store=None)).count()
         else:
             return self.shopifyproduct_set.filter(shopify_id=0).count()
 

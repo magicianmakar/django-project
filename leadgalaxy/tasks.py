@@ -825,29 +825,45 @@ def calculate_sales(self, user_id, period):
         if not period:
             return
 
-        order_tracks = ShopifyOrderTrack.objects.exclude(data='').select_related('user', 'user__profile')
+        for profile in UserProfile.objects.filter(config__contains='aliexpress_affiliate_tracking').select_related('user'):
+            if all(profile.get_config_value(['aliexpress_affiliate_key', 'aliexpress_affiliate_tracking'])):
+                users_affiliate[profile.user.id] = 'UserAliexpress'
+
+        for profile in UserProfile.objects.filter(config__contains='admitad_site_id').select_related('user'):
+            if profile.get_config_value('admitad_site_id'):
+                users_affiliate[profile.user.id] = 'UserAdmitad'
+
+        order_tracks = ShopifyOrderTrack.objects.exclude(data='')
         if period:
             period = timezone.now() - timedelta(days=int(period))
-            order_tracks = order_tracks.filter(created_at__gte=period)
+            # order_tracks = order_tracks.filter(created_at__gte=period).order_by('id')
+            first_track = order_tracks.filter(created_at__gte=period).order_by('id')[0:1].first()
+            order_tracks = order_tracks.filter(id__gte=first_track.id)
 
         steps = 10000
         start = 0
-        total_count = order_tracks.count()
+        ignored_tracks = 0
 
         seen_source_ids = []
-        while start <= total_count:
-            for order_track in order_tracks[start:start + steps]:
+        added_tracks = 1
+        while added_tracks:
+            added_tracks = 0
+
+            for order_track in order_tracks[start:start + steps].values('user_id', 'source_id', 'data'):
+                added_tracks += 1
+
                 try:
-                    source_id = int(order_track.source_id)
+                    source_id = int(order_track['source_id'])
                 except:
                     source_id = None
 
-                if not source_id or source_id in seen_source_ids or 'aliexpress' not in order_track.data:
+                if not source_id or source_id in seen_source_ids or 'order_details' not in order_track['data']:
+                    ignored_tracks += 1
                     continue
 
                 sale = 0
                 try:
-                    data = json.loads(order_track.data)
+                    data = json.loads(order_track['data'])
                     sale = float(data['aliexpress']['order_details']['cost']['products'])
                     if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in rejected_status:
                         sale = 0
@@ -856,20 +872,12 @@ def calculate_sales(self, user_id, period):
                     sale = 0
 
                 if not sale:
+                    ignored_tracks += 1
                     continue
 
-                affiliate = users_affiliate.get(order_track.user.id)
+                affiliate = users_affiliate.get(order_track['user_id'])
                 if not affiliate:
-                    ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(order_track.user)
-                    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(order_track.user)
-
                     affiliate = 'ShopifiedApp'
-                    if user_admitad_credentials:
-                        affiliate = 'UserAdmitad'
-                    elif user_ali_credentials:
-                        affiliate = 'UserAliexpress'
-
-                users_affiliate[order_track.user.id] = affiliate
 
                 if affiliate == 'ShopifiedApp':
                     sales_dropified += sale

@@ -44,7 +44,7 @@ class Command(BaseCommand):
         for store in store_ids:
             store = ShopifyStore.objects.get(id=store)
 
-            self.write_success('Reset Store: {}'.format(store.title))
+            self.write_success(u'Reset Store: {}'.format(store.title))
 
             orders = ShopifyOrder.objects.filter(store=store)
             orders_count = orders.count()
