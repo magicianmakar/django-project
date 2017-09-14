@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function(user_filter, sub_conf) {
+(function(sub_conf) {
 'use strict';
 
 var placed_order_interval = {};
@@ -130,9 +130,9 @@ $('.save-filter-btn').click(function (e) {
         data: $('.filter-form').serialize(),
         success: function (data) {
             toastr.success('Orders Filter', 'Saved');
-            setTimeout(function() {
-                $(".filter-form").trigger('submit');
-            }, 1000);
+            // setTimeout(function() {
+            //     $(".filter-form").trigger('submit');
+            // }, 1000);
         },
         error: function (data) {
             displayAjaxError('Orders Filter', data);
@@ -947,4 +947,4 @@ $(function () {
         window.location.reload();
     }, 3500 * 1000);
 });
-})(user_filter, sub_conf);
+})(sub_conf);

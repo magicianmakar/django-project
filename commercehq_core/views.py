@@ -43,7 +43,8 @@ from .utils import (
     chq_customer_address,
     get_tracking_orders,
     order_id_from_name,
-    store_shipping_carriers
+    store_shipping_carriers,
+    get_orders_filter,
 )
 
 
@@ -417,7 +418,18 @@ class OrdersList(ListView):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('commercehq.use'):
             raise permissions.PermissionDenied()
-
+        if self.request.GET.get('reset') == '1':
+            self.request.user.profile.del_config_values('_chq_orders_filter_', True)
+        query = self.request.GET.get('query')
+        fulfillment = get_orders_filter(self.request, 'fulfillment', '0,1,2')
+        financial = get_orders_filter(self.request, 'financial', '1')
+        sort = get_orders_filter(self.request, 'sort', '!order_date')
+        self.data = {
+            'query': query,
+            'fulfillment': fulfillment,
+            'financial': financial,
+            'sort': sort,
+        }
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -426,7 +438,7 @@ class OrdersList(ListView):
     def get_paginator(self, *args, **kwargs):
         paginator = super(OrdersList, self).get_paginator(*args, **kwargs)
         paginator.set_store(self.get_store())
-        paginator.set_request(self.request)
+        paginator.set_request(self.data)
 
         return paginator
 
@@ -445,6 +457,7 @@ class OrdersList(ListView):
 
         context['orders'] = self.get_orders(context)
         context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+        context.update(self.data)
 
         return context
 

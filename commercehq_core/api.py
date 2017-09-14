@@ -86,6 +86,10 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         return res
 
+    def post_save_orders_filter(self, request, user, data):
+        utils.set_orders_filter(user, data)
+        return self.api_success()
+
     def post_product_save(self, request, user, data):
         return self.api_success(tasks.product_save(data, user.id))
 

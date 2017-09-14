@@ -33,19 +33,6 @@
                                 title="Export Orders"
                                 href="{% url 'order_exports_index' %}"><i class="fa fa-upload"></i> Export</a>
                             {% endif %}
-
-                            {% if store_order_synced %}
-                                {% if store_sync_enabled %}
-                                    <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
-                                        title="Switch to the Old Order page"
-                                        href="{% url_replace 'old' 1 %}">Switch Orders Page</a>
-                                {% else %}
-                                    <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
-                                        title="Switch to the New Order page"
-                                        href="{% url_replace 'old' 0 %}">Switch Orders Page</a>
-                                {% endif %}
-                            {% endif %}
-
                             {% if not store_sync_enabled %}
                             <button class="btn btn-primary btn-rounded btn-sm hide-non-connected-btn">Hide Non Connected</button>
                             <button class="btn btn-primary btn-rounded btn-sm hide-ordered-btn">Hide Ordered</button>
@@ -57,98 +44,6 @@
                           style="display:none"
                     {% endif %}
                     >
-                    {% if store_sync_enabled %}
-                        <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Sort</span>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="sort" class="form-control">
-                                <option {% if sort == 'created_at' %}selected="selected"{% endif %} value="created_at">Order Date</option>
-                                <option {% if sort == 'updated_at' %}selected="selected"{% endif %} value="updated_at">Order Last Update</option>
-                                <option {% if sort == 'total_price' %}selected="selected"{% endif %} value="total_price">Total Price</option>
-                                <option {% if sort == 'country_code' %}selected="selected"{% endif %} value="country_code">Shipping Country</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="sort-desc" class="control-label">
-                                <input type="checkbox" id="sort-desc" name="desc" value="true" class="icheck"
-                                       {% if sort_type == 'true' %}checked{% endif %}>
-                                Descending
-                            </label>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if store_sync_enabled %}
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Order</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="query_order" value="{{query_order|default:''}}" class="form-control"
-                                   placeholder="Order Number or ID">
-                        </div>
-                    </div>
-
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Customer</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
-                                   placeholder="Name or Email">
-                        </div>
-                    </div>
-
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Product</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="product" value="{{request.GET.product|default:''}}" type="hidden" />
-                            <input name="" id="product_title" value="{{product_filter.title|default:''}}" class="form-control"
-                                   placeholder="Product Title" data-store="{{store.id}}">
-                        </div>
-                    </div>
-
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Supplier</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="supplier_name" id="supplier_name" value="{{supplier_filter|default:''}}" class="form-control"
-                                   placeholder="Supplier Name" data-store="{{store.id}}">
-                        </div>
-                    </div>
-                    {% if request.user.profile.get_config.shipping_method_filter %}
-                    <div class="row filter-row">
-                        <div class="col-md-2 filter-label">
-                            <span>Shipping Method</span>
-                        </div>
-                        <div class="col-md-4">
-                            <input name="shipping_method_name" id="shipping_method_name" value="{{shipping_method_filter|default:''}}" class="form-control"
-                                   placeholder="Shipping Method Name" data-store="{{store.id}}">
-                        </div>
-                    </div>
-                    {% endif %}
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Country</span>
-                        </div>
-                        <div class="col-md-4">
-                            <select name="query_address"  class="form-control" id="country-filter"
-                                    data-placeholder="Shipping Country" style="height:30px" multiple>
-                               <option value=""></option>
-                                {% for item in countries %}
-                                <option value="{{item.0}}"
-                                    {% query_active 'query_address' item.0 'selected="selected"' True %}
-                                    >{{item.1}}</option>
-                                {% endfor %}
-                                </select>
-                        </div>
-                    </div>
-
-                    {% else %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Order</span>
@@ -157,7 +52,6 @@
                             <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order name or ID">
                         </div>
                     </div>
-                    {% endif %}
 
                     {% if not store_sync_enabled %}
                     <div class="row filter-row">
@@ -166,8 +60,8 @@
                         </div>
                         <div class="col-md-3">
                             <select name="sort" class="form-control">
-                                <option {% if request.GET.sort == '!order_date' %}selected="selected"{% endif %} value="!order_date">Newest orders first</option>
-                                <option {% if request.GET.sort == 'order_date' %}selected="selected"{% endif %} value="order_date">Oldest orders first</option>
+                                <option {% if sort == '!order_date' %}selected="selected"{% endif %} value="!order_date">Newest orders first</option>
+                                <option {% if sort == 'order_date' %}selected="selected"{% endif %} value="order_date">Oldest orders first</option>
                             </select>
                         </div>
                     </div>
@@ -196,11 +90,11 @@
                         </div>
                         <div class="col-md-3">
                             <select name="fulfillment" class="form-control help-select">
-                                <option {% if not request.GET.fulfillment or request.GET.fulfillment == '0,1,2' %}selected="selected"{% endif %} value="0,1,2">Unfulfilled / Partially fulfilled</option>
-                                <option {% if request.GET.fulfillment == '3' %}selected="selected"{% endif %} value="3">Sent to fulfillment</option>
-                                <option {% if request.GET.fulfillment == '4' %}selected="selected"{% endif %} value="4">Partially shipped</option>
-                                <option {% if request.GET.fulfillment == '5' %}selected="selected"{% endif %} value="5">Shipped</option>
-                                <option {% if request.GET.fulfillment == 'any' %}selected="selected"{% endif %} value="any">Any</option>
+                                <option {% if not fulfillment or fulfillment == '0,1,2' %}selected="selected"{% endif %} value="0,1,2">Unfulfilled / Partially fulfilled</option>
+                                <option {% if fulfillment == '3' %}selected="selected"{% endif %} value="3">Sent to fulfillment</option>
+                                <option {% if fulfillment == '4' %}selected="selected"{% endif %} value="4">Partially shipped</option>
+                                <option {% if fulfillment == '5' %}selected="selected"{% endif %} value="5">Shipped</option>
+                                <option {% if fulfillment == 'any' %}selected="selected"{% endif %} value="any">Any</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
@@ -213,64 +107,34 @@
                         </div>
                         <div class="col-md-3">
                             <select name="financial" class="form-control help-select">
-                                <option value="1" {% if not request.GET.financial or request.GET.financial == '1' %}selected="selected"{% endif %}>Paid</option>
-                                <option value="-1" {% if request.GET.financial == '-1' %}selected="selected"{% endif %}>Partially refunded</option>
-                                <option value="-2" {% if request.GET.financial == '-2' %}selected="selected"{% endif %}>Fully refunded</option>
-                                <option value="0" {% if request.GET.financial == '0' %}selected="selected"{% endif %}>Not Paid</option>
-                                <option value="any" {% if request.GET.financial == 'any' %}selected="selected"{% endif %}>Any</option>
+                                <option value="1" {% if not financial or financial == '1' %}selected="selected"{% endif %}>Paid</option>
+                                <option value="-1" {% if financial == '-1' %}selected="selected"{% endif %}>Partially refunded</option>
+                                <option value="-2" {% if financial == '-2' %}selected="selected"{% endif %}>Fully refunded</option>
+                                <option value="0" {% if financial == '0' %}selected="selected"{% endif %}>Not Paid</option>
+                                <option value="any" {% if financial == 'any' %}selected="selected"{% endif %}>Any</option>
                             </select>
                         </div>
                         <div class="col-md-6" style="">
                             <span class="help-block "></span>
                         </div>
                     </div>
-
-                    {% if store_sync_enabled %}
-                    <!--
-                    <div class="row m-t-xs">
-                        <div class="col-md-2 filter-label filter-order-status"></div>
-                        <div class="col-md-8" style="padding: 0px 10px">
-                            <label for="connected-orders" class="control-label">
-                                <input type="checkbox" id="connected-orders" name="connected" value="true" class="icheck"
-                                       {% if connected_only == 'true' %}checked{% endif %}>
-                                Only Orders with Connected Products
-                                {% include 'partial/help_tooltip.html' with help="Show only Orders with connected products" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
-                            </label>
-                        </div>
-                    </div>
-                    <div class="row m-t-xs">
-                        <div class="col-md-2 filter-label filter-order-status"></div>
-                        <div class="col-md-8" style="padding: 0px 10px">
-                            <label for="awaiting_order" class="control-label">
-                                <input type="checkbox" id="awaiting_order" name="awaiting_order" value="true" class="icheck"
-                                       {% if awaiting_order == 'true' %}checked{% endif %}>
-                                Only Pending Orders
-                                {% include 'partial/help_tooltip.html' with help="Hides orders placed on AliExpress" qtipstyle="color:#BBB" pos_at="right center" pos_my="left bottom" %}
-                            </label>
-                        </div>
-                    </div>
-                    -->
-                    {% endif %}
-
                     <div class="row">
-                        <div class="col-md-2 col-md-offset-2 filter-buttons m-t">
+                        <div class="col-md-2 col-md-offset-2 filter-buttons">
                             {% if request.GET.store %}
                             <input type="hidden" name="store" value="{{ request.GET.store }}">
                             {% endif %}
                         <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
                         </div>
 
-                        {% if store_order_synced %}
-                        <div class="col-md-5 col-md-offset-4 text-right">
-                            <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
+                        <div class="col-md-5 col-md-offset-2 text-right">
+                            <a href="#" class="btn btn-success save-filter-btn">
                                 <i class="fa fa-save"></i> Save Filter
                             </a>
 
-                            <a href="/orders?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                            <a href="/chq/orders?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
                                 <i class="fa fa-eraser"></i> Reset Filter
                             </a>
                         </div>
-                        {% endif %}
 
                     </div>
                     </form>
@@ -626,16 +490,6 @@
 
 {% block extrajs %}
 <script type="text/javascript">
-    var user_filter = {
-        sort: '{{ user_filter.sort }}',
-        status: '{{ user_filter.status }}',
-        fulfillment: '{{ user_filter.fulfillment }}',
-        financial: '{{ user_filter.financial }}',
-        sort_type: "{{ user_filter.desc|default:'false'}}",
-        connected: "{{ user_filter.connected|default:'false' }}",
-        awaiting_order: "{{ user_filter.awaiting_order|default:'false' }}",
-    };
-
     var sub_conf = {
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",

@@ -379,6 +379,34 @@ def store_shipping_carriers(store):
         return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
 
 
+def set_orders_filter(user, filters, default=None):
+    fields = ['sort', 'status', 'fulfillment', 'financial',
+              'desc', 'connected', 'awaiting_order']
+
+    for name, val in filters.items():
+        if name in fields:
+            key = '_chq_orders_filter_{}'.format(name)
+            user.set_config(key, val)
+
+
+def get_orders_filter(request, name=None, default=None, checkbox=False):
+    if name:
+        key = '_chq_orders_filter_{}'.format(name)
+        val = request.GET.get(name)
+
+        if not val:
+            val = request.user.get_config(key, default)
+
+        return val
+    else:
+        filters = {}
+        for name, val in request.user.profile.get_config().items():
+            if name.startswith('_chq_orders_filter_'):
+                filters[name.replace('_chq_orders_filter_', '')] = val
+
+        return filters
+
+
 class CommerceHQOrdersPaginator(Paginator):
     query = None
     store = None
@@ -464,12 +492,12 @@ class CommerceHQOrdersPaginator(Paginator):
     num_pages = property(_get_num_pages)
 
     def _request_filters(self):
-        fulfillment_status = self.request.GET.get('fulfillment', '0,1,2')
-        paid_status = self.request.GET.get('financial', '1')
+        fulfillment = self.request.get('fulfillment')
+        financial = self.request.get('financial')
         filters = {
-            'id': re.sub(r'[^0-9]', '', self.request.GET.get('query') or ''),
-            'status': fulfillment_status,
-            'paid': paid_status,
+            'id': re.sub(r'[^0-9]', '', self.request.get('query') or ''),
+            'status': fulfillment,
+            'paid': financial,
         }
 
         for k, v in filters.items():
@@ -489,10 +517,11 @@ class CommerceHQOrdersPaginator(Paginator):
         return filters
 
     def _orders_request(self):
+        sort = self.request.get('sort')
         params = {
             'size': self.per_page,
             'page': getattr(self, 'current_page', 1),
-            'sort': self.request.GET.get('sort', '!order_date'),
+            'sort': sort,
             # 'expand': 'all',
         }
 
