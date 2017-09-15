@@ -379,11 +379,42 @@ def store_shipping_carriers(store):
         return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
 
 
+def set_orders_filter(user, filters, default=None):
+    fields = ['sort', 'status', 'fulfillment', 'financial',
+              'desc', 'connected', 'awaiting_order']
+
+    for name, val in filters.items():
+        if name in fields:
+            key = '_chq_orders_filter_{}'.format(name)
+            user.set_config(key, val)
+
+
+def get_orders_filter(request, name=None, default=None, checkbox=False):
+    if name:
+        key = '_chq_orders_filter_{}'.format(name)
+        val = request.GET.get(name)
+
+        if not val:
+            val = request.user.get_config(key, default)
+
+        return val
+    else:
+        filters = {}
+        for name, val in request.user.profile.get_config().items():
+            if name.startswith('_chq_orders_filter_'):
+                filters[name.replace('_chq_orders_filter_', '')] = val
+
+        return filters
+
+
 class CommerceHQOrdersPaginator(Paginator):
-    query = None
     store = None
-    request = None
     size = 20
+
+    query = None
+    fulfillment = None
+    financial = None
+    sort = None
 
     _products = None
 
@@ -399,8 +430,12 @@ class CommerceHQOrdersPaginator(Paginator):
     def set_store(self, store):
         self.store = store
 
-    def set_request(self, r):
-        self.request = r
+    def set_filter(self, fulfillment, financial, sort, query=None):
+        self.fulfillment = fulfillment
+        self.financial = financial
+        self.sort = sort
+
+        self.query = query
 
     def page(self, number):
         """
@@ -465,9 +500,9 @@ class CommerceHQOrdersPaginator(Paginator):
 
     def _request_filters(self):
         filters = {
-            'id': re.sub(r'[^0-9]', '', self.request.GET.get('query') or ''),
-            'status': self.request.GET.get('fulfillment'),
-            'paid': self.request.GET.get('financial'),
+            'id': re.sub(r'[^0-9]', '', self.query or ''),
+            'status': self.fulfillment,
+            'paid': self.financial,
         }
 
         for k, v in filters.items():
@@ -476,13 +511,21 @@ class CommerceHQOrdersPaginator(Paginator):
             elif ',' in v:
                 filters[k] = v.split(',')
 
+        for k, v in filters.items():
+            if type(filters[k]) is list:
+                filters[k] = list(map((lambda x: safeInt(x)), filters[k]))
+            else:
+                filters[k] = safeInt(v, None)
+            if not filters[k]:
+                del filters[k]
+
         return filters
 
     def _orders_request(self):
         params = {
             'size': self.per_page,
             'page': getattr(self, 'current_page', 1),
-            'sort': self.request.GET.get('sort', '!order_date'),
+            'sort': self.sort,
             # 'expand': 'all',
         }
 
@@ -768,3 +811,98 @@ def order_track_fulfillment(order_track, user_config=None):
             }]
         }],
     }
+
+
+def set_chq_order_note(store, order_id, note):
+    api_url = store.get_api_url('orders', order_id)
+    r = store.request.patch(api_url, {'notes': note})
+    r.raise_for_status()
+
+    return r.json().get('id')
+
+
+def get_chq_order(store, order_id):
+    order_url = store.get_api_url('orders', order_id, api=True)
+    rep = store.request.get(url=order_url)
+    rep.raise_for_status()
+
+    return rep.json()
+
+
+def get_chq_order_note(store, order_id):
+    order = get_chq_order(store, order_id)
+    return order.get('notes')
+
+
+class CHQOrderUpdater:
+
+    def __init__(self, store=None, order_id=None):
+        self.store = store
+        self.order_id = order_id
+
+        self.notes = []
+
+    def add_note(self, n):
+        self.notes.append(n)
+
+    def mark_as_ordered_note(self, line_id, source_id):
+        note = 'Aliexpress Order ID: {0}\n' \
+               'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+
+        if line_id:
+            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+
+        self.add_note(note)
+
+    def save_changes(self, add=True):
+        with cache.lock('updater_lock_{}_{}'.format(self.store.id, self.order_id), timeout=15):
+            self._do_save_changes(add=add)
+
+    def _do_save_changes(self, add=True):
+        if self.notes:
+            new_note = '\n'.join(self.notes)
+            current_note = ''
+            if add:
+                order = get_chq_order(self.store, self.order_id)
+                current_note = order.get('notes', '') or ''
+            if current_note:
+                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
+            else:
+                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:500]
+            set_chq_order_note(self.store, self.order_id, new_note)
+
+    def delay_save(self, countdown=None):
+        from commercehq_core.tasks import order_save_changes
+
+        order_save_changes.apply_async(
+            args=[self.toJSON()],
+            countdown=countdown
+        )
+
+    def reset(self, what):
+        order_data = {}
+
+        if 'notes' in what:
+            order_data['notes'] = ''
+
+        if len(order_data.keys()) > 1:
+            order_url = self.store.get_api_url('orders', self.order_id, api=True)
+            rep = self.store.request.patch(order_url, order_data)
+
+            rep.raise_for_status()
+
+    def toJSON(self):
+        return json.dumps({
+            "notes": self.notes,
+            "order": self.order_id,
+            "store": self.store.id,
+        }, sort_keys=True, indent=4)
+
+    def fromJSON(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        self.store = CommerceHQStore.objects.get(id=data.get("store"))
+        self.order_id = data.get("order")
+
+        self.notes = data.get("notes")

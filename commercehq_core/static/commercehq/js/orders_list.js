@@ -97,7 +97,7 @@ $('.filter-btn').click(function (e) {
 });
 
 $(".filter-form").submit(function() {
-    $(this).find(":input").filter(function(i, el) {
+    var items = $(this).find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
             // Note: Update in $('.save-filter-btn').click() too
             el.value = JSON.stringify(el.checked);
@@ -106,10 +106,19 @@ $(".filter-form").submit(function() {
         }
 
         var ret = (((!el.value || el.value.trim().length === 0) &&
-                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))));
+                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))) ||
+            (el.name == 'sort' && el.value == user_filter.sort) ||
+            (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
+            (el.name == 'financial' && el.value == user_filter.financial)
+        );
 
         return ret;
-    }).attr("disabled", "disabled");
+    }).attr("disabled", "disabled").css('background-color', '#fff');
+
+    setTimeout(function() {
+        items.removeAttr('disabled');
+    }, 100);
+
     return true; // ensure form still submits
 });
 
@@ -130,9 +139,9 @@ $('.save-filter-btn').click(function (e) {
         data: $('.filter-form').serialize(),
         success: function (data) {
             toastr.success('Orders Filter', 'Saved');
-            setTimeout(function() {
-                $(".filter-form").trigger('submit');
-            }, 1000);
+            // setTimeout(function() {
+            //     $(".filter-form").trigger('submit');
+            // }, 1000);
         },
         error: function (data) {
             displayAjaxError('Orders Filter', data);
@@ -429,12 +438,14 @@ $('.note-panel .note-edit-save').click(function (e) {
         context: {btn: this, parent: parent},
         success: function (data) {
             if (data.status == 'ok') {
-                toastr.success('Order Note', 'Order note saved in Shopify.');
+                toastr.success('Order Note', 'Order note saved in CommerceHQ.');
 
                 // Truncate note
                 var maxLength = 70;
                 var noteText = note.substr(0, maxLength);
-                noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
+                if (noteText.lastIndexOf(" ") > 0) {
+                    noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
+                }
                 if (note.length > maxLength) {
                     noteText = noteText+'...';
                 }

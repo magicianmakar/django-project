@@ -86,6 +86,10 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         return res
 
+    def post_save_orders_filter(self, request, user, data):
+        utils.set_orders_filter(user, data)
+        return self.api_success()
+
     def post_product_save(self, request, user, data):
         return self.api_success(tasks.product_save(data, user.id))
 
@@ -432,6 +436,8 @@ class CHQStoreApi(ApiResponseMixin, View):
         note_delay_key = 'chq_store_{}_order_{}'.format(store.id, order_id)
         note_delay = cache.get(note_delay_key, 0)
 
+        order_updater = utils.CHQOrderUpdater(store, order_id)
+
         for line_id in order_lines.split(','):
             if not line_id:
                 return self.api_error('Order Line Was Not Found.', status=501)
@@ -515,6 +521,12 @@ class CHQStoreApi(ApiResponseMixin, View):
                     for item in fulfilment['items']:
                         caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=604800)
 
+                profile = user.models_user.profile
+
+                # TODO: Handle multi values in source_id
+                if profile.get_config_value('aliexpress_as_notes', True):
+                    order_updater.mark_as_ordered_note(line_id, source_id)
+
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,
             #     order__order_id=order_id,
@@ -534,6 +546,9 @@ class CHQStoreApi(ApiResponseMixin, View):
             })
 
             cache.set(note_delay_key, note_delay + 5, timeout=5)
+
+        if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
+            order_updater.delay_save(countdown=note_delay)
 
         return self.api_success()
 
@@ -1232,3 +1247,12 @@ class CHQStoreApi(ApiResponseMixin, View):
         product.save()
 
         return self.api_success()
+
+    def post_order_note(self, request, user, data):
+        store = CommerceHQStore.objects.get(id=data.get('store'))
+        permissions.user_can_view(user, store)
+
+        if utils.set_chq_order_note(store, data.get('order_id'), data['note']):
+            return self.api_success()
+        else:
+            return self.api_error('CommerceHQ API Error', status=500)
