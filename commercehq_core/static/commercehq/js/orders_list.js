@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError */
 
-(function(sub_conf) {
+(function(user_filter, sub_conf) {
 'use strict';
 
 var placed_order_interval = {};
@@ -97,7 +97,7 @@ $('.filter-btn').click(function (e) {
 });
 
 $(".filter-form").submit(function() {
-    $(this).find(":input").filter(function(i, el) {
+    var items = $(this).find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
             // Note: Update in $('.save-filter-btn').click() too
             el.value = JSON.stringify(el.checked);
@@ -106,10 +106,19 @@ $(".filter-form").submit(function() {
         }
 
         var ret = (((!el.value || el.value.trim().length === 0) &&
-                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))));
+                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))) ||
+            (el.name == 'sort' && el.value == user_filter.sort) ||
+            (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
+            (el.name == 'financial' && el.value == user_filter.financial)
+        );
 
         return ret;
-    }).attr("disabled", "disabled");
+    }).attr("disabled", "disabled").css('background-color', '#fff');
+
+    setTimeout(function() {
+        items.removeAttr('disabled');
+    }, 100);
+
     return true; // ensure form still submits
 });
 
@@ -947,4 +956,4 @@ $(function () {
         window.location.reload();
     }, 3500 * 1000);
 });
-})(sub_conf);
+})(user_filter, sub_conf);

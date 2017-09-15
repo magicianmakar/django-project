@@ -490,6 +490,13 @@
 
 {% block extrajs %}
 <script type="text/javascript">
+
+    var user_filter = {
+        sort: '{{ user_filter.sort }}',
+        fulfillment: '{{ user_filter.fulfillment }}',
+        financial: '{{ user_filter.financial }}',
+    };
+
     var sub_conf = {
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",

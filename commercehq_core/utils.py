@@ -408,10 +408,13 @@ def get_orders_filter(request, name=None, default=None, checkbox=False):
 
 
 class CommerceHQOrdersPaginator(Paginator):
-    query = None
     store = None
-    request = None
     size = 20
+
+    query = None
+    fulfillment = None
+    financial = None
+    sort = None
 
     _products = None
 
@@ -427,8 +430,12 @@ class CommerceHQOrdersPaginator(Paginator):
     def set_store(self, store):
         self.store = store
 
-    def set_request(self, r):
-        self.request = r
+    def set_filter(self, fulfillment, financial, sort, query=None):
+        self.fulfillment = fulfillment
+        self.financial = financial
+        self.sort = sort
+
+        self.query = query
 
     def page(self, number):
         """
@@ -492,12 +499,10 @@ class CommerceHQOrdersPaginator(Paginator):
     num_pages = property(_get_num_pages)
 
     def _request_filters(self):
-        fulfillment = self.request.get('fulfillment')
-        financial = self.request.get('financial')
         filters = {
-            'id': re.sub(r'[^0-9]', '', self.request.get('query') or ''),
-            'status': fulfillment,
-            'paid': financial,
+            'id': re.sub(r'[^0-9]', '', self.query or ''),
+            'status': self.fulfillment,
+            'paid': self.financial,
         }
 
         for k, v in filters.items():
@@ -517,11 +522,10 @@ class CommerceHQOrdersPaginator(Paginator):
         return filters
 
     def _orders_request(self):
-        sort = self.request.get('sort')
         params = {
             'size': self.per_page,
             'page': getattr(self, 'current_page', 1),
-            'sort': sort,
+            'sort': self.sort,
             # 'expand': 'all',
         }
 
