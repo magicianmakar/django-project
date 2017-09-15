@@ -433,7 +433,7 @@ class OrdersList(ListView):
 
         self.filter_data = {
             'query': self.request.GET.get('query'),
-            'fulfillment': get_orders_filter(self.request, 'fulfillment', '0,1,2'),
+            'fulfillment': get_orders_filter(self.request, 'fulfillment', '0,1,2,4'),
             'financial': get_orders_filter(self.request, 'financial', '1'),
             'sort': get_orders_filter(self.request, 'sort', '!order_date'),
         }

@@ -90,7 +90,7 @@
                         </div>
                         <div class="col-md-3">
                             <select name="fulfillment" class="form-control help-select">
-                                <option {% if not fulfillment or fulfillment == '0,1,2' %}selected="selected"{% endif %} value="0,1,2">Unfulfilled / Partially fulfilled</option>
+                                <option {% if not fulfillment or fulfillment == '0,1,2,4' %}selected="selected"{% endif %} value="0,1,2,4">Unfulfilled / Partially fulfilled</option>
                                 <option {% if fulfillment == '3' %}selected="selected"{% endif %} value="3">Sent to fulfillment</option>
                                 <option {% if fulfillment == '4' %}selected="selected"{% endif %} value="4">Partially shipped</option>
                                 <option {% if fulfillment == '5' %}selected="selected"{% endif %} value="5">Shipped</option>
