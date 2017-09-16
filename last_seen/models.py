@@ -30,7 +30,14 @@ class LastSeenManager(models.Manager):
             'module': module,
         }
 
-        seen, created = self.get_or_create(**args)
+        try:
+            seen, created = self.get_or_create(**args)
+        except self.model.MultipleObjectsReturned:
+            seen = self.filter(**args).first()
+            created = False
+
+            self.filter(**args).exclude(id=seen.id).delete()
+
         if created:
             return seen
 
