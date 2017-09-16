@@ -88,7 +88,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'last_seen.middleware.LastSeenMiddleware',
+    # 'last_seen.middleware.LastSeenMiddleware',
     'leadgalaxy.utils.UserIpSaverMiddleware',
     'leadgalaxy.utils.TimezoneMiddleware',
 )

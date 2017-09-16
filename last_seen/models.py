@@ -119,6 +119,6 @@ def clear_interval(user):
 
 @receiver(pre_delete, sender=LastSeen, dispatch_uid='delete_last_seen_cache')
 def delete_last_seen_cache(sender, instance, using, **kwargs):
-    print cache.delete(get_cache_key(settings.LAST_SEEN_DEFAULT_MODULE, instance.user))
-    print cache.delete(get_cache_key(settings.LAST_SEEN_API_MODULE, instance.user))
-    print cache.delete(get_cache_key(settings.LAST_SEEN_ADMIN_MODULE, instance.user))
+    cache.delete(get_cache_key(settings.LAST_SEEN_DEFAULT_MODULE, instance.user))
+    cache.delete(get_cache_key(settings.LAST_SEEN_API_MODULE, instance.user))
+    cache.delete(get_cache_key(settings.LAST_SEEN_ADMIN_MODULE, instance.user))
