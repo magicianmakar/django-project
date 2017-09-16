@@ -1,6 +1,7 @@
 from models import user_seen
 from . import settings
 
+
 class LastSeenMiddleware(object):
     """
         Middlewate to set timestampe when a user

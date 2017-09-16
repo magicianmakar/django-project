@@ -226,6 +226,7 @@ class TestMiddleware(TestCase):
     @mock.patch('last_seen.middleware.user_seen')
     def test_process_request_auth(self, user_seen):
         request = mock.Mock()
+        request.path = ''
         request.user.is_authenticated.return_value = True
         self.middleware.process_request(request)
-        user_seen.assert_called_with(request.user)
+        user_seen.assert_called_with(request.user.models_user, None)
