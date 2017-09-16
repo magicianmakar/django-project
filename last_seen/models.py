@@ -59,7 +59,6 @@ class LastSeen(models.Model):
     objects = LastSeenManager()
 
     class Meta:
-        unique_together = (('user', 'module'),)
         ordering = ('-last_seen',)
 
     def __unicode__(self):
@@ -92,14 +91,14 @@ def user_seen(user, module=None):
     limit = time.time() - settings.LAST_SEEN_INTERVAL
     seen = cache.get(cache_key)
     if not seen or seen < limit:
+        cache.set(cache_key, time.time(), settings.LAST_SEEN_INTERVAL)
+
         # mark the database and the cache, if interval is cleared force
         # database write
         if seen == -1:
             LastSeen.objects.seen(user, module=module, force=True)
         else:
             LastSeen.objects.seen(user, module=module)
-        timeout = settings.LAST_SEEN_INTERVAL
-        cache.set(cache_key, time.time(), timeout)
 
 
 def clear_interval(user):

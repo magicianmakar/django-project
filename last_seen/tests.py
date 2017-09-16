@@ -174,6 +174,8 @@ class TestUserSeen(TestCase):
 
 
 class TestClearInterval(TestCase):
+    def setUp(self):
+        cache.delete_pattern('last_seen:*')
 
     @mock.patch('last_seen.models.LastSeen.objects.filter')
     @mock.patch('last_seen.models.cache')
@@ -227,6 +229,7 @@ class TestMiddleware(TestCase):
     def test_process_request_auth(self, user_seen):
         request = mock.Mock()
         request.path = ''
+        request.session = {}
         request.user.is_authenticated.return_value = True
         self.middleware.process_request(request)
         user_seen.assert_called_with(request.user.models_user, None)
