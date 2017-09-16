@@ -24,5 +24,4 @@ class LastSeenMiddleware(object):
                 from raven.contrib.django.raven_compat.models import client as raven_client
                 raven_client.captureException(level='warning')
 
-
         return None
