@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'storages',
     'django_extensions',
     'test_without_migrations',
+    'last_seen',
     'polymorphic',
 
     'article',
@@ -87,6 +88,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'last_seen.middleware.LastSeenMiddleware',
     'leadgalaxy.utils.UserIpSaverMiddleware',
     'leadgalaxy.utils.TimezoneMiddleware',
 )
