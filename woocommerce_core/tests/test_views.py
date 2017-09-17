@@ -334,16 +334,6 @@ class ProductSaveTestCase(TestCase):
 
     @patch('shopified_core.permissions.user_can_add', Mock(return_value=True))
     @patch('shopified_core.permissions.can_add_product', Mock(return_value=(True, 1, 0)))
-    def test_user_can_add_with_access_token(self):
-        self.data['access_token'] = self.user.get_access_token()
-        r = self.client.post(self.path, json.dumps(self.data), **self.headers)
-        data = json.loads(r.content)
-        product_id = data['product']['id']
-        product = WooProduct.objects.get(pk=product_id)
-        self.assertEqual(product.title, self.product_data['title'])
-
-    @patch('shopified_core.permissions.user_can_add', Mock(return_value=True))
-    @patch('shopified_core.permissions.can_add_product', Mock(return_value=(True, 1, 0)))
     def test_user_can_add_if_logged_in(self):
         self.login()
         r = self.client.post(self.path, json.dumps(self.data), **self.headers)
