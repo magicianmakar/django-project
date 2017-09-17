@@ -7,7 +7,6 @@
         order-data-id="{{ item.order_data_id }}"
         order-number="{{order.id}}"
         line-title="{{item.title}}"
-
         {% if item.shipping_method %}
             style="display:flex"
         {% endif %}
@@ -15,7 +14,7 @@
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
-            data-href="{% app_link 'chq/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+            data-href="{% app_link 'woo/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
             href="#" style="border-right:1px solid #66a8cc"
             >
             {{item.shipping_method.method_short}}
@@ -37,7 +36,7 @@
             {% if item.order_track %}
             <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.order_track.source_id}}" order-date="{{item.order_track.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
             {% else %}
-            <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Mark as Ordered</a></li>
+            <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product_id}}">Mark as Ordered</a></li>
             {% endif %}
 
             <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
@@ -45,18 +44,18 @@
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
-                    data-href="{% app_link 'chq/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true %}"
+                    data-href="{% app_link 'woo/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true %}"
                    >Step By Step Order</a></li>
                <li><a class="place-order-btn queue-order-btn add-to-cart" href="#" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
-                    data-href="{% app_link 'chq/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true SACart=true SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+                    data-href="{% app_link 'woo/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id SAStep=true SACart=true SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
                    >Add To Cart</a></li>
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
-                    data-href="{% app_link 'chq/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id %}"
+                    data-href="{% app_link 'woo/orders/place' product=item.supplier.short_product_url SAPlaceOrder=item.order_data_id %}"
                    >Auto Place Order</a></li>
             <li><a class="place-order-btn auto-shipping-btn" href="#"
                     order-id="{{order.id}}" line-id="{{item.id}}"
-                    product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.customer_address.country_code}}"
-                    data-href="{% app_link 'chq/orders/place' product=item.supplier.short_product_url %}"
+                    product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping.country}}"
+                    data-href="{% app_link 'woo/orders/place' product=item.supplier.short_product_url %}"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}
@@ -65,7 +64,7 @@
 
 {% elif item.product_id %}
     <button class="btn btn-xs btn-info add-supplier-btn"
-            store-id="{{store.id}}" shopify-product="{{item.product_id}}">
+            store-id="{{store.id}}" woo-product="{{item.product_id}}">
         <i class="fa fa-plus"></i> Add Supplier
     </button>
 

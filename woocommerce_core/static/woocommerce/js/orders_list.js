@@ -719,8 +719,8 @@ $('.auto-shipping-btn').click(function (e) {
 $('.add-supplier-btn').click(function (e) {
     e.preventDefault();
 
-    $('#modal-supplier-link').prop('shopify-store', $(this).attr('store-id'));
-    $('#modal-supplier-link').prop('shopify-product', $(this).attr('shopify-product'));
+    $('#modal-supplier-link').prop('woo-store', $(this).attr('store-id'));
+    $('#modal-supplier-link').prop('woo-product', $(this).attr('woo-product'));
 
     $('#modal-supplier-link').modal('show');
 });
@@ -764,11 +764,11 @@ $('.add-supplier-info-btn').click(function (e) {
             url: api_url('import-product', 'woo'),
             type: 'POST',
             data: {
-                store: $('#modal-supplier-link').prop('shopify-store'),
+                store: $('#modal-supplier-link').prop('woo-store'),
                 supplier: $('.product-original-link').val(),
                 vendor_name: $('.product-supplier-name').val(),
                 vendor_url: $('.product-supplier-link').val(),
-                product: $('#modal-supplier-link').prop('shopify-product'),
+                product: $('#modal-supplier-link').prop('woo-product'),
             },
         }).done(function (data) {
             toastr.success('Product is Connected!', 'Product Connect');

@@ -29,6 +29,8 @@ from shopified_core.utils import (
     get_domain,
     remove_link_query,
     orders_update_limit,
+    version_compare,
+    order_phone_number,
 )
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
@@ -333,6 +335,7 @@ class WooStoreApi(ApiResponseMixin, View):
             data=json.dumps({
                 'title': 'Importing...',
                 'variants': [],
+                'vendor': data.get('vendor_name', 'Supplier'),
                 'original_url': supplier_url
             })
         )
@@ -1088,3 +1091,69 @@ class WooStoreApi(ApiResponseMixin, View):
                 product.save()
 
         return self.api_success()
+
+    def get_order_data(self, request, user, data):
+        version = request.META.get('HTTP_X_EXTENSION_VERSION')
+        if version:
+            required = None
+
+            if version_compare(version, '1.25.6') < 0:
+                required = '1.25.6'
+            elif version_compare(version, '1.26.0') == 0:
+                required = '1.26.1'
+
+            if required:
+                raven_client.captureMessage(
+                    'Extension Update Required',
+                    level='warning',
+                    extra={'current': version, 'required': required})
+
+                return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
+
+        order_key = data.get('order')
+
+        if not order_key.startswith('woo_order_'):
+            order_key = 'woo_order_{}'.format(order_key)
+
+        store_type, prefix, store, order, line = order_key.split('_')
+
+        try:
+            store = WooStore.objects.get(id=int(store))
+        except WooStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        permissions.user_can_view(user, store)
+
+        order = utils.order_data_cache(order_key)
+        if order:
+            if not order['shipping_address'].get('address2'):
+                order['shipping_address']['address2'] = ''
+
+            order['ordered'] = False
+            order['fast_checkout'] = user.get_config('_fast_checkout', True)
+            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
+
+            phone = order['order']['phone']
+
+            if type(phone) is dict:
+                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
+                order['order']['phone'] = phone_number
+                order['order']['phoneCountry'] = phone_country
+
+            try:
+                order_id, line_id = order['order_id'], order['line_id']
+                track = WooOrderTrack.objects.get(store=store, order_id=order_id, line_id=order_id)
+
+                order['ordered'] = {
+                    'time': arrow.get(track.created_at).humanize(),
+                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
+                }
+
+            except WooOrderTrack.DoesNotExist:
+                pass
+            except:
+                raven_client.captureException()
+
+            return self.api_success(order)
+        else:
+            return self.api_error('Not found: {}'.format(data.get('order')), status=404)

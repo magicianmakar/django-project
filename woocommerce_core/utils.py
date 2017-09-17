@@ -7,17 +7,24 @@ import arrow
 from math import ceil
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
+from unidecode import unidecode
 
 from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
 from django.core.exceptions import PermissionDenied
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.utils import timezone
 
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, hash_url_filename
+from shopified_core.shipping_helper import (
+    load_uk_provincess,
+    missing_province,
+    country_from_code,
+    province_from_code
+)
 
 import leadgalaxy.utils as leadgalaxy_utils
 
@@ -630,6 +637,87 @@ def get_woo_products(store, page=1, limit=50, all_products=False):
             products = get_woo_products(store=store, page=page, limit=limit, all_products=False)
             for product in products:
                 yield product
+
+
+def woo_customer_address(order):
+    customer_address = {}
+    shipping_address = order['shipping']
+
+    for k in shipping_address.keys():
+        if shipping_address[k] and type(shipping_address[k]) is unicode:
+            customer_address[k] = unidecode(shipping_address[k])
+        else:
+            customer_address[k] = shipping_address[k]
+
+    customer_address['address1'] = customer_address.get('address_1')
+    customer_address['address2'] = customer_address.get('address_2')
+    customer_address['country_code'] = customer_address.get('country')
+    customer_address['province_code'] = customer_address.get('state')
+    customer_address['zip'] = customer_address.get('postcode')
+
+    customer_address['country'] = country_from_code(customer_address['country_code'])
+    customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
+
+    if not customer_address.get('province'):
+        if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+            province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
+            if not province:
+                missing_province(customer_address['city'])
+
+            customer_address['province'] = province
+        else:
+            customer_address['province'] = customer_address['country_code']
+
+    elif customer_address['province'] == 'Washington DC':
+        customer_address['province'] = 'Washington'
+
+    elif customer_address['province'] == 'Puerto Rico':
+        # Puerto Rico is a country in Aliexpress
+        customer_address['province'] = 'PR'
+        customer_address['country_code'] = 'PR'
+        customer_address['country'] = 'Puerto Rico'
+
+    elif customer_address['province'] == 'Virgin Islands':
+        # Virgin Islands is a country in Aliexpress
+        customer_address['province'] = 'VI'
+        customer_address['country_code'] = 'VI'
+        customer_address['country'] = 'Virgin Islands (U.S.)'
+
+    elif customer_address['province'] == 'Guam':
+        # Guam is a country in Aliexpress
+        customer_address['province'] = 'GU'
+        customer_address['country_code'] = 'GU'
+        customer_address['country'] = 'Guam'
+
+    if customer_address['country_code'] == 'CA':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t ]', '', customer_address['zip']).upper().strip()
+
+        if customer_address['province'] == 'Newfoundland':
+            customer_address['province'] = 'Newfoundland and Labrador'
+
+    if customer_address['country'] == 'United Kingdom':
+        if customer_address.get('zip'):
+            if not re.findall('^([0-9A-Za-z]{2,4}\s[0-9A-Za-z]{3})$', customer_address['zip']):
+                customer_address['zip'] = re.sub(r'(.+)([0-9A-Za-z]{3})$', r'\1 \2', customer_address['zip'])
+
+    customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name'])
+
+    return customer_address
+
+
+def order_data_cache(*args, **kwargs):
+    order_key = '_'.join([str(i) for i in args])
+
+    if not order_key.startswith('woo_order_'):
+        order_key = 'woo_order_{}'.format(order_key)
+
+    if '*' in order_key:
+        data = caches['orders'].get_many(caches['orders'].keys(order_key))
+    else:
+        data = caches['orders'].get(order_key)
+
+    return data
 
 
 class WooListQuery(object):

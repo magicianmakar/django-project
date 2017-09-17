@@ -14,4 +14,5 @@ urlpatterns = patterns(
     url(r'^orders/track$', woocommerce_core.views.OrdersTrackList.as_view(), name='orders_track'),
     url(r'^boards/list$', woocommerce_core.views.BoardsList.as_view(), name='boards_list'),
     url(r'^boards/(?P<pk>[0-9]+)$', woocommerce_core.views.BoardDetailView.as_view(), name='board_detail'),
+    url(r'^orders/place$', woocommerce_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
 )

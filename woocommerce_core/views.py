@@ -2,12 +2,18 @@ import json
 
 import arrow
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
+from django.contrib import messages
 from django.db.models import Q
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
+from django.views.generic.base import RedirectView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.core.cache import caches
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 
 from shopified_core import permissions
@@ -17,6 +23,7 @@ from shopified_core.utils import (
     aws_s3_context,
     safeInt,
     clean_query_id,
+    safeFloat,
 )
 
 from .models import WooStore, WooProduct, WooOrderTrack, WooBoard
@@ -30,6 +37,7 @@ from .utils import (
     get_tracking_orders,
     get_tracking_products,
     get_order_line_fulfillment_status,
+    woo_customer_address,
 )
 
 
@@ -321,15 +329,18 @@ class OrdersList(ListView):
         return filters
 
     def get_queryset(self):
-        store, filters = self.get_store(), self.get_filters()
-
-        return WooListQuery(store, 'orders', filters)
+        return WooListQuery(self.get_store(), 'orders', self.get_filters())
 
     def get_product_data(self, product_id):
         if product_id not in self.products:
             self.add_product_data_to_products(product_id)
 
         return self.products.get(product_id)
+
+    def add_product_data_to_products(self, product_id):
+        r = self.get_store().wcapi.get('products/{}'.format(product_id))
+        if r.ok:
+            self.products.setdefault(product_id, r.json())
 
     def get_context_data(self, **kwargs):
         context = super(OrdersList, self).get_context_data(**kwargs)
@@ -339,34 +350,92 @@ class OrdersList(ListView):
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
-            {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)},
-        ]
+            {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)}]
 
         self.normalize_orders(context)
 
         return context
 
-    def add_product_data_to_products(self, product_id):
-        r = self.get_store().wcapi.get('products/{}'.format(product_id))
-        if r.status_code == 200:
-            self.products.setdefault(product_id, r.json())
+    def get_product_supplier(self, product, variant_id=None):
+        if product.has_supplier():
+            return product.get_supplier_for_variant(variant_id)
 
-    def normalize_orders(self, context):
-        store = self.get_store()
-        admin_url = store.get_admin_url()
+    def get_order_date_created(self, order):
+        date_created = arrow.get(order['date_created'])
         timezone = self.request.session.get('django_timezone')
 
-        for order in context.get('orders', []):
-            date_created = arrow.get(order['date_created'])
-            if timezone:
-                date_created = date_created.to(timezone)
-                if order['date_paid']:
-                    order['date_paid'] = order['date_paid'].to(timezone)
+        return date_created if not timezone else date_created.to(timezone)
 
-            order['date'] = date_created
+    def get_order_date_paid(self, order):
+        if order.get('date_paid'):
+            timezone = self.request.session.get('django_timezone')
+            return arrow.get(order['date_paid']).to(timezone).datetime
+
+    def get_item_shipping_method(self, product, item, variant_id, country_code):
+        if item.get('supplier'):
+            return product.get_shipping_for_variant(supplier_id=item['supplier'].id,
+                                                    variant_id=variant_id,
+                                                    country_code=country_code)
+
+    def get_order_data(self, order, item, product, supplier):
+        store = self.get_store()
+        models_user = self.request.user.models_user
+
+        return {
+            'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
+            'quantity': item['quantity'],
+            'shipping_address': woo_customer_address(order),
+            'order_id': order['id'],
+            'line_id': item['id'],
+            'product_id': product.id,
+            'source_id': supplier.get_source_id(),
+            'total': safeFloat(item['price'], 0.0),
+            'store': store.id,
+            'order': {
+                'phone': {
+                    'number': order['billing'].get('phone'),
+                    'country': order['shipping'].get('country'),
+                },
+                'note': models_user.get_config('order_custom_note'),
+                'epacket': bool(models_user.get_config('epacket_shipping')),
+                'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
+            },
+        }
+
+    def get_order_data_variant(self, product, variant_id):
+        mapped = product.get_variant_mapping(
+            name=variant_id,
+            for_extension=True,
+            mapping_supplier=True)
+
+        return mapped if mapped and variant_id else None
+
+    def update_placed_orders(self, order, item):
+        item['fulfillment_status'] = get_order_line_fulfillment_status(item)
+
+        if item['fulfillment_status'] == 'Fulfilled':
+            order['placed_orders'] += 1
+
+        if order['placed_orders'] == order['lines_count']:
+            order['fulfillment_status'] = 'Fulfilled'
+        elif order['placed_orders'] > 0 and order['placed_orders'] < order['lines_count']:
+            order['fulfillment_status'] = 'Partially Fulfilled'
+        else:
+            order['fulfillment_status'] = None
+
+    def normalize_orders(self, context):
+        orders_cache = {}
+        store = self.get_store()
+        admin_url = store.get_admin_url()
+
+        for order in context.get('orders', []):
+            country_code = order['shipping'].get('country')
+            date_created = self.get_order_date_created(order)
+            order['date_paid'] = self.get_order_date_paid(order)
+            order['date'] = date_created.datetime
             order['date_str'] = date_created.format('MM/DD/YYYY')
             order['date_tooltip'] = date_created.format('YYYY/MM/DD HH:mm:ss')
-            order['order_url'] = admin_url + '/post.php?post={}&action=edit'.format(order['id'])
+            order['order_url'] = '{}/post.php?post={}&action=edit'.format(admin_url, order['id'])
             order['store'] = store
             order['placed_orders'] = 0
             order['connected_lines'] = 0
@@ -374,15 +443,27 @@ class OrdersList(ListView):
             order['lines_count'] = len(order['items'])
 
             for item in order.get('items'):
+                self.update_placed_orders(order, item)
                 product_id = item['product_id']
-                product = self.get_product_data(product_id)
-                if product:
-                    item['product'] = WooProduct.objects.filter(source_id=product_id).first()
-                    item['image'] = next(iter(product['images']), {}).get('src')
+                product_data = self.get_product_data(product_id)
 
-                item['fulfillment_status'] = get_order_line_fulfillment_status(item)
-                if item['fulfillment_status'] == 'Fulfilled':
-                    order['placed_orders'] += 1
+                if product_data:
+                    product = WooProduct.objects.filter(source_id=product_id).first()
+                    item['product'] = product
+                    item['image'] = next(iter(product_data['images']), {}).get('src')
+                    variant_id = item.get('variation_id')
+
+                    if product and product.has_supplier():
+                        supplier = self.get_product_supplier(product, variant_id)
+                        order_data = self.get_order_data(order, item, product, supplier)
+                        order_data['variant'] = self.get_order_data_variant(product, variant_id)
+                        order_data_id = order_data['id']
+                        orders_cache['woo_order_{}'.format(order_data_id)] = order_data
+                        item['order_data_id'] = order_data_id
+                        item['order_data'] = order_data
+                        item['supplier'] = supplier
+                        item['shipping_method'] = self.get_item_shipping_method(
+                            product, item, variant_id, country_code)
 
                 item['order_track'] = WooOrderTrack.objects.filter(
                     store=store,
@@ -390,12 +471,7 @@ class OrdersList(ListView):
                     line_id=item['id'],
                     product_id=product_id).first()
 
-            if order['placed_orders'] == order['lines_count']:
-                order['fulfillment_status'] = 'Fulfilled'
-            elif order['placed_orders'] and order['placed_orders'] < order['lines_count']:
-                order['fulfillment_status'] = 'Partially Fulfilled'
-            else:
-                order['fulfillment_status'] = None
+        caches['orders'].set_many(orders_cache, timeout=21600)
 
 
 class OrdersTrackList(ListView):
@@ -559,3 +635,74 @@ class BoardDetailView(DetailView):
         context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('woo:boards_list')}, self.object.title]
 
         return context
+
+
+class OrderPlaceRedirectView(RedirectView):
+    permanent = False
+    query_string = False
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        return super(OrderPlaceRedirectView, self).dispatch(request, *args, **kwargs)
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            assert self.request.GET['product']
+            assert self.request.GET['SAPlaceOrder']
+
+            product = self.request.GET['product']
+        except:
+            raven_client.captureException()
+            raise Http404("Product or Order not set")
+
+        from leadgalaxy.utils import (
+            get_aliexpress_credentials,
+            get_admitad_credentials,
+            get_aliexpress_affiliate_url,
+            get_admitad_affiliate_url,
+            affiliate_link_set_query
+        )
+
+        ali_api_key, ali_tracking_id, user_ali_credentials = get_aliexpress_credentials(self.request.user.models_user)
+        admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
+
+        disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
+
+        redirect_url = False
+        if not disable_affiliate:
+            if user_admitad_credentials:
+                service = 'admitad'
+            elif user_ali_credentials:
+                service = 'ali'
+            else:
+                service = 'admitad'
+
+            if service == 'ali' and ali_api_key and ali_tracking_id:
+                redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+            elif service == 'admitad':
+                redirect_url = get_admitad_affiliate_url(admitad_site_id, product)
+
+        if not redirect_url:
+            redirect_url = product
+
+        for k in self.request.GET.keys():
+            if k.startswith('SA') and k not in redirect_url:
+                redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
+
+        redirect_url = affiliate_link_set_query(redirect_url, 'SAStore', 'woo')
+
+        # Verify if the user didn't pass order limit
+        parent_user = self.request.user.models_user
+        plan = parent_user.profile.plan
+        if plan.auto_fulfill_limit != -1:
+            month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
+            orders_count = parent_user.wooordertrack_set.filter(created_at__gte=month_start).count()
+
+            if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+                messages.error(self.request, "You have reached your plan auto fulfill limit")
+                return '/'
+
+        return redirect_url

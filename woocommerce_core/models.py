@@ -183,6 +183,12 @@ class WooProduct(models.Model):
     def is_connected(self):
         return bool(self.source_id)
 
+    def has_supplier(self):
+        try:
+            return self.default_supplier is not None
+        except:
+            return False
+
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
 
@@ -337,7 +343,7 @@ class WooProduct(models.Model):
             return self.default_supplier
 
         try:
-            return self.productsupplier_set.get(id=mapping['supplier'])
+            return self.woosupplier_set.get(id=mapping['supplier'])
         except:
             return self.default_supplier
 
@@ -441,6 +447,26 @@ class WooProduct(models.Model):
 
         self.shipping_map = mapping
         self.save()
+
+    def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
+        """ Return Shipping Method for the given variant_id and country_code """
+        mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
+
+        if variant_id and country_code and mapping and type(mapping) is list:
+            for method in mapping:
+                if country_code == method.get('country'):
+                    short_name = method.get('method_name').split(' ')
+                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
+                        method['method_short'] = ' '.join(short_name[:2])
+                    else:
+                        method['method_short'] = short_name[0]
+
+                    if method['country'] == 'GB':
+                        method['country'] = 'UK'
+
+                    return method
+
+        return None
 
     def get_all_variants_mapping(self):
         all_mapping = {}
