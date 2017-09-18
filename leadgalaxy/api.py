@@ -2094,6 +2094,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not settings.DEBUG and not from_oberlo:
             order_updater.delay_save(countdown=note_delay)
 
+        if track.data and not from_oberlo:
+            shopify_orders_tasks.check_track_errors(track.id)
+
         return self.api_success()
 
     def delete_order_fulfill(self, request, user, data):
@@ -2186,6 +2189,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater = utils.ShopifyOrderUpdater(order.store, order.order_id)
             order_updater.add_tag(tracking_number_tags)
             order_updater.delay_save()
+
+        if track.data and track.errors != -1:
+            shopify_orders_tasks.check_track_errors(track.id)
 
         return self.api_success()
 

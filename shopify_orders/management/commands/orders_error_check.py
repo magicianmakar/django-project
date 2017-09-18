@@ -22,6 +22,8 @@ class EmptyProgress:
 class Command(BaseCommand):
     help = 'Check for errors in Shopify Order Tracks'
 
+    orders_check = None
+
     def add_arguments(self, parser):
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--since', dest='since', action='store', type=int, help='Check Order Created Since Days')
@@ -38,6 +40,9 @@ class Command(BaseCommand):
         except:
             traceback.print_exc()
             raven_client.captureException()
+
+        self.write_success('Errors: {} - Ignored: {}'.format(
+            self.orders_check.errors, self.orders_check.ignored))
 
     def start_command(self, *args, **options):
             tracks = ShopifyOrderTrack.objects.filter(data__contains='contact_name')
@@ -65,11 +70,11 @@ class Command(BaseCommand):
             steps = 1000
             start = 0
 
-            orders_check = OrderErrorsCheck(self.stdout if options['progress'] else None)
+            self.orders_check = OrderErrorsCheck(self.stdout if options['progress'] else None)
 
             while start <= total_count:
                 for track in tracks[start:start + steps]:
-                    orders_check.check(track, options['commit'])
+                    self.orders_check.check(track, options['commit'])
 
                 obar.update(steps)
                 start += steps

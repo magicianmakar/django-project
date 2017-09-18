@@ -3038,6 +3038,9 @@ def orders_track(request):
     if source_reason:
         orders = orders.filter(source_status_details=source_reason)
 
+    if request.GET.get('errors'):
+        orders = orders.filter(errors__gt=0)
+
     orders = orders.order_by(sorting)
 
     paginator = SimplePaginator(orders, post_per_page)

@@ -21,6 +21,7 @@ from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
+from shopified_core.utils import OrderErrors
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -1504,6 +1505,19 @@ class ShopifyOrderTrack(models.Model):
 
         if commit:
             self.commit()
+
+    def get_errors(self):
+        errors = []
+
+        if self.errors > 0:
+            if self.errors & OrderErrors.NAME:
+                errors.append('Customer Name')
+            elif self.errors & OrderErrors.CITY:
+                errors.append('City')
+            elif self.errors & OrderErrors.COUNTRY:
+                errors.append('Country')
+
+        return errors
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)

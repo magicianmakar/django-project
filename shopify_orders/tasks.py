@@ -7,6 +7,7 @@ from app.celery import celery_app, CaptureFailure
 from dropwow_core.utils import fulfill_dropwow_order
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from dropwow_core.models import DropwowOrderStatus
+from shopify_orders.utils import OrderErrorsCheck
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -66,3 +67,11 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
         results.append(fulfill_dropwow_order(store, order_status, order, el, supplier))
 
     return all(results)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def check_track_errors(self, track_id):
+    track = ShopifyOrderTrack.objects.get(id=track_id)
+    orders_check = OrderErrorsCheck()
+
+    orders_check.check(track, commit=True)
