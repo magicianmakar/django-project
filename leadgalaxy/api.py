@@ -2190,8 +2190,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater.add_tag(tracking_number_tags)
             order_updater.delay_save()
 
-        if track.data and track.errors != -1:
-            shopify_orders_tasks.check_track_errors(track.id)
+        if order.data and order.errors != -1:
+            shopify_orders_tasks.check_track_errors(order.id)
 
         return self.api_success()
 
