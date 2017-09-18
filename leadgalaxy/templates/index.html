@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load perms_helper %}
+{% load template_helper %}
 {% load compress %}
 {% load cache %}
 
@@ -54,23 +55,9 @@
                         {% endwith %}
                       </td>
                       <td class="hidden-xs" style="white-space:nowrap">
-                        {% cache 600 orders_status item.id %}
-                        {% with pending=item.pending_orders awaiting_tracking=0 %}
-                            {% if pending or awaiting_tracking %}
-                                {% if pending %}
-                                <a class="label "
-                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
-                                ><span class="num">{{pending}}</span> Pending</a>
-                                {% endif %}
-
-                                {% if awaiting_tracking %}
-                                    <a class="label "
-                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0&completed=1"
-                                    ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
-                                {% endif %}
-                            {% endif %}
-                        {% endwith %}
-                        {% endcache %}
+                        <a class="label "
+                        href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
+                        ><span id='pending_orders_{{item.id}}' class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Pending</a>
                       </td>
                       {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
@@ -1214,6 +1201,7 @@
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
     <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
@@ -1222,9 +1210,42 @@
     <script src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
 
-{% if first_visit %}
 <script type="text/javascript">
     $(function() {
+{% if not pending_orders_count %}
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "user_{{user.id}}",
+        };
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+        var pending_order_task_id = null;
+        channel.bind('pending-orders-count-calculated', function(data) {
+            if (pending_order_task_id === data.task && data.stores) {
+                for (var i = 0; i < data.stores.length; i++) {
+                    $('#pending_orders_' + data.stores[i].id).html(data.stores[i].count);
+                }
+            }
+        });
+        $.ajax({
+            url: '/api/calculate-pending-orders-count',
+            type: 'POST',
+            success: function(data) {
+                if (data.task) {
+                    pending_order_task_id = data.task;
+                }
+            },
+            error: function(data) {
+                displayAjaxError('Pending Orders Count', data);
+            }
+        });
+{% else %}
+        var stores = {% json_dumps pending_orders_count %};
+        for (var i = 0; i < stores.length; i++) {
+            $('#pending_orders_' + stores[i].id).html(stores[i].count);
+        }
+{% endif %}
+{% if first_visit %}
         var tour = new Tour({
             name: 'tour-intro',
             steps: [{
@@ -1251,10 +1272,10 @@
         });
         tour.init();
         tour.start();
+{% endif %}
     });
 
 </script>
-{% endif %}
 
 {% if lead_dyno_record %}
 <script type="text/javascript">
