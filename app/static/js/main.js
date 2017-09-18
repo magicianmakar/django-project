@@ -464,6 +464,7 @@ function setup_full_editor(textarea_name, include_css, editor_variable, custom_t
     }
 
     document[editor_variable] = CKEDITOR.replace(textarea_name, {
+        language: 'en',
         contentsCss: styles,
         // Remove unused plugins.
         removePlugins : 'elementspath,dialogadvtab,div,filebrowser,flash,forms,horizontalrule,iframe,liststyle,pagebreak,showborders,stylescombo,templates',
@@ -504,6 +505,7 @@ function setup_admin_editor(textarea_name, include_css, editor_variable) {
     }
 
     document[editor_variable] = CKEDITOR.replace( textarea_name, {
+        language: 'en',
         contentsCss: styles,
         allowedContent : true,
     });
