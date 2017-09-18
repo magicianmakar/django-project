@@ -310,18 +310,18 @@ class OrderErrorsCheck:
         if not self.compare_name(order.customer_name, contact_name):
             found_errors |= OrderErrors.NAME
             erros_desc.append(u'Customer Error: ' + order.customer_name + u' <> ' + contact_name)
-            track.add_error("Customer is '{}' should be '{}'".format(contact_name, order.customer_name))
+            track.add_error(u"Customer is '{}' should be '{}'".format(contact_name, order.customer_name))
 
         if not self.compare_city(order.city, city):
             found_errors |= OrderErrors.CITY
             erros_desc.append(u'City Error: ' + order.city + u' <> ' + city)
-            track.add_error("City is '{}' should be '{}'".format(city, order.city))
+            track.add_error(u"City is '{}' should be '{}'".format(city, order.city))
 
         shopiyf_country = country_from_code(order.country_code)
         if not self.compare_country(shopiyf_country, country):
             found_errors |= OrderErrors.COUNTRY
             erros_desc.append(u'Country Error: ' + shopiyf_country + u' <> ' + country)
-            track.add_error("Country is '{}' should be '{}'".format(country, shopiyf_country))
+            track.add_error(u"Country is '{}' should be '{}'".format(country, shopiyf_country))
 
         if found_errors:
             self.errors += 1
