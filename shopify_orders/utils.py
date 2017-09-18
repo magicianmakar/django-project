@@ -4,7 +4,12 @@ import re
 import arrow
 import requests
 
+from unidecode import unidecode
+import simplejson as json
+
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+from shopified_core.utils import OrderErrors
+from shopified_core.shipping_helper import country_from_code
 
 
 def safeInt(v, default=0):
@@ -273,3 +278,119 @@ def order_id_from_name(store, order_name, default=None):
             return orders.pop()['id']
 
     return default
+
+
+class OrderErrorsCheck:
+    ignored = 0
+    errors = 0
+    stdout = None
+
+    def __init__(self, stdout=None):
+        self.stdout = stdout
+
+    def check(self, track, commit):
+        try:
+            track_data = json.loads(track.data)
+            contact_name = track_data['aliexpress']['order_details']['customer']['contact_name']
+        except:
+            self.ignored += 1
+            return
+
+        parts = [i.strip() for i in track_data['aliexpress']['order_details']['customer']['country'].split(',')]
+        city = parts[0]
+        country = parts[len(parts) - 1]
+
+        order = ShopifyOrder.objects.filter(store=track.store, order_id=track.order_id).first()
+        if not order:
+            self.ignored += 1
+            return
+
+        found_errors = 0
+        if not self.compare_name(order.customer_name, contact_name):
+            found_errors |= OrderErrors.NAME
+
+            self.write(
+                track.store.title,
+                u'#{}'.format(order.order_number + 1000),
+                track.source_id,
+                track.source_status,
+                'Customer Error',
+                order.customer_name + u' <> ' + contact_name,
+                arrow.get(order.created_at).humanize(),
+                order.total_price
+            )
+
+        if not self.compare_city(order.city, city):
+            found_errors |= OrderErrors.CITY
+
+            self.write(
+                track.store.title,
+                u'#{}'.format(order.order_number + 1000),
+                track.source_id,
+                track.source_status,
+                'City Error',
+                order.city + u' <> ' + city,
+                arrow.get(order.created_at).humanize(),
+                order.total_price
+            )
+
+        shopiyf_country = country_from_code(order.country_code)
+        if not self.compare_country(shopiyf_country, country):
+            found_errors |= OrderErrors.COUNTRY
+
+            self.write(
+                track.store.title,
+                u'#{}'.format(order.order_number + 1000),
+                track.source_id,
+                track.source_status,
+                'Country Error',
+                shopiyf_country + u' <> ' + country,
+                arrow.get(order.created_at).humanize(),
+                order.total_price
+            )
+
+        if found_errors:
+            self.errors += 1
+
+        if commit:
+            track.errors = found_errors if found_errors > 0 else -1
+            track.save()
+
+    def compare_name(self, first, second):
+        first = self.clean_name(first)
+        second = self.clean_name(second)
+
+        return ensure_title(unidecode(first)).lower() in ensure_title(unidecode(second)).lower()
+
+    def compare_city(self, first, second):
+        first = self.clean_name(first)
+        second = self.clean_name(second)
+
+        match = unidecode(first).lower() == unidecode(second).lower()
+
+        if not match:
+            if ',' in first:
+                for i in first.split(','):
+                    if unidecode(i).lower() == unidecode(second).lower():
+                        return True
+
+        return match
+
+    def compare_country(self, first, second):
+        if second == 'Puerto Rico':
+            second = u'United States'
+
+        first = self.clean_name(first)
+        second = self.clean_name(second)
+
+        return first.lower() == second.lower()
+
+    def clean_name(self, name):
+        name = re.sub(' +', ' ', name)
+        name = re.sub(r'\bNone\b', '', name)
+
+        return name.strip('.,-').strip()
+
+    def write(self, *args):
+        if self.stdout:
+            self.stdout.write(u' | '.join([str(i) for i in args]))

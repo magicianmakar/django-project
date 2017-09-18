@@ -23,6 +23,12 @@ import phonenumbers
 from tld import get_tld
 
 
+class OrderErrors:
+    NAME = 1
+    CITY = 2
+    COUNTRY = 4
+
+
 def safeInt(v, default=0):
     try:
         return int(v)

@@ -1366,6 +1366,8 @@ class ShopifyOrderTrack(models.Model):
     auto_fulfilled = models.BooleanField(default=False, verbose_name='Automatically fulfilled')
     check_count = models.IntegerField(default=0)
 
+    errors = models.IntegerField(null=True, blank=True)
+
     data = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
@@ -1486,6 +1488,22 @@ class ShopifyOrderTrack(models.Model):
     def get_source_ids(self):
         if self.source_id:
             return u', '.join(set([u'#{}'.format(i) for i in self.source_id.split(',')]))
+
+    def add_error(self, error, commit=False):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        if 'errors' not in data:
+            data['errors'] = []
+
+        data['errors'].append(error)
+
+        self.data = json.dumps(data)
+
+        if commit:
+            self.commit()
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
