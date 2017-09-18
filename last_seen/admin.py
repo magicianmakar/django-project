@@ -11,7 +11,11 @@ class PlanListFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         choices = []
         choices_count = {}
-        for i in model_admin.get_queryset(request).values_list('user__profile__plan_id', 'user__profile__plan__title'):
+        qs = model_admin.get_queryset(request)
+        for k in request.GET.keys():
+            qs = qs.filter(**{k: request.GET[k]})
+
+        for i in qs.values_list('user__profile__plan_id', 'user__profile__plan__title'):
             if i not in choices:
                 choices.append(i)
                 choices_count[i[1]] = 1
@@ -20,6 +24,9 @@ class PlanListFilter(admin.SimpleListFilter):
 
         for i, val in enumerate(choices):
             choices[i] = (val[0], '{} - {}'.format(choices_count[val[1]], val[1]))
+
+        if not len(choices):
+            choices = [(None, 'All')]
 
         return choices
 
