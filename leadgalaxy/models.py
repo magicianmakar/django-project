@@ -1512,9 +1512,11 @@ class ShopifyOrderTrack(models.Model):
         if self.errors > 0:
             if self.errors & OrderErrors.NAME:
                 errors.append('Customer Name')
-            elif self.errors & OrderErrors.CITY:
+
+            if self.errors & OrderErrors.CITY:
                 errors.append('City')
-            elif self.errors & OrderErrors.COUNTRY:
+
+            if self.errors & OrderErrors.COUNTRY:
                 errors.append('Country')
 
         return errors

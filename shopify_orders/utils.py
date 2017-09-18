@@ -306,51 +306,32 @@ class OrderErrorsCheck:
             return
 
         found_errors = 0
+        erros_desc = []
         if not self.compare_name(order.customer_name, contact_name):
             found_errors |= OrderErrors.NAME
-
-            self.write(
-                track.store.title,
-                u'#{}'.format(order.order_number + 1000),
-                track.source_id,
-                track.source_status,
-                'Customer Error',
-                order.customer_name + u' <> ' + contact_name,
-                arrow.get(order.created_at).humanize(),
-                order.total_price
-            )
+            erros_desc.append(u'Customer Error: ' + order.customer_name + u' <> ' + contact_name)
 
         if not self.compare_city(order.city, city):
             found_errors |= OrderErrors.CITY
-
-            self.write(
-                track.store.title,
-                u'#{}'.format(order.order_number + 1000),
-                track.source_id,
-                track.source_status,
-                'City Error',
-                order.city + u' <> ' + city,
-                arrow.get(order.created_at).humanize(),
-                order.total_price
-            )
+            erros_desc.append(u'City Error: ' + order.city + u' <> ' + city)
 
         shopiyf_country = country_from_code(order.country_code)
         if not self.compare_country(shopiyf_country, country):
             found_errors |= OrderErrors.COUNTRY
+            erros_desc.append(u'Country Error: ' + shopiyf_country + u' <> ' + country)
+
+        if found_errors:
+            self.errors += 1
 
             self.write(
                 track.store.title,
                 u'#{}'.format(order.order_number + 1000),
                 track.source_id,
                 track.source_status,
-                'Country Error',
-                shopiyf_country + u' <> ' + country,
                 arrow.get(order.created_at).humanize(),
-                order.total_price
+                order.total_price,
+                u'\n\t' + u'\n\t'.join(erros_desc)
             )
-
-        if found_errors:
-            self.errors += 1
 
         if commit:
             track.errors = found_errors if found_errors > 0 else -1
@@ -371,7 +352,7 @@ class OrderErrorsCheck:
         if not match:
             if ',' in first:
                 for i in first.split(','):
-                    if unidecode(i).lower() == unidecode(second).lower():
+                    if unidecode(i).strip().lower() == unidecode(second).lower():
                         return True
 
         return match
@@ -393,4 +374,4 @@ class OrderErrorsCheck:
 
     def write(self, *args):
         if self.stdout:
-            self.stdout.write(u' | '.join([str(i) for i in args]))
+            self.stdout.write(u' | '.join([unicode(i) for i in args]))
