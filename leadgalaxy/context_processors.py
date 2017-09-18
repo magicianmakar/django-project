@@ -19,6 +19,7 @@ def extra_bundles(request):
 
     tos_accept = not request.user.get_config('_tos-accept') and \
         not request.user.is_subuser and \
+        not request.path.startswith('/pages/') and \
         arrow.get('2017-08-27').datetime < request.user.date_joined
 
     return {
