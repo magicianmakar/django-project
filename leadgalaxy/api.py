@@ -2095,7 +2095,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater.delay_save(countdown=note_delay)
 
         if track.data and not from_oberlo:
-            shopify_orders_tasks.check_track_errors(track.id)
+            shopify_orders_tasks.check_track_errors.delay(track.id)
 
         return self.api_success()
 
@@ -2191,7 +2191,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater.delay_save()
 
         if order.data and order.errors != -1:
-            shopify_orders_tasks.check_track_errors(order.id)
+            shopify_orders_tasks.check_track_errors.delay(order.id)
 
         return self.api_success()
 
