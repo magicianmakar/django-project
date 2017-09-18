@@ -220,8 +220,8 @@
                             <td class="no-wrap">{% date_humanize item.updated_at %}</td>
                             <td class="no-wrap">
                                 {% if item.errors > 0 %}
-                                <span class="badge badge-warning itooltip" data-html="true"
-                                      title="Element That doesn't match Aliexpress:<br>- {{item.get_errors|join:'<br> -'}}">
+                                <span class="badge badge-warning" qtip-my="right center" qtip-at="left center"
+                                    qtip-tooltip="{{item.get_errors_details|join:'<br>'}}">
                                     {{item.get_errors|join:", "}}
                                 </span>
                                 {% endif %}

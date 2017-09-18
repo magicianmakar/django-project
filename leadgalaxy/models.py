@@ -1521,6 +1521,14 @@ class ShopifyOrderTrack(models.Model):
 
         return errors
 
+    def get_errors_details(self):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        return data.get('errors', [])
+
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
 
