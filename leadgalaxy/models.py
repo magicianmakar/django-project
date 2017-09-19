@@ -1499,6 +1499,9 @@ class ShopifyOrderTrack(models.Model):
         if 'errors' not in data:
             data['errors'] = []
 
+        if error in data['errors']:
+            return
+
         data['errors'].append(error)
 
         self.data = json.dumps(data)
@@ -1527,7 +1530,7 @@ class ShopifyOrderTrack(models.Model):
         except:
             data = {}
 
-        return data.get('errors', [])
+        return list(set(data.get('errors', [])))
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
