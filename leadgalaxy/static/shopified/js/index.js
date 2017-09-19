@@ -1,4 +1,4 @@
-(function() {
+(function(sub_conf, user_statistics) {
 'use strict';
 
 function syncConfig() {
@@ -661,6 +661,40 @@ $('#add-rule-form').on('submit', function(e) {
 
 });
 
+function updateUserStatistics(statistics_data) {
+    $.each(statistics_data, function (i, store_info) {
+        $('#orders_pending_' + store_info.id).html(store_info.orders_pending).parents('.statistics-link').toggle(store_info.orders_pending);
+        $('#products_saved_' + store_info.id).html(store_info.products_saved).parents('.statistics-link').toggle(store_info.products_saved);
+        $('#products_connected_' + store_info.id).html(store_info.products_connected).parents('.statistics-link').toggle(store_info.products_connected);
+    });
+}
+
+if (user_statistics) {
+    updateUserStatistics(user_statistics);
+} else {
+    var pusher = new Pusher(sub_conf.key);
+    var channel = pusher.subscribe(sub_conf.channel);
+    var pending_order_task_id = null;
+
+    channel.bind('user-statistics-calculated', function(data) {
+        if (pending_order_task_id === data.task && data.stores) {
+            updateUserStatistics(data.stores);
+        }
+    });
+
+    $.ajax({
+        url: '/api/user-statistics',
+        type: 'POST',
+        success: function(data) {
+            if (data.task) {
+                pending_order_task_id = data.task;
+            } else if (data.stores) {
+                updateUserStatistics(data.stores);
+            }
+        }
+    });
+}
+
 $('#markup-rule-table .delete-rule').click(deleteMarkupRuleClicked);
 
 $(function () {
@@ -734,4 +768,4 @@ $(function () {
     }
 });
 
-})();
+})(sub_conf, user_statistics);

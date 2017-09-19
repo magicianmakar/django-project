@@ -110,6 +110,7 @@ def index_view(request):
         'marktup_types': PRICE_MARKUP_TYPES,
         'lead_dyno_record': request.session.pop('lead_dyno_record', False),
         'page': 'index',
+        'user_statistics': cache.get('user_statistics_{}'.format(request.user.id)),
         'breadcrumbs': ['Stores']
     })
 

@@ -905,3 +905,34 @@ def calculate_sales(self, user_id, period):
 
     except:
         raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def calculate_user_statistics(self, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        stores = user.profile.get_shopify_stores()
+        data = {
+            'task': self.request.id,
+            'stores': [],
+        }
+
+        for store in stores:
+            data['stores'].append({
+                'id': store.id,
+                'orders_pending': store.pending_orders(),
+                'products_connected': store.connected_count(),
+                'products_saved': store.saved_count(),
+            })
+
+        cache.set('user_statistics_{}'.format(user_id), data['stores'], timeout=3600)
+
+        pusher = Pusher(
+            app_id=settings.PUSHER_APP_ID,
+            key=settings.PUSHER_KEY,
+            secret=settings.PUSHER_SECRET)
+
+        pusher.trigger("user_{}".format(user_id), 'user-statistics-calculated', data)
+
+    except:
+        raven_client.captureException()

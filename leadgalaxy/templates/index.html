@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load perms_helper %}
+{% load template_helper %}
 {% load compress %}
 {% load cache %}
 
@@ -40,38 +41,22 @@
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
-                      <td class="hidden-xs" style="white-space:nowrap">
-                        {% with connected=item.connected_count saved=item.saved_count %}
-                            {% if connected or saved %}
-                                {% if saved %}
-                                    <a href="/product?store=n&in={{item.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
-                                {% endif %}
 
-                                {% if connected %}
-                                    <a href="/product?store={{item.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
-                                {% endif %}
-                            {% endif %}
-                        {% endwith %}
-                      </td>
-                      <td class="hidden-xs" style="white-space:nowrap">
-                        {% cache 600 orders_status item.id %}
-                        {% with pending=item.pending_orders awaiting_tracking=0 %}
-                            {% if pending or awaiting_tracking %}
-                                {% if pending %}
-                                <a class="label "
-                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
-                                ><span class="num">{{pending}}</span> Pending</a>
-                                {% endif %}
+                        <td class="hidden-xs" style="white-space:nowrap">
+                            <a href="/product?store=n&in={{item.id}}" class="label statistics-link">
+                                <span id="products_saved_{{item.id}}" class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Saved
+                            </a>
+                            <a href="/product?store={{item.id}}" class="label statistics-link">
+                                <span id="products_connected_{{item.id}}" class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Connected
+                            </a>
+                        </td>
 
-                                {% if awaiting_tracking %}
-                                    <a class="label "
-                                    href="/orders/track?store={{item.id}}&tracking=0&hidden=0&completed=1"
-                                    ><span class="num">{{awaiting_tracking}}</span> Awaiting Tracking</a>
-                                {% endif %}
-                            {% endif %}
-                        {% endwith %}
-                        {% endcache %}
-                      </td>
+                        <td class="hidden-xs" style="white-space:nowrap">
+                            <a class="label statistics-link"
+                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}">
+                                <span id="orders_pending_{{item.id}}" class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Pending
+                            </a>
+                        </td>
                       {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
                         <div class="btn-group ">
@@ -1199,6 +1184,9 @@
         display: flex !important;
         align-items: center !important;
     }
+    .statistics-link {
+        display: none;
+    }
 </style>
 {% endblock %}
 
@@ -1210,10 +1198,18 @@
 
         var bootstrapTooltip = $.fn.tooltip.noConflict();
         $.fn.bootstrapTooltip = bootstrapTooltip;
+
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "user_{{user.id}}",
+        };
+
+        var user_statistics = {% json_dumps user_statistics %};
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
     <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
@@ -1222,9 +1218,9 @@
     <script src="{% static 'shopified/js/index.js' %}"></script>
 {% endcompress %}
 
-{% if first_visit %}
 <script type="text/javascript">
     $(function() {
+{% if first_visit %}
         var tour = new Tour({
             name: 'tour-intro',
             steps: [{
@@ -1251,10 +1247,10 @@
         });
         tour.init();
         tour.start();
+{% endif %}
     });
 
 </script>
-{% endif %}
 
 {% if lead_dyno_record %}
 <script type="text/javascript">
