@@ -311,6 +311,7 @@ CELERY_ROUTES = {
     "leadgalaxy.tasks.export_product": {"queue": "priority_high"},
     "leadgalaxy.tasks.order_save_changes": {"queue": "priority_high"},
     "leadgalaxy.tasks.add_ordered_note": {"queue": "priority_high"},
+    "leadgalaxy.tasks.calculate_user_statistics": {"queue": "priority_high"},
     "commercehq_core.tasks.product_export": {"queue": "priority_high"},
     "commercehq_core.tasks.product_update": {"queue": "priority_high"},
     "dropwow_core.tasks.fulfill_dropwow_items": {"queue": "priority_high"},
