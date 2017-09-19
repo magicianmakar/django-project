@@ -41,24 +41,22 @@
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
-                      <td class="hidden-xs" style="white-space:nowrap">
-                        {% with connected=item.connected_count saved=item.saved_count %}
-                            {% if connected or saved %}
-                                {% if saved %}
-                                    <a href="/product?store=n&in={{item.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
-                                {% endif %}
 
-                                {% if connected %}
-                                    <a href="/product?store={{item.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
-                                {% endif %}
-                            {% endif %}
-                        {% endwith %}
-                      </td>
-                      <td class="hidden-xs" style="white-space:nowrap">
-                        <a class="label "
-                        href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}"
-                        ><span id='pending_orders_{{item.id}}' class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Pending</a>
-                      </td>
+                        <td class="hidden-xs" style="white-space:nowrap">
+                            <a href="/product?store=n&in={{item.id}}" class="label statistics-link">
+                                <span id="products_saved_{{item.id}}" class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Saved
+                            </a>
+                            <a href="/product?store={{item.id}}" class="label statistics-link">
+                                <span id="products_connected_{{item.id}}" class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Connected
+                            </a>
+                        </td>
+
+                        <td class="hidden-xs" style="white-space:nowrap">
+                            <a class="label statistics-link"
+                                href="/orders?store={{item.id}}&status=open&fulfillment=unshipped%2Cpartial&financial=paid&awaiting_order=true&connected=true{% if not item.is_sync_enabled %}&new=1{% endif %}">
+                                <span id="orders_pending_{{item.id}}" class="num"><i class="fa fa-circle-o-notch fa-spin"></i></span> Pending
+                            </a>
+                        </td>
                       {% if not user.is_subuser %}
                       <td style="white-space:nowrap" class="hidden-sm hidden-xs">
                         <div class="btn-group ">
@@ -1186,6 +1184,9 @@
         display: flex !important;
         align-items: center !important;
     }
+    .statistics-link {
+        display: none;
+    }
 </style>
 {% endblock %}
 
@@ -1197,6 +1198,13 @@
 
         var bootstrapTooltip = $.fn.tooltip.noConflict();
         $.fn.bootstrapTooltip = bootstrapTooltip;
+
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "user_{{user.id}}",
+        };
+
+        var user_statistics = {% json_dumps user_statistics %};
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
@@ -1212,39 +1220,6 @@
 
 <script type="text/javascript">
     $(function() {
-{% if not pending_orders_count %}
-        var sub_conf = {
-            key: "{% app_setting 'PUSHER_KEY' %}",
-            channel: "user_{{user.id}}",
-        };
-        var pusher = new Pusher(sub_conf.key);
-        var channel = pusher.subscribe(sub_conf.channel);
-        var pending_order_task_id = null;
-        channel.bind('pending-orders-count-calculated', function(data) {
-            if (pending_order_task_id === data.task && data.stores) {
-                for (var i = 0; i < data.stores.length; i++) {
-                    $('#pending_orders_' + data.stores[i].id).html(data.stores[i].count);
-                }
-            }
-        });
-        $.ajax({
-            url: '/api/calculate-pending-orders-count',
-            type: 'POST',
-            success: function(data) {
-                if (data.task) {
-                    pending_order_task_id = data.task;
-                }
-            },
-            error: function(data) {
-                displayAjaxError('Pending Orders Count', data);
-            }
-        });
-{% else %}
-        var stores = {% json_dumps pending_orders_count %};
-        for (var i = 0; i < stores.length; i++) {
-            $('#pending_orders_' + stores[i].id).html(stores[i].count);
-        }
-{% endif %}
 {% if first_visit %}
         var tour = new Tour({
             name: 'tour-intro',

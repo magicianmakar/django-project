@@ -2868,9 +2868,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success({'task': task.id})
 
-    def post_calculate_pending_orders_count(self, request, user, data):
-        stores = cache.get('pending_orders_count_{}'.format(user.id))
+    def post_user_statistics(self, request, user, data):
+        stores = cache.get('user_statistics_{}'.format(user.id))
+
         if not stores:
-            task = tasks.calculate_pending_orders_count.apply_async(args=[user.id])
+            task = tasks.calculate_user_statistics.apply_async(args=[user.id])
             return self.api_success({'task': task.id})
+
         return self.api_success({'stores': stores})
