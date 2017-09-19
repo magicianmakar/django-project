@@ -3038,8 +3038,27 @@ def orders_track(request):
     if source_reason:
         orders = orders.filter(source_status_details=source_reason)
 
-    if request.GET.get('errors'):
-        orders = orders.filter(errors__gt=0)
+    errors_list = request.GET.getlist('errors')
+    if errors_list:
+
+        if 'none' in errors_list:
+            errors_list = ['none']
+            orders = orders.filter(errors__lte=0).exclude(errors=None)
+
+        elif 'any' in errors_list:
+            errors_list = ['any']
+            orders = orders.filter(errors__gt=0)
+
+        elif 'pending' in errors_list:
+            errors_list = ['pending']
+            orders = orders.filter(errors=None)
+
+        else:
+            errors = 0
+            for i in errors_list:
+                errors |= utils.safeInt(i, 0)
+
+            orders = orders.filter(errors=errors)
 
     orders = orders.order_by(sorting)
 
@@ -3059,6 +3078,7 @@ def orders_track(request):
         'orders': orders,
         'paginator': paginator,
         'current_page': page,
+        'errors': errors_list,
         'page': 'orders_track',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
     })

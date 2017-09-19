@@ -122,6 +122,8 @@
     });
 
     $('.filter-btn').click(function(e) {
+        Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+
         $('.filter-form').toggle('fade');
     });
 
@@ -255,6 +257,11 @@
 
     $('.check-all').on('ifChanged', function (e) {
         $('.order-track').iCheck(e.target.checked ? 'check' : 'uncheck');
+    });
+
+    $('[name="errors"]').chosen({
+        search_contains: true,
+        width: '100%'
     });
 
     $(".filter-form").submit(function() {

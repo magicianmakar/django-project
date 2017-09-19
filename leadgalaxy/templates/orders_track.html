@@ -63,16 +63,21 @@
                                 <i class="fa fa-refresh"></i> Sync with Aliexpress</button>
                         </div>
                     </div>
-                    <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm" style="display:none;">
-                    <div class="row">
+                    <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm"
+                        {% if request.COOKIES.orders_filter != 'true' %}
+                              style="display:none"
+                        {% endif %}
+                    >
+
+                    <div class="row" style="display:flex;align-items:center;">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
-                            <label>Query:</label>
+                            <label>Query:{{request.COOKIES.orders_filter}}:</label>
                         </div>
                         <div class="col-md-4">
                             <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row" style="display:flex;align-items:center;">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Tracking #:</label>
                         </div>
@@ -84,7 +89,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row" style="display:flex;align-items:center;">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Shopify Status:</label>
                         </div>
@@ -97,7 +102,7 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row" style="display:flex;align-items:center;">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Aliexpress Status:</label>
                         </div>
@@ -138,7 +143,23 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row" style="display:flex;align-items:center;">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Order Errors:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="errors" class="form-control" style="padding: 6px 0px" data-placeholder="Errors Filter" multiple>
+                                <option {% if 'none' in errors or not errors %}selected="selected"{% endif %} value="none">No Errors</option>
+                                <option {% if 'any' in errors %}selected="selected"{% endif %} value="any">Any Errors</option>
+                                <option {% if 'pending' in errors %}selected="selected"{% endif %} value="pending">Pending Errors Verification</option>
+                                <option {% if '1' in errors %}selected="selected"{% endif %} value="1">Customer Name</option>
+                                <option {% if '2' in errors %}selected="selected"{% endif %} value="2">Customer City</option>
+                                <option {% if '4' in errors %}selected="selected"{% endif %} value="4">Customer Country</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row" style="display:flex;align-items:center;">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             <label>Archived:</label>
                         </div>
@@ -151,7 +172,7 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row m-t">
                         <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
                             {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}

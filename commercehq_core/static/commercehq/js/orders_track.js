@@ -236,6 +236,11 @@
         $('.order-track').iCheck(e.target.checked ? 'check' : 'uncheck');
     });
 
+    $('[name="errors"]').chosen({
+        search_contains: true,
+        width: '100%'
+    });
+
     $(".filter-form").submit(function() {
         $(this).find(":input").filter(function() {
             return ((this.name == 'tracking' && this.value === '') ||
