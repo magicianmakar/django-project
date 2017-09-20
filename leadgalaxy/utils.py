@@ -13,7 +13,6 @@ import mimetypes
 import re
 import shutil
 import tempfile
-import ctypes
 import urlparse
 from urllib import urlencode
 from hashlib import sha256
@@ -35,7 +34,15 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *
 from shopified_core import permissions
-from shopified_core.utils import app_link, save_user_ip, unique_username, send_email_from_template
+from shopified_core.utils import (
+    app_link,
+    save_user_ip,
+    unique_username,
+    send_email_from_template,
+    hash_url_filename,
+    extension_hash_text
+)
+
 from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province
 from shopify_orders.models import ShopifyOrderLine
 
@@ -1126,14 +1133,20 @@ def shopify_link_images(store, product):
         return None
 
     for key, val in enumerate(product[u'variants']):
-        for option in [val['option1'], val['option2'], val['option3']]:
-            if not option:
+        for option_title in [val['option1'], val['option2'], val['option3']]:
+            if not option_title:
                 continue
 
-            option = re.sub('[^A-Za-z0-9 _-]', '', option)
+            option = re.sub('[^A-Za-z0-9 _-]', '', option_title)
             option = re.sub(' +', '_', option)
 
             img_idx = mapping_idx.get(option)
+
+            if not img_idx:
+                img_idx = mapping_idx.get(str(extension_hash_text(option)))
+
+            if not img_idx:
+                img_idx = mapping_idx.get(str(extension_hash_text(option_title)))
 
             if not img_idx:
                 continue
@@ -1967,24 +1980,6 @@ def get_fileext_from_url(url, fallback=''):
         return name.split('.').pop()
     else:
         return fallback
-
-
-def hash_url_filename(s):
-    url = remove_link_query(s)
-    ext = get_fileext_from_url(s, fallback='jpg')
-
-    if not re.match(r'(gif|jpe?g|png|ico|bmp)$', ext, re.I):
-        ext = 'jpg'
-
-    hashval = 0
-    if (len(url) == 0):
-        return hashval
-
-    for i in range(len(url)):
-        ch = ord(url[i])
-        hashval = int(((hashval << 5) - hashval) + ch)
-        hashval |= 0
-    return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
 
 
 def attach_boards_with_product(user, product, ids):

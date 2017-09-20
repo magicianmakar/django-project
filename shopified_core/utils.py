@@ -139,6 +139,20 @@ def get_fileext_from_url(url, fallback=''):
         return fallback
 
 
+def extension_hash_text(s):
+    hashval = 0
+
+    if not len(s):
+        return hashval
+
+    for i in range(len(s)):
+        ch = ord(s[i])
+        hashval = int(((hashval << 5) - hashval) + ch)
+        hashval |= 0
+
+    return ctypes.c_int(hashval & 0xFFFFFFFF).value
+
+
 def hash_url_filename(s):
     url = remove_link_query(s)
     ext = get_fileext_from_url(s, fallback='jpg')
@@ -146,15 +160,9 @@ def hash_url_filename(s):
     if not re.match(r'(gif|jpe?g|png|ico|bmp)$', ext, re.I):
         ext = 'jpg'
 
-    hashval = 0
-    if (len(url) == 0):
-        return hashval
+    hashval = extension_hash_text(url)
 
-    for i in range(len(url)):
-        ch = ord(url[i])
-        hashval = int(((hashval << 5) - hashval) + ch)
-        hashval |= 0
-    return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext)
+    return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext) if hashval else hashval
 
 
 def get_mimetype(url, default=None):

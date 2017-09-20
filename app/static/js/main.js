@@ -113,20 +113,45 @@ function getFileExt(url) {
     return getFileName(url).split('.').pop();
 }
 
-function hashUrlFileName(s) {
-    var url = cleanUrlPatch(s);
-    var ext = getFileExt(s);
-
+function hashText(s) {
     var hash = 0, i, chr, len;
-    if (url.length === 0) return hash;
-    for (i = 0, len = url.length; i < len; i++) {
-        chr = url.charCodeAt(i);
+    if (s.length === 0) {
+        return hash;
+    }
+
+    for (i = 0, len = s.length; i < len; i++) {
+        chr = s.charCodeAt(i);
         hash = ((hash << 5) - hash) + chr;
         hash |= 0; // Convert to 32bit integer
     }
-    return hash + '.' + ext;
+
+    return hash;
 }
 
+function hashUrlFileName(s) {
+    if (!(/^https?:/).test(s)) {
+        s = 'http://' + s.replace(/^\/\//, '');
+    }
+
+    var url = cleanUrlPath(s);
+    var ext = getFileExt(s);
+
+    if (!(/(gif|jpe?g|png|ico|bmp)$/i).test(ext)) {
+        ext = 'jpg';
+    }
+
+    var hash = 0,
+        i, chr, len;
+
+    if (url.length === 0) {
+        return hash;
+    }
+
+    hash = hashText(url);
+
+    return hash ? hash + '.' + ext : hash;
+
+}
 
 function getQueryVariable(variable, url) {
     var query = '';

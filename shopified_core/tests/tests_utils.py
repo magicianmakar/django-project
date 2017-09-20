@@ -12,7 +12,8 @@ from shopified_core.utils import (
     order_data_cache,
     order_phone_number,
     unique_username,
-    hash_url_filename
+    hash_url_filename,
+    extension_hash_text
 )
 
 from shopified_core.shipping_helper import (
@@ -126,6 +127,9 @@ class UtilsTestCase(TestCase):
         self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m'
                                                             r'%C3%A4nner-digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-'
                                                             r'wasserdicht-relogio.jpg_50x50.jpg'))
+
+        self.assertEqual(1628870894, extension_hash_text(u'New Orange'))
+        self.assertEqual(925698, extension_hash_text(u'灰色'))
 
     def test_app_link(self):
         self.assertEqual(app_link(), settings.APP_URL)

@@ -30,6 +30,7 @@ from shopified_core.utils import (
     version_compare,
     order_data_cache,
     orders_update_limit,
+    hash_url_filename,
     order_phone_number
 )
 
@@ -1228,7 +1229,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 images = []
                 for i in data['images']:
                     img = {'src': i}
-                    img_filename = utils.hash_url_filename(i)
+                    img_filename = hash_url_filename(i)
                     if data['variants_images'] and img_filename in data['variants_images']:
                         img['filename'] = 'v-{}__{}'.format(data['variants_images'][img_filename], img_filename)
 
