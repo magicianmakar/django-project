@@ -149,7 +149,8 @@
                         </div>
                         <div class="col-md-2">
                             <select name="errors" class="form-control" style="padding: 6px 0px" data-placeholder="Errors Filter" multiple>
-                                <option {% if 'none' in errors or not errors %}selected="selected"{% endif %} value="none">No Errors</option>
+                                <option value=""></option>
+                                <option {% if 'none' in errors %}selected="selected"{% endif %} value="none">No Errors</option>
                                 <option {% if 'any' in errors %}selected="selected"{% endif %} value="any">Any Errors</option>
                                 <option {% if 'pending' in errors %}selected="selected"{% endif %} value="pending">Pending Errors Verification</option>
                                 <option {% if '1' in errors %}selected="selected"{% endif %} value="1">Customer Name</option>
