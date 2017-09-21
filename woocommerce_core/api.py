@@ -1142,7 +1142,7 @@ class WooStoreApi(ApiResponseMixin, View):
 
             try:
                 order_id, line_id = order['order_id'], order['line_id']
-                track = WooOrderTrack.objects.get(store=store, order_id=order_id, line_id=order_id)
+                track = WooOrderTrack.objects.get(store=store, order_id=order_id, line_id=line_id)
 
                 order['ordered'] = {
                     'time': arrow.get(track.created_at).humanize(),
