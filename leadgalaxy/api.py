@@ -1808,7 +1808,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if int(data.get('count', 0)) >= 30:
             raise Http404('Not found')
 
-        # Get Orders marked as Ordered
+        if not user.can('orders.use'):
+            return self.api_error('Order is not included in your account', status=402)
 
         orders = []
 
