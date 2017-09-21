@@ -1171,6 +1171,17 @@ def shopify_link_images(store, product):
     )
 
 
+def update_shopify_product_vendor(store, product_shopify_id, vendor):
+    api_product = {
+        'id': product_shopify_id,
+        'vendor': vendor
+    }
+    return requests.put(
+        url=store.get_link('/admin/products/{}.json'.format(product_shopify_id), api=True),
+        json={'product': api_product}
+    )
+
+
 def webhook_token(store_id):
     return hashlib.md5('{}-{}'.format(store_id, settings.SECRET_KEY)).hexdigest()
 

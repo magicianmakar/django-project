@@ -1132,6 +1132,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         product.save()
 
+        try:
+            if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
+                utils.update_shopify_product_vendor(store, product.shopify_id, product.default_supplier.supplier_name)
+        except:
+            raven_client.captureException()
+
         return self.api_success({
             'reload': not data.get('export')
         })
@@ -1172,6 +1178,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         product.set_original_url(supplier.product_url)
         product.save()
+
+        try:
+            if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
+                utils.update_shopify_product_vendor(product.store, product.shopify_id, product.default_supplier.supplier_name)
+        except:
+            raven_client.captureException()
 
         return self.api_success()
 
@@ -1404,6 +1416,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'aliexpress_as_custom_note',
                 'order_custom_line_attr',
                 'fix_aliexpress_address',
+                'update_product_vendor',
                 'send_alerts_to_subusers'
             ]
 
@@ -1785,6 +1798,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 elif k == 'config':
                     product.set_mapping_config({'supplier': data[k]})
+
+                    try:
+                        if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id and utils.safeInt(data[k]):
+                            supplier = ProductSupplier.objects.get(id=data[k])
+                            utils.update_shopify_product_vendor(product.store, product.shopify_id, supplier.supplier_name)
+                    except:
+                        raven_client.captureException()
 
                 elif k != 'product':  # Save the variant -> supplier mapping
                     mapping[k] = json.loads(data[k])
