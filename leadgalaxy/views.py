@@ -1074,7 +1074,7 @@ def product_view(request, pid):
         product = get_object_or_404(ShopifyProduct, id=pid)
         permissions.user_can_view(request.user, product)
 
-    if not product.store and not request.user.is_superuser:
+    if not product.store and not request.user.is_subuser:
         product.store = product.user.profile.get_shopify_stores().first()
         product.save()
 
