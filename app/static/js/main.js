@@ -113,6 +113,10 @@ function getFileExt(url) {
     return getFileName(url).split('.').pop();
 }
 
+function cleanUrlPath(url) {
+    return url.replace(/\?.*$/, '').replace(/#.*$/, '');
+}
+
 function hashText(s) {
     var hash = 0, i, chr, len;
     if (s.length === 0) {
