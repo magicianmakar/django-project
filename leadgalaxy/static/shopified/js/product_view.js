@@ -339,8 +339,9 @@ $('#export-btn').click(function () {
         api_data.product.images = new_images;
     }
 
-    if( $('#collection-select').val() !== null )
+    if($('#collection-select').val()) {
         api_data.collections = $('#collection-select').val();
+    }
 
     $.ajax({
         url: '/api/' + target,
@@ -487,8 +488,9 @@ $('#save-for-later-btn').click(function (e) {
         });
     }
 
-    if( $('#collection-select').val() !== null )
+    if($('#collection-select').val()) {
         api_data.collections = $('#collection-select').val();
+    }
 
     $.ajax({
         url: '/api/' + target,

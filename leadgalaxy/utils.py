@@ -2400,21 +2400,22 @@ class ProductCollections(object):
         'unlink_collection': '/admin/collects/{}.json',
     }
 
-    @classmethod
-    def get_collections(cls, store):
+    def get_collections(self, store):
         try:
-            response = requests.get(url=store.get_link(cls.shopify_api_urls.get('custom_collections'), api=True)).json()
+            response = requests.get(url=store.get_link(self.shopify_api_urls.get('custom_collections'), api=True)).json()
             collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
                            response.get('custom_collections', [])]
-        except Exception:
+        except:
+            raven_client.captureException()
             collections = []
 
         return collections
 
     def link_product_collection(self, product, collections):
         response = requests.get(
-            url=product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id),
-                                       api=True)).json()
+            url=product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id), api=True)
+        ).json()
+
         self.unlink_product_collection(product=product, collections=[
             {'id': collection.get('id'), 'collection_id': collection.get('collection_id')} for collection in
             response.get('collects', [])], selected=collections)
@@ -2449,5 +2450,6 @@ class ProductCollections(object):
             data['collections'] = [collection.get('collection_id') for collection in response.get('collects', [])]
             product.data = json.dumps(data)
             product.save()
-        except Exception:
-            pass
+
+        except:
+            raven_client.captureException()

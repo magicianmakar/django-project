@@ -48,8 +48,6 @@ def export_product(req_data, target, user_id):
     data = req_data['data']
     original_data = req_data.get('original', '')
     variants_mapping = None
-    product_collections = utils.ProductCollections()
-    collections = json.loads(data).get('collections', [])
 
     user = User.objects.get(id=user_id)
 
@@ -279,7 +277,9 @@ def export_product(req_data, target, user_id):
             pass
 
         # update product collections
-        product_collections.link_product_collection(product, collections)
+        collections = json.loads(data).get('collections', [])
+        utils.ProductCollections().link_product_collection(product, collections)
+
         product.update_data(data)
 
     elif target == 'save-for-later':  # save for later
@@ -380,7 +380,6 @@ def export_product(req_data, target, user_id):
 def update_shopify_product(self, store_id, shopify_id, shopify_product=None, product_id=None):
     try:
         store = ShopifyStore.objects.get(id=store_id)
-        product_collections = utils.ProductCollections()
         try:
             if product_id:
                 product = ShopifyProduct.objects.get(store=store, id=product_id)
@@ -433,7 +432,7 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
         ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
         # update collections
-        product_collections.update_product_collects_shopify_id(product)
+        utils.ProductCollections().update_product_collects_shopify_id(product)
 
     except ShopifyStore.DoesNotExist:
         raven_client.captureException()
