@@ -909,6 +909,20 @@ $(function() {
             });
         }
     }, 5000);
+
+
+    $('[data-toggle="dropdown"]').click(function (e) {
+        setTimeout(function () {
+            if (!$(e.target).parent().hasClass('open')) {
+                $(e.target).trigger('click');
+
+                if(!window.workaroundCaptured) {
+                    Raven.captureMessage('Dropdown Workaround');
+                    window.workaroundCaptured = true;
+                }
+            }
+        }, 200);
+    });
 });
 
 var ravenOptions = {
