@@ -910,23 +910,6 @@ $(function() {
         }
     }, 5000);
 
-
-    $('[data-toggle="dropdown"]').click(function (e) {
-        if ($(e.target).parent().hasClass('open')) {
-            return;
-        }
-
-        setTimeout(function () {
-            if (!$(e.target).parent().hasClass('open')) {
-                $(e.target).trigger('click');
-
-                if(!window.workaroundCaptured) {
-                    Raven.captureMessage('Dropdown Workaround');
-                    window.workaroundCaptured = true;
-                }
-            }
-        }, 200);
-    });
 });
 
 var ravenOptions = {
