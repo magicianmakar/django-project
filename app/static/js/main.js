@@ -912,6 +912,10 @@ $(function() {
 
 
     $('[data-toggle="dropdown"]').click(function (e) {
+        if ($(e.target).parent().hasClass('open')) {
+            return;
+        }
+
         setTimeout(function () {
             if (!$(e.target).parent().hasClass('open')) {
                 $(e.target).trigger('click');
