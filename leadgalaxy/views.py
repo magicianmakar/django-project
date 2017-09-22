@@ -1155,7 +1155,7 @@ def product_view(request, pid):
         'product': p,
         'board': board,
         'original': original,
-        'collections': utils.ProductCollections.get_collections(product.store),
+        'collections': utils.ProductCollections().get_collections(product.store),
         'shopify_product': shopify_product,
         'aws_available': aws_available,
         'aws_policy': string_to_sign,
@@ -2117,7 +2117,8 @@ def autocomplete(request, target):
     elif target == 'collections':
         results = []
         store = ShopifyStore.objects.get(pk=request.GET.get('store', 0))
-        collections = utils.ProductCollections.get_collections(store)
+        collections = utils.ProductCollections().get_collections(store)
+
         for collection in collections:
             data = {'text': collection.get('title'), 'id': collection.get('id')}
             if data and data not in results:
