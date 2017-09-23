@@ -1157,3 +1157,17 @@ class WooStoreApi(ApiResponseMixin, View):
             return self.api_success(order)
         else:
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
+
+    def post_order_note(self, request, user, data):
+        store = WooStore.objects.get(id=data.get('store'))
+        permissions.user_can_view(user, store)
+        order_id = safeInt(data['order_id'])
+        note = data['note']
+
+        if note == utils.get_latest_order_note(store, order_id):
+            return self.api_success()
+
+        if utils.add_woo_order_note(store, order_id, note):
+            return self.api_success()
+        else:
+            return self.api_error('WooCommerce API Error', status=500)

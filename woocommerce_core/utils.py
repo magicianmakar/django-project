@@ -720,6 +720,23 @@ def order_data_cache(*args, **kwargs):
     return data
 
 
+def get_latest_order_note(store, order_id):
+    r = store.wcapi.get('orders/{}/notes'.format(order_id))
+
+    if r.ok:
+        notes = r.json()
+        return next(iter(notes), {}).get('note', '')
+
+    return ''
+
+
+def add_woo_order_note(store, order_id, note):
+    r = store.wcapi.post('orders/{}/notes'.format(order_id), {'note': note})
+    r.raise_for_status()
+
+    return r.json()
+
+
 class WooListQuery(object):
     def __init__(self, store, endpoint, params=None):
         self._store = store

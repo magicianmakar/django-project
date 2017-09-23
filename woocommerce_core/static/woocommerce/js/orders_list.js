@@ -463,7 +463,9 @@ $('.note-panel .note-edit-save').click(function (e) {
                 // Truncate note
                 var maxLength = 70;
                 var noteText = note.substr(0, maxLength);
-                noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
+                if (noteText.lastIndexOf(" ") > 0) {
+                    noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
+                }
                 if (note.length > maxLength) {
                     noteText = noteText+'...';
                 }
