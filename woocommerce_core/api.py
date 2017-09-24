@@ -242,6 +242,12 @@ class WooStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def post_product_save(self, request, user, data):
+        store_id = safeInt(data.get('store'))
+        if store_id:
+            store = WooStore.objects.get(pk=store_id)
+            if not user.can('save_for_later.sub', store):
+                raise PermissionDenied()
+
         return self.api_success(tasks.product_save(data, user.id))
 
     def post_save_for_later(self, request, user, data):
@@ -421,6 +427,8 @@ class WooStoreApi(ApiResponseMixin, View):
             return self.api_error('Store does not exist')
         else:
             permissions.user_can_view(user, store)
+            if not user.can('send_to_woo.sub', store):
+                raise PermissionDenied()
 
         try:
             product = WooProduct.objects.get(pk=safeInt(data.get('product')))
@@ -633,6 +641,9 @@ class WooStoreApi(ApiResponseMixin, View):
             store = WooStore.objects.get(id=data.get('fulfill-store'))
         except WooStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
+
+        if not user.can('place_orders.sub', store):
+            raise PermissionDenied()
 
         permissions.user_can_view(user, store)
         tracking_number = data.get('fulfill-tracking-number', '')

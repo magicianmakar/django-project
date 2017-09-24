@@ -17,6 +17,13 @@
                 {{ form.subuser_chq_stores.errors | safe }}
             </div>
             {% endif %}
+            {% if form.subuser_woo_stores %}
+            <h4>WooCommerce Stores</h4>
+            <div class="form-group">
+                {% render_field form.subuser_woo_stores  %}
+                {{ form.subuser_woo_stores.errors | safe }}
+            </div>
+            {% endif %}
             <p class="text-right">
                 <a href="{% url 'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
                 <button type="submit" class="btn btn-primary m-b">Save</button>

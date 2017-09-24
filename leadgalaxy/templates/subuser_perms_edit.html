@@ -81,6 +81,24 @@
                 {% endfor %}
             </div>
             {% endif %}
+            {% if subuser.profile.subuser_woo_stores.all %}
+            <br />
+            <div class="ibox-title">
+                <h5>WooCommerce Store Permissions</h5>
+            </div>
+            <div class="ibox-content" style="display:block">
+                {% for store in subuser.profile.subuser_woo_stores.all %}
+                    <p>
+                        {{ store.title }} &nbsp;
+                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url 'subuser_woo_store_permissions' subuser.id store.id %}">Edit</a>
+                    </p>
+                {% empty %}
+                    <p class="text-center">
+                        No stores found
+                    </p>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

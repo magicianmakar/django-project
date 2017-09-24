@@ -3728,6 +3728,37 @@ def subuser_chq_store_permissions(request, user_id, store_id):
     return render(request, 'subuser_chq_store_permissions.html', context)
 
 
+@transaction.atomic
+@login_required
+def subuser_woo_store_permissions(request, user_id, store_id):
+    store = request.user.woostore_set.filter(pk=store_id).first()
+    if not store:
+        raise Http404
+
+    subuser = get_object_or_404(User,
+                                pk=user_id,
+                                profile__subuser_parent=request.user,
+                                profile__subuser_woo_stores__pk=store_id)
+
+    subuser_woo_permissions = subuser.profile.subuser_woo_permissions.filter(store=store)
+    initial = {'permissions': subuser_woo_permissions, 'store': store}
+
+    if request.method == 'POST':
+        form = SubuserWooPermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_woo_permissions.remove(*subuser_woo_permissions)
+            subuser.profile.subuser_woo_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect('leadgalaxy.views.subuser_woo_store_permissions', user_id, store_id)
+    else:
+        form = SubuserWooPermissionsForm(initial=initial)
+
+    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
+    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
+    return render(request, 'subuser_woo_store_permissions.html', context)
+
+
 def crossdomain(request):
     html = """
         <cross-domain-policy>

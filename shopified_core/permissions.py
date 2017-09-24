@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 
 from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
+from woocommerce_core.models import WooStore
 
 
 def get_object_user(obj):
@@ -23,7 +24,9 @@ def user_can_add(user, obj):
     if not user.is_subuser:
         can = obj_user == user
     else:
-        if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+        if isinstance(obj, ShopifyStore) or \
+                isinstance(obj, CommerceHQStore) or \
+                isinstance(obj, WooStore):
             raise PermissionDenied('Sub-User can not add new stores')
 
         can = obj_user == user.profile.subuser_parent
@@ -39,6 +42,8 @@ def user_can_add(user, obj):
                     stores = user.profile.get_shopify_stores(flat=True)
                 elif isinstance(store, CommerceHQStore):
                     stores = user.profile.get_chq_stores(flat=True)
+                elif isinstance(store, WooStore):
+                    stores = user.profile.get_woo_stores(flat=True)
                 else:
                     raise PermissionDenied('Unknow Store Type')
 
@@ -59,7 +64,9 @@ def user_can_view(user, obj):
     else:
         can = obj_user == user.profile.subuser_parent
         if can:
-            if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+            if isinstance(obj, ShopifyStore) or \
+                    isinstance(obj, CommerceHQStore) or \
+                    isinstance(obj, WooStore):
                 store = obj
             elif hasattr(obj, 'store'):
                 store = obj.store
@@ -71,6 +78,8 @@ def user_can_view(user, obj):
                     stores = user.profile.get_shopify_stores(flat=True)
                 elif isinstance(store, CommerceHQStore):
                     stores = user.profile.get_chq_stores(flat=True)
+                elif isinstance(store, WooStore):
+                    stores = user.profile.get_woo_stores(flat=True)
                 else:
                     raise PermissionDenied('Unknow Store Type')
 
@@ -87,7 +96,9 @@ def user_can_edit(user, obj):
     if not user.is_subuser:
         can = obj_user == user
     else:
-        if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+        if isinstance(obj, ShopifyStore) or \
+                isinstance(obj, CommerceHQStore) or \
+                isinstance(obj, WooStore):
             raise PermissionDenied('Sub-User can not edit stores')
 
         can = obj_user == user.profile.subuser_parent
@@ -102,6 +113,8 @@ def user_can_edit(user, obj):
                     stores = user.profile.get_shopify_stores(flat=True)
                 elif isinstance(store, CommerceHQStore):
                     stores = user.profile.get_chq_stores(flat=True)
+                elif isinstance(store, WooStore):
+                    stores = user.profile.get_woo_stores(flat=True)
                 else:
                     raise PermissionDenied('Unknow Store Type')
 
@@ -118,7 +131,9 @@ def user_can_delete(user, obj):
     if not user.is_subuser:
         can = obj_user == user
     else:
-        if isinstance(obj, ShopifyStore) or isinstance(obj, CommerceHQStore):
+        if isinstance(obj, ShopifyStore) or \
+                isinstance(obj, CommerceHQStore) or \
+                isinstance(obj, WooStore):
             raise PermissionDenied('Sub-User can not delete stores')
 
         can = obj_user == user.profile.subuser_parent
@@ -143,6 +158,7 @@ def can_add_store(user):
 
     user_count = profile.user.shopifystore_set.filter(is_active=True).count()
     user_count += profile.user.commercehqstore_set.filter(is_active=True).count()
+    user_count += profile.user.woostore_set.filter(is_active=True).count()
 
     can_add = True
 
@@ -176,7 +192,7 @@ def can_add_product(user, ignore_daily_limit=False):
 
     user_count = profile.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
     user_count += profile.user.commercehqproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
-
+    user_count += profile.user.wooproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
@@ -193,6 +209,7 @@ def can_add_product(user, ignore_daily_limit=False):
             start, end = now.span('day')
             day_count = profile.user.shopifyproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
             day_count += profile.user.commercehqproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
+            day_count += profile.user.wooproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
 
         if day_count + 1 > 2000:
             from raven.contrib.django.raven_compat.models import client as raven_client
@@ -221,6 +238,7 @@ def can_add_board(user):
 
     user_count = profile.user.shopifyboard_set.count()
     user_count += profile.user.commercehqboard_set.count()
+    user_count += profile.user.wooboard_set.count()
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):

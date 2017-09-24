@@ -65,6 +65,14 @@ SUBUSER_CHQ_STORE_PERMISSIONS = (
     ('view_alerts', 'View alerts'),
 )
 
+SUBUSER_WOO_STORE_PERMISSIONS = (
+    ('save_for_later', 'Save products for later'),
+    ('send_to_woo', 'Send products to WooCommerce'),
+    ('delete_products', 'Delete products'),
+    ('place_orders', 'Place orders'),
+    ('view_alerts', 'View alerts'),
+)
+
 PRICE_MARKUP_TYPES = (
     ('margin_percent', 'Increase by pecenatge'),
     ('margin_amount', 'Increase by amount'),
@@ -108,6 +116,7 @@ class UserProfile(models.Model):
     company = models.ForeignKey('UserCompany', null=True, blank=True)
     subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
+    subuser_woo_permissions = models.ManyToManyField('SubuserWooPermission', blank=True)
 
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
@@ -391,6 +400,8 @@ class UserProfile(models.Model):
                 return self.has_subuser_shopify_permission(codename, store)
             elif store_model_name == 'CommerceHQStore':
                 return self.has_subuser_chq_permission(codename, store)
+            elif store_model_name == 'WooStore':
+                return self.has_subuser_woo_permission(codename, store)
             else:
                 raise ValueError('Invalid store')
 
@@ -408,6 +419,12 @@ class UserProfile(models.Model):
             return False
 
         return self.subuser_chq_permissions.filter(codename=codename, store=store).exists()
+
+    def has_subuser_woo_permission(self, codename, store):
+        if not self.subuser_woo_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_woo_permissions.filter(codename=codename, store=store).exists()
 
     def add_ip(self, ip):
         if not ip:
@@ -455,6 +472,19 @@ class SubuserCHQPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
     store = models.ForeignKey('commercehq_core.CommerceHQStore', related_name='subuser_chq_permissions')
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __unicode__(self):
+        return '{} - {}'.format(self.store.title, self.codename)
+
+
+class SubuserWooPermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('woocommerce_core.WooStore', related_name='subuser_woo_permissions')
 
     class Meta:
         ordering = 'pk',
@@ -2075,3 +2105,19 @@ def add_chq_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
         for store in stores:
             permissions = store.subuser_chq_permissions.all()
             instance.subuser_chq_permissions.add(*permissions)
+
+
+@receiver(post_save, sender='woocommerce_core.WooStore')
+def add_woo_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        for codename, name in SUBUSER_WOO_STORE_PERMISSIONS:
+            SubuserWooPermission.objects.create(store=instance, codename=codename, name=name)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_woo_stores.through)
+def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.woostore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_woo_permissions.all()
+            instance.subuser_woo_permissions.add(*permissions)
