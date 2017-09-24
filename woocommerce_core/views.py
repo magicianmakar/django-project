@@ -55,8 +55,7 @@ class StoresList(ListView):
         return super(StoresList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = super(StoresList, self).get_queryset()
-        return qs.filter(user=self.request.user.models_user).filter(is_active=True)
+        return self.request.user.profile.get_woo_stores()
 
     def get_context_data(self, **kwargs):
         context = super(StoresList, self).get_context_data(**kwargs)

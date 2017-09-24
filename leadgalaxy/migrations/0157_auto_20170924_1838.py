@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('woocommerce_core', '0009_wooproduct_product_type'),
-        ('leadgalaxy', '0157_userprofile_subuser_woo_stores'),
+        ('leadgalaxy', '0156_shopifyordertrack_errors'),
     ]
 
     operations = [
@@ -23,6 +23,11 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ('pk',),
             },
+        ),
+        migrations.AddField(
+            model_name='userprofile',
+            name='subuser_woo_stores',
+            field=models.ManyToManyField(related_name='subuser_woo_stores', to='woocommerce_core.WooStore', blank=True),
         ),
         migrations.AddField(
             model_name='userprofile',
