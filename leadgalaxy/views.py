@@ -1475,8 +1475,8 @@ def boards_list(request):
     boards = []
 
     for board in request.user.models_user.shopifyboard_set.all():
-        board.saved = board.saved_count()
-        board.connected = board.connected_count()
+        board.saved = board.saved_count(request=request)
+        board.connected = board.connected_count(request=request)
 
         boards.append(board)
 
