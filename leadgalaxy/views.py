@@ -1472,7 +1472,13 @@ def boards_list(request):
     if not request.user.can('view_product_boards.sub'):
         raise PermissionDenied()
 
-    boards = request.user.models_user.shopifyboard_set.all()
+    boards = []
+
+    for board in request.user.models_user.shopifyboard_set.all():
+        board.saved = board.saved_count()
+        board.connected = board.connected_count()
+
+        boards.append(board)
 
     return render(request, 'boards_list.html', {
         'boards': boards,

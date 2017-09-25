@@ -1552,11 +1552,21 @@ class ShopifyBoard(models.Model):
     def __unicode__(self):
         return self.title
 
-    def saved_count(self):
-        return self.products.filter(store__is_active=True).filter(shopify_id=0).count()
+    def saved_count(self, request=None):
+        products = self.products.filter(store__is_active=True).filter(shopify_id=0)
 
-    def connected_count(self):
-        return self.products.filter(store__is_active=True).exclude(shopify_id=0).count()
+        if request and request.user.is_subuser:
+            self.products.filter(store__in=request.user.profile.get_shopify_stores())
+
+        return products.count()
+
+    def connected_count(self, request=None):
+        products = self.products.filter(store__is_active=True).exclude(shopify_id=0)
+
+        if request and request.user.is_subuser:
+            self.products.filter(store__in=request.user.profile.get_shopify_stores())
+
+        return products.count()
 
 
 class ShopifyWebhook(models.Model):
