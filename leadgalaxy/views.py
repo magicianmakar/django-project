@@ -1144,6 +1144,10 @@ def product_view(request, pid):
                     shopify_product=shopify_product,
                     product_id=p['qelem'].id)
 
+        collections = utils.ProductCollections.get_collections(product.store)
+    else:
+        collections = None
+
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 
     if product.store_id:
@@ -1155,7 +1159,7 @@ def product_view(request, pid):
         'product': p,
         'board': board,
         'original': original,
-        'collections': utils.ProductCollections().get_collections(product.store),
+        'collections': collections,
         'shopify_product': shopify_product,
         'aws_available': aws_available,
         'aws_policy': string_to_sign,
