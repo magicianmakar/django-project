@@ -1144,7 +1144,7 @@ def product_view(request, pid):
                     shopify_product=shopify_product,
                     product_id=p['qelem'].id)
 
-        collections = utils.ProductCollections.get_collections(product.store)
+        collections = utils.ProductCollections().get_collections(product.store)
     else:
         collections = None
 
