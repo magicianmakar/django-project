@@ -1662,6 +1662,16 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             except:
                 return self.api_error('Shopify API Error')
 
+    def post_ignore_shopify_order_track_errors(self, request, user, data):
+        try:
+            track = ShopifyOrderTrack.objects.get(id=data.get('id'))
+            track.errors = -1
+            track.add_error('User {} Ignored this error'.format(user.email))
+            track.save()
+        except ShopifyOrderTrack.DoesNotExist:
+            return self.api_error('Track not found', status=404)
+        return self.api_success()
+
     def get_order_data(self, request, user, data):
         order_key = data.get('order')
 

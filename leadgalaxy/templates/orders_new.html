@@ -277,6 +277,23 @@
                         </div>
                     </div>
 
+                    <div class="row filter-row">
+                        <div class="col-md-2 filter-label filter-order-status">
+                            <span>Order Errors:</span>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="errors" class="form-control" data-placeholder="Errors Filter" multiple>
+                                <option value=""></option>
+                                <option {% if 'none' in errors %}selected="selected"{% endif %} value="none">No Errors</option>
+                                <option {% if 'any' in errors %}selected="selected"{% endif %} value="any">Any Errors</option>
+                                <option {% if 'pending' in errors %}selected="selected"{% endif %} value="pending">Pending Errors Verification</option>
+                                <option {% if '1' in errors %}selected="selected"{% endif %} value="1">Customer Name</option>
+                                <option {% if '2' in errors %}selected="selected"{% endif %} value="2">Customer City</option>
+                                <option {% if '4' in errors %}selected="selected"{% endif %} value="4">Customer Country</option>
+                            </select>
+                        </div>
+                    </div>
+
                     {% if store_sync_enabled %}
                     <div class="row m-t-xs">
                         <div class="col-md-2 filter-label filter-order-status"></div>
@@ -645,6 +662,12 @@
                                                                     </div>
                                                             {% else %}
                                                                 <span class="badge badge-info">{{item.fulfillment_status|default:'Unfulfilled'|title}}</span>
+                                                            {% endif %}
+                                                            {% if item.shopify_order and item.shopify_order.errors %}
+                                                                <i class="fa fa-exclamation-circle text-danger" aria-hidden="true" title='{% if item.shopify_order.errors == 1 %}Customer Name{% elif item.shopify_order.errors == 2 %} Customer City{% elif item.shopify_order.errors == 3 %}Customer Country{% else %}Error Ignored{% endif %}'></i>
+                                                                {% if item.shopify_order.errors > 0 %}
+                                                                <a href='#' class='ignore-error' shopify-order-track-id='{{item.shopify_order.id}}'>Ignore</a>
+                                                                {% endif %}
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">

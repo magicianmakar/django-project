@@ -2667,12 +2667,14 @@ def orders_view(request):
     supplier_filter = request.GET.get('supplier_name')
     shipping_method_filter = request.GET.get('shipping_method_name')
 
+    errors_list = request.GET.getlist('errors')
+
     date_now = arrow.get(timezone.now())
     created_at_daterange = request.GET.get('created_at_daterange',
                                            '{}-'.format(date_now.replace(days=-30).format('MM/DD/YYYY')))
 
     if request.GET.get('shop') or query or query_order or query_customer or query_customer_id:
-        status, fulfillment, financial = ['any', 'any', 'any']
+        status, fulfillment, financial, errors_list = ['any', 'any', 'any', '']
         connected_only = False
         awaiting_order = False
         created_at_daterange = None
@@ -2706,6 +2708,7 @@ def orders_view(request):
     es_search_enabled = es and shopify_orders_utils.is_store_indexed(store=store) and not request.GET.get('elastic') == '0'
 
     if not store_sync_enabled:
+        errors_list = ''
         if ',' in fulfillment:
             # Direct API call doesn't support more that one fulfillment status
             fulfillment = 'unshipped'
@@ -3021,6 +3024,22 @@ def orders_view(request):
             orders = orders.filter(Q(financial_status='paid') | Q(financial_status='partially_refunded'))
         elif financial != 'any':
             orders = orders.filter(financial_status=financial)
+
+        if errors_list:
+            if 'none' in errors_list:
+                errors_list = ['none']
+                orders = orders.filter(shopifyorderline__track__errors__lte=0).exclude(shopifyorderline__track__errors=None).distinct()
+            elif 'any' in errors_list:
+                errors_list = ['any']
+                orders = orders.filter(shopifyorderline__track__errors__gt=0).distinct()
+            elif 'pending' in errors_list:
+                errors_list = ['pending']
+                orders = orders.filter(shopifyorderline__track__errors=None).distinct()
+            else:
+                errors = 0
+                for i in errors_list:
+                    errors |= utils.safeInt(i, 0)
+                orders = orders.filter(shopifyorderline__track__errors=errors).distinct()
 
         if connected_only == 'true':
             if support_product_filter:
@@ -3424,6 +3443,7 @@ def orders_view(request):
         'sort_type': sort_type,
         'status': status,
         'financial': financial,
+        'errors': errors_list,
         'fulfillment': fulfillment,
         'query': query,
         'connected_only': connected_only,
@@ -3452,6 +3472,9 @@ def orders_view(request):
 def orders_track(request):
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
+
+    visited_time = arrow.now().timestamp
+    request.user.profile.set_config_value('orders_track_visited_at', visited_time)
 
     order_map = {
         'order': 'order_id',

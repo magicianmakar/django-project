@@ -26,6 +26,27 @@ $(".more-info").click(function (e) {
     });
 });
 
+$(".ignore-error").click(function (e) {
+    e.preventDefault();
+    var btn = $(this);
+    $.ajax({
+        url: '/api/ignore-shopify-order-track-errors',
+        type: 'POST',
+        data:  { id: btn.attr('shopify-order-track-id') },
+        success: function (data) {
+            if (data.status == 'ok') {
+                btn.hide();
+                toastr.success('Error Ignored.', 'Order Track');
+            } else {
+                displayAjaxError('Ignore Error', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Ignore Error', data);
+        },
+    });
+});
+
 $('.fulfill-btn').click(function (e) {
     $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
     $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
