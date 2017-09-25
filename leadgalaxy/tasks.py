@@ -277,8 +277,9 @@ def export_product(req_data, target, user_id):
             pass
 
         # update product collections
-        collections = json.loads(data).get('collections', [])
-        utils.ProductCollections().link_product_collection(product, collections)
+        collections = json.loads(data).get('collections')
+        if collections is not None:
+            utils.ProductCollections().link_product_collection(product, collections)
 
         product.update_data(data)
 
