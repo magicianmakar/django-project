@@ -1144,10 +1144,6 @@ def product_view(request, pid):
                     shopify_product=shopify_product,
                     product_id=p['qelem'].id)
 
-        collections = utils.ProductCollections.get_collections(product.store)
-    else:
-        collections = None
-
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 
     if product.store_id:
@@ -1159,7 +1155,7 @@ def product_view(request, pid):
         'product': p,
         'board': board,
         'original': original,
-        'collections': collections,
+        'collections': utils.ProductCollections().get_collections(product.store),
         'shopify_product': shopify_product,
         'aws_available': aws_available,
         'aws_policy': string_to_sign,
@@ -1533,18 +1529,18 @@ def get_shipping_info(request):
     if not aliexpress_id and supplier:
         if not request.GET.get('chq'):
             if int(supplier) == 0:
-                product = CommerceHQProduct.objects.get(id=product)
-                permissions.user_can_view(request.user, product)
-                supplier = product.default_supplier
-            else:
-                supplier = CommerceHQSupplier.objects.get(id=supplier)
-        else:
-            if int(supplier) == 0:
                 product = ShopifyProduct.objects.get(id=product)
                 permissions.user_can_view(request.user, product)
                 supplier = product.default_supplier
             else:
                 supplier = ProductSupplier.objects.get(id=supplier)
+        else:
+            if int(supplier) == 0:
+                product = CommerceHQProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = CommerceHQSupplier.objects.get(id=supplier)
 
         aliexpress_id = supplier.get_source_id()
 
@@ -3677,33 +3673,33 @@ def subuser_store_permissions(request, user_id, store_id):
 
 @transaction.atomic
 @login_required
-def subuser_woo_store_permissions(request, user_id, store_id):
-    store = request.user.woostore_set.filter(pk=store_id).first()
+def subuser_chq_store_permissions(request, user_id, store_id):
+    store = request.user.commercehqstore_set.filter(pk=store_id).first()
     if not store:
         raise Http404
 
     subuser = get_object_or_404(User,
                                 pk=user_id,
                                 profile__subuser_parent=request.user,
-                                profile__subuser_woo_stores__pk=store_id)
+                                profile__subuser_chq_stores__pk=store_id)
 
-    subuser_woo_permissions = subuser.profile.subuser_woo_permissions.filter(store=store)
-    initial = {'permissions': subuser_woo_permissions, 'store': store}
+    subuser_chq_permissions = subuser.profile.subuser_chq_permissions.filter(store=store)
+    initial = {'permissions': subuser_chq_permissions, 'store': store}
 
     if request.method == 'POST':
-        form = SubuserWooPermissionsForm(request.POST, initial=initial)
+        form = SubuserCHQPermissionsForm(request.POST, initial=initial)
         if form.is_valid():
             new_permissions = form.cleaned_data['permissions']
-            subuser.profile.subuser_woo_permissions.remove(*subuser_woo_permissions)
-            subuser.profile.subuser_woo_permissions.add(*new_permissions)
+            subuser.profile.subuser_chq_permissions.remove(*subuser_chq_permissions)
+            subuser.profile.subuser_chq_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('leadgalaxy.views.subuser_woo_store_permissions', user_id, store_id)
+            return redirect('leadgalaxy.views.subuser_chq_store_permissions', user_id, store_id)
     else:
-        form = SubuserWooPermissionsForm(initial=initial)
+        form = SubuserCHQPermissionsForm(initial=initial)
 
     breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
     context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
-    return render(request, 'subuser_woo_store_permissions.html', context)
+    return render(request, 'subuser_chq_store_permissions.html', context)
 
 
 def crossdomain(request):
