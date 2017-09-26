@@ -36,6 +36,11 @@ ALIEXPRESS_ES_PROVINCES = [
     "vizcaya", "zamora", "zaragoza"
 ]
 
+ALIEXPRESS_AU_PROVINCES = [
+    "Australian Capital Territory", "Jervis Bay Territory", "New South Wales", "Northern Territory", "Queensland", "South Australia",
+    "Tasmania", "Victoria", "Western Australia"
+]
+
 
 def load_uk_provincess():
     global uk_provinces
@@ -75,6 +80,8 @@ def valide_aliexpress_province(country, province):
         return province in ALIEXPRESS_UK_PROVINCES
     elif country in ['es', 'spain']:
         return province in ALIEXPRESS_ES_PROVINCES
+    elif country in ['au', 'australia']:
+        return province in ALIEXPRESS_AU_PROVINCES
 
     return True
 
