@@ -908,9 +908,13 @@ class WooStoreApi(ApiResponseMixin, View):
         for order in orders:
             permissions.user_can_delete(user, order)
             order.delete()
-            store, order_id, line_id = order.store, order.order_id, order.line_id
-            data = {'store_id': store.id, 'order_id': order_id, 'line_id': line_id}
-            store.pusher_trigger('order-source-id-delete', data)
+            data = {
+                'store_id': order.store.id,
+                'order_id': order.order_id,
+                'line_id': order.line_id,
+                'product_id': order.product_id}
+
+            order.store.pusher_trigger('order-source-id-delete', data)
 
         return self.api_success()
 

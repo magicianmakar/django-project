@@ -4,9 +4,9 @@
     <div class="btn-group dropup order-line-group"
         order-id="{{order.id}}"
         line-id="{{item.id}}"
-        order-data-id="{{ item.order_data_id }}"
-        order-number="{{order.id}}"
-        line-title="{{item.title}}"
+        order-data-id="{{item.order_data_id}}"
+        order-number="{{order.number}}"
+        line-title="{{item.name}}"
         {% if item.shipping_method %}
             style="display:flex"
         {% endif %}

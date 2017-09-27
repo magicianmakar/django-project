@@ -886,6 +886,7 @@ function pusherSub() {
             'text': 'Add',
             'order-id': data.order_id,
             'line-id': data.line_id,
+            'product-id': data.product_id,
             'store': data.store_id,
         }).click(addOrderSourceID));
 
