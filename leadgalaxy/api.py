@@ -2059,18 +2059,26 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
 
-            track, created = ShopifyOrderTrack.objects.update_or_create(
-                store=store,
-                order_id=order_id,
-                line_id=line_id,
-                defaults={
-                    'user': user.models_user,
-                    'source_id': source_id,
-                    'created_at': timezone.now(),
-                    'updated_at': timezone.now(),
-                    'status_updated_at': timezone.now()
-                }
-            )
+            while True:
+                try:
+                    track, created = ShopifyOrderTrack.objects.update_or_create(
+                        store=store,
+                        order_id=order_id,
+                        line_id=line_id,
+                        defaults={
+                            'user': user.models_user,
+                            'source_id': source_id,
+                            'created_at': timezone.now(),
+                            'updated_at': timezone.now(),
+                            'status_updated_at': timezone.now()
+                        }
+                    )
+
+                    break
+
+                except ShopifyOrderTrack.MultipleObjectsReturned:
+                    ShopifyOrderTrack.objects.filter(store=store, order_id=order_id, line_id=line_id).delete()
+                    continue
 
             try:
                 order = ShopifyOrder.objects.get(store=store, order_id=order_id)
