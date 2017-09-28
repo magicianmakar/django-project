@@ -1556,7 +1556,7 @@ class ShopifyBoard(models.Model):
         products = self.products.filter(store__is_active=True).filter(shopify_id=0)
 
         if request and request.user.is_subuser:
-            products = self.products.filter(store__in=request.user.profile.get_shopify_stores())
+            products = products.filter(store__in=request.user.profile.get_shopify_stores())
 
         return products.count()
 
@@ -1564,7 +1564,7 @@ class ShopifyBoard(models.Model):
         products = self.products.filter(store__is_active=True).exclude(shopify_id=0)
 
         if request and request.user.is_subuser:
-            products = self.products.filter(store__in=request.user.profile.get_shopify_stores())
+            products = products.filter(store__in=request.user.profile.get_shopify_stores())
 
         return products.count()
 
