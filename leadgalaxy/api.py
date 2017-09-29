@@ -1837,15 +1837,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
         all_orders = data.get('all') == 'true' or order_ids
 
-        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                                .defer('data') \
-                                                .order_by('updated_at')
+        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
 
         if unfulfilled_only:
             order_tracks = order_tracks.filter(source_tracking='') \
                                        .filter(check_count__lte=250) \
                                        .exclude(shopify_status='fulfilled') \
                                        .exclude(source_status='FINISH')
+
+        order_tracks = order_tracks.filter(hidden=False) \
+                                   .defer('data') \
+                                   .order_by('updated_at')
 
         if order_ids:
             order_tracks = order_tracks.filter(id__in=order_ids.split(','))
@@ -1863,8 +1865,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if limit is None:
                 limit = orders_update_limit(orders_count=order_tracks.count())
 
-                if limit != 20:
-                    cache.set(limit_key, limit, timeout=3600)
+                cache.set(limit_key, limit, timeout=3600 * 12)
 
             if data.get('forced') == 'true':
                 limit = limit * 2
