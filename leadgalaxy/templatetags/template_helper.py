@@ -193,11 +193,14 @@ def render_markdown(text, render_help=True):
 
 
 @register.simple_tag
-def money_format(amount=None, store=None, allow_empty=False):
+def money_format(amount=None, store=None, allow_empty=False, just_value=False):
     currency_format = '${{amount}}'
 
     if store and getattr(store, 'currency_format', None):
         currency_format = store.currency_format
+
+    if just_value:
+        currency_format = re.findall(r'(\{\{.+?\}\})', currency_format)[0]
 
     if amount is not None and amount != '':
         if type(amount) is not float:

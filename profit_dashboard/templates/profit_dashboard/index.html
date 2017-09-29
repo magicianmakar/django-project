@@ -15,7 +15,7 @@
     <div class="row">
       <div class="col-md-12" id="connect-facebook">
         <p class="pull-left" style="line-height: 28px;">For loading Ad Costs data please</p>
-        <fb:login-button class="fb-login-button" scope="ads_read" onlogin="window.ProfitDashboard.checkLoginState();" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false">
+        <fb:login-button class="fb-login-button" scope="ads_read" onlogin="FacebookProfitDashboard.checkLoginState();" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false">
         </fb:login-button>
       </div>
       <div class="col-md-12" id="loading-facebook">
@@ -36,7 +36,7 @@
         </form>
         <p class="pull-left" style="line-height: 35px; margin-left: 15px;">or</p>
         <div style="padding: 3px 0 0;">
-          <fb:login-button autologoutlink="true" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" onlogin="window.ProfitDashboard.checkLoginState();"></fb:login-button>
+          <fb:login-button autologoutlink="true" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" onlogin="FacebookProfitDashboard.checkLoginState();"></fb:login-button>
         </div>
       </div>
       <br>
@@ -76,7 +76,7 @@
           </div>
           <button type="submit" class="btn btn-success">Filter</button>
 
-          <ul id="pagination-limit" class="pull-right">
+          <ul id="pagination-limit" class="top-controls pull-right">
             <li>
               <label>Items per page:</label>
             </li>
@@ -89,174 +89,193 @@
             <li{% if limit == 100 %} class="active"{% endif %}>
               <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=100">100</a>
             </li>
-            <li{% if limit == None %} class="active"{% endif %}>
-              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&nolimit=1">All</a>
+            <li{% if limit == 0 %} class="active"{% endif %}>
+              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=0">All</a>
             </li>
             <li>
               <input type="text" name="limit" placeholder="Type here" value="{{ limit|default:"" }}" />
             </li>
           </ul>
 
-          <div id="generating-data" class="pull-right">
-            <div class="finished hidden">
-              <label>
-                <i class="fa fa-check"></i>
-                Done generating data for search criteria
-              </label>
-            </div>
-            <div class="generating hidden">
-              <div class="sk-spinner sk-spinner-cube-grid pull-left">
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-                <div class="sk-cube"></div>
-              </div>
-              <label>Generating data for date</label>
-            </div>
-          </div>
+          <ul id="graph-view" class="top-controls pull-right hidden">
+            <li><label>View:</label></li>
+            <li><a href="#" class="btn btn-default daily" data-time="daily">Daily</a></li>
+            <li><a href="#" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
+            <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li>
+          </ul>
         </form>
 
-        <br>
+        <div id="top-controls-menu" class="clients-list">
+          <ul class="nav nav-tabs">
+              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#pagination-limit"><i class="fa fa-table"></i> Table</a></li>
+              <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#graph-view"><i class="fa fa-line-chart"></i> Charts</a></li>
+          </ul>
+          <div class="tab-content">
+              <div id="tab-data-table" class="tab-pane active">
+                <div class="col-lg-12" style="padding-right: 0; padding-left: 0;">
+                  <table class="table totals">
+                    <tbody>
+                      <tr>
+                        <td><button type="button" class="btn btn-info m-r-sm" id="total-revenue">{% money_format totals.revenue store True %}</button>Revenue</td>
+                        <td><button type="button" class="btn btn-warning m-r-sm" id="total-ad-spend">{% money_format totals.ad_spend store True %}</button>Ads Spend</td>
+                        <td>
+                          <button type="button" class="btn btn-primary m-r-sm">
+                            {% money_format None store %}
+                            <span id="totals-profit" data-original-amount="{{ totals.profit|default:"0"|floatformat:2 }}">
+                              {% money_format totals.profit store True True %}
+                            </span>
+                          </button>
+                          Profit
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><button type="button" class="btn btn-warning m-r-sm" id="totals-fulfillment-cost">{% money_format totals.fulfillment_cost store True %}</button>Fulfillment Cost</td>
+                        <td>
+                          <button type="button" class="btn btn-warning m-r-sm">
+                            {% money_format None store %}
+                            <span id="totals-other-costs" data-original-amount="{{ totals.other_costs|default:"0"|floatformat:2 }}">
+                              {% money_format totals.other_costs store True True %}
+                            </span>
+                          </button>
+                          Other Costs
+                        </td>
+                        <td>
+                          <button type="button" class="btn btn-danger m-r-sm">
+                            {% money_format None store %}
+                            <span id="totals-total-costs" data-original-amount="{{ totals.outcome|default:"0"|floatformat:2 }}">
+                              {% money_format totals.outcome store True True %}
+                            </span>
+                          </button>
+                          Total Costs
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_count }}</button>Orders</td>
+                        <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_per_day }}</button>Orders Per Day</td>
+                        <td>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
-        <div class="col-lg-12" style="padding-right: 0; padding-left: 0;">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              Totals
-            </div>
-            <div class="panel-body">
-              <table class="table totals">
-                <tbody>
-                  <tr>
-                    <td><button type="button" class="btn btn-info m-r-sm" id="total-revenue">{% money_format totals.revenue store True %}</button>Revenue</td>
-                    <td><button type="button" class="btn btn-warning m-r-sm" id="total-ad-spend">{% money_format totals.ad_spend store True %}</button>Ad Spend</td>
-                    <td>
-                      <button type="button" class="btn btn-primary m-r-sm">
-                        {% money_format None store %}
-                        <span id="totals-profit" data-original-amount="{{ totals.profit|default:"0"|floatformat:2 }}">
-                          {{ totals.profit|default:"0"|floatformat:2 }}
-                        </span>
-                      </button>
-                      Profit
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><button type="button" class="btn btn-warning m-r-sm" id="totals-fulfillment-cost">{% money_format totals.fulfillment_cost store True %}</button>Fulfillment Cost</td>
-                    <td>
-                      <button type="button" class="btn btn-warning m-r-sm">
-                        {% money_format None store %}
-                        <span id="totals-other-costs" data-original-amount="{{ totals.other_costs|default:"0"|floatformat:2 }}">
-                          {{ totals.other_costs|default:"0"|floatformat:2 }}
-                        </span>
-                      </button>
-                      Other Costs
-                    </td>
-                    <td>
-                      <button type="button" class="btn btn-danger m-r-sm">
-                        {% money_format None store %}
-                        <span id="totals-total-costs" data-original-amount="{{ totals.outcome|default:"0"|floatformat:2 }}">
-                          {{ totals.outcome|default:"0"|floatformat:2 }}
-                        </span>
-                      </button>
-                      Total Costs
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                <div id="loading-data" class="col-md-12"{% if not running_calculation %} style="display: none;"{% endif %}>
+                  <i class="fa fa-circle-o-notch fa-spin"></i> Loading...
+                </div>
+
+                <br>
+                <div id="profit-data"{% if running_calculation %} style="display: none;"{% endif %}>
+                  <table id="profits" class="table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Revenue</th>
+                        <th>Fulfillment Cost</th>
+                        <th>Ads Spend</th>
+                        <th>Other Costs</th>
+                        <th>Total Costs</th>
+                        <th>Profit</th>
+                        <th>ROI</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for profit in profits %}
+                      <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}
+                      {% ifchanged profit.empty %}{% else %}{% if profit.empty %} style="display: none;"{% endif %}{% endifchanged %}>
+                        <td>{{ profit.date_as_string }}</td>
+                        <td class="revenue" data-original-amount="{{ profit.item.revenue|default:"0"|floatformat:2 }}">
+                          {% money_format profit.item.revenue store True %}
+                        </td>
+                        <td>{% money_format profit.item.fulfillment_cost store True %}</td>
+                        <td>{% money_format profit.item.ad_spend store True %}</td>
+                        <td class="other-costs" data-original-amount="{{ profit.item.other_costs|default:'0'|floatformat:2 }}">
+                          <form class="form-inline other-costs-form" action="{% url 'profit_dashboard_save_other_costs' %}?store={{ store.id }}">
+                            <div class="form-group">
+                              <label class="sr-only" for="other_costs">Amount</label>
+                              <div class="input-group">
+                                <div class="input-group-addon">{% money_format None store %}</div>
+                                <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.item.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
+                              </div>
+                            </div>
+                            <div class="form-group loading hidden">
+                              <div class="sk-spinner sk-spinner-wave">
+                                  <div class="sk-rect1"></div>
+                                  <div class="sk-rect2"></div>
+                                  <div class="sk-rect3"></div>
+                                  <div class="sk-rect4"></div>
+                                  <div class="sk-rect5"></div>
+                              </div>
+                            </div>
+                          </form>
+                        </td>
+                        <td class="total-costs">
+                          {% money_format None store %}<span data-original-amount="{{ profit.item.outcome|default:"0"|floatformat:2 }}">{{ profit.item.outcome|default:"0"|floatformat:2 }}</span>
+                        </td>
+                        <td class="profit-amount">
+                          {% money_format None store %}<span data-original-amount="{{ profit.item.profit|default:"0"|floatformat:2 }}">{{ profit.item.profit|default:"0"|floatformat:2 }}</span>
+                        </td>
+                        <td class="percentage">{{ profit.item.return_over_investment }}</td>
+                        <td class="actions"></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+
+                  {% include "partial/paginator.html" %}
+                </div>
+              </div>
+              <div id="tab-charts" class="tab-pane">
+                <div>
+                  <h2>Profits</h2>
+                  <div class="chart">
+                    <ul class="toggle-menu">
+                      <li>
+                        <a href="#" class="toggle-data btn btn-white" data-label="Fulfillment Cost" data-key="fulfillment_cost">
+                          <i class="fa fa-check-square-o"></i>
+                          <i class="fa fa-square-o"></i>
+                          Fulfillment Costs
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" class="toggle-data btn btn-white" data-label="Ads Spend" data-key="ads_spend">
+                          <i class="fa fa-check-square-o"></i>
+                          <i class="fa fa-square-o"></i>
+                          Ads Spend
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" class="toggle-data btn btn-white" data-label="Other Costs" data-key="other_costs">
+                          <i class="fa fa-check-square-o"></i>
+                          <i class="fa fa-square-o"></i>
+                          Other Costs
+                        </a>
+                      </li>
+                    </ul>
+                    <canvas id="profits-chart" height="100"></canvas>
+                  </div>
+
+                  <br>
+                  <div class="chart">
+                    <h2>Fulfilment Costs</h2>
+                    <canvas id="fulfillment-costs-chart" height="60"></canvas>
+                  </div>
+
+                  <br>
+                  <div class="chart">
+                    <h2>Ads Spend</h2>
+                    <canvas id="ads-spend-chart" height="60"></canvas>
+                  </div>
+
+                  <br>
+                  <div class="chart">
+                    <h2>Other Costs</h2>
+                    <canvas id="other-cost-chart" height="60"></canvas>
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
-
-        <table id="profits" class="table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Revenue</th>
-              <th>Fulfillment Cost</th>
-              <th>Ad Spend</th>
-              <th>Other Costs</th>
-              <th>Total Costs</th>
-              <th>Profit</th>
-              <th>ROI</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for profit in profits %}
-            <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}>
-              <td>{{ profit.date_as_string }}</td>
-              <td class="revenue" data-original-amount="{{ profit.item.revenue|default:"0"|floatformat:2 }}">
-                {% money_format profit.item.revenue store True %}
-              </td>
-              <td>{% money_format profit.item.fulfillment_cost store True %}</td>
-              <td>{% money_format profit.item.ad_spend store True %}</td>
-              <td class="other-costs" data-original-amount="{{ profit.item.other_costs|default:'0'|floatformat:2 }}">
-                <form class="form-inline other-costs-form" action="{% url 'profit_dashboard_save_other_costs' %}?store={{ store.id }}">
-                  <div class="form-group">
-                    <label class="sr-only" for="other_costs">Amount</label>
-                    <div class="input-group">
-                      <div class="input-group-addon">{% money_format None store %}</div>
-                      <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.item.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
-                    </div>
-                  </div>
-                  <div class="form-group loading hidden">
-                    <div class="sk-spinner sk-spinner-wave">
-                        <div class="sk-rect1"></div>
-                        <div class="sk-rect2"></div>
-                        <div class="sk-rect3"></div>
-                        <div class="sk-rect4"></div>
-                        <div class="sk-rect5"></div>
-                    </div>
-                  </div>
-                </form>
-              </td>
-              <td class="total-costs">
-                {% money_format None store %}<span data-original-amount="{{ profit.item.outcome|default:"0"|floatformat:2 }}">{{ profit.item.outcome|default:"0"|floatformat:2 }}</span>
-              </td>
-              <td class="profit-amount">
-                {% money_format None store %}<span data-original-amount="{{ profit.item.profit|default:"0"|floatformat:2 }}">{{ profit.item.profit|default:"0"|floatformat:2 }}</span>
-              </td>
-              <td class="percentage">{{ profit.item.return_over_investment }}</td>
-              <td class="actions"></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <nav style="text-align: center;">
-          <ul class="pagination pagination-lg">
-          {% for page_number in pages %}
-            {% if forloop.first and current_page != 1 %}
-            <li>
-              <a href="{% url_replace 'page' current_page|add:'-1' %}" aria-label="Previous">
-              <span aria-hidden="true">&laquo;</span>
-              </a>
-            </li>
-            {% endif %}
-
-            {% if page_number == current_page %}
-            <li class="active"><span>{{ page_number }}</span></li>
-            {% else %}
-            <li><a href="{% url_replace 'page' page_number %}">{{ page_number }}</a></li>
-            {% endif %}
-
-            {% if forloop.last and current_page != page_number %}
-            <li>
-              <a href="{% url_replace 'page' current_page|add:'1' %}" aria-label="Next">
-              <span aria-hidden="true">&raquo;</span>
-              </a>
-            </li>
-            {% endif %}
-          {% endfor %}
-
-          {% if current_page.has_next %}
-          {% endif %}
-          </ul>
-        </nav>
       </div>
     </div>
   </div>
@@ -298,6 +317,51 @@
     <td class="actions"></td>
   </tr>
 </script>
+
+<script id="profit-totals" type="text/x-handlebars-template">
+  <tbody>
+    <tr>
+      <td><button type="button" class="btn btn-info m-r-sm">{{totals.currency_revenue}}</button>Revenue</td>
+      <td><button type="button" class="btn btn-warning m-r-sm">{{totals.currency_ad_spend}}</button>Ads Spend</td>
+      <td>
+        <button type="button" class="btn btn-primary m-r-sm">
+          {{totals.currency_sign}}
+          <span id="totals-profit" data-original-amount="{{totals.profit}}">
+            {{totals.currency_profit}}
+          </span>
+        </button>
+        Profit
+      </td>
+    </tr>
+    <tr>
+      <td><button type="button" class="btn btn-warning m-r-sm">{{totals.currency_fulfillment_cost}}</button>Fulfillment Cost</td>
+      <td>
+        <button type="button" class="btn btn-warning m-r-sm">
+          {{totals.currency_sign}}
+          <span id="totals-other-costs" data-original-amount="{{totals.other_costs}}">
+            {{totals.currency_other_costs}}
+          </span>
+        </button>
+        Other Costs
+      </td>
+      <td>
+        <button type="button" class="btn btn-danger m-r-sm">
+          {{totals.currency_sign}}
+          <span id="totals-total-costs" data-original-amount="{{totals.outcome}}">
+            {{totals.currency_outcome}}
+          </span>
+        </button>
+        Total Costs
+      </td>
+      <tr>
+        <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_count}}</button>Orders</td>
+        <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_per_day}}</button>Orders Per Day</td>
+        <td>
+        </td>
+      </tr>
+    </tr>
+  </tbody>
+</script>
 {% endverbatim %}
 {% endblock %}
 
@@ -321,11 +385,17 @@
       runningCalculation: {{ running_calculation|yesno:'true,false' }},
       profitsAjaxUrl: "{% url 'profit_dashboard_profits' %}",
       profitOtherCostsAjaxUrl: "{% url 'profit_dashboard_save_other_costs' %}?store={{ store.id }}",
-      currencySign: "{% money_format None store %}"
+      currencySign: "{% money_format None store %}",
+      currencyFormat: "{{ store.currency_format|default:'' }}"
     };
+
+    var profitsData = {{ profits_json|safe }};
   </script>
 
   <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+
+  <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+  <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.min.js' %}"></script>
 
 {% compress js %}
   <script src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
@@ -333,7 +403,4 @@
   <script src="{% static 'profit/index.js' %}"></script>
 {% endcompress %}
 
-  <script type="text/javascript">
-    window.Currency.defineFormat("{{ store.currency_format|default:'' }}");
-  </script>
 {% endblock %}

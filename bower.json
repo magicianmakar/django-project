@@ -22,7 +22,8 @@
     "select2": "^4.0.3",
     "bootstrap-datepicker": "^1.6.4",
     "animatedmodal": "*",
-    "animate.css": "^3.5.2"
+    "animate.css": "^3.5.2",
+    "chart.js": "^2.7.0"
   },
   "devDependencies": {}
 }

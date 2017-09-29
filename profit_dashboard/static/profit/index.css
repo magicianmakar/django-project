@@ -23,16 +23,19 @@
   visibility: hidden;
 }
 
+#graph-view,
 #pagination-limit {
   list-style-type: none;
 }
 
+#graph-view li,
 #pagination-limit li {
   float: left;
   display: inline-block;
   margin: 2px 2px 0;
 }
 
+#graph-view li label,
 #pagination-limit li label {
   display: inline-block;
   padding: 7px 7px 3px;
@@ -77,18 +80,51 @@
   margin: 0 15px 0 0;
 }
 
-#generating-data {
-  padding-top: 3px;
+#loading-data {
+  text-align: center;
 }
 
-#generating-data label {
-    line-height: 30px;
-    text-indent: 10px;
-    margin: 0;
+#totals-profit,
+#totals-other-costs,
+#totals-total-costs {
+  margin-left: -3px;
 }
 
-#generating-data .finished i {
-    font-size: 27px;
-    float: left;
-    color: #79aa63;
+.pagination .active span {
+  background-color: #eee;
+}
+
+.clients-list .tab-pane {
+  height: auto;
+}
+
+.chart ul.toggle-menu {
+  list-style-type: none;
+  padding: 0;
+}
+
+.chart ul.toggle-menu li {
+  float: left;
+}
+
+.chart ul.toggle-menu li + li {
+  margin-left: 10px;
+}
+
+.chart ul.toggle-menu li .toggle-data:hover,
+.chart ul.toggle-menu li .toggle-data.active {
+  border-color: green;
+}
+
+.chart ul.toggle-menu li .toggle-data.active i.fa-check-square-o {
+  color: green;
+}
+
+.chart ul.toggle-menu li .toggle-data.active i.fa-square-o,
+.chart ul.toggle-menu li .toggle-data i.fa-check-square-o {
+  display: none;
+}
+
+.chart ul.toggle-menu li .toggle-data.active i.fa-check-square-o {
+  display: inline-block;
 }

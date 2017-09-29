@@ -1,4 +1,5 @@
 import arrow
+import simplejson as json
 from datetime import timedelta
 
 from django.contrib import messages
@@ -9,15 +10,16 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from leadgalaxy import utils
+from shopified_core.paginators import SimplePaginator
 from .utils import (
     retrieve_current_profits,
     calculate_shopify_profit,
-    retrieve_facebook_insights,
 )
 from .models import (
     FacebookAccount,
     ShopifyProfit,
 )
+from .tasks import fetch_facebook_insights
 
 
 @login_required
@@ -28,10 +30,8 @@ def index(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
     limit = utils.safeInt(request.GET.get('limit'), 10)
-    no_limit = request.GET.get('nolimit', '0') == '1'
-    current_page = int(request.GET.get('page', '1'))
+    current_page = utils.safeInt(request.GET.get('page'), 1)
 
-    profits = []
     store = utils.get_store_from_request(request)
     if not store:
         messages.warning(request, 'Please add at least one store before using the Profits Dashboard.')
@@ -48,27 +48,29 @@ def index(request):
     else:
         start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
 
-    if no_limit:
-        limit = None
-
-    running_calculation = calculate_shopify_profit(request.user.pk, store.id, start, end)
-    profits, max_results, pages, totals = retrieve_current_profits(
+    running_calculation = calculate_shopify_profit(store.id, start, end)
+    profits, totals = retrieve_current_profits(
         request.user.pk,
         store.id,
         start,
-        end,
-        current_page,
-        limit
+        end
     )
+
+    profits_json = json.dumps(profits[::-1])
+    profits_per_page = len(profits) + 1 if limit == 0 else limit
+    paginator = SimplePaginator(profits, profits_per_page)
+    page = min(max(1, current_page), paginator.num_pages)
+    page = paginator.page(page)
+    profits = page.object_list
 
     accounts = FacebookAccount.objects.filter(access__user=request.user)
 
     return render(request, 'profit_dashboard/index.html', {
         'page': 'profit_dashboard', 'profits': profits, 'store': store,
         'start': start.strftime('%m/%d/%Y'), 'end': end.strftime('%m/%d/%Y'),
-        'current_page': current_page, 'max_results': max_results, 'pages': pages,
-        'limit': limit, 'totals': totals, 'user': request.user, 'accounts': accounts,
-        'running_calculation': running_calculation
+        'current_page': page, 'paginator': paginator, 'limit': limit,
+        'totals': totals, 'user': request.user, 'accounts': accounts,
+        'running_calculation': running_calculation, 'profits_json': profits_json
     })
 
 
@@ -77,7 +79,7 @@ def facebook_insights(request):
     if request.method == 'POST':
         access_token = request.POST.get('access_token')
         store = utils.get_store_from_request(request)
-        retrieve_facebook_insights(request.user.pk, store.id, access_token)
+        fetch_facebook_insights.delay(request.user.pk, store.id, access_token)
 
         return JsonResponse({'success': True})
 
@@ -105,10 +107,8 @@ def save_other_costs(request):
 def profits(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
-    filter_end = request.GET.get('filter_end')
-    filter_start = request.GET.get('filter_start')
-    limit = None
-    current_page = 1
+    limit = utils.safeInt(request.GET.get('limit'), 10)
+    current_page = utils.safeInt(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -118,17 +118,19 @@ def profits(request):
     tz = timezone.localtime(timezone.now()).strftime(' %z')
     end = arrow.get(end + tz, r'MM/DD/YYYY Z').datetime
     start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
-    filter_end = arrow.get(filter_end + tz, r'MM/DD/YYYY Z').datetime
-    filter_start = arrow.get(filter_start + tz, r'MM/DD/YYYY Z').datetime
 
-    profits, max_results, pages, totals = retrieve_current_profits(
+    profits, totals = retrieve_current_profits(
         request.user.pk,
         store.id,
         start,
-        end,
-        current_page,
-        limit,
-        filter_date=[filter_start, filter_end]
+        end
     )
 
-    return JsonResponse({'profits': profits, 'totals': totals})
+    chart_profits = profits[::-1]
+    profits_per_page = len(profits) + 1 if limit == 0 else limit
+    paginator = SimplePaginator(profits, profits_per_page)
+    page = min(max(1, current_page), paginator.num_pages)
+    page = paginator.page(page)
+    profits = page.object_list
+
+    return JsonResponse({'profits': profits, 'totals': totals, 'chart_profits': chart_profits})

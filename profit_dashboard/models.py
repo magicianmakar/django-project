@@ -35,7 +35,17 @@ class ShopifyProfit(models.Model):
     fulfillment_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
     other_costs = models.DecimalField(decimal_places=2, max_digits=9, default=0)
 
+    class Meta:
+        ordering = ['date']
+
 
 class ShopifyProfitImportedOrder(models.Model):
     profit = models.ForeignKey(ShopifyProfit, related_name='imported_orders')
     order_id = models.BigIntegerField()
+
+
+class ShopifyProfitImportedOrderTrack(models.Model):
+    profit = models.ForeignKey(ShopifyProfit, related_name='imported_order_tracks')
+    order_id = models.BigIntegerField()
+    source_id = models.CharField(max_length=512, blank=True, default='')
+    amount = models.DecimalField(decimal_places=2, max_digits=9, default=0)
