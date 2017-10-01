@@ -737,6 +737,20 @@ def add_woo_order_note(store, order_id, note):
     return r.json()
 
 
+def get_order_track_product_id(store, order_id, line_id):
+    order_key = 'woo_order_{}_{}_{}'.format(store.id, order_id, line_id)
+    order = order_data_cache(order_key)
+    if order:
+        return order['product_id']
+
+    r = store.wcapi.get('orders/{}'.format(order_id))
+    if r.ok:
+        order = r.json()
+        for line_item in order['line_items']:
+            if line_item['id'] == line_id:
+                return line_item['product_id']
+
+
 class WooListQuery(object):
     def __init__(self, store, endpoint, params=None):
         self._store = store

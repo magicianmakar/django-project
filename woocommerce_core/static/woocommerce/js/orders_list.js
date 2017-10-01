@@ -672,7 +672,7 @@ $('.auto-shipping-btn').click(function (e) {
         'woo': 1,
     }), function (response, status, xhr) {
         if (xhr.status != 200) {
-            displayAjaxError('Shiping Method', 'Server Error, Please try again.');
+            displayAjaxError('Shipping Method', 'Server Error, Please try again.');
             return;
         }
 
