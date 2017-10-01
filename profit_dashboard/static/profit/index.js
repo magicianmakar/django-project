@@ -122,6 +122,10 @@ Currency.init();
             this.onChartToggleDataClick();
 
             this.checkCalculationPusher();
+
+            if (window.location.hash) {
+                $('#top-controls-menu a[href="' + window.location.hash + '"]').trigger('click');
+            }
         },
         initTooltip: function() {
             $('[data-toggle="profit-tooltip"]').tooltip();
@@ -423,9 +427,14 @@ Currency.init();
                     results.total_costs.push(+total_costs.toFixed(2));
                 }
             } else if (this.chartTime == 'weekly') {
-                var position = -1,
-                    nextMonday = null;
+                var position = 0,
+                    nextMonday = moment(this.profitsData[0].date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
 
+                results.revenue[position] = 0.0;
+                results.fulfillment_cost[position] = 0.0;
+                results.ads_spend[position] = 0.0;
+                results.other_costs[position] = 0.0;
+                results.total_costs[position] = 0.0;
                 for (var iLength = this.profitsData.length, i = 0; i <= iLength; i++) {
                     var profit = this.profitsData[i];
                     if (!profit) {
@@ -433,10 +442,7 @@ Currency.init();
                     }
 
                     var profitDate = moment(profit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'))
-                    if (nextMonday == null || profitDate.isAfter(nextMonday)) {
-                        if (nextMonday == null) {
-                            nextMonday = profitDate.isoWeekday(1);
-                        }
+                    if (profitDate.isAfter(nextMonday)) {
                         position += 1;
                         nextMonday = nextMonday.add(1, 'weeks');
 
@@ -501,8 +507,8 @@ Currency.init();
                     current = start.clone();
 
                 end.add(7, 'days');
-                result.push(current.day(day).format('MMM DD, YYYY'));
-                while (current.day(7 + day).isBefore(end)) {
+                result.push(current.format('MMM DD, YYYY'));
+                while (current.add(1, 'week').isBefore(end)) {
                     result.push(current.format('MMM DD, YYYY'));
                 }
             } else if (this.chartTime == 'monthly') {
@@ -741,6 +747,7 @@ Currency.init();
                 var showControls = $(this).attr('data-top-controls');
                 $('.top-controls').addClass('hidden');
                 $(showControls).removeClass('hidden');
+                window.location.hash = $(this).attr('href').replace('#', '');
             });
         },
         onChartToggleDataClick: function() {
