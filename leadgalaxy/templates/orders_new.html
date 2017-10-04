@@ -482,9 +482,11 @@
                                                         href="#"
                                                     {% endif %}
 
-                                                    {% if user.id == 883 and item.shopify_order %}
+                                                    {% if item.shopify_order %}
+                                                        {% if user.id == 883 or user.id == 21064 %}
                                                         class="order-supplier-store"
                                                         source-order-id="{{item.shopify_order.source_id}}"
+                                                        {% endif %}
                                                     {% endif %}
 
                                                     >{{item.supplier.supplier_name|truncatechars:25}}</a>
