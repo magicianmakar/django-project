@@ -117,6 +117,13 @@ def get_domain(url, full=False):
         return get_tld(url, as_object=True).domain
 
 
+def add_http_schema(url):
+    if not url.startswith('http'):
+        return 'http://{}'.format(url.lstrip(':/'))
+    else:
+        return url
+
+
 def remove_link_query(link):
     if not link:
         return ''

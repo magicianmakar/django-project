@@ -201,7 +201,7 @@ def product_export(store_id, product_id, user_id, publish=None):
                 'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
             })
 
-            content = requests.get(img)
+            content = requests.get(utils.add_http_schema(img))
             mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
             filename = utils.get_filename_from_url(img)
 
@@ -429,7 +429,7 @@ def product_update(product_id, data):
                 'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
             })
 
-            content = requests.get(img)
+            content = requests.get(utils.add_http_schema(img))
             mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
 
             r = store.request.post(
@@ -502,8 +502,7 @@ def create_image_zip(self, images, product_id):
 
         with ZipFile(filename, 'w') as images_zip:
             for i, img_url in enumerate(images):
-                if img_url.startswith('//'):
-                    img_url = u'http:{}'.format(img_url)
+                img_url = utils.add_http_schema(img_url)
 
                 image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
                 images_zip.writestr(image_name, requests.get(img_url).content)
