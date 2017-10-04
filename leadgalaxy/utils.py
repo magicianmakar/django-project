@@ -1110,6 +1110,11 @@ def shopify_customer_address(order, aliexpress_fix=False):
         if not valide_aliexpress_province(customer_address['country'], customer_address['province']):
             customer_address['province'] = 'Other'
 
+            if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+                province = get_uk_province(customer_address['city'])
+                if province:
+                    customer_address['province'] = province
+
     return order, customer_address
 
 
