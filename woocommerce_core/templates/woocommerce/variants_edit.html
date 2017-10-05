@@ -1,0 +1,127 @@
+{% extends "base_woocommerce_core.html" %}
+
+{% load static %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5 class="product-title"></h5>
+                <div class="ibox-tools">
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="container-fluid hide-no-produce">
+                    <div class="row" style="margin-bottom:10px">
+                        <div class="col-md-12 alert alert-info">
+                            <p style="margin:0">Please follow this steps to link product's variants to the corresponding images:</p>
+                            <p style="margin:0;margin-left:10px">Step 1: Select a variant of the product.</p>
+                            <p style="margin:0;margin-left:10px">Step 2: Select images for your variants.</p>
+                        </div>
+                    </div>
+
+                    <div class=" row">
+                        <div class="form-group col-md-12 text-center">
+                            <button class="btn btn-default btn-sm btn-outline var-btn-prev"><span>&lt;</span></button>
+                            <select class="form-control current-var" style="margin:0 10px;width:200px;display:inline"></select>
+                            <button class="btn btn-default btn-sm btn-outline var-btn-next"><span>&gt;</span></button>
+                        </div>
+                        <div class="form-group col-md-12 text-center">
+                            <input type="checkbox" class="icheck" name="auto-next" id="auto-next">
+                            <label class="control-label" for="auto-next">
+                                Automatically select next variant
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row  text-center" id="var-images">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="{{ object.woocommerce_url }}" type="button" class="btn btn-info" style="margin-top:20px" target="_blank">View in WooCommerce</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+
+<link href={% static 'css/jquery.loader.min.css' %} rel="stylesheet">
+
+<style type="text/css">
+.buttons {
+    /*text-align: right;*/
+    margin-top: 20px;
+    margin-bottom: 25px;
+}
+
+.buttons .export, .buttons .view{
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.buttons .export {
+    border: 1px solid #A0E7A3;
+    background-color: rgb(213, 255, 213);
+}
+
+.buttons .view {
+    border: 1px solid #A0C9E7;
+    background-color: rgb(213, 255, 253);
+}
+
+
+.var-image {
+    border: 1px solid #ccc;
+    padding: 5px;
+    width: 99%;
+    cursor: pointer;
+}
+
+.var-image:hover {
+    border: 1px solid #000;
+}
+
+.var-image-disabled {
+    opacity: 0.3;
+}
+
+.var-image-block {
+    margin-top: 15px;
+}
+
+.icheckbox_square-blue {
+    position: inherit;
+    margin: 0 5px;
+    background-color: #fff;
+}
+
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script src={% static 'js/jquery.loader.min.js' %} type="text/javascript"></script>
+
+<script type="text/javascript">
+
+var product = {% json_dumps product %};
+var store_id = '{{store.id}}';
+
+</script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'woocommerce/js/variants_edit.js' %}"></script>
+{% endcompress %}
+{% endblock %}
+

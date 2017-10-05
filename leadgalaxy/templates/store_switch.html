@@ -1,11 +1,21 @@
+{% load perms_helper %}
+
 <div class="dropdown">
     <button class="btn btn-default btn-outline dropdown-toggle"
             type="button" id="dropdownMenu1" data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="true">
         {% if request.resolver_match.namespace == '' %}
-            Shopify
+            {% if request.resolver_match.kwargs.store_type == 'chq' %}
+                CommerceHQ
+            {% elif request.resolver_match.kwargs.store_type == 'woo' %}
+                WooCommerce
+            {% else %}
+                Shopify
+            {% endif %}
         {% elif request.resolver_match.namespace == 'chq' %}
             CommerceHQ
+        {% elif request.resolver_match.namespace == 'woo' %}
+            WooCommerce
         {% else %}
         {% endif %}
         <span class="caret"></span>
@@ -18,6 +28,8 @@
                 <a href="{% url 'index' %}">
             {% endif %}Shopify</a>
         </li>
+
+        {% if user|can:'commercehq.use' %}
         <li>
             {% if chq_view_name %}
                 <a href="{% url chq_view_name %}">
@@ -25,5 +37,16 @@
                 <a href="{% url 'chq:index' %}">
             {% endif %}CommerceHQ</a>
         </li>
+        {% endif %}
+
+        {% if user|can:'woocommerce.use' %}
+        <li>
+            {% if woo_view_name %}
+                <a href="{% url woo_view_name %}">
+            {% else %}
+                <a href="{% url 'woo:index' %}">
+            {% endif %}WooCommerce</a>
+        </li>
+        {% endif %}
     </ul>
 </div>

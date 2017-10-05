@@ -356,6 +356,16 @@ function sendProductToCommerceHQ(productId, storeId, publish) {
     return $.post(api_url('product-export', 'chq'), data);
 }
 
+function sendProductToWooCommerce(productId, storeId, publish) {
+    var data = {
+        product: productId,
+        store: storeId,
+        publish: publish
+    };
+
+    return $.post(api_url('product-export', 'woo'), data);
+}
+
 function productsEditModal(products) {
     if (!products || !products.length) {
         toastr.warning('No product is selected');

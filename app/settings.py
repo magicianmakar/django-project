@@ -75,6 +75,7 @@ INSTALLED_APPS = (
 
     'commercehq_core',
     'dropwow_core',
+    'woocommerce_core',
 )
 
 MIDDLEWARE_CLASSES = (

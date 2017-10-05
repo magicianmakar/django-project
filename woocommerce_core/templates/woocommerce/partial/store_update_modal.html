@@ -1,0 +1,54 @@
+<div id="store-update-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-8 b-r">
+                        <h3 class="m-t-none m-b">Update WooCommerce Store</h3>
+                        <form id="store-update-form" method="post" role="form">
+                            <input type="hidden" name="id" />
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" id="store_title" name="title" placeholder="Store name" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Store URL</label>
+                                <input type="url" id="store_api_url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Consumer Key</label>
+                                <input type="text" id="store_api_key" name="api_key" class="form-control" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Consumer Secret</label>
+                                <input type="password" id="store_api_password" name="api_password" class="form-control" required />
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Update store</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-sm-4"><h4>Need Help?</h4>
+                        <p class="xwell">
+                            How To Connect Your WooCommerce Store:
+                            <ol>
+                                <li>Generate API keys for Dropified App.</li>
+                                <li>Enter a store name.</li>
+                                <li>Enter the store's URL in the suggested format.</li>
+                                <li>
+                                    Copy and paste the <b>consumer key</b>.
+                                </li>
+                                <li>
+                                    Copy and paste the <b>consumer secret</b>.
+                                </li>
+                            </ol>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

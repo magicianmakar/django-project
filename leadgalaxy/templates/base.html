@@ -328,7 +328,7 @@
                         <div id="notification-bell"></div>
                     </li>
 
-                    {% if user|can:'commercehq.use' %}
+                    {% if user|can:'commercehq.use' or user|can:'woocommerce.use' %}
                     <li>
                         {% block store-switch %}
                             {% include 'store_switch.html' %}
