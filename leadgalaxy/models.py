@@ -281,11 +281,11 @@ class UserProfile(models.Model):
         return stores
 
     def get_stores_count(self):
-        stores_count = self.get_shopify_stores().count()
-        stores_count += self.get_chq_stores().count()
-        stores_count += self.get_woo_stores().count()
-
-        return stores_count
+        return sum([
+            self.get_shopify_stores().count(),
+            self.get_chq_stores().count(),
+            self.get_woo_stores().count()
+        ])
 
     def get_new_alerts(self):
         return self.user.models_user.aliexpressproductchange_set \

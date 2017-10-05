@@ -193,6 +193,7 @@ def can_add_product(user, ignore_daily_limit=False):
     user_count = profile.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
     user_count += profile.user.commercehqproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
     user_count += profile.user.wooproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
