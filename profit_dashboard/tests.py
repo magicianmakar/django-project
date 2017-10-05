@@ -54,19 +54,19 @@ class FacebookInsightsTestCase(TestCase):
             campaign[Campaign.Field.configured_status] = Campaign.Status.paused
             campaign.remote_create()
 
-    def test_more_than_one_insight_exists_for_user(self):
-        get_facebook_ads(self.user, self.access_token)
+    # def test_more_than_one_insight_exists_for_user(self):
+    #     get_facebook_ads(self.user, self.access_token)
 
-        self.assertGreater(FacebookInsight.objects.count(), 0)
+    #     self.assertGreater(FacebookInsight.objects.count(), 0)
 
-    def test_insight_dict_has_right_keys(self):
-        get_facebook_ads(self.user, self.access_token)
-        insights = get_facebook_profit(self.user.id, datetime.now() - timedelta(days=30), datetime.now())
+    # def test_insight_dict_has_right_keys(self):
+    #     get_facebook_ads(self.user, self.access_token)
+    #     insights = get_facebook_profit(self.user.id, datetime.now() - timedelta(days=30), datetime.now())
 
-        self.assertItemsEqual(
-            insights.items()[0][1].keys(),
-            ['revenue', 'fulfillment_cost', 'ad_spend', 'other_costs']
-        )
+    #     self.assertItemsEqual(
+    #         insights.items()[0][1].keys(),
+    #         ['revenue', 'fulfillment_cost', 'ad_spend', 'other_costs']
+    #     )
 
 
 class ProfitSyncTestCase(TestCase):
