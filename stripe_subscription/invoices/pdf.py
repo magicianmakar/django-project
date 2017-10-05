@@ -55,6 +55,7 @@ def draw_pdf(buffer, invoice):
             ['', ''],
             [invoicee_label(invoice), ''],
             [invoicee_paragraph(customer), ''],
+            [invoicee_vat(customer.user.profile.company), ''],
             ['', '']]
     table = Table(data, colWidths=[10 * cm, 5 * cm])
     parts.append(table)
@@ -122,6 +123,11 @@ def invoicee_paragraph(customer):
     if invoice_to_company:
         return company_paragraph(customer.user.profile)
     return Paragraph(customer.user.get_full_name(), STYLES['default'])
+
+
+def invoicee_vat(company):
+    if company.vat:
+        return Paragraph('VAT: %s' % company.vat, STYLES['default'])
 
 
 def company_paragraph(profile):

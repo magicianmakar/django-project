@@ -2441,6 +2441,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             profile.company.state = form.cleaned_data['company_state']
             profile.company.zip_code = form.cleaned_data['company_zip_code']
             profile.company.country = form.cleaned_data['company_country']
+            profile.company.vat = form.cleaned_data['vat']
 
             profile.company.save()
             profile.save()

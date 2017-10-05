@@ -450,6 +450,7 @@ class UserCompany(models.Model):
     state = models.CharField(max_length=100, blank=True, default='')
     country = models.CharField(max_length=100, blank=True, default='')
     zip_code = models.CharField(max_length=100, blank=True, default='')
+    vat = models.CharField(max_length=100, blank=True, default='')
 
     def __unicode__(self):
         return self.name
