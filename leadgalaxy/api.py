@@ -2906,10 +2906,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success({'task': task.id})
 
-    def post_user_statistics(self, request, user, data):
+    def get_user_statistics(self, request, user, data):
         stores = cache.get('user_statistics_{}'.format(user.id))
 
-        if not stores:
+        if not stores and not data.get('cache_only'):
             task = tasks.calculate_user_statistics.apply_async(args=[user.id], expires=60)
             return self.api_success({'task': task.id})
 

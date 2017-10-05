@@ -948,27 +948,23 @@ def calculate_user_statistics(self, user_id):
     try:
         user = User.objects.get(id=user_id)
         stores = user.profile.get_shopify_stores()
-        data = {
-            'task': self.request.id,
-            'stores': [],
-        }
 
+        stores_data = []
         for store in stores:
-            data['stores'].append({
+            stores_data.append({
                 'id': store.id,
-                'orders_pending': store.pending_orders(),
                 'products_connected': store.connected_count(),
                 'products_saved': store.saved_count(),
             })
 
-        cache.set('user_statistics_{}'.format(user_id), data['stores'], timeout=3600)
+        cache.set('user_statistics_{}'.format(user_id), stores_data, timeout=3600)
 
         pusher = Pusher(
             app_id=settings.PUSHER_APP_ID,
             key=settings.PUSHER_KEY,
             secret=settings.PUSHER_SECRET)
 
-        pusher.trigger("user_{}".format(user_id), 'user-statistics-calculated', data)
+        pusher.trigger("user_{}".format(user_id), 'user-statistics-calculated', {'task': self.request.id})
 
     except:
         raven_client.captureException()

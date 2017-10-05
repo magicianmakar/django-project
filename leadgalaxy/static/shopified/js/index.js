@@ -663,7 +663,7 @@ $('#add-rule-form').on('submit', function(e) {
 
 function updateUserStatistics(statistics_data) {
     $.each(statistics_data, function (i, store_info) {
-        $('#orders_pending_' + store_info.id).html(store_info.orders_pending).parents('.statistics-link').toggle(store_info.orders_pending);
+        $('#orders_pending_' + store_info.id).html('').parents('.statistics-link').toggle(true);
         $('#products_saved_' + store_info.id).html(store_info.products_saved).parents('.statistics-link').toggle(store_info.products_saved);
         $('#products_connected_' + store_info.id).html(store_info.products_connected).parents('.statistics-link').toggle(store_info.products_connected);
     });
@@ -677,21 +677,34 @@ if (user_statistics) {
     var pending_order_task_id = null;
 
     channel.bind('user-statistics-calculated', function(data) {
-        if (pending_order_task_id === data.task && data.stores) {
-            updateUserStatistics(data.stores);
+        if (pending_order_task_id === data.task) {
+            $.ajax({
+                url: '/api/user-statistics',
+                type: 'GET',
+                data: {
+                    cache_only: true
+                },
+                success: function(data) {
+                    if (data.stores) {
+                        updateUserStatistics(data.stores);
+                    }
+                }
+            });
         }
     });
 
-    $.ajax({
-        url: '/api/user-statistics',
-        type: 'POST',
-        success: function(data) {
-            if (data.task) {
-                pending_order_task_id = data.task;
-            } else if (data.stores) {
-                updateUserStatistics(data.stores);
+    channel.bind('pusher:subscription_succeeded', function() {
+        $.ajax({
+            url: '/api/user-statistics',
+            type: 'GET',
+            success: function(data) {
+                if (data.task) {
+                    pending_order_task_id = data.task;
+                } else if (data.stores) {
+                    updateUserStatistics(data.stores);
+                }
             }
-        }
+        });
     });
 }
 
