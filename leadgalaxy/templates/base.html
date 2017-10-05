@@ -210,7 +210,7 @@
 
                 {% if request.user|can:'profit_dashboard.view' %}
                 <li {% if page == 'profit_dashboard' %}class="active"{% endif %}>
-                    <a href="{% url 'profit_dashboard_index' %}" class="">
+                    <a href="{% url 'profit_dashboard.views.index' %}" class="">
                         <i class="fa fa-calculator"></i>
                         <span class="nav-label">Profit Dashboard</span>
                     </a>

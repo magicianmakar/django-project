@@ -6,11 +6,17 @@ from leadgalaxy.models import ShopifyStore
 
 class FacebookAccess(models.Model):
     user = models.ForeignKey(User)
+    store = models.ForeignKey(ShopifyStore, null=True)
+
     access_token = models.CharField(max_length=255)
+    account_ids = models.CharField(max_length=255, null=True, blank=True)
+    campaigns = models.CharField(max_length=255, null=True, blank=True)
 
 
 class FacebookAccount(models.Model):
     access = models.ForeignKey(FacebookAccess, related_name='accounts')
+    store = models.ForeignKey(ShopifyStore, null=True)
+
     last_sync = models.DateField(null=True)
     account_id = models.CharField(max_length=50)
     account_name = models.CharField(max_length=255)

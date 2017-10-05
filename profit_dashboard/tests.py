@@ -9,7 +9,7 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 from facebookads.api import FacebookAdsApi
-from facebookads.adobjects.user import User
+from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.campaign import Campaign
 
 from leadgalaxy.tests import factories as f
@@ -35,7 +35,7 @@ class FacebookInsightsTestCase(TestCase):
             self.access_token
         )
 
-        user = User(fbid='me', api=self.api)
+        user = FBUser(fbid='me', api=self.api)
         account = list(user.get_ad_accounts())[0]
 
         campaigns = account.get_campaigns(fields=[Campaign.Field.created_time])

@@ -217,7 +217,7 @@ Currency.init();
                 if (nextRows.filter(':not(.empty):first').length == 0) {
                     var index = nextRows.index(nextRows.filter(':last')) + 1;
                 }
-                
+
                 selectedRow = nextRows.filter(':lt(' + index + ')').css('display', 'none').filter(':last');
                 var dateColumn = $(this).parents('.profit').find('td:first');
                 dateColumn.text(dateColumn.text() + ' - ' + selectedRow.find('td:first').text());
@@ -418,7 +418,7 @@ Currency.init();
                     if (!profit) {
                         continue;
                     }
-                    
+
                     results.revenue.push(+profit.item.revenue.toFixed(2));
                     results.fulfillment_cost.push(+profit.item.fulfillment_cost.toFixed(2));
                     results.ads_spend.push(+profit.item.ad_spend.toFixed(2));
@@ -544,7 +544,7 @@ Currency.init();
         initializeChartsData: function() {
             var end = moment($('input[name="end"]').val().replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')),
                 start = moment($('input[name="start"]').val().replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
-            
+
             this.setChartViewByDate(start, end);
             this.loadChartsData();
             this.loadChartLabels(start, end);
@@ -773,7 +773,7 @@ Currency.init();
                     );
                 } else {
                     $(this).removeClass('active');
-                    
+
                     ProfitDashboard.profitChartData.datasets = $.map(ProfitDashboard.profitChartData.datasets, function(dataset) {
                         if (dataset.dataKey != dataKey) {
                             return dataset;
@@ -828,6 +828,9 @@ var FacebookProfitDashboard = {
                     if (result.success) {
                         FacebookProfitDashboard.facebookInsightsPusherNotification();
                     }
+                },
+                error: function (data) {
+                    displayAjaxError('Facebook Ad Sync', data);
                 }
             });
         });
@@ -838,22 +841,14 @@ var FacebookProfitDashboard = {
         // Full docs on the response object can be found in the documentation
         // for FB.getLoginStatus().
         if (response.status === 'connected' && !FacebookProfitDashboard.firstTime) {
-            FacebookProfitDashboard.facebookStatus.loading();
-            $.ajax({
-                type: 'post',
-                url: '/profit-dashboard/facebook/insights',
-                data: {'access_token': response.authResponse.accessToken},
-                dataType: 'json',
-                success: function(result) {
-                    if (result.success) {
-                        FacebookProfitDashboard.facebookInsightsPusherNotification();
-                    }
-                }
-            });
+            FacebookProfitDashboard.facebookStatus.loggedIn();
+
+            $('input[name="fb_access_token"]').val(response.authResponse.accessToken);
+            $('#fb-ad-setup').trigger('click');
         } else {
             if (response.authResponse) {
                 FacebookProfitDashboard.facebookStatus.loggedIn();
-                $('input[name="access_token"]').val(response.authResponse.accessToken);
+                $('input[name="fb_access_token"]').val(response.authResponse.accessToken);
             } else {
                 FacebookProfitDashboard.facebookStatus.connect();
             }
@@ -887,14 +882,6 @@ var FacebookProfitDashboard = {
 
 FacebookProfitDashboard.init();
 
-(function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) return;
-    js = d.createElement(s); js.id = id;
-    js.src = "//connect.facebook.net/en_US/sdk.js";
-    fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
-
 window.fbAsyncInit = function() {
     FB.init({
         appId      : config.facebook.appId,
@@ -909,3 +896,76 @@ window.fbAsyncInit = function() {
 
     FB.Event.subscribe('auth.logout', FacebookProfitDashboard.facebookStatus.connect);
 }
+
+$(function () {
+    $('#fb-ad-setup').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: '/profit-dashboard/facebook/accounts',
+            data: {
+                fb_access_token: $('input[name="fb_access_token"]').val()
+            },
+        }).done(function(data) {
+            var template = Handlebars.compile($("#fb-account-list").html());
+
+            $('#fb-account-select-modal .modal-body').html(template(data));
+            $('#fb-account-select-modal').modal('show');
+        }).fail(function(data) {
+            displayAjaxError('Ad Account Selection', data);
+        });
+    });
+
+    $('#fb-account-selected').click(function (e) {
+        e.preventDefault();
+
+        var account_id = $('#fb-account-select-modal [name="account"]').val();
+
+        $.ajax({
+            url: '/profit-dashboard/facebook/campaign',
+            data: {
+                fb_access_token: $('input[name="fb_access_token"]').val(),
+                account_id: account_id,
+            },
+        }).done(function(data) {
+            $('#fb-account-select-modal').modal('hide');
+
+            var template = Handlebars.compile($("#fb-campaign-list").html());
+
+            $('#fb-campaign-select-modal .modal-body').html(template(data));
+            $('#fb-campaign-select-modal').modal('show');
+        }).fail(function(data) {
+            displayAjaxError('Campaign Selection', data);
+        });
+    });
+
+    $('#fb-campaign-selected').click(function (e) {
+        e.preventDefault();
+
+        var campaigns = $.map($('[name="campaign"]:checked'), function(el) {
+            return el.value;
+        });
+
+        $('#fb-campaign-select-modal').modal('hide');
+
+        FacebookProfitDashboard.facebookStatus.loading();
+        $.ajax({
+            type: 'post',
+            url: '/profit-dashboard/facebook/insights',
+            data: {
+                'fb_access_token': $('input[name="fb_access_token"]').val(),
+                'accounts': $('#fb-account-select-modal [name="account"]').val(),
+                'campaigns': campaigns.join(','),
+            },
+            dataType: 'json',
+            success: function(result) {
+                if (result.success) {
+                    FacebookProfitDashboard.facebookInsightsPusherNotification();
+                }
+            },
+            error: function (data) {
+                displayAjaxError('Facebook Ad Sync', data);
+            }
+        });
+    });
+});
