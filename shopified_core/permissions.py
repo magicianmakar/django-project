@@ -190,9 +190,15 @@ def can_add_product(user, ignore_daily_limit=False):
     else:
         total_allowed = user_products
 
-    user_count = profile.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
-    user_count += profile.user.commercehqproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
-    user_count += profile.user.wooproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+    products_count_key = 'product_count_{}'.format(user.id)
+    user_count = cache.get(products_count_key)
+
+    if user_count is None:
+        user_count = profile.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+        user_count += profile.user.commercehqproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+        user_count += profile.user.wooproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+
+        cache.set(products_count_key, user_count, timeout=600)
 
     can_add = True
 
@@ -200,7 +206,7 @@ def can_add_product(user, ignore_daily_limit=False):
         if not profile.can('unlimited_products.use'):
             can_add = False
 
-    if not ignore_daily_limit:
+    if can_add and not ignore_daily_limit:
         # Check daily limit
         now = arrow.utcnow()
         limit_key = 'product_day_limit-{u.id}-{t.day}-{t.month}'.format(u=user, t=now)
