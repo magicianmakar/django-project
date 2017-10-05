@@ -521,7 +521,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             order_utils.update_shopify_order(store, shopify_order)
 
         active_order_key = 'active_order_{}'.format(shopify_order['id'])
-        if not new_order and caches['orders'].get(active_order_key):
+        if caches['orders'].get(active_order_key):
             order_note = shopify_order.get('note')
             if not order_note:
                 order_note = ''
