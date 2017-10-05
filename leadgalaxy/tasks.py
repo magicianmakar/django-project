@@ -11,7 +11,7 @@ from datetime import timedelta
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.utils.text import slugify
@@ -519,6 +519,18 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
 
         with cache.lock('order_lock_{}_{}'.format(store_id, order_id), timeout=10):
             order_utils.update_shopify_order(store, shopify_order)
+
+        active_order_key = 'active_order_{}'.format(shopify_order['id'])
+        if not new_order and caches['orders'].get(active_order_key):
+            order_note = shopify_order.get('note')
+            if not order_note:
+                order_note = ''
+
+            store.pusher_trigger('order-note-update', {
+                'order_id': shopify_order['id'],
+                'note': order_note,
+                'note_snippet': truncatewords(order_note, 10),
+            })
 
     except AssertionError:
         raven_client.captureMessage('Store is being imported', extra={'store': store})

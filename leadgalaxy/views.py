@@ -698,18 +698,6 @@ def webhook(request, provider, option):
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
-                active_order_key = 'active_order_{}'.format(shopify_order['id'])
-                if not new_order and caches['orders'].get(active_order_key):
-                    order_note = shopify_order.get('note')
-                    if not order_note:
-                        order_note = ''
-
-                    store.pusher_trigger('order-note-update', {
-                        'order_id': shopify_order['id'],
-                        'note': order_note,
-                        'note_snippet': truncatewords(order_note, 10),
-                    })
-
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'orders/delete':
