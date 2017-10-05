@@ -10,7 +10,6 @@
                     <form id="product-filter-form" class="form-inline" method="get">
                         <input type="hidden" name="f" value="1">
                         <input type="hidden" name="ppp" value="{{request.GET.ppp}}">
-                        <input type="hidden" name="sort" value="{{request.GET.sort}}">
                         <input type="hidden" name="store" value="{{request.GET.store}}">
 
                         <div class="col-md-12">
@@ -46,6 +45,21 @@
                             <div class="form-group">
                                 <label class="m-r-sm" style="width: 95px">Supplier</label>
                                 <input id="filter-vendor" name="vendor" type="text" class="form-control" value="{{request.GET.vendor}}" placeholder="">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group" style="width: 100%">
+                                <label class="m-r-sm" style="width: 95px">Sort</label>
+                                <select name="sort" class="form-control">
+                                    <option value="">Select an option</option>
+                                    <option {% if request.GET.sort == "title" %} selected {% endif %} value="title">Product Title (asc)</option>
+                                    <option {% if request.GET.sort == "-title" %} selected {% endif %} value="-title">Product Title (desc)</option>
+                                    <option {% if request.GET.sort == "price" %} selected {% endif %} value="price">Price (asc)</option>
+                                    <option {% if request.GET.sort == "-price" %} selected {% endif %} value="-price">Price (desc)</option>
+                                    <option {% if request.GET.sort == "date" %} selected {% endif %} value="date">Date (asc)</option>
+                                    <option {% if request.GET.sort == "-date" %} selected {% endif %} value="-date">Date (desc)</option>
+                                </select>
                             </div>
                         </div>
 

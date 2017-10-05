@@ -38,7 +38,7 @@ from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
-from shopified_core.shipping_helper import get_counrties_list
+from shopified_core.shipping_helper import get_counrties_list, country_from_code
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.tasks import fulfill_shopify_order_line
 from dropwow_core.models import DropwowOrderStatus
@@ -861,8 +861,8 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         res = accept_product(res, request.GET)
 
     if sort:
-        if re.match(r'^-?(title|price)$', sort):
-            res = res.order_by(sort)
+        if re.match(r'^-?(title|price|date)$', sort):
+            res = res.order_by(sort.replace('date', 'id'))
 
     paginator = SimplePaginator(res, post_per_page)
 
@@ -1520,11 +1520,17 @@ def get_shipping_info(request):
     product = request.GET.get('product')
     supplier = request.GET.get('supplier')
 
-    country_code = request.GET.get('country', 'US')
-    if country_code == 'GB':
+    country = request.GET.get('country', request.user.get_config('_shipping_country', 'US'))
+
+    if request.GET.get('selected'):
+        request.user.set_config('_shipping_country', country)
+
+    if country == 'GB':
         country_code = 'UK'
-    elif country_code == 'ME':
+    elif country == 'ME':
         country_code = 'MNE'
+    else:
+        country_code = country
 
     if not aliexpress_id and supplier:
         if request.GET.get('chq'):
@@ -1595,6 +1601,8 @@ def get_shipping_info(request):
 
     return render(request, tpl, {
         'country_code': country_code,
+        'country_name': country_from_code(country),
+        'selected_country_code': country,
         'info': shippement_data,
         'store': store
     })

@@ -1,5 +1,7 @@
 {% extends "base2.html" %}
 
+{% load url_tools %}
+
 {% block main-nav %}{% endblock %}
 {% block main-container %}
 <div class="ui-window-bd">
@@ -16,7 +18,8 @@
     {% endif %}
 
     <div class="ui-window-content" data-role="content">
-        Ship order(s) to: <b>USA</b>
+        Ship order(s) to: <b id="shipping-country" data-country="{{selected_country_code}}">{{country_name}}</b>
+            <a href="#modal-shipping-country-change" data-toggle="modal" style="font-size: 10px;">Change Country</a>
     </div>
     <div class="shipping-dialog-company">
     <table class="table table-striped table-bordered">
@@ -67,4 +70,52 @@
     </div>
 </div>
 
+<div id="modal-shipping-country-change" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Change Shipping Country</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group" style="max-width:250px">
+                    <label for="">Country:</label>
+                    <select name="default_shipping_country" class="form-control" id="default_shipping"></select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="change-country-btn" class="btn btn-primary" type="submit"> Change</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var base_url = '{% url_replace 'country' '' %}';
+
+        $(function() {
+            $.get('/api/countries',function(countries){
+                $.each(countries, function(index, country) {
+                    $('<option>', {
+                        value: country[0],
+                        text: country[1],
+                        selected: country[0] == $('#shipping-country').data('country'),
+                    }).appendTo($('#default_shipping'));
+                });
+            });
+
+            $('#change-country-btn').click(function (e) {
+                e.preventDefault();
+
+                window.location.href = base_url.replace('country=', $.param({
+                    'country': $('#default_shipping').val()
+                })) + (base_url.indexOf('selected') === -1 ? '&selected=true' : '');
+            });
+        });
+
+    </script>
 {% endblock %}
