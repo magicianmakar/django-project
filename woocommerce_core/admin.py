@@ -4,6 +4,9 @@ from django.core.urlresolvers import reverse
 from .models import (
     WooStore,
     WooProduct,
+    WooSupplier,
+    WooOrderTrack,
+    WooBoard,
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -29,3 +32,8 @@ class WooProductAdmin(admin.ModelAdmin):
 
     def view_on_site(self, obj):
         return reverse('product_view', kwargs={'pid': obj.id})
+
+
+admin.site.register(WooSupplier)
+admin.site.register(WooOrderTrack)
+admin.site.register(WooBoard)
