@@ -10,6 +10,7 @@ exclude =
     app/templates,
     migrations,
     tests,
+    tests.py,
     scripts,
     patches,
     __init__.py

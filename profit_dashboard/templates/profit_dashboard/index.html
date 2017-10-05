@@ -365,7 +365,7 @@
 
 <script id="fb-account-list" type="text/x-handlebars-template">
   <p>Please Select a Facebook Ad Account:</p>
-  <ul class="list-group">
+  <ul class="list-group" style="overflow:auto;max-height:400px;">
     {{#each accounts}}
     <li class="list-group-item"><input type="radio" name="account" value="{{this.id}}"> {{this.name}}</li>
     {{/each}}
@@ -373,8 +373,8 @@
 </script>
 
 <script id="fb-campaign-list" type="text/x-handlebars-template">
-  <p>Please Select Facebook Campaigns:</p>
-  <ul class="list-group">
+  <p>Please Select Facebook Campaigns: <a href="#" class="select-all-btn pull-right">Select All</a></p>
+  <ul class="list-group" style="overflow:auto;max-height:400px;">
     {{#each campaigns}}
     <li class="list-group-item"><input type="checkbox" name="campaign" value="{{this.id}}">
       {{this.name}}
@@ -396,7 +396,7 @@
       <div class="modal-body">
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="overflow:auto">
         <button type="button" class="btn btn-info" id="fb-account-selected">Continue</button>
       </div>
     </div>
@@ -411,7 +411,7 @@
         <h4 class="modal-title">Facebbok Ad Campaigns</h4>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body" style="overflow:auto">
       </div>
 
       <div class="modal-footer">

@@ -934,6 +934,19 @@ $(function () {
 
             $('#fb-campaign-select-modal .modal-body').html(template(data));
             $('#fb-campaign-select-modal').modal('show');
+
+            $('.select-all-btn').click(function (e) {
+                e.preventDefault();
+
+                var status = $(this).prop('status');
+                status = typeof(status) === 'undefined' ? true : status;
+
+                $(this).parents('.modal-body').find('input[type=checkbox]').prop('checked', status);
+
+
+                $(this).text(status ? 'Select None' : 'Select All');
+                $(this).prop('status', !status);
+            });
         }).fail(function(data) {
             displayAjaxError('Campaign Selection', data);
         });
