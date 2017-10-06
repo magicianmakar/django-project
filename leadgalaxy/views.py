@@ -693,7 +693,7 @@ def webhook(request, provider, option):
 
                 if store.user.can('dropwow.use'):
                     _order, customer_address = utils.shopify_customer_address(shopify_order)
-                    if topic == 'orders/create' and customer_address['country_code'] == 'US' and shopify_order['financial_status'] == 'paid':
+                    if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
                         fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
