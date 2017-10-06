@@ -57,7 +57,7 @@ test:
     - sudo ln -s ~/webapp/node_modules/.bin/yuglify /usr/bin/yuglify
 
   override:
-    - flake8
+    - flake8 --show-source
     - ./scripts/common_issues.sh
     - python manage.py test
     
