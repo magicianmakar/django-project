@@ -267,7 +267,7 @@ def calculate_shopify_profit(store_id, start_date, end_date):
     found_order_tracks = ShopifyOrderTrack.objects.filter(
         store_id=store_id,
         order_id__in=shopify_orders.values_list('order_id', flat=True),
-        data__regex=r'.+?"aliexpress".+?"order_details".+?"cost".+?"total"'
+        data__contains='shipping'
     ).annotate(
         order_source_id=Concat('order_id', Value('-'), 'source_id', output_field=CharField())
     ).filter(
