@@ -294,7 +294,7 @@
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
                                     <div class="col-md-3 col-xs-6" style="padding-left:5px">
-                                        {{order.shipping.first_name}} {{order.shipping.last_name}}
+                                        {{order.shipping.first_name|default:''}} {{order.shipping.last_name|default:''}}
                                         <br>
                                         {{order.shipping.address_1}}<br>
                                         {{order.shipping.address_2}}

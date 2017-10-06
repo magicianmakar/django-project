@@ -199,7 +199,7 @@
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
                                     <div class="col-md-3 col-xs-6" style="padding-left:5px">
-                                        {{order.customer_address.first_name}} {{order.customer_address.last_name}}
+                                        {{order.customer_address.first_name|default:''}} {{order.customer_address.last_name|default:''}}
                                         {% if order.customer_address.company %}
                                             - {{order.customer_address.company}}
                                         {% endif %}
