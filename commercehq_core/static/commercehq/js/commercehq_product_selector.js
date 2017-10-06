@@ -11,7 +11,11 @@ function commercehqProductSearch (e) {
         loadingContainer.show();
         productsContainer.empty();
     } else {
-        $(this).bootstrapBtn('loading');
+        if($.fn.hasOwnProperty('bootstrapBtn')) {
+            $(this).bootstrapBtn('loading');
+        } else {
+            $(this).button('loading');
+        }
     }
 
     $.ajax({

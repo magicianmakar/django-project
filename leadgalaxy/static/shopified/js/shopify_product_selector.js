@@ -19,7 +19,7 @@ function shopifyProductSearch (e) {
     }
 
     $.ajax({
-        url: '/api/shopify-products',
+        url: api_url('shopify-products'),
         type: 'POST',
         data: {
             store: store,

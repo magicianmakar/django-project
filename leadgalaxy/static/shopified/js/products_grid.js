@@ -356,7 +356,7 @@ $("#product-filter-form").submit(function() {
 $('.shopify-product-import-btn').click(function (e) {
     e.preventDefault();
 
-    $('#modal-shopify-product .shopify-store').val($(this).attr('store')).trigger('change');
+    $('#modal-shopify-product .shopify-store').val($(this).attr('store'));
     $('#modal-shopify-product .hide-connected-row').show();
     $('#modal-shopify-product').modal('show');
 });

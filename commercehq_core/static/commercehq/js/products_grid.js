@@ -373,7 +373,7 @@ $("#product-filter-form").submit(function() {
 $('.commercehq-product-import-btn').click(function (e) {
     e.preventDefault();
 
-    $('#modal-commercehq-product .commercehq-store').val($(this).attr('store')).trigger('change');
+    $('#modal-commercehq-product .commercehq-store').val($(this).attr('store'));
     $('#modal-commercehq-product').modal('show');
 });
 
