@@ -1123,6 +1123,7 @@ def product_view(request, pid):
             shopify_product = utils.link_product_images(shopify_product)
 
             p['product']['description'] = shopify_product['body_html']
+            p['product']['vendor'] = shopify_product['vendor']
             p['product']['published'] = shopify_product['published_at'] is not None
 
             if arrow.get(shopify_product['updated_at']).datetime > p['qelem'].updated_at or request.GET.get('sync'):
