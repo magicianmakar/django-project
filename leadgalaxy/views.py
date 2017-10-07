@@ -1679,6 +1679,7 @@ def acp_users_list(request):
     charges = []
     subscribtions = []
     registrations = []
+    user_last_seen = None
     if len(users) == 1:
         if users[0].have_stripe_billing():
             for i in users[0].stripe_customer.get_charges():
@@ -1704,6 +1705,12 @@ def acp_users_list(request):
         if subscribtions and registrations:
             messages.warning(request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
 
+        try:
+            from last_seen.models import LastSeen
+            user_last_seen = arrow.get(LastSeen.objects.when(users[0], 'website')).humanize()
+        except:
+            user_last_seen = ''
+
     plans = GroupPlan.objects.all()
     bundles = FeatureBundle.objects.all()
 
@@ -1717,6 +1724,7 @@ def acp_users_list(request):
         'subscribtions': subscribtions,
         'registrations': registrations,
         'random_cache': random_cache,
+        'user_last_seen': user_last_seen,
         'show_products': request.GET.get('products'),
         'page': 'acp_users_list',
         'breadcrumbs': ['ACP', 'Users List']

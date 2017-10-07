@@ -36,6 +36,9 @@
                             {% endif %}
                             <th style="width:13%">Join Date</th>
                             <th style="width:13%">Last Login</th>
+                            {% if users_count == 1 %}
+                            <th>Last Seen</th>
+                            {% endif %}
                             <th style="width:25%">Actions</th>
                         </tr>
                     </thead>
@@ -64,7 +67,7 @@
                             <td>{{item.profile.get_shopify_stores.count}}</td>
                             <td>{{item.profile.get_chq_stores.count}}</td>
                             <td>{{item.shopifyproduct_set.count}}</td>
-                            <td>
+                            <td style=" white-space:nowrap">
                                 <ul style="padding:0;margin:0">
                                     {% for bundle in item.profile.bundles.all %}
                                     <li>{{bundle.title}}</li>
@@ -78,6 +81,9 @@
                             {% endif %}
                             <td>{{item.date_joined|date}}</td>
                             <td>{{item.last_login|date}}</td>
+                            {% if users_count == 1 %}
+                            <td style=" white-space:nowrap">{{user_last_seen}}</td>
+                            {% endif %}
                             <td>
                                 {% if user.is_superuser %}
                                 <a href="#" class="btn btn-primary btn-outline btn-xs user-profile-btn" user-id="{{item.id}}">Profile</a>
