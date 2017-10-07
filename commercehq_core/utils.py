@@ -14,7 +14,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat
+from shopified_core.utils import safeInt, safeFloat, hash_url_filename
 from shopified_core.shipping_helper import (
     get_uk_province,
     valide_aliexpress_province,
@@ -58,6 +58,73 @@ def get_store_from_request(request):
         store = stores.first()
 
     return store
+
+
+def duplicate_product(product, store=None):
+    parent_product = CommerceHQProduct.objects.get(id=product.id)
+
+    product.pk = None
+    product.parent_product = parent_product
+    product.source_id = 0
+
+    if store is not None:
+        product.store = store
+
+    product_data = json.loads(product.data)
+
+    if parent_product.source_id and parent_product.store:
+        try:
+            chq_product = parent_product.retrieve()
+
+            product_data['variants'] = []
+
+            for option in chq_product['options']:
+                product_data['variants'].append({
+                    'values': option['values'],
+                    'title': option['title']
+                })
+
+            product_data['variants_sku'] = {}
+            product_data['variants_images'] = {}
+            variant_image_urls = []
+            for variant in chq_product['variants']:
+                if len(variant['sku'] or '') > 0:
+                    titles = variant['variant']  # u'variant': [u'L']
+                    values = variant['sku'].split(';')
+                    if titles:
+                        if values:
+                            product_data['variants_sku'][titles[0]] = variant['sku']
+                        else:
+                            for k, v in titles:
+                                if values.length > k:
+                                    product_data['variants_sku'][titles[k]] = values[k]
+                    else:
+                        product_data['variants_sku'][variant['title']] = variant['sku']
+
+                for image in variant['images']:
+                    image_hash = hash_url_filename(image['path'])
+                    product_data['variants_images'][image_hash] = variant['sku']
+                    variant_image_urls.append(image['path'])
+
+            product_data['images'] = [image['path'] for image in chq_product['images']] + variant_image_urls
+
+            product.data = json.dumps(product_data)
+
+        except Exception:
+            raven_client.captureException(level='warning')
+
+    product.save()
+
+    for i in parent_product.get_suppliers():
+        i.pk = None
+        i.product = product
+        i.store = product.store
+        i.save()
+
+        if i.is_default:
+            product.set_default_supplier(i, commit=True)
+
+    return product
 
 
 def get_chq_products_count(store):
