@@ -218,7 +218,7 @@ def can_add_product(user, ignore_daily_limit=False):
             day_count += profile.user.commercehqproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
             day_count += profile.user.wooproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
 
-        if day_count + 1 > 2000:
+        if day_count + 1 > profile.get_config_value('_daily_products_limit', 2000):
             from raven.contrib.django.raven_compat.models import client as raven_client
 
             raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})

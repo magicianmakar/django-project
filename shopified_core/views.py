@@ -5,6 +5,7 @@ from django.contrib.auth import login as user_login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.validators import validate_email, ValidationError
 from django.http import JsonResponse
@@ -174,6 +175,12 @@ class ShopifiedApi(ApiResponseMixin, View):
         shopify_count = user.profile.get_shopify_stores().count()
 
         kwargs['target'] = 'save-for-later'
+
+        if user.get_config('_quick_save_limit'):
+            if cache.get('quick_save_limit_{}'.format(user.id)):
+                return JsonResponse({'status': 'ok', 'product': {'url': '/'}})
+            else:
+                cache.set('quick_save_limit_{}'.format(user.id), True, timeout=user.get_config('_quick_save_limit', 5))
 
         if not chq_count or (chq_count and shopify_count):
             return ShopifyStoreApi.as_view()(request, **kwargs)
