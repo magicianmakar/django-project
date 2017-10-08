@@ -46,6 +46,7 @@ def export_product(req_data, target, user_id):
 
     store = req_data.get('store')
     data = req_data['data']
+    parsed_data = json.loads(req_data['data'])
     original_data = req_data.get('original', '')
     variants_mapping = None
 
@@ -80,7 +81,7 @@ def export_product(req_data, target, user_id):
                 'error': "Store: {}".format(e.message)
             }
 
-    original_url = json.loads(data).get('original_url')
+    original_url = parsed_data.get('original_url')
     if not original_url:
         original_url = req_data.get('original_url')
 
@@ -129,14 +130,16 @@ def export_product(req_data, target, user_id):
                 product = ShopifyProduct.objects.get(id=req_data['product'])
                 permissions.user_can_edit(user, product)
 
-                api_data = json.loads(data)
+                api_data = parsed_data
                 api_data['product']['id'] = product.get_shopify_id()
 
                 update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
                 r = requests.put(update_endpoint, json=api_data)
+
+                del api_data
             else:
                 endpoint = store.get_link('/admin/products.json', api=True)
-                api_data = json.loads(data)
+                api_data = parsed_data
 
                 if api_data['product'].get('variants') and len(api_data['product']['variants']) > 100:
                     api_data['product']['variants'] = api_data['product']['variants'][:100]
@@ -173,6 +176,8 @@ def export_product(req_data, target, user_id):
                             r = mapped
                     except Exception as e:
                         raven_client.captureException()
+
+                del api_data
 
             if 'product' not in r.json():
                 rep = r.json()
@@ -277,7 +282,7 @@ def export_product(req_data, target, user_id):
             pass
 
         # update product collections
-        collections = json.loads(data).get('collections')
+        collections = parsed_data.get('collections')
         if collections is not None:
             utils.ProductCollections().link_product_collection(product, collections)
 
@@ -307,7 +312,7 @@ def export_product(req_data, target, user_id):
 
             product.save()
 
-            boards = json.loads(data).get('boards', [])
+            boards = parsed_data.get('boards', [])
             if boards:
                 utils.attach_boards_with_product(user, product, boards)
 
@@ -331,7 +336,7 @@ def export_product(req_data, target, user_id):
 
                 product.save()
 
-                boards = json.loads(data).get('boards', [])
+                boards = parsed_data.get('boards', [])
                 if boards:
                     utils.attach_boards_with_product(user, product, boards)
 
@@ -367,6 +372,10 @@ def export_product(req_data, target, user_id):
             record_import_metric(time.time() - start)
         except:
             raven_client.captureException(level='warning')
+
+    del parsed_data
+    del req_data
+    del original_data
 
     return {
         'product': {
