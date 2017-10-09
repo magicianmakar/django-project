@@ -37,11 +37,11 @@
                                 {% if store_sync_enabled %}
                                     <a class="btn btn-outline btn-default btn-rounded btn-sm swith-implemenation itooltip"
                                         title="Switch to the Simple Order page"
-                                        href="{% url_replace 'old' 1 %}">Advanced Orders Page</a>
+                                        href="{% url_replace 'old' 1 %}">Switch to Simple</a>
                                 {% else %}
                                     <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
                                         title="Switch to the Advanced Order page"
-                                        href="{% url_replace 'old' 0 %}">Simple Orders Page</a>
+                                        href="{% url_replace 'old' 0 %}">Switch to Advanced</a>
                                 {% endif %}
                             {% endif %}
 
