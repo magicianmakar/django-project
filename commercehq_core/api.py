@@ -497,6 +497,17 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         order_updater = utils.CHQOrderUpdater(store, order_id)
 
+        if data.get('combined'):
+            order_lines = order_lines.split(',')
+            current_line = order_data_cache(store.id, order_id, order_lines[0])
+            for key, order_data in order_data_cache(store.id, order_id, '*').items():
+                if current_line and str(order_data['line_id']) not in order_lines \
+                        and str(order_data['source_id']) == str(current_line['source_id']) \
+                        and not CommerceHQOrderTrack.objects.filter(store=store, order_id=order_id, line_id=order_data['line_id']).exists():
+                    order_lines.append(str(order_data['line_id']))
+
+            order_lines = ','.join(order_lines)
+
         for line_id in order_lines.split(','):
             if not line_id:
                 return self.api_error('Order Line Was Not Found.', status=501)
