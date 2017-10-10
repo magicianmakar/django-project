@@ -24,7 +24,8 @@ function commercehqProductSearch (e) {
         data: {
             store: store,
             query: query,
-            page: $(this).prop('page')
+            page: $(this).prop('page'),
+            connected: true,
         },
         context: {
             store: store
@@ -46,7 +47,11 @@ function commercehqProductSearch (e) {
                     e.preventDefault();
 
                     if (window.commercehqProductSelected) {
-                        window.commercehqProductSelected(store, $(this).data('product-id'));
+                        window.commercehqProductSelected(store, $(this).data('product-id'), {
+                            title: $(this).data('product-title'),
+                            image: $(this).data('product-image'),
+                            chq: $(this).data('chq-id'),
+                        });
                     }
                 });
 

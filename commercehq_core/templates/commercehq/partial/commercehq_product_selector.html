@@ -84,12 +84,14 @@
 <script id="product-select-template" type="text/x-handlebars-template">
     <div class="product-item row">
         <div class="product-thumb col-md-1">
-            <a class="commercehq-product" href="#" data-product-id="{{product.id}}">
+            <a class="commercehq-product" href="#" data-product-id="{{product.id}}" data-chq-id="{{product.connected}}" 
+                data-product-title="{{product.title}}" data-product-image="{{product.image.src}}">
                 <img src="{{product.image.src}}" sxtyle="width:45px">
             </a>
         </div>
         <div class="col-md-11">
-            <a class="commercehq-product" href="#" data-product-id="{{product.id}}">{{product.title}}</a>
+            <a class="commercehq-product" href="#" data-product-id="{{product.id}}" data-chq-id="{{product.connected}}"
+                data-product-title="{{product.title}}" data-product-image="{{product.image.src}}">{{product.title}}</a>
         </div>
     </div>
 </script>

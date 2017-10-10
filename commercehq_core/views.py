@@ -9,6 +9,7 @@ from django.core.cache import caches
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse, Http404
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -45,7 +46,10 @@ from .utils import (
     order_id_from_name,
     store_shipping_carriers,
     get_orders_filter,
+    get_chq_product
 )
+
+import utils
 
 
 @ajax_only
@@ -401,6 +405,65 @@ class MappingSupplierView(DetailView):
         return context
 
 
+class MappingBundleView(DetailView):
+    model = CommerceHQProduct
+    template_name = 'commercehq/mapping_bundle.html'
+    context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('commercehq.use'):
+            raise permissions.PermissionDenied()
+
+        return super(MappingBundleView, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingBundleView, self).get_context_data(**kwargs)
+
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['commercehq_product'] = product.sync()
+
+        images_map = {}
+        for option in context['commercehq_product']['options']:
+            for thumb in option['thumbnails']:
+                if thumb.get('image'):
+                    images_map[thumb['value']] = thumb['image']['path']
+
+        for idx, variant in enumerate(context['commercehq_product']['variants']):
+            for v in variant['variant']:
+                if v in images_map:
+                    context['commercehq_product']['variants'][idx]['image'] = images_map[v]
+                    continue
+
+            if len(variant['images']):
+                context['commercehq_product']['variants'][idx]['image'] = variant['images'][0]
+
+        bundle_mapping = []
+
+        for i, v in enumerate(context['commercehq_product']['variants']):
+            v['products'] = product.get_bundle_mapping(v['id'], default=[])
+
+            bundle_mapping.append(v)
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('chq:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('chq:product_detail', args=[self.object.id])},
+            'Bundle Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+            'bundle_mapping': bundle_mapping,
+        })
+
+        return context
+
+
 class OrdersList(ListView):
     model = CommerceHQProduct
     template_name = 'commercehq/orders_list.html'
@@ -467,6 +530,7 @@ class OrdersList(ListView):
     def get_orders(self, ctx):
         models_user = self.request.user.models_user
         auto_orders = self.request.user.can('auto_order.use')
+        fix_order_variants = self.request.user.get_config('fix_order_variants')
         fix_aliexpress_address = self.request.user.get_config('fix_aliexpress_address', False)
 
         products_cache = {}
@@ -564,7 +628,6 @@ class OrdersList(ListView):
                     order['placed_orders'] += 1
 
                 orders_cache['chq_quantity_{}_{}_{}'.format(self.store.id, order['id'], line['id'])] = line['quantity']
-
                 if not line['product_id']:
                     if variant_id:
                         product = CommerceHQProduct.objects.filter(store=self.store, title=line['title'], source_id__gt=0).first()
@@ -576,6 +639,7 @@ class OrdersList(ListView):
                     product = CommerceHQProduct.objects.filter(store=self.store, source_id=line['product_id']).first()
 
                 supplier = None
+                bundle_data = []
                 if product and product.have_supplier():
                     country_code = order['address']['shipping'].get('country')
 
@@ -593,6 +657,53 @@ class OrdersList(ListView):
                     line['shipping_method'] = shipping_method
 
                     order['connected_lines'] += 1
+
+                if fix_order_variants:
+                    mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                    if not mapped:
+                        utils.fix_order_variants(self.store, order, product)
+                if product:
+                    bundles = product.get_bundle_mapping(variant_id)
+                    if bundles:
+                        product_bundles = []
+                        for idx, b in enumerate(bundles):
+                            b_product = CommerceHQProduct.objects.get(id=b['id'])
+                            b_variant_id = b_product.get_real_variant_id(b['variant_id'])
+                            b_supplier = b_product.get_suppier_for_variant(variant_id)
+                            if b_supplier:
+                                b_shipping_method = b_product.get_shipping_for_variant(
+                                    supplier_id=b_supplier.id,
+                                    variant_id=b_variant_id,
+                                    country_code=country_code)
+                            else:
+                                b_shipping_method = None
+
+                            b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
+                            if variant_id and b_variant_mapping:
+                                b_variants = b_variant_mapping
+                            else:
+                                b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
+
+                            product_bundles.append({
+                                'product': b_product,
+                                'supplier': b_supplier,
+                                'shipping_method': b_shipping_method,
+                                'quantity': b['quantity'] * line['quantity'],
+                                'data': b
+                            })
+
+                            bundle_data.append({
+                                'quantity': b['quantity'] * line['quantity'],
+                                'product_id': b_product.id,
+                                'source_id': b_supplier.get_source_id(),
+                                'variants': b_variants,
+                                'shipping_method': b_shipping_method,
+                                'country_code': country_code,
+                            })
+
+                        order['items'][ldx]['bundles'] = product_bundles
+                        order['items'][ldx]['is_bundle'] = len(bundle_data) > 0
+                        order['have_bundle'] = True
 
                 products_cache[line['product_id']] = product
 
@@ -623,7 +734,9 @@ class OrdersList(ListView):
                         'note': models_user.get_config('order_custom_note'),
                         'epacket': bool(models_user.get_config('epacket_shipping')),
                         'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
-                    }
+                    },
+                    'products': bundle_data,
+                    'is_bundle': len(bundle_data) > 0
                 }
 
                 if product:
@@ -646,6 +759,84 @@ class OrdersList(ListView):
         caches['orders'].set_many(orders_cache, timeout=21600)
 
         return orders
+
+
+def autocomplete(request, target):
+    if not request.user.is_authenticated():
+        return JsonResponse({'error': 'User login required'})
+
+    q = request.GET.get('query', '').strip()
+    if not q:
+        q = request.GET.get('term', '').strip()
+
+    if not q:
+        return JsonResponse({'query': q, 'suggestions': []}, safe=False)
+
+    if target == 'variants':
+        try:
+            store = CommerceHQStore.objects.get(id=request.GET.get('store'))
+            permissions.user_can_view(request.user, store)
+
+            product = CommerceHQProduct.objects.get(id=request.GET.get('product'))
+            permissions.user_can_edit(request.user, product)
+
+            chq_product = get_chq_product(store, product.source_id)
+
+            images_map = {}
+            if 'options' in chq_product:
+                for option in chq_product['options']:
+                    for thumb in option['thumbnails']:
+                        if thumb.get('image'):
+                            images_map[thumb['value']] = thumb['image']['path']
+
+            results = []
+            if 'variants' in chq_product:
+                for idx, variant in enumerate(chq_product['variants']):
+                    for v in variant['variant']:
+                        if v in images_map:
+                            chq_product['variants'][idx]['image'] = images_map[v]
+                            continue
+
+                    if len(variant['images']):
+                        chq_product['variants'][idx]['image'] = variant['images'][0]['path']
+
+                for v in chq_product['variants']:
+                    image = ''
+                    if 'image' in v:
+                        image = v['image']
+                    else:
+                        if len(chq_product['images']):
+                            image = chq_product['images'][0]['path']
+
+                    if len(chq_product['images']):
+                        image = chq_product['images'][0]['path']
+
+                    results.append({
+                        'value': " / ".join(v['variant']),
+                        'data': v['id'],
+                        'image': image,
+                    })
+
+            if not len(results):
+                image = ''
+                if len(chq_product['images']):
+                    image = chq_product['images'][0]['path']
+                results.append({
+                    'value': "Default",
+                    'data': chq_product['id'],
+                    'image': image
+                })
+
+            return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
+        except CommerceHQStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except CommerceHQProduct.DoesNotExist:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
+    else:
+        return JsonResponse({'error': 'Unknown target'})
 
 
 class OrderPlaceRedirectView(RedirectView):

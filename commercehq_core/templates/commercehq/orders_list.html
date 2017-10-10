@@ -316,7 +316,7 @@
                                                         source-order-id="{{item.order_track.source_id}}"
                                                         order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
-                                                        title="View Order Details">#{{item.order_track.source_id}}</a>
+                                                        title="View Order Details">#{{item.order_track.get_source_ids}}</a>
                                                 {% else %}
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Add</a>
                                                 {% endif %}
@@ -360,13 +360,20 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <td>
-                                                            <img class="cached-img no-img no-img-sm unveil"
+                                                        <td class="product-preview">
+                                                            {% if not item.is_bundle %}
+                                                            <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
+
+                                                            <img class="product-img cached-img no-img no-img-sm unveil"
+                                                                store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
                                                                 src="{% static 'img/blank.gif' %}"
                                                                 {% if item.image %}
                                                                 data-src="{{item.image}}"
                                                                 {% endif %}
                                                                 />
+
+                                                            {% endif %}
+
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
@@ -390,22 +397,27 @@
                                                             <b>{% money_format item.price store %}</b>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% include 'commercehq/partial/place_order_btn.html' %}
+                                                            {% if item.is_bundle %}
+                                                                <span class="badge badge-primary">Bundle</span>
+                                                            {% elif item.dropwow_status and item.dropwow_status.error_message %}
+                                                                <a class="place-order btn btn-warning btn-xs" href="#" store="{{store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Retry Auto Order</a>
+                                                            {% else %}
+                                                                {% include 'commercehq/partial/place_order_btn.html' %}
+                                                            {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% if not item.status.shipped %}
-
+                                                            {% if not item.is_bundle and not item.fulfillment_status and not order.pending_payment %}
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
                                                                         <span class="caret"></span></button>
 
-                                                                        <ul class="dropdown-menu">
+                                                                        <ul class="dropdown-menu pull-right">
                                                                             <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Fulfill in CommerceHQ</a></li>
                                                                         </ul>
                                                                     </div>
                                                             {% else %}
-                                                                <span class="label label-success">Shipped</span>
+                                                                <span class="badge badge-info">{{item.fulfillment_status|default:'Unfulfilled'|title}}</span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
@@ -418,6 +430,40 @@
                                                     </tr>
                                                 </thead>
                                             </table>
+                                            {% if item.is_bundle %}
+                                            <div class="well bundle-items" style="position: relative;">
+                                                {% for bundle in item.bundles %}
+                                                <div class="m-t-xs" style="display:flex">
+                                                    <div>
+                                                        <img class="product-img cached-img no-img no-img-sm unveil"
+                                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+
+                                                            {% if bundle.data.variant_image %}
+                                                                src="{% shopify_image_thumb bundle.data.variant_image '32x32' 'center' %}"
+                                                            {% elif bundle.data.image %}
+                                                                src="{% shopify_image_thumb bundle.data.image '32x32' 'center' %}"
+                                                            {% endif %} style="max-width: 32px;"/>
+                                                    </div>
+
+                                                    <div>
+                                                        <a href="/product/{{bundle.product.id}}" target="_blank" title="{{bundle.product.title}}">
+                                                            {{bundle.product.title|truncatewords:9}}
+                                                        </a>
+                                                    </div>
+
+                                                    <div>
+                                                        <span class="badge">{{bundle.quantity}} &times; {{bundle.data.variant_title}}</span>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+
+                                                <button class="btn btn-success btn-xs order-bundle-btn"
+                                                        store-type="shopify"
+                                                        style="position:absolute;right:25px;top:6px;"
+                                                        >Order Bundle</button>
+                                            </div>
+                                            {% endif %}
+
                                             </div>
                                         </div>
                                     </div>

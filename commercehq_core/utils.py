@@ -161,6 +161,17 @@ def get_chq_products(store, page=1, limit=50, all_products=False):
                 yield product
 
 
+def get_chq_product(store, product_id):
+    api_url = store.get_api_url('products')
+    if store:
+        params = {'expand': 'all'}
+        response = store.request.get(api_url + '/' + str(product_id), params=params)
+
+        return response.json()
+    else:
+        return None
+
+
 def commercehq_products(request, post_per_page=25, sort=None, board=None, store='n'):
     store = request.GET.get('store', store)
     sort = request.GET.get('sort')
@@ -878,6 +889,48 @@ def order_track_fulfillment(order_track, user_config=None):
             }]
         }],
     }
+
+
+def fix_order_variants(store, order, product):
+    product_key = 'fix_product_{}_{}'.format(store.id, product.get_chq_id())
+    chq_product = cache.get(product_key)
+
+    if chq_product is None:
+        chq_product = get_chq_product(store, product.get_chq_id())
+        cache.set(product_key, chq_product)
+
+    def normalize_name(n):
+        return n.lower().replace(' and ', '').replace(' or ', '').replace(' ', '')
+
+    def get_variant(product, variant_id=None, variant_title=None):
+        for v in product['variants']:
+            if variant_id and v['id'] == int(variant_id):
+                return v
+            elif variant_title and normalize_name(v['title']) == normalize_name(variant_title):
+                return v
+
+        return None
+
+    def set_real_variant(product, deleted_id, real_id):
+        config = product.get_config()
+        mapping = config.get('real_variant_map', {})
+        mapping[str(deleted_id)] = int(real_id)
+
+        config['real_variant_map'] = mapping
+
+        product.config = json.dumps(config, indent=4)
+        product.save()
+
+    for line in order['line_items']:
+        if line['product_id'] != product.get_chq_id():
+            continue
+
+        if get_variant(chq_product, variant_id=line['variant_id']) is None:
+            real_id = product.get_real_variant_id(line['variant_id'])
+            match = get_variant(chq_product, variant_title=line['variant_title'])
+            if match:
+                if real_id != match['id']:
+                    set_real_variant(product, line['variant_id'], match['id'])
 
 
 def set_chq_order_note(store, order_id, note):

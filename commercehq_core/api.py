@@ -2,6 +2,7 @@ import re
 import arrow
 import urlparse
 import simplejson as json
+import copy
 
 from django.conf import settings
 from django.core import serializers
@@ -227,6 +228,15 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_bundles_mapping(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        product.set_bundle_mapping(data.get('mapping'))
+        product.save()
+
+        return self.api_success()
+
     def post_supplier_default(self, request, user, data):
         product = CommerceHQProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -283,6 +293,29 @@ class CHQStoreApi(ApiResponseMixin, View):
                     }
 
                 products.append(i)
+
+            if data.get('connected') or data.get('hide_connected'):
+                connected = {}
+                for p in store.products.filter(source_id__in=[i['id'] for i in products]).values_list('id', 'source_id'):
+                    connected[p[1]] = p[0]
+
+                for idx, i in enumerate(products):
+                    products[idx]['connected'] = connected.get(i['id'])
+
+                def connected_cmp(a, b):
+                    if a['connected'] and b['connected']:
+                        return a['connected'] < b['connected']
+                    elif a['connected']:
+                        return 1
+                    elif b['connected']:
+                        return -1
+                    else:
+                        return 0
+
+                products = sorted(products, cmp=connected_cmp, reverse=True)
+
+                if data.get('hide_connected'):
+                    products = filter(lambda p: not p.get('connected'), products)
 
             return self.api_success({
                 'products': products,
@@ -410,7 +443,14 @@ class CHQStoreApi(ApiResponseMixin, View):
             if all_orders:
                 fields['created_at'] = arrow.get(fields['created_at']).humanize()
 
-            orders.append(fields)
+            if fields['source_id'] and ',' in fields['source_id']:
+                for j in fields['source_id'].split(','):
+                    order_fields = copy.deepcopy(fields)
+                    order_fields['source_id'] = j
+                    order_fields['bundle'] = True
+                    orders.append(order_fields)
+            else:
+                orders.append(fields)
 
         if not data.get('order_id') and not data.get('line_id'):
             CommerceHQOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
@@ -436,16 +476,21 @@ class CHQStoreApi(ApiResponseMixin, View):
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
+            source_id.encode('ascii')
+
             assert safeInt(order_id), 'Order ID is not a numbers'
-            assert safeInt(source_id), 'Aliexpress ID is not a numbers'
+            # assert safeInt(source_id), 'Aliexpress ID is not a numbers'
             # assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
 
-            source_id = int(source_id)
+            # source_id = int(source_id)
 
         except AssertionError as e:
             raven_client.captureMessage('Non valid Aliexpress Order ID')
 
             return self.api_error(e.message, status=501)
+
+        except UnicodeEncodeError as e:
+            return self.api_error('Order ID is not a valid', status=501)
 
         note_delay_key = 'chq_store_{}_order_{}'.format(store.id, order_id)
         note_delay = cache.get(note_delay_key, 0)
@@ -995,6 +1040,20 @@ class CHQStoreApi(ApiResponseMixin, View):
             order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
         except:
             pass
+
+        if data.get('bundle'):
+            if not order_data.get('bundle'):
+                order_data['bundle'] = {}
+
+            if not order_data['bundle'].get(data.get('source_id')):
+                order_data['bundle'][data.get('source_id')] = {}
+
+            order_data['bundle'][data.get('source_id')] = {
+                'source_status': data.get('status'),
+                'source_tracking': data.get('tracking_number'),
+                'end_reason': data.get('end_reason'),
+                'order_details': json.loads(data.get('order_details')),
+            }
 
         order.data = json.dumps(order_data)
 

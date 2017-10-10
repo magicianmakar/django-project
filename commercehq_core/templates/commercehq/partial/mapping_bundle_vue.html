@@ -1,0 +1,116 @@
+{% verbatim %}
+
+<script type="text/x-template" id="bundle-mapping-table-tpl">
+    <div>
+        <table class="table table-borderd table-compact">
+            <thead>
+                <tr>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <template v-for="(item, index) in variants">
+                            <variant-row :variants="variants" :variant="item" :variant_idx="index" />
+                        </template>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button class="btn btn-success"
+            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving"
+            @click="saveChanges">
+            <i class="fa fa-save"></i> Save
+        </button>
+    </div>
+</script>
+
+<script type="text/x-template" id="variant-row-tpl">
+    <div class="well" style="padding:5px">
+        <div style="display: inline-flex;align-items: center;padding: 3px 10px 3px 3px;border: 1px solid #ccc;border-radius: 5px;background-color: white;">
+                <img v-if="variant.image" class="variant-image thumb unveil no-img"
+                    style="height:50px;margin:0 10px 0 0;" src="//d2kadg5e284yn4.cloudfront.net/static/img/blank.gif"
+                    onerror="this.style.display='none'"
+                    :data-src="variant.image.path" />
+                <img v-else
+                    style="width: 40px" class="variant-image"
+                    src="//d2kadg5e284yn4.cloudfront.net/static/img/no-image-sm.png" />
+
+            <label>{{variant.variant.join(" / ")}}</label>
+        </div>
+
+        <template v-for="(product, index) in variant.products">
+            <product-row :variant="variant" :product="product" :product_idx="index" />
+        </template>
+
+        <add-product-row :variant="variant"></add-product-row>
+    </div>
+</script>
+
+<script type="text/x-template" id="product-row-tpl">
+    <div class="row" style="padding: 10px 5px;border: 1px solid rgb(228, 228, 228);margin: 10px 0px;background-color: rgb(255, 255, 255);border-radius: 4px;display: flex;align-items: center;justify-content: flex-start;">
+         <div class="" style="padding:0;flex-grow:1">
+            <img v-if="product.image" class="thumb unveil no-img"
+                onerror="this.style.display='none'"
+                style="width:50px;margin-right:5px;"
+                :src="product.image" />
+
+            <img v-else-if="product.variant_image" class="thumb unveil no-img"
+                onerror="this.style.display='none'"
+                style="width:50px;margin-right:5px;"
+                :src="product.variant_image" />
+
+            <img v-else
+                style="width: 40px"
+                src="//d2kadg5e284yn4.cloudfront.net/static/img/no-image-sm.png" />
+
+            <a :href="'/chq/product/mapping/' + product.id" target="_blank">{{product.title | truncate}}</a>
+         </div>
+
+         <div style="flex-grow:1">
+             <span v-text="product.quantity"></span> &times; <span v-text="product.variant_title"></span>
+         </div>
+
+         <div style="padding: 0px 10px 0 0">
+             <a href="#" class="text-danger m-l itooltip" title="Remove this product" @click="removeProduct"><i class="fa fa-times"></i></a>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-template" id="add-product-row-tpl">
+    <div class="row" style="display: flex;align-items: center;margin-top: 15px;margin-bottom: 10px;margin-left: 0;margin-right: 0;">
+         <div class="col-md-3 product-select-controls" aria-hidden="true" v-show="showControls">
+            <label style="display:block">Product:</label>
+            <button class="product-select btn btn-white" v-text="new_product.short_title || 'Select Product'"
+                    style="padding: 5px 7px; max-width: 100%; overflow: hidden;"></button>
+         </div>
+
+         <div class="col-md-3 product-select-controls" v-show="new_product.id">
+            <label>Variant:</label>
+            <select class="variant-select form-control"></select>
+         </div>
+
+         <div class="col-md-2 product-select-controls" v-show="new_product.variant_id">
+            <label>Quantity:</label>
+            <input type="number" class="form-control text-center quantity-value" value="1">
+         </div>
+
+         <div class="col-md-3" style="position:relative;top:10px;left:5px" v-show="showControls">
+            <a href="#" class="btn btn-success btn-xs m-l itooltip" :disabled="!new_product.variant_id"
+               @click="saveSelection"><i class="fa fa-save"></i> Save</a>
+
+            <a href="#" class="btn btn-danger btn-xs m-l itooltip"
+               @click="cancelSave"><i class="fa fa-times"></i> Cancel</a>
+        </div>
+
+        <div class="col-md-3" v-show="!showControls">
+            <a href="#" class="btn btn-default btn-xs btn-outline itooltip"
+                @click="showSelection"><i class="fa fa-plus"></i> Add Product</a>
+        </div>
+
+    </div>
+</script>
+
+{% endverbatim %}

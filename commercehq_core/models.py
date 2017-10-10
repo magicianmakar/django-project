@@ -153,6 +153,7 @@ class CommerceHQProduct(models.Model):
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
+    bundle_map = models.TextField(null=True, blank=True)
     mapping_config = models.TextField(null=True, blank=True)
 
     parent_product = models.ForeignKey(
@@ -307,6 +308,23 @@ class CommerceHQProduct(models.Model):
 
         return product
 
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
+
     def get_mapping_config(self):
         try:
             return json.loads(self.mapping_config)
@@ -349,6 +367,24 @@ class CommerceHQProduct(models.Model):
             mapping = str(mapping)
 
         return mapping
+
+    def get_bundle_mapping(self, variant=None, default=[]):
+        try:
+            bundle_map = json.loads(self.bundle_map)
+        except:
+            bundle_map = {}
+
+        if variant:
+            return bundle_map.get(str(variant), default)
+        else:
+            return bundle_map
+
+    #
+    def set_bundle_mapping(self, mapping):
+        bundle_map = self.get_bundle_mapping()
+        bundle_map.update(mapping)
+
+        self.bundle_map = json.dumps(bundle_map)
 
     def get_suppier_for_variant(self, variant_id):
         """
@@ -663,7 +699,7 @@ class CommerceHQOrderTrack(models.Model):
     line_id = models.BigIntegerField()
     commercehq_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
 
-    source_id = models.BigIntegerField(default=0, verbose_name="Source Order ID")
+    source_id = models.CharField(max_length=512, blank=True, default='', db_index=True, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
     source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
@@ -681,9 +717,41 @@ class CommerceHQOrderTrack(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+            data = json.loads(self.data)
         except:
-            pass
+            data = None
+
+        if data:
+            if data.get('bundle'):
+                status = []
+                source_tracking = []
+                end_reasons = []
+
+                for key, val in data.get('bundle').items():
+                    if val.get('source_status'):
+                        status.append(val.get('source_status'))
+
+                    if val.get('source_tracking'):
+                        source_tracking.append(val.get('source_tracking'))
+
+                    if val.get('end_reason'):
+                        end_reasons.append(val.get('end_reason'))
+
+                self.source_status = ','.join(status)
+                self.source_tracking = ','.join(source_tracking)
+                self.source_status_details = ','.join(end_reasons)
+
+            else:
+                self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+
+        if self.source_id:
+            source_id = str(self.source_id).strip(' ,')
+            if ',' in source_id:
+                source_id = [i.strip() for i in list(filter(len, re.split('[, ]+', self.source_id)))]
+                source_id = ','.join(source_id)
+
+            if self.source_id != source_id:
+                self.source_id = source_id
 
         super(CommerceHQOrderTrack, self).save(*args, **kwargs)
 
@@ -720,9 +788,27 @@ class CommerceHQOrderTrack(models.Model):
             "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
+
+            # Dropwow Status
+            'P': "In Process",
+            'C': "Complete",
+            'O': "Open",
+            'F': "Failed",
+            'D': "Declined",
+            'B': "Backordered",
+            'I': "Cancelled",
+            'Y': "Awaiting Call",
         }
 
-        return status_map.get(self.source_status)
+        if self.source_status and ',' in self.source_status:
+            source_status = []
+            for i in self.source_status.split(','):
+                source_status.append(status_map.get(i))
+
+            return ', '.join(set(source_status))
+
+        else:
+            return status_map.get(self.source_status)
 
     get_source_status.admin_order_field = 'source_status'
 
@@ -739,6 +825,10 @@ class CommerceHQOrderTrack(models.Model):
             return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
             return None
+
+    def get_source_ids(self):
+        if self.source_id:
+            return u', '.join(set([u'#{}'.format(i) for i in self.source_id.split(',')]))
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)
