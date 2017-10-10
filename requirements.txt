@@ -78,7 +78,7 @@ rsa==3.4.2
 service-identity==14.0.0
 ShopifyAPI==2.5.0
 simplejson==3.11.1
-six==1.11.0
+six==1.10.0
 slimit==0.8.1
 SQLAlchemy==1.0.12
 sqlparse==0.2.1
