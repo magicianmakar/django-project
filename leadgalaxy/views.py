@@ -1444,7 +1444,7 @@ def bulk_edit(request, what):
         products = utils.get_shopify_products(
             store=store,
             product_ids=product_ids,
-            fields='id,title,product_type,image,variants')
+            fields='id,title,product_type,image,variants,vendor,tags')
 
         return render(request, 'bulk_edit_connected.html', {
             'products': list(products),

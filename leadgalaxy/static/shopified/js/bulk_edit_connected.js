@@ -115,6 +115,8 @@
                         'id': el.id,
                         'title': el.title,
                         'product_type': el.product_type,
+                        'tags': el.tags,
+                        'vendor': el.vendor,
                         'variants': $.map(el.variants, function(variant) {
                             return {
                                 'id': variant.id,

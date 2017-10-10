@@ -5,10 +5,12 @@
                 <thead>
                     <tr>
                         <th colspan="2" style="width:40%"></th>
-                        <th style="width: 15%">Price</th>
-                        <th style="width: 15%">Compare at</th>
-                        <th style="width: 15%">Weight</th>
-                        <th style="width: 15%">Product Type</th>
+                        <th>Price</th>
+                        <th>Compare at</th>
+                        <th>Weight</th>
+                        <th>Product Type</th>
+                        <th>Vendor</th>
+                        <th>Tags</th>
                     </tr>
                 </thead>
 
@@ -60,6 +62,9 @@
           <template v-else>
               <td v-for="n in 4" class="text-right" style="padding:5px">&mdash;</td>
           </template>
+
+          <td class="no-wrap"><input class="text-left" placeholder="Vendor" v-model="product.vendor"/></td>
+          <td class="no-wrap"><input class="text-left" placeholder="Tags" v-model="product.tags"/></td>
       </tr>
     </script>
 
@@ -79,7 +84,7 @@
                     <option value="lb">lb</option>
                 </select>
           </td>
-          <td class="text-left"><input style="text-align:left" v-model="product.product_type" /></td>
+          <td class="text-left" colspan="3"><input style="text-align:left" v-model="product.product_type" /></td>
       </tr>
     </script>
 
@@ -99,7 +104,7 @@
                     <option value="lb">lb</option>
                 </select>
           </td>
-          <td class="text-left"></td>
+          <td class="text-left" colspan="3"></td>
       </tr>
     </script>
 {% endverbatim %}
