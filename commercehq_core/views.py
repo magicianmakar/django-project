@@ -534,7 +534,6 @@ class OrdersList(ListView):
         fix_aliexpress_address = self.request.user.get_config('fix_aliexpress_address', False)
 
         products_cache = {}
-        orders_list = {}
         orders_cache = {}
 
         orders_ids = []

@@ -264,7 +264,7 @@ function addOrderSourceID(e) {
             inputValue = order_link[1];
         }
 
-        if (inputValue.match(/^[0-9]+$/) === null) {
+        if (inputValue.length === 0) {
             swal.showInputError("The entered Order ID is not valid.");
             return false;
         }
