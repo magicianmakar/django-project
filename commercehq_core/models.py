@@ -147,6 +147,7 @@ class CommerceHQProduct(models.Model):
     product_type = models.CharField(max_length=300, db_index=True)
     tags = models.TextField(blank=True, default='', db_index=True)
     is_multi = models.BooleanField(default=False)
+    parent_product = models.ForeignKey('CommerceHQProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
 
     config = models.TextField(null=True, blank=True)
     variants_map = models.TextField(default='', blank=True)

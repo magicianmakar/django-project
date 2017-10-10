@@ -394,7 +394,7 @@ $('#duplicate-btn').click(function (e) {
     $(this).bootstrapBtn('loading');
 
     $.ajax({
-        url: '/api/product-duplicate',
+        url: api_url('product-duplicate', 'chq'),
         type: 'POST',
         data: {
             product: product_id

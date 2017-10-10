@@ -6,6 +6,7 @@ import simplejson as json
 from django.conf import settings
 from django.core import serializers
 from django.core.cache import cache, caches
+from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import F
 from django.views.generic import View
@@ -334,6 +335,19 @@ class CHQStoreApi(ApiResponseMixin, View):
             product.save()
 
         return self.api_success()
+
+    def post_product_duplicate(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        permissions.user_can_view(user, product)
+
+        duplicate_product = utils.duplicate_product(product)
+
+        return self.api_success({
+            'product': {
+                'id': duplicate_product.id,
+                'url': reverse('chq:product_detail', kwargs={'pk': duplicate_product.id})
+            }
+        })
 
     def get_order_fulfill(self, request, user, data):
         if int(data.get('count', 0)) >= 30:
