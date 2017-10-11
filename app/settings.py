@@ -308,7 +308,7 @@ CELERYD_TASK_SOFT_TIME_LIMIT = 900
 BROKER_TRANSPORT_OPTIONS = {'max_connections': 10}
 BROKER_POOL_LIMIT = 10
 CELERYD_CONCURRENCY = 4
-CELERYD_MAX_TASKS_PER_CHILD = 5000
+CELERYD_MAX_TASKS_PER_CHILD = 3000
 CELERY_ROUTES = {
     "leadgalaxy.tasks.export_product": {"queue": "priority_high"},
     "leadgalaxy.tasks.order_save_changes": {"queue": "priority_high"},
