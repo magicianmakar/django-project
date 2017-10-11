@@ -309,7 +309,7 @@ def chq_customer_address(order, aliexpress_fix=False):
     #                                                 customer_address['company'])
 
     if aliexpress_fix:
-        if not valide_aliexpress_province(customer_address['country'], customer_address['province']):
+        if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
             customer_address['province'] = 'Other'
 
     return customer_address

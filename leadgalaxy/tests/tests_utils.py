@@ -15,6 +15,11 @@ from leadgalaxy.models import (
 
 from product_alerts.events import ProductChangeEvent
 
+from shopified_core.shipping_helper import (
+     get_uk_province,
+     valide_aliexpress_province,
+)
+
 import shopify_orders.tests.factories as order_factories
 
 import factory
@@ -773,3 +778,14 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         new_data = event.variants_actions(self.data)
 
         self.assertEqual(new_data['product']['variants'][found]['inventory_quantity'], variant_change['new_value'])
+
+
+class ShippingHelperTestCase(TestCase):
+    def test_uk_validate_address(self):
+        self.assertTrue(valide_aliexpress_province('uk', 'england', 'Kent'))
+        self.assertFalse(valide_aliexpress_province('uk', 'england', 'NotFound'))
+        self.assertFalse(valide_aliexpress_province('uk', 'NotFound', 'Kent'))
+
+    def test_uk_fix_address(self):
+        self.assertEqual(get_uk_province('Kent'), 'england')
+        self.assertEqual(get_uk_province('Avon'), 'Other')

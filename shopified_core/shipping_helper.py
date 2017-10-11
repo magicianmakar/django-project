@@ -1,13 +1,12 @@
 import os
 import simplejson as json
-from hashlib import md5
 from collections import OrderedDict
 
-from django.core.cache import cache
 from django.conf import settings
 
 
 uk_provinces = None
+aliexpress_countries = None
 countries_code = None
 provinces_code = {}
 
@@ -55,36 +54,8 @@ ALIEXPRESS_UK_COUNTRIES = {
     "northern ireland": [
         'county antrim', 'antrim', 'county armagh', 'armagh', 'county down', 'county fermanagh', 'fermanagh', 'county londonderry', 'londonderry',
         'county tyrone', 'tyrone'
-    ],
-    "anguilla": [],
-    "bermuda": [],
-    "british indian ocean territory": [],
-    "british virgin islands": [],
-    "cayman islands": [],
-    "falkland islands": [],
-    "gibraltar": [],
-    "guernsey": [],
-    "isle of man": [],
-    "jersey": [],
-    "montserrat": [],
-    "pitcairn islands": [],
-    "south georgia & south sandwich islands": [],
-    "st helena, ascension, tristan da cunha": [],
-    "turks and caicos islands": [],
+    ]
 }
-
-ALIEXPRESS_ES_PROVINCES = [
-    "a coruna", "alacant", "alava", "albacete", "almeria", "asturias", "avila", "badajoz", "balearic islands", "barcelona", "burgos", "caceres",
-    "cadiz", "canary islands", "cantabria", "castello", "ciudad real", "cordoba", "cuenca", "girona", "granada", "guadalajara", "guipuzcoa", "huelva",
-    "huesca", "jaen", "la rioja", "las palmas", "leon", "lleida", "lugo", "madrid", "malaga", "murcia", "navarra", "ourense", "palencia",
-    "pontevedra", "salamanca", "santa cruz de tenerife", "segovia", "sevilla", "soria", "tarragona", "teruel", "toledo", "valencia", "valladolid",
-    "vizcaya", "zamora", "zaragoza"
-]
-
-ALIEXPRESS_AU_PROVINCES = [
-    "Australian Capital Territory", "Jervis Bay Territory", "New South Wales", "Northern Territory", "Queensland", "South Australia",
-    "Tasmania", "Victoria", "Western Australia"
-]
 
 
 def load_uk_provincess():
@@ -107,41 +78,68 @@ def load_uk_provincess():
     return uk_provinces
 
 
+def load_aliexpress_countries():
+    global aliexpress_countries
+
+    if aliexpress_countries:
+        return aliexpress_countries
+
+    data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'shipping', 'aliexpress_countries.json')
+    aliexpress_countries = json.loads(open(data_file).read().lower())
+
+    return aliexpress_countries
+
+
 def get_uk_province(city, default=''):
     provinces = load_uk_provincess()
     city = city.lower().strip().split(',')[0].strip()
 
+    province = default
     found = provinces.get(city, default)
     for country, cites in ALIEXPRESS_UK_COUNTRIES.items():
         if (found and found.lower() in cites) or city.lower() in cites:
-            return country
+            province = country
+            break
 
-    return default
+    if not province or not valide_aliexpress_province('UK', province, city):
+        province = 'Other'
+
+    return province
 
 
-def valide_aliexpress_province(country, province):
+def valide_aliexpress_province(country, province, city):
     if not province:
         province = ''
 
-    country = country.lower()
+    country = country.lower().strip()
     province = province.lower().strip()
+    city = city.lower().strip()
 
+    country_code = None
     if country in ['uk', 'gb', 'united kingdom']:
-        return (province in ALIEXPRESS_UK_PROVINCES or province in ALIEXPRESS_UK_COUNTRIES.keys())
+        country_code = 'uk'
+
     elif country in ['es', 'spain']:
-        return province in ALIEXPRESS_ES_PROVINCES
+        country_code = 'es'
+
     elif country in ['au', 'australia']:
-        return province in ALIEXPRESS_AU_PROVINCES
+        country_code = 'au'
+
+    elif country in ['cl', 'chile']:
+        country_code = 'cl'
+
+    elif country in ['ua', 'ukraine']:
+        country_code = 'ua'
+
+    if country_code:
+        aliexpress_countries = load_aliexpress_countries()
+
+        if aliexpress_countries.get(country_code):
+            return aliexpress_countries.get(country_code).get(province) and \
+                (city in aliexpress_countries.get(country_code).get(province) or
+                    len(aliexpress_countries.get(country_code).get(province)) == 0)
 
     return True
-
-
-def missing_province(city):
-    city_key = md5(city.lower().strip()).hexdigest()[:8]
-    city_key = 'uk_province_{}'.format(city_key)
-    if cache.get(city_key) is None:
-        print 'WARNING: UK Province not found for:', city
-        cache.set(city_key, 1, timeout=3600)
 
 
 def load_countries():

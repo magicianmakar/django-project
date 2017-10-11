@@ -21,7 +21,6 @@ from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, hash_url_filename
 from shopified_core.shipping_helper import (
     load_uk_provincess,
-    missing_province,
     country_from_code,
     province_from_code
 )
@@ -661,8 +660,6 @@ def woo_customer_address(order):
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
             province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
-            if not province:
-                missing_province(customer_address['city'])
 
             customer_address['province'] = province
         else:

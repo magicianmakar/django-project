@@ -1107,7 +1107,7 @@ def shopify_customer_address(order, aliexpress_fix=False):
         customer_address['name'] = u'{} - {}'.format(customer_address['name'], customer_address['company'])
 
     if aliexpress_fix:
-        if not valide_aliexpress_province(customer_address['country'], customer_address['province']):
+        if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
             customer_address['province'] = 'Other'
 
             if customer_address['country'] == 'United Kingdom' and customer_address['city']:
