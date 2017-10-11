@@ -111,6 +111,9 @@ def valide_aliexpress_province(country, province, city):
     if not province:
         province = ''
 
+    if not city:
+        city = ''
+
     country = country.lower().strip()
     province = province.lower().strip()
     city = city.lower().strip()
