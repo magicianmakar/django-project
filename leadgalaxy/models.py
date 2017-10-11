@@ -577,12 +577,12 @@ class ShopifyStore(models.Model):
     access_token = models.CharField(max_length=512, blank=True, null=True)
     scope = models.CharField(max_length=512, blank=True, null=True)
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
     version = models.IntegerField(default=1, choices=((1, 'Private App'), (2, 'Shopify App')), verbose_name='Store Version')
 
     list_index = models.IntegerField(default=0)
-    auto_fulfill = models.CharField(max_length=50, null=True, blank=True)
+    auto_fulfill = models.CharField(max_length=50, null=True, blank=True, db_index=True)
 
     user = models.ForeignKey(User)
 
