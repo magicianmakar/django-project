@@ -128,6 +128,9 @@ def valide_aliexpress_province(country, province, city):
     elif country in ['au', 'australia']:
         country_code = 'au'
 
+    elif country in ['nl', 'netherlands']:
+        country_code = 'nl'
+
     elif country in ['cl', 'chile']:
         country_code = 'cl'
 
