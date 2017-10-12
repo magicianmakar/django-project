@@ -23,10 +23,7 @@ class Command(BaseCommand):
             raven_client.captureException()
 
     def start_command(self, *args, **options):
-        merge_date = arrow.get(1487693000).datetime  # Date when this change was deployed
-
-        all_changes = AliexpressProductChange.objects.filter(created_at__gt=merge_date) \
-                                                     .filter(notified_at=None) \
+        all_changes = AliexpressProductChange.objects.filter(notified_at=None) \
                                                      .order_by('user_id')
 
         changes_by_user = {}
