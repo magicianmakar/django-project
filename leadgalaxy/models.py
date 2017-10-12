@@ -797,7 +797,7 @@ class ShopifyProduct(models.Model):
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
     default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __unicode__(self):
@@ -1405,7 +1405,7 @@ class ShopifyOrderTrack(models.Model):
     shopify_status = models.CharField(max_length=128, blank=True, null=True, default='',
                                       verbose_name="Shopify Fulfillment Status")
 
-    source_id = models.CharField(max_length=512, blank=True, default='', verbose_name="Source Order ID")
+    source_id = models.CharField(max_length=512, blank=True, default='', db_index=True, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', db_index=True, verbose_name="Source Tracking Number")
     source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
@@ -1421,7 +1421,7 @@ class ShopifyOrderTrack(models.Model):
 
     data = models.TextField(blank=True, default='')
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
 
