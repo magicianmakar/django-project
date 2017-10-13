@@ -1,21 +1,15 @@
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 
+from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import *
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--unregistered', dest='unregistered',
                             action='store_true', help='Show Unregistered Emails')
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
 
     def start_command(self, *args, **options):
         registartions = PlanRegistration.objects.filter(expired=False).exclude(plan=None).exclude(email='')

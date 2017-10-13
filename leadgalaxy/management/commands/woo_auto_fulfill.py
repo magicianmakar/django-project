@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand
+from shopified_core.management import DropifiedBaseCommand
 from django.utils import timezone
 
 import requests
@@ -11,7 +11,7 @@ from woocommerce_core import utils
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Auto fulfill tracked orders with a tracking number and unfulfilled status'
 
     def add_arguments(self, parser):
@@ -30,15 +30,6 @@ class Command(BaseCommand):
         parser.add_argument(
             '--uptime', dest='uptime', action='store', type=float, default=8,
             help='Maximum task uptime (minutes)')
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
-
-    def write(self, msg, style_func=None, ending=None):
-        self.stdout.write(msg, style_func, ending)
 
     def start_command(self, *args, **options):
         threshold = options.get('threshold')

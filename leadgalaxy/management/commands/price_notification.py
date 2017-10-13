@@ -1,8 +1,9 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 
-from leadgalaxy.models import *
+from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import app_link
+from leadgalaxy.models import *
 
 import simplejson as json
 import requests
@@ -12,7 +13,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Attach Shopify Webhooks to a specific Plan'
 
     def add_arguments(self, parser):
@@ -23,12 +24,6 @@ class Command(BaseCommand):
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
         parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
 
     def start_command(self, *args, **options):
         self.ignored_users = [16088, 10052, 10889, 13366, 8869, 6680, 8699, 11765, 14651, 12755, 10142, 14970]

@@ -1,21 +1,14 @@
-from django.core.management.base import BaseCommand
-
-from raven.contrib.django.raven_compat.models import client as raven_client
-
-from leadgalaxy.models import ShopifyOrderTrack
-from dropwow_core.models import DropwowOrderStatus
-from dropwow_core.utils import get_dropwow_order
 from django.db.models import Q
 
+from shopified_core.management import DropifiedBaseCommand
+from leadgalaxy.models import ShopifyOrderTrack
 
-class Command(BaseCommand):
+from dropwow_core.models import DropwowOrderStatus
+from dropwow_core.utils import get_dropwow_order
+
+
+class Command(DropifiedBaseCommand):
     help = 'Fetch Order Statuses from Dropwow API and store them in the database'
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
 
     def start_command(self, *args, **options):
         tracks = ShopifyOrderTrack.objects.filter(source_type='dropwow') \
@@ -55,6 +48,3 @@ class Command(BaseCommand):
                 )
 
                 self.stdout.write('Failed to fetch order status #{}'.format(order_id), self.style.WARNING)
-
-    def write_success(self, message):
-        self.stdout.write(self.style.MIGRATE_SUCCESS(message))

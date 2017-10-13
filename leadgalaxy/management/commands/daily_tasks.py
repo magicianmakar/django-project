@@ -1,23 +1,12 @@
-from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 import arrow
 
 from leadgalaxy.models import *
+from shopified_core.management import DropifiedBaseCommand
 
-from raven.contrib.django.raven_compat.models import client as raven_client
 
-
-class Command(BaseCommand):
-    def add_arguments(self, parser):
-        pass
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
-
+class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         # Archive alerts after 7 days
         archive_date = arrow.utcnow().replace(days=-7).datetime

@@ -1,13 +1,14 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
+
+from shopified_core.management import DropifiedBaseCommand
+from shopify_orders.models import ShopifySyncStatus
 from leadgalaxy.models import ShopifyStore, GroupPlan, AppPermission, UserProfile
 from leadgalaxy import utils
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopify_orders.models import ShopifySyncStatus
 
-
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Sync Shopify Orders For a stores with a permission or within a Plan'
 
     synced_store = []
@@ -20,12 +21,6 @@ class Command(BaseCommand):
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
         parser.add_argument('--count', dest='count', action='store_true', help='Update Orders count')
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
 
     def start_command(self, *args, **options):
         for i in ['plan_id', 'user_id', 'store_id', 'permission']:
@@ -119,6 +114,3 @@ class Command(BaseCommand):
                 sync.save()
 
         self.synced_store.append(store.id)
-
-    def write_success(self, message):
-        self.stdout.write(self.style.MIGRATE_SUCCESS(message))

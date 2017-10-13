@@ -1,14 +1,14 @@
-from django.core.management.base import BaseCommand
 from django.core.cache import cache
+from shopified_core.management import DropifiedBaseCommand
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('version', type=str, help='Extension Version')
         parser.add_argument('--required', dest='required', action='store_true', help='Version is required')
         parser.add_argument('--min', dest='min', action='store_true', help='Version is the Minimum version')
 
-    def handle(self, *args, **options):
+    def start_command(self, *args, **options):
         cache.set('extension_release', options['version'], timeout=3600)
         cache.set('extension_required', options['required'], timeout=3600)
 

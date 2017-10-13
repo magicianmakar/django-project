@@ -1,4 +1,3 @@
-from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -8,13 +7,14 @@ import time
 import math
 import requests
 
+from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import get_shopify_order
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Fetch Orders from Shopify API and store them in the database'
 
     sync_type = 'orders'
@@ -33,12 +33,6 @@ class Command(BaseCommand):
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--max_orders', dest='max_orders', type=int, help='Sync Stores with Maximum Orders count')
         parser.add_argument('--max_import', dest='max_import', type=int, help='Maximum number of orders to import')
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
 
     def reset_stores(self, store_ids, progress=False):
         for store in store_ids:
@@ -345,6 +339,3 @@ class Command(BaseCommand):
             ))
 
         return lines
-
-    def write_success(self, message):
-        self.stdout.write(self.style.MIGRATE_SUCCESS(message))

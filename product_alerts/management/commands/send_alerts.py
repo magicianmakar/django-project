@@ -1,11 +1,10 @@
 import simplejson as json
-import arrow
 
-from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import app_link, send_email_from_template
 from leadgalaxy.models import AliexpressProductChange
 from leadgalaxy.utils import get_variant_name
@@ -13,14 +12,8 @@ from leadgalaxy.utils import get_variant_name
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Send product change alerts per every given hours'
-
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
-        except:
-            raven_client.captureException()
 
     def start_command(self, *args, **options):
         all_changes = AliexpressProductChange.objects.filter(notified_at=None) \

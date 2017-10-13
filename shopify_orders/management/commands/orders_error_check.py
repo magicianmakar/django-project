@@ -1,12 +1,10 @@
-from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from raven.contrib.django.raven_compat.models import client as raven_client
 from tqdm import tqdm
 
-import traceback
 from datetime import timedelta
 
+from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck
 
@@ -19,7 +17,7 @@ class EmptyProgress:
         pass
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Check for errors in Shopify Order Tracks'
 
     orders_check = None
@@ -31,55 +29,42 @@ class Command(BaseCommand):
         parser.add_argument('--commit', dest='commit', action='store_true', help='Do not save found errors to the database')
         parser.add_argument('--progress', dest='progress', action='store_true', help='Show Check Progress')
 
-    def handle(self, *args, **options):
-        try:
-            self.start_command(*args, **options)
+    def start_command(self, *args, **options):
+        tracks = ShopifyOrderTrack.objects.filter(data__contains='contact_name')
 
-        except KeyboardInterrupt:
-            self.stdout.write('Exit...')
-        except:
-            traceback.print_exc()
-            raven_client.captureException()
+        if not options['all']:
+            tracks = tracks.filter(errors=None)
+
+        if options['store_id']:
+            tracks = tracks.filter(store__in=options['store_id'])
+
+        if options['since']:
+            tracks = tracks.filter(created_at__gte=timezone.now() - timedelta(days=options['since']))
+
+        tracks = tracks.order_by('-created_at')
+
+        total_count = tracks.count()
+
+        self.write_success('Checking {} Tracks'.format(total_count))
+
+        if options['progress']:
+            obar = tqdm(total=total_count)
+        else:
+            obar = EmptyProgress()
+
+        steps = 1000
+        start = 0
+
+        self.orders_check = OrderErrorsCheck(self.stdout if options['progress'] else None)
+
+        while start <= total_count:
+            for track in tracks[start:start + steps]:
+                self.orders_check.check(track, options['commit'])
+
+            obar.update(steps)
+            start += steps
+
+        obar.close()
 
         self.write_success('Errors: {} - Ignored: {}'.format(
             self.orders_check.errors, self.orders_check.ignored))
-
-    def start_command(self, *args, **options):
-            tracks = ShopifyOrderTrack.objects.filter(data__contains='contact_name')
-
-            if not options['all']:
-                tracks = tracks.filter(errors=None)
-
-            if options['store_id']:
-                tracks = tracks.filter(store__in=options['store_id'])
-
-            if options['since']:
-                tracks = tracks.filter(created_at__gte=timezone.now() - timedelta(days=options['since']))
-
-            tracks = tracks.order_by('-created_at')
-
-            total_count = tracks.count()
-
-            self.write_success('Checking {} Tracks'.format(total_count))
-
-            if options['progress']:
-                obar = tqdm(total=total_count)
-            else:
-                obar = EmptyProgress()
-
-            steps = 1000
-            start = 0
-
-            self.orders_check = OrderErrorsCheck(self.stdout if options['progress'] else None)
-
-            while start <= total_count:
-                for track in tracks[start:start + steps]:
-                    self.orders_check.check(track, options['commit'])
-
-                obar.update(steps)
-                start += steps
-
-            obar.close()
-
-    def write_success(self, message):
-        self.stdout.write(self.style.MIGRATE_SUCCESS(message))

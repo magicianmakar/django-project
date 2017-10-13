@@ -1,9 +1,11 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
+
+from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import *
 from leadgalaxy import utils
 
 
-class Command(BaseCommand):
+class Command(DropifiedBaseCommand):
     help = 'Attach Shopify Webhooks to a specific Plan'
 
     def add_arguments(self, parser):
@@ -16,7 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--delete_on_detach', dest='delete_on_detach',
                             action='store_true', help='Delete Saved Webhook on detach')
 
-    def handle(self, *args, **options):
+    def start_command(self, *args, **options):
         action = options['action'][0]
 
         for i in ['plan_id', 'store_id', 'permission']:
@@ -68,6 +70,3 @@ class Command(BaseCommand):
         else:
             webhooks = utils.detach_webhooks(store, delete_on_detach)
             self.write_success(u'    - {}'.format(store.title))
-
-    def write_success(self, message):
-        self.stdout.write(self.style.MIGRATE_SUCCESS(message))
