@@ -2501,10 +2501,15 @@ def orders_view(request):
     supplier_filter = request.GET.get('supplier_name')
     shipping_method_filter = request.GET.get('shipping_method_name')
 
+    date_now = arrow.get(timezone.now())
+    created_at_daterange = request.GET.get('created_at_daterange',
+                                           '{}-'.format(date_now.replace(days=-30).format('MM/DD/YYYY')))
+
     if request.GET.get('shop') or query or query_order:
         status, fulfillment, financial = ['any', 'any', 'any']
         connected_only = False
         awaiting_order = False
+        created_at_daterange = None
 
     if request.GET.get('old') == '1':
         shopify_orders_utils.disable_store_sync(store)
@@ -2512,14 +2517,18 @@ def orders_view(request):
         shopify_orders_utils.enable_store_sync(store)
 
     created_at_start, created_at_end = None, None
-    created_at_daterange = request.GET.get('created_at_daterange')
     if created_at_daterange:
         try:
+            daterange_list = created_at_daterange.split('-')
+
             tz = timezone.localtime(timezone.now()).strftime(' %z')
 
-            created_at_start, created_at_end = [arrow.get(d + tz, r'MM/DD/YYYY Z') for d in created_at_daterange.split('-')]
-            created_at_end = created_at_end.span('day')[1]
-            created_at_start, created_at_end = created_at_start.datetime, created_at_end.datetime
+            created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+
+            if len(daterange_list) > 1 and daterange_list[1]:
+                created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                created_at_end = created_at_end.span('day')[1].datetime
+
         except:
             created_at_daterange = None
 
@@ -2532,8 +2541,14 @@ def orders_view(request):
             # Direct API call doesn't support more that one fulfillment status
             fulfillment = 'unshipped'
 
-        if created_at_start and created_at_end:
-            created_at_start, created_at_end = arrow.get(created_at_start).isoformat(), arrow.get(created_at_end).isoformat()
+        if ',' in financial:
+            financial = 'paid'
+
+        if created_at_start:
+            created_at_start = arrow.get(created_at_start).isoformat()
+
+        if created_at_end:
+            created_at_end = arrow.get(created_at_end).isoformat()
 
         open_orders = store.get_orders_count(status, fulfillment, financial,
                                              query=utils.safeInt(query, query),

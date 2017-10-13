@@ -1186,8 +1186,17 @@ $(function () {
         var start = picker.startDate,
             end = picker.endDate;
 
-        $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-        $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'))
+        if (start.isValid && !end.isValid()) {
+            end = moment();
+        }
+
+        if (start.isValid() && end.isValid()) {
+            $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'))
+        } else {
+            $('#created_at_daterange span').html('All Time');
+            $('input[name="created_at_daterange"]').val('all')
+        }
     });
 
     $('#created_at_daterange').on('cancel.daterangepicker', function(ev, picker) {
@@ -1198,8 +1207,12 @@ $(function () {
     var createdAtDaterangeValue = $('input[name="created_at_daterange"]').val();
     if (createdAtDaterangeValue != '' && createdAtDaterangeValue != '-') {
         var dates = createdAtDaterangeValue.split('-'),
-            createdAtStart = moment(dates[0].replace('/', '-')),
-            createdAtEnd = moment(dates[1].replace('/', '-'));
+            createdAtStart = moment(dates[0], 'MM/DD/YYYY'),
+            createdAtEnd = moment(dates[1], 'MM/DD/YYYY');
+
+        if (createdAtStart.isValid && !createdAtEnd.isValid()) {
+            createdAtEnd = moment();
+        }
 
         $('#created_at_daterange span').html(createdAtStart.format('MMMM D, YYYY') + ' - ' + createdAtEnd.format('MMMM D, YYYY'));
     }

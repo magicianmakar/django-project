@@ -667,9 +667,12 @@ class ShopifyStore(models.Model):
             else:
                 params['name'] = query
 
-        if created_range and all(created_range):
-            params['created_at_min'] = created_range[0]
-            params['created_at_max'] = created_range[1]
+        if created_range and len(created_range):
+            if created_range[0]:
+                params['created_at_min'] = created_range[0]
+
+            if created_range[1]:
+                params['created_at_max'] = created_range[1]
 
         return requests.get(
             url=self.get_link('/admin/orders/count.json', api=True),

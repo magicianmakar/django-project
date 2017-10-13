@@ -91,7 +91,7 @@ class ShopifyOrder(models.Model):
     need_fulfillment = models.IntegerField(blank=True, null=True, verbose_name='Item Lines not ordered yet')
     connected_items = models.IntegerField(blank=True, null=True, verbose_name='Item Lines with connect products')
 
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(db_index=True)
     updated_at = models.DateTimeField()
     closed_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
