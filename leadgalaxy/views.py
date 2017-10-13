@@ -2685,7 +2685,7 @@ def orders_view(request):
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
-            orders = orders.order_by(sort_desc + sort_field.replace('created_at', 'order_id'))
+            orders = orders.order_by(sort_desc + sort_field)
 
         paginator = SimplePaginator(orders, post_per_page)
         page = min(max(1, page), paginator.num_pages)
