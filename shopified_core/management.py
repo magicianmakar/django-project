@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 from raven.contrib.django.raven_compat.models import client as raven_client
 import sys
 
+
 class DropifiedBaseCommand(BaseCommand):
     def handle(self, *args, **options):
         try:
