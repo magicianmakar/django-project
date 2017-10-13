@@ -2556,6 +2556,20 @@ def orders_view(request):
         page = min(max(1, page), paginator.num_pages)
         current_page = paginator.page(page)
         page = current_page
+
+        # Update outdated order data by comparing last update timestamp
+        _page = ShopifyOrder.objects.filter(store=store, order_id__in=[i['id'] for i in page])
+        _update_page = shopify_orders_utils.sort_orders(page, _page)
+
+        countdown = 1
+        for order in _update_page:
+            if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
+                tasks.update_shopify_order.apply_async(
+                    args=[store.id, order['id']],
+                    kwarg={'shopify_order': order, 'from_webhook': False},
+                    countdown=countdown)
+
+                countdown = countdown + 1
     else:
         orders = ShopifyOrder.objects.filter(store=store)
 
