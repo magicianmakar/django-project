@@ -2586,7 +2586,7 @@ def orders_view(request):
 
                 countdown = countdown + 1
     else:
-        orders = ShopifyOrder.objects.filter(store=store)
+        orders = ShopifyOrder.objects.filter(store=store).only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 
         if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
             messages.info(request, 'Your Store Orders are being imported')
@@ -2795,6 +2795,17 @@ def orders_view(request):
     for i in res:
         images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
+    products_list = {}
+    product_ids = []
+    for order in page:
+        for line in order['line_items']:
+            if line['product_id']:
+                product_ids.append(line['product_id'])
+
+    for p in ShopifyProduct.objects.filter(store=store, shopify_id__in=product_ids).select_related('default_supplier'):
+        if p.shopify_id not in products_list:
+            products_list[p.shopify_id] = p
+
     for index, order in enumerate(page):
         created_at = arrow.get(order['created_at'])
         try:
@@ -2852,7 +2863,7 @@ def orders_view(request):
             elif el['product_id'] in products_cache:
                 product = products_cache[el['product_id']]
             else:
-                product = ShopifyProduct.objects.filter(store=store, shopify_id=el['product_id']).first()
+                product = products_list.get(el['product_id'])
 
             if shopify_order or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
                 order['placed_orders'] += 1
@@ -2895,7 +2906,7 @@ def orders_view(request):
                 if bundles:
                     product_bundles = []
                     for idx, b in enumerate(bundles):
-                        b_product = ShopifyProduct.objects.get(id=b['id'])
+                        b_product = ShopifyProduct.objects.filter(id=b['id']).select_related('default_supplier').first()
                         b_variant_id = b_product.get_real_variant_id(b['variant_id'])
                         b_supplier = b_product.get_suppier_for_variant(variant_id)
                         if b_supplier:
