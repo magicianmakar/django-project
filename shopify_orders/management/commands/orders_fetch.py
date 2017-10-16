@@ -126,7 +126,7 @@ class Command(DropifiedBaseCommand):
         limit = 240
         count = store.get_orders_count(status='any', fulfillment='any', financial='any')
 
-        shipping_method_filter = store.user.get_config('shipping_method_filter')
+        shipping_method_filter = False
 
         self.write_success(u'Import {} Order for: {}'.format(count, store.title))
         if not count:
