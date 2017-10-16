@@ -1076,6 +1076,22 @@ def product_view(request, pid):
     except ShopifyBoard.DoesNotExist:
         board = None
 
+    shopify_product = None
+    if product.shopify_id and product.store:
+        shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
+
+        if shopify_product:
+            shopify_product = utils.link_product_images(shopify_product)
+
+            if arrow.get(shopify_product['updated_at']).datetime > product.updated_at or request.GET.get('sync'):
+                tasks.update_shopify_product(
+                    product.store.id,
+                    product.shopify_id,
+                    shopify_product=shopify_product,
+                    product_id=product.id)
+
+                product.refresh_from_db()
+
     p = {
         'qelem': product,
         'id': product.id,
@@ -1112,26 +1128,13 @@ def product_view(request, pid):
     except:
         pass
 
-    shopify_product = None
-    if product.shopify_id and product.store:
+    if shopify_product:
         p['shopify_url'] = product.store.get_link('/admin/products/{}'.format(product.shopify_id))
         p['variant_edit'] = '/product/variants/{}/{}'.format(product.store.id, product.shopify_id)
 
-        shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
-
-        if shopify_product:
-            shopify_product = utils.link_product_images(shopify_product)
-
-            p['product']['description'] = shopify_product['body_html']
-            p['product']['vendor'] = shopify_product['vendor']
-            p['product']['published'] = shopify_product['published_at'] is not None
-
-            if arrow.get(shopify_product['updated_at']).datetime > p['qelem'].updated_at or request.GET.get('sync'):
-                tasks.update_shopify_product(
-                    product.store.id,
-                    product.shopify_id,
-                    shopify_product=shopify_product,
-                    product_id=p['qelem'].id)
+        p['product']['description'] = shopify_product['body_html']
+        p['product']['vendor'] = shopify_product['vendor']
+        p['product']['published'] = shopify_product['published_at'] is not None
 
         collections = utils.ProductCollections().get_collections(product.store)
     else:
