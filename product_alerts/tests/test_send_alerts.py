@@ -22,15 +22,6 @@ class SendProductAlertsTestCase(TransactionTestCase):
 
     @patch('shopified_core.utils.send_email_from_template', Mock())
     @patch('product_alerts.management.commands.send_alerts.Command.handle_changes')
-    def test_notification_not_sent_for_changes_out_of_last_timespan(self, handle_changes):
-        self.changes.update(created_at=arrow.get(1487693000).replace(days=-1).datetime)
-
-        call_command('send_alerts')
-
-        handle_changes.assert_not_called()
-
-    @patch('shopified_core.utils.send_email_from_template', Mock())
-    @patch('product_alerts.management.commands.send_alerts.Command.handle_changes')
     def test_notification_sent_once_per_each_affected_user(self, handle_changes):
         affected_users = list(set([change.user for change in self.changes]))
         self.assertEqual(len(affected_users), 1)
