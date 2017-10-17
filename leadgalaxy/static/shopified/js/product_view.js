@@ -112,11 +112,19 @@ function productExported(data, target, btn) {
             $('#export-btn, #save-for-later-btn').hide();
             $('#more-options-btn').trigger('click');
 
-            toastr.success('Product Exported.','Shopify Export');
+            if(!$('#toast-container').prop('notified')) {
+                toastr.success('Product Exported.','Shopify Export');
+            }
+
         } else {
-            toastr.success('Product Updated in Shopify.','Shopify Update');
+            if(!$('#toast-container').prop('notified')) {
+                toastr.success('Product Updated in Shopify.','Shopify Update');
+            }
+
             window.location.href = window.location.href;
         }
+
+        $('#toast-container').prop('notified', true);
     }  else {
         displayAjaxError('Product Export', data);
     }
