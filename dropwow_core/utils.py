@@ -145,7 +145,7 @@ def fulfill_dropwow_products(dropwow_account, order_status, supplier, quantity):
     try:
         r.raise_for_status()
     except:
-        raven_client.captureException()
+        raven_client.captureException(extra={'response': r.text})
         raise
 
     return r.json()
@@ -157,7 +157,11 @@ def get_dropwow_order(dropwow_account_email, dropwow_account_api_key, order_id):
         auth=HTTPBasicAuth(dropwow_account_email, dropwow_account_api_key)
     )
 
-    r.raise_for_status()
+    try:
+        r.raise_for_status()
+    except:
+        raven_client.captureException(extra={'response': r.text})
+        raise
 
     return r.json()
 
@@ -168,6 +172,10 @@ def get_dropwow_categories():
         auth=HTTPBasicAuth(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
     )
 
-    r.raise_for_status()
+    try:
+        r.raise_for_status()
+    except:
+        raven_client.captureException(extra={'response': r.text})
+        raise
 
     return r.json()
