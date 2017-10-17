@@ -327,6 +327,12 @@ def smart_board_by_product(user, product):
         'type': product.product_type,
     }
 
+    for k, v in product_info.items():
+        if v:
+            product_info[k] = [i.lower().strip() for i in v.split(',')]
+        else:
+            product_info[k] = []
+
     for i in user.shopifyboard_set.all():
         try:
             config = json.loads(i.config)
@@ -342,7 +348,7 @@ def smart_board_by_product(user, product):
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() and f.lower() in product_info[j].lower():
+                if f.lower() and f.lower() in product_info[j]:
                     i.products.add(product)
                     product_added = True
 
@@ -360,6 +366,12 @@ def smart_board_by_board(user, board):
             'type': product.product_type,
         }
 
+        for k, v in product_info.items():
+            if v:
+                product_info[k] = [i.lower().strip() for i in v.split(',')]
+            else:
+                product_info[k] = []
+
         try:
             config = json.loads(board.config)
         except:
@@ -374,7 +386,7 @@ def smart_board_by_board(user, board):
                 continue
 
             for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j].lower():
+                if f.lower() in product_info[j]:
                     board.products.add(product)
                     product_added = True
 
