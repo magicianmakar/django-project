@@ -895,7 +895,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         profile.subuser_chq_stores.clear()
 
         if profile.plan.slug == 'subuser-plan':
-            profile.apply_subscription(utils.get_plan(plan_slug='startup'))
+            profile.apply_subscription(GroupPlan.objects.get(default_plan=1))
 
         profile.save()
 
