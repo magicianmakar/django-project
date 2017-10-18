@@ -131,9 +131,18 @@ def fulfill_dropwow_products(dropwow_account, order_status, supplier, quantity):
         'user_data': order_status.get_address()
     }
 
+    if supplier.get_source_id() == 2525:
+        # This is a temporary fix to order this product which options and is not avaialble in current products feed
+        product_options = {
+            "2533": "11699",
+            "2534": "11700"
+        }
+    else:
+        product_options = {}
+
     data['products'][supplier.get_source_id()] = {
         'amount': quantity,
-        'product_options': {}
+        'product_options': product_options
     }
 
     r = requests.post(
