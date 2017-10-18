@@ -15,6 +15,7 @@ import requests
 import textwrap
 import hashlib
 import urlparse
+from requests.auth import HTTPBasicAuth
 
 import arrow
 from pusher import Pusher
@@ -796,6 +797,7 @@ class ShopifyProduct(models.Model):
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
     price_notification_id = models.IntegerField(default=0)
+    monitor_id = models.IntegerField(null=True, default=0)
 
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
     default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
@@ -868,6 +870,7 @@ class ShopifyProduct(models.Model):
         except:
             return {}
 
+    @property
     def is_connected(self):
         return bool(self.get_shopify_id())
 
@@ -978,6 +981,18 @@ class ShopifyProduct(models.Model):
 
         supplier.is_default = True
         supplier.save()
+
+    def monitor_product(self):
+        if self.monitor_id > 0 and self.default_supplier:
+            monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, self.monitor_id)
+            post_data = {
+                'url': self.default_supplier.product_url,
+            }
+            requests.patch(
+                url=monitor_api_url,
+                data=post_data,
+                auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+            )
 
     def set_variant_mapping(self, mapping, supplier=None, update=False):
         if supplier is None:

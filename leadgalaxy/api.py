@@ -45,6 +45,7 @@ from shopify_orders.models import (
 )
 from dropwow_core.models import DropwowAccount
 from dropwow_core.utils import get_dropwow_product_options
+from product_alerts.models import ProductChange
 
 import tasks
 import utils
@@ -1191,6 +1192,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product.save()
 
         try:
+            product.monitor_product()
             if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(product.store, product.shopify_id, product.default_supplier.supplier_name)
         except:
@@ -2692,10 +2694,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 store = ShopifyStore.objects.get(id=data.get('store'))
                 permissions.user_can_view(user, store)
 
-                AliexpressProductChange.objects.filter(product__store=store).update(hidden=1)
+                ProductChange.objects.filter(shopify_product__store=store).update(hidden=1)
 
             else:
-                alert = AliexpressProductChange.objects.get(id=data.get('alert'))
+                alert = ProductChange.objects.get(id=data.get('alert'))
                 permissions.user_can_edit(user, alert)
 
                 alert.hidden = 1
@@ -2711,7 +2713,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             store = ShopifyStore.objects.get(id=data.get('store'))
             permissions.user_can_view(user, store)
 
-            AliexpressProductChange.objects.filter(product__store=store).delete()
+            ProductChange.objects.filter(shopify_product__store=store).delete()
 
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)

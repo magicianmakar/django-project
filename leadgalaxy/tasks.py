@@ -32,6 +32,9 @@ from leadgalaxy.statuspage import record_import_metric
 from shopify_orders import utils as order_utils
 from product_alerts.events import ProductChangeEvent
 
+from product_alerts.models import ProductChange
+from product_alerts.managers import ProductChangeManager
+
 from product_feed.feed import generate_product_feed, generate_chq_product_feed, generate_woo_product_feed
 from product_feed.models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus
 
@@ -383,75 +386,7 @@ def export_product(req_data, target, user_id):
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_product(self, store_id, shopify_id, shopify_product=None, product_id=None):
-    try:
-        store = ShopifyStore.objects.get(id=store_id)
-        try:
-            if product_id:
-                product = ShopifyProduct.objects.get(store=store, id=product_id)
-            else:
-                product = ShopifyProduct.objects.get(store=store, shopify_id=shopify_id)
-        except:
-            return
-
-        if shopify_product is None:
-            shopify_product = cache.get('webhook_product_{}_{}'.format(store_id, shopify_id))
-
-        if shopify_product is None:
-            rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(shopify_id), api=True))
-
-            if rep.ok:
-                shopify_product = rep.json()['product']
-            else:
-                if rep.status_code in [401, 402, 403, 404]:
-                    return
-                else:
-                    rep.raise_for_status()
-
-        product_data = json.loads(product.data)
-        product_data['title'] = shopify_product['title']
-        product_data['type'] = shopify_product['product_type']
-        product_data['tags'] = shopify_product['tags']
-        product_data['images'] = [i['src'] for i in shopify_product['images']]
-        product_data['description'] = shopify_product['body_html']
-        product_data['published'] = shopify_product.get('published_at') is not None
-
-        prices = [utils.safeFloat(i['price'], 0.0) for i in shopify_product['variants']]
-        compare_at_prices = [utils.safeFloat(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
-
-        if len(set(prices)) == 1:  # If all variants have the same price
-            product_data['price'] = prices[0]
-            product_data['price_range'] = None
-        else:
-            product_data['price'] = min(prices)
-            product_data['price_range'] = [min(prices), max(prices)]
-
-        if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
-            product_data['compare_at_price'] = compare_at_prices[0]
-        else:
-            product_data['compare_at_price'] = max(compare_at_prices)
-
-        product.data = json.dumps(product_data)
-        product.save()
-
-        # Delete Product images cache
-        ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
-
-        # update collections
-        utils.ProductCollections().update_product_collects_shopify_id(product)
-
-    except ShopifyStore.DoesNotExist:
-        raven_client.captureException()
-
-    except Exception as e:
-        raven_client.captureException(level='warning', extra={
-            'Store': store.title,
-            'Product': shopify_id,
-            'Retries': self.request.retries
-        })
-
-        if not self.request.called_directly:
-            countdown = retry_countdown('retry_product_{}'.format(shopify_id), self.request.retries)
-            raise self.retry(exc=e, countdown=countdown, max_retries=3)
+    utils.update_shopify_product(self, store_id, shopify_id, shopify_product=shopify_product, product_id=product_id)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -689,6 +624,17 @@ def product_change_alert(change_id):
         product_change = AliexpressProductChange.objects.get(pk=change_id)
         product_change_event = ProductChangeEvent(product_change)
         product_change_event.take_action()
+
+    except:
+        raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, ignore_result=True)
+def manage_product_change(change_id):
+    try:
+        product_change = ProductChange.objects.get(pk=change_id)
+        manager = ProductChangeManager.initialize(product_change)
+        manager.apply_changes()
 
     except:
         raven_client.captureException()

@@ -1622,59 +1622,17 @@ def product_changes_remap(changes):
         'variants': {
             'quantity': [],
             'price': [],
-            'new': [],
-            'removed': [],
+            'var_added': [],
+            'var_removed': [],
         }
     }
 
-    products = changes['changes'].get('product')
-    if products and len(products):
-        for i in products:
-            remapped['product']['offline'].append({
-                'category': i['category'],
-                'new_value': i['new_value'],
-                'old_value': i['old_value'],
-            })
-
-    variants = changes['changes'].get('variants')
-    if variants and len(variants):
-        for i in variants:
-            if not i or not i.get('changes'):
-                continue
-
-            for change in i.get('changes'):
-                if change['category'] == 'Availability':
-                    remapped['variants']['quantity'].append({
-                        'category': change['category'],
-                        'new_value': change['new_value'],
-                        'old_value': change['old_value'],
-                        'variant_desc': get_variant_name(i),
-                        'variant_id': i['variant_id'],
-                    })
-                if change['category'] == 'Price':
-                    remapped['variants']['price'].append({
-                        'category': change['category'],
-                        'new_value': change['new_value'],
-                        'old_value': change['old_value'],
-                        'variant_desc': get_variant_name(i),
-                        'variant_id': i['variant_id'],
-                    })
-                if change['category'] == 'new':
-                    remapped['variants']['new'].append({
-                        'category': change['category'],
-                        'price': change['price'],
-                        'quantity': change['quantity'],
-                        'variant_desc': get_variant_name(i),
-                        'variant_id': i['variant_id'],
-                    })
-                if change['category'] == 'removed':
-                    remapped['variants']['removed'].append({
-                        'category': change['category'],
-                        'price': change['price'],
-                        'quantity': change['quantity'],
-                        'variant_desc': get_variant_name(i),
-                        'variant_id': i['variant_id'],
-                    })
+    if changes and len(changes):
+        for change in changes:
+            if change.get('level') == 'product':
+                remapped['product'][change['name']].append(change)
+            if change.get('level') == 'variant':
+                remapped['variants'][change['name']].append(change)
 
     return remapped
 
@@ -2069,6 +2027,77 @@ def attach_boards_with_product(user, product, ids):
             permissions.user_can_edit(user, board)
             board.products.add(product)
             board.save()
+
+
+def update_shopify_product(self, store_id, shopify_id, shopify_product=None, product_id=None):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+        try:
+            if product_id:
+                product = ShopifyProduct.objects.get(store=store, id=product_id)
+            else:
+                product = ShopifyProduct.objects.get(store=store, shopify_id=shopify_id)
+        except:
+            return
+
+        if shopify_product is None:
+            shopify_product = cache.get('webhook_product_{}_{}'.format(store_id, shopify_id))
+
+        if shopify_product is None:
+            rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(shopify_id), api=True))
+
+            if rep.ok:
+                shopify_product = rep.json()['product']
+            else:
+                if rep.status_code in [401, 402, 403, 404]:
+                    return
+                else:
+                    rep.raise_for_status()
+
+        product_data = json.loads(product.data)
+        product_data['title'] = shopify_product['title']
+        product_data['type'] = shopify_product['product_type']
+        product_data['tags'] = shopify_product['tags']
+        product_data['images'] = [i['src'] for i in shopify_product['images']]
+        product_data['description'] = shopify_product['body_html']
+        product_data['published'] = shopify_product.get('published_at') is not None
+
+        prices = [safeFloat(i['price'], 0.0) for i in shopify_product['variants']]
+        compare_at_prices = [safeFloat(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
+
+        if len(set(prices)) == 1:  # If all variants have the same price
+            product_data['price'] = prices[0]
+            product_data['price_range'] = None
+        else:
+            product_data['price'] = min(prices)
+            product_data['price_range'] = [min(prices), max(prices)]
+
+        if len(set(compare_at_prices)) == 1:  # If all variants have the same compare at price
+            product_data['compare_at_price'] = compare_at_prices[0]
+        else:
+            product_data['compare_at_price'] = max(compare_at_prices)
+
+        product.data = json.dumps(product_data)
+        product.save()
+
+        # Delete Product images cache
+        ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
+
+        # update collections
+        ProductCollections().update_product_collects_shopify_id(product)
+    except ShopifyStore.DoesNotExist:
+        raven_client.captureException()
+
+    except Exception as e:
+        raven_client.captureException(level='warning', extra={
+            'Store': store.title,
+            'Product': shopify_id,
+            'Retries': self.request.retries if self else None
+        })
+
+        if self and not self.request.called_directly:
+            countdown = retry_countdown('retry_product_{}'.format(shopify_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
 # Helper Classes
