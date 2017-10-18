@@ -32,7 +32,6 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from raven.contrib.django.raven_compat.models import client as raven_client
-import keen
 
 from analytic_events.models import RegistrationEvent
 
@@ -3289,11 +3288,8 @@ def orders_place(request):
             'cart': 'SACart' in request.GET
         })
 
-        try:
-            keen.add_event("auto_fulfill", event_data)
-            cache.set(event_key, True, timeout=3600)
-        except:
-            raven_client.captureException(level='warning')
+        tasks.keen_add_event.delay("auto_fulfill", event_data)
+        cache.set(event_key, True, timeout=3600)
 
     return HttpResponseRedirect(redirect_url)
 

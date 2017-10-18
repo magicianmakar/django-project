@@ -5,6 +5,8 @@ import time
 import tempfile
 import zipfile
 import os.path
+import keen
+
 from simplejson import JSONDecodeError
 from datetime import timedelta
 
@@ -977,3 +979,11 @@ def calculate_user_statistics(self, user_id):
 
     except:
         raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
+def keen_add_event(self, event_name, event_data):
+    try:
+        keen.add_event(event_name, event_data)
+    except:
+        raven_client.captureException(level='warning')
