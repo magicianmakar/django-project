@@ -260,6 +260,7 @@ function placeOrder(e) {
         }).done(function(data) {
             swal.close();
             toastr.success('Item was ordered.', 'Order Placed');
+            btn.hide();
 
         }).fail(function(data) {
             displayAjaxError('Place Order', data);

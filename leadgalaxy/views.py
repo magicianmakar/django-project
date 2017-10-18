@@ -2900,6 +2900,11 @@ def orders_view(request):
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
 
+                if supplier and supplier.is_dropwow:
+                    order['line_items'][i]['dropwow_retry'] = (not dropwow_order and not shopify_order) \
+                        or (dropwow_order and dropwow_order.error_message) \
+                        or (not shopify_order or shopify_order.source_status in ['F', 'D', 'I'])
+
                 if fix_order_variants:
                     mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
                     if not mapped:

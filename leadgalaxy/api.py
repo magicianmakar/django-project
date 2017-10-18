@@ -1926,8 +1926,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         shopify_order = utils.get_shopify_order(store, order_id)
 
         _order, customer_address = utils.shopify_customer_address(shopify_order)
-        if customer_address['country_code'] != 'US':
-            return self.api_error('Dropwow support US customers only')
 
         result = shopify_orders_tasks.fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id)
         if not result:
