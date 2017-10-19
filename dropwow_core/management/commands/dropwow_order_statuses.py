@@ -14,7 +14,7 @@ class Command(DropifiedBaseCommand):
         tracks = ShopifyOrderTrack.objects.filter(source_type='dropwow') \
             .filter(Q(source_tracking='') | Q(source_tracking='0')) \
             .exclude(shopify_status='fulfilled') \
-            .exclude(source_status__in=['F', 'D', 'I']) \
+            .exclude(source_status__in=['D', 'I']) \
             .exclude(Q(source_id=None) | Q(source_id=''))
 
         self.write_success('Checking {} Tracks'.format(len(tracks)))
