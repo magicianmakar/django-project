@@ -11,7 +11,7 @@
   "boss": true,
   "eqnull": true,
   "node": true,
-  "trailing"      : false,
+  "trailing" : false,
   "globals": {
     "window": false,
     "document": false,
@@ -22,13 +22,13 @@
   },
   "predef": [
     "atob", "btoa", "Event", "Image", "localStorage", "swal", "toastr",
-    "Raven", "XMLHttpRequest", "Uint8Array", hashText,
+    "Raven", "XMLHttpRequest", "Uint8Array", "hashText",
     "api_base", "getAjaxError", "loginError", "displayAjaxError", "isLoggedIn",
     "getUserConfig", "syncUserConfig", "convert_kgToLbs", "convert_LbsToKg", "convert_LbsToG",
     "convert_LbsToOz", "getQueryVariable", "getPathInfo", "matchDomainName", "locationMatch",
     "getDomainName", "cleanUrlPath", "getFileName", "getFileExt", "hashUrlFileName", "getNow",
     "cleanURLParameter", "titleCase", "contentScriptMessage", "contentScriptMessageAll",
     "addScriptString", "addScriptLink", "addStyleString", "addStyleLink", "reduceWhitespaceHTML",
-    "runAfter", "versionCompare", "changeToastrStyle",
+    "runAfter", "versionCompare", "changeToastrStyle"
   ]
 }
