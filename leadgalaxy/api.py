@@ -1840,8 +1840,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
 
         if unfulfilled_only:
-            order_tracks = order_tracks.filter(source_tracking='') \
-                                       .filter(check_count__lte=250) \
+            order_tracks = order_tracks.filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
+                                       .filter(source_tracking='') \
                                        .exclude(shopify_status='fulfilled') \
                                        .exclude(source_status='FINISH')
 

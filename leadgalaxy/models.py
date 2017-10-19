@@ -731,7 +731,7 @@ class ShopifyStore(models.Model):
 
         return self.shopifyordertrack_set.filter(hidden=False) \
                                          .filter(source_tracking='') \
-                                         .filter(check_count__lte=250) \
+                                         .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                          .exclude(shopify_status='fulfilled') \
                                          .exclude(source_status='FINISH') \
                                          .count()
