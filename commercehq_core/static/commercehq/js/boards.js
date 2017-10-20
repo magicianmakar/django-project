@@ -140,7 +140,11 @@ $(document).ready(function() {
             confirmButtonColor: "#DD6B55",
             confirmButtonText: "Empty Board",
             closeOnConfirm: false
-        }, function() {
+        }, function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
+            }
+
             $.ajax({
                 url: api_url('board-empty', 'chq'),
                 data: {board_id: boardId},

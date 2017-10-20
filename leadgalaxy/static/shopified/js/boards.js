@@ -185,6 +185,10 @@ $('.board-empty').click(function(e) {
         cancelButtonText: "Cancel"
     },
     function(isConfirmed) {
+        if (!isConfirmed) {
+            return;
+        }
+
         $.ajax({
             url: '/api/board-empty',
             type: 'POST',
