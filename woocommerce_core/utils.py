@@ -654,7 +654,7 @@ def woo_customer_address(order):
     customer_address['province_code'] = customer_address.get('state')
     customer_address['zip'] = customer_address.get('postcode')
 
-    customer_address['country'] = country_from_code(customer_address['country_code'])
+    customer_address['country'] = country_from_code(customer_address['country_code'], '')
     customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
 
     if not customer_address.get('province'):
@@ -698,7 +698,7 @@ def woo_customer_address(order):
             if not re.findall('^([0-9A-Za-z]{2,4}\s[0-9A-Za-z]{3})$', customer_address['zip']):
                 customer_address['zip'] = re.sub(r'(.+)([0-9A-Za-z]{3})$', r'\1 \2', customer_address['zip'])
 
-    customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name'])
+    customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
     return customer_address
 

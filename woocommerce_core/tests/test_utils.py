@@ -2,7 +2,7 @@ from mock import patch, Mock
 
 from django.test import TestCase
 
-from ..utils import WooListQuery
+from ..utils import WooListQuery, woo_customer_address
 from .factories import WooStoreFactory
 
 
@@ -41,3 +41,24 @@ class WooListQueryTest(TestCase):
             query.count()
             query.count()
             get.assert_called_once()
+
+
+class WooCommerceAddressTest(TestCase):
+    def setUp(self):
+        self.order = {
+            'shipping': {
+                'address_1': '',
+                'address_2': '',
+                'city': '',
+                'company': '',
+                'country': '',
+                'first_name': '',
+                'last_name': '',
+                'postcode': '',
+                'state': ''
+            }
+        }
+
+    def test_must_return_address_even_if_all_values_are_empty_strings(self):
+        for value in woo_customer_address(self.order).values():
+            self.assertEqual(value, '')
