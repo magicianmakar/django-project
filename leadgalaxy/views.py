@@ -1389,7 +1389,7 @@ def mapping_bundle(request, product_id):
         if images.get(v['id']):
             v['image'] = images.get(v['id'])
         elif shopify_product.get('image') and shopify_product.get('image').get('src'):
-            v['image'] = shopify_product.get['image']['src']
+            v['image'] = shopify_product['image']['src']
 
         v['products'] = product.get_bundle_mapping(v['id'], default=[])
 
@@ -2208,7 +2208,7 @@ def autocomplete(request, target):
                 if images.get(v['id']):
                     shopify_product['variants'][i]['image'] = images.get(v['id'])
                 elif shopify_product.get('image') and shopify_product.get('image').get('src'):
-                    shopify_product['variants'][i]['image'] = shopify_product.get['image']['src']
+                    shopify_product['variants'][i]['image'] = shopify_product['image']['src']
 
             results = []
             for v in shopify_product['variants']:
