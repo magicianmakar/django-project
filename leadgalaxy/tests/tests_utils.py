@@ -785,6 +785,7 @@ class ShippingHelperTestCase(TestCase):
         self.assertTrue(valide_aliexpress_province('uk', 'england', 'Kent'))
         self.assertFalse(valide_aliexpress_province('uk', 'england', 'NotFound'))
         self.assertFalse(valide_aliexpress_province('uk', 'NotFound', 'Kent'))
+        self.assertFalse(valide_aliexpress_province('au', 'New South Wales', 'Teven'))
 
     def test_uk_fix_address(self):
         self.assertEqual(get_uk_province('Kent'), 'england')
