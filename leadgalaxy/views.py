@@ -2539,7 +2539,7 @@ def orders_view(request):
                 created_at_end = created_at_end.span('day')[1].datetime
 
         except:
-            created_at_daterange = None
+            pass
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
     store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))

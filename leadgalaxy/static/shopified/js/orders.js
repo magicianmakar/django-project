@@ -1181,7 +1181,7 @@ $(function () {
         }
     }, function(start, end, label) {
         $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-        $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'))
+        $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
     });
 
     $('#created_at_daterange').on('apply.daterangepicker', function(ev, picker) {
@@ -1193,11 +1193,13 @@ $(function () {
         }
 
         if (start.isValid() && end.isValid()) {
-            $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-            $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'))
+            $('#created_at_daterange span').html(
+                start.format(start.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+                 end.format(end.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
+            $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
         } else {
             $('#created_at_daterange span').html('All Time');
-            $('input[name="created_at_daterange"]').val('all')
+            $('input[name="created_at_daterange"]').val('all');
         }
     });
 
@@ -1207,7 +1209,7 @@ $(function () {
     });
 
     var createdAtDaterangeValue = $('input[name="created_at_daterange"]').val();
-    if (createdAtDaterangeValue != '' && createdAtDaterangeValue != '-') {
+    if (createdAtDaterangeValue && createdAtDaterangeValue.indexOf('-') !== -1) {
         var dates = createdAtDaterangeValue.split('-'),
             createdAtStart = moment(dates[0], 'MM/DD/YYYY'),
             createdAtEnd = moment(dates[1], 'MM/DD/YYYY');
@@ -1216,7 +1218,9 @@ $(function () {
             createdAtEnd = moment();
         }
 
-        $('#created_at_daterange span').html(createdAtStart.format('MMMM D, YYYY') + ' - ' + createdAtEnd.format('MMMM D, YYYY'));
+        $('#created_at_daterange span').html(
+            createdAtStart.format(createdAtStart.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+            createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
     }
 
     setTimeout(function() {
