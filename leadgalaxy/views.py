@@ -2921,6 +2921,9 @@ def orders_view(request):
                     product_bundles = []
                     for idx, b in enumerate(bundles):
                         b_product = ShopifyProduct.objects.filter(id=b['id']).select_related('default_supplier').first()
+                        if not b_product:
+                            continue
+
                         b_variant_id = b_product.get_real_variant_id(b['variant_id'])
                         b_supplier = b_product.get_suppier_for_variant(variant_id)
                         if b_supplier:
