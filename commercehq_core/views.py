@@ -675,7 +675,7 @@ class OrdersList(ListView):
                                     variant_id=b_variant_id,
                                     country_code=country_code)
                             else:
-                                b_shipping_method = None
+                                continue
 
                             b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
                             if variant_id and b_variant_mapping:
