@@ -118,6 +118,7 @@ class WooStoreApi(ApiResponseMixin, View):
             r = store.wcapi.get('products')
             r.raise_for_status()
         except HTTPError:
+            raven_client.captureException()
             return False
 
         return True
