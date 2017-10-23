@@ -7,6 +7,8 @@
 {% load url_tools %}
 
 {% block main-container %}
+
+{% if user|can:'profit_dashboard_facebook.user' %}
 <div class="ibox float-e-margins" id="facebook-insights" style="display: none;">
   <div class="ibox-title">
       <h5>Facebook Ad Costs</h5>
@@ -49,6 +51,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <div class="tabs-container">
   <ul class="nav nav-tabs">
@@ -414,7 +417,11 @@
   <script type="text/javascript">
     var config = {
       facebook: {
+        {% if user|can:'profit_dashboard_facebook.user' %}
         appId: "{% app_setting 'FACEBOOK_APP_ID' %}"
+        {% else %}
+        appId: null
+        {% endif %}
       },
       sub_conf: {
         key: "{% app_setting 'PUSHER_KEY' %}",

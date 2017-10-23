@@ -674,6 +674,10 @@ var FacebookProfitDashboard = {
 FacebookProfitDashboard.init();
 
 window.fbAsyncInit = function() {
+    if (!config.facebook.appId) {
+        return;
+    }
+
     FB.init({
         appId      : config.facebook.appId,
         cookie     : true,  // enable cookies to allow the server to access the session
@@ -686,7 +690,7 @@ window.fbAsyncInit = function() {
     });
 
     FB.Event.subscribe('auth.logout', FacebookProfitDashboard.facebookStatus.connect);
-}
+};
 
 $(function () {
     $('#fb-ad-setup').click(function(e) {
