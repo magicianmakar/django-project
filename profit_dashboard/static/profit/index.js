@@ -96,12 +96,6 @@ Currency.init();
         chartsLabels: [],
         profitChart: null,
         profitChartData: null,
-        fulfillmentCostsChart: null,
-        fulfillmentCostsChartData: null,
-        adsSpendChart: null,
-        adsSpendChartData: null,
-        otherCostsChart: null,
-        otherCostsChartData: null,
         chartTime: 'daily',  // daily, weekly, monthly
         min_months_for_weekly_chart: 4,
         min_months_for_daily_chart: 2,
@@ -121,8 +115,6 @@ Currency.init();
             this.onTabsChange();
             this.onChartToggleDataClick();
 
-            this.checkCalculationPusher();
-
             if (window.location.hash) {
                 $('#top-controls-menu a[href="' + window.location.hash + '"]').trigger('click');
             }
@@ -134,7 +126,8 @@ Currency.init();
             $('#profit-range .input-daterange').datepicker({
                 keyboardNavigation: false,
                 forceParse: false,
-                autoclose: true
+                autoclose: true,
+                startDate: moment().subtract(35, 'days').format('MM/DD/YYYY')
             });
         },
         initExpandable: function() {
@@ -231,85 +224,6 @@ Currency.init();
         hideDataGenerationLoading: function() {
             $('#loading-data').css('display', 'none');
             $('#profit-data').css('display', '');
-        },
-        checkCalculationPusher: function() {
-            if (config.runningCalculation) {
-                var pusher = new Pusher(config.sub_conf.key);
-                var channel = pusher.subscribe(config.sub_conf.channel);
-
-                channel.bind('profit-calculations', function(data) {
-                    if (data.success) {
-                        ProfitDashboard.reloadData();
-                    } else {
-                        displayAjaxError(
-                            'Profit Calculations',
-                            'There was an error calculating your profits, reload the page or contact our support for further assistance'
-                        );
-                    }
-                });
-            }
-        },
-        reloadData: function() {
-            var endDate = $('input[name="end"]').val(),
-                startDate = $('input[name="start"]').val(),
-                limit = location.search.match(/limit=(\d+)/),
-                page = $('.pagination .active span').text();
-
-            if (limit != null) {
-                limit = limit[1];
-            }
-
-            $.ajax({
-                type: 'get',
-                url: '/profit-dashboard/profits',
-                data: {start: startDate, end: endDate, limit: limit, page: page},
-                dataType: 'json',
-                success: function(result) {
-                    ProfitDashboard.profitsData = result.chart_profits;
-                    $('#profits tbody tr').remove();
-
-                    for (var i = 0, iLength = result.profits.length; i < iLength; i++) {
-                        var profitRow = Handlebars.compile($("#profit").html()),
-                            profit = result.profits[i],
-                            profitData = $.extend({}, profit, {
-                                'currency_sign': config.currencySign,
-                                'other_costs_url': config.profitOtherCostsAjaxUrl
-                            });
-
-                        profitData['item'] = $.extend({}, profitData['item'], {
-                            'currency_revenue': Currency.format(profit.item.revenue),
-                            'currency_fulfillment_cost': Currency.format(profit.item.fulfillment_cost),
-                            'currency_ad_spend': Currency.format(profit.item.ad_spend),
-                            'currency_outcome': Currency.format(profit.item.outcome, true),
-                            'currency_profit': Currency.format(profit.item.profit, true),
-                            'other_costs': profit.item.other_costs.toFixed(2)
-                        });
-
-                        $('#profits tbody').append(profitRow({'profit': profitData}));
-                    }
-
-                    var profitTotals = Handlebars.compile($("#profit-totals").html()),
-                        totalsData = $.extend({}, result.totals, {
-                            'currency_revenue': Currency.format(result.totals.revenue),
-                            'currency_ad_spend': Currency.format(result.totals.ad_spend),
-                            'currency_fulfillment_cost': Currency.format(result.totals.fulfillment_cost),
-                            'currency_profit': Currency.format(result.totals.profit, true),
-                            'currency_other_costs': Currency.format(result.totals.other_costs, true),
-                            'currency_outcome': Currency.format(result.totals.outcome),
-                            'profit': result.totals.profit.toFixed(2),
-                            'other_costs': result.totals.other_costs.toFixed(2),
-                            'outcome': result.totals.outcome.toFixed(2)
-                        });
-
-                    $('.table.totals tbody').remove();
-                    $('.table.totals').append(profitTotals({'totals': totalsData}));
-
-                    ProfitDashboard.hideDataGenerationLoading();
-                    ProfitDashboard.reloadExpandable();
-                    ProfitDashboard.fixStripes();
-                    ProfitDashboard.reloadCharts();
-                }
-            });
         },
         onOtherCostsChange: function() {
             $('#profits').on('submit', 'tr .other-costs-form', function(e) {
@@ -419,11 +333,11 @@ Currency.init();
                         continue;
                     }
 
-                    results.revenue.push(+profit.item.revenue.toFixed(2));
-                    results.fulfillment_cost.push(+profit.item.fulfillment_cost.toFixed(2));
-                    results.ads_spend.push(+profit.item.ad_spend.toFixed(2));
-                    results.other_costs.push(+profit.item.other_costs.toFixed(2));
-                    var total_costs = profit.item.fulfillment_cost + profit.item.ad_spend + profit.item.other_costs;
+                    results.revenue.push(+profit.revenue.toFixed(2));
+                    results.fulfillment_cost.push(+profit.fulfillment_cost.toFixed(2));
+                    results.ads_spend.push(+profit.ad_spend.toFixed(2));
+                    results.other_costs.push(+profit.other_costs.toFixed(2));
+                    var total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
                     results.total_costs.push(+total_costs.toFixed(2));
                 }
             } else if (this.chartTime == 'weekly') {
@@ -453,11 +367,11 @@ Currency.init();
                         results.total_costs[position] = 0.0;
                     }
 
-                    var total_costs = profit.item.fulfillment_cost + profit.item.ad_spend + profit.item.other_costs;
-                    results.revenue[position] = +(results.revenue[position] + profit.item.revenue).toFixed(2);
-                    results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.item.fulfillment_cost).toFixed(2);
-                    results.ads_spend[position] = +(results.ads_spend[position] + profit.item.ad_spend).toFixed(2);
-                    results.other_costs[position] = +(results.other_costs[position] + profit.item.other_costs).toFixed(2);
+                    var total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
+                    results.revenue[position] = +(results.revenue[position] + profit.revenue).toFixed(2);
+                    results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.fulfillment_cost).toFixed(2);
+                    results.ads_spend[position] = +(results.ads_spend[position] + profit.ad_spend).toFixed(2);
+                    results.other_costs[position] = +(results.other_costs[position] + profit.other_costs).toFixed(2);
                     results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                 }
             } else if (this.chartTime == 'monthly') {
@@ -470,21 +384,21 @@ Currency.init();
                         continue;
                     }
                     var currentDate = profit.date_as_string.replace(/\/\d{2}\//, ''),
-                        total_costs = profit.item.fulfillment_cost + profit.item.ad_spend + profit.item.other_costs;
+                        total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
 
                     if (currentDate != lastDate) {
                         position += 1;
                         lastDate = currentDate;
-                        results.revenue[position] = +profit.item.revenue.toFixed(2);
-                        results.fulfillment_cost[position] = +profit.item.fulfillment_cost.toFixed(2);
-                        results.ads_spend[position] = +profit.item.ad_spend.toFixed(2);
-                        results.other_costs[position] = +profit.item.other_costs.toFixed(2);
+                        results.revenue[position] = +profit.revenue.toFixed(2);
+                        results.fulfillment_cost[position] = +profit.fulfillment_cost.toFixed(2);
+                        results.ads_spend[position] = +profit.ad_spend.toFixed(2);
+                        results.other_costs[position] = +profit.other_costs.toFixed(2);
                         results.total_costs[position] = +total_costs.toFixed(2);
                     } else {
-                        results.revenue[position] = +(results.revenue[position] + profit.item.revenue).toFixed(2);
-                        results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.item.fulfillment_cost).toFixed(2);
-                        results.ads_spend[position] = +(results.ads_spend[position] + profit.item.ad_spend).toFixed(2);
-                        results.other_costs[position] = +(results.other_costs[position] + profit.item.other_costs).toFixed(2);
+                        results.revenue[position] = +(results.revenue[position] + profit.revenue).toFixed(2);
+                        results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.fulfillment_cost).toFixed(2);
+                        results.ads_spend[position] = +(results.ads_spend[position] + profit.ad_spend).toFixed(2);
+                        results.other_costs[position] = +(results.other_costs[position] + profit.other_costs).toFixed(2);
                         results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                     }
                 }
@@ -569,117 +483,12 @@ Currency.init();
                     }
                 ]
             };
-
-            this.fulfillmentCostsChartData = {
-                labels: this.chartsLabels,
-                datasets: [
-                    {
-                        label: "Fulfillment Cost",
-                        fill: false,
-                        backgroundColor: 'rgba(248, 172, 89, 0.5)',
-                        borderColor: "rgba(248, 172, 89, 0.7)",
-                        dataKey: 'fulfillment_cost',
-                        data: this.chartsData.fulfillment_cost
-                    }
-                ]
-            };
-
-            this.adsSpendChartData = {
-                labels: this.chartsLabels,
-                datasets: [
-                    {
-                        label: "Ads Spend",
-                        fill: false,
-                        backgroundColor: 'rgba(248, 172, 89, 0.5)',
-                        borderColor: "rgba(248, 172, 89, 0.7)",
-                        dataKey: 'ads_spend',
-                        data: this.chartsData.ads_spend
-                    }
-                ]
-            };
-
-            this.otherCostsChartData = {
-                labels: this.chartsLabels,
-                datasets: [
-                    {
-                        label: "Other Costs",
-                        fill: false,
-                        backgroundColor: 'rgba(248, 172, 89, 0.5)',
-                        borderColor: "rgba(248, 172, 89, 0.7)",
-                        dataKey: 'other_costs',
-                        data: this.chartsData.other_costs
-                    }
-                ]
-            };
         },
         loadCharts: function() {
             var ctx = $("#profits-chart").get(0).getContext("2d");
             this.profitChart = new Chart(ctx, {
                 type: 'line',
                 data: this.profitChartData,
-                options: {
-                    responsive: true,
-                    tooltips: {mode: 'index', intersect: false},
-                    hover: {mode: 'nearest', intersect: true},
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true,
-                                callback: function(value, index, values) {
-                                    return Currency.format(value);
-                                }
-                            }
-                        }]
-                    }
-                }
-            });
-
-            var ctx = $("#fulfillment-costs-chart").get(0).getContext("2d");
-            this.fulfillmentCostsChart = new Chart(ctx, {
-                type: 'line',
-                data: this.fulfillmentCostsChartData,
-                options: {
-                    responsive: true,
-                    tooltips: {mode: 'index', intersect: false},
-                    hover: {mode: 'nearest', intersect: true},
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true,
-                                callback: function(value, index, values) {
-                                    return Currency.format(value);
-                                }
-                            }
-                        }]
-                    }
-                }
-            });
-
-            var ctx = $("#ads-spend-chart").get(0).getContext("2d");
-            this.adsSpendChart = new Chart(ctx, {
-                type: 'line',
-                data: this.adsSpendChartData,
-                options: {
-                    responsive: true,
-                    tooltips: {mode: 'index', intersect: false},
-                    hover: {mode: 'nearest', intersect: true},
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true,
-                                callback: function(value, index, values) {
-                                    return Currency.format(value);
-                                }
-                            }
-                        }]
-                    }
-                }
-            });
-
-            var ctx = $("#other-cost-chart").get(0).getContext("2d");
-            this.otherCostsChart = new Chart(ctx, {
-                type: 'line',
-                data: this.otherCostsChartData,
                 options: {
                     responsive: true,
                     tooltips: {mode: 'index', intersect: false},
@@ -709,25 +518,7 @@ Currency.init();
                 dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
 
-            this.fulfillmentCostsChartData.labels = this.chartsLabels;
-            this.fulfillmentCostsChartData.datasets.forEach(function(dataset) {
-                dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
-            });
-
-            this.adsSpendChartData.labels = this.chartsLabels;
-            this.adsSpendChartData.datasets.forEach(function(dataset) {
-                dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
-            });
-
-            this.otherCostsChartData.labels = this.chartsLabels;
-            this.otherCostsChartData.datasets.forEach(function(dataset) {
-                dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
-            });
-
             this.profitChart.update();
-            this.fulfillmentCostsChart.update();
-            this.adsSpendChart.update();
-            this.otherCostsChart.update();
         },
         activateGraphView: function(btn) {
             $('#graph-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');

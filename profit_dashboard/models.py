@@ -22,36 +22,35 @@ class FacebookAccount(models.Model):
     account_name = models.CharField(max_length=255)
 
 
-class FacebookInsight(models.Model):
+class FacebookAdCost(models.Model):
     account = models.ForeignKey(FacebookAccount,
-                                related_name='insights',
+                                related_name='costs',
                                 on_delete=models.CASCADE)
-    date = models.DateField()
+    created_at = models.DateField()
     impressions = models.IntegerField(default=0)
     spend = models.DecimalField(decimal_places=2, max_digits=9)
 
     class Meta:
-        ordering = ['date']
+        ordering = ['-created_at']
 
 
-class ShopifyProfit(models.Model):
+class AliexpressFulfillmentCost(models.Model):
     store = models.ForeignKey(ShopifyStore)
-    date = models.DateField()
-    revenue = models.DecimalField(decimal_places=2, max_digits=9, default=0)
-    fulfillment_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
-    other_costs = models.DecimalField(decimal_places=2, max_digits=9, default=0)
+    source_id = models.CharField(max_length=512, blank=True, default='', db_index=True)
+    order_id = models.BigIntegerField()
+    created_at = models.DateField()
+    shipping_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
+    products_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
+    total_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
 
     class Meta:
-        ordering = ['date']
+        ordering = ['-created_at']
 
 
-class ShopifyProfitImportedOrder(models.Model):
-    profit = models.ForeignKey(ShopifyProfit, related_name='imported_orders')
-    order_id = models.BigIntegerField()
-
-
-class ShopifyProfitImportedOrderTrack(models.Model):
-    profit = models.ForeignKey(ShopifyProfit, related_name='imported_order_tracks')
-    order_id = models.BigIntegerField()
-    source_id = models.CharField(max_length=512, blank=True, default='')
+class OtherCost(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    date = models.DateField()
     amount = models.DecimalField(decimal_places=2, max_digits=9, default=0)
+
+    class Meta:
+        ordering = ['-date']

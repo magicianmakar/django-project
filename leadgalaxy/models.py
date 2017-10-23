@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 from django.db.models import Q
 from django.core.cache import cache
@@ -2125,3 +2125,46 @@ def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
         for store in stores:
             permissions = store.subuser_woo_permissions.all()
             instance.subuser_woo_permissions.add(*permissions)
+
+
+@receiver(post_save, sender=ShopifyOrderTrack)
+def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
+    if instance.store_id is not None:
+        from profit_dashboard.models import AliexpressFulfillmentCost
+        if instance.source_id:
+            data = json.loads(instance.data) if instance.data else {}
+            total_cost = 0.0
+            shipping_cost = 0.0
+            products_cost = 0.0
+
+            if data.get('aliexpress') and data.get('aliexpress').get('order_details') and \
+                    data.get('aliexpress').get('order_details').get('cost'):
+                total_cost = data['aliexpress']['order_details']['cost'].get('total', 0)
+                shipping_cost = data['aliexpress']['order_details']['cost'].get('shipping', 0)
+
+            if data.get('aliexpress') and data.get('aliexpress').get('products') and \
+                    data.get('aliexpress').get('products').get('cost'):
+                products_cost = data['aliexpress']['products']['cost'].get('total', 0)
+
+            if total_cost > 0 or shipping_cost > 0 or products_cost > 0:
+                AliexpressFulfillmentCost.objects.update_or_create(
+                    store_id=instance.store_id,
+                    order_id=instance.order_id,
+                    source_id=instance.source_id,
+                    created_at=instance.created_at.date(),
+                    defaults={
+                        'shipping_cost': shipping_cost,
+                        'products_cost': products_cost,
+                        'total_cost': total_cost,
+                    }
+                )
+
+
+@receiver(post_delete, sender=ShopifyOrderTrack)
+def delete_aliexpress_fulfillment_cost(sender, instance, **kwargs):
+    from profit_dashboard.models import AliexpressFulfillmentCost
+    AliexpressFulfillmentCost.objects.filter(
+        store_id=instance.store_id,
+        order_id=instance.order_id,
+        source_id=instance.source_id
+    ).delete()

@@ -159,12 +159,8 @@
                   </table>
                 </div>
 
-                <div id="loading-data" class="col-md-12"{% if not running_calculation %} style="display: none;"{% endif %}>
-                  <i class="fa fa-circle-o-notch fa-spin"></i> Loading...
-                </div>
-
                 <br>
-                <div id="profit-data"{% if running_calculation %} style="display: none;"{% endif %}>
+                <div id="profit-data">
                   <table id="profits" class="table">
                     <thead>
                       <tr>
@@ -184,18 +180,18 @@
                       <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}
                       {% ifchanged profit.empty %}{% else %}{% if profit.empty %} style="display: none;"{% endif %}{% endifchanged %}>
                         <td>{{ profit.date_as_string }}</td>
-                        <td class="revenue" data-original-amount="{{ profit.item.revenue|default:"0"|floatformat:2 }}">
-                          {% money_format profit.item.revenue store True %}
+                        <td class="revenue" data-original-amount="{{ profit.revenue|default:"0"|floatformat:2 }}">
+                          {% money_format profit.revenue store True %}
                         </td>
-                        <td>{% money_format profit.item.fulfillment_cost store True %}</td>
-                        <td>{% money_format profit.item.ad_spend store True %}</td>
-                        <td class="other-costs" data-original-amount="{{ profit.item.other_costs|default:'0'|floatformat:2 }}">
+                        <td>{% money_format profit.fulfillment_cost store True %}</td>
+                        <td>{% money_format profit.ad_spend store True %}</td>
+                        <td class="other-costs" data-original-amount="{{ profit.other_costs|default:'0'|floatformat:2 }}">
                           <form class="form-inline other-costs-form" action="{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}">
                             <div class="form-group">
                               <label class="sr-only" for="other_costs">Amount</label>
                               <div class="input-group">
                                 <div class="input-group-addon">{% money_format None store %}</div>
-                                <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.item.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
+                                <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
                               </div>
                             </div>
                             <div class="form-group loading hidden">
@@ -210,12 +206,12 @@
                           </form>
                         </td>
                         <td class="total-costs">
-                          {% money_format None store %}<span data-original-amount="{{ profit.item.outcome|default:"0"|floatformat:2 }}">{{ profit.item.outcome|default:"0"|floatformat:2 }}</span>
+                          {% money_format None store %}<span data-original-amount="{{ profit.outcome|default:"0"|floatformat:2 }}">{{ profit.outcome|default:"0"|floatformat:2 }}</span>
                         </td>
                         <td class="profit-amount">
-                          {% money_format None store %}<span data-original-amount="{{ profit.item.profit|default:"0"|floatformat:2 }}">{{ profit.item.profit|default:"0"|floatformat:2 }}</span>
+                          {% money_format None store %}<span data-original-amount="{{ profit.profit|default:"0"|floatformat:2 }}">{{ profit.profit|default:"0"|floatformat:2 }}</span>
                         </td>
-                        <td class="percentage">{{ profit.item.return_over_investment }}</td>
+                        <td class="percentage">{{ profit.return_over_investment }}</td>
                         <td class="actions"></td>
                       </tr>
                       {% endfor %}
@@ -254,24 +250,6 @@
                     </ul>
                     <canvas id="profits-chart" height="100"></canvas>
                   </div>
-
-                  <br>
-                  <div class="chart">
-                    <h2>Fulfilment Costs</h2>
-                    <canvas id="fulfillment-costs-chart" height="60"></canvas>
-                  </div>
-
-                  <br>
-                  <div class="chart">
-                    <h2>Ads Spend</h2>
-                    <canvas id="ads-spend-chart" height="60"></canvas>
-                  </div>
-
-                  <br>
-                  <div class="chart">
-                    <h2>Other Costs</h2>
-                    <canvas id="other-cost-chart" height="60"></canvas>
-                  </div>
                 </div>
               </div>
           </div>
@@ -282,18 +260,19 @@
 
 {% verbatim %}
 <script id="profit" type="text/x-handlebars-template">
-  <tr id="date-{{profit.date_as_slug}}" class="profit {{profit.css_empty}}" data-toggle="profit-tooltip" data-placement="right" title="{{profit.week_day}}">
-    <td>{{profit.date_as_string}}</td>
-    <td class="revenue" data-original-amount="{{profit.item.revenue}}">{{profit.item.currency_revenue}}</td>
-    <td>{{profit.item.currency_fulfillment_cost}}</td>
-    <td>{{profit.item.currency_ad_spend}}</td>
-    <td class="other-costs" data-original-amount="{{profit.item.other_costs}}">
-      <form class="form-inline other-costs-form" action="{{profit.other_costs_url}}">
+  {{#each profits}}
+  <tr id="date-{{this.date_as_slug}}" class="profit {{this.css_empty}}" data-toggle="profit-tooltip" data-placement="right" title="{{this.week_day}}">
+    <td>{{this.date_as_string}}</td>
+    <td class="revenue" data-original-amount="{{this.revenue}}">{{this.currency_revenue}}</td>
+    <td>{{this.currency_fulfillment_cost}}</td>
+    <td>{{this.currency_ad_spend}}</td>
+    <td class="other-costs" data-original-amount="{{this.other_costs}}">
+      <form class="form-inline other-costs-form" action="{{this.other_costs_url}}">
         <div class="form-group">
           <label class="sr-only" for="other_costs">Amount</label>
           <div class="input-group">
-            <div class="input-group-addon">{{profit.currency_sign}}</div>
-            <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{profit.item.other_costs}}" size="10" autocomplete="off">
+            <div class="input-group-addon">{{this.currency_sign}}</div>
+            <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{this.other_costs}}" size="10" autocomplete="off">
           </div>
         </div>
         <div class="form-group loading hidden">
@@ -308,14 +287,15 @@
       </form>
     </td>
     <td class="total-costs">
-      {{profit.currency_sign}}<span data-original-amount="{{profit.item.outcome}}">{{profit.item.currency_outcome}}</span>
+      {{this.currency_sign}}<span data-original-amount="{{this.outcome}}">{{this.currency_outcome}}</span>
     </td>
     <td class="profit-amount">
-      {{profit.currency_sign}}<span data-original-amount="{{profit.item.profit}}">{{profit.item.currency_profit}}</span>
+      {{this.currency_sign}}<span data-original-amount="{{this.profit}}">{{this.currency_profit}}</span>
     </td>
-    <td class="percentage">{{profit.item.return_over_investment}}</td>
+    <td class="percentage">{{this.return_over_investment}}</td>
     <td class="actions"></td>
   </tr>
+  {{/each}}
 </script>
 
 <script id="profit-totals" type="text/x-handlebars-template">
@@ -440,8 +420,6 @@
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{ store.pusher_channel }}",
       },
-      runningCalculation: {{ running_calculation|yesno:'true,false' }},
-      profitsAjaxUrl: "{% url 'profit_dashboard.views.profits' %}",
       profitOtherCostsAjaxUrl: "{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}",
       currencySign: "{% money_format None store %}",
       currencyFormat: "{{ store.currency_format|default:'' }}"
@@ -453,10 +431,9 @@
   <script src="//js.pusher.com/3.2/pusher.min.js"></script>
   <script src="//connect.facebook.net/en_US/sdk.js" id="facebook-jssdk"></script>
 
+{% compress js %}
   <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
   <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.min.js' %}"></script>
-
-{% compress js %}
   <script src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
   <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
   <script src="{% static 'profit/index.js' %}"></script>

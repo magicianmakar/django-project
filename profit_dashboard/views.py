@@ -17,13 +17,13 @@ from facebookads.adobjects.adaccount import AdAccount
 from leadgalaxy import utils
 from shopified_core.paginators import SimplePaginator
 from .utils import (
-    retrieve_current_profits,
-    calculate_shopify_profit,
+    get_profits,
+    calculate_profits,
 )
 from .models import (
     FacebookAccess,
     FacebookAccount,
-    ShopifyProfit,
+    OtherCost,
 )
 from .tasks import fetch_facebook_insights
 
@@ -54,20 +54,14 @@ def index(request):
     else:
         start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
 
-    running_calculation = calculate_shopify_profit(store.id, start, end)
-    profits, totals = retrieve_current_profits(
-        request.user.pk,
-        store.id,
-        start,
-        end
-    )
+    profits, totals = get_profits(request.user.pk, store.id, start, end)
 
     profits_json = json.dumps(profits[::-1])
     profits_per_page = len(profits) + 1 if limit == 0 else limit
     paginator = SimplePaginator(profits, profits_per_page)
     page = min(max(1, current_page), paginator.num_pages)
     page = paginator.page(page)
-    profits = page.object_list
+    profits = calculate_profits(page.object_list)
 
     accounts = FacebookAccount.objects.filter(access__user=request.user)
     need_setup = not FacebookAccess.objects.filter(user=request.user, store=store).exists()
@@ -85,7 +79,6 @@ def index(request):
         'user': request.user,
         'accounts': accounts,
         'need_setup': need_setup,
-        'running_calculation': running_calculation,
         'profits_json': profits_json
     })
 
@@ -153,8 +146,7 @@ def facebook_campaign(request):
 @login_required
 def save_other_costs(request):
     amount = float(request.POST.get('amount', '0'))
-    tz = timezone.localtime(timezone.now()).strftime(' %z')
-    date = arrow.get(request.POST.get('date') + tz, r'MMDDYYYY Z').datetime
+    date = arrow.get(request.POST.get('date'), r'MMDDYYYY').date()
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -162,39 +154,6 @@ def save_other_costs(request):
             'error': 'Please add at least one store before using the Profits Dashboard.'
         }, status=500)
 
-    ShopifyProfit.objects.update_or_create(store=store, date=date, defaults={'other_costs': amount})
+    OtherCost.objects.update_or_create(store=store, date=date, defaults={'amount': amount})
 
     return JsonResponse({'status': 'ok'})
-
-
-@login_required
-def profits(request):
-    start = request.GET.get('start')
-    end = request.GET.get('end')
-    limit = utils.safeInt(request.GET.get('limit'), 10)
-    current_page = utils.safeInt(request.GET.get('page'), 1)
-
-    store = utils.get_store_from_request(request)
-    if not store:
-        messages.warning(request, 'Please add at least one store before using the Profits Dashboard.')
-        return HttpResponseRedirect('/')
-
-    tz = timezone.localtime(timezone.now()).strftime(' %z')
-    end = arrow.get(end + tz, r'MM/DD/YYYY Z').datetime
-    start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
-
-    profits, totals = retrieve_current_profits(
-        request.user.pk,
-        store.id,
-        start,
-        end
-    )
-
-    chart_profits = profits[::-1]
-    profits_per_page = len(profits) + 1 if limit == 0 else limit
-    paginator = SimplePaginator(profits, profits_per_page)
-    page = min(max(1, current_page), paginator.num_pages)
-    page = paginator.page(page)
-    profits = page.object_list
-
-    return JsonResponse({'profits': profits, 'totals': totals, 'chart_profits': chart_profits})

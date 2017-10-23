@@ -1,163 +1,24 @@
 import arrow
-from datetime import timedelta, date
+from datetime import date
 from collections import OrderedDict
-from math import ceil
 
 from django.conf import settings
-from django.utils.text import slugify
-from django.db.models import Value, CharField, Q, Count
-from django.db.models.functions import Concat
+from django.db.models import Sum
 
 from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
-from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.models import ShopifyOrder
+from leadgalaxy.utils import safeFloat
 
 from .models import (
     FacebookAccess,
     FacebookAccount,
-    FacebookInsight,
-    ShopifyProfit,
+    FacebookAdCost,
+    AliexpressFulfillmentCost,
+    OtherCost
 )
-from .tasks import cache_shopify_profits
-
-
-def get_meta(start, end, current_page, limit):
-    delta = end - start
-    max_results = delta.days
-    if limit is not None:
-        pages = range(1, int(ceil((max_results + 1) / float(limit))) + 1)
-
-        page_start = limit * (current_page - 1)
-        start = start + timedelta(days=page_start)
-
-        page_end = start + timedelta(days=limit - 1)
-        if page_end < end:
-            end = page_end
-    else:
-        pages = [1]
-
-    return {'start': start, 'end': end, 'max_results': max_results, 'pages': pages}
-
-
-def initialize_base_dict(start, end):
-    result = OrderedDict()
-    delta = end - start
-
-    for days in range(delta.days + 1):
-        day = start + timedelta(days=days)
-        string_day = day.strftime('%m/%d/%Y')
-        result[string_day] = {
-            'date_as_string': string_day,
-            'date_as_slug': slugify(string_day),
-            'week_day': day.strftime('%A'),
-            'empty': True,
-            'css_empty': 'empty',
-            'item': {
-                'revenue': 0.0,
-                'fulfillment_cost': 0.0,
-                'ad_spend': 0.0,
-                'other_costs': 0.0,
-                'outcome': 0.0,
-                'profit': 0.0
-            }
-        }
-
-    return result
-
-
-def merge_profits(data, result):
-    totals = {'revenue': 0.0, 'fulfillment_cost': 0.0, 'ad_spend': 0.0,
-              'other_costs': 0.0, 'outcome': 0.0, 'profit': 0.0, 'orders_count': 0}
-
-    for source in data:
-        for date_key, items in source.items():
-            revenue = float(items.get('revenue', 0.0))
-            fulfillment_cost = float(items.get('fulfillment_cost', 0.0))
-            ad_spend = float(items.get('ad_spend', 0.0))
-            other_costs = float(items.get('other_costs', 0.0))
-            orders_count = items.get('orders_count', 0)
-
-            totals['revenue'] += revenue
-            totals['fulfillment_cost'] += fulfillment_cost
-            totals['ad_spend'] += ad_spend
-            totals['other_costs'] += other_costs
-            totals['orders_count'] += orders_count
-
-            outcome = fulfillment_cost + ad_spend + other_costs
-            totals['outcome'] += outcome
-            totals['profit'] += revenue - outcome
-
-            # Don't populate dates not being shown
-            if date_key not in result:
-                continue
-
-            result[date_key]['empty'] = False
-            result[date_key]['css_empty'] = ''
-            result[date_key]['item']['revenue'] += revenue
-            result[date_key]['item']['fulfillment_cost'] += fulfillment_cost
-            result[date_key]['item']['ad_spend'] += ad_spend
-            result[date_key]['item']['other_costs'] += other_costs
-
-            result[date_key]['item']['outcome'] += result[date_key]['item']['fulfillment_cost'] + \
-                result[date_key]['item']['ad_spend'] + result[date_key]['item']['other_costs']
-            result[date_key]['item']['profit'] += result[date_key]['item']['revenue'] - \
-                result[date_key]['item']['outcome']
-
-            if result[date_key]['item']['revenue'] == 0 or \
-                    revenue < result[date_key]['item']['profit'] or \
-                    result[date_key]['item']['profit'] < 0:
-                percentage = 0
-            else:
-                percentage = result[date_key]['item']['profit'] / result[date_key]['item']['revenue'] * 100
-            result[date_key]['item']['return_over_investment'] = '{}%'.format(int(percentage))
-
-    return result.values()[::-1], totals
-
-
-def get_shopify_profit(store_id, start_date, end_date):
-    # Get data from cached shopify profits
-    profits = ShopifyProfit.objects.filter(
-        store_id=store_id,
-        date__range=(start_date, end_date)
-    ).annotate(orders_count=Count('imported_orders'))
-
-    return {
-        profit.date.strftime('%m/%d/%Y'): {
-            'revenue': profit.revenue,
-            'fulfillment_cost': profit.fulfillment_cost,
-            'other_costs': profit.other_costs,
-            'orders_count': profit.orders_count,
-        } for profit in profits
-    }
-
-
-def get_facebook_profit(user_id, store_id, start_date, end_date):
-    access = FacebookAccess.objects.filter(user_id=user_id, store_id=store_id)
-
-    if not access.exists():
-        return {}
-    else:
-        access = access.first()
-
-    result = {}
-    for account in access.accounts.all():
-        for insight in account.insights.filter(date__range=(start_date, end_date)):
-            date_key = insight.date.strftime('%m/%d/%Y')
-
-            if date_key in result:
-                result[date_key]['ad_spend'] += insight.spend
-            else:
-                result[date_key] = {
-                    'revenue': 0.0,
-                    'fulfillment_cost': 0.0,
-                    'ad_spend': float(insight.spend),
-                    'other_costs': 0.0
-                }
-
-    return result
 
 
 def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None):
@@ -224,86 +85,107 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
                     campaign_insights[insight_date]['spend'] += float(insight[insight.Field.spend])
 
         for key, val in campaign_insights.items():
-            FacebookInsight.objects.update_or_create(account=account_model, date=key, defaults=val)
+            FacebookAdCost.objects.update_or_create(account=account_model, created_at=key, defaults=val)
 
         account_model.last_sync = date.today()
         account_model.save()
 
 
-def calculate_shopify_profit(store_id, start_date, end_date):
-    """
-    Calculates if there is any need for profits to be synced
-    Used only for revenue and fulfillment cost
-    5 queries are done to reduce payload on task
+def get_profits(user_id, store_id, start, end):
+    days = arrow.Arrow.range('day', start, end)
+    profits_data = OrderedDict()
+    for day in reversed(days):
+        date_key = day.format('YYYY-MM-DD')
+        profits_data[date_key] = {
+            'date_as_string': day.format('MM/DD/YYYY'),
+            'date_as_slug': date_key,
+            'week_day': day.strftime('%A'),
+            'empty': True,
+            'css_empty': 'empty',
+            'revenue': 0.0,
+            'fulfillment_cost': 0.0,
+            'ad_spend': 0.0,
+            'other_costs': 0.0,
+            'outcome': 0.0,
+            'profit': 0.0
+        }
 
-    :param store_id: id from shopify store to be synced
-    :param start_date: starting date object from page search criteria
-    :param end_date: ending date object from page search criteria
-    """
-    date_range = (start_date, end_date)
-    profit_search = ShopifyProfit.objects.filter(
-        store_id=store_id,
-        date__range=date_range
-    )
+    orders = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start, end)) \
+                                 .extra({'date_key': 'date(created_at)'}) \
+                                 .values('date_key') \
+                                 .annotate(Sum('total_price')) \
+                                 .order_by('date_key')
 
-    imported_order_ids = list(profit_search.values_list('imported_orders__order_id', flat=True).distinct())
-    shopify_orders = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=date_range)
-    found_orders = [x.order_id for x in shopify_orders if x.order_id not in imported_order_ids]
+    for order in orders:
+        # Date: YYYY-MM-DD
+        date_key = arrow.get(order['date_key']).format('YYYY-MM-DD')
+        profits_data[date_key]['revenue'] = order['total_price__sum']
+        profits_data[date_key]['empty'] = False
+        profits_data[date_key]['css_empty'] = ''
 
-    # Queryset lookup to get unique orders with unique source_id in the format: `order_id`-`source_id`
-    source_id_lookup = Concat(
-        'imported_order_tracks__order_id',
-        Value('-'),
-        'imported_order_tracks__source_id',
-        output_field=CharField()
-    )
+    shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id, created_at__range=(start, end)) \
+                                                 .extra({'date_key': 'date(created_at)'}) \
+                                                 .values('date_key') \
+                                                 .annotate(Sum('shipping_cost'),
+                                                           Sum('products_cost'),
+                                                           Sum('total_cost')) \
+                                                 .order_by('date_key')
 
-    # Get already synced order sources
-    order_source_ids = profit_search.annotate(
-        order_source_id=source_id_lookup
-    ).values_list('order_source_id', flat=True).distinct()
+    for shipping in shippings:
+        date_key = arrow.get(shipping['date_key']).format('YYYY-MM-DD')
+        profits_data[date_key]['fulfillment_cost'] = safeFloat(shipping['total_cost__sum'])
+        profits_data[date_key]['empty'] = False
+        profits_data[date_key]['css_empty'] = ''
 
-    # Search ShopifyOrderTrack for not synced order sources
-    found_order_tracks = ShopifyOrderTrack.objects.filter(
-        store_id=store_id,
-        order_id__in=shopify_orders.values_list('order_id', flat=True),
-        data__contains='shipping'
-    ).annotate(
-        order_source_id=Concat('order_id', Value('-'), 'source_id', output_field=CharField())
-    ).filter(
-        ~Q(order_source_id__in=order_source_ids)
-    )
+    ad_costs = FacebookAdCost.objects.filter(account__access__store_id=store_id,
+                                             account__access__user_id=user_id,
+                                             created_at__range=(start, end)) \
+                                     .extra({'date_key': 'date(created_at)'}) \
+                                     .values('date_key') \
+                                     .annotate(Sum('spend')) \
+                                     .order_by('date_key')
 
-    # Merge order_id from ShopifyOrder with ShopifyOrderTrack
-    found_orders = list(set(found_orders + list(found_order_tracks.values_list('order_id', flat=True))))
+    for ad_cost in ad_costs:
+        date_key = arrow.get(ad_cost['date_key']).format('YYYY-MM-DD')
+        profits_data[date_key]['ad_spend'] = safeFloat(ad_cost['spend__sum'])
+        profits_data[date_key]['empty'] = False
+        profits_data[date_key]['css_empty'] = ''
 
-    running_calculation = len(found_orders) > 0
-    if running_calculation:
-        cache_shopify_profits.apply_async(
-            args=[
-                store_id,
-                found_orders,
-                list(found_order_tracks.values_list('id', flat=True)),
-                imported_order_ids,
-                list(order_source_ids)
-            ],
-            countdown=5,  # Waiting for page to reload so cache doesn't finish first and no profits are sent
-        )
+    other_costs = OtherCost.objects.filter(store_id=store_id) \
+                                   .extra({'date_key': 'date(date)'}) \
+                                   .values('date_key') \
+                                   .annotate(Sum('amount')) \
+                                   .order_by('date_key')
 
-    return running_calculation
+    for other_cost in other_costs:
+        date_key = arrow.get(other_cost['date_key']).format('YYYY-MM-DD')
+        profits_data[date_key]['other_costs'] = safeFloat(other_cost['amount__sum'])
+        profits_data[date_key]['empty'] = False
+        profits_data[date_key]['css_empty'] = ''
+
+    totals = {
+        'revenue': orders.aggregate(total=Sum('total_price__sum'))['total'] or 0.0,
+        'fulfillment_cost': shippings.aggregate(total=Sum('total_cost__sum'))['total'] or 0.0,
+        'ad_spend': ad_costs.aggregate(total=Sum('spend__sum'))['total'] or 0.0,
+        'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
+    }
+    totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ad_spend']) + safeFloat(totals['other_costs'])
+    totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome'])
+    totals['orders_count'] = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start, end)).count()
+    totals['orders_per_day'] = totals['orders_count'] / len(days)
+
+    return profits_data.values(), totals
 
 
-def retrieve_current_profits(user_id, store_id, start, end):
-    # meta = get_meta(start, end, current_page, limit)
-    # base_start_date = meta['start']
-    # base_end_date = meta['end']
+def calculate_profits(profits):
+    for profit in profits:
+        profit['outcome'] = profit['fulfillment_cost'] + profit['ad_spend'] + profit['other_costs']
+        profit['profit'] = profit['revenue'] - profit['outcome']
 
-    result = initialize_base_dict(start, end)
+        if profit['revenue'] == 0 or profit['revenue'] < profit['profit'] or profit['profit'] < 0:
+            percentage = 0
+        else:
+            percentage = profit['profit'] / profit['revenue'] * 100
+        profit['return_over_investment'] = '{}%'.format(int(percentage))
 
-    facebook_data = get_facebook_profit(user_id, store_id, start, end)
-    shopify_data = get_shopify_profit(store_id, start, end)
-
-    profits, totals = merge_profits([facebook_data, shopify_data], result)
-    totals['orders_per_day'] = totals['orders_count'] / (end - start).days
-
-    return profits, totals
+    return profits
