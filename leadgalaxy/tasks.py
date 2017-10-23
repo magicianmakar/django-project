@@ -860,7 +860,7 @@ def sync_product_exclude(self, store_id, product_id):
 def calculate_sales(self, user_id, period):
     try:
         rejected_status = [
-            'buyer_pay_timeout', 'risk_reject_closed', 'buyer_accept_goods_timeout',
+            'buyer_pay_timeout', 'risk_reject_closed',
             'buyer_cancel_notpay_order', 'cancel_order_close_trade', 'seller_send_goods_timeout',
             'buyer_cancel_order_in_risk', 'buyer_accept_goods', 'seller_accept_issue_no_goods_return',
             'seller_response_issue_timeout']
