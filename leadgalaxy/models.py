@@ -2129,6 +2129,7 @@ def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
 
 @receiver(post_save, sender=ShopifyOrderTrack)
 def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
+    return
     if instance.store_id is not None:
         from profit_dashboard.models import AliexpressFulfillmentCost
         if instance.source_id:
@@ -2162,6 +2163,7 @@ def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=ShopifyOrderTrack)
 def delete_aliexpress_fulfillment_cost(sender, instance, **kwargs):
+    return
     from profit_dashboard.models import AliexpressFulfillmentCost
     AliexpressFulfillmentCost.objects.filter(
         store_id=instance.store_id,
