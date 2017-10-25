@@ -2638,9 +2638,9 @@ def orders_view(request):
         if created_at_end:
             orders = orders.filter(created_at__lte=created_at_end)
 
-        if query_customer:
-            orders = orders.filter(Q(customer_name__icontains=query_customer) |
-                                   Q(customer_email__iexact=query_customer))
+        # if query_customer:
+            # orders = orders.filter(Q(customer_name__icontains=query_customer) |
+            #                        Q(customer_email__iexact=query_customer))
 
         if query_address and len(query_address):
             orders = orders.filter(Q(country_code__in=query_address))
