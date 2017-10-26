@@ -61,8 +61,8 @@ class WooStore(models.Model):
             url=self.api_url,
             consumer_key=self.api_key,
             consumer_secret=self.api_password,
-            # wp_api=True,
-            # version='wc/v2',
+            wp_api=True,
+            version='wc/v2',
             verify_ssl=False,
             query_string_auth=True,
             timeout=15)
