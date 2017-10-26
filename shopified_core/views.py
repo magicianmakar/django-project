@@ -166,6 +166,14 @@ class ShopifiedApi(ApiResponseMixin, View):
                 'url': i.get_admin_url()
             })
 
+        for i in user.profile.get_woo_stores():
+            stores.append({
+                'id': i.id,
+                'name': i.title,
+                'type': 'woo',
+                'url': i.get_admin_url()
+            })
+
         return JsonResponse(stores, safe=False)
 
     def post_quick_save(self, request, **kwargs):
