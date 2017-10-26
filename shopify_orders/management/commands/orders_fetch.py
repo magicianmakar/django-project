@@ -88,7 +88,7 @@ class Command(DropifiedBaseCommand):
                 if options['store_id']:
                     order_sync = order_sync.filter(store__in=options['store_id'])
 
-                order_sync = order_sync.latest('updated_at')
+                order_sync = order_sync.earliest('updated_at')
 
                 if not order_sync:
                     break
