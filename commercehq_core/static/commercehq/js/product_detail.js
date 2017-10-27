@@ -279,7 +279,7 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
     $(this).bootstrapBtn('loading');
 
     $.ajax({
-        url: '/api/product-split-variants',
+        url: api_url('product-split-variants', 'chq'),
         type: 'POST',
         data: {
             product: product_id,
