@@ -56,7 +56,6 @@ class Command(DropifiedBaseCommand):
 
         self.store_countdown = {}
         self.start_at = timezone.now()
-        self.fulfill_threshold = timezone.now() - timezone.timedelta(seconds=threshold * 60)
 
         for order in orders[:fulfill_max]:
             try:
