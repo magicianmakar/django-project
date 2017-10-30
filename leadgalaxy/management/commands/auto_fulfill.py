@@ -17,10 +17,6 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--threshold', dest='threshold', action='store', type=int, default=60,
-            help='Fulfill orders updated before threshold (seconds)')
-
-        parser.add_argument(
             '--store', dest='store', action='store', type=int,
             help='Fulfill orders for the given store')
 
@@ -33,20 +29,18 @@ class Command(DropifiedBaseCommand):
             help='Maximuim task uptime (minutes)')
 
     def start_command(self, *args, **options):
-        threshold = options.get('threshold')
         fulfill_store = options.get('store')
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
 
-        time_threshold = timezone.now() - timezone.timedelta(seconds=threshold)
         orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled') \
                                           .exclude(source_tracking='') \
                                           .exclude(hidden=True) \
-                                          .filter(status_updated_at__lt=time_threshold) \
+                                          .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                           .filter(store__is_active=True) \
                                           .filter(store__auto_fulfill__in=['hourly', 'daily', 'enable']) \
                                           .defer('data') \
-                                          .order_by('-id')
+                                          .order_by('created_at')
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)

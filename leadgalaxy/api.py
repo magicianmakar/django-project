@@ -1851,6 +1851,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
         all_orders = data.get('all') == 'true' or order_ids
         sync_all_orders = cache.get('_sync_all_orders')
+        sync_all_orders_key = 'user_sync_all_orders_{}'.format(user.id)
+
+        if sync_all_orders:
+            if cache.get(sync_all_orders_key):
+                return self.api_success(orders, safe=False, status=202)
+            else:
+                cache.set(sync_all_orders_key, True, timeout=7200)
 
         order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
 
@@ -1887,7 +1894,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             order_tracks = order_tracks[:limit]
 
-        elif data.get('all') == 'true':
+        elif data.get('all') == 'true' or sync_all_orders:
             order_tracks = order_tracks.order_by('created_at')
 
         if data.get('order_id') and data.get('line_id'):
