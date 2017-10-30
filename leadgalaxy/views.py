@@ -2237,7 +2237,7 @@ def autocomplete(request, target):
             results = []
             for v in rep.json()['customers']:
                 results.append({
-                    'value': '{} {} ({})'.format(v['first_name'] or '', v['last_name'] or '', v['email']).strip(),
+                    'value': u'{} {} ({})'.format(v['first_name'] or '', v['last_name'] or '', v['email']).strip(),
                     'data': v['id'],
                 })
 
