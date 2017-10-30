@@ -1850,7 +1850,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_ids = data.get('ids')
         unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
         all_orders = data.get('all') == 'true' or order_ids
-        sync_all_orders = cache.get('_sync_all_orders')
+        sync_all_orders = cache.get('_sync_all_orders') and data.get('forced') == 'false'
         sync_all_orders_key = 'user_sync_all_orders_{}'.format(user.id)
 
         if sync_all_orders:
