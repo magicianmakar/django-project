@@ -70,6 +70,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     price = 10
     quantity = 100
     variant_id = 12345
+    created_at = timezone.now()
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
