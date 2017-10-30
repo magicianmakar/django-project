@@ -1850,6 +1850,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_ids = data.get('ids')
         unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
         all_orders = data.get('all') == 'true' or order_ids
+        sync_all_orders = cache.get('_sync_all_orders')
 
         order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
 
@@ -1872,7 +1873,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if data.get('store'):
             order_tracks = order_tracks.filter(store=data.get('store'))
 
-        if not data.get('order_id') and not data.get('line_id') and not all_orders:
+        if not data.get('order_id') and not data.get('line_id') and not all_orders and not sync_all_orders:
             limit_key = 'order_fulfill_limit_%d' % user.models_user.id
             limit = cache.get(limit_key)
 
