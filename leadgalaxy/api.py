@@ -20,6 +20,7 @@ from django.utils import timezone
 from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
+from last_seen.models import LastSeen
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
@@ -1838,6 +1839,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if not user.can('orders.use'):
             return self.api_error('Order is not included in your account', status=402)
+
+        try:
+            LastSeen.objects.when(user.models_user, 'website')
+        except:
+            return self.api_error('User Not Logged In', status=429)
 
         orders = []
 
