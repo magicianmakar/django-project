@@ -111,8 +111,9 @@
                             <span>Customer</span>
                         </div>
                         <div class="col-md-4">
-                            <input name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
-                                   placeholder="Name or Email">
+                            <input type="hidden" type="text" id="query_customer_id" name="query_customer_id" value="{{ request.GET.query_customer_id|default:'' }}" />
+                            <input id="query_customer" name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
+                                   placeholder="Name or Email" data-store="{{store.id}}">
                         </div>
                     </div>
 

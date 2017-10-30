@@ -2226,6 +2226,26 @@ def autocomplete(request, target):
         except ShopifyProduct.DoesNotExist:
             return JsonResponse({'error': 'Product not found'}, status=404)
 
+    elif target == 'shopify-customer':
+        try:
+            store = ShopifyStore.objects.get(id=request.GET.get('store'))
+            permissions.user_can_view(request.user, store)
+
+            rep = requests.get(url=store.get_link('/admin/customers/search.json', api=True), params={'query': q})
+            rep.raise_for_status()
+
+            results = []
+            for v in rep.json()['customers']:
+                results.append({
+                    'value': '{} {} ({})'.format(v['first_name'] or '', v['last_name'] or '', v['email']).strip(),
+                    'data': v['id'],
+                })
+
+            return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
+        except ShopifyStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
@@ -2503,7 +2523,7 @@ def orders_view(request):
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
-    query_customer = request.GET.get('_query_customer')
+    query_customer = request.GET.get('query_customer_id')
     query_address = request.GET.getlist('query_address')
 
     product_filter = request.GET.getlist('product')
@@ -2639,8 +2659,9 @@ def orders_view(request):
             orders = orders.filter(created_at__lte=created_at_end)
 
         if query_customer:
-            orders = orders.filter(Q(customer_name__icontains=query_customer) |
-                                   Q(customer_email__iexact=query_customer))
+            order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer)
+            if len(order_ids):
+                orders = orders.filter(order_id__in=order_ids)
 
         if query_address and len(query_address):
             orders = orders.filter(Q(country_code__in=query_address))

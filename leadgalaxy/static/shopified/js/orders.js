@@ -1148,6 +1148,27 @@ $(function () {
         }
     });
 
+    $('#query_customer').on('change keypress', function (e) {
+        var v = $(this).val().trim();
+
+        if (!v || $('#query_customer_id').attr('orig-value').trim() != v) {
+            $('#query_customer_id').val('');
+        }
+    });
+
+    $('#query_customer').autocomplete({
+        serviceUrl: '/autocomplete/shopify-customer?' + $.param({
+            store: $('#query_customer').data('store')
+        }),
+        minChars: 1,
+        deferRequestBy: 100,
+        onSelect: function(suggestion) {
+            $('#query_customer').val(suggestion.value);
+            $('#query_customer_id').val(suggestion.data);
+            $('#query_customer_id').attr('orig-value', suggestion.data);
+        }
+    });
+
     $('#created_at_daterange').daterangepicker({
         format: 'MM/DD/YYYY',
         showDropdowns: true,

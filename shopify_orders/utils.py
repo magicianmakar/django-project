@@ -280,6 +280,27 @@ def order_id_from_name(store, order_name, default=None):
     return default
 
 
+def order_ids_from_customer_id(store, customer_id):
+    ''' Get Order IDs from Customer ID '''
+
+    params = {
+        'status': 'any',
+        'fulfillment_status': 'any',
+        'financial_status': 'any',
+        'customer_id': customer_id
+    }
+
+    rep = requests.get(
+        url=store.get_link('/admin/orders.json', api=True),
+        params=params
+    )
+
+    if rep.ok:
+        return [i['id'] for i in rep.json()['orders']]
+
+    return []
+
+
 class OrderErrorsCheck:
     ignored = 0
     errors = 0
