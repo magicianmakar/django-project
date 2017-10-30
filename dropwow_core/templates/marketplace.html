@@ -14,6 +14,7 @@
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
                 <div class="row">
+                {% if dropwow_featured_products %}
                 {% for item in dropwow_featured_products %}
                 <div class="col-xs-12 col-md-3">
                     <div class="ibox">
@@ -51,6 +52,7 @@
                 <div class="row">
                 {% endif %}
                 {% endfor %}
+                {% endif %}
                 </div>
 
                 <div class="row" style="margin-bottom: 20px">
@@ -68,6 +70,7 @@
                             <th style="width:40%"><a href="{% url_toggle 'order_by' '-title,title' %}">Title {% sort_icon 'order_by' 'title' %}</a></th>
                             <th><a href="{% url_toggle 'order_by' '-category__label_path,category__label_path' %}">Categories {% sort_icon 'order_by' 'category__label_path' %}</a></th>
                             <th><a href="{% url_toggle 'order_by' '-combinations__price,combinations__price' %}">Price {% sort_icon 'order_by' 'combinations__price' %}</a></th>
+                            <th>Shipping Options</th>
                             <th><a href="{% url_toggle 'order_by' '-vendor,vendor' %}">Vendor {% sort_icon 'order_by' 'vendor' %}</a></th>
                             <th style="width:190px">Action</th>
                         </tr>
@@ -88,6 +91,11 @@
                             <td><a href='{% url 'marketplace:product' dropwow_product_id=item.id %}' class='product-title'>{{item.title}}</a></td>
                             <td class='product-category'>{{item.category.label}}</td>
                             <td>${{item.price}}</td>
+                            <td>
+                                {% for key, value in item.shipping_options.items %}
+                                <a title='{% money_format value %}'>{{key}}</a>
+                                {% endfor %}
+                            </td>
                             <td>{{item.vendor}}</td>
                             <td>
                                 <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{item.id}}">Save</button>&nbsp;&nbsp;

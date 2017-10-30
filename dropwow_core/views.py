@@ -38,7 +38,9 @@ def marketplace(request):
         return HttpResponseRedirect('/user/profile#integration')
 
     try:
-        featured_products = get_dropwow_featured_products(4).get('results', [])
+        featured_products = None
+        if not title:
+            featured_products = get_dropwow_featured_products(4).get('results', [])
         categories = get_dropwow_categories().get('results', [])
         post_per_page = request.GET.get('ppp', 25)
         feed = get_dropwow_products(page, post_per_page, title, category_id, min_price, max_price, brand, vendor, order_by)
