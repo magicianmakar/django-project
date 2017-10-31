@@ -481,10 +481,10 @@ def process_webhook_event(request, event_id, raven_client):
         except User.DoesNotExist:
             return HttpResponse('User Not Found')
 
-        SuccessfulPaymentEvent.objects.create(user=user, charge={
+        SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
             'charge': charge.to_dict(),
             'count': len(stripe.Charge.list(customer=charge.customer).data)
-        })
+        }))
 
         return HttpResponse('ok')
 
