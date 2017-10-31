@@ -2575,7 +2575,7 @@ def orders_view(request):
     created_at_daterange = request.GET.get('created_at_daterange',
                                            '{}-'.format(date_now.replace(days=-30).format('MM/DD/YYYY')))
 
-    if request.GET.get('shop') or query or query_order:
+    if request.GET.get('shop') or query or query_order or query_customer:
         status, fulfillment, financial = ['any', 'any', 'any']
         connected_only = False
         awaiting_order = False

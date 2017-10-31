@@ -111,9 +111,13 @@
                             <span>Customer</span>
                         </div>
                         <div class="col-md-4">
-                            <input type="hidden" type="text" id="query_customer_id" name="query_customer_id" value="{{ request.GET.query_customer_id|default:'' }}" />
-                            <input id="query_customer" name="query_customer" value="{{request.GET.query_customer|default:''}}" class="form-control"
-                                   placeholder="Name or Email" data-store="{{store.id}}">
+                            <input type="hidden" id="query_customer_id" name="query_customer_id"
+                                value="{{ request.GET.query_customer_id|default:'' }}" orig-value="{{request.GET.query_customer|default:''}}" />
+                            <input id="query_customer" name="query_customer" class="form-control"placeholder="Name or Email" data-store="{{store.id}}"
+                            {% if request.GET.query_customer_id %}
+                            value="{{request.GET.query_customer|default:''}}"
+                            {% endif %}
+                            >
                         </div>
                     </div>
 
