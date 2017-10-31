@@ -6,7 +6,6 @@ from .models import (
     StripePlan,
     StripeCustomer,
     StripeSubscription,
-    StripeEvent,
     ExtraStore,
     ExtraCHQStore,
 )
@@ -42,14 +41,6 @@ class StripeSubscriptionAdmin(admin.ModelAdmin):
     readonly_fields = ('subscription_id',)
     search_fields = ('subscription_id',) + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
-
-
-@admin.register(StripeEvent)
-class StripeEventAdmin(admin.ModelAdmin):
-    list_display = ('event_id', 'event_type', 'created_at')
-    readonly_fields = ('event_id', 'created_at')
-    list_filter = ('event_type',)
-    search_fields = ('event_id', 'event_type')
 
 
 @admin.register(ExtraStore)

@@ -295,10 +295,12 @@ class SuccessfulPaymentEvent(Event):
     @cached_property
     def facebook_script(self):
         event_data = self.get_data()
-        value = str(event_data.get('amount', 0) * Decimal('0.01'))
-        data = {'value': value, 'currency': 'USD'}
+        value = str(event_data['charge'].get('amount', 0) * Decimal('0.01'))
 
-        return "<script>fbq('track', 'Purchase', %s);</script>" % json.dumps(data)
+        data = {'value': value, 'currency': 'USD'}
+        event_name = 'Purchase' if event_data['count'] == 1 else 'Recurring Payment'
+
+        return "<script>fbq('track', '{}', {});</script>".format(event_name, json.dumps(data))
 
     @cached_property
     def google_analytics_script(self):

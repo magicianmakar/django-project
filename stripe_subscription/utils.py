@@ -13,7 +13,7 @@ from django.db.models import Q
 
 import arrow
 
-from .models import StripeCustomer, StripeSubscription, StripeEvent, ExtraStore, ExtraCHQStore
+from .models import StripeCustomer, StripeSubscription, ExtraStore, ExtraCHQStore
 from .stripe_api import stripe
 
 from leadgalaxy.models import GroupPlan, UserProfile
@@ -260,14 +260,6 @@ def invoice_extra_stores():
 def process_webhook_event(request, event_id, raven_client):
     event = stripe.Event.retrieve(event_id)
 
-    StripeEvent.objects.update_or_create(
-        event_id=event.id,
-        defaults={
-            'event_type': event.type,
-            'data': json.dumps(event),
-        }
-    )
-
     if event.type == 'invoice.payment_failed':
         invoice = event.data.object
 
@@ -489,7 +481,10 @@ def process_webhook_event(request, event_id, raven_client):
         except User.DoesNotExist:
             return HttpResponse('User Not Found')
 
-        SuccessfulPaymentEvent.objects.create(user=user, charge=str(charge))
+        SuccessfulPaymentEvent.objects.create(user=user, charge={
+            'charge': charge.to_dict(),
+            'count': len(stripe.Charge.list(customer=charge.customer).data)
+        })
 
         return HttpResponse('ok')
 
