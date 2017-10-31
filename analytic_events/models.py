@@ -295,10 +295,12 @@ class SuccessfulPaymentEvent(Event):
     @cached_property
     def facebook_script(self):
         event_data = self.get_data()
-        value = str(event_data['charge'].get('amount', 0) * Decimal('0.01'))
+        charge = event_data.get('charge', event_data)
+
+        value = str(charge.get('amount', 0) * Decimal('0.01'))
 
         data = {'value': value, 'currency': 'USD'}
-        event_name = 'Purchase' if event_data['count'] == 1 else 'Recurring Payment'
+        event_name = 'Purchase' if event_data.get('count', 1) == 1 else 'Recurring Payment'
 
         return "<script>fbq('track', '{}', {});</script>".format(event_name, json.dumps(data))
 
