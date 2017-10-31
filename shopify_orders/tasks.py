@@ -52,8 +52,6 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
         if not product.have_supplier() or not product.default_supplier.is_dropwow:
             continue
 
-        supplier = product.default_supplier
-
         order_status, created = DropwowOrderStatus.objects.update_or_create(
             store=store,
             shopify_order_id=order['id'],
@@ -64,7 +62,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
             }
         )
 
-        results.append(fulfill_dropwow_order(store, order_status, order, el, supplier))
+        results.append(fulfill_dropwow_order(order_status))
 
     return all(results)
 

@@ -123,15 +123,21 @@ $('#shopify-send-btn').click(function(e) {
         var variants = [];
         $.each(original_product.combinations, function(i, c) {
             var variant = {};
+            var combination = [];
 
             var modifier = 0;
-            $.each(c.combination, function(option_id, option_value) {
-                variant['option' + option_id_index[option_id]] = variant_id_index[option_value].variant_name;
-                modifier = modifier + variant_id_index[option_value].modifier;
+            $.each(c.combination, function(option_id, variant_id) {
+                variant['option' + option_id_index[option_id]] = variant_id_index[variant_id].variant_name;
+                var option_variant = {};
+                option_variant[option_id] = variant_id;
+                combination.push(option_variant);
+                modifier = modifier + variant_id_index[variant_id].modifier;
             });
             var price = original_product.price + modifier;
             price = Math.round(price * 100) / 100;
             variant['price'] = price;
+            variant['quantity'] = c.quantity;
+            variant['combination'] = combination;
 
             variants.push(variant);
         });
@@ -183,7 +189,7 @@ $('#shopify-send-btn').click(function(e) {
             'variants_sku': {},
 
             'variants': options,
-            'prices': variants,
+            'combinations': variants,
         };
         var req_data = {
             'store': store,

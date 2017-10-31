@@ -37,6 +37,8 @@ class DropwowOrderStatus(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    pending = models.BooleanField(default=False)
+
     def __unicode__(self):
         return u'<Dropwow Order: {}>'.format(self.order_id)
 

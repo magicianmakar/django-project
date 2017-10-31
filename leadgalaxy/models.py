@@ -1282,6 +1282,13 @@ class ShopifyProduct(models.Model):
 
         self.data = json.dumps(product_data)
 
+    def get_data(self):
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
+        return product_data
+
 
 class ProductSupplier(models.Model):
     store = models.ForeignKey(ShopifyStore, null=True)

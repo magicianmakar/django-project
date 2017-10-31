@@ -304,9 +304,9 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
                     vdata.weight = product.weight;
                     vdata.weight_unit = product.weight_unit;
                 }
-                if (product.prices && product.prices.length) {
-                    for (var i = 0; i < product.prices.length; i++) {
-                        var variant = product.prices[i];
+                if (product.combinations && product.combinations.length) {
+                    for (var i = 0; i < product.combinations.length; i++) {
+                        var variant = product.combinations[i];
                         var match = true;
                         for (var option in variant) {
                             if (variant.hasOwnProperty(option) && option.startsWith('option')) {
@@ -316,6 +316,8 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
                             }
                         }
                         if (match) {
+                            vdata.combination = variant.combination;
+                            vdata.quantity = variant.quantity;
                             vdata.price = variant.price;
                             break;
                         }

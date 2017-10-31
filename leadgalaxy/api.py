@@ -43,6 +43,7 @@ from shopify_orders.models import (
     ShopifyOrderVariant,
 )
 from dropwow_core.models import DropwowAccount
+from dropwow_core.utils import get_dropwow_product_options
 
 import tasks
 import utils
@@ -2556,6 +2557,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 errors.append(u'{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
 
             return self.api_error('\n\n'.join(errors), status=422)
+
+    def post_marketplace_product_options(self, request, user, data):
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+        supplier = product.productsupplier_set.get(id=data.get('supplier'))
+        return JsonResponse(get_dropwow_product_options(supplier.get_source_id()), safe=False)
 
     def get_shipping_aliexpress(self, request, user, data):
         aliexpress_id = data.get('id')

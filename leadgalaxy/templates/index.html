@@ -773,6 +773,31 @@
 
                         {% endif %}
 
+                        {% if user|can:'dropwow.use' %}
+
+                        <div class="setting-section">
+                            <h3 class="setting-title">Dropwow</h3>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="row">
+                                    <div class="form-group v-center">
+                                        <label for="dropwow_order_delay" class="col-sm-4 col-xs-12 control-label">
+                                            How many hours would you like to delay before sending orders to Dropwow?
+                                        </label>
+                                        <div class="col-sm-2">
+                                            <input style="padding:5px 2px;text-align:center" type="text"
+                                               class="form-control col-sm-2" id="dropwow_order_delay" name="dropwow_order_delay"
+                                               value="{% if config.dropwow_order_delay %}{{config.dropwow_order_delay}}{% else %}0{% endif %}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% endif %}
+
                         <div class="col-md-12"><hr /></div>
                         <div class="form-group">
                             <div class="col-sm-offset-1 col-sm-10">

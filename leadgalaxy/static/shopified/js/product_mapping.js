@@ -1,6 +1,7 @@
 (function(product_id, variants_mapping) {
     'use strict';
-
+    var product_options = {};
+    
     var mapping_changed = false;
 
     function select_variant(variants, variant_title, variant_sku) {
@@ -9,7 +10,8 @@
         // variant_sku: variant SKU to test if need to be selected
 
         variant_title = variant_title.toLowerCase().trim();
-        variant_sku = variant_sku.toLowerCase().trim();
+        if (variant_sku)
+            variant_sku = variant_sku.toLowerCase().trim();
 
         if (typeof(variants) === 'string' && variants.toLowerCase().trim() == variant_title) {
             // Simple variant compare
@@ -33,7 +35,7 @@
                         }
                     } else if (typeof(mapped) === 'object') {
                         if (mapped.sku) {
-                            if (mapped.sku.toLowerCase().trim() == variant_sku) {
+                            if (variant_sku && mapped.sku.toLowerCase().trim() == variant_sku) {
                                 return true;
                             }
                         } else if (mapped.title.toLowerCase().trim() == variant_title) {
@@ -159,12 +161,7 @@
 
         $('#modal-variant-select').data('var', $(this).data('var'));
 
-        window.extensionSendMessage({
-            subject: 'getVariants',
-            from: 'webapp',
-            url: getSupplierUrl(),
-            cache: true,
-        }, function(response) {
+        var render_options = function(response) {
             var variant_tpl = Handlebars.compile($("#variant-template").html());
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());
@@ -233,7 +230,35 @@
             $('.select-var-mapping').bootstrapBtn('reset');
 
             selectColor();
-        });
+        };
+
+        var supplier_url = getSupplierUrl();
+        if (/marketplace\/product\/[0-9]+/.test(supplier_url)) {
+            if (product_options[supplier_url]) {
+                render_options(product_options[supplier_url]);
+            } else {
+                var supplier = parseInt($('.supplier-select').val(), 10);
+                $.ajax({
+                    url: '/api/marketplace-product-options',
+                    type: 'POST',
+                    data: {product: product_id, supplier: supplier},
+                    success: function(data) {
+                        product_options[supplier_url] = data;
+                        render_options(data);
+                    },
+                    error: function(data) {
+                        displayAjaxError('Variants Mapping', data);
+                    }
+                });
+            }
+        } else {
+            window.extensionSendMessage({
+                subject: 'getVariants',
+                from: 'webapp',
+                url: supplier_url,
+                cache: true,
+            }, render_options);
+        }
     });
 
     $('#save-var-mapping').click(function(e) {
