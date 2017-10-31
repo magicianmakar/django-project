@@ -427,7 +427,6 @@ class OrdersList(ListView):
         orders_cache = {}
         store = self.get_store()
         admin_url = store.get_admin_url()
-
         for order in context.get('orders', []):
             country_code = order['shipping'].get('country')
             date_created = self.get_order_date_created(order)
@@ -441,17 +440,17 @@ class OrdersList(ListView):
             order['connected_lines'] = 0
             order['items'] = order.pop('line_items')
             order['lines_count'] = len(order['items'])
-            order['notes'] = get_latest_order_note(store, order['id'])
+            # order['notes'] = get_latest_order_note(store, order['id'])
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)
                 product_id = item['product_id']
-                product_data = self.get_product_data(product_id)
+                product_data = True
 
                 if product_data:
                     product = WooProduct.objects.filter(source_id=product_id).first()
                     item['product'] = product
-                    item['image'] = next(iter(product_data['images']), {}).get('src')
+                    # item['image'] = next(iter(product_data['images']), {}).get('src')
                     variant_id = item.get('variation_id')
 
                     if product and product.has_supplier():
