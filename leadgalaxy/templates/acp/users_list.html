@@ -185,6 +185,32 @@
                     </table>
                 {% endif %}
 
+                {% if customer_ids %}
+                <hr/>
+                <h2>Customer ID ({{customer_ids|length}})</h2>
+                <div class="row">
+                    <form action="{{request.get_full_path}}">
+                        {% for k, v in request.GET.items %}
+                            {% if k != 'customer_id' %}
+                                <input type="hidden" name="{{k}}" value="{{v}}">
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="col-md-3">
+                            <select class="form-control" name="customer_id" id="customer_id">
+                                {% for i in customer_ids %}
+                                <option value="{{i.id}}" {% if customer_id == i.id %}selected{% endif %}>{{i.email}} -- {{i.id}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success btn-sm" style="margin-top:2px">View</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+
                 {% if last_charges %}
                     <hr/>
                     <h2>Last Charges</h2>

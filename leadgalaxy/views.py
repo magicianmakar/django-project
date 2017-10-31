@@ -1620,6 +1620,8 @@ def acp_users_list(request):
     if not request.user.is_superuser and not request.user.is_staff:
         raise PermissionDenied()
 
+    from stripe_subscription.stripe_api import stripe
+
     random_cache = 0
     q = request.GET.get('q') or request.GET.get('user') or request.GET.get('store')
 
@@ -1686,9 +1688,46 @@ def acp_users_list(request):
     subscribtions = []
     registrations = []
     user_last_seen = None
+    customer_ids = []
+    customer_id = request.GET.get('customer_id')
+
     if len(users) == 1:
-        if users[0].have_stripe_billing():
-            for i in users[0].stripe_customer.get_charges():
+        rep = requests.get('https://dashboard.stripe.com/v1/search', params={
+            'count': 20,
+            'include[]': 'total_count',
+            'query': u'is:customer {}'.format(users[0].email),
+            'facets': 'true'
+        }, headers={
+            'authorization': 'Bearer {}'.format(settings.STRIPE_SECRET_KEY),
+            'content-type': 'application/x-www-form-urlencoded',
+        })
+
+        rep.raise_for_status()
+
+        if rep.json()['count'] > 0:
+            for c in rep.json()['data']:
+                customer_ids.append({
+                    'id': c['id'],
+                    'email': c['email'],
+                })
+
+        if customer_id:
+            found = False
+            for i in customer_ids:
+                if customer_id == i['id']:
+                    found = True
+                    break
+
+            assert found
+
+        if not customer_id:
+            if users[0].have_stripe_billing():
+                customer_id = users[0].stripe_customer.customer_id
+            elif len(customer_ids):
+                customer_id = customer_id[0]['id']
+
+        if customer_id:
+            for i in stripe.Charge.list(limit=10, customer=customer_id).data:
                 charges.append({
                     'id': i.id,
                     'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
@@ -1699,7 +1738,7 @@ def acp_users_list(request):
                     'amount_refunded': u'${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
                 })
 
-            for i in stripe.Subscription.list(customer=users[0].stripe_customer.customer_id).data:
+            for i in stripe.Subscription.list(customer=customer_id).data:
                 subscribtions.append(i)
 
         for i in PlanRegistration.objects.filter(email__iexact=users[0].email):
@@ -1726,6 +1765,8 @@ def acp_users_list(request):
         'bundles': bundles,
         'profiles': profiles,
         'users_count': len(users),
+        'customer_id': customer_id,
+        'customer_ids': customer_ids,
         'last_charges': charges,
         'subscribtions': subscribtions,
         'registrations': registrations,
