@@ -2542,9 +2542,9 @@ def orders_view(request):
     order_custom_note = models_user.get_config('order_custom_note')
     epacket_shipping = bool(models_user.get_config('epacket_shipping'))
     auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
-    order_custom_line_attr = bool(request.user.get_config('order_custom_line_attr'))
-    fix_order_variants = request.user.get_config('fix_order_variants')
-    fix_aliexpress_address = request.user.get_config('fix_aliexpress_address', False)
+    order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
+    fix_order_variants = models_user.get_config('fix_order_variants')
+    fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', False)
 
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
@@ -2838,7 +2838,7 @@ def orders_view(request):
             page = []
 
     products_cache = {}
-    auto_orders = request.user.can('auto_order.use')
+    auto_orders = models_user.can('auto_order.use')
 
     orders_cache = {}
     orders_ids = []
