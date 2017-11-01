@@ -1070,6 +1070,7 @@ def shopify_customer_address(order, aliexpress_fix=False):
         else:
             customer_address[k] = shipping_address[k]
 
+    customer_province = customer_address['province']
     if not customer_address['province']:
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
             province = get_uk_province(customer_address['city'])
@@ -1126,6 +1127,9 @@ def shopify_customer_address(order, aliexpress_fix=False):
                 province = get_uk_province(customer_address['city'])
                 if province:
                     customer_address['province'] = province
+
+            if customer_province and customer_address['province'] == 'Other':
+                customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
 
     return order, customer_address
 
