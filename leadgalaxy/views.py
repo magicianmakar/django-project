@@ -1724,7 +1724,7 @@ def acp_users_list(request):
             if users[0].have_stripe_billing():
                 customer_id = users[0].stripe_customer.customer_id
             elif len(customer_ids):
-                customer_id = customer_id[0]['id']
+                customer_id = customer_ids[0]['id']
 
         if customer_id:
             for i in stripe.Charge.list(limit=10, customer=customer_id).data:
