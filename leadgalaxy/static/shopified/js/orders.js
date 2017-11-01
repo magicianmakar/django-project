@@ -1162,6 +1162,11 @@ $(function () {
         }),
         minChars: 1,
         deferRequestBy: 100,
+        autoSelectFirst: true,
+        noCache: true,
+        preventBadQueries: false,
+        showNoSuggestionNotice: true,
+        noSuggestionNotice: 'No customer found',
         onSelect: function(suggestion) {
             $('#query_customer').val(suggestion.value);
             $('#query_customer_id').val(suggestion.data);
