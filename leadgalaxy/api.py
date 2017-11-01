@@ -2212,10 +2212,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         order_data['aliexpress']['end_reason'] = data.get('end_reason')
 
+        order_details = {}
         try:
-            order_data['aliexpress']['order_details'] = json.loads(data.get('order_details'))
+            order_details = json.loads(data.get('order_details'))
+            order_data['aliexpress']['order_details'] = order_details
         except:
-            pass
+            raven_client.captureException(level='warning')
 
         if data.get('bundle'):
             if not order_data.get('bundle'):
@@ -2228,7 +2230,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'source_status': data.get('status'),
                 'source_tracking': data.get('tracking_number'),
                 'end_reason': data.get('end_reason'),
-                'order_details': json.loads(data.get('order_details')),
+                'order_details': order_details,
             }
 
         order.data = json.dumps(order_data)
