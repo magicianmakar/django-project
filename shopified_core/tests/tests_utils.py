@@ -104,6 +104,30 @@ class UtilsTestCase(TestCase):
         self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '')
 
+    def test_chase_phone_numbers(self):
+        def get_config(name):
+            conf = {'order_phone_number': '+1-2056577766'}
+            return conf.get(name)
+
+        user = Mock(get_config=get_config, profile=Mock(country='ES'))
+
+        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        # self.assertEqual(country_code, '+1')
+        self.assertEqual(phone_number, '0000000000')
+
+
+    def test_chase_phone_numbers_by_chase(self):
+        def get_config(name):
+            conf = {'order_phone_number': '+1-2056577766'}
+            return conf.get(name)
+
+        user = Mock(get_config=get_config, profile=Mock(country='ES'), username='chase')
+        user.model_user = user
+
+        country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
+        # self.assertEqual(country_code, '+1')
+        self.assertEqual(phone_number, '2056577766')
+
     def test_hash_url_filename(self):
         self.assertEqual('1205230341.jpg', hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg'))
         self.assertEqual('1384416073.png', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible.png?with=450&height=450'))

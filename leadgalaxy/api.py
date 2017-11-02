@@ -1481,6 +1481,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if re.findall('https?://', config.get('tracking_number_tags')):
                 return self.api_error('Invalid Custom Tag - Tracking Number Added', status=422)
 
+        phone_number = config.get('order_phone_number')
+        if phone_number and '2056577766' in re.sub('[^0-9]', '', phone_number):
+            return self.api_error('The entered phone number is not allowed to be used. '
+                                  'Please use a good contact number for you or your company.', status=422)
+
         profile.config = json.dumps(config)
         profile.save()
 
