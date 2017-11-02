@@ -38,7 +38,6 @@ from .utils import (
     get_tracking_products,
     get_order_line_fulfillment_status,
     woo_customer_address,
-    get_latest_order_note
 )
 
 
