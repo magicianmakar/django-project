@@ -86,7 +86,7 @@
                                 <img style="width: 64px; height: 64px;"
                                      class="media-object unveil"
                                      src="{% static 'img/blank.gif' %}"
-                                     data-src="{{item.image_path}}" alt="">
+                                     data-src="https://drrak0mvje5ie.cloudfront.net?url={{item.image_path|urlencode}}" alt="">
                             </td>
                             <td><a href='{% url 'marketplace:product' dropwow_product_id=item.id %}' class='product-title'>{{item.title}}</a></td>
                             <td class='product-category'>{{item.category.label}}</td>
