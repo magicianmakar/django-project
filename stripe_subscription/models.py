@@ -263,21 +263,6 @@ class StripeSubscription(models.Model):
         return status
 
 
-class StripeEvent(models.Model):
-    class Meta:
-        verbose_name = "Event"
-        verbose_name_plural = "Events"
-
-    event_id = models.CharField(max_length=255, unique=True, editable=False, verbose_name='Event ID')
-    event_type = models.CharField(null=True, blank=True, max_length=255, editable=False, verbose_name='Event Type')
-    data = models.TextField(null=True, blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __unicode__(self):
-        return u"{}".format(self.event_type)
-
-
 class ExtraStore(models.Model):
     class Meta:
         verbose_name = "Extra Store"
