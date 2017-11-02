@@ -28,10 +28,10 @@
                 {% endif %}
                 <div class="row product-wrapper" product-id="{{product.id}}" product-title="{{product.title}}">
                     <div class="col-md-3">
-                        <div id='product-image'>
-                        {% for item in combinations %}
-                            <img id='product-image-{{item.id}}' class="media-object unveil"
-                                 src="{{item.image_path}}" alt="">
+                        <div id='product-image' class='slider'>
+                        {% for item in product.images %}
+                            <img class="media-object unveil"
+                                 src="{{item.path}}" alt="">
                         {% endfor %}
                         </div>
                     </div>
@@ -53,6 +53,9 @@
                             <label>Vendor:</label>
                             <span>{{product.vendor}}</span>
                         </div>
+                        <p>
+                            {{product.description}}
+                        </p>
                         <div class="m-t">
                             <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{product.id}}">Save</button>&nbsp;&nbsp;&nbsp;
                             <button class="btn btn-success btn-rounded import-btn" product-id="{{product.id}}">Add To Store</button>
@@ -73,12 +76,16 @@
     <style type="text/css">
         #product-image {
             max-width: 280px;
-            display: none;
         }
         #product-image img {
             width: 100%;
         }
+        #product-image .slick-prev:before, #product-image .slick-next:before {
+            color: #93c47d;
+        }
     </style>
+     <link href="{% static 'libs/bower_components/slick-carousel/slick/slick.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/slick-carousel/slick/slick-theme.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
@@ -88,6 +95,7 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 {% compress js %}
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'libs/bower_components/slick-carousel/slick/slick.min.js' %}" type="text/javascript" ></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
     <script type="text/javascript" src="{% static 'marketplace/js/index.js' %}"></script>
     <script type="text/javascript" src="{% static 'marketplace/js/dropwow_product.js' %}"></script>

@@ -2,7 +2,7 @@
 
 (function() {
     'use strict';
-
+    $('#product-image').slick();
     function showCombination() {
         var dropwow_product = dropwow_products[0];
         var current;
@@ -24,9 +24,6 @@
         }
         if (current) {
             $('#product-price').text('$' + current.price);
-            $('#product-image').show();
-            $('#product-image img').hide();
-            $('#product-image-' + current.id).show();
         }
     }
 
