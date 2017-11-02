@@ -42,8 +42,8 @@
                         <div class="form-group">
                             <label for="option_{{option.option_id}}">{{option.option_name}}:</label>
                             <select id='option_{{option.option_id}}' class="form-control dropwow-product-option" data-option="{{option.option_id}}" style='width: 200px; display: inline-block; margin-left: 10px;'>
-                            {% for variant_id, variant in option.variants.items %}
-                                <option value='{{variant_id}}'>{{variant}}</option>
+                            {% for variant in option.variants %}
+                                <option value='{{variant.variant_id}}'>{{variant.variant_name}}</option>
                             {% endfor %}
                             </select>
                         </div>
