@@ -923,7 +923,11 @@ class ShopifyProduct(models.Model):
 
         if url:
             # Extract domain name
-            domain = urlparse.urlparse(url).hostname
+            try:
+                domain = urlparse.urlparse(url).hostname
+            except:
+                domain = None
+
             if domain is None:
                 return domain
 

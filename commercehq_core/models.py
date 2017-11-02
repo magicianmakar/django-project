@@ -581,7 +581,12 @@ class CommerceHQProduct(models.Model):
     def get_original_info(self):
         if self.have_supplier:
             url = self.default_supplier.product_url
-            domain = urlparse.urlparse(url).hostname
+
+            try:
+                domain = urlparse.urlparse(url).hostname
+            except:
+                domain = None
+
             if domain is None:
                 return domain
 
