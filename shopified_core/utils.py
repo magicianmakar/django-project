@@ -347,7 +347,7 @@ def order_phone_number(request, user, phone_number, customer_country):
         phone_number = user.get_config('order_phone_number')
         country = user.profile.country
 
-        if phone_number and '2056577766' in re.sub('[^0-9]', '', phone_number) and user.model_user.username != 'chase':
+        if phone_number and '2056577766' in re.sub('[^0-9]', '', phone_number) and user.profile.model_user.username != 'chase':
             phone_number = '0000000000'
     else:
         country = customer_country
