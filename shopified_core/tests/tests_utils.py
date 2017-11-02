@@ -122,7 +122,7 @@ class UtilsTestCase(TestCase):
             return conf.get(name)
 
         user = Mock(get_config=get_config, profile=Mock(country='ES'), username='chase')
-        user.model_user = user
+        user.models_user = user
 
         country_code, phone_number = order_phone_number(self.request, user, '', 'FR')
         # self.assertEqual(country_code, '+1')
