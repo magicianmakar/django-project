@@ -31,7 +31,7 @@ function setShopifySendModalTitle() {
         }
 
         $('#modal-shopify-send #product-title').val(original_product.title);
-        $('#modal-shopify-send #product-price').val(original_product.combinations[0].price);
+        $('#modal-shopify-send #product-price').val(original_product.price);
         $('#modal-shopify-send #product-compare-at').val('');
         $('#modal-shopify-send #product-weight').val('');
         $('#modal-shopify-send #product-type').val(original_product.category ? original_product.category.label : '');
@@ -104,7 +104,7 @@ $('#shopify-send-btn').click(function(e) {
 
         var options = [];
         var option_id_index = {};
-        $.each(original_product.options, function(v, k) {
+        $.each(original_product.options, function(k, v) {
             var variants = [];
             for (var key in v.variants) {
                 if (v.variants.hasOwnProperty(key)) {
@@ -114,24 +114,12 @@ $('#shopify-send-btn').click(function(e) {
 
             options.push({
                 title: v.option_name,
-                values: variants
+                values: $.map(variants, function(el) {
+                    return el.variant_name;
+                })
             });
 
             option_id_index[v.option_id] = options.length;
-        });
-
-        var variants = [];
-        $.each(original_product.combinations, function(i, c) {
-            var variant = {
-                title: c.title,
-                price: c.price
-            };
-
-            $.each(c.combination, function(option_id, option_value) {
-                variant['option' + option_id_index[option_id]] = original_product.options[option_id].variants[option_value];
-            });
-
-            variants.push(variant);
         });
 
         var title, price, compare_at_price, weight, weight_unit, type, tag, vendor, description;
@@ -145,10 +133,10 @@ $('#shopify-send-btn').click(function(e) {
             type = $('#modal-shopify-send #product-type').val();
             tag = $('#modal-shopify-send #product-tag').val();
             vendor = $('#modal-shopify-send #product-vendor').val();
-            description = CKEDITOR.instances['product-description'].getData();;
+            description = CKEDITOR.instances['product-description'].getData();
         } else {
             title = original_product.title;
-            price = original_product.combinations[0].price;
+            price = original_product.price;
             compare_at_price = null;
             weight = '';
             weight_unit = '';

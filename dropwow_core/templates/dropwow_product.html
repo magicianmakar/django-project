@@ -11,14 +11,6 @@
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-                <div class="row" style="margin-bottom: 20px">
-                    <div class="col-md-11">
-                        <p>
-                            {{product.category.label_path}} / 
-                            <strong>{{product.title}}</strong>
-                        </p>
-                    </div>
-                </div>
                 {% if not product.active %}
                 <div class="row">
                     <div class="col-md-11">
@@ -36,8 +28,8 @@
                     </div>
                     <div class="col-md-9">
                         <h2>{{product.title}}</h2>
-                        <p>{{product.brand}}</p>
-                        <h3 id='product-price'></h3>
+                        <p>{{product.category.label_path}}</p>
+                        <h3 id="product-price">$ {{product.price}}</h3>
                         {% for option_id, option in product.options.items %}
                         <div class="form-group">
                             <label for="option_{{option.option_id}}">{{option.option_name}}:</label>

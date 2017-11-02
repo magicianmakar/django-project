@@ -27,9 +27,9 @@
         }
     }
 
-    $('.dropwow-product-option').change(function() {
-        showCombination();
-    });
+    // $('.dropwow-product-option').change(function() {
+    //     showCombination();
+    // });
 
-    showCombination();
+    // showCombination();
 })();
