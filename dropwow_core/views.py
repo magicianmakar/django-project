@@ -98,6 +98,8 @@ def marketplace_categories(request):
 def dropwow_product(request, dropwow_product_id):
     try:
         product = get_dropwow_product(dropwow_product_id)
+        if product.get('description'):
+            product['description'] = product.get('description').strip()
 
     except ValidationError:
         raven_client.captureException()

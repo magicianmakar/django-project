@@ -53,7 +53,7 @@
                             <span>{{product.vendor}}</span>
                         </div>
                         <p>
-                            {{product.description}}
+                            {{product.description|linebreaks}}
                         </p>
                         <div class="m-t">
                             <button class="btn btn-primary btn-rounded save-for-later-btn" product-id="{{product.id}}">Save</button>&nbsp;&nbsp;&nbsp;
