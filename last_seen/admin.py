@@ -13,7 +13,7 @@ class PlanListFilter(admin.SimpleListFilter):
         choices_count = {}
         qs = model_admin.get_queryset(request)
         for k in request.GET.keys():
-            if k != 'q':
+            if len(k) > 1:
                 qs = qs.filter(**{k: request.GET[k]})
 
         for i in qs.values_list('user__profile__plan_id', 'user__profile__plan__title'):
