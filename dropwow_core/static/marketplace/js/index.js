@@ -127,7 +127,7 @@ $('#shopify-send-btn').click(function(e) {
             var modifier = 0;
             $.each(c.combination, function(option_id, option_value) {
                 variant['option' + option_id_index[option_id]] = variant_id_index[option_value].variant_name;
-                modifier = modifier + variant_id_index[option_value].modifier - 1;
+                modifier = modifier + variant_id_index[option_value].modifier;
             });
             var price = original_product.price + modifier;
             price = Math.round(price * 100) / 100;

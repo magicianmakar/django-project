@@ -29,7 +29,7 @@
                     var option = dropwow_product.options[option_id];
                     for (var i = 0; i < option.variants.length; i++) {
                         if (current.combination[option_id] == option.variants[i].variant_id) {
-                            modifier = modifier + option.variants[i].modifier - 1;
+                            modifier = modifier + option.variants[i].modifier;
                         }
                     }
                 }
