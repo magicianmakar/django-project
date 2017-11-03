@@ -104,22 +104,36 @@ $('#shopify-send-btn').click(function(e) {
 
         var options = [];
         var option_id_index = {};
+        var variant_id_index = {};
         $.each(original_product.options, function(k, v) {
-            var variants = [];
-            for (var key in v.variants) {
-                if (v.variants.hasOwnProperty(key)) {
-                    variants.push(v.variants[key]);
-                }
+            var values = [];
+            for (var i = 0; i < v.variants.length; i++) {
+                variant_id_index[v.variants[i].variant_id] = v.variants[i];
+                values.push(v.variants[i].variant_name);
             }
 
             options.push({
                 title: v.option_name,
-                values: $.map(variants, function(el) {
-                    return el.variant_name;
-                })
+                values: values
             });
 
             option_id_index[v.option_id] = options.length;
+        });
+
+        var variants = [];
+        $.each(original_product.combinations, function(i, c) {
+            var variant = {};
+
+            var modifier = 0;
+            $.each(c.combination, function(option_id, option_value) {
+                variant['option' + option_id_index[option_id]] = variant_id_index[option_value].variant_name;
+                modifier = modifier + variant_id_index[option_value].modifier - 1;
+            });
+            var price = original_product.price + modifier;
+            price = Math.round(price * 100) / 100;
+            variant['price'] = price;
+
+            variants.push(variant);
         });
 
         var title, price, compare_at_price, weight, weight_unit, type, tag, vendor, description;
@@ -151,8 +165,8 @@ $('#shopify-send-btn').click(function(e) {
             'description': description,
             'price': price,
             'compare_at_price': compare_at_price ? compare_at_price : null,
-            'images': $.map(original_product.combinations, function(c) {
-                return c.image_path;
+            'images': $.map(original_product.images, function(c) {
+                return c.path;
             }),
             'original_url': app_link(['marketplace/product/', original_product.id]),
             'store': {
@@ -169,6 +183,7 @@ $('#shopify-send-btn').click(function(e) {
             'variants_sku': {},
 
             'variants': options,
+            'prices': variants,
         };
         var req_data = {
             'store': store,
