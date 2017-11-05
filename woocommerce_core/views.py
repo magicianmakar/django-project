@@ -6,15 +6,16 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.contrib import messages
 from django.db.models import Q
-from django.views.generic import ListView
+from django.views.generic import View, ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.base import RedirectView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.cache import caches
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.contrib.auth import get_user_model
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -41,6 +42,39 @@ from .utils import (
 )
 
 
+class CallbackEndpoint(View):
+    def dispatch(self, request, *args, **kwargs):
+        self.data = json.loads(request.body)
+
+        return super(CallbackEndpoint, self).dispatch(request, *args, **kwargs)
+
+    def get_user(self):
+        User = get_user_model()
+        user = get_object_or_404(User, pk=self.data['user_id'])
+
+        return user
+
+    def get_store(self):
+        store = get_object_or_404(WooStore, store_hash=self.kwargs['store_hash'])
+
+        return store
+
+    def has_credentials(self, store):
+        return store.api_key and store.api_password
+
+    def post(self, request, *args, **kwargs):
+        user, store = self.get_user(), self.get_store()
+        permissions.user_can_edit(user, store)
+
+        if not self.has_credentials(store):
+            store.api_key = self.data['consumer_key']
+            store.api_password = self.data['consumer_secret']
+            store.save()
+            return HttpResponse('ok')
+
+        raise Http404
+
+
 class StoresList(ListView):
     model = WooStore
     context_object_name = 'stores'
@@ -54,7 +88,10 @@ class StoresList(ListView):
         return super(StoresList, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return self.request.user.profile.get_woo_stores()
+        stores = self.request.user.profile.get_woo_stores()
+        stores = stores.filter(~Q(api_url='') and ~Q(api_password=''))
+
+        return stores
 
     def get_context_data(self, **kwargs):
         context = super(StoresList, self).get_context_data(**kwargs)

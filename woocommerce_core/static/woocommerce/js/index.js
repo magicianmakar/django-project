@@ -33,9 +33,7 @@ $(document).ready(function() {
             type: 'POST',
             data: $('#store-create-form').serialize(),
             success: function(data) {
-                setTimeout(function() {
-                    window.location.reload(true);
-                }, 1000);
+                window.location.replace(data.authorize_url);
             },
             error: function(data) {
                 $('#store-create-form [type=submit]').button('reset');
