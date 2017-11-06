@@ -521,13 +521,6 @@ class CHQStoreApi(ApiResponseMixin, View):
             tracks_count = tracks.count()
 
             if tracks_count > 1:
-                raven_client.captureMessage('More Than One Order Track', level='warning', extra={
-                    'store': store.title,
-                    'order_id': order_id,
-                    'line_id': line_id,
-                    'count': tracks.count()
-                })
-
                 tracks.delete()
 
             elif tracks_count == 1:

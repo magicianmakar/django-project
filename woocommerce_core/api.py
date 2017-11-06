@@ -798,13 +798,6 @@ class WooStoreApi(ApiResponseMixin, View):
         tracks_count = tracks.count()
 
         if tracks_count > 1:
-            extra = {
-                'store': store.title,
-                'order_id': order_id,
-                'line_id': line_id,
-                'count': tracks_count}
-
-            raven_client.captureMessage('More Than One Order Track', level='warning', extra=extra)
             tracks.delete()
 
         if tracks_count == 1:

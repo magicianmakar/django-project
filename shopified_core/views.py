@@ -73,9 +73,7 @@ class ShopifiedApi(ApiResponseMixin, View):
                 raise Exception("Unknown Store Type")
 
         except PermissionDenied as e:
-            raven_client.captureException()
             reason = e.message if e.message else "You don't have permission to perform this action"
-
             return self.api_error('Permission Denied: %s' % reason, status=403)
 
         except requests.Timeout:
