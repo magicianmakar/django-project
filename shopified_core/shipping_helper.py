@@ -108,15 +108,9 @@ def get_uk_province(city, default=''):
 
 
 def valide_aliexpress_province(country, province, city):
-    if not province:
-        province = ''
-
-    if not city:
-        city = ''
-
-    country = country.lower().strip()
-    province = province.lower().strip()
-    city = city.lower().strip()
+    country = country.lower().strip() if country else ''
+    province = province.lower().strip() if province else ''
+    city = city.lower().strip() if city else ''
 
     country_code = None
     if country in ['uk', 'gb', 'united kingdom']:
