@@ -1392,6 +1392,38 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'email': user.email
         }
 
+        if data.get('stores'):
+            stores = []
+            for i in user.profile.get_shopify_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'shopify',
+                    'url': i.get_link(api=False)
+                })
+
+            for i in user.profile.get_chq_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'chq',
+                    'url': i.get_admin_url()
+                })
+
+            for i in user.profile.get_woo_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'woo',
+                    'url': i.get_admin_url()
+                })
+
+            config['stores'] = stores
+
+        config['sync'] = {
+            'new': True
+        }
+
         return JsonResponse(config)
 
     def post_user_config(self, request, user, data):

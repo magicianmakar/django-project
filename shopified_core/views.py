@@ -1,3 +1,4 @@
+import copy
 import traceback
 
 from django.conf import settings
@@ -5,6 +6,7 @@ from django.contrib.auth import login as user_login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.core import serializers
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.validators import validate_email, ValidationError
@@ -12,11 +14,15 @@ from django.http import JsonResponse
 from django.views.generic import View
 
 import requests
+import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.api import ShopifyStoreApi
 from commercehq_core.api import CHQStoreApi
 from woocommerce_core.api import WooStoreApi
+
+from leadgalaxy.models import ShopifyOrderTrack
+from commercehq_core.models import CommerceHQOrderTrack
 
 from .mixins import ApiResponseMixin
 from .exceptions import ApiLoginException
@@ -194,3 +200,84 @@ class ShopifiedApi(ApiResponseMixin, View):
             return ShopifyStoreApi.as_view()(request, **kwargs)
         else:
             return CHQStoreApi.as_view()(request, **kwargs)
+
+    def get_all_orders_sync(self, request, **kwargs):
+        user = self.get_user(request, assert_login=True)
+        data = self.request_data(request)
+
+        if not user.can('orders.use'):
+            return self.api_error('Order is not included in your account', status=402)
+
+        orders = []
+
+        if data.get('since'):
+            since = arrow.get(data.get('since')).datetime
+        else:
+            since = arrow.now().replace(days=-30).datetime
+
+        # Shopify
+        fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at', 'updated_at']
+        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
+                                                .filter(created_at__gte=since) \
+                                                .filter(source_tracking='') \
+                                                .exclude(shopify_status='fulfilled') \
+                                                .exclude(source_status='FINISH') \
+                                                .filter(hidden=False) \
+                                                .only(*fields) \
+                                                .order_by('created_at')
+
+        if user.is_subuser:
+            order_tracks = order_tracks.filter(store__in=user.profile.get_shopify_stores(flat=True))
+
+        if data.get('store'):
+            order_tracks = order_tracks.filter(store=data.get('store'))
+
+        for i in serializers.serialize('python', order_tracks, fields=fields):
+            fields = i['fields']
+            fields['id'] = i['pk']
+            fields['store_type'] = 'shopify'
+
+            if fields['source_id'] and ',' in fields['source_id']:
+                for j in fields['source_id'].split(','):
+                    order_fields = copy.deepcopy(fields)
+                    order_fields['source_id'] = j
+                    order_fields['bundle'] = True
+                    orders.append(order_fields)
+            else:
+                orders.append(fields)
+
+        # CommerceHQ
+        fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at']
+        order_tracks = CommerceHQOrderTrack.objects.filter(user=user.models_user) \
+                                                   .filter(created_at__gte=since) \
+                                                   .filter(source_tracking='') \
+                                                   .exclude(source_status='FINISH') \
+                                                   .filter(hidden=False) \
+                                                   .defer('data') \
+                                                   .order_by('created_at')
+
+        if user.is_subuser:
+            order_tracks = order_tracks.filter(store__in=user.profile.get_chq_stores(flat=True))
+
+        if data.get('store'):
+            order_tracks = order_tracks.filter(store=data.get('store'))
+
+        for i in serializers.serialize('python', order_tracks, fields=fields):
+            fields = i['fields']
+            fields['id'] = i['pk']
+            fields['store_type'] = 'chq'
+
+            if fields['source_id'] and ',' in fields['source_id']:
+                for j in fields['source_id'].split(','):
+                    order_fields = copy.deepcopy(fields)
+                    order_fields['source_id'] = j
+                    order_fields['bundle'] = True
+                    orders.append(order_fields)
+            else:
+                orders.append(fields)
+
+        return self.api_success({
+            'orders': orders,
+            'all_orders': not True,
+            'date': arrow.utcnow().timestamp
+        })
