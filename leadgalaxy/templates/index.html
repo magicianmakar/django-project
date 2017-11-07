@@ -835,14 +835,14 @@
                             <div class="row form-group">
                                 <label class="col-sm-2 control-label">Min Price</label>
                                 <div class="col-sm-3">
-                                    <input type="number" name="min_price" placeholder="Min Price" class="form-control" required>
+                                    <input type="number" name="min_price" placeholder="" class="form-control" required>
                                 </div>
                             </div>
 
                             <div class="row form-group">
                                 <label class="col-sm-2 control-label">Max Price</label>
                                 <div class="col-sm-3">
-                                    <input type="number" name="max_price" placeholder="Max Price" class="form-control" required>
+                                    <input type="number" name="max_price" placeholder="" class="form-control" required>
                                 </div>
                             </div>
 
@@ -850,9 +850,9 @@
                                 <label class="col-sm-2 control-label">Markup Type</label>
                                 <div class="col-sm-3">
                                     <select name="markup_type" class="form-control">
-                                    {% for k,v in marktup_types %}
-                                    <option value="{{ k }}">{{ v }}</option>
-                                    {% endfor %}
+                                        <option value="margin_percent">Increase by Percentage</option>
+                                        <option value="margin_amount">Increase by Amount</option>
+                                        <option value="fixed_amount">Set to Fixed Amount</option>
                                     </select>
                                 </div>
                             </div>
