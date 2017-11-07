@@ -2552,6 +2552,10 @@ def orders_view(request):
             request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
             '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
 
+    # Admitad ID
+    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
+
+    # Filters
     sort = utils.get_orders_filter(request, 'sort', 'asc')
     status = utils.get_orders_filter(request, 'status', 'open')
     fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
@@ -3129,6 +3133,8 @@ def orders_view(request):
         'store_sync_enabled': store_sync_enabled,
         'countries': countries,
         'created_at_daterange': created_at_daterange,
+        'admitad_site_id': admitad_site_id,
+        'user_admitad_credentials': user_admitad_credentials,
         'page': 'orders',
         'breadcrumbs': breadcrumbs
     })

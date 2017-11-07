@@ -48,6 +48,9 @@
             {% endif %}
 
             <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
+            {% if user_admitad_credentials %}
+            <li><a href="https://alitems.com/g/{{admitad_site_id}}/?ulp={{item.supplier.short_product_url|urlencode}}" target="_blank">Manual Order (Admitad)</a></li>
+            {% endif %}
 
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
