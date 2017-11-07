@@ -208,10 +208,14 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         orders = []
 
-        if data.get('since'):
+        since_key = 'sync_since_{}'.format(user.id)
+        all_orders = cache.get(since_key) is None
+
+        if data.get('since') and not all_orders:
             since = arrow.get(data.get('since')).datetime
         else:
             since = arrow.now().replace(days=-30).datetime
+            cache.set(since_key, arrow.utcnow().timestamp, timeout=86400)
 
         # Shopify
         fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at', 'updated_at']
@@ -276,6 +280,6 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         return self.api_success({
             'orders': orders,
-            'all_orders': not True,
+            'all_orders': all_orders,
             'date': arrow.utcnow().timestamp
         })
