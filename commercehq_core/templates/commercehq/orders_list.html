@@ -452,8 +452,20 @@
                                                         </a>
                                                     </div>
 
-                                                    <div>
+                                                    <div class="m-l">
                                                         <span class="badge">{{bundle.quantity}} &times; {{bundle.data.variant_title}}</span>
+                                                    </div>
+
+                                                    <div class="m-l">
+                                                        <span class="badge badge-white">
+                                                            <a {% if bundle.supplier.supplier_url %}
+                                                                href="{{bundle.supplier.supplier_url|default:'#'}}" target="_blank"
+                                                            {% else %}
+                                                                href="#"
+                                                            {% endif %}
+
+                                                            >{{bundle.supplier.supplier_name|truncatechars:25}}</a>
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 {% endfor %}

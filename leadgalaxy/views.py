@@ -2990,7 +2990,7 @@ def orders_view(request):
                             continue
 
                         b_variant_id = b_product.get_real_variant_id(b['variant_id'])
-                        b_supplier = b_product.get_suppier_for_variant(variant_id)
+                        b_supplier = b_product.get_suppier_for_variant(b_variant_id)
                         if b_supplier:
                             b_shipping_method = b_product.get_shipping_for_variant(
                                 supplier_id=b_supplier.id,
@@ -3000,7 +3000,7 @@ def orders_view(request):
                             continue
 
                         b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
-                        if variant_id and b_variant_mapping:
+                        if b_variant_id and b_variant_mapping:
                             b_variants = b_variant_mapping
                         else:
                             b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
