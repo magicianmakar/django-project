@@ -111,8 +111,12 @@ def update_product_api_data(api_data, data, store):
     api_data['status'] = 'publish' if data['published'] else 'draft'
     api_data['price'] = str(data['price'])
     api_data['regular_price'] = str(data['compare_at_price'])
-    api_data['weight'] = str(match_weight(data['weight'], data['weight_unit'], store))
     api_data['description'] = data.get('description')
+
+    try:
+        api_data['weight'] = str(match_weight(safeFloat(data['weight']), data['weight_unit'], store))
+    except:
+        pass
 
     return api_data
 
