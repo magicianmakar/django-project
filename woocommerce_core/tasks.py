@@ -1,5 +1,6 @@
 import simplejson as json
 import requests
+import re
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -171,14 +172,23 @@ def product_export(store_id, product_id, user_id, publish=None):
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
         r = store.wcapi.post('products', api_data)
-        r.raise_for_status()
+        if not r.ok:
+            product_data = None
+            if '/products/' in r.url:
+                product_id = re.findall(r'/products/([0-9]+)', r.url)
+                if len(product_id) == 1:
+                    product.source_id = int(product_id[0])
 
-        product_data = r.json()
-        product.source_id = product_data['id']
+            if not product.source_id:
+                r.raise_for_status()
+        else:
+            product_data = r.json()
+            product.source_id = product_data['id']
+
         product.update_data({'original_images': saved_data.get('images', [])})
         product.save()
 
-        if saved_data.get('variants', []):
+        if product_data and saved_data.get('variants', []):
             image_id_by_hash = get_image_id_by_hash(product_data)
             variant_list = create_variants_api_data(saved_data, image_id_by_hash)
             path = 'products/{}/variations/batch'.format(product.source_id)
