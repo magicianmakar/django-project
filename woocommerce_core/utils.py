@@ -752,6 +752,29 @@ def get_order_track_product_id(store, order_id, line_id):
                 return line_item['product_id']
 
 
+def get_image_by_product_id(store, product_ids=None):
+    image_by_product_id = {}
+    page = 1
+    while page:
+        params = {'page': page, 'per_page': 100}
+        if product_ids is not None:
+            product_ids = [str(product_id) for product_id in product_ids]
+            params['include'] = ','.join(product_ids)
+
+        r = store.wcapi.get('products?{}'.format(urllib.urlencode(params)))
+        r.raise_for_status()
+        products = r.json()
+
+        for product in products:
+            image = next(iter(product['images']), {}).get('src')
+            image_by_product_id[product['id']] = image
+
+        has_next = 'rel="next"' in r.headers.get('link', '')
+        page = page + 1 if has_next else 0
+
+    return image_by_product_id
+
+
 class WooListQuery(object):
     def __init__(self, store, endpoint, params=None):
         self._store = store

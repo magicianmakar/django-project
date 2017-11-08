@@ -39,6 +39,7 @@ from .utils import (
     get_tracking_products,
     get_order_line_fulfillment_status,
     woo_customer_address,
+    get_image_by_product_id
 )
 
 
@@ -369,17 +370,6 @@ class OrdersList(ListView):
     def get_queryset(self):
         return WooListQuery(self.get_store(), 'orders', self.get_filters())
 
-    def get_product_data(self, product_id):
-        if product_id not in self.products:
-            self.add_product_data_to_products(product_id)
-
-        return self.products.get(product_id)
-
-    def add_product_data_to_products(self, product_id):
-        r = self.get_store().wcapi.get('products/{}'.format(product_id))
-        if r.ok:
-            self.products.setdefault(product_id, r.json())
-
     def get_context_data(self, **kwargs):
         context = super(OrdersList, self).get_context_data(**kwargs)
         context['store'] = store = self.get_store()
@@ -461,11 +451,35 @@ class OrdersList(ListView):
         else:
             order['fulfillment_status'] = None
 
+    def get_product_ids(self, orders):
+        product_ids = set()
+        for order in orders:
+            for item in order.get('line_items', []):
+                product_ids.add(item['product_id'])
+
+        return list(product_ids)
+
+    def get_product_by_source_id(self, product_ids):
+        product_by_source_id = {}
+        store = self.get_store()
+        for product in WooProduct.objects.filter(store=store, source_id__in=product_ids):
+            product_by_source_id[product.source_id] = product
+
+        return product_by_source_id
+
+    def get_image_by_product_id(self, product_ids):
+        return get_image_by_product_id(self.get_store(), product_ids)
+
     def normalize_orders(self, context):
         orders_cache = {}
         store = self.get_store()
         admin_url = store.get_admin_url()
-        for order in context.get('orders', []):
+        orders = context.get('orders', [])
+        product_ids = self.get_product_ids(orders)
+        product_by_source_id = self.get_product_by_source_id(product_ids)
+        image_by_product_id = self.get_image_by_product_id(product_ids)
+
+        for order in orders:
             country_code = order['shipping'].get('country')
             date_created = self.get_order_date_created(order)
             order['date_paid'] = self.get_order_date_paid(order)
@@ -483,25 +497,22 @@ class OrdersList(ListView):
             for item in order.get('items'):
                 self.update_placed_orders(order, item)
                 product_id = item['product_id']
-                product_data = True
+                product = product_by_source_id.get(product_id)
+                item['product'] = product
+                item['image'] = image_by_product_id.get(product_id)
+                variant_id = item.get('variation_id')
 
-                if product_data:
-                    product = WooProduct.objects.filter(source_id=product_id).first()
-                    item['product'] = product
-                    # item['image'] = next(iter(product_data['images']), {}).get('src')
-                    variant_id = item.get('variation_id')
-
-                    if product and product.has_supplier():
-                        supplier = self.get_product_supplier(product, variant_id)
-                        order_data = self.get_order_data(order, item, product, supplier)
-                        order_data['variant'] = self.get_order_data_variant(product, variant_id)
-                        order_data_id = order_data['id']
-                        orders_cache['woo_order_{}'.format(order_data_id)] = order_data
-                        item['order_data_id'] = order_data_id
-                        item['order_data'] = order_data
-                        item['supplier'] = supplier
-                        item['shipping_method'] = self.get_item_shipping_method(
-                            product, item, variant_id, country_code)
+                if product and product.has_supplier():
+                    supplier = self.get_product_supplier(product, variant_id)
+                    order_data = self.get_order_data(order, item, product, supplier)
+                    order_data['variant'] = self.get_order_data_variant(product, variant_id)
+                    order_data_id = order_data['id']
+                    orders_cache['woo_order_{}'.format(order_data_id)] = order_data
+                    item['order_data_id'] = order_data_id
+                    item['order_data'] = order_data
+                    item['supplier'] = supplier
+                    item['shipping_method'] = self.get_item_shipping_method(
+                        product, item, variant_id, country_code)
 
                 item['order_track'] = WooOrderTrack.objects.filter(
                     store=store,
