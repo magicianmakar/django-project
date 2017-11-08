@@ -62,17 +62,19 @@ class CallbackEndpoint(View):
     def has_credentials(self, store):
         return store.api_key and store.api_password
 
+    def set_credentials(self, store):
+        store.api_key = self.data['consumer_key']
+        store.api_password = self.data['consumer_secret']
+        store.save()
+
+        return store
+
     def post(self, request, *args, **kwargs):
         user, store = self.get_user(), self.get_store()
         permissions.user_can_edit(user, store)
+        store = self.set_credentials(store) if not self.has_credentials(store) else store
 
-        if not self.has_credentials(store):
-            store.api_key = self.data['consumer_key']
-            store.api_password = self.data['consumer_secret']
-            store.save()
-            return HttpResponse('ok')
-
-        raise Http404
+        return HttpResponse('ok')
 
 
 class StoresList(ListView):
