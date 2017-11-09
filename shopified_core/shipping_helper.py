@@ -131,6 +131,9 @@ def valide_aliexpress_province(country, province, city):
     elif country in ['ua', 'ukraine']:
         country_code = 'ua'
 
+    elif country in ['nz', 'new zealand']:
+        country_code = 'nz'
+
     if country_code:
         aliexpress_countries = load_aliexpress_countries()
 
