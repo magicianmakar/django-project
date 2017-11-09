@@ -328,18 +328,18 @@ class OrderErrorsCheck:
 
         found_errors = 0
         erros_desc = []
-        if order.customer_name and not self.compare_name(order.customer_name, contact_name):
+        if contact_name and not self.compare_name(order.customer_name, contact_name):
             found_errors |= OrderErrors.NAME
             erros_desc.append(u'Customer Error: ' + order.customer_name + u' <> ' + contact_name)
             track.add_error(u"Customer is '{}' should be '{}'".format(contact_name, order.customer_name))
 
-        if order.city and not self.compare_city(order.city, city):
+        if city and not self.compare_city(order.city, city):
             found_errors |= OrderErrors.CITY
             erros_desc.append(u'City Error: ' + order.city + u' <> ' + city)
             track.add_error(u"City is '{}' should be '{}'".format(city, order.city))
 
         shopiyf_country = country_from_code(order.country_code)
-        if shopiyf_country and not self.compare_country(shopiyf_country, country):
+        if country and not self.compare_country(shopiyf_country, country):
             found_errors |= OrderErrors.COUNTRY
             erros_desc.append(u'Country Error: ' + shopiyf_country + u' <> ' + country)
             track.add_error(u"Country is '{}' should be '{}'".format(country, shopiyf_country))
@@ -358,7 +358,15 @@ class OrderErrorsCheck:
             )
 
         if commit:
-            track.errors = found_errors if found_errors > 0 else -1
+            if found_errors > 0:
+                if track.errors > 0:
+                    # Clear previous errors
+                    track.clear_errors(commit=False)
+
+                track.errors = found_errors
+            else:
+                track.errors = -1
+
             track.save()
 
     def compare_name(self, first, second):

@@ -1581,6 +1581,20 @@ class ShopifyOrderTrack(models.Model):
 
         return errors
 
+    def clear_errors(self, commit=False):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        if 'errors' in data:
+            del data['errors']
+
+            self.data = json.dumps(data)
+
+            if commit:
+                self.commit()
+
     def get_errors_details(self):
         try:
             data = json.loads(self.data)
