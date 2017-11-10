@@ -1421,7 +1421,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             config['stores'] = stores
 
         config['sync'] = {
-            'new': True
+            'new': user.models_user.id not in [23957]
         }
 
         return JsonResponse(config)
