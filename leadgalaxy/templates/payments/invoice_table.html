@@ -3,6 +3,7 @@
         <thead>
             <tr>
                 <th>Date</th>
+                <th></th>
                 <th>Amount</th>
                 <th>Status</th>
                 <th></th>
@@ -12,7 +13,7 @@
         {% for invoice in invoices %}
             {% if invoice.total %}
                 <tr>
-                    <td  style="width: 70%">
+                    <td  style="white-space: nowrap;width: 15%">
                         <a href="{% url 'user_invoices' invoice.id %}">
                             {{ invoice.date|date:'M. d, Y' }}
                         </a>
@@ -20,10 +21,13 @@
                         [<a href="{% url 'user_invoices_download' invoice.id %}"
                            title="Download invoice">PDF</a>]
                     </td>
-                    <td style="white-space: nowrap: width: 10%">
+                    <td style="white-space: nowrap; width: 55%">
+                        <span class="m-l">{{invoice.description|default:''}}</span>
+                    </td>
+                    <td style="white-space: nowrap; width: 10%">
                         ${{ invoice.total }}
                     </td>
-                    <td style="white-space: nowrap: width: 10%" class="text-left">
+                    <td style="white-space: nowrap; width: 10%" class="text-left">
                         {% if invoice.paid %}
                             <i class="text-success fa fa-fw fa-check"></i> Paid
                         {% elif not invoice.attempted %}

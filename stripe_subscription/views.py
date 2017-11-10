@@ -208,20 +208,32 @@ def subscription_plan(request):
 @csrf_protect
 def clippingmagic_subscription(request):
     user = request.user
+    paid = False
+
+    invoice = None
 
     try:
         clippingmagic_plan = ClippingMagicPlan.objects.get(id=request.POST.get('plan'))
 
-        stripe.Charge.create(
-            amount=clippingmagic_plan.amount * 100,
-            currency="usd",
+        stripe.InvoiceItem.create(
             customer=user.stripe_customer.customer_id,
-            description="Clipping Magic - {} Credits".format(clippingmagic_plan.allowed_credits),
+            amount=clippingmagic_plan.amount * 100,
+            currency='usd',
+            description='Clipping Magic - {} Credits'.format(clippingmagic_plan.allowed_credits),
+        )
+
+        invoice = stripe.Invoice.create(
+            customer=user.stripe_customer.customer_id,
+            description='Clipping Magic Credits',
             metadata={
                 'user': user.id,
                 'clippingmagic_plan': clippingmagic_plan.id
             }
         )
+
+        invoice.pay()
+
+        paid = True
 
         try:
             clippingmagic = ClippingMagic.objects.get(user=user)
@@ -259,6 +271,11 @@ def clippingmagic_subscription(request):
             'error': 'Credit Card Error, Please try again'
         }, status=500)
 
+    finally:
+        if not paid and invoice:
+            invoice.closed = True
+            invoice.save()
+
     return JsonResponse({'status': 'ok'})
 
 
@@ -266,20 +283,30 @@ def clippingmagic_subscription(request):
 @csrf_protect
 def captchacredit_subscription(request):
     user = request.user
+    paid = False
 
     try:
         captchacredit_plan = CaptchaCreditPlan.objects.get(id=request.POST.get('plan'))
 
-        stripe.Charge.create(
-            amount=captchacredit_plan.amount * 100,
-            currency="usd",
+        stripe.InvoiceItem.create(
             customer=user.stripe_customer.customer_id,
+            amount=captchacredit_plan.amount * 100,
+            currency='usd',
             description="Auto Captcha - {} Credits".format(captchacredit_plan.allowed_credits),
+        )
+
+        invoice = stripe.Invoice.create(
+            customer=user.stripe_customer.customer_id,
+            description='Auto Captcha Credits',
             metadata={
                 'user': user.id,
                 'captchacredit_plan': captchacredit_plan.id
             }
         )
+
+        invoice.pay()
+
+        paid = True
 
         try:
             captchacredit = CaptchaCredit.objects.get(user=user)
@@ -316,6 +343,11 @@ def captchacredit_subscription(request):
         return JsonResponse({
             'error': 'Credit Card Error, Please try again'
         }, status=500)
+
+    finally:
+        if not paid and invoice:
+            invoice.closed = True
+            invoice.save()
 
     return JsonResponse({'status': 'ok'})
 
