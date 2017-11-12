@@ -330,7 +330,7 @@
                                             </div>
                                             <div class="panel-body">
                                                 <div class="note-preview">
-                                                    <span class="note-text">{{order.notes|default:''|truncatewords:10 }}</span>
+                                                    <span class="note-text">Loading...</span>
                                                 </div>
                                                 <div class="edit-note">
                                                     <textarea class="note">{{order.notes|default:''}}</textarea>
@@ -533,6 +533,7 @@
         channel: "{{store.pusher_channel}}",
     };
 
+    var STORE_ID = "{{ store.id }}";
 </script>
 
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>

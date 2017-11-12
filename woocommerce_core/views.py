@@ -492,7 +492,6 @@ class OrdersList(ListView):
             order['connected_lines'] = 0
             order['items'] = order.pop('line_items')
             order['lines_count'] = len(order['items'])
-            # order['notes'] = get_latest_order_note(store, order['id'])
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)

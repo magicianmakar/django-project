@@ -1182,6 +1182,16 @@ class WooStoreApi(ApiResponseMixin, View):
         else:
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
 
+    def get_order_notes(self, request, user, data):
+        store = WooStore.objects.get(id=data['store'])
+        permissions.user_can_view(user, store)
+        order_ids = data.getlist('order_ids[]')
+
+        for order_id in order_ids:
+            tasks.get_latest_order_note_task.delay(store.id, order_id)
+
+        return self.api_success({})
+
     def post_order_note(self, request, user, data):
         store = WooStore.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
