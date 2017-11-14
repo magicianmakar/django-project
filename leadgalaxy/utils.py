@@ -1546,7 +1546,10 @@ def order_track_fulfillment(**kwargs):
     else:
         data['fulfillment']['notify_customer'] = (notify_customer == 'yes')
 
-    return data
+    if kwargs.get('return_line'):
+        return data, line
+    else:
+        return data
 
 
 def get_variant_name(variant):

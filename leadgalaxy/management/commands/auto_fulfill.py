@@ -87,7 +87,7 @@ class Command(DropifiedBaseCommand):
         store = order.store
         user = store.user
 
-        api_data = utils.order_track_fulfillment(order_track=order, user_config=user.get_config())
+        api_data, line = utils.order_track_fulfillment(order_track=order, user_config=user.get_config(), return_line=True)
 
         fulfilled = False
         tries = 3
@@ -160,5 +160,9 @@ class Command(DropifiedBaseCommand):
             tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
 
             self.store_countdown[store.id] = countdown + 5
+
+            if line:
+                line.fulfillment_status = 'fulfilled'
+                line.save()
 
         return fulfilled

@@ -19,7 +19,8 @@ class DropifiedBaseCommand(BaseCommand):
             self.stderr.write('Web app is not available')
             raven_client.captureException(level='warning')
 
-            return
+            if not settings.DEBUG:
+                return
 
         assert hasattr(self, 'start_command')
 
