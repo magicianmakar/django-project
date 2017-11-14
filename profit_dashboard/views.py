@@ -106,7 +106,8 @@ def facebook_accounts(request):
     api = FacebookAdsApi.init(
         settings.FACEBOOK_APP_ID,
         settings.FACEBOOK_APP_SECRET,
-        access_token
+        access_token,
+        api_version='v2.10'
     )
 
     user = FBUser(fbid='me', api=api)
@@ -125,7 +126,8 @@ def facebook_campaign(request):
     api = FacebookAdsApi.init(
         settings.FACEBOOK_APP_ID,
         settings.FACEBOOK_APP_SECRET,
-        access_token
+        access_token,
+        api_version='v2.10'
     )
 
     user = FBUser(fbid='me', api=api)
