@@ -76,7 +76,8 @@ class FacebookAdCostsTestCase(TestCase):
             self.api = FacebookAdsApi.init(
                 settings.FACEBOOK_APP_ID,
                 settings.FACEBOOK_APP_SECRET,
-                self.access_token
+                self.access_token,
+                api_version='v2.10'
             )
 
             user = FBUser(fbid='me', api=self.api)

@@ -41,7 +41,8 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
     api = FacebookAdsApi.init(
         settings.FACEBOOK_APP_ID,
         settings.FACEBOOK_APP_SECRET,
-        access_token
+        access_token,
+        api_version='v2.10'
     )
 
     user = FBUser(fbid='me', api=api)
