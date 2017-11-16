@@ -19,8 +19,9 @@
         // variant_sku: variant SKU to test if need to be selected
 
         variant_title = variant_title.toLowerCase().trim();
-        if (variant_sku)
+        if (variant_sku) {
             variant_sku = variant_sku.toLowerCase().trim();
+        }
 
         if (typeof(variants) === 'string' && variants.toLowerCase().trim() == variant_title) {
             // Simple variant compare
