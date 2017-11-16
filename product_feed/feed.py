@@ -130,7 +130,7 @@ class ProductFeed():
             self._add_element('g:id', 'shopify_{}'.format(variant_id))
             self._add_element('g:item_group_id', '{}'.format(variant_id))
 
-        self._add_element('g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
+        self._add_element('g:link', u'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element('g:title', product.get('title'))
         self._add_element('g:description', self._clean_description(product))
         self._add_element('g:image_link', image)
