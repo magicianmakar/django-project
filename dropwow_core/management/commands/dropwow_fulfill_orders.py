@@ -15,6 +15,6 @@ class Command(DropifiedBaseCommand):
             .filter(pending=True)
         fulfilled_orders = 0
         for dropwow_order_status in dropwow_order_statuses:
-            if (fulfill_dropwow_order(dropwow_order_status)):
+            if fulfill_dropwow_order(dropwow_order_status):
                 fulfilled_orders += 1
         self.write_success('Fulfilled {} Dropwow Orders'.format(fulfilled_orders))
