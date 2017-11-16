@@ -60,36 +60,44 @@ def get_dropwow_product_options(product_id):
     product = get_dropwow_product(product_id)
     ret = []
     for option_id, option in product.get('options', {}).iteritems():
-        item = {'title': option.get('option_name', '')}
+        item = {
+            'title': option['option_name']
+        }
+
         values = []
         for variant in option.get('variants', []):
             values.append({
-                'title': variant.get('variant_name', ''),
-                'image': variant.get('image_path', '')}
-            )
+                'option_id': option_id,
+                'variant_id': variant['variant_id'],
+                'title': variant['variant_name'],
+                'image': variant.get('image_path', '')
+            })
+
         item['values'] = values
         ret.append(item)
+
     return ret
 
 
-def get_dropwow_product_combination(product_id, shopify_options):
+def get_dropwow_product_combination(product_id, variant_mapping):
     product = get_dropwow_product(product_id)
     product_options = {}
-    for shopify_option in shopify_options:
-        variant_name = shopify_option.get('title')
+    for mapping in variant_mapping:
         for option_id, option in product.get('options', {}).iteritems():
             for variant in option.get('variants', {}):
-                if variant.get('variant_name', '') == variant_name:
-                    product_options[option_id] = variant.get('variant_id', '')
+                if variant['variant_name'].lower() == mapping['title'].lower():
+                    product_options[option_id] = variant['variant_id']
+
     return product_options
 
 
 def fulfill_dropwow_order(order_status):
     store = order_status.store
     dropwow_account = store.user.dropwow_account
-    supplier = order_status.product.default_supplier
+
     order_data = get_shopify_order(store, order_status.shopify_order_id)
     line = get_shopify_order_line(store, order_status.shopify_order_id, order_status.shopify_line_id, shopify_data=order_data)
+
     dropwow_order_delay = safeInt(store.user.get_config('dropwow_order_delay'))
     if dropwow_order_delay:
         created_at = get_datetime(order_data['created_at'])
@@ -98,8 +106,9 @@ def fulfill_dropwow_order(order_status):
             order_status.pending = True
             order_status.save()
             return False
+
     try:
-        rep = fulfill_dropwow_products(dropwow_account, order_status, supplier, line['variant_id'], line['quantity'])
+        rep = fulfill_dropwow_products(dropwow_account, order_status, order_status.product, line['variant_id'], line['quantity'])
 
         source_id = rep.get('order_id')
         if not source_id:
@@ -168,11 +177,18 @@ def fulfill_dropwow_order(order_status):
     return False
 
 
-def fulfill_dropwow_products(dropwow_account, order_status, supplier, variant_id, quantity):
+def fulfill_dropwow_products(dropwow_account, order_status, product, variant_id, quantity):
     data = {
         'products': {},
         'user_data': order_status.get_address()
     }
+
+    variant_id = product.get_real_variant_id(variant_id)
+    supplier = product.get_suppier_for_variant(variant_id)
+    if not supplier or not supplier.is_dropwow:
+        return
+
+    product_options = {}
     if supplier.get_source_id() == 2525:
         # This is a temporary fix to order this product which options and is not avaialble in current products feed
         product_options = {
@@ -180,14 +196,20 @@ def fulfill_dropwow_products(dropwow_account, order_status, supplier, variant_id
             "2534": "11700"
         }
     else:
-        variant_mapping = order_status.product.get_variant_mapping(supplier=supplier)
-        options = variant_mapping.get(str(variant_id), [])  # [{'title': option1_value}, {'title': option2_value}]
-        # dropwow product options {"option_id": variant_id, "option_id": variant_id}
-        product_options = get_dropwow_product_combination(supplier.get_source_id(), options)
+        variant_mapping = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+        if variant_mapping:
+            have_mapping = all([i.get('option_id') and i.get('variant_id') for i in variant_mapping])
+            if have_mapping:
+                for i in variant_mapping:
+                    product_options[i['option_id']] = i['variant_id']
+            else:
+                product_options = get_dropwow_product_combination(supplier.get_source_id(), variant_mapping)
+
     data['products'][supplier.get_source_id()] = {
         'amount': quantity,
         'product_options': product_options
     }
+
     r = requests.post(
         url='http://market.dropwow.com/api/order',
         json=data,

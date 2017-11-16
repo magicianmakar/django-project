@@ -1016,19 +1016,6 @@ class ShopifyProduct(models.Model):
         try:
             if supplier and supplier.variants_map:
                 mapping = json.loads(supplier.variants_map)
-                # if supplier.supplier_name.lower() == 'dropwow':
-                #     data = json.loads(self.data)
-                #     new_mapping = {}
-                #     variants = data.get('variants', [])
-                #     for variant_id, options in mapping.iteritems():
-                #         new_options = []
-                #         for index, option in enumerate(options):
-                #             new_options.append({
-                #                 'title': variants[index]['title'],
-                #                 'value': option['title']
-                #             })
-                #         new_mapping[variant_id] = new_options
-                #     mapping = new_mapping
             elif self.variants_map:
                 mapping = json.loads(self.variants_map)
             else:

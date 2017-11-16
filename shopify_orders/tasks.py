@@ -26,7 +26,6 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
 
     store = ShopifyStore.objects.get(id=store_id)
 
-    results = []
     order_tracks = {}
     for i in ShopifyOrderTrack.objects.filter(store=store, order_id=order['id']).defer('data'):
         order_tracks['{}-{}'.format(i.order_id, i.line_id)] = i
@@ -49,7 +48,9 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
         if not product or shopify_order or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
             continue
 
-        if not product.have_supplier() or not product.default_supplier.is_dropwow:
+        variant_id = product.get_real_variant_id(variant_id)
+        supplier = product.get_suppier_for_variant(variant_id)
+        if not product.have_supplier() or not supplier or not supplier.is_dropwow:
             continue
 
         order_status, created = DropwowOrderStatus.objects.update_or_create(
@@ -62,9 +63,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
             }
         )
 
-        results.append(fulfill_dropwow_order(order_status))
-
-    return all(results)
+        fulfill_dropwow_order(order_status)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

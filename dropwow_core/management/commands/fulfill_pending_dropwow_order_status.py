@@ -11,7 +11,6 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         dropwow_order_statuses = DropwowOrderStatus.objects\
-            .select_related('store')\
             .filter(Q(order_id='') | Q(order_id__isnull=True))\
             .filter(pending=True)
         fulfilled_orders = 0
