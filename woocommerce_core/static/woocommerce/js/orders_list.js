@@ -342,6 +342,22 @@ function addOrderSourceRequest(data_api) {
     });
 }
 
+function addOrderNote(orderId, note) {
+    var lastSpace, notePreview = note, maxLength = 70;
+
+    if (note.length > maxLength) {
+        notePreview = note.substr(0, maxLength);
+        lastSpace = notePreview.lastIndexOf(' ');
+        if (lastSpace > 0) {
+            notePreview = notePreview.substr(0, Math.min(notePreview.length, lastSpace));
+        }
+        notePreview += '...';
+    }
+
+    $('#order-' + orderId).find('span.note-text').html(notePreview);
+    $('#order-' + orderId).find('textarea.note').html(note);
+}
+
 $('.mark-as-ordered').click(addOrderSourceID);
 
 $('.add-order-note').click(function (e) {
@@ -377,7 +393,7 @@ $('.add-order-note').click(function (e) {
             success: function (data) {
                 if (data.status == 'ok') {
                     swal.close();
-                    toastr.success('Note added to the order in Shopify.', 'Add Note');
+                    toastr.success('Note added to the order in WooCommerce store.', 'Add Note');
                 } else {
                     displayAjaxError('Add Note', data);
                 }
@@ -458,19 +474,8 @@ $('.note-panel .note-edit-save').click(function (e) {
         context: {btn: this, parent: parent},
         success: function (data) {
             if (data.status == 'ok') {
-                toastr.success('Order Note', 'Order note saved in Shopify.');
-
-                // Truncate note
-                var maxLength = 70;
-                var noteText = note.substr(0, maxLength);
-                if (noteText.lastIndexOf(" ") > 0) {
-                    noteText = noteText.substr(0, Math.min(noteText.length, noteText.lastIndexOf(" ")));
-                }
-                if (note.length > maxLength) {
-                    noteText = noteText+'...';
-                }
-
-                $('.note-preview .note-text', this.parent).text(noteText);
+                toastr.success('Order Note', 'Order note saved in WooCommerce store.');
+                addOrderNote(order_id, note);
             } else {
                 displayAjaxError('Add Note', data);
             }
@@ -910,6 +915,54 @@ function pusherSub() {
         fixNotePanelHeight(order);
     });
 
+    var addOrderNoteError = function(orderId) {
+        $('#order-' + orderId).find('span.note-text').html('[Error: Failed to load]');
+    };
+
+    var handleGetOrderNoteEvent = function(data) {
+        if (data.success) {
+            addOrderNote(data.order_id, data.note);
+        } else {
+            addOrderNoteError(data.order_id);
+        }
+    };
+
+    var getOrderNotesParam = function() {
+        var orders = $('div.order').toArray();
+        var param = {store: STORE_ID, order_ids: []};
+        var i, len;
+        for (i = 0, len = orders.length; i < len; i++) {
+            var orderId = $(orders[i]).attr('order-id');
+            if (orderId) {
+                param.order_ids.push(orderId);
+            }
+        }
+        return param;
+    };
+
+    var getOrderNotes = function() {
+        var param = getOrderNotesParam();
+        if (param.order_ids.length > 0) {
+            var api_path = api_url('order-notes', 'woo') + '?' + $.param(param);
+            return $.get(api_path);
+        }
+    };
+
+    var getOrderNotesListen = function(retry) {
+        var promise = getOrderNotes();
+        if (promise) {
+            promise.done(function() {
+                channel.bind('get-order-note', handleGetOrderNoteEvent);
+            }).fail(function() {
+                if (retry !== true) {
+                    setTimeout(getOrderNotesListen.bind(null, true), 3000);
+                }
+            });
+        }
+    };
+
+    channel.bind('pusher:subscription_succeeded', getOrderNotesListen);
+
     /*
     pusher.connection.bind('disconnected', function () {
         toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
@@ -920,7 +973,6 @@ function pusherSub() {
     });
     */
 }
-
 
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {

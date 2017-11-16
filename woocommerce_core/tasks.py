@@ -27,6 +27,7 @@ from .utils import (
     update_variants_api_data,
     update_product_images_api_data,
     create_variants_api_data,
+    get_latest_order_note
 )
 
 
@@ -298,3 +299,19 @@ def create_image_zip(self, images, product_id):
             'success': False,
             'product': product_id,
         })
+
+
+@celery_app.task(base=CaptureFailure)
+def get_latest_order_note_task(store_id, order_id):
+    store = WooStore.objects.get(pk=store_id)
+    data = {'order_id': order_id}
+
+    try:
+        note = get_latest_order_note(store, order_id)
+        data['success'] = True
+        data['note'] = note
+    except Exception:
+        raven_client.captureException()
+        data['success'] = False
+
+    store.pusher_trigger('get-order-note', data)

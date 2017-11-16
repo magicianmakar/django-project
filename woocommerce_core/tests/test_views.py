@@ -429,3 +429,22 @@ class ProductSaveTestCase(TestCase):
         self.client.post(self.path, json.dumps(self.data), **self.headers)
         product.refresh_from_db()
         self.assertEqual(product.price, new_price)
+
+
+class CallbackEndpointTestCase(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.store = WooStoreFactory(user=self.user, api_key='', api_password='')
+        self.data = {'consumer_key': 'test', 'consumer_secret': '1234', 'user_id': self.user.id}
+        self.json_string = json.dumps(self.data)
+        self.path = reverse('woo:callback_endpoint', kwargs={'store_hash': self.store.store_hash})
+
+    def test_anonymous_user_can_post_credentials(self):
+        r = self.client.post(self.path, data=self.json_string, content_type='application/json')
+        self.assertTrue(r.status_code, 200)
+
+    def test_anonymous_user_can_add_store_credentials(self):
+        self.client.post(self.path, data=self.json_string, content_type='application/json')
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.api_key, self.data['consumer_key'])
+        self.assertEqual(self.store.api_password, self.data['consumer_secret'])

@@ -152,25 +152,37 @@ class WooStoreApi(ApiResponseMixin, View):
                     return self.api_error('Your plan does not support connecting another WooCommerce store. '
                                           'Please contact support@shopifiedapp.com to learn how to connect more stores.')
 
-        error_messages = self.validate_store_data(data)
-        if len(error_messages) > 0:
-            return self.api_error(' '.join(error_messages), status=400)
+        title = data.get('title', '').strip()
+        api_url = data.get('api_url', '').strip()
+
+        try:
+            validate = URLValidator()
+            validate(api_url)
+        except ValidationError:
+            return self.api_error('The URL is invalid.', status=400)
+
+        if len(title) > WooStore._meta.get_field('title').max_length:
+            return self.api_error('The title is too long.', status=400)
 
         store = WooStore()
         store.user = user.models_user
         store.title = data.get('title', '').strip()
         store.api_url = data.get('api_url', '').strip()
-        store.api_key = data.get('api_key', '').strip()
-        store.api_password = data.get('api_password', '').strip()
-
         permissions.user_can_add(user, store)
-
-        if not self.check_store_credentials(store):
-            return self.api_error('API credentials is not correct', status=500)
-
         store.save()
+        return_url = request.build_absolute_uri(reverse('woo:index'))
+        return_url = urlparse.urlparse(return_url)._replace(scheme='https').geturl()
+        callback_path = reverse('woo:callback_endpoint', kwargs={'store_hash': store.store_hash})
+        callback_url = request.build_absolute_uri(callback_path)
+        callback_url = urlparse.urlparse(callback_url)._replace(scheme='https').geturl()
+        params = {
+            'app_name': 'Dropified',
+            'scope': 'read_write',
+            'user_id': user.id,
+            'return_url': return_url,
+            'callback_url': callback_url}
 
-        return self.api_success()
+        return self.api_success({'authorize_url': store.get_authorize_url(params)})
 
     def post_store_update(self, request, user, data):
         if user.is_subuser:
@@ -1169,6 +1181,16 @@ class WooStoreApi(ApiResponseMixin, View):
             return self.api_success(order)
         else:
             return self.api_error('Not found: {}'.format(data.get('order')), status=404)
+
+    def get_order_notes(self, request, user, data):
+        store = WooStore.objects.get(id=data['store'])
+        permissions.user_can_view(user, store)
+        order_ids = data.getlist('order_ids[]')
+
+        for order_id in order_ids:
+            tasks.get_latest_order_note_task.delay(store.id, order_id)
+
+        return self.api_success({})
 
     def post_order_note(self, request, user, data):
         store = WooStore.objects.get(id=data.get('store'))
