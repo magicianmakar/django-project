@@ -1508,7 +1508,7 @@ def order_track_fulfillment(**kwargs):
         have_custom_domain = store_id and user_aftership_domain and type(user_aftership_domain) is dict
 
         if (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
-            data['fulfillment']['tracking_company'] = "USPS"
+            data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')
         elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
             data['fulfillment']['tracking_company'] = "FedEx"
         else:
