@@ -508,6 +508,7 @@ class CHQStoreApi(ApiResponseMixin, View):
 
             order_lines = ','.join(order_lines)
 
+        failed = 0
         for line_id in order_lines.split(','):
             if not line_id:
                 return self.api_error('Order Line Was Not Found.', status=501)
@@ -556,19 +557,6 @@ class CHQStoreApi(ApiResponseMixin, View):
 
                 return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
 
-            track, created = CommerceHQOrderTrack.objects.update_or_create(
-                store=store,
-                order_id=order_id,
-                line_id=line_id,
-                defaults={
-                    'user': user.models_user,
-                    'source_id': source_id,
-                    'created_at': timezone.now(),
-                    'updated_at': timezone.now(),
-                    'status_updated_at': timezone.now()
-                }
-            )
-
             rep = store.request.post(
                 url=store.get_api_url('orders', order_id, 'fulfilments'),
                 json={
@@ -590,28 +578,46 @@ class CHQStoreApi(ApiResponseMixin, View):
                 if profile.get_config_value('aliexpress_as_notes', True):
                     order_updater.mark_as_ordered_note(line_id, source_id)
 
-            # CommerceHQOrderTrack.objects.filter(
-            #     order__store=store,
-            #     order__order_id=order_id,
-            #     line_id=line_id
-            # ).update(track=track)
+                # CommerceHQOrderTrack.objects.filter(
+                #     order__store=store,
+                #     order__order_id=order_id,
+                #     line_id=line_id
+                # ).update(track=track)
 
-            # TODO: add note to CommerceHQ when it's implemented in the API
-            # tasks.mark_as_ordered_note.apply_async(
-            #     args=[store.id, order_id, line_id, source_id],
-            #     countdown=note_delay)
+                # TODO: add note to CommerceHQ when it's implemented in the API
+                # tasks.mark_as_ordered_note.apply_async(
+                #     args=[store.id, order_id, line_id, source_id],
+                #     countdown=note_delay)
 
-            store.pusher_trigger('order-source-id-add', {
-                'track': track.id,
-                'order_id': order_id,
-                'line_id': line_id,
-                'source_id': source_id,
-            })
+                track, created = CommerceHQOrderTrack.objects.update_or_create(
+                    store=store,
+                    order_id=order_id,
+                    line_id=line_id,
+                    defaults={
+                        'user': user.models_user,
+                        'source_id': source_id,
+                        'created_at': timezone.now(),
+                        'updated_at': timezone.now(),
+                        'status_updated_at': timezone.now()
+                    }
+                )
 
-            cache.set(note_delay_key, note_delay + 5, timeout=5)
+                store.pusher_trigger('order-source-id-add', {
+                    'track': track.id,
+                    'order_id': order_id,
+                    'line_id': line_id,
+                    'source_id': source_id,
+                })
+
+                cache.set(note_delay_key, note_delay + 5, timeout=5)
+            else:
+                failed += 1
 
         if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
             order_updater.delay_save(countdown=note_delay)
+
+        if failed > 0:
+            return self.api_error('Error fulfilling {} line(s)'.format(failed))
 
         return self.api_success()
 
