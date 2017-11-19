@@ -3293,7 +3293,7 @@ def orders_place(request):
         redirect_url = product
 
     for k in request.GET.keys():
-        if k.startswith('SA') and k not in redirect_url:
+        if k.startswith('SA') and k not in redirect_url and request.GET[k]:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
 
     # Verify if the user didn't pass order limit

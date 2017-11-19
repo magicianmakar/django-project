@@ -737,7 +737,7 @@ class OrderPlaceRedirectView(RedirectView):
             redirect_url = product
 
         for k in self.request.GET.keys():
-            if k.startswith('SA') and k not in redirect_url:
+            if k.startswith('SA') and k not in redirect_url and self.request.GET[k]:
                 redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
 
         redirect_url = affiliate_link_set_query(redirect_url, 'SAStore', 'woo')
