@@ -197,7 +197,7 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
     currency_format = '${{amount}}'
 
     if store and getattr(store, 'currency_format', None):
-        currency_format = store.currency_format
+        currency_format = re.sub(r'{{\s*([a-zA-Z_-]+)\s*}}', r'{{\1}}', store.currency_format)
 
     if just_value:
         currency_format = re.findall(r'(\{\{.+?\}\})', currency_format)[0]
@@ -219,12 +219,12 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
         if allow_empty:
             return amount
 
-    currency_format = re.sub(r'{{\s*amount\s*}}', amount, currency_format)
+    currency_format = currency_format.replace('{{amount}}', amount)
 
     if 'amount_' in currency_format:
-        currency_format = re.sub(r'{{\s*amount_no_decimals\s*}}', amount_no_decimals, currency_format)
-        currency_format = re.sub(r'{{\s*amount_with_comma_separator\s*}}', amount, currency_format)
-        currency_format = re.sub(r'{{\s*amount_no_decimals_with_comma_separator\s*}}', amount_no_decimals, currency_format)
+        currency_format = currency_format.replace('{{amount_no_decimals}}', amount_no_decimals)
+        currency_format = currency_format.replace('{{amount_with_comma_separator}}', amount)
+        currency_format = currency_format.replace('{{amount_no_decimals_with_comma_separator}}', amount_no_decimals)
 
     return currency_format.strip()
 
