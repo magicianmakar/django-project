@@ -2523,6 +2523,10 @@ def orders_view(request):
         messages.warning(request, 'Please add at least one store before using the Orders page.')
         return HttpResponseRedirect('/')
 
+    if not request.user.can('place_orders.sub', store):
+        messages.warning(request, "You don't have access to this store orders")
+        return HttpResponseRedirect('/')
+
     models_user = request.user.models_user
 
     if request.GET.get('reset') == '1':

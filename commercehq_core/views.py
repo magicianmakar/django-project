@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
@@ -474,6 +474,10 @@ class OrdersList(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('place_orders.sub', self.get_store()):
+            messages.warning(request, "You don't have access to this store orders")
+            return redirect('/chq')
+
         if not request.user.can('commercehq.use'):
             raise permissions.PermissionDenied()
 
