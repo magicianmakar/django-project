@@ -1,5 +1,3 @@
-import re
-
 from django.core.exceptions import PermissionDenied
 
 from leadgalaxy.models import ShopifyStore
