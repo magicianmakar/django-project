@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.cache import caches
 from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import get_user_model
 
 from shopified_core import permissions
@@ -337,6 +337,10 @@ class OrdersList(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('place_orders.sub', self.get_store()):
+            messages.warning(request, "You don't have access to this store orders")
+            return redirect('/woo')
+
         if not request.user.can('woocommerce.use'):
             raise permissions.PermissionDenied()
 
