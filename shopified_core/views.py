@@ -211,7 +211,7 @@ class ShopifiedApi(ApiResponseMixin, View):
         since_key = 'sync_since_{}'.format(user.id)
         all_orders = cache.get(since_key) is None
 
-        if data.get('since') and not all_orders:
+        if core_utils.safeInt(data.get('since')) and not all_orders:
             since = arrow.get(data.get('since')).datetime
         else:
             since = arrow.now().replace(days=-30).datetime
