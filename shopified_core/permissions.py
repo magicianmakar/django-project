@@ -166,9 +166,6 @@ def can_add_store(user):
         if not profile.can('unlimited_stores.use') or profile.get_config_value('_limit_stores'):
             can_add = False
 
-    if not can_add and profile.plan.is_stripe():
-        can_add = len(re.findall(r'\blite\b', profile.plan.title, re.I)) == 0
-
     return can_add, total_allowed, user_count
 
 

@@ -172,7 +172,7 @@ def install(request, store):
                 )
 
                 plans_url = request.build_absolute_uri('/user/profile#plan')
-                if user.profile.plan.is_free:
+                if user.profile.plan.is_free and not user_count:
                     messages.error(
                         request,
                         'Please Activate your account first by visiting '
