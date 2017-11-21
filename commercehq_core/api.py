@@ -1024,8 +1024,12 @@ class CHQStoreApi(ApiResponseMixin, View):
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
-        order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
-        permissions.user_can_edit(user, order)
+        try:
+            order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
+            permissions.user_can_edit(user, order)
+
+        except CommerceHQOrderTrack.DoesNotExist:
+            return self.api_error('Order Not Found', status=404)
 
         order.source_status = data.get('status')
         order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
