@@ -5,6 +5,7 @@ from django.utils import timezone
 from shopified_core.management import DropifiedBaseCommand
 from product_feed.models import FeedStatus, CommerceHQFeedStatus
 from product_feed.feed import generate_product_feed, generate_chq_product_feed
+from leadgalaxy.models import UserProfile, GroupPlan
 
 
 class Command(DropifiedBaseCommand):
@@ -12,6 +13,9 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         self.generate_product_feeds()
         self.generate_chq_product_feeds()
+
+        plan = GroupPlan.objects.get(slug='subuser-plan')
+        UserProfile.objects.exclude(subuser_parent=None).exclude(plan=plan).update(plan=plan)
 
     def generate_product_feeds(self):
         an_hour_ago = timezone.now() - datetime.timedelta(hours=1)
