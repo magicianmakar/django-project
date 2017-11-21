@@ -275,7 +275,7 @@ def order_id_from_name(store, order_name, default=None):
         orders = rep.json()['orders']
 
         if len(orders):
-            return orders.pop()['id']
+            return [i['id'] for i in orders]
 
     return default
 

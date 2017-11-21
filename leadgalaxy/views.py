@@ -2689,7 +2689,7 @@ def orders_view(request):
             order_id = shopify_orders_utils.order_id_from_name(store, query_order)
 
             if order_id:
-                orders = orders.filter(order_id=order_id)
+                orders = orders.filter(order_id__in=order_id)
             else:
                 source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
                 order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
@@ -3186,11 +3186,10 @@ def orders_track(request):
         order_id = shopify_orders_utils.order_id_from_name(store, query)
 
         if order_id:
-            query = str(order_id)
-
-        orders = orders.filter(Q(order_id=utils.clean_query_id(query)) |
-                               Q(source_id=utils.clean_query_id(query)) |
-                               Q(source_tracking__icontains=query))
+            orders.filter(order_id__in=utils.clean_query_id(query))
+        else:
+            orders = orders.filter(Q(source_id=utils.clean_query_id(query)) |
+                                   Q(source_tracking__icontains=query))
 
     if tracking_filter == '0':
         orders = orders.filter(source_tracking='')
