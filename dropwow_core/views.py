@@ -38,7 +38,7 @@ def marketplace(request):
         return HttpResponseRedirect('/user/profile#integration')
 
     try:
-        featured_products = None
+        featured_products = []
         if not title:
             try:
                 featured_products = get_dropwow_featured_products(4).get('results', [])
