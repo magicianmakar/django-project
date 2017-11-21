@@ -3186,7 +3186,7 @@ def orders_track(request):
         order_id = shopify_orders_utils.order_id_from_name(store, query)
 
         if order_id:
-            orders.filter(order_id__in=utils.clean_query_id(query))
+            orders.filter(order_id__in=utils.clean_query_id(order_id))
         else:
             orders = orders.filter(Q(source_id=utils.clean_query_id(query)) |
                                    Q(source_tracking__icontains=query))
