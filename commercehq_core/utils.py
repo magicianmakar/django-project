@@ -127,6 +127,53 @@ def duplicate_product(product, store=None):
     return product
 
 
+def get_connected_options(product, split_factor):
+    for attribute in product.parsed.get('options', []):
+        if attribute['title'] == split_factor:
+            return attribute
+
+
+def get_non_connected_options(product, split_factor):
+    for variant in product.parsed.get('variants', []):
+        if variant['title'] == split_factor:
+            return variant
+
+
+def get_variant_options(product, split_factor):
+    if product.source_id:
+        return get_connected_options(product, split_factor)
+    else:
+        return get_non_connected_options(product, split_factor)
+
+
+def split_product(product, split_factor, store=None):
+    new_products = []
+    options = get_variant_options(product, split_factor)
+
+    parent_data = product.parsed
+    title = parent_data.get('title', '')
+
+    for value in options['values']:
+        new_product = duplicate_product(product, product.store)
+        new_data = new_product.parsed
+        new_data['title'] = '{} ({})'.format(title, value)
+
+        original_images = new_data.get('original_images', new_data.get('images', []))
+        variant_images = new_data.get('variants_images', [])
+
+        variants = new_data.get('variants', [])
+        new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
+
+        hashes = [h for h, variant in variant_images.items() if variant == value]
+        new_data['images'] = [i for i in original_images if hash_url_filename(i) in hashes]
+
+        new_product.update_data(new_data)
+        new_product.save()
+        new_products.append(new_product)
+
+    return new_products
+
+
 def get_chq_products_count(store):
     api_url = store.get_api_url('products')
     response = store.request.head(api_url)

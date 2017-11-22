@@ -1333,3 +1333,13 @@ class CHQStoreApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             return self.api_error('CommerceHQ API Error', status=500)
+
+    def post_product_split_variants(self, request, user, data):
+        product = CommerceHQProduct.objects.get(id=data.get('product'))
+        split_factor = data.get('split_factor')
+        permissions.user_can_view(user, product)
+        splitted_products = utils.split_product(product, split_factor)
+
+        return self.api_success({
+            'products_ids': [p.id for p in splitted_products]
+        })

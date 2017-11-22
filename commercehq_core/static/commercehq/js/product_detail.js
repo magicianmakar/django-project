@@ -250,7 +250,7 @@ $('#modal-pick-variant .dropdown-menu li a').click(function(e) {
             $('#split-variants-values').text(targetVariants[0].values.join(', '));
         }
     } else {
-        targetVariants = config.commercehq_options.filter(function(o) { return o.name === val; });
+        targetVariants = config.commercehq_options.filter(function(o) { return o.title === val; });
         if (targetVariants.length > 0) {
             $('#split-variants-count').text(targetVariants[0].values.length);
             $('#split-variants-values').html(targetVariants[0].values.join('<br />'));
@@ -292,13 +292,13 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
 
             if ('products_ids' in data) {
                 // check if current product is already connected to shopify..
-                if ($('#product-export-btn').attr('target') === 'shopify-update') {
+                if ($('#product-export-btn').attr('target') === 'product-update') {
                   toastr.success('The variants are splitted into new products now.\r\n' +
                     'The new products will get connected to shopify very soon.', 'Product Split!');
                 } else {
                   toastr.success('The variants are splitted into new products now.', 'Product Split!');
                 }
-                setTimeout(function() { window.location.href = '/product'; }, 500);
+                setTimeout(function() { window.location.href = '/chq/products'; }, 500);
             }
         },
         error: function (data) {
@@ -1277,7 +1277,7 @@ function clippingmagicEditImage(data, image) {
         allowSpaces: true,
         autocomplete: {
             source: '/autocomplete/tags',
-            delay: 500, 
+            delay: 500,
             minLength: 1
         }
     });
