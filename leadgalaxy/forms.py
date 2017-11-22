@@ -11,6 +11,8 @@ from django.core.validators import validate_email, ValidationError
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 
 class BsErrorList(ErrorList):
     def __unicode__(self):
@@ -65,8 +67,8 @@ class RegisterForm(forms.ModelForm):
         except AssertionError as e:
             raise forms.ValidationError(e.message)
         except Exception as e:
+            raven_client.captureException()
             raise forms.ValidationError('Username is already registred to an other account.')
-            print 'WARNING: Register Form Exception: {}'.format(repr(e))
 
         raise forms.ValidationError('Username is already registred to an other account.')
 
@@ -198,14 +200,18 @@ class DropwowIntegrationForm(forms.Form):
 
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
-        username = self.data['username']
 
-        validate_email(username)
+        try:
+            username = self.data['username'].strip()
+
+            validate_email(username)
+        except:
+            raven_client.captureException()
+            raise
 
         if login_attempts_exceeded(username):
             unlock_email = unlock_account_email(username)
 
-            from raven.contrib.django.raven_compat.models import client as raven_client
             raven_client.captureMessage('Maximum login attempts reached',
                                         extra={'username': username, 'from': 'WebApp', 'unlock_email': unlock_email},
                                         level='warning')
@@ -219,20 +225,22 @@ class EmailAuthenticationForm(AuthenticationForm):
         try:
             return User.objects.get(email__iexact=username).username
 
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             raise ValidationError(
                 "The Email you've entered doesn't match any account.",
                 code='invalid_login',
                 params={'username': self.username_field.verbose_name},
             )
-        except Exception as e:
-            print 'WARNING: LOGIN EXCEPTION: {} For {}'.format(repr(e), username)
+
+        except:
+            raven_client.captureException()
 
             raise ValidationError(
                 self.error_messages['invalid_login'],
                 code='invalid_login',
                 params={'username': self.username_field.verbose_name},
             )
+
         return username
 
 
