@@ -1663,6 +1663,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         order = order_data_cache(order_key)
         if order:
+            if user.get_config('_static_shipping_address'):
+                order['shipping_address'] = user.get_config('_static_shipping_address')
+
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
 
