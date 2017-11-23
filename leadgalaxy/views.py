@@ -2627,8 +2627,11 @@ def orders_view(request):
         if created_at_end:
             created_at_end = arrow.get(created_at_end).isoformat()
 
+        if query:
+            order_id = shopify_orders_utils.order_id_from_name(store, query)
+
         open_orders = store.get_orders_count(status, fulfillment, financial,
-                                             query=utils.safeInt(query, query),
+                                             query=utils.safeInt(order_id, query),
                                              created_range=[created_at_start, created_at_end])
         orders = xrange(0, open_orders)
 
@@ -2643,7 +2646,7 @@ def orders_view(request):
             created_at_end
         )
         paginator.set_reverse_order(sort == 'desc' and sort != 'created_at')
-        paginator.set_query(utils.safeInt(query, query))
+        paginator.set_query(utils.safeInt(order_id, query))
 
         page = min(max(1, page), paginator.num_pages)
         current_page = paginator.page(page)
@@ -2689,7 +2692,7 @@ def orders_view(request):
             order_id = shopify_orders_utils.order_id_from_name(store, query_order)
 
             if order_id:
-                orders = orders.filter(order_id__in=order_id)
+                orders = orders.filter(order_id=order_id)
             else:
                 source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
                 order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
@@ -3186,7 +3189,7 @@ def orders_track(request):
         order_id = shopify_orders_utils.order_id_from_name(store, query)
 
         if order_id:
-            orders.filter(order_id__in=order_id)
+            orders.filter(order_id=order_id)
         else:
             orders = orders.filter(Q(source_id=utils.clean_query_id(query)) |
                                    Q(source_tracking=query))

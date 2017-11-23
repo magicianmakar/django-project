@@ -658,14 +658,10 @@ class ShopifyStore(models.Model):
             'status': status,
             'fulfillment_status': fulfillment,
             'financial_status': financial,
-            'query': query
         }
 
         if query:
-            if type(query) is long:
-                params['ids'] = [query]
-            else:
-                params['name'] = query
+            params['ids'] = query
 
         if created_range and len(created_range):
             if created_range[0]:

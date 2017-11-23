@@ -246,23 +246,16 @@ def change_store_sync(store):
 def order_id_from_name(store, order_name, default=None):
     ''' Get Order ID from Order Name '''
 
-    orders = ShopifyOrder.objects.filter(store=store)
-
-    order_rx = store.user.get_config('order_number', {}).get(str(store.id), '[0-9]+')
-    order_number = re.findall(order_rx, order_name)
-    if not order_number:
+    order_name = order_name.strip() if order_name else ''
+    if not order_name:
         return default
 
-    order_number = order_number[0]
-    if len(order_number) > 7:
-        # Order name should contain less than 7 digits
-        return default
-
+    rx = re.compile(r'[^a-zA-Z0-9_-]')
     params = {
         'status': 'any',
         'fulfillment_status': 'any',
         'financial_status': 'any',
-        'fields': 'id',
+        'fields': 'id,name',
         'name': order_name.strip()
     }
 
@@ -274,8 +267,26 @@ def order_id_from_name(store, order_name, default=None):
     if rep.ok:
         orders = rep.json()['orders']
 
-        if len(orders):
-            return [i['id'] for i in orders]
+        for i in orders:
+            if rx.sub('', i['name']) == rx.sub('', order_name):
+                print '= Found Name:', i['id']
+                return i['id']
+
+    params['ids'] = order_name
+    del params['name']
+
+    rep = requests.get(
+        url=store.get_link('/admin/orders.json', api=True),
+        params=params
+    )
+
+    if rep.ok:
+        orders = rep.json()['orders']
+
+        for i in orders:
+            if str(i['id']) == rx.sub('', order_name):
+                print '= Found ID:', i['id']
+                return i['id']
 
     return default
 
