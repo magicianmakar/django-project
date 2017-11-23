@@ -269,7 +269,6 @@ def order_id_from_name(store, order_name, default=None):
 
         for i in orders:
             if rx.sub('', i['name']) == rx.sub('', order_name):
-                print '= Found Name:', i['id']
                 return i['id']
 
     params['ids'] = order_name
@@ -285,7 +284,6 @@ def order_id_from_name(store, order_name, default=None):
 
         for i in orders:
             if str(i['id']) == rx.sub('', order_name):
-                print '= Found ID:', i['id']
                 return i['id']
 
     return default
