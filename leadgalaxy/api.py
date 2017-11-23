@@ -1785,7 +1785,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 }
             )
 
-            order_updater.add_note("Variant changed to '{}' for line #{} by {}".format(
+            order_updater.add_note(u"Variant changed to '{}' for line #{} by {}".format(
                 data.get('title'), data.get('line'), user.first_name or user.username))
 
         order_updater.save_changes()
