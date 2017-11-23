@@ -28,7 +28,6 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     app_link,
     send_email_from_template,
-    version_compare,
     order_data_cache,
     orders_update_limit,
     hash_url_filename,
