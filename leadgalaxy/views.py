@@ -2629,6 +2629,8 @@ def orders_view(request):
 
         if query:
             order_id = shopify_orders_utils.order_id_from_name(store, query)
+        else:
+            order_id = None
 
         open_orders = store.get_orders_count(status, fulfillment, financial,
                                              query=utils.safeInt(order_id, query),
