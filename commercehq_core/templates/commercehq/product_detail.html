@@ -491,12 +491,12 @@
                   {% if commercehq_product %}
                     {% for option in commercehq_product.options %}
                       <li>
-                        <a type="button">{{ option.name }}</a>
+                        <a type="button">{{ option.title }}</a>
                       </li>
                     {% endfor %}
                   {% else %}
-                    {% for v in product.parsed.variants %}
-                      <li>
+                    {% for v in product_data.variants %}
+                     <li>
                         <a type="button">{{ v.title }}</a>
                       </li>
                     {% endfor %}
