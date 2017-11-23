@@ -1648,23 +1648,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 return self.api_error('Shopify API Error')
 
     def get_order_data(self, request, user, data):
-        version = request.META.get('HTTP_X_EXTENSION_VERSION')
-        if version:
-            required = None
-
-            if version_compare(version, '1.25.6') < 0:
-                required = '1.25.6'
-            elif version_compare(version, '1.26.0') == 0:
-                required = '1.26.1'
-
-            if required:
-                raven_client.captureMessage(
-                    'Extension Update Required',
-                    level='warning',
-                    extra={'current': version, 'required': required})
-
-                return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
-
         order_key = data.get('order')
 
         if not order_key.startswith('order_'):
