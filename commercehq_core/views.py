@@ -646,6 +646,7 @@ class OrdersList(ListView):
                 if product and product.have_supplier():
                     country_code = order['address']['shipping'].get('country')
 
+                    variant_id = product.get_real_variant_id(variant_id)
                     supplier = product.get_suppier_for_variant(variant_id)
                     if supplier:
                         shipping_method = product.get_shipping_for_variant(
