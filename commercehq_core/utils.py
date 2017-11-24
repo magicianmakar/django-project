@@ -953,7 +953,7 @@ def fix_order_variants(store, order, product):
         for v in product['variants']:
             if variant_id and v['id'] == int(variant_id):
                 return v
-            elif variant_list and all([l in v['variants'] for l in variant_list]) and len(v['variants']) == len(variant_list):
+            elif variant_list and all([l in v['variant'] for l in variant_list]) and len(v['variant']) == len(variant_list):
                 return v
 
         return None
