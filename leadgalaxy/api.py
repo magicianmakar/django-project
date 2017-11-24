@@ -1458,6 +1458,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'order_custom_line_attr',
                 'fix_aliexpress_address',
                 'update_product_vendor',
+                'order_risk_levels_enabled',
                 'send_alerts_to_subusers'
             ]
 
@@ -2958,3 +2959,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_success({'task': task.id})
 
         return self.api_success({'stores': stores})
+
+    def post_order_risks(self, request, user, data):
+        store = ShopifyStore.objects.get(id=data.get('store'))
+        permissions.user_can_view(user, store)
+
+        task = tasks.shopify_orders_risk.apply_async(args=[store.id, data.get('orders')], expires=120)
+
+        return self.api_success({'task': task.id})

@@ -340,10 +340,15 @@
                                         {% date_humanize order.date %}
                                         </span>
                                     </div>
-                                    <div class="col-xs-2">
+                                    <div class="col-xs-1">
                                         <span class="badge badge-{% if order.financial_status != 'paid' %}warning{% else %}primary{% endif %}">
                                             {{order.financial_status|title}}
                                         </span>
+                                    </div>
+                                    <div class="col-xs-1">
+                                        {% if order_risk_levels_enabled %}
+                                        <span class="order-risk-level itooltip" order-id="{{order.id}}" title="Order Risk Level"></span>
+                                        {% endif %}
                                     </div>
                                     <div class="col-xs-2">
                                         <span class="badge badge-{% if not order.fulfillment_status %}warning{% else %}primary{% endif %}">
@@ -502,7 +507,7 @@
 
                                             <div class="col-xs-3 line-order-id">
                                                 Order ID:
-                                                
+
                                                 {% if item.shopify_order %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
                                                         source-order-id="{{item.shopify_order.source_id}}"
@@ -839,6 +844,7 @@
     var sub_conf = {
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",
+        store: {{store.id}},
     };
 </script>
 

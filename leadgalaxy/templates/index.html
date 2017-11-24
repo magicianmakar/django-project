@@ -794,6 +794,20 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
+                                    <label for="order_custom_line_attr" class="col-sm-4 col-xs-8 control-label">
+                                        Enable Order Risk Levels
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input id="order_risk_levels_enabled" name="order_risk_levels_enabled" type="checkbox"
+                                               class="js-switch" {% if config.order_risk_levels_enabled %}checked{% endif %} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {% endif %}
 
                         <div class="col-md-12"><hr /></div>

@@ -959,6 +959,32 @@ function pusherSub() {
         }
     });
 
+    channel.bind('order-risks', function(data) {
+        if (sub_conf.order_risk_task && sub_conf.order_risk_task == data.task) {
+            for (var order_id in data.orders) {
+                var risk_level = data.orders[order_id];
+                var el = $('.order-risk-level[order-id=' + order_id +']');
+
+                if (risk_level > 0.7) {
+                    el.text('High');
+                    el.addClass('badge badge-danger');
+                } else if (risk_level > 0.4) {
+                    el.text('Medium');
+                    el.addClass('badge badge-warning');
+                } else {
+                    el.text('Low');
+                    el.addClass('badge badge-primary');
+                }
+
+                if (typeof ($.fn.bootstrapTooltip) === 'undefined') {
+                    $(el).tooltip();
+                } else {
+                    $(el).bootstrapTooltip();
+                }
+            }
+        }
+    });
+
     /*
     pusher.connection.bind('disconnected', function () {
         toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
@@ -1069,18 +1095,28 @@ $(function () {
 
     fixNotePanelHeight();
 
-    // $('#product_title').keyup(function() {
-    //     if (!$(this).val().trim().length) {
-    //         $('input[name="product"]', $(this).parent()).val('');
-    //     }
-    // }).autocomplete({
-    //     serviceUrl: '/autocomplete/title?' + $.param({store: $('#product_title').data('store')}),
-    //     minChars: 1,
-    //     deferRequestBy: 1000,
-    //     onSelect: function(suggestion) {
-    //         $('input[name="product"]', $(this).parent()).val(suggestion.data);
-    //     }
-    // });
+    var orders = $(".order-risk-level").map(function() {
+        return $(this).attr("order-id");
+    }).get();
+
+    if (orders.length) {
+        $.ajax({
+            url: '/api/order-risks',
+            type: 'POST',
+            data: JSON.stringify({
+                'store': sub_conf.store,
+                'orders': orders,
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data) {
+                sub_conf.order_risk_task = data.task;
+            },
+            error: function(data) {
+                displayAjaxError('Failed to Get Order Risks', data);
+            }
+        });
+    }
 
     $('select#product').select2({
         placeholder: 'Select a Product',

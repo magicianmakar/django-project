@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import simplejson as json
 
 from leadgalaxy.models import (
     ShopifyStore,
@@ -153,3 +154,26 @@ class ShopifyOrderVariant(models.Model):
 
     def __unicode__(self):
         return '{}'.format(self.variant_title)
+
+
+class ShopifyOrderRisk(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    order_id = models.BigIntegerField()
+    data = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return self.risk_id
+
+    def get_data(self):
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
+
+    def set_data(self, data):
+        if type(data) is not str:
+            data = json.dumps(data)
+
+        self.data = data
+        self.save()

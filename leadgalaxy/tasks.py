@@ -40,6 +40,7 @@ from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI
 
 from shopify_orders.models import ShopifyOrder
+from shopify_orders.models import ShopifyOrderRisk
 
 
 @celery_app.task(base=CaptureFailure)
@@ -987,3 +988,50 @@ def keen_add_event(self, event_name, event_data):
         keen.add_event(event_name, event_data)
     except:
         raven_client.captureException(level='warning')
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def shopify_orders_risk(self, store, order_ids):
+    store = ShopifyStore.objects.get(id=store)
+    order_risks = dict(ShopifyOrderRisk.objects.filter(store=store, order_id__in=order_ids).values_list('order_id', 'data'))
+
+    errors = []
+    orders = {}
+    for order_id in order_ids:
+        if int(order_id) in order_risks:
+            risks = json.loads(order_risks[int(order_id)])
+        else:
+            try:
+                api_url = store.get_link('/admin/orders/{}/risks.json'.format(order_id), api=True)
+                rep = requests.get(api_url)
+                rep.raise_for_status()
+
+                risks = rep.json()['risks']
+
+                ShopifyOrderRisk.objects.create(
+                    store=store,
+                    order_id=order_id,
+                    data=json.dumps([{'score': i['score']} for i in risks])
+                )
+
+                if int(rep.headers['X-Shopify-Shop-Api-Call-Limit'].split('/')[0]) > 20:
+                    time.sleep(0.5)
+
+            except:
+                risks = []
+                errors.append(order_id)
+                raven_client.captureException()
+
+        score = 0.0
+
+        for s in risks:
+            if score < float(s['score']):
+                score = float(s['score'])
+
+        orders[str(order_id)] = score
+
+    store.pusher_trigger('order-risks', {
+        'task': self.request.id,
+        'orders': orders,
+        'errors': errors
+    })

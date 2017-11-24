@@ -3137,6 +3137,7 @@ def orders_view(request):
         'supplier_filter': supplier_filter,
         'shipping_method_filter': shipping_method_filter,
         'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter') and store_order_synced,
+        'order_risk_levels_enabled': models_user.get_config('order_risk_levels_enabled'),
         'user_filter': utils.get_orders_filter(request),
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
