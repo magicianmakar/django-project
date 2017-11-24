@@ -969,7 +969,7 @@ def fix_order_variants(store, order, product):
         product.save()
 
     for line in order['items']:
-        if line['data']['product_id'] != product.get_chq_id() or not line['is_multi']:
+        if line['data']['product_id'] != product.get_chq_id() or not line['data']['is_multi']:
             continue
 
         if get_variant(chq_product, variant_id=line['data']['variant']['id']) is None:
