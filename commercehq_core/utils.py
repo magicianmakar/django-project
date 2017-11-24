@@ -949,11 +949,11 @@ def fix_order_variants(store, order, product):
     def normalize_name(n):
         return n.lower().replace(' and ', '').replace(' or ', '').replace(' ', '')
 
-    def get_variant(product, variant_id=None, variant_title=None):
+    def get_variant(product, variant_id=None, variant_list=None):
         for v in product['variants']:
             if variant_id and v['id'] == int(variant_id):
                 return v
-            elif variant_title and normalize_name(v['title']) == normalize_name(variant_title):
+            elif variant_list and all([l in v['variants'] for l in variant_list]) and len(v['variants']) == len(variant_list):
                 return v
 
         return None
@@ -968,16 +968,16 @@ def fix_order_variants(store, order, product):
         product.config = json.dumps(config, indent=4)
         product.save()
 
-    for line in order['line_items']:
-        if line['product_id'] != product.get_chq_id():
+    for line in order['items']:
+        if line['data']['product_id'] != product.get_chq_id() or not line['is_multi']:
             continue
 
-        if get_variant(chq_product, variant_id=line['variant_id']) is None:
-            real_id = product.get_real_variant_id(line['variant_id'])
-            match = get_variant(chq_product, variant_title=line['variant_title'])
+        if get_variant(chq_product, variant_id=line['data']['variant']['id']) is None:
+            real_id = product.get_real_variant_id(line['data']['variant']['id'])
+            match = get_variant(chq_product, variant_list=line['data']['variant']['variant'])
             if match:
                 if real_id != match['id']:
-                    set_real_variant(product, line['variant_id'], match['id'])
+                    set_real_variant(product, line['data']['variant']['id'], match['id'])
 
 
 def set_chq_order_note(store, order_id, note):

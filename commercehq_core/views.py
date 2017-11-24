@@ -661,10 +661,11 @@ class OrdersList(ListView):
 
                     order['connected_lines'] += 1
 
-                if fix_order_variants:
-                    mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
-                    if not mapped:
-                        utils.fix_order_variants(self.store, order, product)
+                    if fix_order_variants:
+                        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                        if not mapped:
+                            utils.fix_order_variants(self.store, order, product)
+
                 if product:
                     bundles = product.get_bundle_mapping(variant_id)
                     if bundles:
