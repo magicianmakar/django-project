@@ -120,33 +120,11 @@ $('#shopify-send-btn').click(function(e) {
             option_id_index[v.option_id] = options.length;
         });
 
-        var variants = [];
-        $.each(original_product.combinations, function(i, c) {
-            var variant = {};
-            var combination = [];
-
-            var modifier = 0;
-            $.each(c.combination, function(option_id, variant_id) {
-                variant['option' + option_id_index[option_id]] = variant_id_index[variant_id].variant_name;
-                var option_variant = {};
-                option_variant[option_id] = variant_id;
-                combination.push(option_variant);
-                modifier = modifier + variant_id_index[variant_id].modifier;
-            });
-            var price = original_product.price + modifier;
-            price = Math.round(price * 100) / 100;
-            variant['price'] = price;
-            variant['quantity'] = c.quantity;
-            variant['combination'] = combination;
-
-            variants.push(variant);
-        });
-
         var title, price, compare_at_price, weight, weight_unit, type, tag, vendor, description;
 
         if (targetProducts.length == 1 && $('#modal-shopify-send .product-details').is(':visible')) {
             title = $('#modal-shopify-send #product-title').val();
-            price = $('#modal-shopify-send #product-price').val();
+            price = parseFloat($('#modal-shopify-send #product-price').val());
             compare_at_price = $('#modal-shopify-send #product-compare-at').val();
             weight = $('#modal-shopify-send #product-weight').val();
             weight_unit = weight ? $('#modal-shopify-send #product-weight-unit').val() : '';
@@ -165,6 +143,28 @@ $('#shopify-send-btn').click(function(e) {
             vendor = '';
             description = original_product.description;
         }
+
+        var variants = [];
+        $.each(original_product.combinations, function(i, c) {
+            var variant = {};
+            var combination = [];
+
+            var modifier = 0;
+            $.each(c.combination, function(option_id, variant_id) {
+                variant['option' + option_id_index[option_id]] = variant_id_index[variant_id].variant_name;
+                var option_variant = {};
+                option_variant[option_id] = variant_id;
+                combination.push(option_variant);
+                modifier = modifier + variant_id_index[variant_id].modifier;
+            });
+            var variant_price = price + modifier;
+            variant_price = Math.round(variant_price * 100) / 100;
+            variant['price'] = variant_price;
+            variant['quantity'] = c.quantity;
+            variant['combination'] = combination;
+
+            variants.push(variant);
+        });
 
         var api_data = {
             'title': title,
