@@ -1477,6 +1477,11 @@ def order_track_fulfillment(**kwargs):
 
     is_usps = False
     line = None
+    tracking_numbers = None
+
+    if source_tracking and ',' in source_tracking.strip(','):
+        tracking_numbers = source_tracking.split(',')
+        source_tracking = tracking_numbers[0]
 
     try:
         if kwargs.get('use_usps') is None:  # Find line when shipping method is not selected
@@ -1504,6 +1509,12 @@ def order_track_fulfillment(**kwargs):
     }
 
     if source_tracking:
+        if tracking_numbers:
+            data['fulfillment']['tracking_numbers'] = tracking_numbers
+            del data['fulfillment']['tracking_number']
+        else:
+            data['fulfillment']['tracking_number'] = source_tracking
+
         user_aftership_domain = user_config.get('aftership_domain')
         have_custom_domain = store_id and user_aftership_domain and type(user_aftership_domain) is dict
 
@@ -1522,7 +1533,10 @@ def order_track_fulfillment(**kwargs):
                     aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
 
             data['fulfillment']['tracking_company'] = "Other"
-            data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
+            if tracking_numbers:
+                data['fulfillment']['tracking_urls'] = [aftership_domain.replace('{{tracking_number}}', i) for i in tracking_numbers]
+            else:
+                data['fulfillment']['tracking_url'] = aftership_domain.replace('{{tracking_number}}', source_tracking)
 
     if user_config.get('validate_tracking_number', False) \
             and not is_valide_tracking_number(source_tracking) \
