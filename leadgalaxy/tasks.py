@@ -556,6 +556,8 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             'Order': order_id,
             'from_webhook': from_webhook,
             'Retries': self.request.retries
+        }, tags={
+            'store': store.shop
         })
 
         if not self.request.called_directly:
