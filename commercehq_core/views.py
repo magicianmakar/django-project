@@ -765,10 +765,14 @@ class OrdersList(ListView):
                 order['items'][ldx] = line
 
             if tracked_unfulfilled:
-                store = self.get_store()
-                fulfilments_url = store.get_api_url('orders', order['id'], 'fulfilments')
-                r = store.request.post(url=fulfilments_url, json={'items': tracked_unfulfilled})
-                r.raise_for_status()
+                try:
+                    store = self.get_store()
+                    fulfilments_url = store.get_api_url('orders', order['id'], 'fulfilments')
+
+                    r = store.request.post(url=fulfilments_url, json={'items': tracked_unfulfilled})
+                    r.raise_for_status()
+                except:
+                    raven_client.captureException(level='warning')
 
             orders[odx] = order
 
