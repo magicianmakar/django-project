@@ -607,6 +607,8 @@ class OrdersList(ListView):
                 for item in fulfilment['items']:
                     orders_cache['chq_fulfilments_{}_{}_{}'.format(self.store.id, order['id'], item['id'])] = fulfilment['id']
 
+            tracked_unfulfilled = []
+
             for ldx, line in enumerate(order['items']):
                 line.update(line.get('data'))
                 line.update(line.get('status'))
@@ -626,6 +628,9 @@ class OrdersList(ListView):
                 line['image'] = (line.get('image') or '').replace('/uploads/', '/uploads/thumbnail_')
 
                 line['order_track'] = orders_list.get('{}-{}'.format(order['id'], line['id']))
+
+                if line['order_track'] and line['not_fulfilled'] > 0:
+                    tracked_unfulfilled.append({'id': line['id'], 'quantity': line['not_fulfilled']})
 
                 if line['order_track'] or line['fulfilled'] == line['quantity'] or line['shipped'] == line['quantity']:
                     order['placed_orders'] += 1
@@ -759,6 +764,16 @@ class OrdersList(ListView):
                     line['order_data'] = order_data
 
                 order['items'][ldx] = line
+
+            if tracked_unfulfilled:
+                try:
+                    store = self.get_store()
+                    fulfilments_url = store.get_api_url('orders', order['id'], 'fulfilments')
+
+                    r = store.request.post(url=fulfilments_url, json={'items': tracked_unfulfilled})
+                    r.raise_for_status()
+                except:
+                    raven_client.captureException(level='warning')
 
             orders[odx] = order
 
