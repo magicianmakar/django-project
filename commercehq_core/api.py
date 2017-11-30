@@ -579,7 +579,9 @@ class CHQStoreApi(ApiResponseMixin, View):
                 }
             )
 
-            if rep.ok:
+            try:
+                rep.raise_for_status()
+
                 for fulfilment in rep.json()['fulfilments']:
                     for item in fulfilment['items']:
                         caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(store.id, order_id, item['id']), fulfilment['id'], timeout=604800)
@@ -589,6 +591,9 @@ class CHQStoreApi(ApiResponseMixin, View):
                 # TODO: Handle multi values in source_id
                 if profile.get_config_value('aliexpress_as_notes', True):
                     order_updater.mark_as_ordered_note(line_id, source_id)
+
+            except:
+                raven_client.captureException(level='warning')
 
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,
