@@ -36,7 +36,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.paginators import SimplePaginator
+from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.tasks import fulfill_shopify_order_line
@@ -2613,6 +2613,8 @@ def orders_view(request):
     store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
     support_product_filter = shopify_orders_utils.support_product_filter(store) and models_user.can('exclude_products.use')
 
+    es = shopify_orders_utils.get_elastic()
+
     if not store_sync_enabled:
         if ',' in fulfillment:
             # Direct API call doesn't support more that one fulfillment status
@@ -2667,6 +2669,188 @@ def orders_view(request):
                     countdown=countdown)
 
                 countdown = countdown + 1
+
+    elif es and shopify_orders_utils.is_store_indexed(store=store):
+        _must_term = [{'term': {'store': store.id}}]
+        _must_not_term = []
+
+        if query_order:
+            order_id = shopify_orders_utils.order_id_from_name(store, query_order)
+
+            if order_id:
+                _must_term.append({'term': {'order_id': order_id}})
+            else:
+                source_id = utils.safeInt(query_order.replace('#', '').strip(), 123)
+                order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
+                                                     .defer('data') \
+                                                     .values_list('order_id', flat=True)
+                if len(order_ids):
+                    _must_term.append({
+                        'bool': {
+                            'should': [{'term': {'order_id': i}} for i in order_ids]
+                        }
+                    })
+                else:
+                    _must_term.append({'term': {'order_id': utils.safeInt(query_order, 0)}})
+
+        if status == 'open':
+            _must_not_term.append({"exists": {'field': 'closed_at'}})
+            _must_not_term.append({"exists": {'field': 'cancelled_at'}})
+        elif status == 'closed':
+            _must_term.append({"exists": {'field': 'closed_at'}})
+        elif status == 'cancelled':
+            _must_term.append({"exists": {'field': 'cancelled_at'}})
+
+        if fulfillment == 'unshipped,partial':
+            _must_term.append({
+                'bool': {
+                    'should': [
+                        {
+                            'bool': {
+                                'must_not': [
+                                    {"exists": {'field': 'fulfillment_status'}}
+                                ]
+                            }
+                        },
+                        {'term': {'fulfillment_status': 'partial'}}
+                    ]
+                }
+            })
+        elif fulfillment == 'unshipped':
+            _must_not_term.append({"exists": {'field': 'fulfillment_status'}})
+        elif fulfillment == 'shipped':
+            _must_term.append({'term': {'fulfillment_status': 'fulfilled'}})
+        elif fulfillment == 'partial':
+            _must_term.append({'term': {'fulfillment_status': 'partial'}})
+
+        if financial == 'paid,partially_refunded':
+            _must_term.append({
+                'bool': {
+                    'should': [
+                        {'term': {'financial_status': 'paid'}},
+                        {'term': {'financial_status': 'partially_refunded'}}
+                    ]
+                }
+            })
+        elif financial != 'any':
+            _must_term.append({'term': {'financial_status': financial}})
+
+        if query_customer:
+            search_field = 'customer_email' if '@' in query_customer else 'customer_name'
+            _must_term.append({'match': {search_field: query_customer}})
+
+        if query_address and len(query_address):
+            _must_term.append({
+                'bool': {
+                    'should': [{'term': {'country_code': country_code.lower()}} for country_code in query_address]
+                }
+            })
+
+        if created_at_start and created_at_end:
+            _must_term.append({
+                "range": {
+                    "created_at": {
+                        "gte": created_at_start.isoformat(),
+                        "lte": created_at_end.isoformat(),
+                    }
+                }
+            })
+        elif created_at_start:
+            _must_term.append({
+                "range": {
+                    "created_at": {
+                        "gte": created_at_start.isoformat(),
+                    }
+                }
+            })
+        elif created_at_end:
+            _must_term.append({
+                "range": {
+                    "created_at": {
+                        "lte": created_at_end.isoformat(),
+                    }
+                }
+            })
+
+        if connected_only == 'true':
+            _must_term.append({
+                'range': {
+                    'connected_items': {
+                        'gt': 0
+                    }
+                }
+            })
+
+        if awaiting_order == 'true':
+            _must_term.append({
+                'range': {
+                    'need_fulfillment': {
+                        'gt': 0
+                    }
+                }
+            })
+
+        if product_filter:
+            should_products = [{'match': {'product_ids': product_id}} for product_id in product_filter]
+            _must_term.append({
+                'bool': {
+                    'should': should_products
+                }
+            })
+
+        if supplier_filter:
+            products = ShopifyProduct.objects.filter(default_supplier__supplier_name=supplier_filter)
+            should_products = [{'match': {'product_ids': product.id}} for product in products]
+            _must_term.append({
+                'bool': {
+                    'should': should_products
+                }
+            })
+
+        if sort_field not in ['created_at', 'updated_at', 'total_price', 'country_code']:
+            sort_field = 'created_at'
+
+        body = {
+            'query': {
+                'bool': {
+                    'must': _must_term,
+                    'must_not': _must_not_term
+                },
+            },
+            'sort': [{
+                sort_field: 'desc' if sort_type == 'true' else 'asc'
+            }],
+            'size': post_per_page,
+            'from': (page - 1) * post_per_page
+        }
+
+        matchs = es.search(index='shopify-order', doc_type='order', body=body)
+        hits = matchs['hits']['hits']
+        orders = ShopifyOrder.objects.filter(id__in=[i['_id'] for i in hits])
+        paginator = FakePaginator(xrange(0, matchs['hits']['total']), post_per_page)
+        paginator.set_orders(orders)
+
+        page = min(max(1, page), paginator.num_pages)
+        current_page = paginator.page(page)
+        page = current_page
+
+        open_orders = matchs['hits']['total']
+
+        if open_orders:
+            rep = requests.get(
+                url=store.get_link('/admin/orders.json', api=True),
+                params={
+                    'ids': ','.join([str(i['_source']['order_id']) for i in hits]),
+                    'status': 'any',
+                    'fulfillment_status': 'any',
+                    'financial_status': 'any',
+                }
+            )
+
+            rep.raise_for_status()
+            shopify_orders = rep.json()['orders']
+
+            page = shopify_orders_utils.sort_es_orders(shopify_orders, page, hits)
     else:
         orders = ShopifyOrder.objects.filter(store=store).only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 

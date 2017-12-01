@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.conf import settings
 
 import re
 import arrow
@@ -6,6 +7,8 @@ import requests
 
 from unidecode import unidecode
 import simplejson as json
+
+from elasticsearch import Elasticsearch
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopified_core.utils import OrderErrors
@@ -64,6 +67,69 @@ def sort_orders(orders, page):
             resorted.append(order)
 
     return resorted
+
+
+def sort_es_orders(orders, page, hits):
+    orders_map = {}
+    resorted = []
+
+    for i in orders:
+        orders_map[i['id']] = i
+
+    for i in hits:
+        order = orders_map.get(i['_source']['order_id'])
+        if order:
+            # order['db_updated_at'] = arrow.get(i.updated_at).timestamp
+            resorted.append(order)
+
+    return resorted
+
+
+def get_elastic(verify_certs=False):
+    if any(settings.ELASTICSEARCH_API):
+        if any(settings.ELASTICSEARCH_AUTH):
+            return Elasticsearch(settings.ELASTICSEARCH_API, http_auth=settings.ELASTICSEARCH_AUTH, verify_certs=verify_certs)
+        else:
+            return Elasticsearch(settings.ELASTICSEARCH_API, verify_certs=verify_certs)
+
+    return None
+
+
+def update_elasticsearch_shopify_order(order):
+    es = get_elastic()
+
+    if not es:
+        return
+
+    es.index(
+        index="shopify-order",
+        doc_type="order",
+        id=order.id,
+        body=dict(
+            store=order.store_id,
+            user=order.user_id,
+            order_id=order.order_id,
+            order_number=order.order_number,
+            customer_id=order.customer_id,
+            customer_name=order.customer_name,
+            customer_email=order.customer_email,
+            financial_status=order.financial_status,
+            fulfillment_status=order.fulfillment_status,
+            total_price=order.total_price,
+            tags=order.tags,
+            city=order.city,
+            zip_code=order.zip_code,
+            country_code=order.country_code,
+            items_count=order.items_count,
+            need_fulfillment=order.need_fulfillment,
+            connected_items=order.connected_items,
+            created_at=order.created_at,
+            updated_at=order.updated_at,
+            closed_at=order.closed_at,
+            cancelled_at=order.cancelled_at,
+            product_ids=[l.product_id for l in order.shopifyorderline_set.all()]
+        )
+    )
 
 
 def update_shopify_order(store, data, sync_check=True):
@@ -148,6 +214,9 @@ def update_shopify_order(store, data, sync_check=True):
     order.connected_items = connected_items
     order.save()
 
+    if sync_status.elastic:
+        update_elasticsearch_shopify_order(order)
+
 
 def update_line_export(store, shopify_id):
     """
@@ -192,6 +261,15 @@ def is_store_sync_enabled(store, sync_type='orders'):
     try:
         sync_status = ShopifySyncStatus.objects.get(store=store)
         return sync_status.sync_status in [2, 6]
+    except ShopifySyncStatus.DoesNotExist:
+        return False
+
+
+def is_store_indexed(store, sync_type='orders'):
+    ''' Return True if store orders are indexed on elasticsearch '''
+    try:
+        sync_status = ShopifySyncStatus.objects.get(store=store)
+        return sync_status.sync_status in [2, 6] and sync_status.elastic
     except ShopifySyncStatus.DoesNotExist:
         return False
 

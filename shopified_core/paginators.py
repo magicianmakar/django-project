@@ -25,3 +25,26 @@ class SimplePaginator(Paginator):
             pages = pages + [None, page_count]
 
         return pages
+
+
+class FakePaginator(SimplePaginator):
+    def set_current_page(self, page):
+        self.current_page = page
+
+    def page(self, number):
+        """
+        Returns a Page object for the given 1-based page number.
+        """
+
+        self.current_page = number
+
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        return self._get_page(self.orders, number, self)
+
+    def set_orders(self, orders):
+        self.orders = orders

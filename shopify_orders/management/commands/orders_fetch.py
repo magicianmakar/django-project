@@ -65,9 +65,9 @@ class Command(DropifiedBaseCommand):
             if progress:
                 obar.close()
 
-            self.write_success('Deleted Orders: {}'.format(count))
+            self.write_success('Deleted Orders: {}/{}'.format(count, orders_count))
 
-            ShopifySyncStatus.objects.filter(store_id=store.id).update(sync_status=0, pending_orders=None)
+            ShopifySyncStatus.objects.filter(store_id=store.id).update(sync_status=0, pending_orders=None, elastic=False)
             self.write_success('Done')
 
     def start_command(self, *args, **options):
@@ -106,6 +106,7 @@ class Command(DropifiedBaseCommand):
                 self.fetch_orders(order_sync.store)
 
                 order_sync.sync_status = 2
+                order_sync.elastic = False  # Orders are not indexed by default
                 order_sync.revision = 2  # New imported (or re-imported) orders support Product filters by default
                 order_sync.save()
 

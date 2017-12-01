@@ -29,6 +29,7 @@ class ShopifySyncStatus(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    elastic = models.BooleanField(default=False)
 
     def __unicode__(self):
         return u'{} / {}'.format(self.sync_type, self.store.title)
