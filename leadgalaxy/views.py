@@ -611,7 +611,7 @@ def webhook(request, provider, option):
             token = request.GET['t']
             topic = option.replace('-', '/')
             try:
-                store = ShopifyStore.objects.get(id=request.GET['store'])
+                store = ShopifyStore.objects.get(id=request.GET['store'], is_active=True)
             except ShopifyStore.DoesNotExist:
                 return HttpResponse('ok')
 
