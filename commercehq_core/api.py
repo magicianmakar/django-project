@@ -569,17 +569,19 @@ class CHQStoreApi(ApiResponseMixin, View):
                 }
             )
 
-            rep = store.request.post(
-                url=store.get_api_url('orders', order_id, 'fulfilments'),
-                json={
+            try:
+                api_data = {
                     "items": [{
                         "id": line_id,
                         "quantity": caches['orders'].get('chq_quantity_{}_{}_{}'.format(store.id, order_id, line_id)) or 1,
                     }]
                 }
-            )
 
-            try:
+                rep = store.request.post(
+                    url=store.get_api_url('orders', order_id, 'fulfilments'),
+                    json=api_data
+                )
+
                 rep.raise_for_status()
 
                 for fulfilment in rep.json()['fulfilments']:
@@ -592,8 +594,10 @@ class CHQStoreApi(ApiResponseMixin, View):
                 if profile.get_config_value('aliexpress_as_notes', True):
                     order_updater.mark_as_ordered_note(line_id, source_id)
 
-            except:
-                raven_client.captureException(level='warning')
+            except Exception as e:
+                raven_client.captureException(level='warning', extra={
+                    'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
+                })
 
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,
