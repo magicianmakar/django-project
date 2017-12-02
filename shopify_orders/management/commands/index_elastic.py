@@ -13,12 +13,16 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--store', dest='store', action='append', type=int, help='Store Orders to index')
+        parser.add_argument('--user', dest='user', action='append', type=int, help='User Stores to index')
 
     def start_command(self, *args, **options):
-        stores = ShopifyStore.objects.filter(is_active=True, shopifysyncstatus__sync_status__in=[2, 6])
+        stores = ShopifyStore.objects.filter(is_active=True, shopifysyncstatus__sync_status__in=[2, 5])
 
         if options.get('store'):
             stores = stores.filter(id__in=options['store'])
+
+        if options.get('user'):
+            stores = stores.filter(user__in=options['user'])
 
         self.es = get_elastic()
 
