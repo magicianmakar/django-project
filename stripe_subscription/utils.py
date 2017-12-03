@@ -328,7 +328,7 @@ def process_webhook_event(request, event_id, raven_client):
                 customer.user.set_config('registration_discount', u':{}'.format(reg_coupon))
 
         except StripeCustomer.DoesNotExist:
-            if sub.plan.metadata.get('click_funnels'):
+            if sub.plan.metadata.get('click_funnels') or sub.plan.metadata.get('lifetime'):
                 stripe_customer = stripe.Customer.retrieve(sub.customer)
 
                 fullname = ''
@@ -345,6 +345,9 @@ def process_webhook_event(request, event_id, raven_client):
 
                 if created:
                     customer = update_customer(user, stripe_customer)[0]
+
+                    if sub.plan.metadata.get('lifetime'):
+                        user.set_config('_stripe_lifetime', sub.plan.id)
                 else:
                     raven_client.captureException()
                     return HttpResponse('Cloud Not Register User')
