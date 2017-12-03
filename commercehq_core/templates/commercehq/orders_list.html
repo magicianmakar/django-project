@@ -407,15 +407,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% if item.shipped %}
-                                                                <span class="badge badge-info">
-                                                                    Shipped
-                                                                </span>
-                                                            {% elif item.fulfilled %}
-                                                                <span class="badge badge-info">
-                                                                    Sent to Fulfillment
-                                                                </span>
-                                                            {% else %}
+                                                            {% if not item.is_bundle and not item.fulfillment_status and not order.pending_payment %}
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
@@ -425,6 +417,8 @@
                                                                             <li><a class="fulfill-btn" quantity="{{item.quantity}}" order-id="{{order.id}}" line-id="{{item.id}}" store="{{order.store.id}}" tracking-number="{{item.order_track.source_tracking}}">Fulfill in CommerceHQ</a></li>
                                                                         </ul>
                                                                     </div>
+                                                            {% else %}
+                                                                <span class="badge badge-info">{{item.fulfillment_status|default:'Unfulfilled'|title}}</span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
