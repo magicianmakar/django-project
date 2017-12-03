@@ -764,9 +764,7 @@ $(function () {
     setTimeout(function() {
         editor_sync_content();
 
-        if ($('#default_desc').is(':visible')) {
-            setup_full_editor('default_desc', false, 'default_desc', true);
-        }
+        setup_full_editor('default_desc', false, 'default_desc', true);
     }, 1000);
 
     $(".tag-it").tagit({
