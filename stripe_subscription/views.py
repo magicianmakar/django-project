@@ -153,7 +153,7 @@ def subscription_plan(request):
                 raven_client.captureException(level='warning')
                 msg = 'Subscription Error: {}'.format(e.message)
                 if 'This customer has no attached payment source' in e.message:
-                    msg = 'Add your billing information first'
+                    msg = 'Please add your billing information first'
 
                 return JsonResponse({'error': msg}, status=500)
 
@@ -174,13 +174,26 @@ def subscription_plan(request):
                 status=500
             )
     else:
-        sub = stripe.Subscription.create(
-            customer=user.stripe_customer.customer_id,
-            plan=plan.stripe_plan.stripe_id,
-            metadata={'plan_id': plan.id, 'user_id': user.id}
-        )
+        try:
+            sub = stripe.Subscription.create(
+                customer=user.stripe_customer.customer_id,
+                plan=plan.stripe_plan.stripe_id,
+                metadata={'plan_id': plan.id, 'user_id': user.id}
+            )
 
-        update_subscription(user, plan, sub)
+            update_subscription(user, plan, sub)
+
+        except (SubscriptionException, stripe.CardError, stripe.InvalidRequestError) as e:
+            raven_client.captureException(level='warning')
+            msg = 'Subscription Error: {}'.format(e.message)
+            if 'This customer has no attached payment source' in e.message:
+                msg = 'Please add your billing information first'
+
+            return JsonResponse({'error': msg}, status=500)
+
+        except:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Server Error'}, status=500)
 
         if not user.stripe_customer.can_trial:
             try:
