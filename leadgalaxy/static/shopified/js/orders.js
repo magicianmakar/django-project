@@ -985,6 +985,31 @@ function pusherSub() {
         }
     });
 
+    channel.bind('pusher:subscription_succeeded', function() {
+        var orders = $(".order-risk-level").map(function() {
+            return $(this).attr("order-id");
+        }).get();
+
+        if (orders.length) {
+            $.ajax({
+                url: '/api/order-risks',
+                type: 'POST',
+                data: JSON.stringify({
+                    'store': sub_conf.store,
+                    'orders': orders,
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data) {
+                    sub_conf.order_risk_task = data.task;
+                },
+                error: function(data) {
+                    displayAjaxError('Failed to Get Order Risks', data);
+                }
+            });
+        }
+    });
+
     /*
     pusher.connection.bind('disconnected', function () {
         toastr.warning('Please reload the page', 'Disconnected', {timeOut: 0});
@@ -1094,29 +1119,6 @@ $(function () {
     }
 
     fixNotePanelHeight();
-
-    var orders = $(".order-risk-level").map(function() {
-        return $(this).attr("order-id");
-    }).get();
-
-    if (orders.length) {
-        $.ajax({
-            url: '/api/order-risks',
-            type: 'POST',
-            data: JSON.stringify({
-                'store': sub_conf.store,
-                'orders': orders,
-            }),
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function(data) {
-                sub_conf.order_risk_task = data.task;
-            },
-            error: function(data) {
-                displayAjaxError('Failed to Get Order Risks', data);
-            }
-        });
-    }
 
     $('select#product').select2({
         placeholder: 'Select a Product',
