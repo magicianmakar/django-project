@@ -2179,6 +2179,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 permissions.user_can_delete(user, track)
 
                 for order in ShopifyOrder.objects.filter(store=track.store, shopifyorderline__track_id=track.id).distinct():
+                    tasks.update_shopify_order.apply_async(args=[store.id, order.id])
+
                     need_fulfillment = order.need_fulfillment
                     for line in order.shopifyorderline_set.all():
                         if line.track_id == track.id:
