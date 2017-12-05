@@ -594,10 +594,8 @@ class CHQStoreApi(ApiResponseMixin, View):
                 if profile.get_config_value('aliexpress_as_notes', True):
                     order_updater.mark_as_ordered_note(line_id, source_id)
 
-            except Exception as e:
-                raven_client.captureException(level='warning', extra={
-                    'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
-                })
+            except Exception:
+                pass
 
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,
