@@ -2670,7 +2670,7 @@ def orders_view(request):
 
                 countdown = countdown + 1
 
-    elif es and shopify_orders_utils.is_store_indexed(store=store):
+    elif es and shopify_orders_utils.is_store_indexed(store=store) and not request.GET.get('elastic') == '0':
         _must_term = [{'term': {'store': store.id}}]
         _must_not_term = []
 
