@@ -513,7 +513,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
-        if store.user.get_config('_disable_update_shopify_order'):
+        if not store.is_active or store.user.get_config('_disable_update_shopify_order'):
             return
 
         if shopify_order is None:
@@ -555,6 +555,10 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
         raven_client.captureException()
 
     except Exception as e:
+        if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+            if e.response.status_code in [401, 402, 403, 404]:
+                return
+
         raven_client.captureException(level='warning', extra={
             'Store': store_id,
             'Order': order_id,

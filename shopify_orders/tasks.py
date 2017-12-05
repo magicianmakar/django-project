@@ -68,7 +68,10 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def check_track_errors(self, track_id):
-    track = ShopifyOrderTrack.objects.get(id=track_id)
-    orders_check = OrderErrorsCheck()
+    try:
+        track = ShopifyOrderTrack.objects.get(id=track_id)
+    except ShopifyOrderTrack.DoesNotExist:
+        return
 
+    orders_check = OrderErrorsCheck()
     orders_check.check(track, commit=True)
