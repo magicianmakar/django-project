@@ -8,7 +8,7 @@ class LastSeenMiddleware(object):
         has been last seen
     """
     def process_request(self, request):
-        if request.path.startswith('/admin/') and not request.user.is_superuser:
+        if request.path.startswith('/admin/') and not request.user.is_superuser and not request.session.get('is_hijacked_user'):
             from django.http import Http404
             raise Http404
 
