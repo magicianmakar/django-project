@@ -2571,7 +2571,7 @@ def orders_view(request):
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
-    query_customer = request.GET.get('query_customer_id')
+    query_customer = request.GET.get('query_customer_id') or request.GET.get('query_customer')
     query_address = request.GET.getlist('query_address')
 
     product_filter = request.GET.getlist('product')
@@ -2614,6 +2614,7 @@ def orders_view(request):
     support_product_filter = shopify_orders_utils.support_product_filter(store) and models_user.can('exclude_products.use')
 
     es = shopify_orders_utils.get_elastic()
+    es_search_enabled = es and shopify_orders_utils.is_store_indexed(store=store) and not request.GET.get('elastic') == '0'
 
     if not store_sync_enabled:
         if ',' in fulfillment:
@@ -2670,7 +2671,7 @@ def orders_view(request):
 
                 countdown = countdown + 1
 
-    elif es and shopify_orders_utils.is_store_indexed(store=store) and not request.GET.get('elastic') == '0':
+    elif es_search_enabled:
         _must_term = [{'term': {'store': store.id}}]
         _must_not_term = []
 
@@ -2895,7 +2896,7 @@ def orders_view(request):
         if created_at_end:
             orders = orders.filter(created_at__lte=created_at_end)
 
-        if query_customer:
+        if utils.safeInt(query_customer):
             order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer)
             if len(order_ids):
                 orders = orders.filter(order_id__in=order_ids)
@@ -3325,6 +3326,7 @@ def orders_view(request):
         'user_filter': utils.get_orders_filter(request),
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
+        'es_search_enabled': es_search_enabled,
         'countries': countries,
         'created_at_daterange': created_at_daterange,
         'admitad_site_id': admitad_site_id,

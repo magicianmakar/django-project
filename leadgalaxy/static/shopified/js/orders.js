@@ -1189,28 +1189,34 @@ $(function () {
     $('#query_customer').on('change keypress', function (e) {
         var v = $(this).val().trim();
 
+        if (!$('#query_customer_id').length) {
+            return;
+        }
+
         if (!v || $('#query_customer_id').attr('orig-value').trim() != v) {
             $('#query_customer_id').val('');
         }
     });
 
-    $('#query_customer').autocomplete({
-        serviceUrl: '/autocomplete/shopify-customer?' + $.param({
-            store: $('#query_customer').data('store')
-        }),
-        minChars: 1,
-        deferRequestBy: 100,
-        autoSelectFirst: true,
-        noCache: true,
-        preventBadQueries: false,
-        showNoSuggestionNotice: true,
-        noSuggestionNotice: 'No customer found',
-        onSelect: function(suggestion) {
-            $('#query_customer').val(suggestion.value);
-            $('#query_customer_id').val(suggestion.data);
-            $('#query_customer_id').attr('orig-value', suggestion.data);
-        }
-    });
+    if ($('#query_customer_id').length) {
+        $('#query_customer').autocomplete({
+            serviceUrl: '/autocomplete/shopify-customer?' + $.param({
+                store: $('#query_customer').data('store')
+            }),
+            minChars: 1,
+            deferRequestBy: 100,
+            autoSelectFirst: true,
+            noCache: true,
+            preventBadQueries: false,
+            showNoSuggestionNotice: true,
+            noSuggestionNotice: 'No customer found',
+            onSelect: function(suggestion) {
+                $('#query_customer').val(suggestion.value);
+                $('#query_customer_id').val(suggestion.data);
+                $('#query_customer_id').attr('orig-value', suggestion.data);
+            }
+        });
+    }
 
     $('#created_at_daterange').daterangepicker({
         format: 'MM/DD/YYYY',
