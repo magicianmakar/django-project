@@ -489,6 +489,7 @@ def sync_shopify_orders(self, store_id):
                     if shopify_order_id not in order_ids:
                         update_shopify_order.apply_async(
                             args=[store_id, shopify_order_id],
+                            kwarg={'from_webhook': False},
                             countdown=countdown)
 
                         imported += 1
@@ -511,6 +512,9 @@ def sync_shopify_orders(self, store_id):
 def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
     try:
         store = ShopifyStore.objects.get(id=store_id)
+
+        if store.user.get_config('_disable_update_shopify_order'):
+            return
 
         if shopify_order is None:
             shopify_order = cache.get('webhook_order_{}_{}'.format(store_id, order_id))
@@ -557,7 +561,8 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             'from_webhook': from_webhook,
             'Retries': self.request.retries
         }, tags={
-            'store': store.shop
+            'store': store.shop,
+            'webhook': from_webhook,
         })
 
         if not self.request.called_directly:
