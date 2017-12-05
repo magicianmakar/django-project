@@ -1,3 +1,4 @@
+import arrow
 from tqdm import tqdm
 
 from shopified_core.management import DropifiedBaseCommand
@@ -14,6 +15,7 @@ class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--store', dest='store', action='append', type=int, help='Store Orders to index')
         parser.add_argument('--user', dest='user', action='append', type=int, help='User Stores to index')
+        parser.add_argument('--days', dest='days', action='store', type=int, help='Index order in the least number of days')
 
     def start_command(self, *args, **options):
         stores = ShopifyStore.objects.filter(is_active=True, shopifysyncstatus__sync_status__in=[2, 5])
@@ -36,6 +38,10 @@ class Command(DropifiedBaseCommand):
                 continue
 
             orders = ShopifyOrder.objects.prefetch_related('shopifyorderline_set').filter(store_id=store.id)
+
+            if options['days']:
+                orders = orders.filter(created_at__gte=arrow.utcnow().replace(days=-options['days']).datetime)
+
             orders_count = orders.count()
 
             orders_bar = tqdm(desc=store.title, total=orders_count)
