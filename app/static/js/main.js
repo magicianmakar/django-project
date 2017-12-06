@@ -305,8 +305,8 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
                     vdata.weight_unit = product.weight_unit;
                 }
                 if (product.combinations && product.combinations.length) {
-                    for (var i = 0; i < product.combinations.length; i++) {
-                        var variant = product.combinations[i];
+                    for (var j = 0; j < product.combinations.length; j++) {
+                        var variant = product.combinations[j];
                         var match = true;
                         for (var option in variant) {
                             if (variant.hasOwnProperty(option) && option.startsWith('option')) {
