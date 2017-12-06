@@ -595,7 +595,13 @@ class CHQStoreApi(ApiResponseMixin, View):
                     order_updater.mark_as_ordered_note(line_id, source_id)
 
             except Exception:
-                pass
+                rep = store.request.get(url=store.get_api_url('orders', order_id))
+                if rep.ok:
+                    for fulfilment in rep.json()['fulfilments']:
+                        for item in fulfilment['items']:
+                            if item['id'] == int(line_id):
+                                caches['orders'].set('chq_fulfilments_{}_{}_{}'.format(
+                                    store.id, order_id, item['id']), fulfilment['id'], timeout=604800)
 
             # CommerceHQOrderTrack.objects.filter(
             #     order__store=store,
