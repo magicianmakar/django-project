@@ -2861,7 +2861,20 @@ def orders_view(request):
             rep.raise_for_status()
             shopify_orders = rep.json()['orders']
 
-            page = shopify_orders_utils.sort_es_orders(shopify_orders, page, hits)
+            page = shopify_orders_utils.sort_es_orders(shopify_orders, hits)
+            _update_page = shopify_orders_utils.sort_es_orders(shopify_orders, hits)
+
+            countdown = 1
+            for order in _update_page:
+                if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
+                    print 'Update:', order['id']
+                    tasks.update_shopify_order.apply_async(
+                        args=[store.id, order['id']],
+                        kwarg={'shopify_order': order, 'from_webhook': False},
+                        countdown=countdown)
+
+                    countdown = countdown + 1
+
     else:
         orders = ShopifyOrder.objects.filter(store=store).only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 

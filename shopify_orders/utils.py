@@ -69,7 +69,7 @@ def sort_orders(orders, page):
     return resorted
 
 
-def sort_es_orders(orders, page, hits):
+def sort_es_orders(orders, hits):
     orders_map = {}
     resorted = []
 
@@ -79,7 +79,7 @@ def sort_es_orders(orders, page, hits):
     for i in hits:
         order = orders_map.get(i['_source']['order_id'])
         if order:
-            # order['db_updated_at'] = arrow.get(i.updated_at).timestamp
+            order['db_updated_at'] = arrow.get(i['_source']['updated_at']).timestamp
             resorted.append(order)
 
     return resorted
