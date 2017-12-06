@@ -112,25 +112,7 @@ class PlanSelectionEvent(Event):
                 'content_type': 'product',
                 'content_name': event_data['plan']}
 
-        script = "<script>fbq('track', 'Purchase', %s);</script>" % json.dumps(data)
-
-        if 'elite' in self.user.profile.plan.slug:
-            webinarjam = '//app.webinarjam.net/tracker?action=sale&webicode=40ee867159&productID=166240'
-        elif 'unlimited' in self.user.profile.plan.slug:
-            webinarjam = '//app.webinarjam.net/tracker?action=sale&webicode=40ee867159&productID=166241'
-        else:
-            webinarjam = None
-
-        if webinarjam:
-            script += '''<script>
-            var wImg = document.createElement("img");
-            wImg.setAttribute('src', '{}');
-            wImg.setAttribute('height', '0px');
-            wImg.setAttribute('width', '0px');
-            document.body.appendChild(wImg);
-            </script>'''.format(webinarjam)
-
-        return script
+        return "<script>fbq('track', 'Select Plan', %s);</script>" % json.dumps(data)
 
     @cached_property
     def google_analytics_script(self):
