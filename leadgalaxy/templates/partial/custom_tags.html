@@ -1,4 +1,5 @@
 {% load cache %}
+{% load template_helper %}
 
 <script src="//fast.appcues.com/20262.js"></script>
 <script src="//fast.appcues.com/widget-bundle.js"></script>
@@ -37,17 +38,20 @@
                 plan: dataLayer[0].userPlan,
                 extension_version: dataLayer[0].extension_version,
 
+                {% cache 1800 all_stores_count user.id %}
                 stores_count: {{user.profile.get_shopify_stores.count}},
                 chq_count: {{user.profile.get_chq_stores.count}},
+                {% endcache %}
 
                 {% cache 604800 total_orders user.id %}
-                total_orders: {{user.models_user.shopifyorder_set.count}},
+                total_orders: {% user_orders_count user %},
                 {% endcache %}
 
                 {% if user.is_subuser %}
                 parent_plan: '{{user.models_user.profile.plan.title}}',
+                {% else %}
+                parent_plan: '',
                 {% endif %}
-
 
                 {% if not user.is_recurring_customer %}
                 bundles: '{{user.profile.bundles_list|join:","}}',

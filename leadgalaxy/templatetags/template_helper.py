@@ -232,3 +232,13 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
 @register.filter
 def key_value(dict, key):
     return dict.get(key, '')
+
+
+@register.simple_tag
+def user_orders_count(user):
+    orders_count = 0
+
+    for store in user.profile.get_shopify_stores()[:10]:
+        orders_count += store.get_orders_count(all_orders=True)
+
+    return mark_safe('{}'.format(orders_count))
