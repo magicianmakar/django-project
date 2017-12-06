@@ -2919,8 +2919,8 @@ def orders_view(request):
         if created_at_end:
             orders = orders.filter(created_at__lte=created_at_end)
 
-        if utils.safeInt(query_customer):
-            order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer)
+        if utils.safeInt(query_customer_id):
+            order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer_id)
             if len(order_ids):
                 orders = orders.filter(order_id__in=order_ids)
 
