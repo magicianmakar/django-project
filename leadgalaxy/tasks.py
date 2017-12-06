@@ -810,11 +810,14 @@ def order_save_changes(self, data):
 @celery_app.task(base=CaptureFailure, bind=True)
 def sync_product_exclude(self, store_id, product_id):
     try:
+        from shopify_orders import tasks as order_tasks
+
         store = ShopifyStore.objects.get(id=store_id)
 
         print 'PSync', store.title, product_id
 
         filtered_map = store.shopifyproduct_set.filter(is_excluded=True).values_list('shopify_id', flat=True)
+        es_search_enabled = order_utils.is_store_indexed(store=store)
 
         orders = ShopifyOrder.objects.filter(store=store, shopifyorderline__product_id=product_id) \
                                      .prefetch_related('shopifyorderline_set') \
@@ -846,6 +849,9 @@ def sync_product_exclude(self, store_id, product_id):
 
                     if order.need_fulfillment != need_fulfillment or order.connected_items != connected_items:
                         ShopifyOrder.objects.filter(id=order.id).update(need_fulfillment=need_fulfillment, connected_items=connected_items)
+
+                        if es_search_enabled:
+                            order_tasks.index_shopify_order.delay(order.id)
 
                     count += 1
 

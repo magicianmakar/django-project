@@ -4,10 +4,13 @@ import json
 
 from app.celery import celery_app, CaptureFailure
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from dropwow_core.utils import fulfill_dropwow_order
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from dropwow_core.models import DropwowOrderStatus
-from shopify_orders.utils import OrderErrorsCheck
+from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
+from shopify_orders.models import ShopifyOrder
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -75,3 +78,23 @@ def check_track_errors(self, track_id):
 
     orders_check = OrderErrorsCheck()
     orders_check.check(track, commit=True)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def index_shopify_order(self, order_pk):
+    """
+    Re-index the passed order
+
+    Args:
+        order_pk (int): ShopifyOrder primary key id
+    """
+
+    try:
+        order = ShopifyOrder.objects.get(id=order_pk)
+        update_elasticsearch_shopify_order(order)
+
+    except ShopifyOrderTrack.DoesNotExist:
+        pass
+
+    except:
+        raven_client.captureException()
