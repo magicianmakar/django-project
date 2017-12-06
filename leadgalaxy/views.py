@@ -2571,7 +2571,8 @@ def orders_view(request):
 
     query = request.GET.get('query') or request.GET.get('id')
     query_order = request.GET.get('query_order') or request.GET.get('id')
-    query_customer = request.GET.get('query_customer_id') or request.GET.get('query_customer')
+    query_customer = request.GET.get('query_customer')
+    query_customer_id = request.GET.get('query_customer_id')
     query_address = request.GET.getlist('query_address')
 
     product_filter = request.GET.getlist('product')
@@ -2582,7 +2583,7 @@ def orders_view(request):
     created_at_daterange = request.GET.get('created_at_daterange',
                                            '{}-'.format(date_now.replace(days=-30).format('MM/DD/YYYY')))
 
-    if request.GET.get('shop') or query or query_order or query_customer:
+    if request.GET.get('shop') or query or query_order or query_customer or query_customer_id:
         status, fulfillment, financial = ['any', 'any', 'any']
         connected_only = False
         awaiting_order = False
@@ -2736,9 +2737,18 @@ def orders_view(request):
         elif financial != 'any':
             _must_term.append({'term': {'financial_status': financial}})
 
-        if query_customer:
-            search_field = 'customer_email' if '@' in query_customer else 'customer_name'
-            _must_term.append({'match': {search_field: query_customer}})
+        if query_customer_id:
+            # Search by customer ID first
+            _must_term.append({'match': {'customer_id': query_customer_id}})
+
+        elif query_customer:
+            # Try to find the customer email in the search query
+            customer_email = re.findall(r'[\w\._\+-]+@[\w\.-]+', query_customer)
+
+            if customer_email:
+                _must_term.append({'match': {'customer_email': customer_email[0].lower()}})
+            else:
+                _must_term.append({'match': {'customer_name': query_customer.lower()}})
 
         if query_address and len(query_address):
             _must_term.append({

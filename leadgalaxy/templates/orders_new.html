@@ -111,15 +111,11 @@
                             <span>Customer</span>
                         </div>
                         <div class="col-md-4">
-                            {% if not es_search_enabled %}
                             <input type="hidden" id="query_customer_id" name="query_customer_id"
                                 value="{{ request.GET.query_customer_id|default:'' }}" orig-value="{{request.GET.query_customer|default:''}}" />
-                            {% endif %}
 
                             <input id="query_customer" name="query_customer" class="form-control"placeholder="Name or Email" data-store="{{store.id}}"
-                            {% if request.GET.query_customer_id %}
-                            value="{{request.GET.query_customer|default:''}}"
-                            {% endif %}
+                                value="{{request.GET.query_customer|default:''}}"
                             >
                         </div>
                     </div>
