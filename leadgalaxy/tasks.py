@@ -463,42 +463,52 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def sync_shopify_orders(self, store_id):
+def sync_shopify_orders(self, store_id, elastic=False):
     try:
         start_time = arrow.now()
 
         store = ShopifyStore.objects.get(id=store_id)
-        orders = ShopifyOrder.objects.filter(store=store)
-        shopify_count = store.get_orders_count(all_orders=True)
-        db_count = orders.count()
-        need_import = shopify_count - db_count
+        es = order_utils.get_elastic() if elastic else None
 
-        if shopify_count > db_count:
+        saved_count = order_utils.store_saved_orders(store, es=es)
+        shopify_count = store.get_orders_count(all_orders=True)
+
+        need_import = shopify_count - saved_count
+
+        if need_import:
+            raven_client.captureMessage('Sync Store Orders', level='info', extra={
+                'store': store.title,
+                'es': bool(es),
+                'missing': need_import
+            }, tags={
+                'store': store.title,
+                'es': bool(es),
+            })
+
             imported = 0
             page = 1
-            countdown = 0
 
             while imported < need_import:
                 shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
                 shopify_order_ids = [o['id'] for o in shopify_orders]
 
-                order_ids = list(ShopifyOrder.objects.filter(store=store, order_id__in=shopify_order_ids)
-                                                     .values_list('order_id', flat=True))
+                if not shopify_order_ids:
+                    break
 
-                for shopify_order_id in shopify_order_ids:
-                    if shopify_order_id not in order_ids:
-                        update_shopify_order.apply_async(
-                            args=[store_id, shopify_order_id],
-                            kwarg={'from_webhook': False},
-                            countdown=countdown)
+                missing_order_ids = order_utils.find_missing_order_ids(store, shopify_order_ids, es=es)
 
-                        imported += 1
-                        countdown += 1
+                for i in missing_order_ids:
+                    update_shopify_order.apply_async(
+                        args=[store_id, i],
+                        kwarg={'from_webhook': False},
+                        countdown=imported)
 
-                        store.pusher_trigger('order-sync-status', {
-                            'curreny': imported,
-                            'total': need_import
-                        })
+                    imported += 1
+
+                    store.pusher_trigger('order-sync-status', {
+                        'curreny': imported,
+                        'total': need_import
+                    })
 
                 page += 1
 

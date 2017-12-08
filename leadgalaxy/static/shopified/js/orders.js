@@ -946,6 +946,14 @@ function pusherSub() {
     channel.bind('order-sync-status', function(data) {
         var el = $('.order_sync_status');
 
+        if (!el.length) {
+            $('.wrapper-content').prepend($('<div class="alert alert-info alert-dismissable">' +
+                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>' +
+                '<i class="fa fa-circle-o-notch fa-spin"></i> Importing ' + data.total + ' orders from your store<span class="order_sync_status"> (0%)</span></div>'));
+
+            el = $('.order_sync_status');
+        }
+
         var progress = ((data.curreny / data.total) * 100.0).toFixed(0);
 
         el.text(' (' + progress + '%)');

@@ -375,7 +375,6 @@
             {% for message in messages %}
             <div class="alert
                 {% if message.tags %}
-                    alert-{{ message.tags }}
                     {% if message.tags == 'error' %}
                         alert-danger
                     {% else %}

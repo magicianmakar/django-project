@@ -2880,23 +2880,6 @@ def orders_view(request):
 
         if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
             messages.info(request, 'Your Store Orders are being imported')
-        else:
-            orders_sync_check_key = 'store_orders_sync_check_{}'.format(store.id)
-            if cache.get(orders_sync_check_key) is None:
-                shopify_count = store.get_orders_count(all_orders=True)
-                db_count = orders.count()
-                if shopify_count > db_count:
-                    tasks.sync_shopify_orders.apply_async(args=[store.id])
-
-                    raven_client.captureMessage('Sync Store Orders', level='info', extra={
-                        'store': store.title,
-                        'missing': (shopify_count - db_count)
-                    })
-
-                    messages.info(request, '<i class="fa fa-circle-o-notch fa-spin"></i> Importing {} orders from your store'
-                                           '<span class="order_sync_status"> (0%)</span>'.format(shopify_count - db_count))
-
-                cache.set(orders_sync_check_key, True, timeout=43200)
 
         if query_order:
             order_id = shopify_orders_utils.order_id_from_name(store, query_order)
@@ -3056,6 +3039,11 @@ def orders_view(request):
                     countdown = countdown + 1
         else:
             page = []
+
+    orders_sync_check_key = 'store_orders_sync_check_{}'.format(store.id)
+    if store_sync_enabled and cache.get(orders_sync_check_key) is None:
+        tasks.sync_shopify_orders.apply_async(args=[store.id], kwarg={'elastic': es_search_enabled})
+        cache.set(orders_sync_check_key, True, timeout=43200)
 
     products_cache = {}
     auto_orders = models_user.can('auto_order.use')

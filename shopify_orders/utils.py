@@ -388,6 +388,72 @@ def order_ids_from_customer_id(store, customer_id):
     return []
 
 
+def store_saved_orders(store, es=None):
+    """ Get total saved orders in the database if es is not set, otherwise return total orders in Elastic index
+
+    Args:
+        store (ShopifyStore): Store to find orders count
+        es (Elasticsearch, optional): Elastic index
+    """
+
+    if not es:
+        return ShopifyOrder.objects.filter(store=store).count()
+    else:
+        body = {
+            'query': {
+                'bool': {
+                    'must': [
+                        {'term': {'store': store.id}},
+                    ],
+                },
+            },
+        }
+
+        matchs = es.search(index='shopify-order', doc_type='order', body=body)
+        return matchs['hits']['total']
+
+
+def find_missing_order_ids(store, order_ids, es=None):
+    """ Return the Order IDs that are in `order_ids` and not in database or ES saved orders
+
+    Args:
+        store (ShopifyStore): Store model
+        order_ids (list): Shopify Order IDs list
+        es (Elasticsearch, optional): is not set, search in the database, otherwise search in Elastic
+    """
+
+    missing_orders = []
+
+    if not es:
+        saved_order_ids = list(ShopifyOrder.objects.filter(store=store, order_id__in=order_ids)
+                                                   .values_list('order_id', flat=True))
+    else:
+        body = {
+            'query': {
+                'bool': {
+                    'must': [
+                        {'term': {'store': store.id}},
+                        {'bool': {'should': [{'term': {'order_id': i}} for i in order_ids]}}
+                    ],
+                },
+            },
+            'sort': [{
+                'order_id': 'asc'
+            }],
+            'size': 250,
+            'from': 0
+        }
+
+        matchs = es.search(index='shopify-order', doc_type='order', body=body, filter_path='hits.hits._source.order_id')
+        saved_order_ids = [int(i['_source']['order_id']) for i in matchs['hits']['hits']]
+
+    for i in order_ids:
+        if i not in saved_order_ids:
+            missing_orders.append(i)
+
+    return missing_orders
+
+
 class OrderErrorsCheck:
     ignored = 0
     errors = 0
