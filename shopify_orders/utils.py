@@ -454,6 +454,45 @@ def find_missing_order_ids(store, order_ids, es=None):
     return missing_orders
 
 
+def delete_store_orders(store, db=True, es=True):
+    deleted = []
+
+    if db:
+        orders = ShopifyOrder.objects.filter(store=store)
+        orders_count = orders.count()
+
+        steps = 2000
+        count = 0
+        while count <= orders_count:
+            order_ids = orders[:steps].values_list('id', flat=True)
+            ShopifyOrder.objects.filter(id__in=order_ids).delete()
+
+            count += len(order_ids)
+
+            if not len(order_ids):
+                break
+
+        deleted.append(count)
+
+    if es:
+        es = get_elastic()
+        if es:
+            body = {
+                'query': {
+                    'bool': {
+                        'must': [
+                            {'term': {'store': store.id}},
+                        ],
+                    },
+                },
+            }
+
+            r = es.delete_by_query(index='shopify-order', doc_type='order', body=body)
+            deleted.append(r['total'])
+
+    return deleted
+
+
 class OrderErrorsCheck:
     ignored = 0
     errors = 0

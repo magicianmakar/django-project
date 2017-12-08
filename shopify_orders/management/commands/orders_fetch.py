@@ -9,7 +9,7 @@ import requests
 
 from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
-from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max
+from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max, delete_store_orders
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import get_shopify_order
 
@@ -40,32 +40,9 @@ class Command(DropifiedBaseCommand):
 
             self.write_success(u'Reset Store: {}'.format(store.title))
 
-            orders = ShopifyOrder.objects.filter(store=store)
-            orders_count = orders.count()
+            deleted = delete_store_orders(store)
 
-            if progress:
-                obar = tqdm(total=orders_count)
-
-            steps = 10000
-            count = 0
-
-            while count <= orders_count:
-                with transaction.atomic():
-                    order_ids = orders[:steps].values_list('id', flat=True)
-                    ShopifyOrder.objects.filter(id__in=order_ids).delete()
-
-                    if progress:
-                        obar.update(len(order_ids))
-
-                    count += len(order_ids)
-
-                    if not len(order_ids):
-                        break
-
-            if progress:
-                obar.close()
-
-            self.write_success('Deleted Orders: {}/{}'.format(count, orders_count))
+            self.write_success('Deleted Orders: {}'.format(deleted))
 
             ShopifySyncStatus.objects.filter(store_id=store.id).update(sync_status=0, pending_orders=None, elastic=False)
             self.write_success('Done')
