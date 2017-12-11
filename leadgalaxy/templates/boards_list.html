@@ -34,8 +34,12 @@
                             </td>
                             <td class="products-count">
                                 {% cache 600 boards_products_count user.id item.id %}
-                                <a href="/boards/{{item.id}}?store=n" class="btn btn-outline btn-xs btn-default">{{ item.saved }} Saved</a>
-                                <a href="/boards/{{item.id}}?store=c" class="btn btn-outline btn-xs btn-default">{{ item.connected }} Connected</a>
+                                    <a href="/boards/{{item.id}}?store=n" class="btn btn-outline btn-xs btn-default">
+                                        {% if item.saved != None %}{{ item.saved }}{% endif %} Saved</a>
+
+                                    <a href="/boards/{{item.id}}?store=c" class="btn btn-outline btn-xs btn-default">
+                                        {% if item.connected != None %}{{ item.connected }}{% endif %} Connected</a>
+
                                 {% endcache %}
                             </td>
                             <td>{{item.updated_at|date}}</td>

@@ -1467,10 +1467,12 @@ def boards_list(request):
         raise PermissionDenied()
 
     boards = []
+    boards_list = request.user.models_user.shopifyboard_set.all()
 
+    board_products_count = len(boards_list) <= 10
     for board in request.user.models_user.shopifyboard_set.all():
-        board.saved = board.saved_count(request=request)
-        board.connected = board.connected_count(request=request)
+        board.saved = board.saved_count(request=request) if board_products_count else None
+        board.connected = board.connected_count(request=request) if board_products_count else None
 
         boards.append(board)
 
