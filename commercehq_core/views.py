@@ -500,6 +500,10 @@ class OrdersList(ListView):
             'sort': get_orders_filter(self.request, 'sort', '!order_date'),
         }
 
+        if self.filter_data['query']:
+            self.filter_data['fulfillment'] = 'any'
+            self.filter_data['financial'] = 'any'
+
         paginator.set_filter(**self.filter_data)
 
         return paginator

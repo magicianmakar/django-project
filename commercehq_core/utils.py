@@ -540,6 +540,7 @@ class CommerceHQOrdersPaginator(Paginator):
     fulfillment = None
     financial = None
     sort = None
+    query_field = 'id'
 
     _products = None
 
@@ -555,12 +556,18 @@ class CommerceHQOrdersPaginator(Paginator):
     def set_store(self, store):
         self.store = store
 
-    def set_filter(self, fulfillment, financial, sort, query=None):
+    def set_filter(self, fulfillment, financial, sort, query=''):
         self.fulfillment = fulfillment
         self.financial = financial
         self.sort = sort
 
-        self.query = query
+        self.query = query or ''
+
+        if '@' in self.query:
+            self.query_field = 'email'
+        else:
+            self.query_field = 'id'
+            self.query = re.sub(r'[^0-9]', '', self.query)
 
     def page(self, number):
         """
@@ -625,13 +632,14 @@ class CommerceHQOrdersPaginator(Paginator):
 
     def _request_filters(self):
         filters = {
-            'id': re.sub(r'[^0-9]', '', self.query or ''),
             'status': self.fulfillment,
             'paid': self.financial,
         }
 
+        filters[self.query_field] = self.query
+
         for k, v in filters.items():
-            if not v:
+            if not v or v == 'any':
                 del filters[k]
             elif ',' in v:
                 filters[k] = v.split(',')
@@ -639,8 +647,9 @@ class CommerceHQOrdersPaginator(Paginator):
         for k, v in filters.items():
             if type(filters[k]) is list:
                 filters[k] = list(map((lambda x: safeInt(x)), filters[k]))
-            else:
+            elif k != 'email':
                 filters[k] = safeInt(v, None)
+
             if not filters[k]:
                 del filters[k]
 
