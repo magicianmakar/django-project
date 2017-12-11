@@ -2908,6 +2908,8 @@ def orders_view(request):
             order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer_id)
             if len(order_ids):
                 orders = orders.filter(order_id__in=order_ids)
+            else:
+                orders = orders.filter(order_id=-1)  # Show Not Found message
 
         if query_address and len(query_address):
             orders = orders.filter(Q(country_code__in=query_address))

@@ -1,7 +1,4 @@
-from django.db import transaction
-
 from raven.contrib.django.raven_compat.models import client as raven_client
-from tqdm import tqdm
 
 import time
 import math
