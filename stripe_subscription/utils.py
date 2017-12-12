@@ -482,6 +482,39 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
         except User.DoesNotExist:
+            if 'Dropified Unlimited' in charge.description and 'ECOM Jam' in charge.description:
+                stripe_customer = stripe.Customer.retrieve(charge.customer)
+
+                fullname = ''
+                email = stripe_customer.email
+                intercom_attrs = {
+                    "register_source": 'clickfunnels',
+                    "register_medium": 'webhook',
+                }
+
+                if stripe_customer.sources and stripe_customer.sources.data:
+                    fullname = stripe_customer.sources.data[0].name
+
+                user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
+
+                if created:
+                    customer = update_customer(user, stripe_customer)[0]
+
+                    plan = GroupPlan.objects.get(id=31)
+                    user.profile.change_plan(plan)
+
+                    user.set_config('_stripe_lifetime', plan.id)
+
+                    SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
+                        'charge': charge.to_dict(),
+                        'count': 1
+                    }))
+
+                    return HttpResponse('New Registration to {}'.format(plan.title))
+                else:
+                    raven_client.captureException()
+                    return HttpResponse('Cloud Not Register User')
+
             return HttpResponse('User Not Found')
 
         SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
