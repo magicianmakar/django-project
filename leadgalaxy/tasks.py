@@ -475,7 +475,7 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
         need_import = shopify_count - saved_count
 
-        if need_import:
+        if need_import > 0:
             raven_client.captureMessage('Sync Store Orders', level='info', extra={
                 'store': store.title,
                 'es': bool(es),
