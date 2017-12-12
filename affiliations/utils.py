@@ -378,7 +378,7 @@ class LeadDynoAffiliation(LeadDynoAffiliations):
 
         try:
             self.affiliation = self.user.lead_dyno_affiliation
-        except User.RelatedObjectDoesNotExist:
+        except:
             self.affiliation = None
 
     def update(self, email=None, first_name=None, last_name=None):
