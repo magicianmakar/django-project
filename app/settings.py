@@ -72,6 +72,7 @@ INSTALLED_APPS = (
     'order_exports',
     'order_imports',
     'profit_dashboard',
+    'affiliations',
 
     'commercehq_core',
     'dropwow_core',
@@ -360,3 +361,5 @@ FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
 
 ELASTICSEARCH_API = os.environ.get('FOUNDELASTICSEARCH_URL', '').split(',')
 ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get('FOUNDELASTICSEARCH_PASSWORD'))
+
+LEAD_DYNO_API_KEY = os.environ.get('LEAD_DYNO_API_KEY')

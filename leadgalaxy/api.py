@@ -22,6 +22,8 @@ from django.views.generic import View
 from raven.contrib.django.raven_compat.models import client as raven_client
 from last_seen.models import LastSeen
 
+from affiliations.utils import LeadDynoAffiliation
+
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.shipping_helper import get_counrties_list
@@ -2969,3 +2971,22 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         task = tasks.shopify_orders_risk.apply_async(args=[store.id, data.get('orders')], expires=120)
 
         return self.api_success({'task': task.id})
+
+    def post_affiliate_edit(self, request, user, data):
+        """
+        Edit affiliate e-mail, first name and last name
+        """
+
+        email = data.get('email', '') or None
+        first_name = data.get('first_name', '') or None
+        last_name = data.get('last_name', '') or None
+
+        affiliation = LeadDynoAffiliation(user)
+        try:
+            affiliate = affiliation.update(email=email, first_name=first_name, last_name=last_name)
+        except Exception:
+            raven_client.captureException()
+            import traceback; traceback.print_exc();
+            return self.api_error('Server Error')
+
+        return self.api_success(affiliate)

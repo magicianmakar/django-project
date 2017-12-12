@@ -35,6 +35,9 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from analytic_events.models import RegistrationEvent
 
+from affiliations.utils import LeadDynoAffiliations
+from affiliations.tasks import create_lead_dyno_affiliation
+
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code
@@ -2374,6 +2377,14 @@ def user_profile(request):
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
 
+    affiliations = LeadDynoAffiliations()
+    affiliations.check_last_update()
+
+    try:
+        affiliate = request.user.lead_dyno_affiliation
+    except:
+        affiliate = None
+
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
         'now': timezone.now(),
@@ -2387,6 +2398,7 @@ def user_profile(request):
         'clippingmagic': clippingmagic,
         'captchacredit_plans': captchacredit_plans,
         'captchacredit': captchacredit,
+        'affiliate': affiliate,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
@@ -3890,6 +3902,8 @@ def register(request, registration=None, subscribe_plan=None):
             RegistrationEvent.objects.create(user=request.user)
 
             utils.wicked_report_add_user(request, new_user)
+
+            create_lead_dyno_affiliation.delay(new_user.pk)
 
             if subscribe_plan:
                 if not try_plan and not subscribe_plan.is_free:

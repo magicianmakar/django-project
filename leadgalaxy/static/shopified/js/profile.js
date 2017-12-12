@@ -104,6 +104,39 @@ $('#save-profile').click(function () {
     });
 });
 
+$('#affiliate-form').on('submit', function(e) {
+    e.preventDefault();
+    var btn = $('#affiliate-form button');
+    btn.button('loading');
+
+    $.ajax({
+        url: '/api/affiliate-edit',
+        type: 'POST',
+        data: $('#affiliate-form').serialize(),
+        context: {btn: btn},
+        success: function (data) {
+            if (data.status == 'ok') {
+                $('#affiliate-email').text(data.email);
+                $('#affiliate-url').text(data.affiliate_url);
+                $('#affiliate-dashboard-url').text(data.affiliate_dashboard_url);
+
+                var name = data.first_name + ' ' + data.last_name;
+                $('#affiliate-name').text(name.trim())
+
+                $('input[name="email"]').val('');
+                $('input[name="first_name"]').val('');
+                $('input[name="last_name"]').val('');
+            }
+        },
+        error: function (data) {
+            displayAjaxError('Edit Affiliation', data);
+        },
+        complete: function () {
+            this.btn.button('reset');
+        }
+    });
+});
+
 $('#save-email').click(function () {
     var btn = $(this);
     btn.button('loading');
@@ -248,4 +281,38 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
             });
         }
     });
+});
+
+var initializeCharts = function() {
+    setTimeout(function() {
+        $("#affiliation-visitors").sparkline(
+            window.affiliate.visitors.values,
+            {type: 'line', width: '100%', height: '60', lineColor: '#79aa63', fillColor: "#ffffff"}
+        );
+
+        $("#affiliation-leads").sparkline(
+            window.affiliate.leads.values,
+            {type: 'line', width: '100%', height: '60', lineColor: '#1f90d8', fillColor: "#ffffff"}
+        );
+
+        $("#affiliation-purchases").sparkline(
+            window.affiliate.purchases.values,
+            {type: 'line', width: '100%', height: '60', lineColor: '#ed5565', fillColor: "#ffffff"}
+        );
+
+        $("#affiliation-resources").sparkline([
+            window.affiliate.visitors.count,
+            window.affiliate.leads.count,
+            window.affiliate.purchases.count
+        ], {
+            type: 'pie',
+            height: '140',
+            sliceColors: ['#79aa63', '#1f90d8', '#ed5565']
+        });
+    }, 100);
+}
+
+initializeCharts();
+$('.affiliation-tab a').one('click', function() {
+    initializeCharts();
 });

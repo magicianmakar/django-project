@@ -24,7 +24,8 @@
     "animatedmodal": "*",
     "animate.css": "^3.5.2",
     "chart.js": "^2.7.0",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "jquery.sparkline": "gwatts/jquery.sparkline#^2.1.2"
   },
   "devDependencies": {}
 }
