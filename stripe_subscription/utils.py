@@ -482,7 +482,7 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
         except User.DoesNotExist:
-            if 'Dropified Unlimited' in charge.description and 'ECOM Jam' in charge.description:
+            if charge.description and 'Dropified Unlimited' in charge.description and 'ECOM Jam' in charge.description:
                 stripe_customer = stripe.Customer.retrieve(charge.customer)
 
                 fullname = ''
