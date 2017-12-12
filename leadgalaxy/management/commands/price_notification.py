@@ -79,15 +79,17 @@ class Command(DropifiedBaseCommand):
         if options['new_products']:
             products = products.filter(price_notification_id=0)
 
-        products = products.exclude(shopify_id=0).exclude(store=None)
+        products = products.exclude(shopify_id=0).exclude(store=None).exclude(store__is_active=False)
 
-        products_count = len(products)
+        if user.id in self.ignored_users:
+            self.stdout.write(u'Ignore product for user: {}'.format(user.username))
+            return
+
+        products_count = products.count()
 
         if products_count:
-            if user.id in self.ignored_users:
-                self.stdout.write(u'Ignore {} product for user: {}'.format(products_count, user.username))
-
-                products.update(price_notification_id=-7)
+            if products_count > 1000:
+                self.stdout.write(u'Too many products ({}) for user: {}'.format(products_count, user.username))
                 return
 
             self.stdout.write(u'{} webhooks to {} product for user: {}'.format(
