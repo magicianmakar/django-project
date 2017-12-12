@@ -2986,7 +2986,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             affiliate = affiliation.update(email=email, first_name=first_name, last_name=last_name)
         except Exception:
             raven_client.captureException()
-            import traceback; traceback.print_exc();
             return self.api_error('Server Error')
 
         return self.api_success(affiliate)

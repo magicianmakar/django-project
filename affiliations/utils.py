@@ -2,9 +2,9 @@ import json
 
 from math import ceil
 from time import sleep
-from pytz import utc
 
 import requests
+import arrow
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -155,8 +155,7 @@ class LeadDynoAffiliations():
                 if as_generator:
                     yield visitor.get('id')
 
-                created_at = utc.localize(timezone.datetime.strptime(visitor.get('created_at'),
-                                                                     '%Y-%m-%dT%H:%M:%SZ'))
+                created_at = arrow.get(visitor.get('created_at')).datetime
 
                 # Only parses and save visitors that arent added yet
                 if last_visitor is not None and last_visitor.created_at >= created_at:
@@ -235,8 +234,7 @@ class LeadDynoAffiliations():
                 if as_generator:
                     yield lead.get('id')
 
-                created_at = utc.localize(timezone.datetime.strptime(lead.get('created_at'),
-                                                                     '%Y-%m-%dT%H:%M:%SZ'))
+                created_at = arrow.get(lead.get('created_at')).datetime
 
                 # Only parses and save leads that arent added yet
                 if last_lead is not None and last_lead.created_at >= created_at:
@@ -310,8 +308,7 @@ class LeadDynoAffiliations():
                 if as_generator:
                     yield purchase.get('id')
 
-                created_at = utc.localize(timezone.datetime.strptime(purchase.get('created_at'),
-                                                                     '%Y-%m-%dT%H:%M:%SZ'))
+                created_at = arrow.get(purchase.get('created_at')).datetime
 
                 # Only parses and save leads that arent added yet
                 if last_purchase is not None and last_purchase.created_at >= created_at:
@@ -382,7 +379,6 @@ class LeadDynoAffiliation(LeadDynoAffiliations):
         try:
             self.affiliation = self.user.lead_dyno_affiliation
         except User.RelatedObjectDoesNotExist:
-            import traceback; traceback.print_exc();
             self.affiliation = None
 
     def update(self, email=None, first_name=None, last_name=None):

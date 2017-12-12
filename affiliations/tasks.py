@@ -25,5 +25,4 @@ def sync_lead_dyno_resources(self):
         affiliations.finish_sync()
 
     except Exception:
-        import traceback; traceback.print_exc();
         raven_client.captureException()
