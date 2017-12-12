@@ -45,6 +45,35 @@ $(function () {
         search_contains: true,
         width: '250px'
     });
+
+    if (window.affiliate) {
+        $('.affiliation-tab a').one('click', function() {
+            $("#affiliation-visitors").sparkline(
+                window.affiliate.visitors.values,
+                {type: 'line', width: '100%', height: '60', lineColor: '#79aa63', fillColor: "#ffffff"}
+            );
+
+            $("#affiliation-leads").sparkline(
+                window.affiliate.leads.values,
+                {type: 'line', width: '100%', height: '60', lineColor: '#1f90d8', fillColor: "#ffffff"}
+            );
+
+            $("#affiliation-purchases").sparkline(
+                window.affiliate.purchases.values,
+                {type: 'line', width: '100%', height: '60', lineColor: '#ed5565', fillColor: "#ffffff"}
+            );
+
+            $("#affiliation-resources").sparkline([
+                window.affiliate.visitors.count,
+                window.affiliate.leads.count,
+                window.affiliate.purchases.count
+            ], {
+                type: 'pie',
+                height: '140',
+                sliceColors: ['#79aa63', '#1f90d8', '#ed5565']
+            });
+        });
+    }
 });
 
 $('#country').change(function (e) {
@@ -121,7 +150,7 @@ $('#affiliate-form').on('submit', function(e) {
                 $('#affiliate-dashboard-url').text(data.affiliate_dashboard_url);
 
                 var name = data.first_name + ' ' + data.last_name;
-                $('#affiliate-name').text(name.trim())
+                $('#affiliate-name').text(name.trim());
 
                 $('input[name="email"]').val('');
                 $('input[name="first_name"]').val('');
@@ -281,38 +310,4 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
             });
         }
     });
-});
-
-var initializeCharts = function() {
-    setTimeout(function() {
-        $("#affiliation-visitors").sparkline(
-            window.affiliate.visitors.values,
-            {type: 'line', width: '100%', height: '60', lineColor: '#79aa63', fillColor: "#ffffff"}
-        );
-
-        $("#affiliation-leads").sparkline(
-            window.affiliate.leads.values,
-            {type: 'line', width: '100%', height: '60', lineColor: '#1f90d8', fillColor: "#ffffff"}
-        );
-
-        $("#affiliation-purchases").sparkline(
-            window.affiliate.purchases.values,
-            {type: 'line', width: '100%', height: '60', lineColor: '#ed5565', fillColor: "#ffffff"}
-        );
-
-        $("#affiliation-resources").sparkline([
-            window.affiliate.visitors.count,
-            window.affiliate.leads.count,
-            window.affiliate.purchases.count
-        ], {
-            type: 'pie',
-            height: '140',
-            sliceColors: ['#79aa63', '#1f90d8', '#ed5565']
-        });
-    }, 100);
-}
-
-initializeCharts();
-$('.affiliation-tab a').one('click', function() {
-    initializeCharts();
 });
