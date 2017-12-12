@@ -683,6 +683,7 @@ $(function() {
         appendTo: '',
         onSave: function(imageID, newURL) {
             var img = document.getElementById(imageID);
+            var oldURL = img.src;
             img.src = newURL;
 
             config.feather_editor.disableControls();
@@ -693,6 +694,7 @@ $(function() {
                 type: 'POST',
                 data: {
                     'url': newURL,
+                    'old_url': oldURL,
                     'product': config.product_id,
                     'chq': 1,
                 },

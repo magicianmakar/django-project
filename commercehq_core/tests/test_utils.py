@@ -1,3 +1,5 @@
+import json
+
 from mock import patch, Mock
 from requests.exceptions import HTTPError
 
@@ -10,12 +12,18 @@ from commercehq_core.models import CommerceHQStore
 from leadgalaxy.utils import (
     random_hash
 )
-from .factories import CommerceHQStoreFactory, CommerceHQOrderTrackFactory
+from .factories import (
+    CommerceHQStoreFactory,
+    CommerceHQOrderTrackFactory,
+    CommerceHQProductFactory,
+)
 from ..utils import (
     get_shipping_carrier,
     check_notify_customer,
     add_aftership_to_store_carriers,
     cache_fulfillment_data,
+    update_product_data_images,
+    hash_url_filename,
 )
 
 
@@ -301,3 +309,36 @@ class OrdersTestCase(TestCase):
         updater.save_changes(add=False)
 
         self.assertEqual(note, utils.get_chq_order_note(store, order_id))
+
+
+class UpdateProductDataImageVariantsTestCase(TestCase):
+    def setUp(self):
+        self.old_url = 'https://example.com/example.png'
+        self.new_url = 'https://example.com/new-image.png'
+        self.variant = 'red'
+        hashed_ = hash_url_filename(self.old_url)
+        data = {'images': [self.old_url], 'variants_images': {hashed_: self.variant}}
+        self.product = CommerceHQProductFactory(data=json.dumps(data))
+
+    def test_product_must_have_new_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        self.assertIn(self.new_url, self.product.parsed.get('images'))
+
+    def test_product_must_not_have_old_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        self.assertNotIn(self.old_url, self.product.parsed.get('images'))
+
+    def test_product_must_have_new_variant_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        hashed_new_url = hash_url_filename(self.new_url)
+        self.assertIn(hashed_new_url, self.product.parsed.get('variants_images'))
+
+    def test_product_must_not_have_old_variant_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        hashed_old_url = hash_url_filename(self.old_url)
+        self.assertNotIn(hashed_old_url, self.product.parsed.get('variants_images'))
+
+    def test_new_image_must_have_old_image_value(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        hashed_new_url = hash_url_filename(self.new_url)
+        self.assertEqual(self.product.parsed.get('variants_images')[hashed_new_url], self.variant)

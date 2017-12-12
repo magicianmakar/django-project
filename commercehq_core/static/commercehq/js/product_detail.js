@@ -912,6 +912,7 @@ function renderImages() {
                     product: config.product_id,
                     advanced: true,
                     image_id: imageId,
+                    old_url: el,
                     chq: 1
                 })
             });
@@ -1236,6 +1237,7 @@ function clippingmagicEditImage(data, image) {
                     data: {
                         product: config.product_id,
                         url: data.image_url,
+                        old_url: image.attr('src'),
                         clippingmagic: true,
                         chq: 1
                     }
