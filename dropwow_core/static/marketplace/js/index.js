@@ -101,6 +101,10 @@ $('#shopify-send-btn').click(function(e) {
         if (!original_product) {
             return;
         }
+        var images = $.map(original_product.images, function(c) {
+            return c.path;
+        });
+        var variants_images = {};
 
         var options = [];
         var option_id_index = {};
@@ -110,6 +114,10 @@ $('#shopify-send-btn').click(function(e) {
             for (var i = 0; i < v.variants.length; i++) {
                 variant_id_index[v.variants[i].variant_id] = v.variants[i];
                 values.push(v.variants[i].variant_name);
+                if (v.variants[i].image_path) {
+                    images.push(v.variants[i].image_path);
+                    variants_images[hashUrlFileName(v.variants[i].image_path)] = v.variants[i].variant_name;
+                }
             }
 
             options.push({
@@ -171,9 +179,7 @@ $('#shopify-send-btn').click(function(e) {
             'description': description,
             'price': price,
             'compare_at_price': compare_at_price ? compare_at_price : null,
-            'images': $.map(original_product.images, function(c) {
-                return c.path;
-            }),
+            'images': images,
             'original_url': app_link(['marketplace/product/', original_product.id]),
             'store': {
                 url: app_link('marketplace'),
@@ -185,7 +191,7 @@ $('#shopify-send-btn').click(function(e) {
             "published": $('#send-product-visible')[0].checked,
             'weight': weight,
             'weight_unit': weight_unit,
-            'variants_images': {},
+            'variants_images': variants_images,
             'variants_sku': {},
 
             'variants': options,
