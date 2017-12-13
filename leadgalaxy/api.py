@@ -2432,17 +2432,31 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Product not found', status=404)
 
     def post_generate_reg_link(self, request, user, data):
-        if not user.is_superuser and not user.has_perm('leadgalaxy.add_planregistration'):
+        if not user.is_superuser:
             return self.api_error('Unauthorized API call', status=403)
 
         plan_id = int(data.get('plan'))
         if not user.is_superuser and plan_id != 8:
             return self.api_error('Unauthorized API call', status=403)
 
+        email = data.get('email').strip()
+        if not email:
+            return self.api_error('Email address is empty', status=500)
+
         plan = GroupPlan.objects.get(id=plan_id)
-        reg = utils.generate_plan_registration(plan, {
-            'email': data.get('email')
-        })
+        reg = utils.generate_plan_registration(plan, {'email': email})
+
+        data = {
+            'email': email,
+            'reg_hash': reg.register_hash
+        }
+
+        send_email_from_template(
+            tpl='registration_link_invite.html',
+            subject='Welcome to Dropified!',
+            recipient=email,
+            data=data,
+        )
 
         return self.api_success({
             'hash': reg.register_hash
