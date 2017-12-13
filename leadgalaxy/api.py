@@ -2432,11 +2432,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Product not found', status=404)
 
     def post_generate_reg_link(self, request, user, data):
-        if not user.is_superuser:
+        if not user.is_superuser and not user.is_staff:
             return self.api_error('Unauthorized API call', status=403)
 
         plan_id = int(data.get('plan'))
-        if not user.is_superuser and plan_id != 8:
+        if not user.is_superuser and plan_id != 16:
             return self.api_error('Unauthorized API call', status=403)
 
         email = data.get('email').strip()
@@ -2457,6 +2457,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             recipient=email,
             data=data,
         )
+
+        AdminEvent.objects.create(
+            user=user,
+            event_type='plan_invite',
+            data=json.dumps({'plan': plan.title, 'email': email}))
 
         return self.api_success({
             'hash': reg.register_hash

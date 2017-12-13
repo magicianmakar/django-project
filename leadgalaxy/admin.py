@@ -263,6 +263,8 @@ class AdminEventAdmin(admin.ModelAdmin):
                 return '$%0.2f' % data.get('amount')
             elif data.get('query'):
                 return data.get('query')
+            elif data.get('plan'):
+                return u'{} - {}'.format(data.get('plan'), data.get('email'))
         except:
             pass
 
