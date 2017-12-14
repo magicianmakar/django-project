@@ -1,4 +1,7 @@
 import arrow
+import re
+import simplejson as json
+
 from datetime import date
 from collections import OrderedDict
 
@@ -190,3 +193,68 @@ def calculate_profits(profits):
         profit['return_over_investment'] = '{}%'.format(int(percentage))
 
     return profits
+
+
+def get_costs_from_track(track, commit=False):
+    """Get Aliexpress cost data from Order Track
+
+    Args:
+        track (ShopifyOrderTrack): Order Track
+        commit (bool, optional): Update or create AliexpressFulfillmentCost from the track data
+
+    Returns:
+        (dict/None): Return None in case of error or track doesn't have costs
+    """
+
+    rejected_status = [
+        'buyer_pay_timeout', 'risk_reject_closed', 'buyer_cancel_notpay_order', 'cancel_order_close_trade', 'seller_send_goods_timeout',
+        'buyer_cancel_order_in_risk', 'buyer_accept_goods', 'seller_accept_issue_no_goods_return', 'seller_response_issue_timeout'
+    ]
+
+    costs = {
+        'total_cost': 0.0,
+        'shipping_cost': 0.0,
+        'products_cost': 0.0,
+    }
+
+    try:
+        data = json.loads(track.data.encode('utf-8')) if track.data else {}
+    except:
+        return
+
+    if data.get('aliexpress') and data.get('aliexpress').get('order_details') and \
+            data.get('aliexpress').get('order_details').get('cost'):
+        costs['total_cost'] = data['aliexpress']['order_details']['cost'].get('total').replace(',', '.')
+        costs['shipping_cost'] = data['aliexpress']['order_details']['cost'].get('shipping').replace(',', '.')
+        costs['products_cost'] = data['aliexpress']['order_details']['cost'].get('products').replace(',', '.')
+
+        if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in rejected_status:
+            return
+
+        try:
+            float(costs['total_cost']) + float(costs['shipping_cost']) + float(costs['products_cost'])
+        except:
+            costs['total_cost'] = re.sub(r'\.([0-9]{3})', r'\1', costs['total_cost'])
+            costs['shipping_cost'] = re.sub(r'\.([0-9]{3})', r'\1', costs['shipping_cost'])
+            costs['products_cost'] = re.sub(r'\.([0-9]{3})', r'\1', costs['products_cost'])
+
+        try:
+            float(costs['total_cost']) + float(costs['shipping_cost']) + float(costs['products_cost'])
+        except:
+            return
+
+    if any(costs.values()):
+        if commit:
+            AliexpressFulfillmentCost.objects.update_or_create(
+                store=track.store,
+                order_id=track.order_id,
+                source_id=track.source_id,
+                defaults={
+                    'created_at': track.created_at.date(),
+                    'shipping_cost': costs['shipping_cost'],
+                    'products_cost': costs['products_cost'],
+                    'total_cost': costs['total_cost'],
+                }
+            )
+
+        return costs

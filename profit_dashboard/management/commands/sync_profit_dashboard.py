@@ -1,41 +1,46 @@
-import simplejson as json
-from datetime import timedelta
+import arrow
 
-from django.db import transaction
-from django.utils import timezone
-from django.db.models import CharField, Value
-from django.db.models.functions import Concat
 from tqdm import tqdm
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from profit_dashboard.models import AliexpressFulfillmentCost
+from profit_dashboard.utils import get_costs_from_track
 
 
 class Command(DropifiedBaseCommand):
     help = 'Sync Aliexpress fulfillment costs from last month'
 
     def add_arguments(self, parser):
-        parser.add_argument('--noprogress', dest='progress',
-                            action='store_false', help='Hide Progress')
+        parser.add_argument('--noprogress', dest='progress', action='store_false',
+                            help='Hide Progress')
+
+        parser.add_argument('--store', dest='store', action='append', type=int,
+                            help='Save fulfillment data for this stores only')
+
+        parser.add_argument('--reset', dest='reset', action='store_true',
+                            help='Delete All saved fulfillment cost data')
+
+        parser.add_argument('--days', dest='days', action='store', type=int, default=30,
+                            help='Save fulfillment data for orders made in the last number of days')
 
     def start_command(self, *args, **options):
         progress = options['progress']
 
-        order_source = Concat('order_id', Value('-'), 'source_id', output_field=CharField())
-        start_date = timezone.now() - timedelta(days=32)
-        end_date = timezone.now()
-
         tracks = ShopifyOrderTrack.objects.filter(
-            store_id__isnull=False,
-            source_id__isnull=False,
-            created_at__range=(start_date, end_date),
             data__icontains='aliexpress'
-        ).annotate(
-            order_source=order_source
-        ).exclude(
-            order_source__in=AliexpressFulfillmentCost.objects.annotate(order_source=order_source).values('order_source')
         )
+
+        if options.get('store'):
+            tracks = tracks.filter(store__in=options['store'])
+
+        if options.get('days') > 0:
+            tracks = tracks.filter(created_at__gte=arrow.utcnow().replace(days=-options['store']).datetime)
+
+        if options.get('reset') and options.get('store'):
+            self.write('Reset Stores: {}'.format(options['store']))
+            AliexpressFulfillmentCost.objects.filter(store__in=options['store']).delete()
 
         count = tracks.count()
         if progress:
@@ -45,39 +50,36 @@ class Command(DropifiedBaseCommand):
         steps = 5000
 
         while start < count:
-            with transaction.atomic():
-                aliexpress_fulfillment_costs = []
-                order_sources = []
+            aliexpress_fulfillment_costs = []
+            source_ids = []
 
-                for track in tracks[start:start + steps]:
-                    data = json.loads(track.data) if track.data else {}
-                    total_cost = 0.0
-                    shipping_cost = 0.0
-                    products_cost = 0.0
+            for track in tracks[start:start + steps]:
+                try:
+                    costs = get_costs_from_track(track)
+                    if not costs or track.source_id in source_ids:
+                        continue
 
-                    if data.get('aliexpress') and data.get('aliexpress').get('order_details') and \
-                            data.get('aliexpress').get('order_details').get('cost'):
-                        total_cost = data['aliexpress']['order_details']['cost'].get('total', 0)
-                        shipping_cost = data['aliexpress']['order_details']['cost'].get('shipping', 0)
-                        products_cost = data['aliexpress']['order_details']['cost'].get('products', 0)
+                    aliexpress_fulfillment_costs.append(AliexpressFulfillmentCost(
+                        store=track.store,
+                        order_id=track.order_id,
+                        source_id=track.source_id,
+                        created_at=track.created_at.date(),
+                        shipping_cost=costs['shipping_cost'],
+                        products_cost=costs['products_cost'],
+                        total_cost=costs['total_cost']
+                    ))
 
-                    if track.order_source not in order_sources and (total_cost > 0 or shipping_cost > 0 or products_cost > 0):
-                        aliexpress_fulfillment_costs.append(AliexpressFulfillmentCost(
-                            store_id=track.store_id,
-                            order_id=track.order_id,
-                            source_id=track.source_id,
-                            created_at=track.created_at.date(),
-                            shipping_cost=shipping_cost,
-                            products_cost=products_cost,
-                            total_cost=total_cost
-                        ))
-                        order_sources.append(track.order_source)
+                    source_ids.append(track.source_id)
 
-                    start += 1
-                    if progress:
-                        obar.update(1)
+                except:
+                    raven_client.captureException()
 
-                AliexpressFulfillmentCost.objects.bulk_create(aliexpress_fulfillment_costs)
+            if progress:
+                obar.update(steps)
+
+            start += steps
+
+            AliexpressFulfillmentCost.objects.bulk_create(aliexpress_fulfillment_costs)
 
         if progress:
             obar.close()

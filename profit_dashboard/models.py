@@ -35,16 +35,19 @@ class FacebookAdCost(models.Model):
 
 
 class AliexpressFulfillmentCost(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+        index_together = ['store', 'order_id', 'source_id']
+
     store = models.ForeignKey(ShopifyStore)
-    source_id = models.CharField(max_length=512, blank=True, default='', db_index=True)
     order_id = models.BigIntegerField()
-    created_at = models.DateField()
+    source_id = models.CharField(max_length=512, blank=True, default='')
+
+    created_at = models.DateField(db_index=True)
+
     shipping_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
     products_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
     total_cost = models.DecimalField(decimal_places=2, max_digits=9, default=0)
-
-    class Meta:
-        ordering = ['-created_at']
 
 
 class OtherCost(models.Model):

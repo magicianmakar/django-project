@@ -2135,44 +2135,17 @@ def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
             instance.subuser_woo_permissions.add(*permissions)
 
 
-@receiver(post_save, sender=ShopifyOrderTrack)
+@receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')
 def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
-    return
-    if instance.store_id is not None:
-        from profit_dashboard.models import AliexpressFulfillmentCost
-        if instance.source_id:
-            data = json.loads(instance.data) if instance.data else {}
-            total_cost = 0.0
-            shipping_cost = 0.0
-            products_cost = 0.0
-
-            if data.get('aliexpress') and data.get('aliexpress').get('order_details') and \
-                    data.get('aliexpress').get('order_details').get('cost'):
-                total_cost = data['aliexpress']['order_details']['cost'].get('total', 0)
-                shipping_cost = data['aliexpress']['order_details']['cost'].get('shipping', 0)
-
-            if data.get('aliexpress') and data.get('aliexpress').get('products') and \
-                    data.get('aliexpress').get('products').get('cost'):
-                products_cost = data['aliexpress']['products']['cost'].get('total', 0)
-
-            if total_cost > 0 or shipping_cost > 0 or products_cost > 0:
-                AliexpressFulfillmentCost.objects.update_or_create(
-                    store_id=instance.store_id,
-                    order_id=instance.order_id,
-                    source_id=instance.source_id,
-                    created_at=instance.created_at.date(),
-                    defaults={
-                        'shipping_cost': shipping_cost,
-                        'products_cost': products_cost,
-                        'total_cost': total_cost,
-                    }
-                )
+    if instance.user.can('profit_dashboard.use'):
+        from profit_dashboard.utils import get_costs_from_track
+        get_costs_from_track(instance, commit=True)
 
 
-@receiver(post_delete, sender=ShopifyOrderTrack)
+@receiver(post_delete, sender=ShopifyOrderTrack, dispatch_uid='delete_aliexpress_fulfillment_cost')
 def delete_aliexpress_fulfillment_cost(sender, instance, **kwargs):
-    return
     from profit_dashboard.models import AliexpressFulfillmentCost
+
     AliexpressFulfillmentCost.objects.filter(
         store_id=instance.store_id,
         order_id=instance.order_id,
