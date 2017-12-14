@@ -2457,6 +2457,7 @@ def save_image_s3(request):
         image = request.FILES.get('image')
         product_id = request.GET.get('product')
         img_url = image.name
+        old_url = request.GET.get('old_url')
 
         fp = image
 
@@ -2466,6 +2467,7 @@ def save_image_s3(request):
 
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
+        old_url = request.POST.get('old_url')
         fp = StringIO.StringIO(requests.get(img_url).content)
         img_url = '%s.png' % img_url
 
@@ -2476,6 +2478,7 @@ def save_image_s3(request):
 
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
+        old_url = request.POST.get('old_url')
 
         if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
@@ -2502,10 +2505,14 @@ def save_image_s3(request):
         UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
     else:
         from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload
+        from commercehq_core.utils import update_product_data_images
 
         product = CommerceHQProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)
         CommerceHQUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            update_product_data_images(product, old_url, upload_url)
 
     # For Pixlr upload, trigger the close of the editor
     if 'advanced' in request.GET:

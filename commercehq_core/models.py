@@ -11,6 +11,8 @@ import urlparse
 import requests
 from pusher import Pusher
 
+from shopified_core.utils import hash_url_filename
+
 
 def add_to_class(cls, name):
     def _decorator(*args, **kwargs):
@@ -564,11 +566,43 @@ class CommerceHQProduct(models.Model):
 
         return all_mapping
 
+    def get_common_images(self):
+        common_images = set()
+        image_urls = self.parsed.get('images', [])
+
+        if not self.source_id:
+            hashed_variant_images = self.parsed.get('variants_images', {}).keys()
+
+            for image_url in image_urls:
+                if hash_url_filename(image_url) not in hashed_variant_images:
+                    common_images.add(image_url)
+        else:
+            variant_primary_images = []
+            variants = self.parsed.get('variants', [])
+
+            for variant in variants:
+                images = variant.get('images', [])
+
+                for i, image in enumerate(images):
+                    if i == 0:
+                        variant_primary_images.append(image['path'])
+                    else:
+                        common_images.add(image['path'])
+
+            common_images.update(set(image_urls) - set(variant_primary_images))
+
+        return list(common_images)
+
     def get_image(self):
         images = self.parsed.get('images', [])
 
         if images:
             return images[0]
+
+        common_images = self.get_common_images()
+
+        if common_images:
+            return common_images[0]
 
         variants = self.parsed.get('variants', [])
         variant_images = []
