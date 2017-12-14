@@ -176,6 +176,11 @@ def product_export(store_id, product_id, user_id, publish=None):
         variants_uploads = {}
 
         have_variant_images = False
+
+        if type(p.get('variants_images')) is list:
+            p['variants_images'] = {}
+            product.update_data({'variants_images': {}})
+
         for h, var in p.get('variants_images', {}).items():
             for idx, img in enumerate(p.get('images', [])):
                 if utils.hash_url_filename(img) == h:

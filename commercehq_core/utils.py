@@ -1019,7 +1019,7 @@ def update_product_data_images(product, old_url, new_url):
     hashed_new = hash_url_filename(new_url)
     hashed_old = hash_url_filename(old_url)
 
-    variants_images = product.parsed.get('variants_images') or []
+    variants_images = product.parsed.get('variants_images') or {}
     if hashed_old in variants_images:
         variants_images[hashed_new] = variants_images.pop(hashed_old)
 
