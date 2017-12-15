@@ -2377,9 +2377,6 @@ def user_profile(request):
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
 
-    affiliations = LeadDynoAffiliations()
-    affiliations.check_last_update()
-
     try:
         affiliate = request.user.lead_dyno_affiliation
     except:
