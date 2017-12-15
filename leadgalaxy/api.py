@@ -2439,7 +2439,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not user.is_superuser and plan_id != 16:
             return self.api_error('Unauthorized API call', status=403)
 
-        email = data.get('email').strip()
+        email = data.get('email', data.get('user')).strip()
         if not email:
             return self.api_error('Email address is empty', status=500)
 
