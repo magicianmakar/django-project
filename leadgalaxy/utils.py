@@ -2445,7 +2445,7 @@ class ProductCollections(object):
 
     def get_collections(self, store):
         try:
-            response = requests.get(url=store.get_link(self.shopify_api_urls.get('custom_collections'), api=True)).json()
+            response = requests.get(url=store.get_link(self.shopify_api_urls.get('custom_collections'), api=True), params={'limit': 100}).json()
             collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
                            response.get('custom_collections', [])]
         except:
