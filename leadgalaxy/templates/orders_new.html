@@ -566,7 +566,7 @@
 
                                                             <img class="product-img cached-img no-img no-img-sm unveil"
                                                                 store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
-                                                                src="{% static 'img/blank.gif' %}"
+                                                                src="{% static 'img/blank.gif' %}" no-img-width="32px"
 
                                                                 {% if item.image_src %}
                                                                     data-src="{% shopify_image_thumb item.image_src '64x64' 'center' %}"
@@ -666,7 +666,7 @@
                                                 <div class="m-t-xs" style="display:flex">
                                                     <div>
                                                         <img class="product-img cached-img no-img no-img-sm unveil"
-                                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+                                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}" no-img-width="32px"
 
                                                             {% if bundle.data.variant_image %}
                                                                 src="{% shopify_image_thumb bundle.data.variant_image '32x32' 'center' %}"
