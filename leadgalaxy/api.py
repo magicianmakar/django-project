@@ -2285,7 +2285,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not len(aliexpress_ids):
             return self.api_error('Aliexpress ID not set', status=422)
 
-        fix_aliexpress_address = user.get_config('fix_aliexpress_address')
+        fix_aliexpress_address = user.models_user.get_config('fix_aliexpress_address')
+        german_umlauts = user.models_user.get_config('_use_german_umlauts')
+
         aliexpress_ids = [int(j) for j in aliexpress_ids]
         orders = {}
 
@@ -2341,7 +2343,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     info.update({
                         'shopify_number': track.order['name'],
                         'shopify_status': track.order['fulfillment_status'],
-                        'shopify_customer': utils.shopify_customer_address(track.order, aliexpress_fix=fix_aliexpress_address)[1],
+                        'shopify_customer': utils.shopify_customer_address(track.order, aliexpress_fix=fix_aliexpress_address,
+                                                                           german_umlauts=german_umlauts)[1],
                         'shopify_summary': "<br>".join(shopify_summary),
                     })
 

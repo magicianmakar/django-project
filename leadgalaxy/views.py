@@ -2566,6 +2566,7 @@ def orders_view(request):
     order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
     fix_order_variants = models_user.get_config('fix_order_variants')
     fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', False)
+    german_umlauts = models_user.get_config('_use_german_umlauts', False)
 
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
@@ -3255,7 +3256,7 @@ def orders_view(request):
 
             products_cache[el['product_id']] = product
 
-            order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=fix_aliexpress_address)
+            order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=fix_aliexpress_address, german_umlauts=german_umlauts)
 
             if auto_orders and customer_address and not order['pending_payment']:
                 try:

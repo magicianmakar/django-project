@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import simplejson as json
 from mock import patch, Mock
 
@@ -799,6 +801,46 @@ class ProductChangeAlertTestCase(TransactionTestCase):
         new_data = event.variants_actions(self.data)
 
         self.assertEqual(new_data['product']['variants'][found]['inventory_quantity'], variant_change['new_value'])
+
+
+class CustomerAddressTestCase(TestCase):
+    def test_german_umlauts(self):
+        order = {
+            'shipping_address': {
+                "last_name": "Smith",
+                "first_name": "Kamal",
+                "city": "Rabat",
+                "province": "Alaska",
+                "zip": "95500",
+                "name": "Kamal Smith",
+                "address2": "",
+                "country": "United States",
+                "province_code": "AK",
+                "phone": "123456789",
+                "country_code": "US",
+                "company": "",
+                "address1": u"5th Ave üop",
+            }
+        }
+
+        order, addr = utils.shopify_customer_address(order)
+        self.assertEqual(addr['address1'], '5th Ave uop')
+
+        order, addr = utils.shopify_customer_address(order, german_umlauts=True)
+        self.assertEqual(addr['address1'], '5th Ave ueop')
+
+        vals = {
+            u"5TH AVE ÜOP": '5TH AVE UEOP',
+            u"5th Ave äop": '5th Ave aeop',
+            u"5TH AVE ÄOP": '5TH AVE AEOP',
+            u"5th Ave öop": '5th Ave oeop',
+            u"5TH AVE ÖOP": '5TH AVE OEOP',
+        }
+
+        for k, v in vals.items():
+            order['shipping_address']['address1'] = k
+            order, addr = utils.shopify_customer_address(order, german_umlauts=True)
+            self.assertEqual(addr['address1'], v)
 
 
 class ShippingHelperTestCase(TestCase):

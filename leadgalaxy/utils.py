@@ -1054,7 +1054,7 @@ def fix_order_variants(store, order, product):
                     set_real_variant(product, line['variant_id'], match['id'])
 
 
-def shopify_customer_address(order, aliexpress_fix=False):
+def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False):
     if 'shipping_address' not in order \
             and order.get('customer') and order.get('customer').get('default_address'):
         order['shipping_address'] = order['customer'].get('default_address')
@@ -1066,7 +1066,16 @@ def shopify_customer_address(order, aliexpress_fix=False):
     shipping_address = order['shipping_address']
     for k in shipping_address.keys():
         if shipping_address[k] and type(shipping_address[k]) is unicode:
-            customer_address[k] = unidecode(re.sub('\xc2\xb0 ?'.decode('utf-8'), r' ', shipping_address[k]))
+            v = re.sub('\xc2\xb0 ?'.decode('utf-8'), r' ', shipping_address[k])
+            if german_umlauts:
+                v = re.sub(u'\u00e4', 'ae', v)
+                v = re.sub(u'\u00c4', 'AE', v)
+                v = re.sub(u'\u00d6', 'OE', v)
+                v = re.sub(u'\u00fc', 'ue', v)
+                v = re.sub(u'\u00dc', 'UE', v)
+                v = re.sub(u'\u00f6', 'oe', v)
+
+            customer_address[k] = unidecode(v)
         else:
             customer_address[k] = shipping_address[k]
 
