@@ -69,16 +69,16 @@
                         {% endif %}
                     >
 
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                    <div class="row">
+                        <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Query:</label>
                         </div>
                         <div class="col-md-4">
                             <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
                         </div>
                     </div>
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                    <div class="row">
+                        <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Tracking #:</label>
                         </div>
                         <div class="col-md-2">
@@ -89,8 +89,8 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                    <div class="row">
+                        <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Shopify Status:</label>
                         </div>
                         <div class="col-md-2">
@@ -102,49 +102,65 @@
                         </div>
                     </div>
 
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                    <div class="row">
+                        <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Aliexpress Status:</label>
                         </div>
                         <div class="col-md-2">
-                            <select name="reason" class="form-control" style="padding: 6px 0px">
-                                <option {% if not request.GET.reason %}selected="selected"{% endif %} value="">Any</option>
+                            <select name="reason" class="form-control" style="padding: 6px 0px" data-placeholder="Any">
+                                <option value=""></option>
+                                <optgroup label="Order Status">
+                                    <option {% if reason == '_PLACE_ORDER_SUCCESS' %}selected="selected"{% endif %} value="_PLACE_ORDER_SUCCESS">Awaiting Payment</option>
+                                    <option {% if reason == '_IN_CANCEL' %}selected="selected"{% endif %} value="_IN_CANCEL">Awaiting Cancellation</option>
+                                    <option {% if reason == '_WAIT_SELLER_SEND_GOODS' %}selected="selected"{% endif %} value="_WAIT_SELLER_SEND_GOODS">Awaiting Shipment</option>
+                                    <option {% if reason == '_SELLER_PART_SEND_GOODS' %}selected="selected"{% endif %} value="_SELLER_PART_SEND_GOODS">Partial Shipment</option>
+                                    <option {% if reason == '_WAIT_BUYER_ACCEPT_GOODS' %}selected="selected"{% endif %} value="_WAIT_BUYER_ACCEPT_GOODS">Awaiting delivery</option>
+                                    <option {% if reason == '_WAIT_GROUP_SUCCESS' %}selected="selected"{% endif %} value="_WAIT_GROUP_SUCCESS">Pending operation success</option>
+                                    <option {% if reason == '_FINISH' %}selected="selected"{% endif %} value="_FINISH">Order Completed</option>
+                                    <option {% if reason == '_IN_ISSUE' %}selected="selected"{% endif %} value="_IN_ISSUE">Dispute Orders</option>
+                                    <option {% if reason == '_IN_FROZEN' %}selected="selected"{% endif %} value="_IN_FROZEN">Frozen Orders</option>
+                                    <option {% if reason == '_WAIT_SELLER_EXAMINE_MONEY' %}selected="selected"{% endif %} value="_WAIT_SELLER_EXAMINE_MONEY">Payment not yet confirmed</option>
+                                    <option {% if reason == '_RISK_CONTROL' %}selected="selected"{% endif %} value="_RISK_CONTROL">Payment being verified</option>
+                                    <option {% if reason == '_IN_PRESELL_PROMOTION' %}selected="selected"{% endif %} value="_IN_PRESELL_PROMOTION">Promotion is on</option>
+                                </optgroup>
 
-                                <option {% if request.GET.reason == 'buyer_pay_timeout' %}selected="selected"{% endif %}
-                                        value="buyer_pay_timeout">Order Pay Timeout</option>
+                                <optgroup label="Order Cancellation Reason">
+                                    <option {% if reason == 'buyer_pay_timeout' %}selected="selected"{% endif %}
+                                            value="buyer_pay_timeout">Order Pay Timeout</option>
 
-                                <option {% if request.GET.reason == 'risk_reject_closed' %}selected="selected"{% endif %}
-                                        value="risk_reject_closed">Rejected By Risk Control</option>
+                                    <option {% if reason == 'risk_reject_closed' %}selected="selected"{% endif %}
+                                            value="risk_reject_closed">Rejected By Risk Control</option>
 
-                                <option {% if request.GET.reason == 'buyer_accept_goods_timeout' %}selected="selected"{% endif %}
-                                        value="buyer_accept_goods_timeout">Buyer Accept Goods Timeout</option>
+                                    <option {% if reason == 'buyer_accept_goods_timeout' %}selected="selected"{% endif %}
+                                            value="buyer_accept_goods_timeout">Buyer Accept Goods Timeout</option>
 
-                                <option {% if request.GET.reason == 'buyer_cancel_notpay_order' %}selected="selected"{% endif %}
-                                        value="buyer_cancel_notpay_order">Buyer Cancel or Doesn't Pay Order</option>
+                                    <option {% if reason == 'buyer_cancel_notpay_order' %}selected="selected"{% endif %}
+                                            value="buyer_cancel_notpay_order">Buyer Cancel or Doesn't Pay Order</option>
 
-                                <option {% if request.GET.reason == 'cancel_order_close_trade' %}selected="selected"{% endif %}
-                                        value="cancel_order_close_trade">Cancel Order Close Trade</option>
+                                    <option {% if reason == 'cancel_order_close_trade' %}selected="selected"{% endif %}
+                                            value="cancel_order_close_trade">Cancel Order Close Trade</option>
 
-                                <option {% if request.GET.reason == 'seller_send_goods_timeout' %}selected="selected"{% endif %}
-                                        value="seller_send_goods_timeout">Seller Send Goods Timeout</option>
+                                    <option {% if reason == 'seller_send_goods_timeout' %}selected="selected"{% endif %}
+                                            value="seller_send_goods_timeout">Seller Send Goods Timeout</option>
 
-                                <option {% if request.GET.reason == 'buyer_cancel_order_in_risk' %}selected="selected"{% endif %}
-                                        value="buyer_cancel_order_in_risk">Buyer Cancel Order In Risk</option>
+                                    <option {% if reason == 'buyer_cancel_order_in_risk' %}selected="selected"{% endif %}
+                                            value="buyer_cancel_order_in_risk">Buyer Cancel Order In Risk</option>
 
-                                <option {% if request.GET.reason == 'buyer_accept_goods' %}selected="selected"{% endif %}
-                                        value="buyer_accept_goods">Buyer Accept Goods</option>
+                                    <option {% if reason == 'buyer_accept_goods' %}selected="selected"{% endif %}
+                                            value="buyer_accept_goods">Buyer Accept Goods</option>
 
-                                <option {% if request.GET.reason == 'seller_accept_issue_no_goods_return' %}selected="selected"{% endif %}
-                                        value="seller_accept_issue_no_goods_return">Seller Accept Issue No Goods Return</option>
+                                    <option {% if reason == 'seller_accept_issue_no_goods_return' %}selected="selected"{% endif %}
+                                            value="seller_accept_issue_no_goods_return">Seller Accept Issue No Goods Return</option>
 
-                                <option {% if request.GET.reason == 'seller_response_issue_timeout' %}selected="selected"{% endif %}
-                                        value="seller_response_issue_timeout">Seller Response Issue Timeout</option>
+                                    <option {% if reason == 'seller_response_issue_timeout' %}selected="selected"{% endif %}
+                                            value="seller_response_issue_timeout">Seller Response Issue Timeout</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
 
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                    <div class="row">
+                        <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Order Errors:</label>
                         </div>
                         <div class="col-md-2">
@@ -160,8 +176,8 @@
                         </div>
                     </div>
 
-                    <div class="row" style="display:flex;align-items:center;">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                    <div class="row">
+                        <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Archived:</label>
                         </div>
                         <div class="col-md-2">
@@ -174,7 +190,7 @@
                     </div>
 
                     <div class="row m-t">
-                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                        <div class="col-md-2" style="width: 180px;margin-right: 0;padding-right: 0">
                             {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
                             {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}
 
@@ -311,6 +327,12 @@
         position: absolute !important;
         top: 0px;
         left: 15px;
+    }
+
+    .filter-form .row {
+        padding-bottom: 5px;
+        display: flex;
+        align-items: center;
     }
 </style>
 {% endblock %}

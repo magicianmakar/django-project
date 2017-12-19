@@ -21,7 +21,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django.core.signing import Signer
 from django.db import transaction
-from django.db.models import Count, Max, F
+from django.db.models import Count, Max, F, Q
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -3434,7 +3434,10 @@ def orders_track(request):
         orders = orders.exclude(source_status='FINISH')
 
     if source_reason:
-        orders = orders.filter(source_status_details=source_reason)
+        if source_reason.startswith('_'):
+            orders = orders.filter(source_status=source_reason[1:])
+        else:
+            orders = orders.filter(source_status_details=source_reason)
 
     errors_list = request.GET.getlist('errors')
     if errors_list:
@@ -3477,6 +3480,7 @@ def orders_track(request):
         'paginator': paginator,
         'current_page': page,
         'errors': errors_list,
+        'reason': source_reason,
         'page': 'orders_track',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
     })
