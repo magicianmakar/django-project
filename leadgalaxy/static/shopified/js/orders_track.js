@@ -264,6 +264,11 @@
         width: '100%'
     });
 
+    $('[name="reason"]').chosen({
+        search_contains: true,
+        width: '100%'
+    });
+
     $(".filter-form").submit(function() {
         $(this).find(":input").filter(function() {
             return ((this.name == 'tracking' && this.value === '') ||
