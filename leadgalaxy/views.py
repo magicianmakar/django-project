@@ -35,7 +35,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from analytic_events.models import RegistrationEvent
 
-from affiliations.utils import LeadDynoAffiliations
 from affiliations.tasks import create_lead_dyno_affiliation
 
 from shopified_core import permissions
