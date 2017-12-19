@@ -2981,8 +2981,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         stores = cache.get('user_statistics_{}'.format(user.id))
 
         if not stores and not data.get('cache_only'):
-            task = tasks.calculate_user_statistics.apply_async(args=[user.id], expires=60)
-            return self.api_success({'task': task.id})
+            if user.models_user.get_shopify_stores().count() > 10:
+                task = tasks.calculate_user_statistics.apply_async(args=[user.id], expires=60)
+                return self.api_success({'task': task.id})
 
         return self.api_success({'stores': stores})
 
