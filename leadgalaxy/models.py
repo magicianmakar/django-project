@@ -2141,9 +2141,13 @@ def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')
 def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
-    if instance.user.can('profit_dashboard.use'):
-        from profit_dashboard.utils import get_costs_from_track
-        get_costs_from_track(instance, commit=True)
+    try:
+        if instance.user.can('profit_dashboard.use'):
+            from profit_dashboard.utils import get_costs_from_track
+            get_costs_from_track(instance, commit=True)
+
+    except User.DoesNotExist:
+        pass
 
 
 @receiver(post_delete, sender=ShopifyOrderTrack, dispatch_uid='delete_aliexpress_fulfillment_cost')
