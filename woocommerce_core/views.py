@@ -39,7 +39,7 @@ from .utils import (
     get_tracking_products,
     get_order_line_fulfillment_status,
     woo_customer_address,
-    get_image_by_product_id
+    get_product_data,
 )
 
 
@@ -435,13 +435,14 @@ class OrdersList(ListView):
             },
         }
 
-    def get_order_data_variant(self, product, variant_id):
-        mapped = product.get_variant_mapping(
-            name=variant_id,
-            for_extension=True,
-            mapping_supplier=True)
+    def get_order_data_variant(self, product, line):
+        variant_id = line['variation_id']
+        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
 
-        return mapped if mapped and variant_id else None
+        if mapped and variant_id:
+            return mapped
+        else:
+            product_data = self.product_data.get(product.id)
 
     def update_placed_orders(self, order, item):
         item['fulfillment_status'] = get_order_line_fulfillment_status(item)
@@ -472,8 +473,12 @@ class OrdersList(ListView):
 
         return product_by_source_id
 
-    def get_image_by_product_id(self, product_ids):
-        return get_image_by_product_id(self.get_store(), product_ids)
+    def get_product_data(self, product_ids):
+        if not self.product_data:
+            store = self.get_store()
+            self.product_data = get_product_data(store, product_ids)
+
+        return self.product_data
 
     def normalize_orders(self, context):
         orders_cache = {}
@@ -482,7 +487,7 @@ class OrdersList(ListView):
         orders = context.get('orders', [])
         product_ids = self.get_product_ids(orders)
         product_by_source_id = self.get_product_by_source_id(product_ids)
-        image_by_product_id = self.get_image_by_product_id(product_ids)
+        product_data = self.get_product_data(product_ids)
 
         for order in orders:
             country_code = order['shipping'].get('country')
@@ -502,8 +507,9 @@ class OrdersList(ListView):
                 self.update_placed_orders(order, item)
                 product_id = item['product_id']
                 product = product_by_source_id.get(product_id)
+                product_data = product_data.get(product_id)
                 item['product'] = product
-                item['image'] = image_by_product_id.get(product_id)
+                item['image'] = next(iter(product_data['images']), {}).get('src')
                 variant_id = item.get('variation_id')
 
                 if product and product.has_supplier():

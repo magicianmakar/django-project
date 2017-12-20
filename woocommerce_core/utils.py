@@ -752,8 +752,8 @@ def get_order_track_product_id(store, order_id, line_id):
                 return line_item['product_id']
 
 
-def get_image_by_product_id(store, product_ids=None):
-    image_by_product_id = {}
+def get_product_data(store, product_ids=None):
+    product_data_by_product_id = {}
     page = 1
     while page:
         params = {'page': page, 'per_page': 100}
@@ -766,13 +766,12 @@ def get_image_by_product_id(store, product_ids=None):
         products = r.json()
 
         for product in products:
-            image = next(iter(product['images']), {}).get('src')
-            image_by_product_id[product['id']] = image
+            product_data_by_product_id[product['id']] = product
 
         has_next = 'rel="next"' in r.headers.get('link', '')
         page = page + 1 if has_next else 0
 
-    return image_by_product_id
+    return product_data_by_product_id
 
 
 class WooListQuery(object):
