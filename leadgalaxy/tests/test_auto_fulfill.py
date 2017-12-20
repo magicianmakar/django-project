@@ -77,6 +77,12 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
 class AutoFulfillTestCase(TestCase):
 
     def setUp(self):
+        self.parent_user = f.UserFactory()
+        self.user = f.UserFactory()
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
         self.store = ShopifyStoreFactory()
 
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.write', Mock())
@@ -89,7 +95,6 @@ class AutoFulfillTestCase(TestCase):
             store_id=self.store.id
         )
 
-        track.status_updated_at = timezone.now() - timezone.timedelta(seconds=61)
         track.save()
 
         call_command('auto_fulfill')

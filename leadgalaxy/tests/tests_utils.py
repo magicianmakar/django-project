@@ -23,6 +23,7 @@ from shopified_core.shipping_helper import (
 )
 
 import shopify_orders.tests.factories as order_factories
+from leadgalaxy.tests.factories import UserFactory
 
 import factory
 
@@ -80,6 +81,11 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
 
 class FulfillmentTestCase(TestCase):
     def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
         self.fulfillment_data = {
             'line_id': '123456',
             'order_id': '456789123',
