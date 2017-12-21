@@ -1,9 +1,13 @@
+from Queue import Queue
+from threading import Thread
+
 import simplejson as json
 import requests
 from requests.auth import HTTPBasicAuth
 
 from django.core.management.base import CommandError
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import app_link
@@ -14,6 +18,71 @@ from commercehq_core.models import CommerceHQProduct
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 PRICE_MONITOR_BASE = '{}/api'.format(settings.PRICE_MONITOR_HOSTNAME)
+
+
+def worker(q):
+    while True:
+        item = q.get()
+        attach_product(**item)
+        q.task_done()
+
+
+def attach_product(product, product_id, store_id, stdout=None):
+    """
+    product_id: Source Product ID (ex. Aliexpress ID)
+    store_id: Source Store ID (ex. Aliexpress Store ID)
+    """
+    if product.__class__.__name__ == 'ShopifyProduct':
+        dropified_type = 'shopify'
+    elif product.__class__.__name__ == 'CommerceHQProduct':
+        dropified_type = 'chq'
+
+    webhook_url = app_link('webhook/price-monitor/product', product=product.id, dropified_type=dropified_type)
+    monitor_api_url = '{}/products'.format(PRICE_MONITOR_BASE)
+
+    try:
+        product_json = json.loads(product.data)
+        post_data = {
+            'product_id': product_id,
+            'store_id': store_id,
+            'dropified_id': product.id,
+            'dropified_type': dropified_type,
+            'dropified_store': product.store_id,
+            'dropified_user': product.user_id,
+            'webhook': webhook_url,
+            'url': product.default_supplier.product_url,
+        }
+
+        # if product is variant-splitted product, pass its value.
+        if product_json.get('variants_sku') and len(product_json['variants_sku']) == 1:
+            post_data['variant_value'] = product_json['variants_sku'].values()[0]
+
+        rep = requests.post(
+            url=monitor_api_url,
+            data=post_data,
+            auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+        )
+
+    except Exception as e:
+        raven_client.captureException()
+
+        if stdout:
+            stdout.write(' * API Call error: {}'.format(repr(e)))
+
+        return
+
+    try:
+        rep.raise_for_status()
+
+        data = rep.json()
+        product.monitor_id = data['id']
+        product.save()
+    except Exception as e:
+        raven_client.captureException()
+
+        if stdout:
+            stdout.write(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
+                product.id, repr(e), rep.text))
 
 
 class Command(DropifiedBaseCommand):
@@ -44,6 +113,12 @@ class Command(DropifiedBaseCommand):
 
         if not options['permission']:
             options['permission'] = []
+
+        self.q = Queue()
+        for i in range(4):
+            t = Thread(target=worker, args=(self.q, ))
+            t.daemon = True
+            t.start()
 
         for plan_id in options['plan_id']:
             try:
@@ -94,34 +169,37 @@ class Command(DropifiedBaseCommand):
             except User.DoesNotExist:
                 raise CommandError('User "%s" does not exist' % user_id)
 
+        self.q.join()
+
     def handle_products(self, user, products, action, options):
         if options['new_products']:
-            products = products.filter(monitor_id=0)
-        if products.model.__name__ == 'ShopifyProduct':
-            products = products.exclude(shopify_id=0).exclude(store=None)
-        if products.model.__name__ == 'CommerceHQProduct':
-            products = products.exclude(source_id=0).exclude(store=None)
+            products = products.filter(Q(monitor_id=0) | Q(monitor_id=None)) \
+                               .exclude(store__is_active=False) \
+                               .exclude(store=None)
 
-        products_count = len(products)
+        if products.model.__name__ == 'ShopifyProduct':
+            products = products.exclude(shopify_id=0)
+        elif products.model.__name__ == 'CommerceHQProduct':
+            products = products.exclude(source_id=0)
+
+        if user.id in self.ignored_users:
+            self.stdout.write(u'Ignore product for user: {}'.format(user.username))
+            return
+
+        products_count = products.count()
 
         if products_count:
-            if user.id in self.ignored_users:
-                self.stdout.write(u'Ignore {} product for user: {}'.format(products_count, user.username))
-
-                products.update(monitor_id=-7)
+            if products_count > 1000:
+                self.stdout.write(u'Too many products ({}) for user: {}'.format(products_count, user.username))
                 return
 
             self.stdout.write(u'{} webhooks to {} product for user: {}'.format(
                 action.title(), products_count, user.username), self.style.HTTP_INFO)
 
-            count = 0
-
             for product in products:
                 self.handle_product(product, action)
-                count += 1
 
-                if (count % 100 == 0):
-                    self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
+        self.q.join()
 
     def handle_product(self, product, action):
         if product.monitor_id:
@@ -152,53 +230,9 @@ class Command(DropifiedBaseCommand):
             product.save()
             return
 
-        self.attach_product(product, product_id, store_id)
-
-    def attach_product(self, product, product_id, store_id):
-        """
-        product_id: Source Product ID (ex. Aliexpress ID)
-        store_id: Source Store ID (ex. Aliexpress Store ID)
-        """
-        if product.__class__.__name__ == 'ShopifyProduct':
-            dropified_type = 'shopify'
-        if product.__class__.__name__ == 'CommerceHQProduct':
-            dropified_type = 'chq'
-        webhook_url = app_link('webhook/price-monitor/product', product=product.id, dropified_type=dropified_type)
-        monitor_api_url = '{}/products'.format(PRICE_MONITOR_BASE)
-
-        try:
-            product_json = json.loads(product.data)
-            post_data = {
-                'product_id': product_id,
-                'store_id': store_id,
-                'dropified_id': product.id,
-                'dropified_type': dropified_type,
-                'dropified_store': product.store_id,
-                'dropified_user': product.user_id,
-                'webhook': webhook_url,
-                'url': product.default_supplier.product_url,
-            }
-            # if product is variant-splitted product, pass its value.
-            if product_json.get('variants_sku') and len(product_json['variants_sku']) == 1:
-                post_data['variant_value'] = product_json['variants_sku'].values()[0]
-            rep = requests.post(
-                url=monitor_api_url,
-                data=post_data,
-                auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
-            )
-        except Exception as e:
-            raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * API Call error: {}'.format(repr(e))))
-            return
-
-        try:
-            assert rep.status_code == 200 or rep.status_code == 201, 'API Status Code'
-            data = rep.json()
-            product.monitor_id = data['id']
-            product.save()
-        except Exception as e:
-            raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
-                product.id, repr(e), rep.text)))
-
-            return
+        self.q.put({
+            'product': product,
+            'product_id': product_id,
+            'store_id': store_id,
+            'stdout': self.stdout,
+        })
