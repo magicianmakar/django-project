@@ -68,10 +68,10 @@ def load_uk_provincess():
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'uk_provinces.csv')
     lines = open(data_file).readlines()
     for l in lines:
-        l = [j.strip() for j in l.split(',')]
-        if len(l) == 2:
-            city = l[0].lower()
-            province = l[1]
+        parts = [j.strip() for j in l.split(',')]
+        if len(parts) == 2:
+            city = parts[0].lower()
+            province = parts[1]
             if city not in uk_provinces and province.lower() in ALIEXPRESS_UK_PROVINCES:
                 uk_provinces[city] = province
 

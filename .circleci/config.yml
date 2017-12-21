@@ -1,0 +1,109 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/ShopifiedApp/webapp
+    docker:
+      - image: circleci/python:2.7
+        environment:
+          DEBUG_APP: "TRUE"
+
+          DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
+          DATA_STORE_DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/store_test
+
+          REDISCLOUD_URL: redis://localhost:6379
+          REDISCLOUD_CACHE: redis://localhost:6379
+          REDISCLOUD_ORDERS: redis://localhost:6379
+
+          AWS_ACCESS_KEY_ID: AKIAIVNSP7PF5CR4UC7Q
+          AWS_SECRET_ACCESS_KEY: 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
+
+          S3_CUSTOM_DOMAIN: d1ohstt056kdjc.cloudfront.net
+          S3_BUCKET_NAME: shopifiedapp-assets-dev-789552
+          S3_PRODUCT_FEED_BUCKET: shopifiedapp-feeds-dev-789552
+          S3_UPLOADS_BUCKET: shopifiedapp-uploads-dev-789552
+
+          SHOPIFY_API_KEY: f136ffe9efd969c70ad04f31de4a59de
+          SHOPIFY_API_SECRET: e22d8748c0507ad996ef80691a4054a0
+
+          PUSHER_APP_ID: 255355
+          PUSHER_KEY: 446d8151fc6d4157e2cc
+          PUSHER_SECRET: 4e7022fac49cdb27bcdb
+          PUSHER_SOCKET_URL: ws://ws.pusherapp.com/app/446d8151fc6d4157e2cc
+          PUSHER_URL: http://446d8151fc6d4157e2cc:4e7022fac49cdb27bcdb@api.pusherapp.com/apps/255355
+
+          SENDGRID_PASSWORD: ""
+          SENDGRID_USERNAME: ""
+
+          STRIPE_PUBLIC_KEY: ""
+          STRIPE_SECRET_KEY: ""
+
+          JVZOO_SECRET: ""
+
+      - image: circleci/postgres:9.5
+        environment:
+          POSTGRES_USER: ubuntu
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: ""
+
+      - image: redis:3.2.7
+
+    steps:
+      - checkout
+      - run:
+          name: Install System Dependencies
+          command: |
+              source ./scripts/prepare_build.sh
+
+      - run: 
+          name: Intall NodeJS
+          command: |
+              sudo apt install npm
+              sudo ln -s /usr/bin/nodejs /usr/bin/node
+
+      - run: 
+          name: Static Code Checks
+          command: |
+              flake8 --show-source
+    
+      # Restore the dependency cache
+      - restore_cache:
+          keys:
+          # This branch if available
+          - v1-dep-{{ .Branch }}-
+          # Default branch if not
+          - v1-dep-master-
+          # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+          - v1-dep-
+        
+      - run:
+          name: Install Python Dependencies
+          command: |
+              source venv/bin/activate
+              pip install -r requirements.txt
+              npm install
+
+      - run: 
+          name: Set up test
+          command: |
+              sudo ln -s ~/ShopifiedApp/webapp/node_modules/.bin/yuglify /usr/bin/yuglify
+
+      # Save dependency cache
+      - save_cache:
+          key: v1-dep-{{ .Branch }}-{{ epoch }}
+          paths:
+          - app/static/libs/bower_components
+          - venv
+
+      - run: 
+          name: Django Tests
+          command: |
+            source venv/bin/activate
+            ./scripts/common_issues.sh
+            python manage.py test
+
+      - run:
+          name: Static Files
+          command: |
+            source venv/bin/activate
+            python manage.py collectstatic --noinput --traceback 2>&1 | sed '/^Post-processed/d;/^Copying/d;/^$/d'
+            DEBUG_APP="FALSE" python manage.py compress

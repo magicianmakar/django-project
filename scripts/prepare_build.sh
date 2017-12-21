@@ -31,5 +31,5 @@ if [ ! -d "venv" ]; then
     virtualenv venv
 fi
 
-pip install -U pip
-pip install flake8
+sudo pip install -U pip
+sudo pip install flake8
