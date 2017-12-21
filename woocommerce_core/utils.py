@@ -742,7 +742,7 @@ def get_order_track_product_id(store, order_id, line_id):
     order_key = 'woo_order_{}_{}_{}'.format(store.id, order_id, line_id)
     order = order_data_cache(order_key)
     if order:
-        return order['product_id']
+        return order['product_source_id']
 
     r = store.wcapi.get('orders/{}'.format(order_id))
     if r.ok:

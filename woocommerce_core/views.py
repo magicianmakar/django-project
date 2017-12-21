@@ -420,6 +420,7 @@ class OrdersList(ListView):
             'order_id': order['id'],
             'line_id': item['id'],
             'product_id': product.id,
+            'product_source_id': product.source_id,
             'source_id': supplier.get_source_id(),
             'total': safeFloat(item['price'], 0.0),
             'store': store.id,

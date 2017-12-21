@@ -784,14 +784,12 @@ class WooStoreApi(ApiResponseMixin, View):
 
         order_id = safeInt(data.get('order_id'))
         line_id = safeInt(data.get('line_id'))
-        product_id = safeInt(data.get('product_id'))
-        source_id = data.get('aliexpress_order_id')
 
         if not (order_id and line_id):
             return self.api_error('Required input is missing')
 
-        if not product_id:
-            product_id = utils.get_order_track_product_id(store, order_id, line_id)
+        product_id = utils.get_order_track_product_id(store, order_id, line_id)
+        source_id = data.get('aliexpress_order_id')
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
