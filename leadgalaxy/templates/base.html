@@ -94,7 +94,7 @@
                     <div class="dropdown profile-element">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
-                             </span> <span class="text-muted text-xs block profile-options">Options <b class="caret"></b></span> </span> </a>
+                             </span> <span class="text-muted text-xs block profile-options">Manage Account <b class="caret"></b></span> </span> </a>
                             <ul class="dropdown-menu m-t-xs">
                                 {% if user.is_superuser %}
                                 <li><a href="{% url 'admin:index' %}">Admin Panel</a></li>
@@ -102,8 +102,10 @@
                                 {% endif %}
 
                                 {% if user.is_authenticated %}
-                                <li><a href="{% url 'user_profile' %}" class="user-profile">Profile</a></li>
-                                <li><a href="{% url 'leadgalaxy.views.logout' %}">Logout</a></li>
+                                <li><a href="{% url 'user_profile' %}#plan" class="user-profile">Manage Plans/Credits</a></li>
+                                <li><a href="{% url 'user_profile' %}" class="user-profile">Manage Profile</a></li>
+                                <li><a href="{% url 'user_profile' %}#billing" class="user-profile">Manage Billing</a></li>
+                                <li><a href="{% url 'user_profile' %}#invoices" class="user-profile">View Invoices</a></li>
                                 {% endif %}
                             </ul>
                     </div>
