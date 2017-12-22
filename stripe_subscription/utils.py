@@ -502,8 +502,18 @@ def process_webhook_event(request, event_id, raven_client):
 
                 customer = update_customer(user, stripe_customer)[0]
 
+                profile = user.profile
+                if profile.subuser_parent:
+                    profile.subuser_parent = None
+                    profile.subuser_stores.clear()
+                    profile.subuser_chq_stores.clear()
+                    profile.save()
+
                 plan = GroupPlan.objects.get(id=31)
-                user.profile.change_plan(plan)
+                profile.change_plan(plan)
+
+                if plan.is_stripe():
+                    profile.apply_subscription(plan)
 
                 user.set_config('_stripe_lifetime', plan.id)
 
