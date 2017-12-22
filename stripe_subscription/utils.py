@@ -343,14 +343,13 @@ def process_webhook_event(request, event_id, raven_client):
 
                 user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
 
-                if created:
-                    customer = update_customer(user, stripe_customer)[0]
+                if not created:
+                    StripeCustomer.objects.filter(user=user).delete()
 
-                    if sub.plan.metadata.get('lifetime'):
-                        user.set_config('_stripe_lifetime', sub.plan.id)
-                else:
-                    raven_client.captureException()
-                    return HttpResponse('Cloud Not Register User')
+                customer = update_customer(user, stripe_customer)[0]
+
+                if sub.plan.metadata.get('lifetime'):
+                    user.set_config('_stripe_lifetime', sub.plan.id)
             else:
                 raven_client.captureException(level='warning')
                 return HttpResponse('Customer Not Found')
