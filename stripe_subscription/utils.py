@@ -343,13 +343,14 @@ def process_webhook_event(request, event_id, raven_client):
 
                 user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
 
-                if not created:
-                    StripeCustomer.objects.filter(user=user).delete()
+                if created:
+                    customer = update_customer(user, stripe_customer)[0]
 
-                customer = update_customer(user, stripe_customer)[0]
-
-                if sub.plan.metadata.get('lifetime'):
-                    user.set_config('_stripe_lifetime', sub.plan.id)
+                    if sub.plan.metadata.get('lifetime'):
+                        user.set_config('_stripe_lifetime', sub.plan.id)
+                else:
+                    raven_client.captureException()
+                    return HttpResponse('Cloud Not Register User')
             else:
                 raven_client.captureException(level='warning')
                 return HttpResponse('Customer Not Found')
@@ -481,7 +482,7 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
         except User.DoesNotExist:
-            if charge.description and 'Dropified Unlimited' in charge.description and 'ECOM Jam' in charge.description:
+            if charge.description and 'Unlimited' in charge.description and ('ECOM Jam' in charge.description or '$997' in charge.description):
                 stripe_customer = stripe.Customer.retrieve(charge.customer)
 
                 fullname = ''
@@ -496,23 +497,22 @@ def process_webhook_event(request, event_id, raven_client):
 
                 user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
 
-                if created:
-                    customer = update_customer(user, stripe_customer)[0]
+                if not created:
+                    StripeCustomer.objects.filter(user=user).delete()
 
-                    plan = GroupPlan.objects.get(id=31)
-                    user.profile.change_plan(plan)
+                customer = update_customer(user, stripe_customer)[0]
 
-                    user.set_config('_stripe_lifetime', plan.id)
+                plan = GroupPlan.objects.get(id=31)
+                user.profile.change_plan(plan)
 
-                    SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
-                        'charge': charge.to_dict(),
-                        'count': 1
-                    }))
+                user.set_config('_stripe_lifetime', plan.id)
 
-                    return HttpResponse('New Registration to {}'.format(plan.title))
-                else:
-                    raven_client.captureException()
-                    return HttpResponse('Cloud Not Register User')
+                SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
+                    'charge': charge.to_dict(),
+                    'count': 1
+                }))
+
+                return HttpResponse('New Registration to {}'.format(plan.title))
 
             return HttpResponse('User Not Found')
 
