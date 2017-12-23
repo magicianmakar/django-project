@@ -436,13 +436,21 @@ class OrdersList(ListView):
         }
 
     def get_order_data_variant(self, product, line):
-        variant_id = line['variation_id']
-        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
-
-        if mapped and variant_id:
+        mapped = product.get_variant_mapping(name=line['variation_id'],
+                                             for_extension=True,
+                                             mapping_supplier=True)
+        if mapped:
             return mapped
-        else:
-            product_data = self.product_data.get(product.id)
+
+        data = self.product_data.get(product.source_id)
+        options = []
+        for attribute in data['attributes']:
+            options += attribute['options']
+
+        metas = line.get('meta_data', [])
+        variant = [{'title': meta['value']} for meta in metas if meta['value'] in options]
+
+        return variant
 
     def update_placed_orders(self, order, item):
         item['fulfillment_status'] = get_order_line_fulfillment_status(item)
@@ -474,7 +482,7 @@ class OrdersList(ListView):
         return product_by_source_id
 
     def get_product_data(self, product_ids):
-        if not self.product_data:
+        if not hasattr(self, 'product_data'):
             store = self.get_store()
             self.product_data = get_product_data(store, product_ids)
 
@@ -507,15 +515,15 @@ class OrdersList(ListView):
                 self.update_placed_orders(order, item)
                 product_id = item['product_id']
                 product = product_by_source_id.get(product_id)
-                product_data = product_data.get(product_id)
+                data = product_data.get(product_id)
                 item['product'] = product
-                item['image'] = next(iter(product_data['images']), {}).get('src')
+                item['image'] = next(iter(data['images']), {}).get('src')
                 variant_id = item.get('variation_id')
 
                 if product and product.has_supplier():
                     supplier = self.get_product_supplier(product, variant_id)
                     order_data = self.get_order_data(order, item, product, supplier)
-                    order_data['variant'] = self.get_order_data_variant(product, variant_id)
+                    order_data['variant'] = self.get_order_data_variant(product, item)
                     order_data_id = order_data['id']
                     orders_cache['woo_order_{}'.format(order_data_id)] = order_data
                     item['order_data_id'] = order_data_id
