@@ -78,6 +78,10 @@ def hash_text(text):
     return hashlib.md5(text).hexdigest()
 
 
+def hash_list(data, sep=''):
+    return hash_text(sep.join(data))
+
+
 def random_hash():
     token = get_random_string(32)
     return hashlib.md5(token).hexdigest()

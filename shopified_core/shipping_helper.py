@@ -1,9 +1,16 @@
 import os
 import simplejson as json
+import requests
+
 from collections import OrderedDict
+from unidecode import unidecode
 
 from django.conf import settings
+from django.core.cache import cache
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
+from shopified_core.utils import hash_list
 
 uk_provinces = None
 aliexpress_countries = None
@@ -58,6 +65,13 @@ ALIEXPRESS_UK_COUNTRIES = {
 }
 
 
+def clean_name(name):
+    name = u'{}'.format(name.replace(u'-', u' ').lower().strip())
+    name = unidecode(name)
+
+    return name
+
+
 def load_uk_provincess():
     global uk_provinces
 
@@ -105,6 +119,84 @@ def get_uk_province(city, default=''):
         province = 'Other'
 
     return province
+
+
+def get_fr_city_info(city, zip_code=None):
+    params = {
+        'fields': 'nom,code,codesPostaux,codeDepartement,departement,codeRegion,region,population',
+    }
+
+    if city and city not in ['ville', 'villers', 'eu']:
+        params['nom'] = city
+
+        res = requests.get(url='https://geo.api.gouv.fr/communes', params=params)
+        res.raise_for_status()
+
+        res = res.json()
+        if len(res) == 1 and res[0].get('_score', 0) >= 0.8:
+            # Good City match
+            return res.pop()
+
+        for i in res:
+            # Find by Zip Code (ex: Courtomer city)
+            if zip_code and zip_code in i['codesPostaux']:
+                return i
+
+    if zip_code:
+        params['codePostal'] = zip_code
+
+        if 'nom' in params:
+            del params['nom']
+
+        res = requests.get(url='https://geo.api.gouv.fr/communes', params=params)
+        res.raise_for_status()
+
+        zip_code_matchs = []
+        for i in res.json():
+            if zip_code and zip_code in i['codesPostaux']:
+                zip_code_matchs.append(i)
+
+        if len(zip_code_matchs) == 1:
+            # Some zip code have more than one city, return only when one match is found
+            return zip_code_matchs.pop()
+        else:
+            raven_client.captureMessage('[FR Address] Too many Zip Matchs',
+                                        extra={'zip_code': zip_code, 'city': city, 'match_count': len(zip_code_matchs)})
+
+    raven_client.captureMessage('[FR Address] No Match Found',
+                                extra={'zip_code': zip_code, 'city': city})
+
+
+def fix_fr_address(shipping_address):
+    city = clean_name(shipping_address['city'])
+    zip_code = shipping_address['zip'].rjust(5, '0')
+
+    cache_key = 'fr_city_{}'.format(hash_list(city, zip_code))
+    info = cache.get(cache_key)
+    if info is None:
+        info = get_fr_city_info(city, zip_code)
+
+    if info:
+        shipping_address['province'] = info['region']['nom']
+        shipping_address['city'] = info['departement']['nom']
+
+        if clean_name(info['nom']) != clean_name(info['departement']['nom']):
+            # Add City to address2 field
+            if not shipping_address['address2'].strip():
+                shipping_address['address2'] = info['nom']
+            else:
+                shipping_address['address2'] = u'{}, {}'.format(shipping_address['address2'].strip(), info['nom'])
+
+        for i in ['province', 'city', 'address2']:
+            if type(shipping_address[i]) is unicode:
+                shipping_address[i] = unidecode(shipping_address[i])
+
+        info['city'] = city
+        info['zip_code'] = zip_code
+
+        cache.set(cache_key, info, timeout=86400)
+
+    return shipping_address
 
 
 def valide_aliexpress_province(country, province, city):

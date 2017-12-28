@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import os
 
 from django.conf import settings
 from django.test import TestCase
-from mock import Mock
+from mock import patch, Mock
+import requests_mock
+
+from django.conf import settings
 from collections import OrderedDict
 from django.core.cache import cache, caches
 from django.contrib.auth.models import User
@@ -18,7 +22,8 @@ from shopified_core.utils import (
 
 from shopified_core.shipping_helper import (
     country_from_code,
-    get_counrties_list
+    get_counrties_list,
+    fix_fr_address,
 )
 
 
@@ -266,9 +271,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(username, 'user')
 
 
-class ShippingHelperTestCase(TestCase):
-    def setUp(self):
-        pass
+class ShippingHelperFunctionsTestCase(TestCase):
 
     def test_get_country_from_code(self):
         counrties = {
@@ -290,3 +293,124 @@ class ShippingHelperTestCase(TestCase):
 
         for i, c in enumerate(counrties.items()):
             self.assertEqual(counrties_list[i][0], c[0])
+
+
+class FranceAddressFixTestCase(TestCase):
+    def setUp(self):
+        cache.delete_pattern('fr_city_*')
+
+    def get_address(self, **kwargs):
+        shipping_address = {
+            "province": "Paris",
+            "city": "Paris",
+            "zip": "75019",
+
+            "address1": "Allee Anne-de-Beaujeu N365",
+            "address2": "",
+
+            "first_name": "Anna",
+            "last_name": "Smith",
+            "name": "Anna Smith",
+            "province_code": None,
+            "phone": "85549863",
+            "country_code": "FR",
+            "country": "France",
+            "company": ""
+        }
+
+        shipping_address.update(kwargs)
+        return shipping_address
+
+    def get_file_content(self, name):
+        return open(os.path.join(settings.BASE_DIR, 'shopified_core/tests/data', name)).read().decode('utf8')
+
+    # @requests_mock.Mocker()
+    def test_fix_fr_address(self):
+        # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data1.json'))
+
+        shipping_address = self.get_address(
+            province="Paris",
+            city="Paris",
+            zip="75019",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Ile-de-France')
+        self.assertEqual(fixed_address['city'], 'Paris')
+        self.assertEqual(fixed_address['address2'], '')
+
+    def test_fix_fr_address_zip_match(self):
+
+        shipping_address = self.get_address(
+            province="Bourgogne",
+            city="nice",
+            zip="6300",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Provence-Alpes-Cote d\'Azur')
+        self.assertEqual(fixed_address['city'], 'Alpes-Maritimes')
+        self.assertEqual(fixed_address['address2'], 'Nice')
+
+    def test_fix_fr_address_paris_arrondissement(self):
+        shipping_address = self.get_address(
+            province="Paris",
+            city="Paris-11E-Arrondissement",
+            zip="75011",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Ile-de-France')
+        self.assertEqual(fixed_address['city'], 'Paris')
+        self.assertEqual(fixed_address['address2'], '')
+
+    def test_fix_fr_address_zip_code_in_city_name(self):
+
+        shipping_address = self.get_address(
+            province="Hauts",
+            city="59400 - CAMBRAI",
+            zip="59400",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Hauts-de-France')
+        self.assertEqual(fixed_address['city'], 'Nord')
+        self.assertEqual(fixed_address['address2'], 'Cambrai')
+
+    # @requests_mock.Mocker()
+    def test_fix_fr_address_multi_occurence(self):
+        # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data2.json'))
+        shipping_address = self.get_address(
+            province="",
+            city="courtomer",
+            zip="77390",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Ile-de-France')
+        self.assertEqual(fixed_address['city'], 'Seine-et-Marne')
+        self.assertEqual(fixed_address['address2'], 'Courtomer')
+
+    # @requests_mock.Mocker()
+    def test_fix_fr_address_short_common_names(self):
+        # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data3.json'))
+
+        shipping_address = self.get_address(
+            province="",
+            city="Fontaine",
+            zip="71150",
+            address1="Allee Anne-de-Beaujeu N365",
+            address2="5eme Etage N55",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Bourgogne-Franche-Comte')
+        self.assertEqual(fixed_address['city'], 'Saone-et-Loire')
+        self.assertEqual(fixed_address['address1'], 'Allee Anne-de-Beaujeu N365')
+        self.assertEqual(fixed_address['address2'], '5eme Etage N55, Fontaines')

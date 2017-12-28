@@ -26,7 +26,7 @@ from affiliations.utils import LeadDynoAffiliation
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.shipping_helper import get_counrties_list
+from shopified_core.shipping_helper import get_counrties_list, fix_fr_address
 from shopified_core.utils import (
     app_link,
     send_email_from_template,
@@ -1670,6 +1670,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
+
+            if order['shipping_address']['country_code'] == 'FR' and user.models_user.get_config('fix_aliexpress_address'):
+                order['shipping_address'] = fix_fr_address(order['shipping_address'])
 
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', True)
