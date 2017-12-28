@@ -414,3 +414,37 @@ class FranceAddressFixTestCase(TestCase):
         self.assertEqual(fixed_address['city'], 'Saone-et-Loire')
         self.assertEqual(fixed_address['address1'], 'Allee Anne-de-Beaujeu N365')
         self.assertEqual(fixed_address['address2'], '5eme Etage N55, Fontaines')
+
+    def test_fix_fr_address_same_zip_and_region(self):
+
+        shipping_address = self.get_address(
+            province="",
+            city="Villeneuve d'Ornon",
+            zip="33140",
+            address1="40 rue de Fontenelle",
+            address2="Res les 4 platanes Bat E 54",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Nouvelle-Aquitaine')
+        self.assertEqual(fixed_address['city'], 'Gironde')
+        self.assertEqual(fixed_address['address1'], '40 rue de Fontenelle')
+        self.assertEqual(fixed_address['address2'], 'Res les 4 platanes Bat E 54, Villeneuve d\'Ornon')
+
+    def test_fix_fr_address_same_zip_and_region2(self):
+
+        shipping_address = self.get_address(
+            province="",
+            city="st cricq",
+            zip="32430",
+            address1="40 rue de Fontenelle",
+            address2="",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Occitanie')
+        self.assertEqual(fixed_address['city'], 'Gers')
+        self.assertEqual(fixed_address['address1'], '40 rue de Fontenelle')
+        self.assertEqual(fixed_address['address2'], 'st cricq')

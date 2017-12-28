@@ -121,7 +121,7 @@ def get_uk_province(city, default=''):
     return province
 
 
-def get_fr_city_info(city, zip_code=None):
+def get_fr_city_info(city, zip_code=None, orig_city=None):
     params = {
         'fields': 'nom,code,codesPostaux,codeDepartement,departement,codeRegion,region,population',
     }
@@ -159,6 +159,10 @@ def get_fr_city_info(city, zip_code=None):
         if len(zip_code_matchs) == 1:
             # Some zip code have more than one city, return only when one match is found
             return zip_code_matchs.pop()
+        elif len(set(map(lambda m: m['codeRegion'], zip_code_matchs))) == 1:
+            match = zip_code_matchs.pop()
+            match['nom'] = orig_city or city
+            return match
         else:
             raven_client.captureMessage('[FR Address] Too many Zip Matchs',
                                         extra={'zip_code': zip_code, 'city': city, 'match_count': len(zip_code_matchs)})
@@ -174,7 +178,7 @@ def fix_fr_address(shipping_address):
     cache_key = 'fr_city_{}'.format(hash_list(city, zip_code))
     info = cache.get(cache_key)
     if info is None:
-        info = get_fr_city_info(city, zip_code)
+        info = get_fr_city_info(city, zip_code, orig_city=shipping_address['city'])
 
     if info:
         shipping_address['province'] = info['region']['nom']

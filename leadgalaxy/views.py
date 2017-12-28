@@ -2885,7 +2885,6 @@ def orders_view(request):
             countdown = 1
             for order in _update_page:
                 if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
-                    print 'Update:', order['id']
                     tasks.update_shopify_order.apply_async(
                         args=[store.id, order['id']],
                         kwarg={'shopify_order': order, 'from_webhook': False},
