@@ -513,7 +513,7 @@ def process_webhook_event(request, event_id, raven_client):
                     profile.subuser_chq_stores.clear()
                     profile.save()
 
-                plan = GroupPlan.objects.get(id=31)
+                plan = GroupPlan.objects.get(id=request.POST.get('plan', 31))
                 profile.change_plan(plan)
 
                 if plan.is_stripe():
