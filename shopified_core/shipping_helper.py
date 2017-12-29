@@ -200,8 +200,6 @@ def fix_fr_address(shipping_address):
 
         cache.set(cache_key, info, timeout=86400)
 
-        print 'FRMATCH:', city, '|', zip_code, '|', shipping_address['city'], '|', shipping_address['province']
-
     return shipping_address
 
 
