@@ -33,7 +33,7 @@ class StripeCustomer(models.Model):
 
     user = models.OneToOneField(User, related_name='stripe_customer')
 
-    customer_id = models.CharField(max_length=255, null=True, editable=False, verbose_name='Stripe Customer ID')
+    customer_id = models.CharField(max_length=255, null=True, verbose_name='Stripe Customer ID')
     can_trial = models.BooleanField(default=True, verbose_name='Can have trial')
     data = models.TextField(null=True, blank=True)
 
