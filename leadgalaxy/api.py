@@ -1671,8 +1671,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
 
-            if order['shipping_address']['country_code'] == 'FR' and user.models_user.get_config('fix_aliexpress_address'):
-                order['shipping_address'] = fix_fr_address(order['shipping_address'])
+            if user.models_user.get_config('_fr_address_fix'):
+                if order['shipping_address']['country_code'] == 'FR':
+                    order['shipping_address'] = fix_fr_address(order['shipping_address'])
 
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', True)

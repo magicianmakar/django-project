@@ -1110,7 +1110,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False):
 
     if customer_address['country_code'] == 'FR':
         if customer_address.get('zip'):
-            customer_address['zip'] = re.sub(r'[^0-9]', '', customer_address['zip']).strip().rjust(5, '0')
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(5, '0')
 
     if customer_address['country_code'] == 'CA':
         if customer_address.get('zip'):
