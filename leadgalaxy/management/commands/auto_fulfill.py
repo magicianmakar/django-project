@@ -33,12 +33,12 @@ class Command(DropifiedBaseCommand):
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
 
-        orders = ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled') \
+        orders = ShopifyOrderTrack.objects.filter(shopify_status='') \
                                           .exclude(source_tracking='') \
-                                          .exclude(hidden=True) \
+                                          .filter(hidden=False) \
                                           .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                           .filter(store__is_active=True) \
-                                          .filter(store__auto_fulfill__in=['hourly', 'daily', 'enable']) \
+                                          .filter(store__auto_fulfill='enable') \
                                           .defer('data') \
                                           .order_by('created_at')
 

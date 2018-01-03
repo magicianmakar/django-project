@@ -1,6 +1,7 @@
 from shopified_core.management import DropifiedBaseCommand
 from django.utils import timezone
 
+import arrow
 import requests
 import time
 from simplejson import JSONDecodeError
@@ -16,10 +17,6 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--threshold', dest='threshold', action='store', type=int, default=60,
-            help='Fulfill orders updated before threshold (seconds)')
-
-        parser.add_argument(
             '--store', dest='store', action='store', type=int,
             help='Fulfill orders for the given store')
 
@@ -32,16 +29,14 @@ class Command(DropifiedBaseCommand):
             help='Maximum task uptime (minutes)')
 
     def start_command(self, *args, **options):
-        threshold = options.get('threshold')
         fulfill_store = options.get('store')
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
 
-        time_threshold = timezone.now() - timezone.timedelta(seconds=threshold)
         orders = WooOrderTrack.objects.exclude(woocommerce_status='fulfilled') \
                                       .exclude(source_tracking='') \
-                                      .exclude(hidden=True) \
-                                      .filter(status_updated_at__lt=time_threshold) \
+                                      .filter(hidden=False) \
+                                      .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                       .filter(store__is_active=True) \
                                       .defer('data') \
                                       .order_by('-id')
@@ -54,7 +49,6 @@ class Command(DropifiedBaseCommand):
         self.write('Auto Fulfill {}/{} WOO Orders'.format(fulfill_max, len(orders)), self.style.HTTP_INFO)
         self.store_countdown = {}
         self.start_at = timezone.now()
-        self.fulfill_threshold = timezone.now() - timezone.timedelta(seconds=threshold * 60)
 
         counter = {'fulfilled': 0, 'need_fulfill': 0}
 
