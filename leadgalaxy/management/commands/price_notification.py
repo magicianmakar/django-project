@@ -1,3 +1,6 @@
+from Queue import Queue
+from threading import Thread
+
 from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 
@@ -13,6 +16,57 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 ALI_WEB_API_BASE = 'http://ali-web-api.herokuapp.com/api'
 
 
+def worker(q):
+    while True:
+        item = q.get()
+        attach_product(**item)
+        q.task_done()
+
+
+def attach_product(product, product_id, store_id, stdout=None):
+    """
+    product: ShopifyProduct model instance
+    product_id: Source Product ID (ex. Aliexpress ID)
+    store_id: Source Store ID (ex. Aliexpress Store ID)
+    """
+
+    webhook_url = app_link('webhook/price-notification/product', product=product.id)
+    notification_api_url = '{}/product/add'.format(ALI_WEB_API_BASE)
+
+    try:
+        product_json = json.loads(product.data)
+        post_data = {
+            'product_id': product_id,
+            'store_id': store_id,
+            'webhook': webhook_url,
+            'user_id': product.user_id,
+        }
+        # if product is variant-splitted product, pass its value.
+        if product_json.get('variants_sku') and len(product_json['variants_sku']) == 1:
+            post_data['variant_value'] = product_json['variants_sku'].values()[0]
+        rep = requests.post(
+            url=notification_api_url,
+            data=post_data
+        )
+    except Exception as e:
+        raven_client.captureException()
+        self.stdout.write(self.style.ERROR(' * API Call error: {}'.format(repr(e))))
+        return
+
+    try:
+        assert rep.status_code == 200, 'API Status Code'
+        data = rep.json()
+
+        assert data.get('status') == 'ok', 'API Reutrn OK'
+
+        product.price_notification_id = data['id']
+        product.save()
+    except Exception as e:
+        raven_client.captureException()
+        self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
+            product.id, repr(e), rep.text)))
+
+
 class Command(DropifiedBaseCommand):
     help = 'Attach Shopify Webhooks to a specific Plan'
 
@@ -22,6 +76,7 @@ class Command(DropifiedBaseCommand):
 
         parser.add_argument('--new', dest='new_products', action='store_true', help='Only New Products')
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
+        parser.add_argument('--exclude-plan', dest='exclude_plan_id', action='append', type=int, help='Plan ID')
         parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
 
@@ -33,11 +88,20 @@ class Command(DropifiedBaseCommand):
         if not options['plan_id']:
             options['plan_id'] = []
 
+        if not options['exclude_plan_id']:
+            options['exclude_plan_id'] = []
+
         if not options['user_id']:
             options['user_id'] = []
 
         if not options['permission']:
             options['permission'] = []
+
+        self.q = Queue()
+        for i in range(4):
+            t = Thread(target=worker, args=(self.q, ))
+            t.daemon = True
+            t.start()
 
         for plan_id in options['plan_id']:
             try:
@@ -54,6 +118,10 @@ class Command(DropifiedBaseCommand):
         for permission in options['permission']:
             for p in AppPermission.objects.filter(name=permission):
                 for plan in p.groupplan_set.all():
+                    if plan.id in options['exclude_plan_id']:
+                        self.stdout.write('* Ignore Plan: {}'.format(plan.title))
+                        continue
+
                     self.stdout.write(self.style.MIGRATE_SUCCESS(
                         '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
 
@@ -75,6 +143,8 @@ class Command(DropifiedBaseCommand):
             except ShopifyStore.DoesNotExist:
                 raise CommandError('User "%s" does not exist' % user_id)
 
+        self.q.join()
+
     def handle_products(self, user, products, action, options):
         if options['new_products']:
             products = products.filter(price_notification_id=0)
@@ -95,14 +165,10 @@ class Command(DropifiedBaseCommand):
             self.stdout.write(u'{} webhooks to {} product for user: {}'.format(
                 action.title(), products_count, user.username), self.style.HTTP_INFO)
 
-            count = 0
-
             for product in products:
                 self.handle_product(product, action)
-                count += 1
 
-                if (count % 100 == 0):
-                    self.stdout.write(self.style.HTTP_INFO('Progress: %d' % count))
+        self.q.join()
 
     def handle_product(self, product, action):
         if product.price_notification_id:
@@ -133,48 +199,9 @@ class Command(DropifiedBaseCommand):
             product.save()
             return
 
-        self.attach_product(product, product_id, store_id)
-
-    def attach_product(self, product, product_id, store_id):
-        """
-        product_id: Source Product ID (ex. Aliexpress ID)
-        store_id: Source Store ID (ex. Aliexpress Store ID)
-        """
-
-        webhook_url = app_link('webhook/price-notification/product', product=product.id)
-        notification_api_url = '{}/product/add'.format(ALI_WEB_API_BASE)
-
-        try:
-            product_json = json.loads(product.data)
-            post_data = {
-                'product_id': product_id,
-                'store_id': store_id,
-                'webhook': webhook_url,
-                'user_id': product.user_id,
-            }
-            # if product is variant-splitted product, pass its value.
-            if product_json.get('variants_sku') and len(product_json['variants_sku']) == 1:
-                post_data['variant_value'] = product_json['variants_sku'].values()[0]
-            rep = requests.post(
-                url=notification_api_url,
-                data=post_data
-            )
-        except Exception as e:
-            raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * API Call error: {}'.format(repr(e))))
-            return
-
-        try:
-            assert rep.status_code == 200, 'API Status Code'
-            data = rep.json()
-
-            assert data.get('status') == 'ok', 'API Reutrn OK'
-
-            product.price_notification_id = data['id']
-            product.save()
-        except Exception as e:
-            raven_client.captureException()
-            self.stdout.write(self.style.ERROR(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
-                product.id, repr(e), rep.text)))
-
-            return
+        self.q.put({
+            'product': product,
+            'product_id': product_id,
+            'store_id': store_id,
+            'stdout': self.stdout,
+        })
