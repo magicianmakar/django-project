@@ -2177,7 +2177,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_id = data.get('order_id')
         line_id = data.get('line_id')
 
-        tracks = ShopifyOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
+        tracks = ShopifyOrderTrack.objects.filter(store=user.get_shopify_stores(flat=True), order_id=order_id, line_id=line_id)
         deleted_ids = []
 
         if len(tracks):
