@@ -43,7 +43,7 @@ from shopified_core.utils import (
     extension_hash_text
 )
 
-from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province
+from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -1054,7 +1054,7 @@ def fix_order_variants(store, order, product):
                     set_real_variant(product, line['variant_id'], match['id'])
 
 
-def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False):
+def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False):
     if 'shipping_address' not in order \
             and order.get('customer') and order.get('customer').get('default_address'):
         order['shipping_address'] = order['customer'].get('default_address')
@@ -1134,15 +1134,25 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False):
 
     if aliexpress_fix:
         if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
-            customer_address['province'] = 'Other'
+            if support_other_in_province(customer_address['country']):
+                customer_address['province'] = 'Other'
 
-            if customer_address['country'] == 'United Kingdom' and customer_address['city']:
-                province = get_uk_province(customer_address['city'])
-                if province:
-                    customer_address['province'] = province
+                if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+                    province = get_uk_province(customer_address['city'])
+                    if province:
+                        customer_address['province'] = province
 
-            if customer_province and customer_address['province'] == 'Other':
-                customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
+                if customer_province and customer_address['province'] == 'Other':
+                    customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
+
+            elif fix_aliexpress_city:
+                city = customer_address['city'].strip().strip(',')
+                customer_address['city'] = 'Other'
+
+                if not customer_address['address2'].strip():
+                    customer_address['address2'] = u'{},'.format(city)
+                else:
+                    customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
 
     return order, customer_address
 

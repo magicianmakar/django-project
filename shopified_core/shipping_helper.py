@@ -72,6 +72,40 @@ def clean_name(name):
     return name
 
 
+def normalize_country_code(country):
+    country_code = None
+    country = country.lower().strip() if country else ''
+
+    if country in ['uk', 'gb', 'united kingdom']:
+        country_code = 'uk'
+
+    elif country in ['es', 'spain']:
+        country_code = 'es'
+
+    elif country in ['au', 'australia']:
+        country_code = 'au'
+
+    elif country in ['nl', 'netherlands']:
+        country_code = 'nl'
+
+    elif country in ['cl', 'chile']:
+        country_code = 'cl'
+
+    elif country in ['ua', 'ukraine']:
+        country_code = 'ua'
+
+    elif country in ['nz', 'new zealand']:
+        country_code = 'nz'
+
+    elif country in ['us', 'united states']:
+        country_code = 'us'
+
+    elif country in ['ca', 'canada']:
+        country_code = 'ca'
+
+    return country_code
+
+
 def load_uk_provincess():
     global uk_provinces
 
@@ -208,37 +242,35 @@ def valide_aliexpress_province(country, province, city):
     province = province.lower().strip() if province else ''
     city = city.lower().strip() if city else ''
 
-    country_code = None
-    if country in ['uk', 'gb', 'united kingdom']:
-        country_code = 'uk'
-
-    elif country in ['es', 'spain']:
-        country_code = 'es'
-
-    elif country in ['au', 'australia']:
-        country_code = 'au'
-
-    elif country in ['nl', 'netherlands']:
-        country_code = 'nl'
-
-    elif country in ['cl', 'chile']:
-        country_code = 'cl'
-
-    elif country in ['ua', 'ukraine']:
-        country_code = 'ua'
-
-    elif country in ['nz', 'new zealand']:
-        country_code = 'nz'
+    country_code = normalize_country_code(country)
 
     if country_code:
         aliexpress_countries = load_aliexpress_countries()
 
         if aliexpress_countries.get(country_code):
-            return aliexpress_countries.get(country_code).get(province) and \
+            return province in aliexpress_countries.get(country_code) and \
                 (city in aliexpress_countries.get(country_code).get(province) or
                     len(aliexpress_countries.get(country_code).get(province)) == 0)
 
     return True
+
+
+def support_other_in_province(country):
+    """ Return True if the coutry have "Other" option in Aliexpress Province Dropfown
+
+
+    Args:
+        country: country code or name
+    """
+
+    country_code = normalize_country_code(country)
+    if country_code:
+        aliexpress_countries = load_aliexpress_countries()
+
+        if aliexpress_countries.get(country_code):
+            return "other" in aliexpress_countries.get(country_code)
+
+    return False
 
 
 def load_countries():
