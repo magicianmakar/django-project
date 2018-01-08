@@ -6,7 +6,6 @@ from django.test import TestCase
 from mock import patch, Mock
 import requests_mock
 
-from django.conf import settings
 from collections import OrderedDict
 from django.core.cache import cache, caches
 from django.contrib.auth.models import User
@@ -24,6 +23,7 @@ from shopified_core.shipping_helper import (
     country_from_code,
     get_counrties_list,
     fix_fr_address,
+    aliexpress_country_code_map,
 )
 
 
@@ -293,6 +293,12 @@ class ShippingHelperFunctionsTestCase(TestCase):
 
         for i, c in enumerate(counrties.items()):
             self.assertEqual(counrties_list[i][0], c[0])
+
+    def test_aliexpress_country_code_map(self):
+        self.assertEqual(aliexpress_country_code_map('UK'), 'UK')
+        self.assertEqual(aliexpress_country_code_map('GB'), 'UK')
+        self.assertEqual(aliexpress_country_code_map('ME'), 'MNE')
+        self.assertEqual(aliexpress_country_code_map('US'), 'US')
 
 
 class FranceAddressFixTestCase(TestCase):

@@ -39,7 +39,7 @@ from affiliations.tasks import create_lead_dyno_affiliation
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
-from shopified_core.shipping_helper import get_counrties_list, country_from_code
+from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.tasks import fulfill_shopify_order_line
 from dropwow_core.models import DropwowOrderStatus
@@ -1531,16 +1531,10 @@ def get_shipping_info(request):
     supplier = request.GET.get('supplier')
 
     country = request.GET.get('country', request.user.get_config('_shipping_country', 'US'))
+    country_code = aliexpress_country_code_map(country)
 
     if request.GET.get('selected'):
         request.user.set_config('_shipping_country', country)
-
-    if country == 'GB':
-        country_code = 'UK'
-    elif country == 'ME':
-        country_code = 'MNE'
-    else:
-        country_code = country
 
     if not aliexpress_id and supplier:
         if request.GET.get('chq'):

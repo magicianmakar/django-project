@@ -273,6 +273,24 @@ def support_other_in_province(country):
     return False
 
 
+def aliexpress_country_code_map(country_code):
+    maps = {
+        'GB': 'UK',
+        'AX': 'ALA',
+        'CG': 'CG',
+        'CD': 'CG',
+        'JE': 'JEY',
+        'KV': 'KS',
+        'ME': 'MNE',
+        'RS': 'SRB',
+        'GS': 'SGS',
+        'GG': 'GGY',
+        'BL': 'BLM'
+    }
+
+    return maps.get(country_code, country_code)
+
+
 def load_countries():
     global countries_code
 
