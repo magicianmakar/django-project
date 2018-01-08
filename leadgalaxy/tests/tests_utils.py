@@ -20,6 +20,7 @@ from product_alerts.events import ProductChangeEvent
 from shopified_core.shipping_helper import (
      get_uk_province,
      valide_aliexpress_province,
+     support_other_in_province,
 )
 
 import shopify_orders.tests.factories as order_factories
@@ -850,6 +851,30 @@ class CustomerAddressTestCase(TestCase):
 
 
 class ShippingHelperTestCase(TestCase):
+    def get_order(self, **kwargs):
+        shipping_address = {
+            "country_code": "US",
+            "country": "United States",
+
+            "province": "Alaska",
+            "city": "Akiak",
+            "zip": "75019",
+
+            "address1": "Allee Anne-de-Beaujeu N365",
+            "address2": "",
+
+            "first_name": "Anna",
+            "last_name": "Smith",
+            "name": "Anna Smith",
+            "province_code": None,  # Not used
+            "phone": "85549863",
+            "company": ""
+        }
+
+        shipping_address.update(kwargs)
+
+        return {'shipping_address': shipping_address}
+
     def test_uk_validate_address(self):
         self.assertTrue(valide_aliexpress_province('uk', 'england', 'Kent'))
         self.assertFalse(valide_aliexpress_province('uk', 'england', 'NotFound'))
@@ -859,3 +884,116 @@ class ShippingHelperTestCase(TestCase):
     def test_uk_fix_address(self):
         self.assertEqual(get_uk_province('Kent'), 'england')
         self.assertEqual(get_uk_province('Avon'), 'Other')
+
+    def test_support_other_in_province(self):
+        self.assertTrue(support_other_in_province('United Kingdom'))
+        self.assertTrue(support_other_in_province('uk'))
+        self.assertFalse(support_other_in_province('United States'))
+        self.assertFalse(support_other_in_province('US'))
+
+        for country in ['gb', 'es', 'spain', 'au', 'australia', 'nl', 'netherlands', 'cl', 'chile', 'ua', 'ukraine', 'nz', 'new zealand']:
+            self.assertTrue(support_other_in_province(country))
+
+    def test_shopify_customer_address(self):
+        order = self.get_order()
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Alaska')
+        self.assertEqual(customer_address['city'], 'Akiak')
+        self.assertEqual(customer_address['address2'], '')
+
+    def test_shopify_customer_address_minor_changes_to_match_aliexpress(self):
+        order = self.get_order(province='Washington DC', city="malo")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Washington')
+        self.assertEqual(customer_address['city'], 'malo')
+        self.assertEqual(customer_address['address2'], '')
+
+    def test_shopify_address_name_title(self):
+        order = self.get_order(name="john smith")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['name'], 'John Smith')
+
+    def test_shopify_address_name_and_company(self):
+        order = self.get_order(name="john smith", company='TDM LLC')
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['name'], 'John Smith - TDM LLC')
+
+    def test_shopify_address_canada(self):
+        order = self.get_order(
+            country='Canada', country_code='CA', province='Newfoundland', city="Stephenville", zip='ACF855')
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Newfoundland and Labrador')
+        self.assertEqual(customer_address['city'], 'Stephenville')
+        self.assertEqual(customer_address['zip'], 'ACF855')
+
+    def test_shopify_address_canada_unmatch(self):
+        order = self.get_order(
+            country='Canada', country_code='CA', province='Newfoundland', city="Not Found", zip='acf 855 ')
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Newfoundland and Labrador')
+        self.assertEqual(customer_address['city'], 'Not Found')
+        self.assertEqual(customer_address['zip'], 'ACF855')
+
+    def test_shopify_address_spain(self):
+        order = self.get_order(country='SPAIN', country_code='ES', province='Madrid', city="Batres")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Madrid')
+        self.assertEqual(customer_address['city'], 'Batres')
+
+    def test_shopify_address_spain_unmatch(self):
+        order = self.get_order(country='Spain', country_code='ES', province='Madrid', city="Not Found")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Other')
+        self.assertEqual(customer_address['city'], 'Not Found, Madrid')
+
+    def test_shopify_address_uk(self):
+        order = self.get_order(country='United Kingdom', country_code='UK', province='England', city="North Yorkshire", zip="WC1B3DG")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'England')
+        self.assertEqual(customer_address['city'], 'North Yorkshire')
+        self.assertEqual(customer_address['zip'], 'WC1B 3DG')
+
+    def test_shopify_address_uk_unmatch(self):
+        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='England', city="Not Found")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Other')
+        self.assertEqual(customer_address['city'], 'Not Found, England')
+
+        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Xngland', city="North Yorkshire")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Other')
+        self.assertEqual(customer_address['city'], 'North Yorkshire, Xngland')
+
+    def test_shopify_customer_us(self):
+        order = self.get_order(province='Alabama', city='alexander city')
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Alabama')
+        self.assertEqual(customer_address['city'], 'alexander city')
+        self.assertEqual(customer_address['address2'], '')
+
+    def test_shopify_customer_us_unmatch(self):
+        order = self.get_order(province='Alabama', city='alexand city')
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Alabama')
+        self.assertEqual(customer_address['city'], 'Other')
+        self.assertEqual(customer_address['address2'], 'alexand city,')
+
+        order = self.get_order(province='Texas', city='Yants', address2='2nd Apt. N 555,  ')
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Texas')
+        self.assertEqual(customer_address['city'], 'Other')
+        self.assertEqual(customer_address['address2'], '2nd Apt. N 555, Yants,')

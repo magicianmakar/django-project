@@ -279,6 +279,14 @@ $('#auto_shopify_fulfill').change(function (e) {
     }
 });
 
+$('#fix_aliexpress_address').change(function (e) {
+    if(!e.target.checked) {
+        $('#fix_aliexpress_city').parents('.option-config-row').hide();
+    } else {
+        $('#fix_aliexpress_city').parents('.option-config-row').show();
+    }
+});
+
 $('.verify-api-url').click(function (e) {
     e.preventDefault();
 
