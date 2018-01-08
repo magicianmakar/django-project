@@ -219,17 +219,14 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         # Shopify
         fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at', 'updated_at']
-        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
+        order_tracks = ShopifyOrderTrack.objects.filter(store__in=list(user.profile.get_shopify_stores(flat=True))) \
                                                 .filter(created_at__gte=since) \
                                                 .filter(source_tracking='') \
-                                                .exclude(shopify_status='fulfilled') \
+                                                .filter(shopify_status='') \
                                                 .exclude(source_status='FINISH') \
                                                 .filter(hidden=False) \
                                                 .only(*fields) \
                                                 .order_by('created_at')
-
-        if user.is_subuser:
-            order_tracks = order_tracks.filter(store__in=user.profile.get_shopify_stores(flat=True))
 
         if data.get('store'):
             order_tracks = order_tracks.filter(store=data.get('store'))
@@ -250,16 +247,13 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         # CommerceHQ
         fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at']
-        order_tracks = CommerceHQOrderTrack.objects.filter(user=user.models_user) \
+        order_tracks = CommerceHQOrderTrack.objects.filter(store__in=list(user.profile.get_chq_stores(flat=True))) \
                                                    .filter(created_at__gte=since) \
                                                    .filter(source_tracking='') \
                                                    .exclude(source_status='FINISH') \
                                                    .filter(hidden=False) \
                                                    .defer('data') \
                                                    .order_by('created_at')
-
-        if user.is_subuser:
-            order_tracks = order_tracks.filter(store__in=user.profile.get_chq_stores(flat=True))
 
         if data.get('store'):
             order_tracks = order_tracks.filter(store=data.get('store'))

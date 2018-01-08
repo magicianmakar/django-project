@@ -2979,6 +2979,10 @@ def orders_view(request):
 
         if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
             sort_desc = '-' if sort_type == 'true' else ''
+
+            if sort_field == 'created_at':
+                sort_field = 'order_id'
+
             orders = orders.order_by(sort_desc + sort_field)
 
         paginator = SimplePaginator(orders, post_per_page)

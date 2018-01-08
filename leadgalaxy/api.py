@@ -1894,7 +1894,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if unfulfilled_only:
             order_tracks = order_tracks.filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                        .filter(source_tracking='') \
-                                       .exclude(shopify_status='fulfilled') \
+                                       .filter(shopify_status='') \
                                        .exclude(source_status='FINISH')
 
         order_tracks = order_tracks.filter(hidden=False) \

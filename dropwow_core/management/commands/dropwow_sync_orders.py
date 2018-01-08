@@ -16,7 +16,7 @@ class Command(DropifiedBaseCommand):
         tracks = ShopifyOrderTrack.objects.filter(source_type='dropwow') \
             .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
             .filter(Q(source_tracking='') | Q(source_tracking='0')) \
-            .exclude(shopify_status='fulfilled') \
+            .filter(shopify_status='') \
             .exclude(source_status__in=['D', 'I']) \
             .exclude(Q(source_id=None) | Q(source_id=''))
 
