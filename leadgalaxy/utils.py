@@ -35,6 +35,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import (
+    safeStr,
     app_link,
     save_user_ip,
     unique_username,
@@ -1149,7 +1150,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
                 city = customer_address['city'].strip().strip(',')
                 customer_address['city'] = 'Other'
 
-                if not customer_address['address2'].strip():
+                if not safeStr(customer_address['address2']).strip():
                     customer_address['address2'] = u'{},'.format(city)
                 else:
                     customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
