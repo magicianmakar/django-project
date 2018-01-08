@@ -522,7 +522,7 @@
                                 <div class="form-group">
                                     <label for="fix_aliexpress_city" class="col-sm-4 col-xs-8 control-label">
                                         Fix Aliexpress Address City Selection issues
-                                        {% include 'partial/help_tooltip.html' with help="Add City to Second Address Line when city could not be matched (for US address only)" qtipstyle="color:#BBB" %}
+                                        {% include 'partial/help_tooltip.html' with help="If the U.S. City the user entered is not found in the AliExpress dropdown, the app will select “Other” from the dropdown and add the City name to second address input.<br><br>This option is only a workaround the AliExpress limitation. <b>Please enable it only if you understand the behavior and it works for you. We do not recommend or guarantee your packages will be delivered because of this.</b>" qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="fix_aliexpress_city"
