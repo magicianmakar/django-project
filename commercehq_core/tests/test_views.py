@@ -75,10 +75,10 @@ class StoreCreateTestCase(TestCase):
         self.subuser.profile.save()
 
         self.data = {
-            'title': 'Test Store',
-            'api_url': 'https://chq-shopified-dev.commercehqdev.com/admin',
-            'api_key': 'uVlgBcvwRtP2GvIkp6HbxDNA-PJ9c3Z7',
-            'api_password': '7zg_g6yr1L4SEY50X2Ur_J57G0O6RhyM'}
+            'title': 'Dropified Test App',
+            'api_url': 'http://chq-shopified-test.commercehqtesting.com/admin',
+            'api_key': 'gsycAdWxbv56CAQFNWVkN53sLxnzcSEF',
+            'api_password': 'euld-IWsmA1SkT5dved51decAcrXoz6n'}
 
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         self.path = '/api/chq/store-add'
@@ -106,7 +106,7 @@ class StoreCreateTestCase(TestCase):
     def test_add_store_wrong_api_url(self):
         self.login()
 
-        self.data['api_url'] = 'https://chq-shopified-dev.commerce.com/admin'
+        self.data['api_url'] = 'https://chq-shopified-test.commerce.com/admin'
 
         r = self.client.post(self.path, self.data, **self.headers)
         rep = json.loads(r.content)

@@ -27,9 +27,9 @@ from ..utils import (
 )
 
 
-CHQ_API_URL = 'chq-shopified-dev.commercehqdev.com'
-CHQ_API_KEY = 'i7_-EFt8qb8MPb4ey0nTQ2BRT88DjSaH'
-CHQ_API_PASSWORD = 'UVJJqis5sWxSLxoEXOuAM672n2d66xfs'
+CHQ_API_URL = 'chq-shopified-test.commercehqtesting.com'
+CHQ_API_KEY = 'gsycAdWxbv56CAQFNWVkN53sLxnzcSEF'
+CHQ_API_PASSWORD = 'euld-IWsmA1SkT5dved51decAcrXoz6n'
 
 
 class GetShippingCarrierTestCase(TestCase):

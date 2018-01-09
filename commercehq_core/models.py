@@ -79,7 +79,7 @@ class CommerceHQStore(models.Model):
         :param api: Return the API version of the url if true, otherwise return Admin url
         """
 
-        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', self.api_url).pop()
+        url = re.findall(r'([^/.]+\.commercehq(?:dev|testing)?\.com)', self.api_url).pop()
 
         args = '/'.join([str(i) for i in args]).lstrip('/')
         if kwargs.get('api', True):
@@ -97,7 +97,7 @@ class CommerceHQStore(models.Model):
         return self.get_api_url(*args, api=False)
 
     def get_store_url(self, *args):
-        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', self.api_url).pop()
+        url = re.findall(r'([^/.]+\.commercehq(?:dev|testing)?\.com)', self.api_url).pop()
         if len(args):
             url = url + '/' + '/'.join([str(i) for i in args]).lstrip('/')
 

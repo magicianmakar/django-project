@@ -664,7 +664,7 @@ class CHQStoreApi(ApiResponseMixin, View):
     def post_store_add(self, request, user, data):
         url = data.get('api_url').strip()
 
-        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', url)
+        url = re.findall(r'([^/.]+\.commercehq(?:dev|testing)?\.com)', url)
 
         if len(url):
             url = url.pop()
