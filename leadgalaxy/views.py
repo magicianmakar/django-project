@@ -3923,6 +3923,8 @@ def register(request, registration=None, subscribe_plan=None):
             if subscribe_plan:
                 if not try_plan and not subscribe_plan.is_free:
                     return HttpResponseRedirect("/user/profile?auto={}#billing".format(subscribe_plan.id))
+                elif try_plan and not subscribe_plan.is_free:
+                    return HttpResponseRedirect("/user/profile?try={}#plan".format(subscribe_plan.id))
 
             return HttpResponseRedirect("/")
 
