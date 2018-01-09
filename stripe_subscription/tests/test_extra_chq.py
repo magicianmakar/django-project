@@ -12,7 +12,7 @@ from leadgalaxy.models import GroupPlan, User, ShopifyStore
 from commercehq_core.models import CommerceHQStore
 
 
-CHQ_API_URL = 'chq-shopified-dev.commercehqdev.com'
+CHQ_API_URL = 'chq-shopified-test.commercehqtesting.com'
 CHQ_API_KEY = ''
 CHQ_API_PASSWORD = ''
 

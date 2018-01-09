@@ -26,7 +26,7 @@ $(document).ready(function() {
     });
 
     $('#store-create-form').on('submit', function(e) {
-        var url = $('#store_api_url').val().match(/[^\/\.]+\.commercehq(?:dev)?\.com/);
+        var url = $('#store_api_url').val().match(/[^\/\.]+\.commercehq(?:dev|testing)?\.com/);
 
         if (!url || url.length != 1) {
             swal('Add Store', 'API URL is not correct!', 'error');

@@ -15,7 +15,7 @@ class CommerceHQStoreForm(ModelForm):
 
     def clean_api_url(self):
         url = self.cleaned_data['api_url']
-        url = re.findall(r'([^/.]+\.commercehq(?:dev)?\.com)', url)
+        url = re.findall(r'([^/.]+\.commercehq(?:dev|testing)?\.com)', url)
 
         if not len(url):
             raise forms.ValidationError('Only CommerceHQ stores can be added.')
