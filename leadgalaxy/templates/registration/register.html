@@ -47,6 +47,10 @@
                     {{registration.get_description}}
                 {% elif subscribe_plan %}
                     Subscribe to <b>{{subscribe_plan.get_description}}</b><br/>
+
+                    {% if reg_coupon %}
+                    <br/><b>{{reg_coupon|safe}}</b><br/>
+                    {% endif %}
                 {% else %}
                     Create account to see it in action.
                 {% endif %}

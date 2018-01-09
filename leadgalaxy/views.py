@@ -3942,10 +3942,20 @@ def register(request, registration=None, subscribe_plan=None):
     if registration and registration.email:
         form.fields['email'].widget.attrs['readonly'] = True
 
+    reg_coupon = request.GET.get('cp')
+    if reg_coupon:
+        try:
+            reg_coupon = Signer().unsign(base64.decodestring(reg_coupon))
+            reg_coupon = stripe.Coupon.retrieve(reg_coupon)
+            reg_coupon = reg_coupon.metadata.msg
+        except:
+            reg_coupon = '<b style=color:red>Coupon Not Found!</b>'
+
     return render(request, "registration/register.html", {
         'form': form,
         'registration': registration,
-        'subscribe_plan': subscribe_plan
+        'subscribe_plan': subscribe_plan,
+        'reg_coupon': reg_coupon,
     })
 
 
