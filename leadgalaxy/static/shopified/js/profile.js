@@ -36,11 +36,6 @@ $(function () {
         };
     }
 
-    if (getQueryVariable('try')) {
-        window.skipPlanSelectConfirmation = true;
-        $('[data-plan="' + getQueryVariable('try') + '"] button').trigger('click');
-    }
-
     $('#company_country').chosen({
         search_contains: true,
         width: '250px'
