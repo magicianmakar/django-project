@@ -198,32 +198,12 @@
 },
 {
   "fields": {
-    "shop": null,
-    "list_index": 0,
-    "api_url": "https://:a24c99b29c641b580274db5212357ac4@shopified-app-nin.myshopify.com",
-    "title": "Shopified App - Nin",
-    "access_token": null,
-    "created_at": "2017-08-20T22:11:41.685Z",
-    "is_active": true,
-    "updated_at": "2017-09-04T22:11:41.685Z",
-    "store_hash": "d18e736818efdcedbdd4bf1821473112",
-    "version": 2,
-    "user": [
-      "admin"
-    ],
-    "scope": null
-  },
-  "model": "leadgalaxy.shopifystore",
-  "pk": 2
-},
-{
-  "fields": {
     "shipping_map": "",
     "shopify_export": 1,
     "product_type": "",
     "default_supplier": 5,
     "title": "Cajerin Polyester Men Clothing Suits Tailor Blazer Blue Suit (Jacket+Pants+Vest) Slim Fit Wedding Groom Tuxedos For Custom Made",
-    "shopify_id": 28457435139,
+    "shopify_id": 123958558725,
     "user": [
       "admin"
     ],
@@ -235,7 +215,7 @@
     "created_at": "2017-05-21T18:01:26.806Z",
     "data": "{\"variants_sku\": {\"Blue\": \"14:173\", \"XL\": \"5:100014065\", \"M\": \"5:361386\", \"L\": \"5:361385\", \"XXXL\": \"5:4183\", \"S\": \"5:100014064\", \"XS\": \"5:100014066\", \"XXL\": \"5:4182\"}, \"store\": {\"url\": \"//www.aliexpress.com/store/3101104\", \"contact\": \"//message.aliexpress.com/message/new.htm?productId=32828532636&messageType=product&memberType=seller&refer=//www.aliexpress.com/item/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom/32828532636.html\", \"id\": \"3101104\", \"name\": \"cajerin Official Store\"}, \"vendor\": \"cajerin Official Store\", \"description\": \"\", \"weight\": 1800.76, \"original_url\": \"https://www.aliexpress.com/item/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom/32828532636.html\", \"type\": \"Tailor-made Suits\", \"price\": 155.25, \"tags\": \"\", \"collections\": [], \"compare_at_price\": 175.25, \"published\": false, \"images\": [\"https://cdn.shopify.com/s/files/1/1951/9151/products/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom.jpg?v=1511366684\", \"https://cdn.shopify.com/s/files/1/1951/9151/products/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom_4e655f41-2506-4bd2-902a-33cb0b9c6c0c.jpg?v=1511366684\", \"https://cdn.shopify.com/s/files/1/1951/9151/products/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom_93b47a18-bb57-4c11-9916-f978f97218e2.jpg?v=1511366684\", \"https://cdn.shopify.com/s/files/1/1951/9151/products/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom_48cd9dd5-7b36-4054-b563-7979a013dff7.jpg?v=1511366684\", \"https://cdn.shopify.com/s/files/1/1951/9151/products/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom_84f3ee4a-d906-46ca-b34e-8cfbea4ef8aa.jpg?v=1511366684\", \"https://cdn.shopify.com/s/files/1/1951/9151/products/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom_1d41fd05-d4c1-4c0e-b615-9f736ffb1f5d.jpg?v=1511366684\", \"https://cdn.shopify.com/s/files/1/1951/9151/products/v-2073722__853950443.jpg?v=1511366684\"], \"title\": \"Cajerin Polyester Men Clothing Suits Tailor Blazer Blue Suit (Jacket+Pants+Vest) Slim Fit Wedding Groom Tuxedos For Custom Made\", \"variants\": [{\"values\": [\"XS\", \"S\", \"M\", \"L\", \"XL\", \"XXL\", \"XXXL\"], \"title\": \"Size\"}], \"variants_images\": {\"853950443.jpg\": \"Blue\"}, \"price_range\": null, \"weight_unit\": \"g\", \"boards\": null}",
     "notes": "",
-    "store": 2,
+    "store": 1,
     "supplier_map": ""
   },
   "model": "leadgalaxy.shopifyproduct",
@@ -252,7 +232,7 @@
     "product_url": "https://www.aliexpress.com/item/Cajerin-Polyester-Men-Clothing-Suits-Tailor-Blazer-Blue-Suit-Jacket-Pants-Vest-Slim-Fit-Wedding-Groom/32828532636.html",
     "variants_map": "{\"265919660035\": [{\"title\": \"XS\"}], \"265919725571\": [{\"title\": \"M\"}], \"265919692803\": [{\"title\": \"S\"}], \"265919823875\": [{\"title\": \"XXL\"}], \"265919856643\": [{\"title\": \"XXXL\"}], \"265919758339\": [{\"title\": \"L\"}], \"265919791107\": [{\"title\": \"XL\"}]}",
     "supplier_name": "cajerin Official Store",
-    "store": 2
+    "store": 1
   },
   "model": "leadgalaxy.productsupplier",
   "pk": 5
@@ -264,7 +244,7 @@
     "product_type": "",
     "default_supplier": 6,
     "title": "DINISITON designer belts men high quality genuine leather belt man fashion strap male cowhide belts for men jeans cow leather",
-    "shopify_id": 31527272451,
+    "shopify_id": 123945320453,
     "user": [
       "admin"
     ],
@@ -276,7 +256,7 @@
     "created_at": "2017-05-21T18:01:26.806Z",
     "data": "{\"vendor\": \"DINISITON Official Store\", \"description\": \"\", \"weight\": 299.37, \"tags\": \"\", \"price\": 9.82, \"compare_at_price\": 18.18, \"images\": [\"https://ae01.alicdn.com/kf/HTB17jjUPXXXXXcqXVXXq6xXFXXX6/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg\", \"https://ae01.alicdn.com/kf/HTB1sWZdPXXXXXXjXpXXq6xXFXXXo/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg\", \"https://ae01.alicdn.com/kf/HTB1ay2WPXXXXXaFXVXXq6xXFXXXG/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg\", \"https://ae01.alicdn.com/kf/HTB1JPTIPXXXXXa8aXXXq6xXFXXX8/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg\", \"https://ae01.alicdn.com/kf/HTB11lTAPXXXXXXXaFXXq6xXFXXX8/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg\", \"https://ae01.alicdn.com/kf/HTB1zC3aPXXXXXbmXpXXq6xXFXXX2/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg\", \"https://ae01.alicdn.com/kf/HTB1ObDzPXXXXXbVaFXXq6xXFXXXy/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg_640x640.jpg\", \"https://ae01.alicdn.com/kf/HTB12Bf1PXXXXXXmXVXXq6xXFXXXh/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg_640x640.jpg\", \"https://ae01.alicdn.com/kf/HTB1kFTNPXXXXXa2aXXXq6xXFXXXt/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg_640x640.jpg\", \"https://ae01.alicdn.com/kf/HTB1a62KPXXXXXc9aXXXq6xXFXXXZ/DINISITON-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for.jpg_640x640.jpg\"], \"variants\": [{\"values\": [\"RB black\", \"RB coffe\", \"RG black\", \"RG coffe\"], \"title\": \"Color\"}, {\"values\": [\"100cm\", \"105cm\", \"110cm\", \"115cm\", \"120cm\", \"125cm\", \"130cm\"], \"title\": \"Belt Length\"}], \"variants_sku\": {\"RG black\": \"14:175\", \"120cm\": \"200000858:200006543\", \"125cm\": \"200000858:201447588\", \"RB black\": \"14:29\", \"115cm\": \"200000858:201447587\", \"RB coffe\": \"14:193\", \"110cm\": \"200000858:201447586\", \"105cm\": \"200000858:201447585\", \"100cm\": \"200000858:100014128\", \"130cm\": \"200000858:201447589\", \"RG coffe\": \"14:200004889\"}, \"original_url\": \"https://www.aliexpress.com/item/SWORDFISH-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for/32750070496.html\", \"type\": \"Belts & Cummerbunds\", \"title\": \"DINISITON designer belts men high quality genuine leather belt man fashion strap male cowhide belts for men jeans cow leather\", \"weight_unit\": \"g\", \"published\": false, \"variants_images\": {\"1816471834.jpg\": \"RG black\", \"-1652404638.jpg\": \"RG coffe\", \"820446205.jpg\": \"RB coffe\", \"-676298598.jpg\": \"RB black\"}, \"store\": {\"url\": \"//www.aliexpress.com/store/2339384\", \"contact\": \"//message.aliexpress.com/message/new.htm?productId=32750070496&messageType=product&memberType=seller&refer=//www.aliexpress.com/item/SWORDFISH-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for/32750070496.html\", \"id\": \"2339384\", \"name\": \"DINISITON Official Store\"}}",
     "notes": "",
-    "store": 2,
+    "store": 1,
     "supplier_map": ""
   },
   "model": "leadgalaxy.shopifyproduct",
@@ -291,9 +271,9 @@
     "updated_at": "2016-09-09T22:44:07.920Z",
     "supplier_url": "http://www.aliexpress.com/store/2339384",
     "product_url": "https://www.aliexpress.com/item/SWORDFISH-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for/32750070496.html",
-    "variants_map": "{\"277214789635\": [{\"title\": \"RB black\"}, {\"title\": \"120cm\"}], \"277214953475\": [{\"title\": \"RB coffe\"}, {\"title\": \"125cm\"}], \"277214461955\": [{\"title\": \"RG black\"}, {\"title\": \"105cm\"}], \"277214429187\": [{\"title\": \"RB coffe\"}, {\"title\": \"105cm\"}], \"277214265347\": [{\"title\": \"RB black\"}, {\"title\": \"100cm\"}], \"277214822403\": [{\"title\": \"RB coffe\"}, {\"title\": \"120cm\"}], \"277214593027\": [{\"title\": \"RG black\"}, {\"title\": \"110cm\"}], \"277214691331\": [{\"title\": \"RB coffe\"}, {\"title\": \"115cm\"}], \"277214560259\": [{\"title\": \"RB coffe\"}, {\"title\": \"110cm\"}], \"277215084547\": [{\"title\": \"RB coffe\"}, {\"title\": \"130cm\"}], \"277214658563\": [{\"title\": \"RB black\"}, {\"title\": \"115cm\"}], \"277214298115\": [{\"title\": \"RB coffe\"}, {\"title\": \"100cm\"}], \"277215117315\": [{\"title\": \"RG black\"}, {\"title\": \"130cm\"}], \"277214363651\": [{\"title\": \"RG coffe\"}, {\"title\": \"100cm\"}], \"277214855171\": [{\"title\": \"RG black\"}, {\"title\": \"120cm\"}], \"277214625795\": [{\"title\": \"RG coffe\"}, {\"title\": \"110cm\"}], \"277215019011\": [{\"title\": \"RG coffe\"}, {\"title\": \"125cm\"}], \"277214527491\": [{\"title\": \"RB black\"}, {\"title\": \"110cm\"}], \"277214494723\": [{\"title\": \"RG coffe\"}, {\"title\": \"105cm\"}], \"277214920707\": [{\"title\": \"RB black\"}, {\"title\": \"125cm\"}], \"277214330883\": [{\"title\": \"RG black\"}, {\"title\": \"100cm\"}], \"277215051779\": [{\"title\": \"RB black\"}, {\"title\": \"130cm\"}], \"277214756867\": [{\"title\": \"RG coffe\"}, {\"title\": \"115cm\"}], \"277214986243\": [{\"title\": \"RG black\"}, {\"title\": \"125cm\"}], \"277215150083\": [{\"title\": \"RG coffe\"}, {\"title\": \"130cm\"}], \"277214396419\": [{\"title\": \"RB black\"}, {\"title\": \"105cm\"}], \"277214724099\": [{\"title\": \"RG black\"}, {\"title\": \"115cm\"}], \"277214887939\": [{\"title\": \"RG coffe\"}, {\"title\": \"120cm\"}]}",
+    "variants_map": "{\"1238763307013\": [{\"title\": \"RB black\"}, {\"title\": \"120cm\"}], \"1238763470853\": [{\"title\": \"RB coffe\"}, {\"title\": \"125cm\"}], \"1238762913797\": [{\"title\": \"RG black\"}, {\"title\": \"105cm\"}], \"1238762946565\": [{\"title\": \"RB coffe\"}, {\"title\": \"105cm\"}], \"1238762782725\": [{\"title\": \"RB black\"}, {\"title\": \"100cm\"}], \"1238763405317\": [{\"title\": \"RB coffe\"}, {\"title\": \"120cm\"}], \"1238763044869\": [{\"title\": \"RG black\"}, {\"title\": \"110cm\"}], \"1238763208709\": [{\"title\": \"RB coffe\"}, {\"title\": \"115cm\"}], \"1238763077637\": [{\"title\": \"RB coffe\"}, {\"title\": \"110cm\"}], \"1238763601925\": [{\"title\": \"RB coffe\"}, {\"title\": \"130cm\"}], \"1238763175941\": [{\"title\": \"RB black\"}, {\"title\": \"115cm\"}], \"1238762815493\": [{\"title\": \"RB coffe\"}, {\"title\": \"100cm\"}], \"277215117315\": [{\"title\": \"RG black\"}, {\"title\": \"130cm\"}], \"277214363651\": [{\"title\": \"RG coffe\"}, {\"title\": \"100cm\"}], \"277214855171\": [{\"title\": \"RG black\"}, {\"title\": \"120cm\"}], \"277214625795\": [{\"title\": \"RG coffe\"}, {\"title\": \"110cm\"}], \"277215019011\": [{\"title\": \"RG coffe\"}, {\"title\": \"125cm\"}], \"277214527491\": [{\"title\": \"RB black\"}, {\"title\": \"110cm\"}], \"277214494723\": [{\"title\": \"RG coffe\"}, {\"title\": \"105cm\"}], \"277214920707\": [{\"title\": \"RB black\"}, {\"title\": \"125cm\"}], \"277214330883\": [{\"title\": \"RG black\"}, {\"title\": \"100cm\"}], \"277215051779\": [{\"title\": \"RB black\"}, {\"title\": \"130cm\"}], \"277214756867\": [{\"title\": \"RG coffe\"}, {\"title\": \"115cm\"}], \"277214986243\": [{\"title\": \"RG black\"}, {\"title\": \"125cm\"}], \"277215150083\": [{\"title\": \"RG coffe\"}, {\"title\": \"130cm\"}], \"277214396419\": [{\"title\": \"RB black\"}, {\"title\": \"105cm\"}], \"277214724099\": [{\"title\": \"RG black\"}, {\"title\": \"115cm\"}], \"277214887939\": [{\"title\": \"RG coffe\"}, {\"title\": \"120cm\"}]}",
     "supplier_name": "DINISITON Official Store",
-    "store": 2
+    "store": 1
   },
   "model": "leadgalaxy.productsupplier",
   "pk": 6
