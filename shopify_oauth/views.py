@@ -185,8 +185,6 @@ def install(request, store):
                         'contact support</a> to learn how to connect more stores'.format(plans_url))
 
                 return HttpResponseRedirect('/')
-    else:
-        print 'Not Logged in'
 
     state = get_random_string(16)
     request.session['shopify_state'] = state

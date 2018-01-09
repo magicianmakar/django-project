@@ -115,13 +115,6 @@ def export_product(req_data, target, user_id):
             import_store = 'N/A'
 
         if not user.can('import_from_any.use'):
-            try:
-                if 'free' not in user.profile.plan.title.lower():
-                    print u'ERROR: STORE PERMISSION FOR [{}] [{}] [{}] User: {}'.format(
-                        import_store, original_url, user.profile.plan.title, user.username)
-            except:
-                pass
-
             return {
                 'error': 'Importing from this store ({}) is not included in your current plan.'.format(import_store)
             }

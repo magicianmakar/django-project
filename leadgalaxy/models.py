@@ -168,7 +168,7 @@ class UserProfile(models.Model):
                     self.plan_after_expire = get_plan(plan_hash='606bd8eb8cb148c28c4c022a43f0432d')
                     self.plan_expire_at = expire.datetime
 
-            if verbose and self.plan.title != reg.plan:
+            if verbose and self.plan.id != reg.plan.id:
                 print "APPLY REGISTRATION: Change User {} ({}) from '{}' to '{}'".format(
                     self.user.username, self.user.email, self.plan.title, reg.plan.title)
 
