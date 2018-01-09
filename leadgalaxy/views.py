@@ -860,9 +860,15 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     if filter_products:
         res = accept_product(res, request.GET)
 
+    sort = sort if sort else '-date'
     if sort:
         if re.match(r'^-?(title|price|date)$', sort):
-            res = res.order_by(sort.replace('date', 'id'))
+            sort_columns = [sort.replace('date', 'created_at')]
+
+            if sort_columns[0].endswith('created_at'):
+                sort_columns.append('store_id')
+
+            res = res.order_by(*sort_columns)
 
     paginator = SimplePaginator(res, post_per_page)
 
