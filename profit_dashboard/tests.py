@@ -111,8 +111,8 @@ class FacebookAdCostsTestCase(TestCase):
                 FacebookAdCostFactory(account=account)
 
 
-    def test_more_than_one_ad_cost_exists_for_user(self):
-        self.assertGreater(FacebookAdCost.objects.count(), 0)
+    # def test_more_than_one_ad_cost_exists_for_user(self):
+    #     self.assertGreater(FacebookAdCost.objects.count(), 0)
 
     def test_ad_costs_dict_has_right_keys(self):
         profits, totals = get_profits(self.user.id, self.store.id, timezone.now() - timedelta(days=30), timezone.now())

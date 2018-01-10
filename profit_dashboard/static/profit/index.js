@@ -764,6 +764,7 @@ $(function () {
                 'fb_access_token': $('input[name="fb_access_token"]').val(),
                 'accounts': $('#fb-account-select-modal [name="account"]').val(),
                 'campaigns': campaigns.join(','),
+                'config': $('#fb-account-select-modal [name="config"]').val()
             },
             dataType: 'json',
             success: function(result) {
