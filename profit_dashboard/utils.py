@@ -24,11 +24,11 @@ from .models import (
 )
 
 
-def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None):
-    access, created = FacebookAccess.objects.get_or_create(user=user, store=store, defaults={
+def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None, config='include'):
+    access, created = FacebookAccess.objects.create_or_update(user=user, store=store, defaults={
         'access_token': access_token,
         'account_ids': ','.join(account_ids) if account_ids else '',
-        'campaigns': ','.join(campaigns) if campaigns else '',
+        'campaigns': ','.join(campaigns) if campaigns else ''
     })
 
     if access_token and access_token != access.access_token:
@@ -56,13 +56,14 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
         if account['id'] not in account_ids:
             continue
 
-        account_model, created = FacebookAccount.objects.get_or_create(
+        account_model, created = FacebookAccount.objects.create_or_update(
             account_id=account.get(account.Field.id),
             access=access,
             store=store,
             defaults={
                 'account_name': account.get(account.Field.name),
-                'last_sync': date.today()
+                'last_sync': date.today(),
+                'config': config
             }
         )
 
@@ -74,7 +75,9 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
 
         campaign_insights = {}
         for campaign in account.get_campaigns(fields=['name', 'status', 'created_time']):
-            if campaign['id'] not in campaigns:
+            if 'include' in config and campaign['id'] not in campaigns:
+                continue
+            if 'exclude' in config and campaign['id'] in campaigns:
                 continue
 
             for insight in campaign.get_insights(params=params):

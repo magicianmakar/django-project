@@ -357,9 +357,15 @@
 
 <script id="fb-campaign-list" type="text/x-handlebars-template">
   <p>Please Select Facebook Campaigns: <a href="#" class="select-all-btn pull-right">Select All</a></p>
+  <select name="config">
+    {{#each config_choices}}
+    <option class="form-control" value="{{this.key}}" {{this.selected}}>{{this.value}}</option>
+    {{/each}}
+  </select>
   <ul class="list-group" style="overflow:auto;max-height:400px;">
     {{#each campaigns}}
-    <li class="list-group-item"><input type="checkbox" name="campaign" value="{{this.id}}">
+    <li class="list-group-item">
+      <input type="checkbox" name="campaign" value="{{this.id}}" {{ this.checked }}>
       {{this.name}}
       <span class="badge badge-white">{{this.created_time}}</span>
       <span class="badge badge-white">{{this.status}}</span></li>

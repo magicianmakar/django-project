@@ -680,24 +680,25 @@ class WooStoreApi(ApiResponseMixin, View):
             except ValidationError as e:
                 return self.api_error(','.join(e))
 
-        line_items = [{
-            'id': line_id,
-            'product_id': product_id,
-            'meta_data': [
-                {'key': 'Fulfillment Status', 'value': 'Fulfilled'},
-                {'key': 'Provider', 'value': provider_name},
-                {'key': 'Tracking Number', 'value': tracking_number},
-                {'key': 'Tracking Link', 'value': tracking_link},
-                {'key': 'Date Shipped', 'value': date_shipped},
-            ]
-        }]
+        meta_data = utils.get_fulfillment_meta(
+            provider_name,
+            tracking_number,
+            tracking_link,
+            date_shipped
+        )
+
+        line_items = [{'id': line_id, 'product_id': product_id, 'meta_data': meta_data}]
 
         try:
-            r = store.wcapi.put('orders/{}'.format(order_id), {'line_items': line_items})
+            data = {'line_items': line_items, 'status': 'processing'}
+            r = store.wcapi.put('orders/{}'.format(order_id), data)
             r.raise_for_status()
         except:
             raven_client.captureException(level='warning', extra={'response': r.text})
             return self.api_error('WooCommerce API Error')
+
+        if len(utils.get_unfulfilled_items(r.json())) == 0:
+            utils.update_order_status(store, order_id, 'completed')
 
         return self.api_success()
 
@@ -859,6 +860,8 @@ class WooStoreApi(ApiResponseMixin, View):
             'line_id': line_id,
             'product_id': product_id,
             'source_id': source_id})
+
+        utils.update_order_status(store, order_id, 'processing')
 
         return self.api_success()
 

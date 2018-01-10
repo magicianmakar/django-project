@@ -4,6 +4,13 @@ from django.db import models
 from leadgalaxy.models import ShopifyStore
 
 
+CONFIG_CHOICES = (
+    ('include', 'Include Selected Campaign Only'),
+    ('include_and_new', 'Include Selected Campaign and newer ones'),
+    ('exclude', 'Exclude Selected Campaign')
+)
+
+
 class FacebookAccess(models.Model):
     user = models.ForeignKey(User)
     store = models.ForeignKey(ShopifyStore, null=True)
@@ -20,6 +27,7 @@ class FacebookAccount(models.Model):
     last_sync = models.DateField(null=True)
     account_id = models.CharField(max_length=50)
     account_name = models.CharField(max_length=255)
+    config = models.CharField(max_length=100, choices=CONFIG_CHOICES, default='selected')
 
 
 class FacebookAdCost(models.Model):

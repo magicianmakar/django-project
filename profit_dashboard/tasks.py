@@ -6,13 +6,13 @@ from app.celery import celery_app, CaptureFailure
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
-def fetch_facebook_insights(self, user_id, store_id, access_token, account_ids, campaigns):
+def fetch_facebook_insights(self, user_id, store_id, access_token, account_ids, campaigns, config):
     from .utils import get_facebook_ads
 
     user = User.objects.get(pk=user_id)
     store = user.profile.get_shopify_stores().filter(pk=store_id).first()
     try:
-        get_facebook_ads(user, store, access_token, account_ids, campaigns)
+        get_facebook_ads(user, store, access_token, account_ids, campaigns, config)
 
         store.pusher_trigger('facebook-insights', {
             'success': True

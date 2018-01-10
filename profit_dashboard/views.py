@@ -21,6 +21,7 @@ from .utils import (
     calculate_profits,
 )
 from .models import (
+    CONFIG_CHOICES,
     FacebookAccess,
     FacebookAccount,
     OtherCost,
@@ -79,7 +80,7 @@ def index(request):
         'user': request.user,
         'accounts': accounts,
         'need_setup': need_setup,
-        'profits_json': profits_json
+        'profits_json': profits_json,
     })
 
 
@@ -91,8 +92,9 @@ def facebook_insights(request):
 
         account_ids = request.POST.get('accounts').split(',') if request.POST.get('accounts') else []
         campaigns = request.POST.get('campaigns').split(',') if request.POST.get('campaigns') else []
+        config = request.POST.get('config')
 
-        fetch_facebook_insights.delay(request.user.pk, store.id, access_token, account_ids, campaigns)
+        fetch_facebook_insights.delay(request.user.pk, store.id, access_token, account_ids, campaigns, config)
 
         return JsonResponse({'success': True})
 
@@ -130,6 +132,21 @@ def facebook_campaign(request):
         api_version='v2.10'
     )
 
+    store = utils.get_store_from_request(request)
+    access = FacebookAccess.objects.filter(user=request.user, store=store)
+    saved_campaigns = access.campaigns.split(',')
+
+    account = FacebookAccount.objects.filter(
+        account_id=account_id,
+        access=access,
+        store=store,
+    )
+    updated = None
+    if account.exists():
+        account = account.first()
+        if account.config == 'include_and_new':
+            updated = arrow.get(account.last_sync)
+
     user = FBUser(fbid='me', api=api)
     for account in user.get_ad_accounts(fields=[AdAccount.Field.name]):
         if account['id'] == account_id:
@@ -138,8 +155,16 @@ def facebook_campaign(request):
                     'id': i['id'],
                     'name': i['name'],
                     'status': i['status'].title(),
-                    'created_time': arrow.get(i['created_time']).humanize()
-                } for i in account.get_campaigns(fields=['name', 'status', 'created_time'])]
+                    'created_time': arrow.get(i['created_time']).humanize(),
+                    'checked': 'checked="checked"' if i['id'] in saved_campaigns or
+                    (updated is not None and arrow.get(i['created_time']) > updated)
+                    else ''
+                } for i in account.get_campaigns(fields=['name', 'status', 'created_time'])],
+                'config_options': [{
+                    'key': option[0],
+                    'value': option[1],
+                    'selected': 'selected' if account.config == option[0] else ''
+                } for option in CONFIG_CHOICES]
             })
 
     return JsonResponse({'error': 'Ad Account Not found'})

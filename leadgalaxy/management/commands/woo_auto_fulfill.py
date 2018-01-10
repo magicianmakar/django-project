@@ -95,6 +95,8 @@ class Command(DropifiedBaseCommand):
                 r = store.wcapi.put('orders/{}'.format(order_track.order_id), api_data)
                 r.raise_for_status()
                 fulfilled = 'id' in r.json()
+                if fulfilled and len(utils.get_unfulfilled_items(r.json())) == 0:
+                    utils.update_order_status(store, order_track.order_id, 'completed')
                 break
 
             except (JSONDecodeError, requests.exceptions.ConnectionError):
