@@ -33,6 +33,8 @@ class Command(DropifiedBaseCommand):
         if not shop:
             self.write(u'Store {} not found'.format(shop))
             return
+        else:
+            shop = shop.pop()
 
         try:
             store = ShopifyStore.objects.get(shop=shop, user=from_user, is_active=True)
@@ -47,13 +49,13 @@ class Command(DropifiedBaseCommand):
             else:
                 self.write('Warning: Store is not install on {} account'.format(to_user.email))
         else:
-            for old_store in ShopifyStore.objects.filter(shop=shop, user=to_user):
+            for old_store in ShopifyStore.objects.filter(shop=shop, user=to_user, is_active=True):
+                self.write('Disable {} on {} account'.format(old_store.shop, to_user.email))
+
                 detach_webhooks(old_store, delete_too=True)
 
                 old_store.is_active = False
                 old_store.save()
-
-            self.write('Disable {} on {} account'.format(old_store.shop, to_user.email))
 
         store.user = to_user
         store.save()
@@ -62,3 +64,5 @@ class Command(DropifiedBaseCommand):
         ShopifyOrderTrack.objects.filter(store=store, user=from_user).update(user=to_user)
         ShopifyOrder.objects.filter(store=store, user=from_user).update(user=to_user)  # TODO: Elastic update
         ShopifyBoard.objects.filter(user=from_user).update(user=to_user)
+
+        self.write('Store {} has been transferred to {} account'.format(store.shop, to_user.email))
