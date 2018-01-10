@@ -472,18 +472,20 @@ def order_track_fulfillment(order_track, user_config=None):
     shipping_carrier_name = 'AfterShip' if not shipping_carrier_name else shipping_carrier_name
     date_shipped = arrow.get(timezone.now()).format('MM/DD/YYYY')
 
+    meta_data = get_fulfillment_meta(
+        shipping_carrier_name,
+        tracking_number,
+        order_track.get_tracking_link(),
+        date_shipped
+    )
+
     data = {
         'line_items': [{
             'id': order_track.line_id,
             'product_id': order_track.product_id,
-            'meta_data': [
-                {'key': 'Fulfillment Status', 'value': 'Fulfilled'},
-                {'key': 'Provider', 'value': shipping_carrier_name},
-                {'key': 'Tracking Number', 'value': tracking_number},
-                {'key': 'Tracking Link', 'value': order_track.get_tracking_link()},
-                {'key': 'Date Shipped', 'value': date_shipped},
-            ]
-        }]
+            'meta_data': meta_data
+        }],
+        'status': 'processing'
     }
 
     return data
@@ -772,6 +774,28 @@ def get_product_data(store, product_ids=None):
         page = page + 1 if has_next else 0
 
     return product_data_by_product_id
+
+
+def get_unfulfilled_items(order):
+    return [item for item in order.get('line_items') if not has_order_line_been_fulfilled(item)]
+
+
+def get_fulfillment_meta(shipping_carrier_name, tracking_number, tracking_link, date_shipped):
+    return [
+        {'key': 'Fulfillment Status', 'value': 'Fulfilled'},
+        {'key': 'Provider', 'value': shipping_carrier_name},
+        {'key': 'Tracking Number', 'value': tracking_number},
+        {'key': 'Tracking Link', 'value': tracking_link},
+        {'key': 'Date Shipped', 'value': date_shipped},
+    ]
+
+
+def update_order_status(store, order_id, status, tries=3):
+    while tries > 0:
+        tries -= 1
+        r = store.wcapi.put('orders/{}'.format(order_id), {'status': status})
+        if r.ok:
+            break
 
 
 class WooListQuery(object):
