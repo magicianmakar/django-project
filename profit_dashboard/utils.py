@@ -25,7 +25,7 @@ from .models import (
 
 
 def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None, config='include'):
-    access, created = FacebookAccess.objects.create_or_update(user=user, store=store, defaults={
+    access, created = FacebookAccess.objects.update_or_create(user=user, store=store, defaults={
         'access_token': access_token,
         'account_ids': ','.join(account_ids) if account_ids else '',
         'campaigns': ','.join(campaigns) if campaigns else ''
@@ -56,7 +56,7 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
         if account['id'] not in account_ids:
             continue
 
-        account_model, created = FacebookAccount.objects.create_or_update(
+        account_model, created = FacebookAccount.objects.update_or_create(
             account_id=account.get(account.Field.id),
             access=access,
             store=store,
