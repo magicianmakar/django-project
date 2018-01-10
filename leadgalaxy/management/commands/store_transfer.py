@@ -14,9 +14,6 @@ from leadgalaxy.models import (
 
 from shopified_core.management import DropifiedBaseCommand
 
-hundred
-thosdnad
-
 
 class Command(DropifiedBaseCommand):
 
