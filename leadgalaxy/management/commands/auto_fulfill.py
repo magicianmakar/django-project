@@ -154,12 +154,13 @@ class Command(DropifiedBaseCommand):
                 tries -= 1
 
         if fulfilled:
-            note = "Auto Fulfilled by Dropified (Line Item #{})".format(order.line_id)
+            if user.get_config('aliexpress_as_notes', True):
+                note = "Auto Fulfilled by Dropified (Line Item #{})".format(order.line_id)
 
-            countdown = self.store_countdown.get(store.id, 30)
-            tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
+                countdown = self.store_countdown.get(store.id, 30)
+                tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
 
-            self.store_countdown[store.id] = countdown + 5
+                self.store_countdown[store.id] = countdown + 5
 
             if line:
                 line.fulfillment_status = 'fulfilled'
