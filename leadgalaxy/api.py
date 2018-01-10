@@ -1423,7 +1423,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             config['stores'] = stores
 
         config['sync'] = {
-            'new': user.models_user.id not in [23957]
+            'new': not user.models_user.get_config('_disable_new_orders_sync', False)
         }
 
         return JsonResponse(config)

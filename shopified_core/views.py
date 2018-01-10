@@ -23,6 +23,7 @@ from woocommerce_core.api import WooStoreApi
 
 from leadgalaxy.models import ShopifyOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
+from woocommerce_core.models import WooOrderTrack
 
 from .mixins import ApiResponseMixin
 from .exceptions import ApiLoginException
@@ -217,60 +218,92 @@ class ShopifiedApi(ApiResponseMixin, View):
             since = arrow.now().replace(days=-30).datetime
             cache.set(since_key, arrow.utcnow().timestamp, timeout=86400)
 
-        # Shopify
         fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at', 'updated_at']
-        order_tracks = ShopifyOrderTrack.objects.filter(store__in=list(user.profile.get_shopify_stores(flat=True))) \
-                                                .filter(created_at__gte=since) \
-                                                .filter(source_tracking='') \
-                                                .filter(shopify_status='') \
-                                                .exclude(source_status='FINISH') \
-                                                .filter(hidden=False) \
-                                                .only(*fields) \
-                                                .order_by('created_at')
 
-        if data.get('store'):
-            order_tracks = order_tracks.filter(store=data.get('store'))
+        # Shopify
+        store_ids = list(user.profile.get_shopify_stores(flat=True))
+        if store_ids:
+            order_tracks = ShopifyOrderTrack.objects.filter(store__in=store_ids) \
+                                                    .filter(created_at__gte=since) \
+                                                    .filter(source_tracking='') \
+                                                    .filter(shopify_status='') \
+                                                    .exclude(source_status='FINISH') \
+                                                    .filter(hidden=False) \
+                                                    .only(*fields) \
+                                                    .order_by('created_at')
 
-        for i in serializers.serialize('python', order_tracks, fields=fields):
-            fields = i['fields']
-            fields['id'] = i['pk']
-            fields['store_type'] = 'shopify'
+            if data.get('store'):
+                order_tracks = order_tracks.filter(store=data.get('store'))
 
-            if fields['source_id'] and ',' in fields['source_id']:
-                for j in fields['source_id'].split(','):
-                    order_fields = copy.deepcopy(fields)
-                    order_fields['source_id'] = j
-                    order_fields['bundle'] = True
-                    orders.append(order_fields)
-            else:
-                orders.append(fields)
+            for i in serializers.serialize('python', order_tracks, fields=fields):
+                fields = i['fields']
+                fields['id'] = i['pk']
+                fields['store_type'] = 'shopify'
+
+                if fields['source_id'] and ',' in fields['source_id']:
+                    for j in fields['source_id'].split(','):
+                        order_fields = copy.deepcopy(fields)
+                        order_fields['source_id'] = j
+                        order_fields['bundle'] = True
+                        orders.append(order_fields)
+                else:
+                    orders.append(fields)
 
         # CommerceHQ
-        fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at']
-        order_tracks = CommerceHQOrderTrack.objects.filter(store__in=list(user.profile.get_chq_stores(flat=True))) \
-                                                   .filter(created_at__gte=since) \
-                                                   .filter(source_tracking='') \
-                                                   .exclude(source_status='FINISH') \
-                                                   .filter(hidden=False) \
-                                                   .defer('data') \
-                                                   .order_by('created_at')
+        store_ids = list(user.profile.get_chq_stores(flat=True))
+        if store_ids:
+            order_tracks = CommerceHQOrderTrack.objects.filter(store__in=store_ids) \
+                                                       .filter(created_at__gte=since) \
+                                                       .filter(source_tracking='') \
+                                                       .exclude(source_status='FINISH') \
+                                                       .filter(hidden=False) \
+                                                       .defer('data') \
+                                                       .order_by('created_at')
 
-        if data.get('store'):
-            order_tracks = order_tracks.filter(store=data.get('store'))
+            if data.get('store'):
+                order_tracks = order_tracks.filter(store=data.get('store'))
 
-        for i in serializers.serialize('python', order_tracks, fields=fields):
-            fields = i['fields']
-            fields['id'] = i['pk']
-            fields['store_type'] = 'chq'
+            for i in serializers.serialize('python', order_tracks, fields=fields):
+                fields = i['fields']
+                fields['id'] = i['pk']
+                fields['store_type'] = 'chq'
 
-            if fields['source_id'] and ',' in fields['source_id']:
-                for j in fields['source_id'].split(','):
-                    order_fields = copy.deepcopy(fields)
-                    order_fields['source_id'] = j
-                    order_fields['bundle'] = True
-                    orders.append(order_fields)
-            else:
-                orders.append(fields)
+                if fields['source_id'] and ',' in fields['source_id']:
+                    for j in fields['source_id'].split(','):
+                        order_fields = copy.deepcopy(fields)
+                        order_fields['source_id'] = j
+                        order_fields['bundle'] = True
+                        orders.append(order_fields)
+                else:
+                    orders.append(fields)
+
+        # WooCommerce
+        store_ids = list(user.profile.get_woo_stores(flat=True))
+        if store_ids:
+            order_tracks = WooOrderTrack.objects.filter(store__in=store_ids) \
+                                                .filter(created_at__gte=since) \
+                                                .filter(source_tracking='') \
+                                                .exclude(source_status='FINISH') \
+                                                .filter(hidden=False) \
+                                                .defer('data') \
+                                                .order_by('created_at')
+
+            if data.get('store'):
+                order_tracks = order_tracks.filter(store=data.get('store'))
+
+            for i in serializers.serialize('python', order_tracks, fields=fields):
+                fields = i['fields']
+                fields['id'] = i['pk']
+                fields['store_type'] = 'woo'
+
+                if fields['source_id'] and ',' in fields['source_id']:
+                    for j in fields['source_id'].split(','):
+                        order_fields = copy.deepcopy(fields)
+                        order_fields['source_id'] = j
+                        order_fields['bundle'] = True
+                        orders.append(order_fields)
+                else:
+                    orders.append(fields)
 
         return self.api_success({
             'orders': orders,
