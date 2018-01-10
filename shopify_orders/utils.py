@@ -224,8 +224,21 @@ def update_line_export(store, shopify_id):
     :param shopify_id: Shopify Product ID
     """
 
+    try:
+        sync_status = ShopifySyncStatus.objects.get(store=store)
+    except ShopifySyncStatus.DoesNotExist:
+        sync_status = None
+
+    update_elastic = is_store_synced(store) and sync_status.elastic
+
     product = store.shopifyproduct_set.filter(shopify_id=shopify_id).first()
-    for order in ShopifyOrder.objects.filter(store=store, shopifyorderline__shopify_product=shopify_id).distinct():
+    seen_orders = []
+    for order in ShopifyOrder.objects.filter(store=store, shopifyorderline__shopify_product=shopify_id):  # TODO: Index shopify_product column
+        if order.id not in seen_orders:
+            seen_orders.append(order.id)
+        else:
+            continue
+
         connected_items = 0
         for line in order.shopifyorderline_set.all():
             if line.shopify_product == safeInt(shopify_id):
@@ -240,6 +253,9 @@ def update_line_export(store, shopify_id):
 
         if order.connected_items != connected_items:
             ShopifyOrder.objects.filter(id=order.id).update(connected_items=connected_items)
+
+            if update_elastic:
+                update_elasticsearch_shopify_order(order)
 
 
 def delete_shopify_order(store, data):
