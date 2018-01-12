@@ -1070,7 +1070,7 @@ function renderImages() {
                 imageUrl = el;
 
             if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
-                imageUrl = window.location.origin + '/pixlr/serve?' + $.param({image: imageUrl});
+                imageUrl = app_link(['api/ali/get-image'], {url: btoa(imageUrl)});
             }
 
             var pixlrUrl = pixlr.url({

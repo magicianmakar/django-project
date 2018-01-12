@@ -45,6 +45,7 @@ from shopify_orders.tasks import fulfill_shopify_order_line
 from dropwow_core.models import DropwowOrderStatus
 
 from shopified_core.utils import (
+    app_link,
     send_email_from_template,
     version_compare,
     get_mimetype,
@@ -2433,11 +2434,7 @@ def pixlr_serve_image(request):
     if not img_url:
         raise Http404
 
-    if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
-        raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-
-    fp = StringIO.StringIO(requests.get(img_url).content)
-    return HttpResponse(fp, content_type=get_mimetype(img_url))
+    return HttpResponseRedirect(app_link('api/ali/get-image', url=img_url))
 
 
 @login_required
