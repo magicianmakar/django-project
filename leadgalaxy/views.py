@@ -48,7 +48,6 @@ from shopified_core.utils import (
     app_link,
     send_email_from_template,
     version_compare,
-    get_mimetype,
     order_data_cache
 )
 
