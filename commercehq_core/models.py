@@ -165,7 +165,7 @@ class CommerceHQProduct(models.Model):
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='CommerceHQ Product ID')
     default_supplier = models.ForeignKey('CommerceHQSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
-    monitor_id = models.IntegerField(null=True)
+    monitor_id = models.IntegerField(default=0, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

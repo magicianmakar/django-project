@@ -1193,6 +1193,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         try:
             product.monitor_product()
+
             if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(product.store, product.shopify_id, product.default_supplier.supplier_name)
         except:

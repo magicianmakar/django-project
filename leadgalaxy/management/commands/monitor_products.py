@@ -1,8 +1,6 @@
 from Queue import Queue
 from threading import Thread
 
-import simplejson as json
-import requests
 from requests.auth import HTTPBasicAuth
 
 from django.core.management.base import CommandError
@@ -10,7 +8,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, safeInt
 from leadgalaxy.models import *
 from commercehq_core.models import CommerceHQProduct
 
@@ -29,9 +27,11 @@ def worker(q):
 
 def attach_product(product, product_id, store_id, stdout=None):
     """
+    product: Product model (ShopifyProduct or CommerceHQProduct)
     product_id: Source Product ID (ex. Aliexpress ID)
     store_id: Source Store ID (ex. Aliexpress Store ID)
     """
+
     if product.__class__.__name__ == 'ShopifyProduct':
         dropified_type = 'shopify'
     elif product.__class__.__name__ == 'CommerceHQProduct':
@@ -41,7 +41,6 @@ def attach_product(product, product_id, store_id, stdout=None):
     monitor_api_url = '{}/products'.format(PRICE_MONITOR_BASE)
 
     try:
-        product_json = json.loads(product.data)
         post_data = {
             'product_id': product_id,
             'store_id': store_id,
@@ -52,10 +51,6 @@ def attach_product(product, product_id, store_id, stdout=None):
             'webhook': webhook_url,
             'url': product.default_supplier.product_url,
         }
-
-        # if product is variant-splitted product, pass its value.
-        if product_json.get('variants_sku') and len(product_json['variants_sku']) == 1:
-            post_data['variant_value'] = product_json['variants_sku'].values()[0]
 
         rep = requests.post(
             url=monitor_api_url,
@@ -94,8 +89,8 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('store_type', nargs=1, type=str,
                             choices=['shopify', 'chq'], help='Store Type')
 
-        parser.add_argument('--new', dest='new_products', action='store_true', help='Only New Products')
         parser.add_argument('--plan', dest='plan_id', action='append', type=int, help='Plan ID')
+        parser.add_argument('--exclude-plan', dest='exclude_plan_id', action='append', type=int, help='Plan ID')
         parser.add_argument('--user', dest='user_id', action='append', type=int, help='User ID')
         parser.add_argument('--permission', dest='permission', action='append', type=str, help='Users with permission')
 
@@ -107,6 +102,9 @@ class Command(DropifiedBaseCommand):
 
         if not options['plan_id']:
             options['plan_id'] = []
+
+        if not options['exclude_plan_id']:
+            options['exclude_plan_id'] = []
 
         if not options['user_id']:
             options['user_id'] = []
@@ -138,6 +136,10 @@ class Command(DropifiedBaseCommand):
         for permission in options['permission']:
             for p in AppPermission.objects.filter(name=permission):
                 for plan in p.groupplan_set.all():
+                    if plan.id in options['exclude_plan_id']:
+                        self.stdout.write('* Ignore Plan: {}'.format(plan.title))
+                        continue
+
                     self.stdout.write(self.style.MIGRATE_SUCCESS(
                         '{} webhooks for Plan: {}'.format(action.title(), plan.title)))
 
@@ -172,15 +174,14 @@ class Command(DropifiedBaseCommand):
         self.q.join()
 
     def handle_products(self, user, products, action, options):
-        if options['new_products']:
-            products = products.filter(Q(monitor_id=0) | Q(monitor_id=None)) \
-                               .exclude(store__is_active=False) \
-                               .exclude(store=None)
+        products = products.filter(Q(monitor_id=0) | Q(monitor_id=None))
 
         if products.model.__name__ == 'ShopifyProduct':
             products = products.exclude(shopify_id=0)
         elif products.model.__name__ == 'CommerceHQProduct':
             products = products.exclude(source_id=0)
+
+        products = products.filter(store__is_active=True)
 
         if user.id in self.ignored_users:
             self.stdout.write(u'Ignore product for user: {}'.format(user.username))
@@ -207,17 +208,15 @@ class Command(DropifiedBaseCommand):
             return
 
         try:
-            supplier = product.default_supplier
 
-            if 'aliexpress.com' not in supplier.product_url.lower():
+            if not (product.have_supplier() and product.default_supplier.is_aliexpress):
                 #  Not connected or not an Aliexpress product
                 product.monitor_id = -1
                 product.save()
                 return
 
-            store_id = supplier.get_store_id()
-            if not store_id:
-                store_id = 0
+            supplier = product.default_supplier
+            store_id = safeInt(supplier.get_store_id())
 
             product_id = supplier.get_source_id()
             if not product_id:
@@ -225,7 +224,9 @@ class Command(DropifiedBaseCommand):
                 product.monitor_id = -3
                 product.save()
                 return
+
         except:
+            raven_client.captureException()
             product.monitor_id = -5
             product.save()
             return

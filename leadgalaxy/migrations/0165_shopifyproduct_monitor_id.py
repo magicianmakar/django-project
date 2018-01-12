@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyproduct',
             name='monitor_id',
-            field=models.IntegerField(null=True),
+            field=models.IntegerField(default=0, null=True),
         ),
     ]

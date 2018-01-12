@@ -140,7 +140,7 @@ class Command(DropifiedBaseCommand):
                 products = ShopifyProduct.objects.filter(user=user)
                 self.handle_products(user, products, action, options)
 
-            except ShopifyStore.DoesNotExist:
+            except User.DoesNotExist:
                 raise CommandError('User "%s" does not exist' % user_id)
 
         self.q.join()
@@ -149,7 +149,7 @@ class Command(DropifiedBaseCommand):
         if options['new_products']:
             products = products.filter(price_notification_id=0)
 
-        products = products.exclude(shopify_id=0).exclude(store=None).exclude(store__is_active=False)
+        products = products.exclude(shopify_id=0).filter(store__is_active=True)
 
         if user.id in self.ignored_users:
             self.stdout.write(u'Ignore product for user: {}'.format(user.username))

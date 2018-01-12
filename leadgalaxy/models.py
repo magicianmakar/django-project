@@ -797,7 +797,7 @@ class ShopifyProduct(models.Model):
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
     price_notification_id = models.IntegerField(default=0)
-    monitor_id = models.IntegerField(null=True)
+    monitor_id = models.IntegerField(default=0, null=True)
 
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
     default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
@@ -983,11 +983,12 @@ class ShopifyProduct(models.Model):
         supplier.save()
 
     def monitor_product(self):
-        if self.monitor_id > 0 and self.default_supplier:
+        if self.monitor_id and self.have_supplier() and settings.PRICE_MONITOR_HOSTNAME:
             monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, self.monitor_id)
             post_data = {
                 'url': self.default_supplier.product_url,
             }
+
             requests.patch(
                 url=monitor_api_url,
                 data=post_data,
