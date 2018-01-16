@@ -512,6 +512,8 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
+    store = None
+
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
@@ -567,7 +569,7 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             'from_webhook': from_webhook,
             'Retries': self.request.retries
         }, tags={
-            'store': store.shop,
+            'store': store.shop if store else 'N/A',
             'webhook': from_webhook,
         })
 
