@@ -2,6 +2,7 @@
 
 import traceback
 import urlparse
+import urllib2
 import copy
 
 from django.contrib.auth import authenticate, login
@@ -678,7 +679,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             res = requests.post(
                 api_url,
                 files={
-                    'image': requests.get(data.get('image_url')).content
+                    'image': urllib2.urlopen(data.get('image_url'))
                 },
                 auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()
