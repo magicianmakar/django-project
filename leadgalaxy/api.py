@@ -667,11 +667,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         api_response = {}
 
         try:
-            ClippingMagic.objects.get(user=user)
+            ClippingMagic.objects.get(user=user.models_user)
         except ClippingMagic.DoesNotExist:
-            ClippingMagic.objects.create(user=request.user, remaining_credits=5)
+            ClippingMagic.objects.create(user=user.models_user, remaining_credits=5)
 
-        if user.clippingmagic.remaining_credits <= 0:
+        if user.models_user.clippingmagic.remaining_credits <= 0:
             return self.api_error('Looks like your credits have run out', status=402)
 
         if action == 'edit':
@@ -693,13 +693,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             if img_url:
                 UserUpload.objects.create(
-                    user=request.user.models_user,
+                    user=user.models_user,
                     product=data.get('product_id'),
                     url=img_url[:510]
                 )
 
-                user.clippingmagic.remaining_credits -= 1
-                user.clippingmagic.save()
+                user.models_user.clippingmagic.remaining_credits -= 1
+                user.models_user.clippingmagic.save()
             else:
                 return self.api_error('Action is not defined', status=500)
 
