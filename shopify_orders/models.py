@@ -164,7 +164,7 @@ class ShopifyOrderRisk(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.risk_id
+        return u'OrderRisk #{}'.format(self.order_id)
 
     def get_data(self):
         try:

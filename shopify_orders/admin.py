@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderRisk
 
 
 @admin.register(ShopifySyncStatus)
@@ -22,3 +22,8 @@ class ShopifyOrderApiAdmin(admin.ModelAdmin):
 class ShopifyOrderLineAdmin(admin.ModelAdmin):
     list_display = ('line_id', 'order', 'track', 'variant_title')
     raw_id_fields = ('product', 'order', 'track')
+
+@admin.register(ShopifyOrderRisk)
+class ShopifyOrderRiskeAdmin(admin.ModelAdmin):
+    list_display = ('store', 'order_id', 'created_at')
+    raw_id_fields = ('store',)
