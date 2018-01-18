@@ -42,7 +42,9 @@ from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.tasks import fulfill_shopify_order_line
+from commercehq_core.models import CommerceHQProduct
 from dropwow_core.models import DropwowOrderStatus
+from product_alerts.models import ProductChange
 
 from shopified_core.utils import (
     app_link,
@@ -751,7 +753,7 @@ def webhook(request, provider, option):
             else:
                 raven_client.captureException(leve='warning')
 
-        if product.user.can('price_changes.use') and product.is_connected():
+        if product.user.can('price_changes.use') and product.is_connected:
             product_change = AliexpressProductChange.objects.create(
                 product=product,
                 user=product.user,
@@ -815,6 +817,35 @@ def webhook(request, provider, option):
 
         except:
             raven_client.captureException()
+
+    elif provider == 'price-monitor' and request.method == 'POST':
+        product_id = request.GET['product']
+        dropified_type = request.GET['dropified_type']  # shopify or chq
+        if dropified_type == 'shopify':
+            try:
+                product = ShopifyProduct.objects.get(id=product_id)
+            except ShopifyProduct.DoesNotExist:
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
+        if dropified_type == 'chq':
+            try:
+                product = CommerceHQProduct.objects.get(id=product_id)
+            except CommerceHQProduct.DoesNotExist:
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
+        if product.user.can('price_changes.use') and product.is_connected:
+            product_change = ProductChange.objects.create(
+                store_type=dropified_type,
+                shopify_product=product if dropified_type == 'shopify' else None,
+                chq_product=product if dropified_type == 'chq' else None,
+                user=product.user,
+                data=request.body,
+            )
+            tasks.manage_product_change.delay(product_change.pk)
+        else:
+            product.monitor_id = 0
+            product.save()
+            return JsonResponse({'error': 'User do not have Alerts permission'}, status=404)
+
+        return JsonResponse({'status': 'ok'})
 
     else:
         raven_client.captureMessage('Unknown Webhook Provider')
@@ -3654,13 +3685,13 @@ def product_alerts(request):
         messages.warning(request, 'Please add at least one store before using the Alerts page.')
         return HttpResponseRedirect('/')
 
-    AliexpressProductChange.objects.filter(user=request.user.models_user,
-                                           product__store=None).delete()
+    ProductChange.objects.filter(user=request.user.models_user,
+                                 shopify_product__store=None).delete()
 
-    changes = AliexpressProductChange.objects.select_related('product') \
-                                     .select_related('product__default_supplier') \
-                                     .filter(user=request.user.models_user,
-                                             product__store=store)
+    changes = ProductChange.objects.select_related('shopify_product') \
+                                   .select_related('shopify_product__default_supplier') \
+                                   .filter(user=request.user.models_user,
+                                           shopify_product__store=store)
 
     if request.user.is_subuser:
         store_ids = request.user.profile.subuser_permissions.filter(
@@ -3668,10 +3699,10 @@ def product_alerts(request):
         ).values_list(
             'store_id', flat=True
         )
-        changes = changes.filter(product__store_id__in=store_ids)
+        changes = changes.filter(shopify_product__store_id__in=store_ids)
 
     if product:
-        changes = changes.filter(product=product)
+        changes = changes.filter(shopify_product=product)
     else:
         changes = changes.filter(hidden=show_hidden)
 
@@ -3695,9 +3726,9 @@ def product_alerts(request):
         product_changes.append(change)
 
     if not show_hidden:
-        AliexpressProductChange.objects.filter(user=request.user.models_user) \
-                                       .filter(id__in=[i['id'] for i in product_changes]) \
-                                       .update(seen=True)
+        ProductChange.objects.filter(user=request.user.models_user) \
+                             .filter(id__in=[i['id'] for i in product_changes]) \
+                             .update(seen=True)
 
     # Allow sending notification for new changes
     cache.delete('product_change_%d' % request.user.models_user.id)

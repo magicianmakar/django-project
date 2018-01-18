@@ -104,7 +104,7 @@
     								<img class="product-image" src="{{product.images|first}}" alt="product image" />
     							</td>
     							<td class="product">
-    								<a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+    								<a href="{{product.target_url}}" target="_blank">{{product.title}}</a>
     							</td>
     							<td {% if product.from == 'Offline' %}class="from red"{% else %}class="from green"{% endif %}>
                     {{ product.from }}
@@ -139,7 +139,7 @@
                     <img class="product-image" src="{{product.images|first}}" alt="product image" />
                   </td>
                   <td class="product">
-                    <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+                    <a href="{{product.target_url}}" target="_blank">{{product.title}}</a>
                   </td>
                   <td {% if product.increase %}class="from red"{% else %}class="from green"{% endif %}>{{product.from}}</td>
                   <td {% if product.increase %}class="to red"{% else %}class="to green"{% endif %}>{{product.to}}</td>
@@ -170,7 +170,7 @@
                     <img class="product-image" src="{{product.images|first}}" alt="product image" />
                   </td>
                   <td class="product">
-                    <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+                    <a href="{{product.target_url}}" target="_blank">{{product.title}}</a>
                   </td>
                   <td {% if product.increase %}class="from red"{% else %}class="from green"{% endif %}>{{product.from}}</td>
                   <td {% if product.increase %}class="to red"{% else %}class="to green"{% endif %}>{{product.to}}</td>
@@ -200,7 +200,7 @@
                     <img class="product-image" src="{{product.images|first}}" alt="product image" />
                   </td>
                   <td class="product">
-                    <a href="{{product.shopify_url}}" target="_blank">{{product.title}}</a>
+                    <a href="{{product.target_url}}" target="_blank">{{product.title}}</a>
                   </td>
                   <td lass="variants ">
                     <p class="red">
