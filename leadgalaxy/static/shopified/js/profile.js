@@ -242,6 +242,32 @@ $('#save-dropwow-integration').click(function() {
     });
 });
 
+$('#save-youzign-integration').click(function () {
+    var btn = $(this);
+    btn.button('loading');
+
+    $.ajax({
+        url: '/api/youzign-integration',
+        type: 'POST',
+        data: $("form#youzign-integration").serialize(),
+        success: function (data) {
+            if (data.status == 'ok') {
+                toastr.success('Saved.','YouZign Configuration');
+            } else {
+                displayAjaxError('YouZign Configuration', data);
+            }
+        },
+        error: function (data) {
+            displayAjaxError('YouZign Configuration', data);
+        },
+        complete: function () {
+            btn.button('reset');
+        }
+    });
+
+    return false
+});
+
 $('#renew_clippingmagic, #renew_captchacredit').click(function() {
     var type = $(this).attr('id').split('_')[1];
     var title = $(this).data('title');

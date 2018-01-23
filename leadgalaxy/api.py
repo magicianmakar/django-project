@@ -2583,6 +2583,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             return self.api_error('\n\n'.join(errors), status=422)
 
+    def post_youzign_integration(self, request, user, data):
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        user.models_user.set_config('yz_public_key', data.get('yz_public_key') or '')
+        user.models_user.set_config('yz_access_token', data.get('yz_access_token') or '')
+
+        return self.api_success()
+
     def post_marketplace_product_options(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
