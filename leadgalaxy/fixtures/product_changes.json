@@ -312,14 +312,14 @@
 },
 {
   "fields": {
-    "api_url": "chq-shopified-dev.commercehqdev.com",
-    "title": "Dev Store",
-    "api_key": "i7_-EFt8qb8MPb4ey0nTQ2BRT88DjSaH",
-    "api_password": "UVJJqis5sWxSLxoEXOuAM672n2d66xfs",
+    "api_url": "chq-shopified-test.commercehqtesting.com",
+    "title": "Test Store",
+    "api_key": "gsycAdWxbv56CAQFNWVkN53sLxnzcSEF",
+    "api_password": "euld-IWsmA1SkT5dved51decAcrXoz6n",
     "created_at": "2017-08-20T22:11:41.685Z",
     "is_active": true,
     "updated_at": "2017-09-04T22:11:41.685Z",
-    "store_hash": "20c3a8eb1d04226a96f981da3781b60a",
+    "store_hash": "d5b786651040f21b4e2c98623732beb7",
     "user": [
       "admin"
     ]
@@ -332,7 +332,7 @@
     "shipping_map": "",
     "product_type": "Belts & Cummerbunds",
     "title": "DINISITON designer belts men high quality genuine leather belt man fashion strap male cowhide belts for men jeans cow leather",
-    "source_id": 205,
+    "source_id": 48,
     "user": [
       "admin"
     ],

@@ -1,6 +1,5 @@
 import simplejson as json
 import requests
-import re
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -9,6 +8,7 @@ from leadgalaxy.utils import (
     get_shopify_product,
     update_shopify_product,
 )
+from product_alerts.utils import variant_index
 
 
 class ProductChangeManager():
@@ -225,43 +225,9 @@ class ShopifyProductChangeManager(ProductChangeManager):
         return product_data
 
     def get_variant(self, product_data, variant_change):
-        found_variant_id = None
-        variants_map = self.product.get_variant_mapping()
         # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
         sku = variant_change.get('sku')
-        options = []
-        for s in sku.split(';'):
-            m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
-            options.append(m.groupdict())
-        sku = ';'.join('{}:{}'.format(option['option_group'], option['option_id']) for option in options)
-        for variant_id, variant in variants_map.iteritems():
-            found = True
-            for variant_option in variant:
-                mapped_title = variant_option.get('title')
-                mapped_sku = variant_option.get('sku')
-                exists = False
-                for option in options:
-                    option_id = option['option_id']
-                    option_title = option['option_title']
-                    if mapped_sku and option_id in mapped_sku:
-                        exists = True
-                    if mapped_title and mapped_title == option_title:
-                        exists = True
-                if not exists:
-                    found = False
-                    break
-            if found:
-                found_variant_id = variant_id
-                break
-        if found_variant_id is not None:
-            for idx, variant in enumerate(product_data['variants']):
-                if variant.get('id') == int(found_variant_id):
-                    return idx
-        else:
-            for idx, variant in enumerate(product_data['variants']):
-                if variant.get('sku') in sku or variant.get('sku') in variant_change.get('sku'):
-                    return idx
-        return None
+        return variant_index(self.product, sku, product_data['variants'])
 
     def handle_variant_price_change(self, product_data, variant_change):
         if self.config['price_change'] == 'notify':
@@ -342,48 +308,9 @@ class CommerceHQProductChangeManager(ProductChangeManager):
         return self.product.retrieve()
 
     def get_variant(self, product_data, variant_change):
-        found_variant_id = None
-        variants_map = self.product.get_variant_mapping()
         # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
         sku = variant_change.get('sku')
-        options = []
-        for s in sku.split(';'):
-            m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
-            options.append(m.groupdict())
-        sku = ';'.join('{}:{}'.format(option['option_group'], option['option_id']) for option in options)
-        for variant_id, variant in variants_map.iteritems():
-            found = True
-            for variant_option in variant:
-                mapped_title = variant_option.get('title')
-                mapped_sku = variant_option.get('sku')
-                exists = False
-                for option in options:
-                    option_id = option['option_id']
-                    option_title = option['option_title']
-                    if mapped_sku and option_id in mapped_sku:
-                        exists = True
-                    if mapped_title and mapped_title == option_title:
-                        exists = True
-                if not exists:
-                    found = False
-                    break
-            if found:
-                found_variant_id = variant_id
-                break
-        if found_variant_id is not None:
-            for idx, variant in enumerate(product_data['variants']):
-                if variant.get('id') == int(found_variant_id):
-                    return idx
-        else:
-            for idx, variant in enumerate(product_data['variants']):
-                found = True
-                variant_values = variant['variant']
-                for i, value in enumerate(variant_values):
-                    if value != options[i]['option_title']:
-                        found = False
-                if found:
-                    return idx
-        return None
+        return variant_index(self.product, sku, product_data['variants'])
 
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'notify':

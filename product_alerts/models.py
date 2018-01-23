@@ -1,3 +1,5 @@
+import simplejson as json
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -24,6 +26,7 @@ class ProductChange(models.Model):
     hidden = models.BooleanField(default=False, verbose_name='Archived change')
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
     status = models.IntegerField(default=0, choices=PRODUCT_CHANGE_STATUS_CHOICES)
+    categories = models.CharField(max_length=512, default='', null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -47,3 +50,50 @@ class ProductChange(models.Model):
         if self.store_type == 'chq':
             return self.chq_product
         return None
+
+    def get_data(self):
+        try:
+            changes_data = json.loads(self.data)
+        except:
+            changes_data = []
+        return changes_data
+
+    def get_changes_map(self, category):
+        changes = self.get_data()
+
+        changes_map = {
+            'product': {
+                'offline': [],
+            },
+            'variants': {
+                'quantity': [],
+                'price': [],
+                'var_added': [],
+                'var_removed': [],
+            }
+        }
+
+        if changes and len(changes):
+            for change in changes:
+                if not category or (change['level'] in category and change['name'] in category):
+                    if change.get('level') == 'product':
+                        changes_map['product'][change['name']].append(change)
+                    if change.get('level') == 'variant':
+                        changes_map['variants'][change['name']].append(change)
+
+        return changes_map
+
+    def get_categories(self):
+        changes = self.get_data()
+        categories = []
+        if changes and len(changes):
+            for change in changes:
+                category = '{}:{}'.format(change['level'], change['name'])
+                if category not in categories:
+                    categories.append(category)
+        return ','.join(categories)
+
+    def save(self, *args, **kwargs):
+        if self.categories != self.get_categories():
+            self.categories = self.get_categories()
+        super(ProductChange, self).save(*args, **kwargs)

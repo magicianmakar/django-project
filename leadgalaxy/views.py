@@ -3670,7 +3670,7 @@ def product_alerts(request):
     if not request.user.can('price_changes.use'):
         return render(request, 'upgrade.html')
 
-    show_hidden = 'hidden' in request.GET
+    show_hidden = True if request.GET.get('hidden') else False
 
     product = request.GET.get('product')
     if product:
@@ -3706,6 +3706,13 @@ def product_alerts(request):
     else:
         changes = changes.filter(hidden=show_hidden)
 
+    category = request.GET.get('category')
+    if category:
+        changes = changes.filter(categories__icontains=category)
+    product_type = request.GET.get('product_type', '')
+    if product_type:
+        changes = changes.filter(shopify_product__product_type__icontains=product_type)
+
     changes = changes.order_by('-updated_at')
 
     paginator = SimplePaginator(changes, post_per_page)
@@ -3717,8 +3724,8 @@ def product_alerts(request):
     for i in changes:
         change = {'qelem': i}
         change['id'] = i.id
-        change['data'] = json.loads(i.data)
-        change['changes'] = utils.product_changes_remap(change['data'])
+        change['data'] = i.get_data()
+        change['changes'] = i.get_changes_map(category)
         change['product'] = i.product
         change['shopify_link'] = i.product.shopify_link()
         change['original_link'] = i.product.get_original_info().get('url')
@@ -3745,6 +3752,8 @@ def product_alerts(request):
         'current_page': page,
         'page': 'product_alerts',
         'store': store,
+        'category': category,
+        'product_type': product_type,
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
     })
 

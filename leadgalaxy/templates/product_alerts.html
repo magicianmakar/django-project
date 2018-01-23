@@ -35,7 +35,25 @@
                 <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
                         <div class="row">
-                            <div class="col-md-2 col-md-offset-10 text-right">
+                            <div class="col-md-8 filter-col">
+                                <form id="filter-form" class="form-inline" method="get">
+                                    <input type="hidden" name="store" value="{{request.GET.store}}">
+                                    <input type="hidden" name="hidden" value="{{request.GET.hidden}}">
+                                    <label for="selected-actions" class="filter-col-item">Category:</label>
+                                    <select class="form-control filter-col-item" name="category">
+                                        <option value=""></option>
+                                        <option {% if category == "product:offline" %} selected {% endif %} value="product:offline">Availability</option>
+                                        <option {% if category == "variant:quantity" %} selected {% endif %} value="variant:quantity">Quantity</option>
+                                        <option {% if category == "variant:price" %} selected {% endif %} value="variant:price">Price</option>
+                                        <option {% if category == "variant:var_added" %} selected {% endif %} value="variant:var_added">Variant Added</option>
+                                        <option {% if category == "variant:var_removed" %} selected {% endif %} value="variant:var_removed">Variant Removed</option>
+                                    </select>
+                                    <label for="selected-actions" class="filter-col-item">Product Type:</label>
+                                    <input name="product_type" type="text" class="form-control filter-col-item" value="{{product_type}}" placeholder="">
+                                    <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
+                                </form>
+                            </div>
+                            <div class="col-md-4 text-right">
                             {% if show_hidden %}
                                 <a href="{% url 'product_alerts' %}?store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default btn-reverse active">Archived Alerts</a>
                             {% else %}
@@ -62,15 +80,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for change in product_changes.changes.product %}
-                                <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                {% endfor %}
-
                                 {% for item in product_changes %}
                                     {% for change in item.changes.product.offline %}
                                         {% if forloop.first %}
@@ -86,8 +95,7 @@
                                                     <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a>
                                                     Is now <b style="color:red">Offline</b>
                                                 {% endif %}
-
-                                            </b></td>
+                                            </td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
@@ -165,8 +173,8 @@
                                     {% for change in item.changes.variants.quantity %}
                                         {% if forloop.first %}
                                         <tr class="header" alert-id="{{item.id}}" >
-                                            <td class="category">Availability</td>
-                                            <td class="details-toggle">The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td class="category">Quantity</td>
+                                            <td class="details-toggle">The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
                                             <td>{{item.qelem.updated_at|date}}</td>
                                             <td>
                                                 <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
@@ -348,6 +356,21 @@
         display:none;
     }
     {% endif %}
+
+    .filter-col {
+        display: flex;
+        align-items: center;
+    }
+
+    .filter-col .filter-col-item {
+        margin-right: 5px;
+    }
+
+    .filter-col select {
+        padding-top: 2px;
+        display: inline-block;
+        width: 191px;
+    }
 </style>
 {% endblock %}
 

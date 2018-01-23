@@ -15,7 +15,6 @@ import requests
 import textwrap
 import hashlib
 import urlparse
-from requests.auth import HTTPBasicAuth
 
 import arrow
 from pusher import Pusher
@@ -983,6 +982,8 @@ class ShopifyProduct(models.Model):
         supplier.save()
 
     def monitor_product(self):
+        from requests.auth import HTTPBasicAuth
+
         if self.monitor_id and self.have_supplier() and settings.PRICE_MONITOR_HOSTNAME:
             monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, self.monitor_id)
             post_data = {

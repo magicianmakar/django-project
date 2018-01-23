@@ -34,6 +34,7 @@ from product_alerts.events import ProductChangeEvent
 
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
+from product_alerts.utils import aliexpress_variants, variant_index
 
 from product_feed.feed import generate_product_feed, generate_chq_product_feed, generate_woo_product_feed
 from product_feed.models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus
@@ -141,6 +142,17 @@ def export_product(req_data, target, user_id):
 
                 if api_data['product'].get('variants') and len(api_data['product']['variants']) > 100:
                     api_data['product']['variants'] = api_data['product']['variants'][:100]
+
+                variant_quantities = []
+                supplier = ProductSupplier(product_url=original_url)
+                if supplier.is_aliexpress:
+                    variant_quantities = aliexpress_variants(supplier.get_source_id())
+                for idx, variant in enumerate(api_data['product']['variants']):
+                    sku = variant['sku']
+                    for variant_quantity in variant_quantities:
+                        if variant_quantity['sku_short'] == sku:
+                            api_data['product']['variants'][idx]['inventory_quantity'] = variant_quantity['availabe_qty']
+                            api_data['product']['variants'][idx]['inventory_management'] = 'shopify'
 
                 r = requests.post(endpoint, json=api_data)
 
@@ -382,6 +394,24 @@ def export_product(req_data, target, user_id):
         },
         'target': target
     }
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def sync_shopify_product_quantities(self, product_id):
+    try:
+        product = ShopifyProduct.objects.get(pk=product_id)
+        product_data = utils.get_shopify_product(product.store, product.shopify_id)
+        variant_quantities = aliexpress_variants(product.default_supplier.get_source_id())
+        for variant in variant_quantities:
+            idx = variant_index(product, variant['sku'], product_data['variants'])
+            if idx is not None:
+                product_data['variants'][idx]['inventory_quantity'] = variant['availabe_qty']
+                product_data['variants'][idx]['inventory_management'] = 'shopify'
+        update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
+        rep = requests.put(update_endpoint, json={'product': product_data})
+        rep.raise_for_status()
+    except Exception:
+        raven_client.captureException()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

@@ -11,40 +11,20 @@
         </tr>
     </thead>
     <tbody>
-        {% for change in product_changes.changes.product %}
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        {% endfor %}
-
         {% for item in product_changes %}
             {% for change in item.changes.product.offline %}
                 {% if forloop.first %}
                 <tr class="header">
-                    <td class="category">Vendor</td>
-                    <td>A vendor store has gone <b>{% if change.new_value %}Online{% else %}Offline{% endif %}</b></td>
-                    <td>{{item.qelem.updated_at|date}}</td>
-                    <td><a class="view-details" href="#">View Details</a></td>
-                </tr>
-                <tr class="details">
-                    <td class="well" colspan="4">
-                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                            <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
-                            <div class="col-md-3"><b>Old Price</b></div>
-                            <div class="col-md-3"><b>New Price</b></div>
-                        </div>
-
-                {% endif %}
-                        <div class="row">
-                            <div class="col-md-offset-3 col-md-3">{{change.sku}}</div>
-                            <div class="col-md-3">{% money_format change.old_value store %}</div>
-                            <div class="col-md-3">{% money_format change.new_value store %}</div>
-                        </div>
-                {% if forloop.last %}
+                    <td class="category">Availability</td>
+                    <td>
+                        {% if not change.new_value %}
+                            <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">This product</a> is now <b style="color:green">Online</b>
+                        {% else %}
+                            <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">This product</a> is now <b style="color:red">Offline</b>
+                        {% endif %}
                     </td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td></td>
                 </tr>
                 {% endif %}
             {% endfor %}
@@ -60,14 +40,16 @@
                 <tr class="details">
                     <td class="well" colspan="4">
                         <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                            <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
                             <div class="col-md-3"><b>Old Price</b></div>
                             <div class="col-md-3"><b>New Price</b></div>
                         </div>
 
                 {% endif %}
                         <div class="row">
-                            <div class="col-md-offset-3 col-md-3">{{change.sku}}</div>
+                            <div class="col-md-offset-1 col-md-3">{{change.sku}}</div>
+                            <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
                             <div class="col-md-3">{% money_format change.old_value store %}</div>
                             <div class="col-md-3">{% money_format change.new_value store %}</div>
                         </div>
@@ -80,24 +62,78 @@
             {% for change in item.changes.variants.quantity %}
                 {% if forloop.first %}
                 <tr class="header">
-                    <td class="category">Availability</td>
-                    <td>The <b>Availability</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td class="category">Quantity</td>
+                    <td>The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
                     <td>{{item.qelem.updated_at|date}}</td>
                     <td><a class="view-details" href="#">View Details</a></td>
                 </tr>
                 <tr class="details">
                     <td class="well" colspan="4">
                         <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                            <div class="col-md-offset-3 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
                             <div class="col-md-3"><b>Old Quantity</b></div>
                             <div class="col-md-3"><b>New Quantity</b></div>
                         </div>
 
                 {% endif %}
                         <div class="row">
-                            <div class="col-md-offset-3 col-md-3">{{change.sku}}</div>
+                            <div class="col-md-offset-1 col-md-3">{{change.sku}}</div>
+                            <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
                             <div class="col-md-3">{{change.old_value}}</div>
                             <div class="col-md-3">{{change.new_value}}</div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            {% for change in item.changes.variants.var_added %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">New Variant</td>
+                    <td>A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a></td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-1 col-md-3" style="color:green">
+                                {{change.sku}}
+                            </div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            {% for change in item.changes.variants.var_removed %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Removed Variant</td>
+                    <td>A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a></td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-1 col-md-3" style="color:red">
+                                {{change.sku}}
+                            </div>
+                            <div class="col-md-2"></div>
                         </div>
                 {% if forloop.last %}
                     </td>

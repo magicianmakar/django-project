@@ -47,6 +47,7 @@ from shopify_orders.models import (
 from dropwow_core.models import DropwowAccount
 from dropwow_core.utils import get_dropwow_product_options
 from product_alerts.models import ProductChange
+from product_alerts.utils import monitor_product
 
 import tasks
 import utils
@@ -1193,7 +1194,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product.save()
 
         try:
-            product.monitor_product()
+            monitor_product(product)
+            if product.is_connected:
+                tasks.sync_shopify_product_quantities.apply_async(args=[product.id])
 
             if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(product.store, product.shopify_id, product.default_supplier.supplier_name)

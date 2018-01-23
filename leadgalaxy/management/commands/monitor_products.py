@@ -1,19 +1,15 @@
 from Queue import Queue
 from threading import Thread
 
-from requests.auth import HTTPBasicAuth
-
 from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 from django.db.models import Q
 
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import app_link, safeInt
 from leadgalaxy.models import *
 from commercehq_core.models import CommerceHQProduct
+from product_alerts.utils import monitor_product
 
-
-from raven.contrib.django.raven_compat.models import client as raven_client
 
 PRICE_MONITOR_BASE = '{}/api'.format(settings.PRICE_MONITOR_HOSTNAME)
 
@@ -25,59 +21,8 @@ def worker(q):
         q.task_done()
 
 
-def attach_product(product, product_id, store_id, stdout=None):
-    """
-    product: Product model (ShopifyProduct or CommerceHQProduct)
-    product_id: Source Product ID (ex. Aliexpress ID)
-    store_id: Source Store ID (ex. Aliexpress Store ID)
-    """
-
-    if product.__class__.__name__ == 'ShopifyProduct':
-        dropified_type = 'shopify'
-    elif product.__class__.__name__ == 'CommerceHQProduct':
-        dropified_type = 'chq'
-
-    webhook_url = app_link('webhook/price-monitor/product', product=product.id, dropified_type=dropified_type)
-    monitor_api_url = '{}/products'.format(PRICE_MONITOR_BASE)
-
-    try:
-        post_data = {
-            'product_id': product_id,
-            'store_id': store_id,
-            'dropified_id': product.id,
-            'dropified_type': dropified_type,
-            'dropified_store': product.store_id,
-            'dropified_user': product.user_id,
-            'webhook': webhook_url,
-            'url': product.default_supplier.product_url,
-        }
-
-        rep = requests.post(
-            url=monitor_api_url,
-            data=post_data,
-            auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
-        )
-
-    except Exception as e:
-        raven_client.captureException()
-
-        if stdout:
-            stdout.write(' * API Call error: {}'.format(repr(e)))
-
-        return
-
-    try:
-        rep.raise_for_status()
-
-        data = rep.json()
-        product.monitor_id = data['id']
-        product.save()
-    except Exception as e:
-        raven_client.captureException()
-
-        if stdout:
-            stdout.write(' * Attach Product ({}) Exception: {} \nResponse: {}'.format(
-                product.id, repr(e), rep.text))
+def attach_product(product, stdout=None):
+    monitor_product(product, stdout)
 
 
 class Command(DropifiedBaseCommand):
@@ -207,33 +152,7 @@ class Command(DropifiedBaseCommand):
             self.stdout.write(self.style.HTTP_INFO('Ignore, already registered.'))
             return
 
-        try:
-
-            if not (product.have_supplier() and product.default_supplier.is_aliexpress):
-                #  Not connected or not an Aliexpress product
-                product.monitor_id = -1
-                product.save()
-                return
-
-            supplier = product.default_supplier
-            store_id = safeInt(supplier.get_store_id())
-
-            product_id = supplier.get_source_id()
-            if not product_id:
-                # Product doesn't have Source Product ID
-                product.monitor_id = -3
-                product.save()
-                return
-
-        except:
-            raven_client.captureException()
-            product.monitor_id = -5
-            product.save()
-            return
-
         self.q.put({
             'product': product,
-            'product_id': product_id,
-            'store_id': store_id,
             'stdout': self.stdout,
         })
