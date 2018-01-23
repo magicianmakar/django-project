@@ -330,7 +330,7 @@
                                     <div class="col-xs-2">
                                         <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
 
-                                        {% if request.session.is_hijacked_user or user.is_superuser and request.GET.debug %}
+                                        {% if order_debug %}
                                             <a class="badge badge-info" target="_blank" href="{{order.order_api_url}}">order</a>
                                         {% endif %}
                                     </div>
@@ -479,7 +479,7 @@
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
-                                                {% if request.session.is_hijacked_user or user.is_superuser and request.GET.debug and item.order_data_id %}
+                                                {% if order_debug and item.order_data_id %}
                                                     <a class="badge badge-info" target="_blank" href="/api/shopify/order-data?order={{item.order_data_id}}">data</a>
                                                 {% endif %}
 

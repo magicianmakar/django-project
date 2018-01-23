@@ -829,6 +829,7 @@ class CommerceHQOrderTrack(models.Model):
             "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
+            "FUND_PROCESSING": "Fund Processing",
 
             # Dropwow Status
             'P': "In Process",

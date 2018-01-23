@@ -15,7 +15,6 @@
 
             user_id: {{ user.id }},
             name: "{{ user.get_full_name|default:user.username|escapejs }}",
-            email: "{{ user.email }}",
             created_at: {{ user.date_joined|date:"U" }},
             extension_version: '{{user.profile.get_config.extension_version}}',
         }];
@@ -33,7 +32,7 @@
                 user_id: {{ user.id }},
                 {% if INTERCOM_USER_HASH %}user_hash: '{{INTERCOM_USER_HASH}}',{% endif %}
                 name: dataLayer[0].name,
-                email: dataLayer[0].email,
+                email: currentUser.email,
                 created_at: dataLayer[0].created_at,
                 plan: dataLayer[0].userPlan,
                 extension_version: dataLayer[0].extension_version,
