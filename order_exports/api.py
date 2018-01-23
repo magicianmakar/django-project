@@ -9,13 +9,17 @@ import uuid
 from math import ceil
 
 import requests
+from django.db.models.query_utils import Q
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment
+from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment, clean_query_id
 from shopified_core.utils import app_link, send_email_from_template
+
+from leadgalaxy.models import ShopifyOrderTrack, User, ShopifyStore
+from shopify_orders import utils as shopify_orders_utils
 
 
 # Get an instance of a logger
@@ -409,3 +413,96 @@ class ShopifyOrderExportAPI():
         self.query.found_order_ids = ','.join(order_ids)
         self.query.found_vendors = ', '.join(vendors)
         self.query.save()
+
+
+class ShopifyTrackOrderExport():
+
+    def __init__(self, store):
+        self.store = ShopifyStore.objects.get(id=store)
+        # create the base url for accessing Shopify with basic http auth
+        self.base_url = self.store.get_link('/', api=True)
+        self.file_path = tempfile.mktemp(suffix='.csv', prefix='order_export_')
+
+        file_name = self.file_path.split('/')[-1]
+        self._s3_path = os.path.join('order-exports', file_name)
+
+    def generate_tracked_export(self, params):
+        self.user = User.objects.get(id=params["user_id"])
+
+        orders = ShopifyOrderTrack.objects.filter(user=self.user, store=self.store).defer('data')
+
+        if params["query"]:
+            order_id = shopify_orders_utils.order_id_from_name(self.store, params["query"])
+
+            if order_id:
+                orders = orders.filter(order_id=order_id)
+            else:
+                orders = orders.filter(Q(source_id=clean_query_id(params["query"])) |
+                                       Q(source_tracking=params["query"]))
+
+        if params["tracking"] == '0':
+            orders = orders.filter(source_tracking='')
+        elif params["tracking"] == '1':
+            orders = orders.exclude(source_tracking='')
+
+        if params["fulfillment"] == '1':
+            orders = orders.filter(shopify_status='fulfilled')
+        elif params["fulfillment"] == '0':
+            orders = orders.exclude(shopify_status='fulfilled')
+
+        if params["hidden"] == '1':
+            orders = orders.filter(hidden=True)
+        elif not params["hidden"] or params["hidden"] == '0':
+            orders = orders.exclude(hidden=True)
+
+        if params["reason"]:
+            if params["reason"].startswith('_'):
+                orders = orders.filter(source_status=params["reason"][1:])
+            else:
+                orders = orders.filter(source_status_details=params["reason"])
+
+        self.create_track_orders_csv(orders)
+
+    def create_track_orders_csv(self, orders):
+        orders_count = orders.count()
+        start = 0
+        steps = 5000
+
+        with open(self.file_path, 'wr') as csv_file:
+            fieldnames = ['Shopify Order', 'Shopify Item', 'Aliexpress Order ID', 'Tracking Number']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+
+            while start <= orders_count:
+                for order in orders[start:start + steps]:
+                    line = {}
+                    line['Shopify Order'] = order.order_id
+                    line['Shopify Item'] = order.line_id
+                    line['Aliexpress Order ID'] = order.source_id
+                    line['Tracking Number'] = order.source_tracking
+
+                    writer.writerow(line)
+
+                start += steps
+
+        url = self.send_to_s3()
+        self.send_email(url)
+
+    def send_to_s3(self):
+        url = aws_s3_upload(self._s3_path, input_filename=self.file_path)
+        os.remove(self.file_path)
+
+        return url
+
+    def send_email(self, url):
+        data = {
+            'url': url
+        }
+
+        send_email_from_template(
+            tpl='tracked_order_export.html',
+            subject='[Dropified] Aliexpress IDs & Tracking Numbers Export',
+            recipient=self.user.email,
+            data=data,
+            nl2br=False
+        )

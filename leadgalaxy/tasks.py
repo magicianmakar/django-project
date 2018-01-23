@@ -41,7 +41,7 @@ from product_feed.feed import generate_product_feed, generate_chq_product_feed, 
 from product_feed.models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus
 
 from order_exports.models import OrderExport
-from order_exports.api import ShopifyOrderExportAPI
+from order_exports.api import ShopifyOrderExportAPI, ShopifyTrackOrderExport
 
 from shopify_orders.models import ShopifyOrder
 from shopify_orders.models import ShopifyOrderRisk
@@ -741,10 +741,18 @@ def generate_order_export(self, order_export_id):
 
         api = ShopifyOrderExportAPI(order_export)
         api.generate_export()
-    except Exception as exc:
+    except:
         raven_client.captureException()
 
-        raise self.retry(exc=exc, countdown=5, max_retries=3)
+
+@celery_app.task(bind=True, base=CaptureFailure)
+def generate_tracked_order_export(self, params):
+    try:
+        track_order_export = ShopifyTrackOrderExport(params["store_id"])
+        track_order_export.generate_tracked_export(params)
+
+    except:
+        raven_client.captureException()
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
@@ -754,10 +762,8 @@ def generate_order_export_query(self, order_export_id):
 
         api = ShopifyOrderExportAPI(order_export)
         api.generate_query(send_email=False)
-    except Exception as exc:
+    except:
         raven_client.captureException()
-
-        raise self.retry(exc=exc, countdown=5, max_retries=3)
 
 
 @celery_app.task(bind=True, base=CaptureFailure)

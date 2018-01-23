@@ -279,4 +279,25 @@
         }).attr("disabled", "disabled");
         return true; // ensure form still submits
     });
+
+    $('.export-tracked-orders').click(function(e) {
+        var form_data = $('form.filter-form').serialize() +'&'+$.param({ 'store': $(this).data("store") });
+
+        $.ajax({
+            url: '/api/export-tracked-orders',
+            type: 'POST',
+            data: form_data,
+            success: function (data) {
+                swal({
+                    text: 'Your request for Orders Export has been received. \nYour CSV file will be emailed to ' + data.email,
+                    title: 'Export Orders',
+                    type: 'success'
+                });
+            },
+            error: function (data) {
+                displayAjaxError('Export Orders', data);
+            }
+        });
+    });
+
 })();

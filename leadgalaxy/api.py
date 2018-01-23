@@ -3067,3 +3067,27 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success({
             'products': products
         })
+
+    def post_export_tracked_orders(self, request, user, data):
+        if user.is_subuser:
+            return self.api_error('Sub Users are not allowed to Export Orders', status=403)
+
+        params = {
+            'query': data.get('query'),
+            'tracking': data.get('tracking'),
+            'fulfillment': data.get('fulfillment'),
+            'reason': data.get('reason'),
+            'hidden': data.get('hidden'),
+            'store_id': data.get('store'),
+            'user_id': user.id,
+        }
+
+        cache_key = 'track_export_{}_{}'.format(user.id, data['store'])
+
+        cache.set(cache_key, True, timeout=600)
+
+        tasks.generate_tracked_order_export.apply_async(args=[params], expires=180)
+
+        return self.api_success({
+            'email': user.email
+        })
