@@ -1016,6 +1016,23 @@ def calculate_user_statistics(self, user_id):
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
 def keen_add_event(self, event_name, event_data):
     try:
+        try:
+            if 'product' in event_data:
+                cache_key = 'keen_event_product_price_{}'.format(event_data.get('product'))
+                product_price = cache.get(cache_key)
+
+                if not product_price:
+                    url = '{}/api/products/price/{}'.format(settings.PRICE_MONITOR_HOSTNAME, event_data.get('product'))
+                    prices_response = requests.get(
+                        url=url,
+                        auth=requests.auth.HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+                    )
+
+                    product_price = prices_response.json()
+                    cache.set(cache_key, product_price['min_price'], timeout=3600)
+        except:
+            raven_client.captureException()
+
         keen.add_event(event_name, event_data)
     except:
         raven_client.captureException(level='warning')
