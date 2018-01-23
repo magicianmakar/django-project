@@ -3336,6 +3336,11 @@ def orders_view(request):
     if product_filter:
         product_filter = models_user.shopifyproduct_set.filter(id__in=product_filter)
 
+    order_debug = request.session.get('is_hijacked_user') or \
+        (request.user.is_superuser and request.GET.get('debug')) or \
+        request.user.get_config('_orders_debug') or \
+        settings.DEBUG
+
     return render(request, 'orders_new.html', {
         'orders': all_orders,
         'store': store,
@@ -3365,6 +3370,7 @@ def orders_view(request):
         'admitad_site_id': admitad_site_id,
         'user_admitad_credentials': user_admitad_credentials,
         'show_actual_supplier': show_actual_supplier,
+        'order_debug': order_debug,
         'page': 'orders',
         'breadcrumbs': breadcrumbs
     })
