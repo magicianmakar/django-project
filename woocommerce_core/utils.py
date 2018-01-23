@@ -425,20 +425,26 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
     for store in stores:
         order_ids = list(store_orders[store.id])
         include = ','.join(str(order_id) for order_id in order_ids)
+        page = 1
+        while page:
+            params = {'page': page, 'per_page': 100, 'include': include}
+            query_string = urllib.urlencode(params)
+            r = store.wcapi.get('orders?{}'.format(query_string))
+            r.raise_for_status()
 
-        r = store.wcapi.get('orders?{}'.format(urllib.urlencode({'include': include})))
-        r.raise_for_status()
+            orders = r.json()
 
-        orders = r.json()
+            for order in orders:
+                country = order['shipping']['country']
+                cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
 
-        for order in orders:
-            country = order['shipping']['country']
-            cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
+                for item in order.get('line_items', []):
+                    args = store.id, order['id'], item['id']
+                    cache_key = 'woo_auto_fulfilled_order_{}_{}_{}'.format(*args)
+                    cache_data[cache_key] = has_order_line_been_fulfilled(item)
 
-            for item in order.get('line_items', []):
-                args = store.id, order['id'], item['id']
-                cache_key = 'woo_auto_fulfilled_order_{}_{}_{}'.format(*args)
-                cache_data[cache_key] = has_order_line_been_fulfilled(item)
+            has_next = 'rel="next"' in r.headers.get('link', '')
+            page = page + 1 if has_next else 0
 
     cache.set_many(cache_data, timeout=3600)
 
