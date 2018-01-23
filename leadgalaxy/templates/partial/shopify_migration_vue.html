@@ -1,0 +1,76 @@
+{% verbatim %}
+    <script type="text/x-template" id="shopify-products-table-tpl">
+      <div>
+        <table class="table table-striped table-bordered xdataTables">
+          <thead>
+              <tr>
+                  <th style="width:40px"></th>
+                  <th style="width:64px"></th>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Supplier</th>
+                  <th style="width: 110px">Status</th>
+                  <th style="width: 140px"></th>
+              </tr>
+          </thead>
+          <tbody>
+            <product-row v-for="item in products" :product="item" />
+          </tbody>
+        </table>
+        <div class="row" v-if='prev || next'>
+            <nav style="text-align: center;">
+                <ul class="pagination pagination-lg">
+                  <li v-if='prev'>
+                    <a :href="replacePageParam(current - 1)" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+
+                  <li v-if='next'>
+                    <a :href="replacePageParam(current + 1)" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                </ul>
+            </nav>
+        </div>
+      </div>
+    </script>
+    <script type="text/x-template" id="product-row-tpl">
+      <tr v-if="product.loading" :product-id="product.id">
+        <td colspan="7">
+            <p class="text-center">Loading...</p>
+        </td>
+      </tr>
+      <tr v-else :product-id="product.id">
+          <td>
+            <input v-if="product.status == 'connected'" class="item-select icheck" style="" :id="'product_' + product.id" name="product" :value="product.id" type="checkbox" :data-product="product.product" />
+            <input v-else class="item-select icheck" style="" :id="'product_' + product.id" name="product" :value="product.id" type="checkbox" />
+            <label class="pull-left" :for="'product_' + product.id"></label>
+          </td>
+          <td><img style="width: 64px; height: 64px;" class="media-object unveil" :src="product.image ? product.image.src : ''" alt=""></td>
+          <td>
+            <template v-if="product.product">
+                <a :href="'/product/' + product.product" target="_blank">{{ product.title }}</a>
+            </template>
+            <template v-else>
+                {{ product.title }}
+            </template>
+          </td>
+          <td>{{product.product_type}}</td>
+          <td><a :href="product.original_url" target="_blank">{{product.supplier_name}}</a></td>
+          <td>
+              <template v-if="product.status == 'connected'">
+              <span class="no-wrap"><i class='fa fa-circle text-success'></i> Connected</span>
+              </template>
+              <template v-else>
+              <span class="no-wrap"><i class='fa fa-circle text-danger'></i> Not Connected</span>
+              </template>
+          </td>
+          <td>
+              <button v-if="product.status == 'connected'" class="btn btn-rounded product-connection-disconnect" :data-product="product.product">DISCONNECT</button>
+              <button v-else class="btn btn-rounded product-connection-connect" :data-shopify="product.id">CONNECT</button>
+          </td>
+      </tr>
+    </script>
+{% endverbatim %}

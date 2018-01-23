@@ -123,7 +123,7 @@
                 </li>
 
                 {#  #}
-                <li {% if page == 'product' or page == 'bulk' or page == 'boards' %}class="active"{% endif %}>
+                <li {% if page == 'product' or page == 'bulk' or page == 'boards'  or page == 'shopify_migration'%}class="active"{% endif %}>
                     <a href="{% url 'product' %}">
                         <i class="fa fa-shopping-cart"></i>
                         <span class="nav-label">Products</span>
@@ -155,6 +155,12 @@
                             </a>
                         </li>
                         {% endif %}
+                        <li {% if page == 'shopify_migration' %}class="active"{% endif %}>
+                            <a href="{% url 'shopify_migration' %}">
+                                <i class="fa fa-link"></i>
+                                <span class="nav-label">Migration</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 {# {% else %} #}

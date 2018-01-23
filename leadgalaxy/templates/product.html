@@ -147,8 +147,14 @@
     {% if store.id %}
         <p class="text-center">
             <a href="#" class="shopify-product-import-btn filter-col-item" store="{{store.id}}">
-                <i class="fa fa-plus"></i> Import From Shopify
+                Import
             </a>
+            Or
+            <a href="{% url 'shopify_migration' %}?store={{store.id}}&status=not_connected" class="filter-col-item">
+                Migrate
+            </a>
+
+            From Shopify
         </p>
     {% endif %}
     {% endfor %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load compress %}
+{% load template_helper %}
+
+{% block main-container %}
+    <div class="tabs-container">
+       <ul class="nav nav-tabs">
+       {% for item in user.profile.get_shopify_stores %}
+           {% if item.id|stringformat:"i" == request.GET.store  or item.id == store.id %}
+               <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+           {% else %}
+               <li class=""><a href="{% url 'shopify_migration' %}?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+           {% endif %}
+       {% endfor %}
+
+       </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter Options</button>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <label>Items Per Page</label>
+                        {% items_per_page_list as ps %}
+                        {% for value in ps %}
+                            {% if value == ppp %}
+                            <span class='btn btn-primary btn-rounded' >{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</span>
+                            {% else %}
+                            <a href='?store={{ store.id }}&ppp={{ value }}' class='btn btn-default btn-outline btn-rounded'>{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+                <form method="get" action="{% url 'shopify_migration' %}" class="filter-form gray-bg m-b-sm m-t-sm"
+                    {% if request.COOKIES.shopify_products_filter != 'true' %}
+                          style="display:none"
+                    {% endif %}
+                >
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Category</span>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="category" value="{{category|default:''}}" class="form-control" placeholder="Category">
+                        </div>
+                    </div>
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Status</span>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="status" class="form-control help-select">
+                                <option {% if status == 'connected' %}selected="selected"{% endif %} value="connected">Connected</option>
+                                <option {% if status == 'not_connected' %}selected="selected"{% endif %} value="not_connected">Not Connected</option>
+                                <option {% if status == 'any' or status == None %}selected="selected"{% endif %} value="any">Any status</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Title</span>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="title" value="{{title|default:''}}" class="form-control" placeholder="Title">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2 text-center filter-buttons">
+                            {% if request.GET.store %}
+                            <input type="hidden" name="store" value="{{ request.GET.store }}">
+                            {% endif %}
+                            <input type="hidden" name="ppp" value="{{ ppp }}">
+                        <button class="btn btn-primary"><i class="fa fa-filter"></i> Apply</button>
+                        </div>
+                        <div class="col-md-5 col-md-offset-4 text-right">
+                            <a href="{% url_replace save 1 %}" class="btn btn-success save-filter-btn">
+                                <i class="fa fa-save"></i> Save Filter
+                            </a>
+
+                            <a href="{% url 'shopify_migration' %}?store={{store.id}}&reset=1" class="btn btn-default reset-filter-btn">
+                                <i class="fa fa-eraser"></i> Reset Filter
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                <div class="row" style="margin-bottom: 20px">
+                    <div class="col-md-6 filter-col">
+                        <label for="selected-actions">Selected Items:</label>
+                        <select class="form-control" name="selected-actions" id="selected-actions" style="display: inline-block; width: 191px; ">
+                            <option value=""></option>
+                            <option value="disconnect">DISCONNECT</option>
+                        </select>
+                        <button id="apply-btn" class="btn btn-primary">Apply</button>
+                        <button class="btn btn-default btn-outline select-all-btn">Select All</button>
+                    </div>
+                </div>
+
+                <div id='products-wrapper'>
+                    <shopify-products-table></shopify-products-table>
+                </div>
+                </div> <!-- div.panel-body -->
+            </div> <!-- tab-1 -->
+        </div> <!-- tab-content -->
+    </div> <!-- tabs-container -->
+
+{% include 'partial/shopify_migration_vue.html' %}
+
+{% include "partial/shopify_product_selector.html" %}
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        .icheckbox_square-blue {
+            position: absolute;
+            margin: 0;
+            background-color: #fff;
+        }
+        .filter-row {
+            padding-bottom: 5px;
+        }
+        .filter-form {
+            border: 1px solid rgb(215, 218, 215);
+            box-shadow: rgb(215, 218, 215) 0px 0px 10px 0px;
+            padding: 15px 0px 20px 15px;
+        }
+        .filter-label {
+            padding: 7px 12px;
+            font-weight: bold;
+            text-align: right;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    var user_filter = {
+        title: '{{ title }}',
+        category: '{{ category }}',
+        status: '{{ status }}',
+        ppp: '{{ppp}}',
+        current_page: '{{current_page}}',
+        store: {{store.id}},
+    };
+
+    var sub_conf = {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "{{store.pusher_channel}}",
+        store: {{store.id}},
+    };
+</script>
+
+<script src="//js.pusher.com/3.2/pusher.min.js"></script>
+
+{% compress js %}
+    <script src="{% static 'libs/bower_components/vue/dist/vue.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/products_table.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/shopify_migration.js' %}"></script>
+{% endcompress %}
+{% endblock %}
+

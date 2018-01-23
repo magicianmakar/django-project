@@ -1081,16 +1081,18 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def delete_product_connect(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
+        product_ids = data.get('product').split(',')
+        for product_id in product_ids:
+            product = ShopifyProduct.objects.get(id=product_id)
+            permissions.user_can_edit(user, product)
 
-        shopify_id = product.shopify_id
-        if shopify_id:
-            product.shopify_id = 0
-            product.save()
+            shopify_id = product.shopify_id
+            if shopify_id:
+                product.shopify_id = 0
+                product.save()
 
-            cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            tasks.update_product_connection.delay(product.store.id, shopify_id)
+                cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
+                tasks.update_product_connection.delay(product.store.id, shopify_id)
 
         return self.api_success()
 
@@ -2204,7 +2206,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 deleted_ids.append(track.id)
                 track.delete()
 
-                track.store.pusher_trigger('order-source-id-delete', {
+                order.store.pusher_trigger('order-source-id-delete', {
                     'store_id': track.store.id,
                     'order_id': track.order_id,
                     'line_id': track.line_id,
@@ -2729,6 +2731,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         utils.set_orders_filter(user, data)
         return self.api_success()
 
+    def post_save_shopify_products_filter(self, request, user, data):
+        utils.set_shopify_products_filter(user, data)
+        return self.api_success()
+
     def post_import_product(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
@@ -3023,3 +3029,32 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             return self.api_error('Server Error')
 
         return self.api_success(affiliate)
+
+    def get_search_shopify_products(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        title = data.get('title')
+        category = data.get('category')
+        status = data.get('status')
+        ppp = data.get('ppp')
+        page = data.get('current_page')
+
+        # fetch all shopify products asynchronously
+        task = tasks.search_shopify_products.apply_async(
+            args=[store.id, title, category, status, ppp, page],
+            queue='priority_high',
+            expires=60)
+
+        return self.api_success({'task': task.id})
+
+    def get_search_shopify_products_cached(self, request, user, data):
+        cache_key = 'shopify_products_%s' % data.get('task')
+        products = cache.get(cache_key)
+        cache.delete(cache_key)
+        return self.api_success({
+            'products': products
+        })

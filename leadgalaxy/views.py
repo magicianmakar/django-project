@@ -1059,6 +1059,47 @@ def products_list(request, tpl='grid'):
 
 
 @login_required
+def shopify_migration(request):
+    if not request.user.can('product_filters.use'):
+        return render(request, 'upgrade.html')
+
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Migration page.')
+        return HttpResponseRedirect('/')
+
+    ppp = request.GET.get('ppp', '50')
+    page = request.GET.get('page', '1')
+
+    if request.GET.get('reset') == '1':
+        request.user.profile.del_config_values('_shopify_products_filter_', True)
+
+    category = utils.get_shopify_products_filter(request, 'category', '')
+    status = utils.get_shopify_products_filter(request, 'status', 'any')
+    title = utils.get_shopify_products_filter(request, 'title', '')
+
+    if status not in ['connected', 'not_connected']:
+        status = None
+
+    breadcrumbs = [
+        {'url': '/product', 'title': 'Products'},
+        {'url': '/product?store={}'.format(store.id), 'title': store.title},
+    ]
+
+    return render(request, 'shopify_migration.html', {
+        'store': store,
+        'category': category,
+        'status': status,
+        'title': title,
+        'user_filter': utils.get_shopify_products_filter(request),
+        'page': 'shopify_migration',
+        'breadcrumbs': breadcrumbs,
+        'ppp': ppp,
+        'current_page': page
+    })
+
+
+@login_required
 def product_view(request, pid):
     #  AWS
 

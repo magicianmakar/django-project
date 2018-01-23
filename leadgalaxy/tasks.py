@@ -22,6 +22,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
 from shopified_core.utils import app_link
+from shopified_core.paginators import SimplePaginator
 
 from unidecode import unidecode
 
@@ -697,6 +698,39 @@ def bulk_edit_products(self, store, products):
     store.pusher_trigger('bulk-edit-connected', {
         'task': self.request.id,
         'errors': errors
+    })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def search_shopify_products(self, store, title, category, status, ppp, page):
+    store = ShopifyStore.objects.get(id=store)
+
+    all_products = []
+    errors = []
+    page = utils.safeInt(page, 1)
+    post_per_page = utils.safeInt(ppp)
+    max_products = post_per_page * (page + 1)
+
+    try:
+        products = utils.get_shopify_products(store=store, all_products=True, max_products=max_products,
+                                              title=title, product_type=category, status=status,
+                                              fields='id,image,title,product_type', sleep=0.5)
+        for product in products:
+            all_products.append(product)
+    except:
+        errors.append('Server Error')
+        raven_client.captureException()
+
+    paginator = SimplePaginator(all_products, post_per_page)
+    page = min(max(1, page), paginator.num_pages)
+    cache.set('shopify_products_%s' % self.request.id, paginator.page(page).object_list, timeout=60)
+
+    store.pusher_trigger('shopify-products-found', {
+        'task': self.request.id,
+        'errors': errors,
+        'current': page,
+        'prev': page > 1,
+        'next': paginator.num_pages > page
     })
 
 

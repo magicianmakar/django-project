@@ -242,3 +242,8 @@ def user_orders_count(user):
         orders_count += store.get_orders_count(all_orders=True)
 
     return mark_safe('{}'.format(orders_count))
+
+
+@register.assignment_tag
+def items_per_page_list():
+    return ['10', '50', '100']

@@ -780,13 +780,20 @@ def get_shopify_products_count(store):
 
 
 def get_shopify_products(store, page=1, limit=50, all_products=False,
-                         product_ids=None, fields=None, session=requests):
+                         product_ids=None, fields=None, session=requests,
+                         title=None, product_type=None, status=None, max_products=None, sleep=None):
 
     if not all_products:
         params = {
             'page': page,
-            'limit': limit
+            'limit': limit,
         }
+
+        if product_type:
+            params['product_type'] = product_type
+
+        if title:
+            params['title'] = title
 
         if product_ids:
             if type(product_ids) is list:
@@ -816,12 +823,45 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
         if not count:
             return
 
+        if status not in ['connected', 'not_connected']:
+            status = None
+
         pages = int(ceil(count / float(limit)))
+        total = 0
         for page in xrange(1, pages + 1):
             rep = get_shopify_products(store=store, page=page, limit=limit,
+                                       title=title, product_type=product_type, fields=fields,
                                        all_products=False, session=requests.session())
+
+            products = {}
+            if status:
+                for product in ShopifyProduct.objects.filter(store=store).select_related('default_supplier').defer('data'):
+                    products[product.shopify_id] = product
+
             for p in rep:
-                yield p
+                if status is None:
+                    total += 1
+                    yield p
+                else:
+                    product = products.get(p['id'])
+                    if product and product.have_supplier():
+                        p['original_url'] = product.default_supplier.product_url
+                        p['supplier_name'] = product.default_supplier.get_name()
+                        p['status'] = 'connected'
+                        p['product'] = product.id
+                    else:
+                        p['original_url'] = ''
+                        p['status'] = 'not_connected'
+
+                    if status == p['status']:
+                        total += 1
+                        yield p
+
+            if max_products and total >= max_products:
+                break
+
+            if sleep:
+                time.sleep(sleep)
 
 
 def get_shopify_product(store, product_id, raise_for_status=False):
@@ -1892,6 +1932,33 @@ def ensure_title(text):
         pass
 
     return text
+
+
+def get_shopify_products_filter(request, name=None, default=None):
+    if name:
+        key = '_shopify_products_filter_{}'.format(name)
+        val = request.GET.get(name)
+
+        if not val:
+            val = request.user.get_config(key, default)
+
+        return val
+    else:
+        filters = {}
+        for name, val in request.user.profile.get_config().items():
+            if name.startswith('_shopify_products_filter_'):
+                filters[name.replace('_shopify_products_filter_', '')] = val
+
+        return filters
+
+
+def set_shopify_products_filter(user, filters, default=None):
+    fields = ['category', 'status', 'title']
+
+    for name, val in filters.items():
+        if name in fields:
+            key = '_shopify_products_filter_{}'.format(name)
+            user.set_config(key, val)
 
 
 def get_orders_filter(request, name=None, default=None, checkbox=False):

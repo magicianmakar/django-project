@@ -157,6 +157,19 @@ function hashUrlFileName(s) {
 
 }
 
+function replaceQueryParam(param, value) {
+    var queryParameters = {}, queryString = location.search.substring(1),
+    re = /([^&=]+)=([^&]*)/g, m;
+
+    while (m = re.exec(queryString)) {
+        queryParameters[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+    }
+
+    queryParameters[param] = value;
+    return '?' + jQuery.param(queryParameters);
+}
+
+
 function getQueryVariable(variable, url) {
     var query = '';
     if (url === undefined) {

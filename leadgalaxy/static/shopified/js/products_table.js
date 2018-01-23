@@ -55,6 +55,8 @@ $('#apply-btn').click(function(e) {
     } else if (action == 'shopify-send') {
         $('#modal-shopify-send').modal({backdrop: 'static', keyboard: false});
         return;
+    } else {
+        return;
     }
 
     $('#selected-actions').val('');
