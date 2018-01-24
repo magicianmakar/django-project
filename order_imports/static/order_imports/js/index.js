@@ -6,13 +6,14 @@ window.OrderImportsIndex = {
         this.onApproveSubmit();
         this.onChangeOnlyOneFilled();
         this.onKeyUpOnlyNumber();
+        this.onChangeIdentity();
     },
     setDropzoneOptions: function() {
         Dropzone.options.dropzoneForm = {
             paramName: "file", // The name that will be used to transfer the file
             maxFilesize: 2, // MB
             uploadMultiple: false,
-            dictDefaultMessage: "<strong>Step 2: Drop files here or click to upload</strong></br>" +
+            dictDefaultMessage: "<strong>Step 4: Drop your CSV files here or click to upload</strong></br>" +
                                 "(After the file is dropped or selected, it will be sent to the server.)",
             acceptedFiles: '.csv',
             init: function() {
@@ -58,19 +59,19 @@ window.OrderImportsIndex = {
                 tr.find('td:nth-child(2)').text(item.key);
                 tr.find('td:nth-child(3)').text(item.identify);
                 tr.find('td:nth-child(4)').text(item.tracking_number);
-                
+
                 var icon = 'fa-times';
                 if (item.shopify) {
                     window.OrderImportsIndex.addItem(
-                        result.store_id, 
-                        order.shopify, 
-                        item.shopify, 
+                        result.store_id,
+                        order.shopify,
+                        item.shopify,
                         item.tracking_number
                     );
                     icon = 'fa-check';
                 }
                 tr.find('td:nth-child(5)').html($('<i class="fa '+icon+'">'));
-                
+
                 tr.removeClass('hidden clone');
                 tr.addClass(lineItemClass);
                 if (item.identify) {
@@ -95,7 +96,7 @@ window.OrderImportsIndex = {
         for (var i = 0, iLength = this.data[store_id].length; i < iLength; i++) {
             var storeItem = this.data[store_id][i];
             if (storeItem['order_id'] == order.id && storeItem['line_item_id'] == item.id) {
-                storeItem['tracking_number'] = tracking_number;X
+                storeItem['tracking_number'] = tracking_number;
                 found = true;
                 break;
             }
@@ -103,8 +104,8 @@ window.OrderImportsIndex = {
 
         if (!found) {
             this.data[store_id].push({
-                'order_id': order.id, 
-                'line_item_id': item.id, 
+                'order_id': order.id,
+                'line_item_id': item.id,
                 'tracking_number': tracking_number
             });
         }
@@ -135,6 +136,14 @@ window.OrderImportsIndex = {
         $('.only-one-filled').on('change', function() {
             if ($(this).val() != '') {
                 $(this).parent().siblings(':not(.control-label)').find('input').val('');
+            }
+        });
+    },
+    onChangeIdentity: function() {
+        $('#identify_column_position, #identify_column_name').on('change', function(e) {
+            var value = $(this).val();
+            if (value == $('#line_item_position').val()) {
+                $('#line_item_position').val('');
             }
         });
     },

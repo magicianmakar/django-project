@@ -33,7 +33,7 @@
 
         <form id="mapping-form" class="form-horizontal">
             <fieldset>
-                <legend>Step 2: Map Your Columns (If needed)</legend>
+                <legend>Step 2: Map Your Columns</legend>
                 <div class="form-horizontal">
                     <div class="form-group">
                         <label for="order_id_position" class="col-sm-2 control-label">Order Id #</label>
@@ -72,12 +72,16 @@
             <br>
 
             <fieldset>
-                <legend>Set 3: Identify Using SKU</legend>
-                <p class="help-text">If you use SKU for every Line Item instead of the Line Item Id we need an extra column for identifying items that may have the same SKU but have different titles.</p>
+                <legend>Step 3: Identify Line Items Using Variant Title (optional)</legend>
+                <div class="col-sm-10 col-sm-offset-2">
+                    <p class="help-text">
+                        If you use <b>the variant title</b> for identifying the Line Item <b>instead of the ID or SKU</b> please let us know in which column it will be.
+                    </p>
+                </div>
 
                 <div class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">Identifying Column</label>
+                        <label class="col-sm-2 control-label">Variant Title</label>
                         <div class="col-sm-2 field-position">
                             <input type="number" class="form-control only-one-filled" id="identify_column_position" name="identify_column_position" placeholder="Type the column position">
                         </div>
@@ -118,8 +122,8 @@
             <div class="form-group">
                 <button type="submit"
                         id="approve-button"
-                        class="btn btn-primary pull-right" 
-                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Approving">Approve</button>
+                        class="btn btn-primary pull-right"
+                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Approving">Approve Found Orders</button>
             </div>
         </form>
 
@@ -130,9 +134,9 @@
                 <tr>
                     <th>Order Id #</th>
                     <th>Line Item Id / Line Item SKU</th>
-                    <th>Identifier</th>
+                    <th>Variant Title</th>
                     <th>Tracking Number</th>
-                    <th>Found</th>
+                    <th>Is This Order Found?</th>
                 </tr>
             </thead>
             <tbody>

@@ -93,16 +93,25 @@ class ShopifyOrderImportAPI():
             order = orders[name]
 
             if order['shopify'] is not None:
-                for line_item in order['shopify']['line_items']:
-                    for item in order['items']:
-                        if str(line_item['id']) == item['key'] or line_item['sku'] == item['key']:
-                            if 'identify' in item and item['identify']:
-                                if item['identify'] in line_item['variant_title']:
-                                    item['shopify'] = {'id': line_item.get('id')}
-                                    break
-                            else:
-                                item['shopify'] = {'id': line_item.get('id')}
-                                break
+                for item in order['items']:
+                    for line_item in order['shopify']['line_items']:
+                        found = False
+                        if item['key'] != '':
+                            # Check for line item id
+                            if str(line_item['id']) == item['key']:
+                                found = True
+
+                            # Check for line item sku
+                            if line_item['sku'] == item['key']:
+                                found = True
+
+                        # Check for variant title
+                        if item.get('identify', '') != '' and item['identify'] in line_item['variant_title']:
+                            found = True
+
+                        if found:
+                            item['shopify'] = {'id': line_item.get('id')}
+                            break
 
                 # Clean not needed data
                 order['shopify'] = {'id': order['shopify'].get('id')}
