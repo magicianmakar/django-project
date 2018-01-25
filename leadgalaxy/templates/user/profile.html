@@ -42,10 +42,10 @@
                     <a data-toggle="tab" href="#tab-6" data-auto-hash="integration" data-auto-click="true" aria-expanded="false">Integrations</a>
                 </li>
                 {% endif %}
-                
+
                 {% if request.user|can:'affiliation.use' %}
                 <li class="affiliation-tab">
-                    <a data-toggle="tab" href="#tab-7" data-auto-hash="affiliation" data-auto-click="true" aria-expanded="false">Affiliation</a>
+                    <a data-toggle="tab" href="#tab-7" data-auto-hash="partner" data-auto-click="true" aria-expanded="false">Partner</a>
                 </li>
                 {% endif %}
             </ul>
@@ -421,11 +421,11 @@
                                         <dd id="affiliate-name">{{ affiliate.first_name }} {{ affiliate.last_name }}</dd>
                                     </dl>
                                     <dl>
-                                        <dt>Affiliation URL</dt>
+                                        <dt>Dropified Referral URL</dt>
                                         <dd id="affiliate-url">{{ affiliate.affiliate_url }}</dd>
                                     </dl>
                                     <dl>
-                                        <dt>Dashboard</dt>
+                                        <dt>Referral Dashboard</dt>
                                         <dd id="affiliate-dashboard-url">{{ affiliate.affiliate_dashboard_url }}</dd>
                                     </dl>
                                 </div>
@@ -434,20 +434,23 @@
 
                             <div class="col-md-6">
                                 <form role="form" id="affiliate-form">
+                                    <legend>Change Your Credentials</legend>
                                     <div class="form-group">
                                         <label>Email</label>
-                                        <input type="text" name="email" placeholder="Enter email" class="form-control">
+                                        <input type="text" name="email" placeholder="Enter a new email address" class="form-control">
                                     </div>
-                                    <div class="form-group">
-                                        <label>First Name</label>
-                                        <input type="text" name="first_name" placeholder="Enter first name" class="form-control">
+                                    <div class="form-group col-md-12">
+                                        <div class="col-md-6">
+                                            <label>First Name</label>
+                                            <input type="text" name="first_name" placeholder="Type your first name to change it" class="form-control">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label>Last Name</label>
+                                            <input type="text" name="last_name" placeholder="Type your last name to change it" class="form-control">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Last Name</label>
-                                        <input type="text" name="last_name" placeholder="Enter last name" class="form-control">
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-primary pull-right m-t-n-xs" type="submit" data-loading-text="Saving...">
+                                    <div class="col-md-12">
+                                        <button class="btn btn-sm btn-primary pull-right" type="submit" data-loading-text="Saving...">
                                             <strong>Save</strong>
                                         </button>
                                     </div>
@@ -537,6 +540,20 @@
 
         .chart .ibox .ibox-content {
             border: 1px solid #e7eaec;
+        }
+
+        #affiliate-form .form-group.col-md-12,
+        #affiliate-form .col-md-6 {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        #affiliate-form .col-md-6:first-child {
+            padding-right: 7px;
+        }
+
+        #affiliate-form .col-md-6:last-child {
+            padding-left: 7px;
         }
     </style>
 {% endcompress %}
