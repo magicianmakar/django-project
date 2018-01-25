@@ -3478,6 +3478,10 @@ def orders_track(request):
     hidden_filter = request.GET.get('hidden')
     completed = request.GET.get('completed')
     source_reason = request.GET.get('reason')
+    days_passed = request.GET.get('days_passed', '')
+    if days_passed.lower() == 'expired':
+        days_passed = request.user.get_config('sync_delay_notify_days')
+    days_passed = utils.safeInt(days_passed, 0)
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -3541,6 +3545,16 @@ def orders_track(request):
 
             orders = orders.filter(errors=errors)
 
+    if days_passed:
+        time_threshold = timezone.now() - timezone.timedelta(days=days_passed)
+        orders = orders.filter(created_at__lt=time_threshold)
+
+    sync_delay_notify_days = utils.safeInt(request.user.get_config('sync_delay_notify_days'))
+    sync_delay_notify_highlight = request.user.get_config('sync_delay_notify_highlight')
+    order_threshold = None
+    if sync_delay_notify_days > 0 and sync_delay_notify_highlight:
+        order_threshold = timezone.now() - timezone.timedelta(days=sync_delay_notify_days)
+
     orders = orders.order_by(sorting)
 
     paginator = SimplePaginator(orders, post_per_page)
@@ -3557,6 +3571,7 @@ def orders_track(request):
     return render(request, 'orders_track.html', {
         'store': store,
         'orders': orders,
+        'order_threshold': order_threshold,
         'paginator': paginator,
         'current_page': page,
         'errors': errors_list,

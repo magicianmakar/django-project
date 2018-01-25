@@ -1470,7 +1470,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'fix_aliexpress_address',
                 'update_product_vendor',
                 'order_risk_levels_enabled',
-                'send_alerts_to_subusers'
+                'send_alerts_to_subusers',
+                'sync_delay_notify',
+                'sync_delay_notify_email',
+                'sync_delay_notify_push',
+                'sync_delay_notify_highlight',
             ]
 
         for key in data:

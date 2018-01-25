@@ -124,7 +124,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         }),
 
         ('User Settings', {
-            'fields': ('config', 'emails', 'ips')
+            'fields': ('config', 'sync_delay_notify', 'emails', 'ips')
         }),
 
         ('Sub User', {

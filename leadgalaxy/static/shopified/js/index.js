@@ -287,6 +287,14 @@ $('#fix_aliexpress_address').change(function (e) {
     }
 });
 
+$('#sync_delay_notify').change(function (e) {
+    if(!e.target.checked) {
+        $('.sync-delay-config').hide();
+    } else {
+        $('.sync-delay-config').show();
+    }
+});
+
 $('.verify-api-url').click(function (e) {
     e.preventDefault();
 

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta charset="UTF-8">
+<style type="text/css">
+    /* CLIENT-SPECIFIC STYLES */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+
+    /* RESET STYLES */
+    img { border: 0;  outline: none; text-decoration: none; }
+    table { border-collapse: collapse !important; }
+    body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+
+    /* iOS BLUE LINKS */
+    a[x-apple-data-detectors] {
+        color: inherit !important;
+        text-decoration: none !important;
+        font-size: inherit !important;
+        font-family: inherit !important;
+        font-weight: inherit !important;
+        line-height: inherit !important;
+    }
+  body { color: #848585; background-color: #ececec; font-family: Arial, sans-serif; }
+    p { margin: 1px 0; }
+    a { text-decoration: none !important; }
+    a img { vertical-align: middle; }
+    table { border-collapse: collapse; }
+    table, th, td { border: 1px solid #e5e5e5; }
+    .container { max-width: 900px; margin: auto; }
+    .logo { margin: 40px 60px; }
+    .content { padding: 50px; border-top-left-radius: 20px; border-top-right-radius: 20px; background-color: white; }
+    .info-block { padding: 25px 0; }
+    .info-title { color: #93c47d; margin-bottom: 25px; }
+    .info-table { color: #5f5f5f; font-size: 14px; width: 100%; }
+    .info-table a { color: #5f5f5f; border-bottom: 1px dashed #5f5f5f; }
+{#    .info-table td, .info-table th { padding: 5px 10px; }#}
+    .info-table .image, .info-table .from, .info-table .to { text-align: center; }
+    .info-table .orders { min-width: 100px; }
+    .info-table th.product { text-align: left; }
+    .info-table tr.odd { background-color: #fafafa; }
+    .info-table tr.even { background-color: white; }
+    .info-table tbody tr td { border: 0; }
+    .info-table tbody tr td table { border: 0; }
+    .info-table > tbody > tr { border: 1px solid #e5e5e5; }
+    img.product-image { width: 55px; height: 55px; border-radius: 5px; }
+    .separator { height: 1px; background-color: #e5e5e5; }
+    .support-footer { font-family: Arial, sans-serif; padding: 25px 50px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; background-color: white; text-align: center; }
+    .support-title { display: inline-block; margin: 0 10px 0 0; }
+    .support-title img { vertical-align: middle; }
+    .support-title + p { display: inline-block; font-size: 14px; }
+    .link-btn { font-family: Arial, sans-serif; color: white; background-color: #7dabc4; border-radius: 15px; padding: 8px 25px; text-decoration: none; text-transform: uppercase; font-size: 12px; text-align: center;}
+    .link-btn.warning { background-color: #d99646; }
+    .footer { text-align: center; padding: 20px; }
+    .green { color: #93c47d; }
+    .red { color: #ca6969; }
+    .links { margin-top: 20px; }
+    .link { color: #7dabc4; font-weight: 500; text-decoration: none; padding: 20px 0; margin: 0 5px; }
+    @media only screen and (max-width: 600px){
+        #templateColumns{ width:100% !important; }
+        .templateColumnContainer{ display:block !important; width:100% !important; }
+        .columnImage{ height:auto !important; max-width:480px !important; width:100% !important; }
+        .leftColumnContent{ font-size:16px !important; line-height:125% !important; }
+        .rightColumnContent{ font-size:16px !important; line-height:125% !important; }
+        .block { display: block; border-radius: 25px; padding: 2px 25px; }
+    }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <img class="logo" src="https://d2kadg5e284yn4.cloudfront.net/static/dropified-logo.png" width="220" height="50" alt="logo" />
+    <div class="content">
+     	<p>Hi,</p>
+	    <p>{{count}} order(s) haven't shipped in time:</p>
+	    <p style="margin-bottom: 10px; line-height: 36px;">
+	        You can find more details by visiting the <a href="{{url}}" target="_blank" title="Order Tracking Page">Tracking Page</a>
+	    </p>
+    </div>
+
+    <div class="separator">
+    </div>
+
+    <div class="support-footer">
+        <p style="line-height: 36px;">
+            <span class="support-title green">
+                Support&nbsp;
+                <img style="width:30px" src="https://d2kadg5e284yn4.cloudfront.net/static/dropified-icon.png" alt="Dropified" />
+            </span>
+            Need help? Visit our&nbsp;
+                    <a class="link-btn block" href="http://www.dropified.com/training-videos/" target="_blank" title="Training Center">Training Center</a>
+                    &nbsp;or create a ticket&nbsp;
+                    <a class="link-btn block" href="http://www.dropified.com/support/" target="_blank" title="Support Center">Support Center</a>
+            <a href="https://www.facebook.com/dropified" target="_blank" title="Facebook">
+                <img src="https://d2kadg5e284yn4.cloudfront.net/static/img/facebook.png" height="20" alt="Dropified on Facebook" />
+            </a>
+            <a href="https://www.twitter.com/dropified" target="_blank" title="Twitter">
+                <img src="https://d2kadg5e284yn4.cloudfront.net/static/img/twitter.png" height="20" alt="Dropified on Twitter" />
+            </a>
+        </p>
+    </div>
+
+
+    <div class="footer">
+        <p>
+            <span class="green">&copy;</span>
+            2015-2018 Dropified, All Rights Reserved. <br /><br />
+            909 Irving Road, Bessemer, AL 35022 USA
+        </p>
+        <div class="links">
+            <a class="link" href="http://www.dropified.com/contact/" target="_blank" title="Contact Us">Contact Us</a>
+            <span class="link">•</span>
+            <a class="link" href="http://www.dropified.com/terms-of-service/" target="_blank" title="Terms of Use">Terms of Use</a>
+            <span class="link">•</span>
+            <a class="link" href="http://www.dropified.com/terms-of-service/" target="_blank" title="Privacy Policy">Privacy Policy</a>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

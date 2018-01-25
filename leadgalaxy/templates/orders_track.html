@@ -197,6 +197,15 @@
 
                     <div class="row m-t">
                         <div class="col-md-2" style="width: 180px;margin-right: 0;padding-right: 0">
+                            <label>Number of Days Passed:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <input name="days_passed" value="{{request.GET.days_passed|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Number of Days Passed">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
                             {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
                             {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}
 
@@ -228,7 +237,10 @@
                       </thead>
                       <tbody>
                         {% for item in orders %}
-                        <tr id="{{item.id}}" {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}>
+                        <tr id="{{item.id}}" 
+                            {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}
+                            {% if order_threshold and item.created_at < order_threshold and not item.source_tracking %}class="highlight"{% endif %}
+                        >
                             <td style="min-width:30px">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -333,6 +345,9 @@
         position: absolute !important;
         top: 0px;
         left: 15px;
+    }
+    .highlight {
+        background-color: rgb(230, 213, 213);
     }
 
     .filter-form .row {

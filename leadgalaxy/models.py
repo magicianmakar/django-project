@@ -108,6 +108,7 @@ class UserProfile(models.Model):
     ips = models.TextField(null=True, blank=True, verbose_name="User IPs")
 
     config = models.TextField(default='', blank=True)
+    sync_delay_notify = models.IntegerField(default=0, null=True, db_index=True, verbose_name='Notify if no tracking number is found (days)')
 
     plan_expire_at = models.DateTimeField(blank=True, null=True, verbose_name="Plan Expire Date")
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
@@ -123,7 +124,14 @@ class UserProfile(models.Model):
 
     def save(self, *args, **kwargs):
         if self.config:
-            json.loads(self.config)
+            config = json.loads(self.config)
+
+            sync_delay_notify = config.get('sync_delay_notify_days', 0)
+            if not config.get('sync_delay_notify'):
+                sync_delay_notify = 0
+
+            if self.sync_delay_notify != sync_delay_notify:
+                self.sync_delay_notify = sync_delay_notify
 
         super(UserProfile, self).save(*args, **kwargs)
 
