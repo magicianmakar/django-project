@@ -823,7 +823,7 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
         if not count:
             return
 
-        if status not in ['connected', 'not_connected']:
+        if status not in ['connected', 'not_connected', 'any']:
             status = None
 
         pages = int(ceil(count / float(limit)))
@@ -853,7 +853,7 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
                         p['original_url'] = ''
                         p['status'] = 'not_connected'
 
-                    if status == p['status']:
+                    if status == 'any' or status == p['status']:
                         total += 1
                         yield p
 

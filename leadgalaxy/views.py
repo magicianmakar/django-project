@@ -1078,8 +1078,8 @@ def shopify_migration(request):
     status = utils.get_shopify_products_filter(request, 'status', 'any')
     title = utils.get_shopify_products_filter(request, 'title', '')
 
-    if status not in ['connected', 'not_connected']:
-        status = None
+    if status not in ['connected', 'not_connected', 'any']:
+        status = 'any'
 
     breadcrumbs = [
         {'url': '/product', 'title': 'Products'},
