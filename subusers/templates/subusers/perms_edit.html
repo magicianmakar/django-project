@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends template_config.base %}
 
 {% load widget_tweaks %}
 {% load static %}
@@ -30,7 +30,7 @@
                 <form
                     method="POST"
                     role="form"
-                    action="{% url 'subuser_perms_edit' subuser.id %}"
+                    action="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}"
                 >
                     <div class="form-group">
                         {% render_field form.permissions %}
@@ -55,7 +55,7 @@
                 {% for store in subuser.profile.subuser_stores.all %}
                     <p>
                         {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url 'subuser_store_permissions' subuser.id store.id %}">Edit</a>
+                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_store_permissions' subuser.id store.id %}">Edit</a>
                     </p>
                 {% empty %}
                     <p class="text-center">
@@ -72,7 +72,7 @@
                 {% for store in subuser.profile.subuser_chq_stores.all %}
                     <p>
                         {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url 'subuser_chq_store_permissions' subuser.id store.id %}">Edit</a>
+                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_chq_store_permissions' subuser.id store.id %}">Edit</a>
                     </p>
                 {% empty %}
                     <p class="text-center">
@@ -90,7 +90,7 @@
                 {% for store in subuser.profile.subuser_woo_stores.all %}
                     <p>
                         {{ store.title }} &nbsp;
-                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url 'subuser_woo_store_permissions' subuser.id store.id %}">Edit</a>
+                        <a class="btn btn-xs btn-outline btn-success board-btn _pull-right" href="{% url template_config.url.namespace|add:'subuser_woo_store_permissions' subuser.id store.id %}">Edit</a>
                     </p>
                 {% empty %}
                     <p class="text-center">

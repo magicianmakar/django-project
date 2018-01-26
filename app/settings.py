@@ -73,6 +73,7 @@ INSTALLED_APPS = (
     'order_imports',
     'profit_dashboard',
     'affiliations',
+    'subusers',
 
     'commercehq_core',
     'dropwow_core',
@@ -113,6 +114,7 @@ TEMPLATES = [
                 'leadgalaxy.context_processors.extension_release',
                 'leadgalaxy.context_processors.intercom',
                 'leadgalaxy.context_processors.facebook_pixel',
+                'subusers.context_processors.template_config',
                 'analytic_events.context_processors.analytic_events',
             ],
         },

@@ -94,6 +94,19 @@
                 </ul>
             </li>
             {% endif %}
+
+            {% if user|can:'sub_users.use' and not user.is_subuser %}
+            <li {% if page == 'subusers' %}class="active"{% endif %}>
+                <a href="{% url 'woo:subusers' %}">
+                    <i class="fa fa-users"></i>
+                    <span class="nav-label">Sub Users</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% cache 1800 sidebar_link user.id user.profile.plan_id request.app %}
+            {% include 'partial/sidebar_link.html' with links=sidebar_links plan=user.profile.plan.register_hash %}
+            {% endcache %}
         </ul>
     </div>
 </nav>

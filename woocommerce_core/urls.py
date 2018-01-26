@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url
 
 import woocommerce_core.views
+import subusers.views
 
 urlpatterns = patterns(
     '',
@@ -16,4 +17,14 @@ urlpatterns = patterns(
     url(r'^boards/list$', woocommerce_core.views.BoardsList.as_view(), name='boards_list'),
     url(r'^boards/(?P<pk>[0-9]+)$', woocommerce_core.views.BoardDetailView.as_view(), name='board_detail'),
     url(r'^orders/place$', woocommerce_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
+
+    url(r'^subusers$', subusers.views.subusers, name='subusers'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', subusers.views.subusers_perms, name='subusers_perms'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/edit$', subusers.views.subuser_perms_edit, name='subuser_perms_edit'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_store_permissions, name='subuser_store_permissions'),
+    url(r'^subusers/chq-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_chq_store_permissions, name='subuser_chq_store_permissions'),
+    url(r'^subusers/woo-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
 )

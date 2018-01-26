@@ -1,6 +1,7 @@
-{% extends "base.html" %}
+{% extends template_config.base %}
 
 {% load static %}
+{% load perms_helper %}
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load compress %}
@@ -209,7 +210,7 @@
             e.preventDefault();
 
             $('#modal-subuser-prems .model-content').html('<p>Loading content...</p>')
-                .load('/subusers/permissions/' + $(this).attr('user-id'),
+                .load('{{ template_config.url.prefix }}/subusers/permissions/' + $(this).attr('user-id'),
                     function(response, status, xhr) {
                         if(status == 'error') {
                             $('#modal-subuser-prems').modal('hide');
@@ -355,4 +356,3 @@
     </script>
     {% endcompress %}
 {% endblock %}
-

@@ -18,6 +18,13 @@ ARTICLE_FORMAT = (
     ('markdown', 'Markdown'),
 )
 
+STORE_TYPES = (
+    ('default', 'All Stores'),
+    ('shopify', 'Shopify'),
+    ('chq', 'CommerceHQ'),
+    ('woo', 'WooCommerce'),
+)
+
 
 class Article(models.Model):
 
@@ -102,6 +109,8 @@ class SidebarLink(models.Model):
     inherit_plan = models.BooleanField(default=False, verbose_name='Show For Subuser If Parent Can See It')
 
     parent = models.ForeignKey('SidebarLink', on_delete=models.SET_NULL, related_name='childs', blank=True, null=True)
+    store_type = models.CharField(choices=STORE_TYPES, max_length=50, default='default')
+
     display_plans = models.ManyToManyField(GroupPlan, blank=True)
 
     def __str__(self):

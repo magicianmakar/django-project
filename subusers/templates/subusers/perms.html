@@ -1,11 +1,10 @@
-
 {% load static %}
 {% load widget_tweaks %}
 
 <h4><i>{{subuser.get_full_name|default:subuser.username}}</i> Can manage the following stores:</h4>
 <div class="row">
     <div class="col-md-12">
-        <form method="POST" class="m-t-xs" role="form" action="{% url 'subusers_perms' user_id=subuser.id %}">
+        <form method="POST" class="m-t-xs" role="form" action="{% url template_config.url.namespace|add:'subusers_perms' user_id=subuser.id %}">
             <div class="form-group">
                 {% render_field form.subuser_stores  %}
                 {{ form.subuser_stores.errors | safe }}
@@ -25,7 +24,7 @@
             </div>
             {% endif %}
             <p class="text-right">
-                <a href="{% url 'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
+                <a href="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
                 <button type="submit" class="btn btn-primary m-b">Save</button>
             </p>
         </form>

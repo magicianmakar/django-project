@@ -4,6 +4,16 @@
 
 {% block title %}{{ article.text_title }}{% endblock %}
 
+{% if request.app == "chq" %}
+    {% block main-nav %}
+        {% include 'commercehq/main_nav.html' with url_name=request.resolver_match.view_name %}
+    {% endblock main-nav %}
+{% elif request.app == "woo" %}
+    {% block main-nav %}
+        {% include 'woocommerce/main_nav.html' with url_name=request.resolver_match.view_name %}
+    {% endblock main-nav %}
+{% endif %}
+
 {% block main-container %}
 
 <div class="row article">

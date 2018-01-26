@@ -22,10 +22,8 @@ from django.core.exceptions import PermissionDenied
 from django.core.signing import Signer
 from django.db import transaction
 from django.db.models import Count, Max, F, Q
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.http import JsonResponse
-from django.shortcuts import redirect
-from django.shortcuts import render, get_object_or_404, render_to_response
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
+from django.shortcuts import render, get_object_or_404, render_to_response, redirect
 from django.template import RequestContext
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
@@ -3897,63 +3895,6 @@ def products_collections(request, collection):
 
 
 @login_required
-def subusers(request):
-    if not request.user.can('sub_users.use'):
-        return render(request, 'upgrade.html')
-
-    if request.user.is_subuser:
-        raise PermissionDenied()
-
-    sub_users = User.objects.filter(profile__subuser_parent=request.user)
-    invitation = []
-    for i in PlanRegistration.objects.filter(sender=request.user).filter(Q(user__isnull=True) | Q(user__profile__subuser_parent=request.user)):
-        i.have_access = (i.expired and (i.user.profile.subuser_stores.count() or i.user.profile.subuser_chq_stores.count()))
-
-        invitation.append(i)
-
-    return render(request, 'subusers_manage.html', {
-        'sub_users': sub_users,
-        'invitation': invitation,
-        'page': 'subusers',
-        'breadcrumbs': ['Account', 'Sub Users']
-    })
-
-
-@login_required
-def subusers_perms(request, user_id):
-    try:
-        user = User.objects.get(id=user_id, profile__subuser_parent=request.user)
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
-    except:
-        return JsonResponse({'error': 'Unknown Error'}, status=500)
-
-    if request.method == 'POST':
-        form = SubUserStoresForm(request.POST,
-                                 instance=user.profile,
-                                 parent_user=request.user)
-        if form.is_valid():
-            form.save()
-
-            messages.success(request, 'User permissions has been updated')
-        else:
-            messages.error(request, 'Error occurred during user permissions update')
-
-        return HttpResponseRedirect(reverse('subusers'))
-
-    else:
-        form = SubUserStoresForm(instance=user.profile,
-                                 parent_user=request.user)
-
-    return render(request, 'subusers_perms.html', {
-        'subuser': user,
-        'form': form,
-        'page': 'subusers',
-        'breadcrumbs': ['Account', 'Sub Users']
-    })
-
-
-@login_required
 def logout(request):
     user_logout(request)
     return redirect('/')
@@ -4106,133 +4047,6 @@ def user_invoices_download(request, invoice_id):
     buffer.close()
 
     return response
-
-
-@transaction.atomic
-@login_required
-def subuser_perms_edit(request, user_id):
-    subuser = get_object_or_404(User, pk=user_id, profile__subuser_parent=request.user)
-    global_permissions = subuser.profile.subuser_permissions.filter(store__isnull=True)
-    initial = {'permissions': global_permissions, 'store': None}
-
-    if request.method == 'POST':
-        form = SubuserPermissionsForm(request.POST, initial=initial)
-        if form.is_valid():
-            new_permissions = form.cleaned_data['permissions']
-            subuser.profile.subuser_permissions.remove(*global_permissions)
-            subuser.profile.subuser_permissions.add(*new_permissions)
-            messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('leadgalaxy.views.subuser_perms_edit', user_id)
-    else:
-        form = SubuserPermissionsForm(initial=initial)
-
-    breadcrumbs = [
-        'Account',
-        {'title': 'Sub Users', 'url': reverse('subusers')},
-        subuser.username,
-        'Permissions',
-    ]
-
-    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
-
-    return render(request, 'subuser_perms_edit.html', context)
-
-
-@transaction.atomic
-@login_required
-def subuser_store_permissions(request, user_id, store_id):
-    store = get_object_or_404(ShopifyStore, pk=store_id, user=request.user)
-    subuser = get_object_or_404(User,
-                                pk=user_id,
-                                profile__subuser_parent=request.user,
-                                profile__subuser_stores__pk=store_id)
-    subuser_permissions = subuser.profile.subuser_permissions.filter(store=store)
-    initial = {'permissions': subuser_permissions, 'store': store}
-
-    if request.method == 'POST':
-        form = SubuserPermissionsForm(request.POST, initial=initial)
-        if form.is_valid():
-            new_permissions = form.cleaned_data['permissions']
-            subuser.profile.subuser_permissions.remove(*subuser_permissions)
-            subuser.profile.subuser_permissions.add(*new_permissions)
-            messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('leadgalaxy.views.subuser_store_permissions', user_id, store_id)
-    else:
-        form = SubuserPermissionsForm(initial=initial)
-
-    breadcrumbs = [
-        'Account',
-        {'title': 'Sub Users', 'url': reverse('subusers')},
-        subuser.username,
-        {'title': 'Permissions', 'url': reverse('subuser_perms_edit', args=(user_id,))},
-        store.title,
-    ]
-
-    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
-
-    return render(request, 'subuser_store_permissions.html', context)
-
-
-@transaction.atomic
-@login_required
-def subuser_chq_store_permissions(request, user_id, store_id):
-    store = request.user.commercehqstore_set.filter(pk=store_id).first()
-    if not store:
-        raise Http404
-
-    subuser = get_object_or_404(User,
-                                pk=user_id,
-                                profile__subuser_parent=request.user,
-                                profile__subuser_chq_stores__pk=store_id)
-
-    subuser_chq_permissions = subuser.profile.subuser_chq_permissions.filter(store=store)
-    initial = {'permissions': subuser_chq_permissions, 'store': store}
-
-    if request.method == 'POST':
-        form = SubuserCHQPermissionsForm(request.POST, initial=initial)
-        if form.is_valid():
-            new_permissions = form.cleaned_data['permissions']
-            subuser.profile.subuser_chq_permissions.remove(*subuser_chq_permissions)
-            subuser.profile.subuser_chq_permissions.add(*new_permissions)
-            messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('leadgalaxy.views.subuser_chq_store_permissions', user_id, store_id)
-    else:
-        form = SubuserCHQPermissionsForm(initial=initial)
-
-    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
-    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
-    return render(request, 'subuser_chq_store_permissions.html', context)
-
-
-@transaction.atomic
-@login_required
-def subuser_woo_store_permissions(request, user_id, store_id):
-    store = request.user.woostore_set.filter(pk=store_id).first()
-    if not store:
-        raise Http404
-
-    subuser = get_object_or_404(User,
-                                pk=user_id,
-                                profile__subuser_parent=request.user,
-                                profile__subuser_woo_stores__pk=store_id)
-
-    subuser_woo_permissions = subuser.profile.subuser_woo_permissions.filter(store=store)
-    initial = {'permissions': subuser_woo_permissions, 'store': store}
-
-    if request.method == 'POST':
-        form = SubuserWooPermissionsForm(request.POST, initial=initial)
-        if form.is_valid():
-            new_permissions = form.cleaned_data['permissions']
-            subuser.profile.subuser_woo_permissions.remove(*subuser_woo_permissions)
-            subuser.profile.subuser_woo_permissions.add(*new_permissions)
-            messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('leadgalaxy.views.subuser_woo_store_permissions', user_id, store_id)
-    else:
-        form = SubuserWooPermissionsForm(initial=initial)
-
-    breadcrumbs = ['Account', 'Sub Users', 'Permissions', subuser.username, store.title]
-    context = {'subuser': subuser, 'form': form, 'breadcrumbs': breadcrumbs}
-    return render(request, 'subuser_woo_store_permissions.html', context)
 
 
 def crossdomain(request):

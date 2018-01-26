@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url
 
 import commercehq_core.views
+import subusers.views
 
 urlpatterns = patterns(
     '',
@@ -21,4 +22,14 @@ urlpatterns = patterns(
     url(r'^orders$', commercehq_core.views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/place$', commercehq_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
     url(r'^orders/track$', commercehq_core.views.OrdersTrackList.as_view(), name='orders_track'),
+
+    url(r'^subusers$', subusers.views.subusers, name='subusers'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', subusers.views.subusers_perms, name='subusers_perms'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/edit$', subusers.views.subuser_perms_edit, name='subuser_perms_edit'),
+    url(r'^subusers/permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_store_permissions, name='subuser_store_permissions'),
+    url(r'^subusers/chq-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_chq_store_permissions, name='subuser_chq_store_permissions'),
+    url(r'^subusers/woo-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
 )
