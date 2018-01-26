@@ -46,8 +46,8 @@ $(function () {
         width: '250px'
     });
 
-    if (window.affiliate) {
-        $('.affiliation-tab a').one('click', function() {
+    var loadGraphs = function() {
+        setTimeout(function() {
             $("#affiliation-visitors").sparkline(
                 window.affiliate.visitors.values,
                 {type: 'line', width: '100%', height: '60', lineColor: '#79aa63', fillColor: "#ffffff"}
@@ -72,7 +72,17 @@ $(function () {
                 height: '140',
                 sliceColors: ['#79aa63', '#1f90d8', '#ed5565']
             });
-        });
+        }, 200);
+    }
+
+    if (window.affiliate) {
+        if (window.location.hash == '#partner') {
+            loadGraphs();
+        } else {
+            $('.affiliation-tab a').one('click', function() {
+                loadGraphs();
+            });
+        }
     }
 });
 
