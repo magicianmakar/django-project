@@ -14,18 +14,4 @@ def sidebarlinks(request):
             sidebar_links = sidebar_links.exclude(Q(title__icontains='Help & Training') |
                                                   Q(title__icontains='Support'))
 
-    if sidebar_links:
-        temp = []
-
-        for sidebar_link in sidebar_links:
-            try:
-                if 'http' not in sidebar_link.link and request.app is not "shopify":
-                    sidebar_link.link = "/%s%s" % (request.app, sidebar_link.link)
-            except:
-                pass
-
-            temp.append(sidebar_link)
-
-        sidebar_links = temp
-
     return {'sidebar_links': sidebar_links}
