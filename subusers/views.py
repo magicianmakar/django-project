@@ -9,7 +9,7 @@ from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 
 from leadgalaxy.models import ShopifyStore, PlanRegistration
-from .utils import AppURLConfig
+from .utils import get_namespace
 from .forms import SubUserStoresForm, SubuserPermissionsForm, SubuserCHQPermissionsForm, SubuserWooPermissionsForm
 
 
@@ -56,9 +56,7 @@ def subusers_perms(request, user_id):
         else:
             messages.error(request, 'Error occurred during user permissions update')
 
-        app = request.resolver_match.view_name.split(':')[0]
-        url_config = AppURLConfig(app)
-        return HttpResponseRedirect(reverse('{}subusers'.format(url_config.namespace)))
+        return HttpResponseRedirect(reverse('{}subusers'.format(get_namespace(request))))
 
     else:
         form = SubUserStoresForm(instance=user.profile,
@@ -79,9 +77,6 @@ def subuser_perms_edit(request, user_id):
     global_permissions = subuser.profile.subuser_permissions.filter(store__isnull=True)
     initial = {'permissions': global_permissions, 'store': None}
 
-    app = request.resolver_match.view_name.split(':')[0]
-    url_config = AppURLConfig(app)
-
     if request.method == 'POST':
         form = SubuserPermissionsForm(request.POST, initial=initial)
         if form.is_valid():
@@ -89,13 +84,13 @@ def subuser_perms_edit(request, user_id):
             subuser.profile.subuser_permissions.remove(*global_permissions)
             subuser.profile.subuser_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_perms_edit'.format(url_config.namespace), user_id)
+            return redirect('{}subusers.views.subuser_perms_edit'.format(get_namespace(request)), user_id)
     else:
         form = SubuserPermissionsForm(initial=initial)
 
     breadcrumbs = [
         'Account',
-        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(url_config.namespace))},
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
         subuser.username,
         'Permissions',
     ]
@@ -121,9 +116,6 @@ def subuser_store_permissions(request, user_id, store_id):
     subuser_permissions = subuser.profile.subuser_permissions.filter(store=store)
     initial = {'permissions': subuser_permissions, 'store': store}
 
-    app = request.resolver_match.view_name.split(':')[0]
-    url_config = AppURLConfig(app)
-
     if request.method == 'POST':
         form = SubuserPermissionsForm(request.POST, initial=initial)
         if form.is_valid():
@@ -131,15 +123,15 @@ def subuser_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_permissions.remove(*subuser_permissions)
             subuser.profile.subuser_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_store_permissions'.format(url_config.namespace), user_id, store_id)
+            return redirect('{}subusers.views.subuser_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserPermissionsForm(initial=initial)
 
     breadcrumbs = [
         'Account',
-        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(url_config.namespace))},
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
         subuser.username,
-        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(url_config.namespace), args=(user_id,))},
+        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(get_namespace(request)), args=(user_id,))},
         store.title,
     ]
 
@@ -168,9 +160,6 @@ def subuser_chq_store_permissions(request, user_id, store_id):
     subuser_chq_permissions = subuser.profile.subuser_chq_permissions.filter(store=store)
     initial = {'permissions': subuser_chq_permissions, 'store': store}
 
-    app = request.resolver_match.view_name.split(':')[0]
-    url_config = AppURLConfig(app)
-
     if request.method == 'POST':
         form = SubuserCHQPermissionsForm(request.POST, initial=initial)
         if form.is_valid():
@@ -178,15 +167,15 @@ def subuser_chq_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_chq_permissions.remove(*subuser_chq_permissions)
             subuser.profile.subuser_chq_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully {}updated')
-            return redirect('{}subusers.views.subuser_chq_store_permissions'.format(url_config.namespace), user_id, store_id)
+            return redirect('{}subusers.views.subuser_chq_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserCHQPermissionsForm(initial=initial)
 
     breadcrumbs = [
         'Account',
-        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(url_config.namespace))},
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
         subuser.username,
-        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(url_config.namespace), args=(user_id,))},
+        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(get_namespace(request)), args=(user_id,))},
         store.title,
     ]
 
@@ -215,9 +204,6 @@ def subuser_woo_store_permissions(request, user_id, store_id):
     subuser_woo_permissions = subuser.profile.subuser_woo_permissions.filter(store=store)
     initial = {'permissions': subuser_woo_permissions, 'store': store}
 
-    app = request.resolver_match.view_name.split(':')[0]
-    url_config = AppURLConfig(app)
-
     if request.method == 'POST':
         form = SubuserWooPermissionsForm(request.POST, initial=initial)
         if form.is_valid():
@@ -225,15 +211,15 @@ def subuser_woo_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_woo_permissions.remove(*subuser_woo_permissions)
             subuser.profile.subuser_woo_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_woo_store_permissions'.format(url_config.namespace), user_id, store_id)
+            return redirect('{}subusers.views.subuser_woo_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserWooPermissionsForm(initial=initial)
 
     breadcrumbs = [
         'Account',
-        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(url_config.namespace))},
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
         subuser.username,
-        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(url_config.namespace), args=(user_id,))},
+        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(get_namespace(request)), args=(user_id,))},
         store.title,
     ]
 

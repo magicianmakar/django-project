@@ -1,6 +1,10 @@
 
 def template_config(request):
-    namespace = request.resolver_match.view_name.split(':')[0]
+    try:
+        namespace = request.resolver_match.view_name.split(':')[0]
+    except:
+        namespace = ''
+
     if namespace == 'chq':
         template_config = {
             'base': 'base_commercehq_core.html',

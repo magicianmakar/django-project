@@ -1,12 +1,6 @@
 
-class AppURLConfig:
-    namespace = ''
-    prefix = ''
-
-    def __init__(self, namespace):
-        if namespace == 'chq':
-            self.namespace = 'chq:'
-            self.prefix = '/chq'
-        elif namespace == 'woo':
-            self.namespace = 'woo:'
-            self.prefix = '/woo'
+def get_namespace(request):
+    try:
+        request.resolver_match.view_name.split(':')[0]
+    except:
+        return ''
