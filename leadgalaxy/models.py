@@ -804,7 +804,7 @@ class ShopifyProduct(models.Model):
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
     price_notification_id = models.IntegerField(default=0)
-    monitor_id = models.IntegerField(default=0, null=True)
+    monitor_id = models.IntegerField(null=True)
 
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
     default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
