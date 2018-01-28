@@ -1,0 +1,220 @@
+{% load static %}
+{% load perms_helper %}
+{% load cache %}
+
+<nav class="navbar-default navbar-static-side" role="navigation">
+    <div class="sidebar-collapse">
+        <ul class="nav metismenu" id="side-menu">
+            <li class="profile-element" style="padding:12px 5px 11px 5px;text-align:center;">
+                <img src="{% static 'dropified-logo-white-s.png' %}" style="height:40px" />
+            </li>
+
+            {% if user.is_authenticated %}
+            <li class="nav-header">
+                <div class="dropdown profile-element">
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
+                         </span> <span class="text-muted text-xs block profile-options">Manage Account <b class="caret"></b></span> </span> </a>
+                        <ul class="dropdown-menu m-t-xs">
+                            {% if user.is_superuser %}
+                            <li><a href="{% url 'admin:index' %}">Admin Panel</a></li>
+                            <li class="divider"></li>
+                            {% endif %}
+
+                            {% if user.is_authenticated %}
+                            <li><a href="{% url 'user_profile' %}#plan" class="user-profile">Manage Plans/Credits</a></li>
+                            <li><a href="{% url 'user_profile' %}" class="user-profile">Manage Profile</a></li>
+                            <li><a href="{% url 'user_profile' %}#billing" class="user-profile">Manage Billing</a></li>
+                            <li><a href="{% url 'user_profile' %}#invoices" class="user-profile">View Invoices</a></li>
+                            {% endif %}
+                        </ul>
+                </div>
+                <div style="font-size: 0.9em;padding: 0;margin: 0;" class="logo-element">
+                    <img src="{% static 'dropified-icon.png' %}" style="width: 50%; ">
+                </div>
+            </li>
+            {% endif %}
+
+            <li {% if page == 'index' %}class="active"{% endif %}>
+                <a href="{% url 'index' %}">
+                    <i class="fa fa-th-large"></i>
+                    <span class="nav-label">Stores</span>
+                </a>
+            </li>
+
+            {#  #}
+            <li {% if page == 'product' or page == 'bulk' or page == 'boards'  or page == 'shopify_migration'%}class="active"{% endif %}>
+                <a href="{% url 'product' %}">
+                    <i class="fa fa-shopping-cart"></i>
+                    <span class="nav-label">Products</span>
+                    <span class="fa arrow"></span>
+                </a>
+
+                <ul class="nav nav-second-level {% if page != 'product' and page != 'bulk' and page != 'boards' %}collapse{% endif %}">
+                    <li {% if page == 'product' %}class="active"{% endif %}>
+                        <a href="{% url 'product' %}">
+                            <i class="fa fa-list"></i>
+                            <span class="nav-label">All Products</span>
+                        </a>
+                    </li>
+
+                    {% if user|can:'view_product_boards.sub' %}
+                    <li {% if page == 'boards' %}class="active"{% endif %}>
+                        <a href="{% url 'boards_list' %}">
+                            <i class="fa fa-edit"></i>
+                            <span class="nav-label">Boards</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if request.user|can:'bulk_editing.view' %}
+                    <li {% if page == 'bulk' %}class="active"{% endif %}>
+                        <a href="{% url 'bulk_edit' what='saved' %}">
+                            <i class="fa fa-table"></i>
+                            <span class="nav-label">Bulk edit</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li {% if page == 'shopify_migration' %}class="active"{% endif %}>
+                        <a href="{% url 'shopify_migration' %}">
+                            <i class="fa fa-link"></i>
+                            <span class="nav-label">Migration</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            {# {% else %} #}
+            {# <li> #}
+                {# <a href="{% url 'product' %}"> #}
+                    {# <i class="fa fa-shopping-cart"></i> #}
+                    {# <span class="nav-label">Products</span> #}
+                    {# <span class="fa arrow"></span> #}
+                {# </a> #}
+            {# </li> #}
+            {# {% endif %} #}
+
+            {% if request.user|can:'orders.view' %}
+            <li {% if page == 'orders' %}class="active"{% endif %}>
+                <a href="{% url 'orders' %}" class="">
+                    <i class="fa fa-calendar-check-o"></i>
+                    <span class="nav-label">Orders</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user.is_vendor %}
+            <li {% if page == 'order_exports' %}class="active"{% endif %}>
+                <a href="{% url 'order_exports_index' %}" class="">
+                    <i class="fa fa-file-pdf-o"></i>
+                    <span class="nav-label">Order Exports</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user|can:'orders.view' %}
+            <li {% if page == 'orders_track' %}class="active"{% endif %}>
+                <a href="{% url 'orders_track' %}" class="">
+                    <i class="fa fa-truck"></i>
+                    <span class="nav-label">Tracking</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user|can:'price_changes.use' %}
+            <li {% if page == 'product_alerts' %}class="active"{% endif %}>
+                <a href="{% url 'product_alerts' %}">
+                    <i class="fa fa-bell"></i>
+                    <span class="nav-label">Alerts</span>
+                    {% cache 1800 alert_info user.id %}
+                    {% with user.profile.get_new_alerts as alerts %}
+                        {% if alerts %}
+                        <span class="label label-info pull-right">{{alerts}}</span>
+                        {% endif %}
+                    {% endwith %}
+                    {% endcache %}
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user|can:'profit_dashboard.view' %}
+            <li {% if page == 'profit_dashboard' %}class="active"{% endif %}>
+                <a href="{% url 'profit_dashboard.views.index' %}" class="">
+                    <i class="fa fa-calculator"></i>
+                    <span class="nav-label">Profit Dashboard</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if user|can:'product_feeds.use' %}
+            <li {% if page == 'product_feeds' %}class="active"{% endif %}>
+                <a href="#">
+                    <i class="fa fa-bar-chart"></i>
+                    <span class="nav-label">Marketing</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level collapse">
+                    <li><a  {% if page == 'product_feeds' %}class="active"{% endif %}
+                            href="{% url 'product_feeds' %}"
+                        >Product Feeds</a></li>
+                </ul>
+            </li>
+            {% endif %}
+
+            {% if request.user.is_superuser or request.user.is_staff %}
+            <li {% if 'acp' in page %}class="active"{% endif %}>
+                <a href="#">
+                    <i class="fa fa-cogs"></i>
+                    <span class="nav-label">Admin</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level collapse">
+                    <li {% if page == 'acp_users_list' %}class="active"{% endif %}>
+                        <a href="{% url 'acp_users_list' %}">Users
+                        <span class="label label-info pull-right"
+                              onclick="javascript:setTimeout(
+                                function(){
+                                    var q=prompt('Query Dropified Users');
+                                    if(q.length) {
+                                        window.location.href='/acp/users/list?q=' + encodeURIComponent(q.trim());
+                                    }
+                                }, 10);
+                                return false;">Search</span>
+                        </a>
+                    </li>
+
+                    {% if request.user.is_superuser %}
+                    <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans</a></li>
+                    <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Analytics</a></li>
+                    <li {% if page == 'acp_pages' %}class="active"{% endif %}><a href="/pages/">Pages</a></li>
+                    <li><a href="/admin/article/sidebarlink/">Sidebar Links</a></li>
+                    <li><a href="/admin/leadgalaxy/featurebundle/">Bundles</a></li>
+                    {% endif %}
+                </ul>
+            </li>
+            {% endif %}
+
+            {% if user|can:'sub_users.use' and not user.is_subuser %}
+            <li {% if page == 'subusers' %}class="active"{% endif %}>
+                <a href="{% url 'subusers' %}">
+                    <i class="fa fa-users"></i>
+                    <span class="nav-label">Sub Users</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user|can:'dropwow.use' %}
+            <li {% if page == 'marketplace' %}class="active"{% endif %}>
+                <a href="{% url 'marketplace:index' %}">
+                    <i class="fa fa-pie-chart"></i>
+                    <span class="nav-label">Marketplace</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% cache 1800 sidebar_link user.id user.profile.plan_id %}
+            {% include 'partial/sidebar_link.html' with links=sidebar_links plan=user.profile.plan.register_hash %}
+            {% endcache %}
+        </ul>
+
+    </div>
+</nav>

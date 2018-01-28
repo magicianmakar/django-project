@@ -4,15 +4,15 @@
 
 {% block title %}Dropified{% endblock %}
 
-{% if request.app == "chq" %}
-    {% block main-nav %}
+{% block main-nav %}
+    {% if request.app == "chq" %}
         {% include 'commercehq/main_nav.html' with url_name=request.resolver_match.view_name %}
-    {% endblock main-nav %}
-{% elif request.app == "woo" %}
-    {% block main-nav %}
+    {% elif request.app == "woo" %}
         {% include 'woocommerce/main_nav.html' with url_name=request.resolver_match.view_name %}
-    {% endblock main-nav %}
-{% endif %}
+    {% else %}
+        {% include 'main_nav.html' %}
+    {% endif %}
+{% endblock main-nav %}
 
 {% block main-container %}
 
