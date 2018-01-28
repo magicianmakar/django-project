@@ -4,7 +4,6 @@
 {% load perms_helper %}
 {% load widget_tweaks %}
 {% load template_helper %}
-{% load compress %}
 
 {% block main-container %}
 
@@ -179,9 +178,7 @@
     <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
 
 
-    {% compress js %}
     <script type="text/javascript">
-
         $(document).ready(function() {
             $('.dataTables').on('draw.dt', function(e) {
                 $('.dataTables tr').each(function(i, el) {
@@ -354,5 +351,4 @@
             });
         });
     </script>
-    {% endcompress %}
 {% endblock %}
