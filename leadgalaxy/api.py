@@ -1380,14 +1380,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         config['extra_stores'] = extra_stores
 
-        if data.get('name'):
-            named_config = {}
-            for name in data.get('name').split(','):
-                if name in config:
-                    named_config[name] = config[name]
-
-            config = named_config
-
         # Auto Order Timeout
         config['ot'] = {
             #  Start Auto fulfill after `t` is elapsed
@@ -1434,6 +1426,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         config['sync'] = {
             'new': not user.models_user.get_config('_disable_new_orders_sync', False)
         }
+
+        if data.get('name'):
+            named_config = {}
+            for name in data.get('name').split(','):
+                if name in config:
+                    named_config[name] = config[name]
+
+            config = named_config
 
         return JsonResponse(config)
 
