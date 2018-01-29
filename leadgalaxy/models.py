@@ -21,7 +21,7 @@ from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
-from shopified_core.utils import OrderErrors
+from shopified_core.utils import safeInt, OrderErrors
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -126,7 +126,7 @@ class UserProfile(models.Model):
         if self.config:
             config = json.loads(self.config)
 
-            sync_delay_notify = config.get('sync_delay_notify_days', 0)
+            sync_delay_notify = safeInt(config.get('sync_delay_notify_days'))
             if not config.get('sync_delay_notify'):
                 sync_delay_notify = 0
 
