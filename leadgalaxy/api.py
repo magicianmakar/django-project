@@ -2422,9 +2422,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product = None
 
             if source_id:
-                product = ShopifyProduct.objects.get(user=user.models_user, productsupplier__source_id=source_id)
+                supplier = ProductSupplier.objects.filter(product__user=user.models_user, source_id=source_id).first()
+                if supplier:
+                    product = supplier.product
             else:
                 product = ShopifyProduct.objects.get(user=user.models_user, shopify_id=shopify_id)
+
             permissions.user_can_view(user, product)
 
             return self.api_success({
