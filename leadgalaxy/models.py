@@ -296,7 +296,7 @@ class UserProfile(models.Model):
         ])
 
     def get_new_alerts(self):
-        return self.user.models_user.aliexpressproductchange_set \
+        return self.user.models_user.productchange_set \
                                     .filter(seen=False) \
                                     .filter(hidden=False) \
                                     .count()
