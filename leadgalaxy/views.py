@@ -3451,10 +3451,6 @@ def orders_track(request):
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
 
-    if not request.user.can('place_orders.sub', store):
-        messages.warning(request, "You don't have access to this store orders")
-        return HttpResponseRedirect('/')
-
     visited_time = arrow.now().timestamp
     request.user.profile.set_config_value('orders_track_visited_at', visited_time)
 
@@ -3491,6 +3487,10 @@ def orders_track(request):
     store = utils.get_store_from_request(request)
     if not store:
         messages.warning(request, 'Please add at least one store before using the Tracking page.')
+        return HttpResponseRedirect('/')
+
+    if not request.user.can('place_orders.sub', store):
+        messages.warning(request, "You don't have access to this store orders")
         return HttpResponseRedirect('/')
 
     orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store).defer('data')
