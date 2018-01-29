@@ -1037,15 +1037,18 @@ def keen_add_event(self, event_name, event_data):
                 cache_key = 'keen_event_product_price_{}'.format(event_data.get('product'))
                 product_price = cache.get(cache_key)
 
-                if not product_price:
+                if product_price is None:
                     url = '{}/api/products/price/{}'.format(settings.PRICE_MONITOR_HOSTNAME, event_data.get('product'))
                     prices_response = requests.get(
                         url=url,
                         auth=requests.auth.HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
                     )
 
-                    product_price = prices_response.json()
-                    cache.set(cache_key, product_price['min_price'], timeout=3600)
+                    product_price = utils.safeInt(prices_response.json()['price'])
+                    cache.set(cache_key, product_price, timeout=3600)
+
+                if product_price:
+                    event_data['product_price'] = product_price
         except:
             raven_client.captureException()
 
