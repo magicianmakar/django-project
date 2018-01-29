@@ -1,3 +1,6 @@
+import os
+from StringIO import StringIO
+
 from django.test import TestCase
 from django.utils import timezone
 from django.core.management import call_command
@@ -22,7 +25,7 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
         model = ShopifyOrderTrack
         django_get_or_create = ['line_id', 'order_id', 'user_id']
 
-    line_id = '1654811'
+    line_id = factory.fuzzy.FuzzyInteger(1000000, 9999999)
     order_id = '5415135175'
     source_tracking = 'MA7565915257226HK'
     user_id = 1
@@ -55,6 +58,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     order_number = 31
     total_price = 100
     customer_id = 1
+    fulfillment_status = ''
     created_at = utils.timezone.now()
     updated_at = utils.timezone.now()
 
@@ -70,7 +74,6 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     price = 10
     quantity = 100
     variant_id = 12345
-    created_at = timezone.now()
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
@@ -117,6 +120,110 @@ class AutoFulfillTestCase(TestCase):
         call_command('auto_fulfill')
 
         fulfill_order.assert_not_called()
+
+
+class AutoFulfillCombinedTestCase(TestCase):
+
+    def setUp(self):
+        self.parent_user = f.UserFactory()
+        self.user = f.UserFactory()
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.set_config('auto_shopify_fulfill', 'enable')
+        self.user.save()
+
+        self.store = ShopifyStoreFactory(user_id=self.user.pk)
+        self.store.save()
+
+    @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
+    @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.fulfill_order')
+    def test_fulfill_tracked_order(self, fulfill_order):
+        line_items = []
+        line_item_ids = []
+        tracks = []
+        api_data = {'fulfillment': {
+            'line_items': [],
+            'tracking_number': u'MA7565915257226HK',
+            'tracking_company': 'USPS',
+            'notify_customer': True
+        }}
+        for track in range(2):
+            track = ShopifyOrderTrackFactory(
+                order_id='5415135170',
+                source_tracking='MA7565915257226HK',
+                store_id=self.store.id
+            )
+            track.status_updated_at = timezone.now() - timezone.timedelta(seconds=61)
+            track.save()
+            tracks.append(track)
+
+            order = ShopifyOrderFactory(store_id=track.store_id, order_id=track.order_id)
+            order.save()
+            line = ShopifyOrderLineFactory(line_id=track.line_id, order=order)
+            line.save()
+            line_items.append(line)
+            line_item_ids.append(track.line_id)
+
+            api_data['fulfillment']['line_items'].append({'id': line.line_id})
+
+        data = {
+            'api': api_data,
+            'line_items': line_items,
+            'line_item_ids': line_item_ids,
+            'orders': tracks,
+            'run': False
+        }
+
+        call_command('auto_fulfill_combine')
+
+        fulfill_order.assert_called_with(data)
+
+    @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
+    @patch('leadgalaxy.management.commands.auto_fulfill_combine.requests.post')
+    def test_fulfill_tracked_line(self, request_post):
+        response = Mock()
+        response.json = Mock(return_value={'fulfillment': '1'})
+        request_post.return_value = response
+
+        for track in range(2):
+            track = ShopifyOrderTrackFactory(
+                order_id='5415135170',
+                source_tracking='MA7565915257226HK',
+                store_id=self.store.id
+            )
+            track.status_updated_at = timezone.now() - timezone.timedelta(seconds=61)
+            track.save()
+            order = ShopifyOrderFactory(store_id=self.store.id, order_id=track.order_id)
+            order.save()
+            line = ShopifyOrderLineFactory(line_id=track.line_id, order=order)
+            line.save()
+
+        call_command('auto_fulfill_combine')
+
+        line.refresh_from_db()
+        self.assertEqual(line.fulfillment_status, 'fulfilled')
+
+    @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
+    @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.get_fulfillment_data')
+    def test_prepare_fulfillment_data(self, get_fulfillment_data):
+        track = ShopifyOrderTrackFactory(
+            order_id='5415135170',
+            source_tracking='MA7565915257226HK',
+            store_id=self.store.id
+        )
+
+        track.save()
+        data = {
+            'api': {},
+            'line_items': [],
+            'line_item_ids': [track.line_id],
+            'orders': [track],
+            'run': False,
+        }
+
+        call_command('auto_fulfill_combine')
+
+        get_fulfillment_data.assert_called_with(track, data)
 
 
 class FulfillApiTestCase(TestCase):
