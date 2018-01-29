@@ -1,6 +1,6 @@
 
 def get_namespace(request):
     try:
-        request.resolver_match.view_name.split(':')[0]
+        return request.resolver_match.namespaces[0] + ':'
     except:
         return ''

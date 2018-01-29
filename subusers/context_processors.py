@@ -1,7 +1,7 @@
 
 def template_config(request):
     try:
-        namespace = request.resolver_match.view_name.split(':')[0]
+        namespace = request.resolver_match.namespaces[0]
     except:
         namespace = ''
 
