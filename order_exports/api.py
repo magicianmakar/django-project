@@ -178,6 +178,8 @@ class ShopifyOrderExportAPI():
 
     def generate_sample_export(self):
         log = self.order_export.logs.create()
+        log.type = log.SAMPLE
+
         try:
             params = self._create_url_params()
             orders = self._get_orders(params=params, limit=20)
@@ -189,12 +191,14 @@ class ShopifyOrderExportAPI():
             log.successful = True
             log.finished_by = timezone.now()
             log.csv_url = url
-            log.type = log.SAMPLE
-            log.save()
 
         except Exception:
             raven_client.captureException()
+
+            log.successful = False
             log.finished_by = timezone.now()
+
+        finally:
             log.save()
 
     def generate_export(self):
@@ -233,9 +237,13 @@ class ShopifyOrderExportAPI():
             log.finished_by = timezone.now()
             log.save()
 
-    def get_query_info(self):
-        count = self._get_orders_count(params=self.query.params_dict)
-        max_pages = int(ceil(float(count) / float(GENERATED_PAGE_LIMIT)) + 1)
+    def get_query_info(self, limit=GENERATED_PAGE_LIMIT):
+        if self.query.found_order_ids:
+            count = self._get_orders_count(params={'ids': self.query.found_order_ids})
+            max_pages = int(ceil(float(count) / float(limit)) + 1)
+        else:
+            count = 0
+            max_pages = 1
 
         return {
             'fieldnames': {
@@ -249,11 +257,10 @@ class ShopifyOrderExportAPI():
         }
 
     def get_data(self, page=1, limit=GENERATED_PAGE_LIMIT):
-        if not self.query:
+        if not self.query.found_order_ids:
             return []
 
-        params = {'ids': self.query.found_order_ids}
-        orders = self._get_orders(params=params, page=page, limit=limit)
+        orders = self._get_orders(params={'ids': self.query.found_order_ids}, page=page, limit=limit)
 
         vendor = self.order_export.filters.vendor.lower()
         vendor_no_spaces = re.sub(r'\s+', '.*?', vendor)

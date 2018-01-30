@@ -179,7 +179,7 @@ def edit(request, order_export_id):
     form = OrderExportForm(initial={
         "previous_day": order_export.previous_day,
         "copy_me": order_export.copy_me,
-        "vendor_user": order_export.vendor_user and order_export.vendor_user.pk or None,
+        "vendor_user": order_export.vendor_user.user.pk if order_export.vendor_user else None,
         "product_price_min": order_export.filters.product_price_min,
         "product_price_max": order_export.filters.product_price_max,
         "starting_at": order_export.starting_at,
@@ -354,7 +354,7 @@ def generated(request, order_export_id, code):
     order_export = OrderExport.objects.get(pk=order_export_id)
     api = ShopifyOrderExportAPI(order_export, code=code)
 
-    info = api.get_query_info()
+    info = api.get_query_info(limit=limit)
     data = api.get_data(page=page, limit=limit)
 
     return render(request, 'order_exports/generated.html', {

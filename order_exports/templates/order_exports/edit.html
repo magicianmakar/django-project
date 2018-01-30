@@ -84,7 +84,7 @@
                             <input type="text" class="form-control" name="schedule" value="{{ order_export.schedule|date:"H:i" }}" autocomplete="off">
                         </div>
                         <p class="help-block">What time would you like the export notification to be sent?</p>
-                    
+
                         {% for error in form.schedule.errors %}
                         <p class="help-block">
                             {{ error }}
@@ -148,7 +148,7 @@
                     {% endfor %}
                 </div>
             </div>
-            
+
             <div class="alert alert-success">
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10" id="export-description">
@@ -178,7 +178,7 @@
                                 </ol>
                             </div>
                             <input type="hidden" class="output" id="fields-output" name="fields" value="">
-                            
+
                             {% for field in order_fields %}
                             <div class="field-wrapper" data-name="fields_{{ field.0 }}">
                                 {% if field.0 not in selected_fields %}
@@ -363,7 +363,7 @@
 
                 <div class="col-sm-offset-2 col-sm-10">
                     <p class="help-block">
-                        Enter a title that can match several products or 
+                        Enter a title that can match several products or
                         <a href="#" class="find-shopify-product">search for a specific one.</a>
                     </p>
                 </div>

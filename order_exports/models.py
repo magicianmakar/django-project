@@ -275,7 +275,7 @@ class OrderExport(models.Model):
             search_for_products = True
             orders = orders.filter(shopifyorderline__price__lte=self.filters.product_price_max)
 
-        # Start query for title OR id
+        # Start query for: title OR id
         query = None
 
         # Search for product titles
