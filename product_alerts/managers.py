@@ -9,6 +9,7 @@ from leadgalaxy.utils import (
     update_shopify_product,
 )
 from product_alerts.utils import variant_index
+from product_alerts.models import ProductVariantPriceHistory
 
 
 class ProductChangeManager():
@@ -95,7 +96,24 @@ class ProductChangeManager():
     def handle_product_appear(self, product_data):
         return product_data
 
+    def get_variant(self, product_data, variant_change):
+        # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
+        sku = variant_change.get('sku')
+        return variant_index(self.product, sku, product_data['variants'])
+
     def handle_variant_price_change(self, product_data, variant_change):
+        idx = self.get_variant(product_data, variant_change)
+        if idx is not None:
+            variant_id = product_data['variants'][idx]['id']
+            self.add_price_history(variant_id, variant_change)
+        if self.config['price_change'] == 'notify':
+            pass
+        if self.config['price_change'] == 'update':
+            if idx is not None:
+                product_data['variants'][idx]['price'] = variant_change.get('new_value')
+        if self.config['price_change'] == 'update_for_increase':
+            if idx is not None and product_data['variants'][idx]['price'] < variant_change.get('new_value'):
+                product_data['variants'][idx]['price'] = variant_change.get('new_value')
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
@@ -224,24 +242,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
             pass
         return product_data
 
-    def get_variant(self, product_data, variant_change):
-        # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
-        sku = variant_change.get('sku')
-        return variant_index(self.product, sku, product_data['variants'])
-
-    def handle_variant_price_change(self, product_data, variant_change):
-        if self.config['price_change'] == 'notify':
-            pass
-        if self.config['price_change'] == 'update':
-            idx = self.get_variant(product_data, variant_change)
-            if idx is not None:
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
-        if self.config['price_change'] == 'update_for_increase':
-            idx = self.get_variant(product_data, variant_change)
-            if idx is not None and product_data['variants'][idx]['price'] < variant_change.get('new_value'):
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
-        return product_data
-
     def handle_variant_quantity_change(self, product_data, variant_change):
         if self.config['quantity_change'] == 'notify':
             pass
@@ -302,15 +302,18 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
             })
 
+    def add_price_history(self, variant_id, variant_change):
+        history, created = ProductVariantPriceHistory.objects.get_or_create(
+            user=self.product.user,
+            shopify_product=self.product,
+            variant_id=variant_id
+        )
+        history.add_price(variant_change.get('new_value'), variant_change.get('old_value'))
+
 
 class CommerceHQProductChangeManager(ProductChangeManager):
     def get_product_data(self):
         return self.product.retrieve()
-
-    def get_variant(self, product_data, variant_change):
-        # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
-        sku = variant_change.get('sku')
-        return variant_index(self.product, sku, product_data['variants'])
 
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'notify':
@@ -329,19 +332,6 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             product_data['is_draft'] = False
         if self.config['product_disappears'] == 'zero_quantity':
             pass
-        return product_data
-
-    def handle_variant_price_change(self, product_data, variant_change):
-        if self.config['price_change'] == 'notify':
-            pass
-        if self.config['price_change'] == 'update':
-            idx = self.get_variant(product_data, variant_change)
-            if idx is not None:
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
-        if self.config['price_change'] == 'update_for_increase':
-            idx = self.get_variant(product_data, variant_change)
-            if idx is not None and product_data['variants'][idx]['price'] < variant_change.get('new_value'):
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
@@ -402,3 +392,11 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             raven_client.captureException(extra={
                 'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
             })
+
+    def add_price_history(self, variant_id, variant_change):
+        history, created = ProductVariantPriceHistory.objects.get_or_create(
+            user=self.product.user,
+            chq_product=self.product,
+            variant_id=variant_id
+        )
+        history.add_price(variant_change.get('new_value'), variant_change.get('old_value'))

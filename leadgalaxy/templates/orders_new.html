@@ -621,6 +621,9 @@
                                                             </span>
                                                             &times;
                                                             <b>{% money_format item.price store %}</b>
+                                                            <span class="price-trends" data-product="{{item.product.id}}" data-variant="{{item.variant_id}}" style="display:none">
+                                                                <a href="#" target="_blank"><i class="fa fa-lg"></i></a>
+                                                            </span>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.is_bundle %}
@@ -837,6 +840,8 @@
         connected: "{{ user_filter.connected|default:'false' }}",
         awaiting_order: "{{ user_filter.awaiting_order|default:'false' }}",
     };
+
+    var product_variants = {% json_dumps product_variants %};
 
     var sub_conf = {
         key: "{% app_setting 'PUSHER_KEY' %}",

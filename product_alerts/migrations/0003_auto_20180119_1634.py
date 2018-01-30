@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import migrations, models
+from django.conf import settings
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('leadgalaxy', '0165_shopifyproduct_monitor_id'),
+        ('commercehq_core', '0007_commercehqproduct_monitor_id'),
+        ('product_alerts', '0002_productchange_categories'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='ProductVariantPriceHistory',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('variant_id', models.BigIntegerField(null=True, verbose_name=b'Source Variant ID')),
+                ('data', models.TextField(null=True, blank=True)),
+                ('old_price', models.FloatField(null=True)),
+                ('new_price', models.FloatField(null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('chq_product', models.ForeignKey(to='commercehq_core.CommerceHQProduct', null=True)),
+                ('shopify_product', models.ForeignKey(to='leadgalaxy.ShopifyProduct', null=True)),
+            ],
+            options={
+                'ordering': ['-updated_at'],
+            },
+        ),
+        migrations.AlterIndexTogether(
+            name='productvariantpricehistory',
+            index_together=set([('chq_product', 'variant_id'), ('shopify_product', 'variant_id')]),
+        ),
+    ]

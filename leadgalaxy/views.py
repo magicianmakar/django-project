@@ -3176,6 +3176,7 @@ def orders_view(request):
         if p.shopify_id not in products_list:
             products_list[p.shopify_id] = p
 
+    product_variants = []
     for index, order in enumerate(page):
         created_at = arrow.get(order['created_at'])
         try:
@@ -3321,6 +3322,8 @@ def orders_view(request):
                     order['line_items'][i]['bundles'] = product_bundles
                     order['line_items'][i]['is_bundle'] = len(bundle_data) > 0
                     order['have_bundle'] = True
+                else:
+                    product_variants.append({'product': product.id, 'variant': variant_id})
 
                 order['connected_lines'] += 1
 
@@ -3435,6 +3438,7 @@ def orders_view(request):
         'store_order_synced': store_order_synced,
         'store_sync_enabled': store_sync_enabled,
         'es_search_enabled': es_search_enabled,
+        'product_variants': product_variants,
         'countries': countries,
         'created_at_daterange': created_at_daterange,
         'admitad_site_id': admitad_site_id,
