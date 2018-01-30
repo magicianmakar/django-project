@@ -46,6 +46,9 @@ from order_exports.api import ShopifyOrderExportAPI, ShopifyTrackOrderExport
 from shopify_orders.models import ShopifyOrder
 from shopify_orders.models import ShopifyOrderRisk
 
+from product_alerts.models import ProductVariantPriceHistory
+from .templatetags.template_helper import money_format
+
 
 @celery_app.task(base=CaptureFailure)
 def export_product(req_data, target, user_id):
@@ -1102,3 +1105,33 @@ def shopify_orders_risk(self, store, order_ids):
         'orders': orders,
         'errors': errors
     })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def product_price_trends(self, store_id, product_variants):
+    store = ShopifyStore.objects.get(id=store_id)
+    trends = []
+
+    print product_variants
+    for item in product_variants:
+        history = ProductVariantPriceHistory.objects.filter(
+            user=store.user,
+            shopify_product_id=item['product'],
+            variant_id=item['variant']
+        ).first()
+
+        if history:
+            if history.old_price < history.new_price:
+                item['trend'] = 'asc'
+            elif history.old_price > history.new_price:
+                item['trend'] = 'desc'
+
+            if item['trend']:
+                item['latest_price'] = money_format(history.new_price, store)
+                trends.append(item)
+
+    if trends:
+        store.pusher_trigger('product-price-trends', {
+            'task': self.request.id,
+            'trends': trends,
+        })

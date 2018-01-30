@@ -180,3 +180,11 @@ ul.shipping-method {
     border: 0;
     border-radius: 0;
 }
+
+.price-trends .price-up {
+    color: #1ab394;
+}
+
+.price-trends .price-down {
+    color: #ed5565;
+}

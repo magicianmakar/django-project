@@ -10,7 +10,7 @@ from leadgalaxy.views import webhook
 from leadgalaxy.tasks import manage_product_change
 from leadgalaxy import utils
 from commercehq_core.models import CommerceHQProduct
-from product_alerts.models import ProductChange
+from product_alerts.models import ProductChange, ProductVariantPriceHistory
 from product_alerts.managers import ProductChangeManager
 
 
@@ -69,8 +69,9 @@ class ProductChangeManagerTestCase(TestCase):
         price = utils.safeFloat(variant['price'])
 
         # update price
+        old_price = price - 10
         update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
-        shopify_product['variants'][0]['price'] = price - 10
+        shopify_product['variants'][0]['price'] = old_price
         r = requests.put(update_endpoint, json={'product': shopify_product})
         self.assertTrue(r.ok)
 
@@ -79,7 +80,7 @@ class ProductChangeManagerTestCase(TestCase):
             'name': 'price',
             'sku': variant['sku'],
             'new_value': price,
-            'old_value': price - 10,
+            'old_value': old_price,
         })
         request = self.factory.post(
             '/webhook/price-monitor/product?product={}&dropified_type=shopify'.format(product.id),
@@ -94,6 +95,12 @@ class ProductChangeManagerTestCase(TestCase):
 
         # check if price was updated back
         self.assertEqual(updated_price, price)
+        # check if price history was added
+        history = ProductVariantPriceHistory.objects.filter(shopify_product=product, variant_id=shopify_product['variants'][0]['id']).first()
+        self.assertIsNotNone(history)
+        self.assertEqual(history.old_price, old_price)
+        self.assertEqual(history.new_price, updated_price)
+
 
     @mock.patch.object(manage_product_change, 'delay', side_effect=manage_product_change)
     def test_webhook_shopify_quantity_change(self, manage):
@@ -145,7 +152,8 @@ class ProductChangeManagerTestCase(TestCase):
         price = utils.safeFloat(variant['price'])
 
         # update price
-        chq_product['variants'][0]['price'] = price - 1
+        old_price = price - 1
+        chq_product['variants'][0]['price'] = old_price
         r = product.store.request.patch(
             url='{}/{}'.format(product.store.get_api_url('products'), product.source_id),
             json={'variants': chq_product['variants']}
@@ -157,7 +165,7 @@ class ProductChangeManagerTestCase(TestCase):
             'name': 'price',
             'sku': '14:29#RB black;200000858:100014128#100cm',
             'new_value': price,
-            'old_value': price - 1,
+            'old_value': old_price,
         })
         request = self.factory.post(
             '/webhook/price-monitor/product?product={}&dropified_type=chq'.format(product.id),
@@ -172,3 +180,8 @@ class ProductChangeManagerTestCase(TestCase):
 
         # check if price was updated back
         self.assertEqual(updated_price, price)
+        # check if price history was added
+        history = ProductVariantPriceHistory.objects.filter(chq_product=product, variant_id=chq_product['variants'][0]['id']).first()
+        self.assertIsNotNone(history)
+        self.assertEqual(history.old_price, old_price)
+        self.assertEqual(history.new_price, updated_price)

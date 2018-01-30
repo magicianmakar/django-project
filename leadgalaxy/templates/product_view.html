@@ -53,9 +53,12 @@
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
                 {% if request.user|can:'price_changes.use' %}
-                <li class="product-alerts-tab" product-id="{{product.id}}">
+                <li>
                     <a data-toggle="tab" href="#tab-6"
                        data-auto-click="#alerts"
+                       data-auto-click-onload="true"
+                       class="product-alerts-tab"
+                       product-id="{{product.id}}"
                     >
                         <i class="fa fa-line-chart"></i> Alerts
                     </a>

@@ -751,11 +751,17 @@ $(function() {
     });
 });
 
-$('a[data-auto-click]').each(function () {
-    if($(this).data('auto-click') && (
-        window.location.hash == '#' + $(this).data('auto-hash') ||
-        window.location.hash == $(this).data('auto-click'))) {
-        $(this).trigger('click');
+$('a[data-auto-click]').each(function (i, el) {
+    if($(el).data('auto-click') && (
+        window.location.hash == '#' + $(el).data('auto-hash') ||
+        window.location.hash == $(el).data('auto-click'))) {
+        if ($(el).data('auto-click-onload')) {
+            $(function() {
+                $(el).trigger('click');
+            });
+        } else {
+            $(el).trigger('click');
+        }
     }
 });
 
