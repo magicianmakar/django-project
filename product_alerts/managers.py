@@ -225,7 +225,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
         return product_data
 
     def get_variant(self, product_data, variant_change):
-        # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
         sku = variant_change.get('sku')
         return variant_index(self.product, sku, product_data['variants'])
 
@@ -308,7 +307,6 @@ class CommerceHQProductChangeManager(ProductChangeManager):
         return self.product.retrieve()
 
     def get_variant(self, product_data, variant_change):
-        # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
         sku = variant_change.get('sku')
         return variant_index(self.product, sku, product_data['variants'])
 

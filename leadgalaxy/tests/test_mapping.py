@@ -6,6 +6,7 @@ from leadgalaxy.models import User, ShopifyStore, ShopifyProduct, ProductSupplie
 
 
 class MappingTestCase(TestCase):
+
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
 
@@ -17,7 +18,7 @@ class MappingTestCase(TestCase):
             data='{}',
             variants_map=json.dumps({
                 '1234567': 'Red'
-                }))
+            }))
 
     def test_simple_mapping(self):
         variants_map = self.product.get_variant_mapping()
@@ -64,7 +65,7 @@ class MappingTestCase(TestCase):
             '987654321': [{
                 'title': 'Blue',
                 'sku': 'sku-1-12345'
-                }, {
+            }, {
                 'title': 'S',
                 'sku': 'sku-2-12345'
             }]
@@ -89,12 +90,12 @@ class MappingTestCase(TestCase):
         supplier1 = ProductSupplier.objects.create(
             store=self.store,
             product=self.product,
-            )
+        )
 
         supplier2 = ProductSupplier.objects.create(
             store=self.store,
             product=self.product,
-            )
+        )
 
         self.product.set_default_supplier(supplier1)
 
@@ -109,12 +110,12 @@ class MappingTestCase(TestCase):
         supplier1 = ProductSupplier.objects.create(
             store=self.store,
             product=self.product,
-            )
+        )
 
         supplier2 = ProductSupplier.objects.create(
             store=self.store,
             product=self.product,
-            )
+        )
 
         self.product.set_default_supplier(supplier1)
 

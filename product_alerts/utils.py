@@ -93,7 +93,6 @@ def monitor_product(product, stdout=None):
 
 
 def variant_index(product, sku, variants):
-    # sku = 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
     original_sku = sku
     found_variant_id = None
     variants_map = product.get_variant_mapping(for_extension=True)
