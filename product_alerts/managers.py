@@ -242,23 +242,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
             pass
         return product_data
 
-    def get_variant(self, product_data, variant_change):
-        sku = variant_change.get('sku')
-        return variant_index(self.product, sku, product_data['variants'])
-
-    def handle_variant_price_change(self, product_data, variant_change):
-        if self.config['price_change'] == 'notify':
-            pass
-        if self.config['price_change'] == 'update':
-            idx = self.get_variant(product_data, variant_change)
-            if idx is not None:
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
-        if self.config['price_change'] == 'update_for_increase':
-            idx = self.get_variant(product_data, variant_change)
-            if idx is not None and product_data['variants'][idx]['price'] < variant_change.get('new_value'):
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
-        return product_data
-
     def handle_variant_quantity_change(self, product_data, variant_change):
         if self.config['quantity_change'] == 'notify':
             pass
@@ -331,10 +314,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
 class CommerceHQProductChangeManager(ProductChangeManager):
     def get_product_data(self):
         return self.product.retrieve()
-
-    def get_variant(self, product_data, variant_change):
-        sku = variant_change.get('sku')
-        return variant_index(self.product, sku, product_data['variants'])
 
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'notify':
