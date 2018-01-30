@@ -140,9 +140,18 @@ def subscription_end_trial(user, raven_client, delete_on_error=False):
             item.refresh()
 
 
-def get_recent_invoice(customer_id):
-    invoices = stripe.Invoice.list(limit=1, customer=customer_id).data
-    return invoices[0] if len(invoices) else None
+def get_recent_invoice(customer_id, plan_invoices_only=False):
+    if not plan_invoices_only:
+        invoices = stripe.Invoice.list(limit=1, customer=customer_id).data
+        if len(invoices):
+            return invoices[0]
+    else:
+        invoices = stripe.Invoice.list(limit=10, customer=customer_id).data
+        for i in invoices:
+            if not i.description or 'Credits' not in i.description:
+                return i
+
+    return None
 
 
 def resubscribe_customer(customer_id):
