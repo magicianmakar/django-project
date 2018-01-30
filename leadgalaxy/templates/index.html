@@ -809,14 +809,12 @@
                                 <div class="col-sm-offset-1 col-sm-10">
                                     <div class="form-group">
                                         <label for="sync_delay_notify_days" class="col-sm-3 col-xs-6 control-label">
-                                            Notify if tracking number is not found after
+                                            Notify if tracking number is not found after (in days)
                                         </label>
                                         <div class="col-sm-2 col-xs-2">
-                                            <div class="input-group" style="padding-left: 70px;">
                                                 <input type="number" id="sync_delay_notify_days" name="sync_delay_notify_days" class="form-control text-center"
-                                                       value="{% if config.sync_delay_notify_days %}{{config.sync_delay_notify_days}}{% endif %}" min="1" max="30" />
-                                                <span class="input-group-addon">Days</span>
-                                            </div>
+                                                       value="{% if config.sync_delay_notify_days %}{{config.sync_delay_notify_days}}{% endif %}"
+                                                       style="max-width:90px;float:right;" min="1" max="30" />
                                         </div>
                                     </div>
                                 </div>
