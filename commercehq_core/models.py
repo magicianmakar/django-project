@@ -534,7 +534,8 @@ class CommerceHQProduct(models.Model):
                     try:
                         m = json.loads(v)
                     except:
-                        m = v.split(',')
+                        if type(v) in [str, unicode]:
+                            m = v.split(',')
 
                     mapping[k] = m
 
