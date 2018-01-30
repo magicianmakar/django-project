@@ -381,8 +381,20 @@ class WooProduct(models.Model):
         if type(mapping) is int:
             mapping = str(mapping)
 
-        if for_extension and type(mapping) in [str, unicode]:
-            mapping = mapping.split(',')
+        if for_extension and mapping:
+            if name:
+                if type(mapping) in [str, unicode]:
+                    mapping = mapping.split(',')
+            else:
+                for k, v in mapping.items():
+                    m = str(v) if type(v) is int else v
+
+                    try:
+                        m = json.loads(v)
+                    except:
+                        m = v.split(',')
+
+                    mapping[k] = m
 
         return mapping
 
