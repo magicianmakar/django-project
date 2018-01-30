@@ -1013,22 +1013,6 @@ def get_chq_order_note(store, order_id):
     return order.get('notes')
 
 
-def update_product_data_images(product, old_url, new_url):
-    images = product.parsed.get('images')
-    images = [new_url if url == old_url else url for url in images]
-    hashed_new = hash_url_filename(new_url)
-    hashed_old = hash_url_filename(old_url)
-
-    variants_images = product.parsed.get('variants_images') or {}
-    if hashed_old in variants_images:
-        variants_images[hashed_new] = variants_images.pop(hashed_old)
-
-    product.update_data({'images': images, 'variants_images': variants_images})
-    product.save()
-
-    return product
-
-
 class CHQOrderUpdater:
 
     def __init__(self, store=None, order_id=None):
