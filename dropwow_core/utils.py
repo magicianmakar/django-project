@@ -3,7 +3,6 @@ import requests
 from django.conf import settings
 from django.utils import timezone
 
-from requests.auth import HTTPBasicAuth
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import ShopifyOrderTrack
@@ -25,7 +24,7 @@ def get_dropwow_products(page, post_per_page, title, category_id, min_price, max
             'vendor': vendor,
             'order_by': order_by,
         },
-        auth=HTTPBasicAuth(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
+        auth=(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
     )
 
     feed.raise_for_status()
@@ -37,7 +36,7 @@ def get_dropwow_featured_products(count):
     feed = requests.get(
         url='{}/dropwow-products/random'.format(settings.DROPWOW_API_HOSTNAME),
         params={'count': count},
-        auth=HTTPBasicAuth(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
+        auth=(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
     )
 
     feed.raise_for_status()
@@ -48,7 +47,7 @@ def get_dropwow_featured_products(count):
 def get_dropwow_product(product_id):
     feed = requests.get(
         url='{}/dropwow-products/{}'.format(settings.DROPWOW_API_HOSTNAME, product_id),
-        auth=HTTPBasicAuth(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
+        auth=(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
     )
 
     feed.raise_for_status()
@@ -213,7 +212,7 @@ def fulfill_dropwow_products(dropwow_account, order_status, product, variant_id,
     r = requests.post(
         url='http://market.dropwow.com/api/order',
         json=data,
-        auth=HTTPBasicAuth(dropwow_account.email, dropwow_account.api_key)
+        auth=(dropwow_account.email, dropwow_account.api_key)
     )
 
     try:
@@ -228,7 +227,7 @@ def fulfill_dropwow_products(dropwow_account, order_status, product, variant_id,
 def get_dropwow_order(dropwow_account_email, dropwow_account_api_key, order_id):
     r = requests.get(
         url='http://market.dropwow.com/api/order/{}'.format(order_id),
-        auth=HTTPBasicAuth(dropwow_account_email, dropwow_account_api_key)
+        auth=(dropwow_account_email, dropwow_account_api_key)
     )
 
     try:
@@ -243,7 +242,7 @@ def get_dropwow_order(dropwow_account_email, dropwow_account_api_key, order_id):
 def get_dropwow_categories():
     r = requests.get(
         url='{}/dropwow-categories/'.format(settings.DROPWOW_API_HOSTNAME),
-        auth=HTTPBasicAuth(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
+        auth=(settings.DROPWOW_API_USERNAME, settings.DROPWOW_API_PASSWORD)
     )
 
     try:

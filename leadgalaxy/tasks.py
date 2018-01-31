@@ -1044,7 +1044,7 @@ def keen_add_event(self, event_name, event_data):
                     url = '{}/api/products/price/{}'.format(settings.PRICE_MONITOR_HOSTNAME, event_data.get('product'))
                     prices_response = requests.get(
                         url=url,
-                        auth=requests.auth.HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+                        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
                     )
 
                     product_price = utils.safeInt(prices_response.json()['price'])

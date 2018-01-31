@@ -1,6 +1,5 @@
 import re
 import requests
-from requests.auth import HTTPBasicAuth
 from django.conf import settings
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -13,7 +12,7 @@ def aliexpress_variants(product_id):
     variants_api_url = '{}/products/{}/variants'.format(PRICE_MONITOR_BASE, product_id)
     rep = requests.get(
         url=variants_api_url,
-        auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
     )
     rep.raise_for_status()
     return rep.json()
@@ -71,7 +70,7 @@ def monitor_product(product, stdout=None):
         rep = requests.post(
             url=monitor_api_url,
             json=post_data,
-            auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+            auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
         )
         rep.raise_for_status()
 

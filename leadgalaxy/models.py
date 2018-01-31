@@ -990,8 +990,6 @@ class ShopifyProduct(models.Model):
         supplier.save()
 
     def monitor_product(self):
-        from requests.auth import HTTPBasicAuth
-
         if self.monitor_id and self.have_supplier() and settings.PRICE_MONITOR_HOSTNAME:
             monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, self.monitor_id)
             post_data = {
@@ -1001,7 +999,7 @@ class ShopifyProduct(models.Model):
             requests.patch(
                 url=monitor_api_url,
                 data=post_data,
-                auth=HTTPBasicAuth(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+                auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
             )
 
     def set_variant_mapping(self, mapping, supplier=None, update=False):
