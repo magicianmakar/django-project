@@ -22,9 +22,9 @@ from ..utils import (
     check_notify_customer,
     add_aftership_to_store_carriers,
     cache_fulfillment_data,
-    update_product_data_images,
-    hash_url_filename,
 )
+
+from shopified_core.utils import hash_url_filename, update_product_data_images
 
 
 CHQ_API_URL = 'chq-shopified-test.commercehqtesting.com'

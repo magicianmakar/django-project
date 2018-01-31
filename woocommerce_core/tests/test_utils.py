@@ -1,9 +1,13 @@
+import json
+
 from mock import patch, Mock
 
 from django.test import TestCase
 
 from ..utils import WooListQuery, woo_customer_address
-from .factories import WooStoreFactory
+from .factories import WooStoreFactory, WooProductFactory
+
+from shopified_core.utils import hash_url_filename, update_product_data_images
 
 
 class WooListQueryTest(TestCase):
@@ -62,3 +66,36 @@ class WooCommerceAddressTest(TestCase):
     def test_must_return_address_even_if_all_values_are_empty_strings(self):
         for value in woo_customer_address(self.order).values():
             self.assertEqual(value, '')
+
+
+class UpdateProductDataImageVariantsTestCase(TestCase):
+    def setUp(self):
+        self.old_url = 'https://example.com/example.png'
+        self.new_url = 'https://example.com/new-image.png'
+        self.variant = 'red'
+        hashed_ = hash_url_filename(self.old_url)
+        data = {'images': [self.old_url], 'variants_images': {hashed_: self.variant}}
+        self.product = WooProductFactory(data=json.dumps(data))
+
+    def test_product_must_have_new_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        self.assertIn(self.new_url, self.product.parsed.get('images'))
+
+    def test_product_must_not_have_old_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        self.assertNotIn(self.old_url, self.product.parsed.get('images'))
+
+    def test_product_must_have_new_variant_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        hashed_new_url = hash_url_filename(self.new_url)
+        self.assertIn(hashed_new_url, self.product.parsed.get('variants_images'))
+
+    def test_product_must_not_have_old_variant_image(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        hashed_old_url = hash_url_filename(self.old_url)
+        self.assertNotIn(hashed_old_url, self.product.parsed.get('variants_images'))
+
+    def test_new_image_must_have_old_image_value(self):
+        self.product = update_product_data_images(self.product, self.old_url, self.new_url)
+        hashed_new_url = hash_url_filename(self.new_url)
+        self.assertEqual(self.product.parsed.get('variants_images')[hashed_new_url], self.variant)

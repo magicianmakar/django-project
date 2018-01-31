@@ -847,7 +847,7 @@ function renderImages() {
         // Pixlr Doesn't redirect to this page
         pixlr.settings.exit = window.location.origin + '/pixlr/close';
         pixlr.settings.method = 'POST';
-        pixlr.settings.referrer = 'Shopified App';
+        pixlr.settings.referrer = 'Dropified App';
         // setting to false saves the image but doesn't run the redirect script on pixlr.html
         pixlr.settings.redirect = false;
     }
@@ -927,6 +927,7 @@ function renderImages() {
                     product: config.product_id,
                     advanced: true,
                     image_id: imageId,
+                    old_url: el,
                     woo: 1
                 })
             });
@@ -1246,6 +1247,7 @@ function clippingmagicEditImage(data, image) {
                     data: {
                         product: config.product_id,
                         url: data.image_url,
+                        old_url: image.attr('src'),
                         clippingmagic: true,
                         woo: 1
                     }

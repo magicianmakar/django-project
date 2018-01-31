@@ -48,7 +48,8 @@ from shopified_core.utils import (
     app_link,
     send_email_from_template,
     version_compare,
-    order_data_cache
+    order_data_cache,
+    update_product_data_images,
 )
 
 from shopify_orders.models import (
@@ -2550,7 +2551,6 @@ def save_image_s3(request):
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
     img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
-
     mimetype = mimetypes.guess_type(img_url)[0]
 
     upload_url = utils.aws_s3_upload(
@@ -2560,14 +2560,8 @@ def save_image_s3(request):
         bucket_name=settings.S3_UPLOADS_BUCKET
     )
 
-    chq_product = request.GET.get('chq') or request.POST.get('chq')
-    if not chq_product:
-        product = ShopifyProduct.objects.get(id=product_id)
-        permissions.user_can_edit(request.user, product)
-        UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
-    else:
+    if request.GET.get('chq') or request.POST.get('chq'):
         from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload
-        from commercehq_core.utils import update_product_data_images
 
         product = CommerceHQProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)
@@ -2575,6 +2569,22 @@ def save_image_s3(request):
 
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
+
+    elif request.GET.get('woo') or request.POST.get('woo'):
+        from woocommerce_core.models import WooProduct, WooUserUpload
+
+        product = WooProduct.objects.get(id=product_id)
+        permissions.user_can_edit(request.user, product)
+
+        WooUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            update_product_data_images(product, old_url, upload_url)
+
+    else:
+        product = ShopifyProduct.objects.get(id=product_id)
+        permissions.user_can_edit(request.user, product)
+        UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
 
     # For Pixlr upload, trigger the close of the editor
     if 'advanced' in request.GET:

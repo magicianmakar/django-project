@@ -698,3 +698,18 @@ class WooBoard(models.Model):
 
     def connected_count(self):
         return self.products.filter(store__is_active=True).exclude(source_id=0).count()
+
+
+class WooUserUpload(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+    product = models.ForeignKey(WooProduct, null=True)
+    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return self.url.replace('%2F', '/').split('/')[-1]
