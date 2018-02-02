@@ -1047,7 +1047,7 @@ def keen_add_event(self, event_name, event_data):
                         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
                     )
 
-                    product_price = utils.safeInt(prices_response.json()['price'])
+                    product_price = prices_response.json()['price']
                     cache.set(cache_key, product_price, timeout=3600)
 
                 if product_price:
