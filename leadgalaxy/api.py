@@ -2220,7 +2220,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 deleted_ids.append(track.id)
                 track.delete()
 
-                order.store.pusher_trigger('order-source-id-delete', {
+                track.store.pusher_trigger('order-source-id-delete', {
                     'store_id': track.store.id,
                     'order_id': track.order_id,
                     'line_id': track.line_id,
