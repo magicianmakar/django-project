@@ -329,12 +329,15 @@ def process_webhook_event(request, event_id, raven_client):
             customer.save()
 
             reg_coupon = customer.user.get_config('registration_discount')
-            if reg_coupon and not reg_coupon.startswith(':'):
-                cus = stripe.Customer.retrieve(sub.customer)
-                cus.coupon = reg_coupon
-                cus.save()
+            try:
+                if reg_coupon and not reg_coupon.startswith(':'):
+                    cus = stripe.Customer.retrieve(sub.customer)
+                    cus.coupon = reg_coupon
+                    cus.save()
 
                 customer.user.set_config('registration_discount', u':{}'.format(reg_coupon))
+            except:
+                raven_client.captureException(level='warning')
 
         except StripeCustomer.DoesNotExist:
             if sub.plan.metadata.get('click_funnels') or sub.plan.metadata.get('lifetime'):
