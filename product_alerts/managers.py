@@ -15,7 +15,7 @@ class ProductChangeManager():
         manager = None
         if product_change.store_type == 'shopify':
             manager = ShopifyProductChangeManager(product_change)
-        if product_change.store_type == 'chq':
+        elif product_change.store_type == 'chq':
             manager = CommerceHQProductChangeManager(product_change)
         return manager
 
@@ -47,18 +47,45 @@ class ProductChangeManager():
 
         return value
 
+    def need_update(self):
+        """ Return True if the user have any setting that will require a product update """
+
+        for k, v in self.config.keys():
+            if v not in ['notify', 'none']:
+                return True
+
+        return False
+
     def apply_changes(self):
         try:
+            if not self.need_update():
+                # No need to check for updates, the user doesn't have any setting that will require a product update
+                self.product_change.status = 1  # Applied
+                self.product_change.save()
+                return
+
             product_data = self.get_product_data()
-            product_data = self.apply_product_changes(product_data)
-            product_data = self.apply_variant_changes(product_data)
-            self.update_product(product_data)
+
+            if product_data:
+                product_change_data = self.apply_product_changes(product_data)
+                if product_change_data:  # Do we have any change on the product level?
+                    product_data = product_change_data
+
+            if product_data:
+                product_data = self.apply_variant_changes(product_data)
+
+            if product_data:
+                self.update_product(product_data)
+
             self.product_change.status = 1  # Applied
             self.product_change.save()
+
             return product_data
+
         except Exception:
             self.product_change.status = 2  # Failed
             self.product_change.save()
+
         return None
 
     def get_product_data(self):
@@ -70,8 +97,9 @@ class ProductChangeManager():
                 if product_change.get('name') == 'offline':
                     if product_change.get('new_value') and not product_change.get('old_value'):  # disappeared
                         product_data = self.handle_product_disappear(product_data)
-                    if product_change.get('old_value') and not product_change.get('new_value'):  # appeared
+                    elif product_change.get('old_value') and not product_change.get('new_value'):  # appeared
                         product_data = self.handle_product_appear(product_data)
+
         return product_data
 
     def apply_variant_changes(self, product_data):
@@ -79,12 +107,13 @@ class ProductChangeManager():
             for variant_change in self.variant_changes:
                 if variant_change.get('name') == 'price':
                     product_data = self.handle_variant_price_change(product_data, variant_change)
-                if variant_change.get('name') == 'quantity':
+                elif variant_change.get('name') == 'quantity':
                     product_data = self.handle_variant_quantity_change(product_data, variant_change)
-                if variant_change.get('name') == 'var_added':
+                elif variant_change.get('name') == 'var_added':
                     product_data = self.handle_variant_added(product_data, variant_change)
-                if variant_change.get('name') == 'var_removed':
+                elif variant_change.get('name') == 'var_removed':
                     product_data = self.handle_variant_removed(product_data, variant_change)
+
         return product_data
 
     def handle_product_disappear(self, product_data):
@@ -103,14 +132,16 @@ class ProductChangeManager():
         if idx is not None:
             variant_id = product_data['variants'][idx]['id']
             self.add_price_history(variant_id, variant_change)
+
         if self.config['price_change'] == 'notify':
-            pass
-        if self.config['price_change'] == 'update':
+            return None
+        elif self.config['price_change'] == 'update':
             if idx is not None:
                 product_data['variants'][idx]['price'] = variant_change.get('new_value')
-        if self.config['price_change'] == 'update_for_increase':
+        elif self.config['price_change'] == 'update_for_increase':
             if idx is not None and product_data['variants'][idx]['price'] < variant_change.get('new_value'):
                 product_data['variants'][idx]['price'] = variant_change.get('new_value')
+
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
@@ -220,37 +251,42 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'notify':
-            pass
-        if self.config['product_disappears'] == 'unpublish':
+            return None
+        elif self.config['product_disappears'] == 'unpublish':
             product_data['published'] = False
-        if self.config['product_disappears'] == 'zero_quantity':
+        elif self.config['product_disappears'] == 'zero_quantity':
             for idx, variant in enumerate(product_data['variants']):
                 product_data['variants'][idx]['inventory_quantity'] = 0
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
+
         return product_data
 
     def handle_product_appear(self, product_data):
         if self.config['product_disappears'] == 'notify':
-            pass
-        if self.config['product_disappears'] == 'unpublish':
+            return None
+        elif self.config['product_disappears'] == 'unpublish':
             product_data['published'] = True
-        if self.config['product_disappears'] == 'zero_quantity':
-            pass
+        elif self.config['product_disappears'] == 'zero_quantity':
+            return None
+
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
         if self.config['quantity_change'] == 'notify':
-            pass
-        if self.config['quantity_change'] == 'update':
+            return None
+        elif self.config['quantity_change'] == 'update':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 product_data['variants'][idx]['inventory_quantity'] = variant_change.get('new_value')
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
+
         return product_data
 
     def handle_variant_added(self, product_data, variant_change):
+        return None  # This case is not covered with a setting
+
         idx = self.get_variant(product_data, variant_change)
         if idx is None:
             variant = {}
@@ -260,21 +296,23 @@ class ShopifyProductChangeManager(ProductChangeManager):
             variant['inventory_management'] = 'shopify'
             variant['inventory_policy'] = 'deny'
             product_data['variants'].append(variant)
+
         return product_data
 
     def handle_variant_removed(self, product_data, variant_change):
         if self.config['variant_disappears'] == 'notify':
-            pass
-        if self.config['variant_disappears'] == 'remove':
+            return None
+        elif self.config['variant_disappears'] == 'remove':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 del product_data['variants'][idx]
-        if self.config['variant_disappears'] == 'zero_quantity':
+        elif self.config['variant_disappears'] == 'zero_quantity':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 product_data['variants'][idx]['inventory_quantity'] = 0
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
+
         return product_data
 
     def update_product(self, product_data):
@@ -313,34 +351,39 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'notify':
-            pass
-        if self.config['product_disappears'] == 'unpublish':
+            return None
+        elif self.config['product_disappears'] == 'unpublish':
             product_data['is_draft'] = True
-        if self.config['product_disappears'] == 'zero_quantity':
+        elif self.config['product_disappears'] == 'zero_quantity':
             # TODO: set quantity to zero
-            pass
+            return None
+
         return product_data
 
     def handle_product_appear(self, product_data):
         if self.config['product_disappears'] == 'notify':
-            pass
-        if self.config['product_disappears'] == 'unpublish':
+            return None
+        elif self.config['product_disappears'] == 'unpublish':
             product_data['is_draft'] = False
-        if self.config['product_disappears'] == 'zero_quantity':
-            pass
+        elif self.config['product_disappears'] == 'zero_quantity':
+            return None
+
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
         if self.config['quantity_change'] == 'notify':
-            pass
-        if self.config['quantity_change'] == 'update':
+            return None
+        elif self.config['quantity_change'] == 'update':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 # TODO: update quantity
-                pass
+                return None
+
         return product_data
 
     def handle_variant_added(self, product_data, variant_change):
+        return None  # This case is not covered with a setting
+
         idx = self.get_variant(product_data, variant_change)
         if idx is None:
             variant = {}
@@ -348,11 +391,12 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             variant['price'] = variant_change.get('price')
             # TODO: set quantity
             product_data['variants'].append(variant)
+
         return product_data
 
     def handle_variant_removed(self, product_data, variant_change):
         if self.config['variant_disappears'] == 'notify':
-            pass
+            return None
         if self.config['variant_disappears'] == 'remove':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
@@ -361,7 +405,8 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 # TODO: set quantity to zero
-                pass
+                return None
+
         return product_data
 
     def update_product(self, product_data):
