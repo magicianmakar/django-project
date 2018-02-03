@@ -4,10 +4,7 @@ import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.utils import app_link
-from leadgalaxy.utils import (
-    get_shopify_product,
-    update_shopify_product,
-)
+from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index
 from product_alerts.models import ProductVariantPriceHistory
 
@@ -288,15 +285,14 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 del product_data['variants']
             r = requests.put(update_endpoint, json={'product': product_data})
 
-            if not r.ok:
+            if not r.ok and r.status_code not in [401, 402, 403, 404]:
                 raven_client.captureMessage('Alert Update Error', extra={
                     'product': self.product.id,
                     'store': self.product.store,
                     'rep': r.text,
                     'data': product_data,
                 })
-            else:
-                update_shopify_product(None, self.product.store.id, self.product.get_shopify_id(), product_id=self.product.id)
+
         except Exception as e:
             raven_client.captureException(extra={
                 'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
@@ -379,7 +375,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                 }
             )
 
-            if not r.ok:
+            if not r.ok and r.status_code not in [401, 402, 403, 404]:
                 raven_client.captureMessage('Alert Update Error', extra={
                     'product': self.product.id,
                     'store': self.product.store,

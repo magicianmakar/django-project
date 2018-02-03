@@ -187,7 +187,7 @@ class ProductChangeEvent():
 
             r = requests.put(update_endpoint, json=data)
 
-            if not r.ok:
+            if not r.ok and r.status_code not in [401, 402, 403, 404]:
                 raven_client.captureMessage('Alert Update Error', extra={
                     'product': self.product.id,
                     'store': self.product.store,
