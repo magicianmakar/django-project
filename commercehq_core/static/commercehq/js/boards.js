@@ -378,4 +378,9 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#chq-modal-board-add').on('shown.bs.modal', function() {
+        $(this).find('input[name="title"]').trigger('focus');
+    });
+
 });

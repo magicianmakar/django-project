@@ -14,6 +14,12 @@
             </div>
 
             <div class="ibox-content">
+                <form id="board-search-form" method="get" role="form" class="form-inline">
+                    <div class="form-group pull-right">
+                        <label>Search:</label>
+                        <input type="text" class="form-control" name="search" placeholder="Board title" value="{{ request.GET.search|default:'' }}">
+                    </div>
+                </form>
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
@@ -24,7 +30,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in boards %}
+                        {% for item in current_page.object_list %}
                         <tr class="board-box">
                             <td>
                                 <a class="edit-user-premsc" board-id="{{item.id}}" href="/boards/{{item.id}}">
@@ -49,6 +55,16 @@
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <div id="pages-info" class="row">
+                    <div class="col-sm-12">
+                        <div id="results-count" class="pull-left">
+                            Showing {{ current_page.start_index }} to {{ current_page.end_index }} of
+                            {{ count }} entries
+                        </div>
+                        {% include "partial/paginator.html" %}
+                    </div>
+                </div>
 
                 <button class="btn btn-success add-board-btn">
                     <i class="fa fa-plus"></i> Add Board
@@ -102,56 +118,48 @@
 {% endblock %}
 
 {% block extracss %}
-    <!-- Data Tables -->
-    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
-
     <style type="text/css">
     tbody td {
         padding: 0px;
         margin: 0px;
     }
+
+    #board-search-form {
+        height: 35px;
+        margin-bottom: 5px;
+    }
+
+    #pages-info {
+        margin-bottom: 15px;
+    }
+    #results-count {
+        height: 28px;
+        line-height: 28px;
+    }
+
+    .pagination {
+        margin: 0 15px 0 0;
+        float: right;
+    }
+    .pagination > li > a,
+    .pagination > li > span {
+        font-size: 13px;
+    }
+    .pagination-lg > li:first-child > a,
+    .pagination-lg > li:first-child > span {
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+    }
+    .pagination-lg > li:last-child > a,
+    .pagination-lg > li:last-child > span {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
     </style>
 {% endblock %}
 
 {% block extrajs %}
-    <!-- Data Tables -->
-    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
-    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
-    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
-    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
-
-    <script type="text/javascript">
-
-        $(document).ready(function() {
-            $('.dataTables').on('draw.dt', function(e) {
-                $('.dataTables tr').each(function(i, el) {
-                    var info = $(el).find('td');
-
-                    if (info.length == 1) {
-                        $(el).find('td').last().text('No board found.').addClass('text-center');
-                        return;
-                    }
-                });
-            });
-
-            var table = $('.dataTables').dataTable({
-                responsive: true,
-                autoWidth: false,
-                dom: 'T<"clear">lfrtip',
-                bLengthChange: false,
-                iDisplayLength: 25,
-                tableTools: {
-                    aButtons: [],
-                }
-            });
-        });
-
-
-    </script>
-
-{% compress js %}
+    {% compress js %}
     <script type="text/javascript" src="{% static 'shopified/js/boards.js' %}"></script>
-{% endcompress %}
+    {% endcompress %}
 {% endblock %}

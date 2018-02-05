@@ -1545,18 +1545,25 @@ def boards_list(request):
     if not request.user.can('view_product_boards.sub'):
         raise PermissionDenied()
 
-    boards = []
+    search_title = request.GET.get('search') or None
     boards_list = request.user.models_user.shopifyboard_set.all()
+    if search_title is not None:
+        boards_list = boards_list.filter(title__icontains=search_title)
+    boards_count = len(boards_list)
 
-    board_products_count = len(boards_list) <= 10
-    for board in request.user.models_user.shopifyboard_set.all():
-        board.saved = board.saved_count(request=request) if board_products_count else None
-        board.connected = board.connected_count(request=request) if board_products_count else None
+    paginator = SimplePaginator(boards_list, 10)
+    page = utils.safeInt(request.GET.get('page'), 1)
+    page = min(max(1, page), paginator.num_pages)
+    current_page = paginator.page(page)
 
-        boards.append(board)
+    for board in current_page.object_list:
+        board.saved = board.saved_count(request=request)
+        board.connected = board.connected_count(request=request)
 
     return render(request, 'boards_list.html', {
-        'boards': boards,
+        'current_page': current_page,
+        'count': boards_count,
+        'paginator': paginator,
         'page': 'boards',
         'breadcrumbs': ['Boards']
     })

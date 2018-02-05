@@ -363,4 +363,8 @@ $("#product-filter-form").submit(function() {
     return true; // ensure form still submits
 });
 
+$('#modal-board-add').on('shown.bs.modal', function() {
+    $('#add-board-name').trigger('focus');
+});
+
 })();
