@@ -151,7 +151,7 @@ class ProductChangeManagerTestCase(TestCase):
         price = round(float(variant['price']), 2)
 
         # update price
-        old_price = price - 1
+        old_price = round(price - 1.0, 2)
         chq_product['variants'][0]['price'] = old_price
         r = product.store.request.patch(
             url='{}/{}'.format(product.store.get_api_url('products'), product.source_id),
