@@ -66,7 +66,7 @@ class ProductChangeManagerTestCase(TestCase):
         product = ShopifyProduct.objects.get(pk=4)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
-        price = utils.safeFloat(variant['price'])
+        price = round(float(variant['price']), 2)
 
         # update price
         old_price = price - 10
@@ -91,7 +91,7 @@ class ProductChangeManagerTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         updated_variant = shopify_product['variants'][0]
-        updated_price = utils.safeFloat(updated_variant['price'])
+        updated_price = round(float(updated_variant['price']), 2)
 
         # check if price was updated back
         self.assertEqual(updated_price, price)
@@ -100,7 +100,6 @@ class ProductChangeManagerTestCase(TestCase):
         self.assertIsNotNone(history)
         self.assertEqual(history.old_price, old_price)
         self.assertEqual(history.new_price, updated_price)
-
 
     @mock.patch.object(manage_product_change, 'delay', side_effect=manage_product_change)
     def test_webhook_shopify_quantity_change(self, manage):
@@ -149,7 +148,7 @@ class ProductChangeManagerTestCase(TestCase):
         product = CommerceHQProduct.objects.get(pk=1)
         chq_product = product.retrieve()
         variant = chq_product['variants'][0]
-        price = utils.safeFloat(variant['price'])
+        price = round(float(variant['price']), 2)
 
         # update price
         old_price = price - 1
@@ -176,7 +175,7 @@ class ProductChangeManagerTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         chq_product = product.retrieve()
         updated_variant = chq_product['variants'][0]
-        updated_price = utils.safeFloat(updated_variant['price'])
+        updated_price = round(float(updated_variant['price']), 2)
 
         # check if price was updated back
         self.assertEqual(updated_price, price)
