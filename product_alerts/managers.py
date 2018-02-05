@@ -50,7 +50,7 @@ class ProductChangeManager():
     def need_update(self):
         """ Return True if the user have any setting that will require a product update """
 
-        for k, v in self.config.keys():
+        for k, v in self.config.items():
             if v not in ['notify', 'none']:
                 return True
 
