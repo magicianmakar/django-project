@@ -326,7 +326,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
             r.raise_for_status()
 
         except Exception as e:
-            if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code in [401, 402, 403, 404]:
+            if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code not in [401, 402, 403, 404]:
                 raven_client.captureException(extra={
                     'rep': r.text,
                     'data': product_data,
@@ -428,7 +428,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             self.product.update_data(product_data)
 
         except Exception as e:
-            if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code in [401, 402, 403, 404]:
+            if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code not in [401, 402, 403, 404]:
                 raven_client.captureMessage(extra={
                     'rep': r.text,
                     'data': product_data,
