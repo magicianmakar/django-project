@@ -74,7 +74,7 @@ SUBUSER_WOO_STORE_PERMISSIONS = (
 )
 
 PRICE_MARKUP_TYPES = (
-    ('margin_percent', 'Increase by pecenatge'),
+    ('margin_percent', 'Increase by percentage'),
     ('margin_amount', 'Increase by amount'),
     ('fixed_amount', 'Set to fixed amount'),
 )
