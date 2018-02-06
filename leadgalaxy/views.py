@@ -825,11 +825,14 @@ def webhook(request, provider, option):
                 product = ShopifyProduct.objects.get(id=product_id)
             except ShopifyProduct.DoesNotExist:
                 return JsonResponse({'error': 'Product Not Found'}, status=404)
-        if dropified_type == 'chq':
+        elif dropified_type == 'chq':
             try:
                 product = CommerceHQProduct.objects.get(id=product_id)
             except CommerceHQProduct.DoesNotExist:
                 return JsonResponse({'error': 'Product Not Found'}, status=404)
+        else:
+            return JsonResponse({'error': 'Unknown Product Type'}, status=500)
+
         if product.user.can('price_changes.use') and product.is_connected:
             product_change = ProductChange.objects.create(
                 store_type=dropified_type,
@@ -838,7 +841,9 @@ def webhook(request, provider, option):
                 user=product.user,
                 data=request.body,
             )
-            tasks.manage_product_change.delay(product_change.pk)
+
+            tasks.manage_product_change.apply_async(args=[product_change.pk], countdown=random.randint(1, 120))
+
         else:
             product.monitor_id = 0
             product.save()
