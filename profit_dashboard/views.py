@@ -1,6 +1,5 @@
 import arrow
 import simplejson as json
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
