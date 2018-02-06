@@ -14,6 +14,10 @@ from product_alerts.models import ProductChange, ProductVariantPriceHistory
 from product_alerts.managers import ProductChangeManager
 
 
+def manage_product_change_callback(*args, **kwargs):
+    manage_product_change(*kwargs['args'])
+
+
 class ProductChangeManagerTestCase(TestCase):
     fixtures = ['product_changes.json']
 
@@ -57,7 +61,7 @@ class ProductChangeManagerTestCase(TestCase):
         result = manager.get_variant(product_data, manager.variant_changes[0])
         self.assertEqual(result, 0)
 
-    @mock.patch.object(manage_product_change, 'delay', side_effect=manage_product_change)
+    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
         self.user.profile.save()
@@ -69,7 +73,7 @@ class ProductChangeManagerTestCase(TestCase):
         price = round(float(variant['price']), 2)
 
         # update price
-        old_price = price - 10
+        old_price = round(price - (price / 2.0), 2)
         update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
         shopify_product['variants'][0]['price'] = old_price
         r = requests.put(update_endpoint, json={'product': shopify_product})
@@ -101,7 +105,7 @@ class ProductChangeManagerTestCase(TestCase):
         self.assertEqual(history.old_price, old_price)
         self.assertEqual(history.new_price, updated_price)
 
-    @mock.patch.object(manage_product_change, 'delay', side_effect=manage_product_change)
+    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_quantity_change(self, manage):
         self.user.profile.config = json.dumps({"alert_quantity_change": "update"})
         self.user.profile.save()
@@ -139,7 +143,7 @@ class ProductChangeManagerTestCase(TestCase):
         # check if quantity was updated back
         self.assertEqual(updated_quantity, quantity)
 
-    @mock.patch.object(manage_product_change, 'delay', side_effect=manage_product_change)
+    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_chq_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
         self.user.profile.save()
@@ -151,7 +155,7 @@ class ProductChangeManagerTestCase(TestCase):
         price = round(float(variant['price']), 2)
 
         # update price
-        old_price = round(price - 1.0, 2)
+        old_price = round(price - (price / 2.0), 2)
         chq_product['variants'][0]['price'] = old_price
         r = product.store.request.patch(
             url='{}/{}'.format(product.store.get_api_url('products'), product.source_id),
