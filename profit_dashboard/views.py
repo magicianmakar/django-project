@@ -16,6 +16,7 @@ from facebookads.adobjects.adaccount import AdAccount
 
 from leadgalaxy import utils
 from shopified_core.paginators import SimplePaginator
+from shopify_orders.utils import is_store_synced
 from .utils import (
     get_profits,
     calculate_profits,
@@ -34,24 +35,28 @@ def index(request):
     if not request.user.can('profit_dashboard.use'):
         raise PermissionDenied()
 
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Profits Dashboard')
+        return HttpResponseRedirect('/')
+
+    if not is_store_synced(store):
+        messages.warning(request, 'Your orders are not synced yet')
+        return HttpResponseRedirect('/')
+
     start = request.GET.get('start')
     end = request.GET.get('end')
     limit = utils.safeInt(request.GET.get('limit'), 10)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
-    store = utils.get_store_from_request(request)
-    if not store:
-        messages.warning(request, 'Please add at least one store before using the Profits Dashboard.')
-        return HttpResponseRedirect('/')
-
     tz = timezone.localtime(timezone.now()).strftime(' %z')
     if end is None:
-        end = arrow.now().span('month')[1].datetime
+        end = arrow.now().datetime
     else:
         end = arrow.get(end + tz, r'MM/DD/YYYY Z').datetime
 
     if start is None:
-        start = end - timedelta(days=end.day - 1)
+        start = arrow.now().replace(days=-30).datetime
     else:
         start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
 

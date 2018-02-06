@@ -488,6 +488,18 @@ class OrdersList(ListView):
 
         return self.product_data
 
+    def get_order_ids(self, orders):
+        return [order['id'] for order in orders]
+
+    def get_order_track_by_item(self, order_ids):
+        track_by_item = {}
+        store = self.get_store()
+        for track in WooOrderTrack.objects.filter(store=store, order_id__in=order_ids):
+            key = '{}_{}_{}'.format(track.order_id, track.line_id, track.product_id)
+            track_by_item[key] = track
+
+        return track_by_item
+
     def normalize_orders(self, context):
         orders_cache = {}
         store = self.get_store()
@@ -496,6 +508,8 @@ class OrdersList(ListView):
         product_ids = self.get_product_ids(orders)
         product_by_source_id = self.get_product_by_source_id(product_ids)
         product_data = self.get_product_data(product_ids)
+        order_ids = self.get_order_ids(orders)
+        order_track_by_item = self.get_order_track_by_item(order_ids)
 
         for order in orders:
             country_code = order['shipping'].get('country')
@@ -532,11 +546,8 @@ class OrdersList(ListView):
                     item['shipping_method'] = self.get_item_shipping_method(
                         product, item, variant_id, country_code)
 
-                item['order_track'] = WooOrderTrack.objects.filter(
-                    store=store,
-                    order_id=order['id'],
-                    line_id=item['id'],
-                    product_id=product_id).first()
+                key = '{}_{}_{}'.format(order['id'], item['id'], item['product_id'])
+                item['order_track'] = order_track_by_item.get(key)
 
         caches['orders'].set_many(orders_cache, timeout=21600)
 
