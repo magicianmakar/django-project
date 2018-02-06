@@ -1053,6 +1053,25 @@ def add_shopify_order_note(store, order_id, new_note, current_note=False):
     return set_shopify_order_note(store, order_id, note)
 
 
+def sync_shopify_products(store, products):
+    from leadgalaxy.tasks import update_shopify_product
+
+    product_map = {}
+    for i in products:
+        if i['qelem'].shopify_id:
+            product_map[i['qelem'].shopify_id] = i['qelem']
+
+    if product_map:
+        for shopify_product in get_shopify_products(store, limit=100, product_ids=[str(j) for j in product_map.keys()]):
+            product = product_map[shopify_product['id']]
+            if arrow.get(shopify_product['updated_at']).datetime > product.updated_at:
+                update_shopify_product.delay(
+                    product.store.id,
+                    product.shopify_id,
+                    shopify_product=shopify_product,
+                    product_id=product.id)
+
+
 def fix_order_variants(store, order, product):
     product_key = 'fix_product_{}_{}'.format(store.id, product.get_shopify_id())
     shopify_product = cache.get(product_key)
