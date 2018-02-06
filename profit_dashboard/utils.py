@@ -117,7 +117,8 @@ def get_profits(user_id, store_id, start, end):
             'profit': 0.0
         }
 
-    orders = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start, end)) \
+    orders = ShopifyOrder.objects.filter(store_id=store_id,
+                                         created_at__range=(start, end)) \
                                  .extra({'date_key': 'date(created_at)'}) \
                                  .values('date_key') \
                                  .annotate(Sum('total_price')) \
@@ -130,7 +131,8 @@ def get_profits(user_id, store_id, start, end):
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
-    shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id, created_at__range=(start, end)) \
+    shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id,
+                                                         created_at__range=(start, end)) \
                                                  .extra({'date_key': 'date(created_at)'}) \
                                                  .values('date_key') \
                                                  .annotate(Sum('shipping_cost'),
@@ -158,7 +160,8 @@ def get_profits(user_id, store_id, start, end):
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
-    other_costs = OtherCost.objects.filter(store_id=store_id) \
+    other_costs = OtherCost.objects.filter(store_id=store_id,
+                                           date__range=(start, end)) \
                                    .extra({'date_key': 'date(date)'}) \
                                    .values('date_key') \
                                    .annotate(Sum('amount')) \

@@ -51,12 +51,12 @@ def index(request):
 
     tz = timezone.localtime(timezone.now()).strftime(' %z')
     if end is None:
-        end = arrow.now().span('month')[1].datetime
+        end = arrow.now().datetime
     else:
         end = arrow.get(end + tz, r'MM/DD/YYYY Z').datetime
 
     if start is None:
-        start = end - timedelta(days=end.day - 1)
+        start = arrow.now().replace(days=-30).datetime
     else:
         start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
 
