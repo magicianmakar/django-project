@@ -1036,7 +1036,10 @@ def products_list(request, tpl='grid'):
         store = None
 
     if store:
-        utils.sync_shopify_products(store, products)
+        try:
+            utils.sync_shopify_products(store, products)
+        except:
+            raven_client.captureMessage(level='warning')
 
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 
