@@ -346,7 +346,7 @@
                                     </div>
                                     <div class="col-xs-1">
                                         {% if order_risk_levels_enabled %}
-                                        {% if order.gateway == 'shopify_payments' %}
+                                        {% if order.gateway == 'shopify_payments' or order_risk_all_getaways %}
                                         <span class="order-risk-level itooltip" order-id="{{order.id}}" title="Order Risk Level"></span>
                                         {% endif %}
                                         {% endif %}

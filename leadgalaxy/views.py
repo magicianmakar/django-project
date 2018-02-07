@@ -2662,6 +2662,7 @@ def orders_view(request):
     fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', False)
     german_umlauts = models_user.get_config('_use_german_umlauts', False)
     show_actual_supplier = models_user.get_config('_show_actual_supplier', False) or models_user.id in [883, 21064, 24767]
+    order_risk_all_getaways = models_user.get_config('_order_risk_all_getaways', False)
 
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
@@ -3472,6 +3473,7 @@ def orders_view(request):
         'admitad_site_id': admitad_site_id,
         'user_admitad_credentials': user_admitad_credentials,
         'show_actual_supplier': show_actual_supplier,
+        'order_risk_all_getaways': order_risk_all_getaways,
         'order_debug': order_debug,
         'page': 'orders',
         'breadcrumbs': breadcrumbs
