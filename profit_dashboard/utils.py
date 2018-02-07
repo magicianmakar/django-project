@@ -99,7 +99,7 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
 
 
 def get_profits(user_id, store_id, start, end):
-    days = arrow.Arrow.range('day', start, end)
+    days = arrow.Arrow.range('day', start, end) + [arrow.get(end)]
     profits_data = OrderedDict()
     for day in reversed(days):
         date_key = day.format('YYYY-MM-DD')
