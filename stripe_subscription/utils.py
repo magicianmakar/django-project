@@ -497,9 +497,9 @@ def process_webhook_event(request, event_id, raven_client):
         except User.DoesNotExist:
             description = safeStr(charge.description)
 
-            is_unlimited = bool(request.POST.get('unlimited'))
-            is_unlimited |= bool('Unlimited' in description and ('ECOM Jam' in description or '$997' in description))
-            is_unlimited |= bool(charge.metadata.get('products') == '$997 Lifetime Offer')
+            is_unlimited = request.POST.get('unlimited') or \
+                ('Unlimited' in description and ('ECOM Jam' in description or '$997' in description)) or \
+                (charge.metadata.get('products') in ['$997 Lifetime Offer', 'Dropified Lifetime Unlimited'])
 
             if is_unlimited:
                 stripe_customer = stripe.Customer.retrieve(charge.customer)
