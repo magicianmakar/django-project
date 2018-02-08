@@ -1039,7 +1039,7 @@ def products_list(request, tpl='grid'):
         try:
             utils.sync_shopify_products(store, products)
         except:
-            raven_client.captureMessage(level='warning')
+            raven_client.captureException(level='warning')
 
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 

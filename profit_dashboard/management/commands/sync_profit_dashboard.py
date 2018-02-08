@@ -36,7 +36,7 @@ class Command(DropifiedBaseCommand):
             tracks = tracks.filter(store__in=options['store'])
 
         if options.get('days') > 0:
-            tracks = tracks.filter(created_at__gte=arrow.utcnow().replace(days=-options['store']).datetime)
+            tracks = tracks.filter(created_at__gte=arrow.utcnow().replace(days=-options['days']).datetime)
 
         if options.get('reset') and options.get('store'):
             self.write('Reset Stores: {}'.format(options['store']))
