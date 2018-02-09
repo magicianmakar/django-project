@@ -485,7 +485,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             # source_id = int(source_id)
 
         except AssertionError as e:
-            raven_client.captureMessage('Non valid Aliexpress Order ID')
+            raven_client.captureException(level='warning')
 
             return self.api_error(e.message, status=501)
 
