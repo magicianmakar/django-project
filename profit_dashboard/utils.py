@@ -251,16 +251,29 @@ def get_costs_from_track(track, commit=False):
 
     if any(costs.values()):
         if commit:
-            AliexpressFulfillmentCost.objects.update_or_create(
-                store=track.store,
-                order_id=track.order_id,
-                source_id=track.source_id,
-                defaults={
-                    'created_at': track.created_at.date(),
-                    'shipping_cost': costs['shipping_cost'],
-                    'products_cost': costs['products_cost'],
-                    'total_cost': costs['total_cost'],
-                }
-            )
+            while True:
+                try:
+                    AliexpressFulfillmentCost.objects.update_or_create(
+                        store=track.store,
+                        order_id=track.order_id,
+                        source_id=track.source_id,
+                        defaults={
+                            'created_at': track.created_at.date(),
+                            'shipping_cost': costs['shipping_cost'],
+                            'products_cost': costs['products_cost'],
+                            'total_cost': costs['total_cost'],
+                        }
+                    )
+
+                except AliexpressFulfillmentCost.MultipleObjectsReturned:
+                    AliexpressFulfillmentCost.objects.filter(
+                        store=track.store,
+                        order_id=track.order_id,
+                        source_id=track.source_id,
+                    ).delete()
+
+                    continue
+
+                break
 
         return costs
