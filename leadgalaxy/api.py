@@ -2036,11 +2036,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             # source_id = int(source_id)
 
         except AssertionError as e:
-            raven_client.captureException(level='warning', tags={'oberlo': from_oberlo, 'shop': store.shop})
-
             if from_oberlo and (not source_id or not len(source_id)):
                 # Handle a regression in the extension migration tool (1b59df9)
-                return self.api_success('Nothing to import (Aliexpress ID is empty)')
+                return self.api_success({'message': 'Nothing to import (Aliexpress ID is empty)'}, status=202)
+            else:
+                raven_client.captureException(level='warning', tags={'oberlo': from_oberlo, 'shop': store.shop})
 
             return self.api_error(e.message, status=501)
 
