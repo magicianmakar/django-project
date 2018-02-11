@@ -49,7 +49,7 @@
         }, 1000);
     });
 
-    $('#update-unfulfilled-only').on('change', function (e) {
+    $('#update-unfulfilled-only').on('ifChanged', function (e) {
         if($('.aliexpress-sync-btn').prop('updated-version') &&
             $('#modal-tracking-update').is(':visible')) {
             syncTrackedOrders();
@@ -78,12 +78,18 @@
             }
         });
 
+        var createdAt = $('input[name="created_at_daterange"]').val();
+        if (createdAt.indexOf('all-time') > -1) {
+            createdAt = '';
+        }
+
         $.ajax({
             url: '/api/order-fulfill',
             data: {
                 store: btn.data('store'),
                 all: true,
                 unfulfilled_only: $('#update-unfulfilled-only').is(':checked'),
+                created_at: createdAt,
                 count_only: true
             }
         }).done(function(data) {
@@ -134,12 +140,18 @@
         btn.hide();
         $('.stop-update-btn').show();
 
+        var createdAt = $('input[name="created_at_daterange"]').val();
+        if (createdAt.indexOf('all-time') > -1) {
+            createdAt = '';
+        }
+
         $.ajax({
             url: '/api/order-fulfill',
             data: {
                 store: btn.data('store'),
                 all: true,
                 ids: window.syncOrderIds,
+                created_at: createdAt,
                 unfulfilled_only: $('#update-unfulfilled-only').is(':checked')
             }
         }).done(function(data) {
@@ -183,8 +195,12 @@
         }, 1000);
     });
 
-    $('#advanced-options-check').on('change', function (e) {
-        $('.advanced-options').toggle(e.target.checked);
+    $('#advanced-options-check').on('ifChanged', function (e) {
+        if (e.target.checked) {
+            $('.advanced-options').addClass('show').removeClass('hide');
+        } else {
+            $('.advanced-options').addClass('hide').removeClass('show');
+        }
 
         saveConfig('_track_advanced_options', e.target.checked);
     });
@@ -346,8 +362,85 @@
         $('.refresh-page-btn').show();
     }
 
+    $('#created_at_daterange').daterangepicker({
+        format: 'MM/DD/YYYY',
+        showDropdowns: true,
+        showWeekNumbers: true,
+        timePicker: false,
+        autoUpdateInput: false,
+        ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+            'All Time': 'all-time',
+        },
+        opens: 'right',
+        drops: 'down',
+        buttonClasses: ['btn', 'btn-sm'],
+        applyClass: 'btn-primary',
+        cancelClass: 'btn-default',
+        separator: ' to ',
+        locale: {
+            applyLabel: 'Submit',
+            cancelLabel: 'Clear',
+            fromLabel: 'From',
+            toLabel: 'To',
+            customRangeLabel: 'Custom Range',
+            daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr','Sa'],
+            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            firstDay: 1
+        }
+    }, function(start, end, label) {  // Callback
+        if (start.isValid() && end.isValid()) {
+            $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+        }
+    });
+
+    $('#created_at_daterange').on('apply.daterangepicker', function(ev, picker) {
+        var start = picker.startDate,
+            end = picker.endDate;
+
+        if (start.isValid && !end.isValid()) {
+            end = moment();
+        }
+
+        if (start.isValid() && end.isValid()) {
+            $('#created_at_daterange span').html(
+                start.format(start.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+                 end.format(end.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
+            $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+        } else {
+            $('#created_at_daterange span').html('All Time');
+            $('input[name="created_at_daterange"]').val('all-time');
+        }
+
+        $('input[name="created_at_daterange"]').trigger('change');
+    });
+
+    $('#created_at_daterange').on('cancel.daterangepicker', function(ev, picker) {
+        $('#created_at_daterange span').html('');
+        $('input[name="created_at_daterange"]').val('');
+        $('input[name="created_at_daterange"]').trigger('change');
+    });
+
+    var trackingSyncEndDate = moment(),
+        trackingSyncStartDate = moment().subtract(29, 'days');
+    $('#created_at_daterange').data('daterangepicker').setStartDate(trackingSyncStartDate.format('MM/DD/YYYY'));
+    $('#created_at_daterange').data('daterangepicker').setEndDate(trackingSyncEndDate.format('MM/DD/YYYY'));
+    $('#created_at_daterange').trigger('apply.daterangepicker', $('#created_at_daterange').data('daterangepicker'));
+
+    $('input[name="created_at_daterange"]').on('change', syncTrackedOrders);
+
     $(function () {
         setTimeout(loadConfig, 500);
     });
 
+    $('#modal-tracking-update').on('shown.bs.modal', function() {
+        // Force checkbox to start unchecked
+        $('#advanced-options-check').iCheck('uncheck');
+    });
 })();

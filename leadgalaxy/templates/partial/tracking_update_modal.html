@@ -45,32 +45,69 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <div id="date-range-sync-filter" class="row">
                     <div class="col-sm-12">
-                        <label htmlFor="#advanced-options-check" class="control-label">
-                        <input id="advanced-options-check" type="checkbox" class="">
-                             Advanced Options
-                        </label>
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">Date Range</label>
+
+                                <div class="col-lg-5">
+                                    <div id="created_at_daterange" class="form-control">
+                                        <i class="fa fa-calendar m-r-xs"></i>
+                                        <span>All Time</span>
+                                        <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                                    </div>
+                                    <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-offset-3 col-sm-9">
+                                    <div class="i-checks">
+                                        <label>
+                                            <input type="checkbox" id="advanced-options-check" class="icheck" name="advanced-options">
+                                            <i></i> Advanced Options
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-12 advanced-options" style="display:none">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <span>Parallel Updates:</span>
-                                <input id="update-concurrency" class="text-center" type="number" value="2" min="1" max="10">
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12 advanced-options hide">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">Parallel Updates</label>
+
+                                <div class="col-lg-2">
+                                    <input id="update-concurrency" class="form-control text-center" type="number" value="2" min="1" max="10">
+                                </div>
                             </div>
-                        </div>
-                        <div class="row" style="margin-top:5px">
-                            <div class="col-md-4" >
-                                <span>Delay updates (seconds):</span>
-                                <input id="update-delay" class="text-center" type="number" value="0.1" min="0.1" max="100" step="0.1">
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">Delay Updates (seconds)</label>
+
+                                <div class="col-lg-2">
+                                    <input id="update-delay" class="form-control text-center" type="number" value="0.1" min="0.1" max="100" step="0.1">
+                                </div>
                             </div>
-                        </div>
-                        <div class="row" style="margin-top:5px">
-                            <div class="col-md-4" >
-                                <label style="font-weight:inherit">
-                                    <input id="update-unfulfilled-only" type="checkbox" checked="checked">
-                                    Update Unfulfilled Orders only
-                                </label>
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">Delay Updates (seconds)</label>
+
+                                <div class="col-lg-2">
+                                    <input id="update-delay" class="form-control text-center" type="number" value="0.1" min="0.1" max="100" step="0.1">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-offset-3 col-lg-9">
+                                    <div class="i-checks">
+                                        <label>
+                                            <input id="update-unfulfilled-only" class="icheck" type="checkbox" checked="checked">
+                                            <i></i> Update Unfulfilled Orders only
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

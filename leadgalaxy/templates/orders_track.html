@@ -237,7 +237,7 @@
                       </thead>
                       <tbody>
                         {% for item in orders %}
-                        <tr id="{{item.id}}" 
+                        <tr id="{{item.id}}"
                             {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}
                             {% if order_threshold and item.created_at < order_threshold and not item.source_tracking %}class="highlight"{% endif %}
                         >
@@ -335,6 +335,8 @@
 {% endblock %}
 
 {% block extracss %}
+<link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
     .icheckbox_square-blue {
         position: initial !important;
@@ -355,12 +357,47 @@
         display: flex;
         align-items: center;
     }
+
+    #modal-tracking-update .modal-body {
+        padding-bottom: 15px;
+    }
+
+    .advanced-options {
+        transition: max-height 0.2s ease-in-out, margin-top 0.2s, opacity 0.2s linear 0.2s;
+        max-height: 0;
+        height: auto;
+        opacity: 0;
+        margin-top: 0;
+        box-sizing: border-box;
+        display: block !important;
+    }
+
+    .advanced-options.show {
+        max-height: 1000px;
+        opacity: 1;
+    }
+
+    .advanced-options.hide {
+        max-height: 0;
+        margin-top: 0;
+        opacity: 0;
+        transition: max-height 0.2s ease-in-out 0.1s, margin-top 0.2s linear 0.1s, opacity 0.1s;
+    }
+    .advanced-options .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    #date-range-sync-filter {
+        margin-top: 18px;
+    }
 </style>
 {% endblock %}
 
 {% block extrajs %}
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
     <script src="{% static 'shopified/js/orders_track.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders_track_update.js' %}" type="text/javascript"></script>

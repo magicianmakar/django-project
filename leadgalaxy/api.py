@@ -1904,6 +1904,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         orders = []
 
         order_ids = data.get('ids')
+        created_at = data.get('created_at')  # Format: %m/%d/%Y-%m/%d/%Y
         unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
         all_orders = data.get('all') == 'true' or order_ids
         sync_all_orders = cache.get('_sync_all_orders') and data.get('forced') == 'false'
@@ -1915,13 +1916,22 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             else:
                 cache.set(sync_all_orders_key, True, timeout=7200)
 
-        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
+        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user)
 
         if unfulfilled_only:
             order_tracks = order_tracks.filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                        .filter(source_tracking='') \
                                        .filter(shopify_status='') \
                                        .exclude(source_status='FINISH')
+
+        if created_at:
+            start, end = created_at.split('-')
+
+            tz = timezone.localtime(timezone.now()).strftime(' %z')
+            start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
+            end = arrow.get(end + tz, r'MM/DD/YYYY Z').replace(days=1, microseconds=-1).datetime
+
+            order_tracks = order_tracks.filter(created_at__range=(start, end))
 
         order_tracks = order_tracks.filter(hidden=False) \
                                    .defer('data') \
