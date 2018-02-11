@@ -2,7 +2,7 @@
     {% if searchable %}
         action="{{request.path}}"
     {% else %}
-        action=""
+        action="{% url 'woo:products_list' %}"
     {% endif %}
 >
     <div class="form-group">
