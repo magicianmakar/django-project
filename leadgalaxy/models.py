@@ -731,6 +731,7 @@ class ShopifyStore(models.Model):
 
         return self.shopifyorder_set.filter(closed_at=None, cancelled_at=None) \
                                     .filter(need_fulfillment__gt=0) \
+                                    .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                     .count()
 
     def awaiting_tracking(self):
