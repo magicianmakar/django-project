@@ -50,6 +50,7 @@ from shopified_core.utils import (
     version_compare,
     order_data_cache,
     update_product_data_images,
+    decode_params,
 )
 
 from shopify_orders.models import (
@@ -980,7 +981,8 @@ def link_product_board(products, boards):
 
 def accept_product(res, fdata):
     if fdata.get('title'):
-        res = res.filter(title__icontains=fdata.get('title'))
+        title = decode_params(fdata.get('title'))
+        res = res.filter(title__icontains=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
         min_price = utils.safeFloat(fdata.get('price_min'), -1)
@@ -2684,9 +2686,9 @@ def orders_view(request):
     connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
     awaiting_order = utils.get_orders_filter(request, 'awaiting_order', checkbox=True)
 
-    query = request.GET.get('query') or request.GET.get('id')
-    query_order = request.GET.get('query_order') or request.GET.get('id')
-    query_customer = request.GET.get('query_customer')
+    query = decode_params(request.GET.get('query') or request.GET.get('id'))
+    query_order = decode_params(request.GET.get('query_order') or request.GET.get('id'))
+    query_customer = decode_params(request.GET.get('query_customer'))
     query_customer_id = request.GET.get('query_customer_id')
     query_address = request.GET.getlist('query_address')
 
@@ -3943,6 +3945,17 @@ def register(request, registration=None, subscribe_plan=None):
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
 
+    email = request.GET.get('email', '')
+    try:
+        email = base64.decodestring(email)
+    except:
+        if email and '@' in email:
+            # Base64 encode the email in url
+            params = request.GET.copy()
+            params['email'] = base64.encodestring(email)
+
+            return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
+
     try_plan = registration and registration.endswith('-try')
     if registration and (registration.endswith('-subscribe') or try_plan):
         slug = registration.replace('-subscribe', '').replace('-try', '')
@@ -4010,8 +4023,9 @@ def register(request, registration=None, subscribe_plan=None):
 
     else:
         try:
+
             initial = {
-                'email': (registration.email if registration else request.GET.get('email', '')).strip(),
+                'email': (registration.email if registration else email).strip(),
                 'fullname': (request.GET.get('name', '')).strip(),
             }
         except:

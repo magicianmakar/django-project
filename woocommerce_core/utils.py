@@ -18,7 +18,7 @@ from django.core.cache import cache, caches
 from django.utils import timezone
 
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat, hash_url_filename
+from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params
 from shopified_core.shipping_helper import (
     load_uk_provincess,
     country_from_code,
@@ -32,7 +32,8 @@ from .models import WooProduct, WooStore, WooBoard
 
 def filter_products(res, fdata):
     if fdata.get('title'):
-        res = res.filter(title__icontains=fdata.get('title'))
+        title = decode_params(fdata.get('title'))
+        res = res.filter(title__icontains=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
         min_price = safeFloat(fdata.get('price_min'), -1)

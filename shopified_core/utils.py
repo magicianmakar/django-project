@@ -87,6 +87,16 @@ def random_hash():
     return hashlib.md5(token).hexdigest()
 
 
+def decode_params(val):
+    if val:
+        try:
+            return base64.decodestring(val)
+        except:
+            pass
+
+    return val
+
+
 def all_possible_cases(arr, top=True):
     sep = '_'.join([str(i) for i in range(10)])
 
