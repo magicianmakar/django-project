@@ -41,7 +41,7 @@ class ProductChange(models.Model):
             return self.shopify_product.shopifyorderline_set \
                        .exclude(order__fulfillment_status='fulfilled') \
                        .filter(order__closed_at=None, order__cancelled_at=None) \
-                       .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
+                       .filter(order__created_at__gte=arrow.now().replace(days=-30).datetime) \
                        .count()
         return 0
 
