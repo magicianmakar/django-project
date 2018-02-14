@@ -12,10 +12,12 @@ from django.contrib.auth.models import User
 
 from shopified_core.utils import (
     app_link,
+    random_hash,
     order_data_cache,
     order_phone_number,
     unique_username,
     hash_url_filename,
+    decode_params,
     extension_hash_text
 )
 
@@ -269,6 +271,22 @@ class UtilsTestCase(TestCase):
 
         username = unique_username('', fullname=[])
         self.assertEqual(username, 'user')
+
+    def test_decode_params(self):
+        self.assertEqual(decode_params('test'), 'test')
+        self.assertEqual(decode_params('test'.encode('utf-8')), 'test')
+
+        self.assertEqual(decode_params('John Smith'), 'John Smith')
+        self.assertEqual(decode_params('John Smith'.encode('utf-8')), 'John Smith')
+
+        self.assertEqual(decode_params('John Smith'.encode('utf-8')), 'John Smith')
+        self.assertEqual(decode_params('John Smith'.encode('utf-8')), 'John Smith')
+
+        h = random_hash()
+        self.assertEqual(decode_params(h), h)
+
+        h = random_hash()
+        self.assertEqual(decode_params(h.encode('utf-8')), h)
 
 
 class ShippingHelperFunctionsTestCase(TestCase):

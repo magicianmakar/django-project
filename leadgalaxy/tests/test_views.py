@@ -93,6 +93,27 @@ class GetProductTestCase(TestCase):
         self.assertIn(product, products)
         self.assertEquals(len(products), 1)
 
+    def test_products_can_be_filtered_by_title_base64(self):
+        product = f.ShopifyProductFactory(
+            user=self.user,
+            store=self.store,
+            data=json.dumps({'title': 'this is a test'})
+        )
+        f.ShopifyProductFactory(
+            user=self.user,
+            store=self.store,
+            data=json.dumps({'title': 'not retrieved'})
+        )
+        request = Mock()
+        request.user = self.user
+        request.GET = {'title': 'test'.encode('base64')}
+
+        items = get_product(request, filter_products=True)[0]
+        products = [item['qelem'] for item in items]
+
+        self.assertIn(product, products)
+        self.assertEquals(len(products), 1)
+
     def test_products_can_be_sorted_by_title(self):
         product1 = f.ShopifyProductFactory(
             user=self.user,
