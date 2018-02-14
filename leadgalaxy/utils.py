@@ -28,6 +28,8 @@ from django.utils.crypto import get_random_string
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.core.validators import validate_email, ValidationError
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -2207,6 +2209,42 @@ class UserIpSaverMiddleware(object):
     def process_request(self, request):
         if request.user.is_authenticated() and not request.session.get('is_hijacked_user'):
             save_user_ip(request)
+
+
+class UserEmailEncodeMiddleware(object):
+
+    def process_request(self, request):
+        if request.method == 'GET':
+            if request.GET.get('f') and request.GET.get('title'):
+                if self.need_encoding(request, 'title'):
+                    return self.encode_param(request, 'title')
+
+            if request.path == '/orders':
+                for p in ['query_order', 'query', 'query_customer']:
+                    if request.GET.get(p) and self.need_encoding(request, p):
+                            return self.encode_param(request, p)
+
+    def need_encoding(self, request, name):
+        value = request.GET.get(name)
+
+        if '@' in value:
+            try:
+                validate_email(value)
+                return True
+
+            except ValidationError:
+                pass
+
+        return False
+
+    def encode_param(self, request, name, value=None):
+        if value is None:
+            value = request.GET.get(name) or ''
+
+        params = request.GET.copy()
+        params[name] = value.encode('base64')
+
+        return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
 
 
 class ShopifyOrderPaginator(Paginator):

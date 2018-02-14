@@ -49,7 +49,8 @@
                             <span>Order</span>
                         </div>
                         <div class="col-md-4">
-                            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" placeholder="Order Number or Customer Email">
+                            <input id="query_input" name="query_input" value="{% base64_decode request.GET.query default=request.GET.query %}" class="form-control" placeholder="Order Number or Customer Email">
+                            <input id="query" name="query" type="hidden">
                         </div>
                     </div>
 

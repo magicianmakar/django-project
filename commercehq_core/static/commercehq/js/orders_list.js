@@ -96,6 +96,12 @@ $('.filter-btn').click(function (e) {
     }
 });
 
+$('#query_input').change(function (e) {
+    var val = $(e.target).val();
+
+    $('#query').val(val && val.indexOf('@') !== -1 ? btoa(val) : val);
+});
+
 $(".filter-form").submit(function() {
     var items = $(this).find(":input").filter(function(i, el) {
         if (['desc', 'connected', 'awaiting_order'].includes(el.name) && !$(el).prop('filtred'))  {
@@ -109,7 +115,8 @@ $(".filter-form").submit(function() {
                 (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))) ||
             (el.name == 'sort' && el.value == user_filter.sort) ||
             (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
-            (el.name == 'financial' && el.value == user_filter.financial)
+            (el.name == 'financial' && el.value == user_filter.financial) ||
+            (el.name == 'query_input')
         );
 
         return ret;
@@ -918,6 +925,8 @@ $(function () {
     if (window.location.hash.length) {
         window.location.hash = '';
     }
+
+    $('#query_input').trigger('change');
 
     fixNotePanelHeight();
 /*
