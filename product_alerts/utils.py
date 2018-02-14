@@ -91,15 +91,23 @@ def monitor_product(product, stdout=None):
         return
 
 
+def parse_sku(sku):
+    options = []
+    for s in sku.split(';'):
+        m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
+        option = m.groupdict()
+        if not option.get('option_title'):
+            option['option_title'] = ''
+        options.append(option)
+    return options
+
+
 def variant_index(product, sku, variants):
     original_sku = sku
     found_variant_id = None
     variants_map = product.get_variant_mapping(for_extension=True)
 
-    options = []
-    for s in sku.split(';'):
-        m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
-        options.append(m.groupdict())
+    options = parse_sku(sku)
     sku = ';'.join('{}:{}'.format(option['option_group'], option['option_id']) for option in options)
 
     for variant_id, variant in variants_map.iteritems():

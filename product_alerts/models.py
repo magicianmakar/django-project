@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
+from .utils import parse_sku
 
 PRODUCT_CHANGE_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -58,6 +59,13 @@ class ProductChange(models.Model):
             changes_data = json.loads(self.data)
         except:
             changes_data = []
+        for idx, change in enumerate(changes_data):
+            sku = change.get('sku')
+            if sku:
+                options = parse_sku(sku)
+                sku = ' / '.join(option.get('option_title', '') for option in options)
+                changes_data[idx]['sku_readable'] = sku
+
         return changes_data
 
     def get_changes_map(self, category):
