@@ -707,6 +707,7 @@ class BoardDetailView(DetailView):
         page = safeInt(self.request.GET.get('page'), 1)
         page = paginator.page(page)
 
+        context['searchable'] = True
         context['paginator'] = paginator
         context['products'] = page
         context['current_page'] = page
