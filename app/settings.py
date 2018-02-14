@@ -94,6 +94,7 @@ MIDDLEWARE_CLASSES = (
     'last_seen.middleware.LastSeenMiddleware',
     'leadgalaxy.utils.UserIpSaverMiddleware',
     'leadgalaxy.utils.TimezoneMiddleware',
+    'leadgalaxy.utils.UserEmailEncodeMiddleware',
 )
 
 ROOT_URLCONF = 'app.urls'

@@ -14,7 +14,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat, hash_url_filename
+from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params
 from shopified_core.shipping_helper import (
     get_uk_province,
     valide_aliexpress_province,
@@ -262,7 +262,8 @@ def commercehq_products(request, post_per_page=25, sort=None, board=None, store=
 
 def filter_products(res, fdata):
     if fdata.get('title'):
-        res = res.filter(title__icontains=fdata.get('title'))
+        title = decode_params(fdata.get('title'))
+        res = res.filter(title__icontains=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
         min_price = safeFloat(fdata.get('price_min'), -1)
@@ -561,7 +562,7 @@ class CommerceHQOrdersPaginator(Paginator):
         self.financial = financial
         self.sort = sort
 
-        self.query = query or ''
+        self.query = decode_params(query or '')
 
         if '@' in self.query:
             self.query_field = 'email'

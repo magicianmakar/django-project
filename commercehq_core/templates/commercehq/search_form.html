@@ -1,3 +1,5 @@
+{% load template_helper %}
+
 <form role="search" class="navbar-form-custom" method="get"
     {% if searchable %}
         action="{{request.path}}"
@@ -8,7 +10,7 @@
     <div class="form-group">
         <input type="text" placeholder="Search" class="form-control" name="title" id="top-search"
         {% if request.GET.title and request.GET.f %}
-               value="{{request.GET.title}}"
+               value="{% base64_decode request.GET.title default=request.GET.title %}"
         {% endif %}
         >
         <input type="hidden" name="f" value="1">

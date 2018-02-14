@@ -159,7 +159,7 @@
 
                                         {% endif %}
                                                 <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku}}</div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku_readable}}</div>
                                                     <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
                                                     <div class="col-md-3">{% money_format change.old_value store %}</div>
                                                     <div class="col-md-3">{% money_format change.new_value store %}</div>
@@ -206,7 +206,7 @@
 
                                         {% endif %}
                                                 <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku}}</div>
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku_readable}}</div>
                                                     <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
                                                     <div class="col-md-3">{{change.old_value}}</div>
                                                     <div class="col-md-3">{{change.new_value}}</div>
@@ -253,7 +253,7 @@
                                         {% endif %}
                                                 <div class="row">
                                                     <div class="col-md-offset-1 col-md-3 var-name" style="color:green">
-                                                        {{change.sku}}
+                                                        {{change.sku_readable}}
                                                     </div>
                                                     <div class="col-md-2"></div>
                                                 </div>
@@ -299,7 +299,7 @@
                                         {% endif %}
                                                 <div class="row">
                                                     <div class="col-md-offset-1 col-md-3 var-name" style="color:red">
-                                                        {{change.sku}}
+                                                        {{change.sku_readable}}
                                                     </div>
                                                     <div class="col-md-2"></div>
                                                 </div>

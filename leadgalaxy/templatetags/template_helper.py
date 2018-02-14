@@ -59,6 +59,14 @@ def base64_encode(context, data):
 
 
 @register.simple_tag(takes_context=True)
+def base64_decode(context, data, default=''):
+    try:
+        return data.decode('base64')
+    except:
+        return default or ''
+
+
+@register.simple_tag(takes_context=True)
 def json_dumps(context, data):
     from django.utils.html import escapejs
 

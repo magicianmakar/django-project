@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
+from .utils import parse_sku
 
 PRODUCT_CHANGE_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -41,7 +42,7 @@ class ProductChange(models.Model):
             return self.shopify_product.shopifyorderline_set \
                        .exclude(order__fulfillment_status='fulfilled') \
                        .filter(order__closed_at=None, order__cancelled_at=None) \
-                       .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
+                       .filter(order__created_at__gte=arrow.now().replace(days=-30).datetime) \
                        .count()
         return 0
 
@@ -58,6 +59,13 @@ class ProductChange(models.Model):
             changes_data = json.loads(self.data)
         except:
             changes_data = []
+        for idx, change in enumerate(changes_data):
+            sku = change.get('sku')
+            if sku:
+                options = parse_sku(sku)
+                sku = ' / '.join(option.get('option_title', '') for option in options)
+                changes_data[idx]['sku_readable'] = sku
+
         return changes_data
 
     def get_changes_map(self, category):

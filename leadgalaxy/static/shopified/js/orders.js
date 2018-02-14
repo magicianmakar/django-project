@@ -1277,7 +1277,7 @@ $(function () {
             showNoSuggestionNotice: true,
             noSuggestionNotice: 'No customer found',
             onSelect: function(suggestion) {
-                $('#query_customer').val(suggestion.value);
+                $('#query_customer').val(suggestion.value.replace(/ \([^\)]+\)$/, ''));
                 $('#query_customer_id').val(suggestion.data);
                 $('#query_customer_id').attr('orig-value', suggestion.data);
             }
