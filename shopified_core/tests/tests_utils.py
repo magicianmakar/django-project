@@ -274,19 +274,19 @@ class UtilsTestCase(TestCase):
 
     def test_decode_params(self):
         self.assertEqual(decode_params('test'), 'test')
-        self.assertEqual(decode_params('test'.encode('utf-8')), 'test')
+        self.assertEqual(decode_params('test'.encode('base64')), 'test')
+
+        self.assertEqual(decode_params('9343'), '9343')
+        self.assertEqual(decode_params('9343'.encode('base64')), '9343')
 
         self.assertEqual(decode_params('John Smith'), 'John Smith')
-        self.assertEqual(decode_params('John Smith'.encode('utf-8')), 'John Smith')
-
-        self.assertEqual(decode_params('John Smith'.encode('utf-8')), 'John Smith')
-        self.assertEqual(decode_params('John Smith'.encode('utf-8')), 'John Smith')
+        self.assertEqual(decode_params('John Smith'.encode('base64')), 'John Smith')
 
         h = random_hash()
         self.assertEqual(decode_params(h), h)
 
         h = random_hash()
-        self.assertEqual(decode_params(h.encode('utf-8')), h)
+        self.assertEqual(decode_params(h.encode('base64')), h)
 
 
 class ShippingHelperFunctionsTestCase(TestCase):

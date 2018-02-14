@@ -5,6 +5,7 @@ from django.conf import settings
 from shopified_core.utils import app_link as utils_app_link
 
 import simplejson as json
+import base64
 import re
 
 import arrow
@@ -61,7 +62,7 @@ def base64_encode(context, data):
 @register.simple_tag(takes_context=True)
 def base64_decode(context, data, default=''):
     try:
-        return data.decode('base64')
+        return base64.decodestring(data).decode('utf-8')
     except:
         return default or ''
 
