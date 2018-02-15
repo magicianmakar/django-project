@@ -279,6 +279,8 @@ class UtilsTestCase(TestCase):
         self.assertEqual(decode_params('9343'), '9343')
         self.assertEqual(decode_params('9343'.encode('base64')), '9343')
 
+        self.assertEqual(decode_params('4624'), '4624')
+
         self.assertEqual(decode_params('John Smith'), 'John Smith')
         self.assertEqual(decode_params('John Smith'.encode('base64')), 'John Smith')
 

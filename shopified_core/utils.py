@@ -88,7 +88,7 @@ def random_hash():
 
 
 def decode_params(val):
-    if val:
+    if val and not safeInt(val):
         try:
             return base64.decodestring(val).decode('utf-8')
         except:
