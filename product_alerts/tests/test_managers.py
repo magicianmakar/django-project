@@ -74,17 +74,22 @@ class ProductChangeManagerTestCase(TestCase):
 
         # update price
         old_price = round(price - (price / 2.0), 2)
+        old_compare_price = round(price - (price / 2.0), 2) * 2.0
+
         update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
         shopify_product['variants'][0]['price'] = old_price
+        shopify_product['variants'][0]['compare_at_price'] = old_compare_price
         r = requests.put(update_endpoint, json={'product': shopify_product})
         self.assertTrue(r.ok)
 
+        new_value = round(price / 3.0, 2)
+        old_value = round(old_price / 3.0, 2)
         product_changes.append({
             'level': 'variant',
             'name': 'price',
             'sku': variant['sku'],
-            'new_value': price,
-            'old_value': old_price,
+            'new_value': new_value,
+            'old_value': old_value,
         })
         request = self.factory.post(
             '/webhook/price-monitor/product?product={}&dropified_type=shopify'.format(product.id),
@@ -96,14 +101,17 @@ class ProductChangeManagerTestCase(TestCase):
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         updated_variant = shopify_product['variants'][0]
         updated_price = round(float(updated_variant['price']), 2)
+        updated_compare_price = round(float(updated_variant['compare_at_price']), 2)
 
-        # check if price was updated back
-        self.assertEqual(updated_price, price)
+        # check if price was updated back and preserved the margin
+        self.assertEqual(updated_price, (old_price * new_value) / old_value)
+        self.assertEqual(updated_compare_price, (old_compare_price * new_value) / old_value)
+
         # check if price history was added
         history = ProductVariantPriceHistory.objects.filter(shopify_product=product, variant_id=shopify_product['variants'][0]['id']).first()
         self.assertIsNotNone(history)
-        self.assertEqual(history.old_price, old_price)
-        self.assertEqual(history.new_price, updated_price)
+        self.assertEqual(history.old_price, old_value)
+        self.assertEqual(history.new_price, new_value)
 
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_quantity_change(self, manage):
@@ -157,18 +165,21 @@ class ProductChangeManagerTestCase(TestCase):
         # update price
         old_price = round(price - (price / 2.0), 2)
         chq_product['variants'][0]['price'] = old_price
+        chq_product['variants'][0]['compare_price'] = old_price
         r = product.store.request.patch(
             url='{}/{}'.format(product.store.get_api_url('products'), product.source_id),
             json={'variants': chq_product['variants']}
         )
         self.assertTrue(r.ok)
 
+        new_value = round(price / 3.0, 2)
+        old_value = round(old_price / 3.0, 2)
         product_changes.append({
             'level': 'variant',
             'name': 'price',
             'sku': '14:29#RB black;200000858:100014128#100cm',
-            'new_value': price,
-            'old_value': old_price,
+            'new_value': new_value,
+            'old_value': old_value,
         })
         request = self.factory.post(
             '/webhook/price-monitor/product?product={}&dropified_type=chq'.format(product.id),
@@ -181,10 +192,10 @@ class ProductChangeManagerTestCase(TestCase):
         updated_variant = chq_product['variants'][0]
         updated_price = round(float(updated_variant['price']), 2)
 
-        # check if price was updated back
-        self.assertEqual(updated_price, price)
+        # check if price was updated back and preserved the margin
+        self.assertEqual(updated_price, round(old_price * new_value / old_value, 2))
         # check if price history was added
         history = ProductVariantPriceHistory.objects.filter(chq_product=product, variant_id=chq_product['variants'][0]['id']).first()
         self.assertIsNotNone(history)
-        self.assertEqual(history.old_price, old_price)
-        self.assertEqual(history.new_price, updated_price)
+        self.assertEqual(history.old_price, old_value)
+        self.assertEqual(history.new_price, new_value)

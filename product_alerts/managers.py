@@ -3,7 +3,7 @@ import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, safeFloat
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index
 from product_alerts.models import ProductVariantPriceHistory
@@ -133,14 +133,28 @@ class ProductChangeManager():
             variant_id = product_data['variants'][idx]['id']
             self.add_price_history(variant_id, variant_change)
 
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+        current_price = float(product_data['variants'][idx]['price'])
+
         if self.config['price_change'] == 'notify':
             return None
+
         elif self.config['price_change'] == 'update':
             if idx is not None:
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
+                product_data['variants'][idx]['price'] = round((current_price * new_value) / old_value, 2)
+
+                compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
+                if compare_at_price:
+                    product_data['variants'][idx]['compare_at_price'] = round((compare_at_price * new_value) / old_value, 2)
+
         elif self.config['price_change'] == 'update_for_increase':
-            if idx is not None and product_data['variants'][idx]['price'] < variant_change.get('new_value'):
-                product_data['variants'][idx]['price'] = variant_change.get('new_value')
+            if idx is not None and current_price < variant_change.get('new_value'):
+                product_data['variants'][idx]['price'] = round((current_price * new_value) / old_value, 2)
+
+                compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
+                if compare_at_price:
+                    product_data['variants'][idx]['compare_at_price'] = round((compare_at_price * new_value) / old_value, 2)
 
         return product_data
 
