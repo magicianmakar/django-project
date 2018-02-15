@@ -43,6 +43,7 @@ from shopified_core.utils import (
     unique_username,
     send_email_from_template,
     hash_url_filename,
+    encode_params,
     extension_hash_text
 )
 
@@ -2242,7 +2243,7 @@ class UserEmailEncodeMiddleware(object):
             value = request.GET.get(name) or ''
 
         params = request.GET.copy()
-        params[name] = value.encode('base64')
+        params[name] = encode_params(value)
 
         return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
 

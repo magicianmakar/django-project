@@ -2,10 +2,9 @@ from django import template
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
-from shopified_core.utils import app_link as utils_app_link
+from shopified_core.utils import decode_params, app_link as utils_app_link
 
 import simplejson as json
-import base64
 import re
 
 import arrow
@@ -60,11 +59,8 @@ def base64_encode(context, data):
 
 
 @register.simple_tag(takes_context=True)
-def base64_decode(context, data, default=''):
-    try:
-        return base64.decodestring(data).decode('utf-8')
-    except:
-        return default or ''
+def base64_decode(context, data):
+    return decode_params(data)
 
 
 @register.simple_tag(takes_context=True)

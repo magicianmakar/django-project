@@ -115,7 +115,7 @@
                                 value="{{ request.GET.query_customer_id|default:'' }}" orig-value="{{request.GET.query_customer|default:''}}" />
 
                             <input id="query_customer" name="query_customer" class="form-control"placeholder="Name or Email" data-store="{{store.id}}"
-                                value="{% base64_decode request.GET.query_customer default=request.GET.query_customer %}"
+                                value="{% base64_decode request.GET.query_customer %}"
                             >
                         </div>
                     </div>

@@ -99,7 +99,7 @@ $('.filter-btn').click(function (e) {
 $('#query_input').change(function (e) {
     var val = $(e.target).val();
 
-    $('#query').val(val && val.indexOf('@') !== -1 ? btoa(val) : val);
+    $('#query').val(val && val.indexOf('@') !== -1 ? 'b:' + btoa(val) : val);
 });
 
 $(".filter-form").submit(function() {

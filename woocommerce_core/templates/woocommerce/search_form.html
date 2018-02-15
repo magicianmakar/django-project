@@ -10,7 +10,7 @@
     <div class="form-group">
         <input type="text" placeholder="Search" class="form-control" name="title" id="top-search"
         {% if request.GET.title and request.GET.f %}
-            value="{% base64_decode request.GET.title default=request.GET.title %}"
+            value="{% base64_decode request.GET.title %}"
         {% endif %}
         >
         <input type="hidden" name="f" value="1">

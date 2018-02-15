@@ -87,12 +87,25 @@ def random_hash():
     return hashlib.md5(token).hexdigest()
 
 
+def encode_params(val):
+    val = val or ''
+    return 'b:{}'.format(''.join(base64.encodestring(val).split('\n'))).strip()
+
+
 def decode_params(val):
-    if val and not safeInt(val):
-        try:
-            return base64.decodestring(val).decode('utf-8')
-        except:
-            pass
+    if val:
+        if val.startswith('b:'):
+            return base64.decodestring(val[2:])
+
+        elif not safeInt(val):
+            try:
+                r = base64.decodestring(val).decode('utf-8')
+                if '@' in r:
+                    # Return the encoded value only if we have @ char in the decode string
+                    # This will help us prevent decoding numbers (ex: 4624) as valid base64 encoded strings
+                    return r
+            except:
+                pass
 
     return val
 

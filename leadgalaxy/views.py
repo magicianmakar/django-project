@@ -50,6 +50,7 @@ from shopified_core.utils import (
     version_compare,
     order_data_cache,
     update_product_data_images,
+    encode_params,
     decode_params,
 )
 
@@ -3946,13 +3947,13 @@ def register(request, registration=None, subscribe_plan=None):
         return HttpResponseRedirect('/')
 
     email = request.GET.get('email', '')
-    try:
-        email = base64.decodestring(email)
-    except:
-        if email and '@' in email:
+    if email:
+        if '@' not in email:
+            email = decode_params(email)
+        else:
             # Base64 encode the email in url
             params = request.GET.copy()
-            params['email'] = base64.encodestring(email)
+            params['email'] = encode_params(email)
 
             return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
 

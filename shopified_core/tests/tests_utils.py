@@ -17,6 +17,7 @@ from shopified_core.utils import (
     order_phone_number,
     unique_username,
     hash_url_filename,
+    encode_params,
     decode_params,
     extension_hash_text
 )
@@ -272,23 +273,43 @@ class UtilsTestCase(TestCase):
         username = unique_username('', fullname=[])
         self.assertEqual(username, 'user')
 
-    def test_decode_params(self):
-        self.assertEqual(decode_params('test'), 'test')
-        self.assertEqual(decode_params('test'.encode('base64')), 'test')
+    def test_decode_params_str(self):
+        s = 'test'
+        self.assertEqual(decode_params(s), s)
+        self.assertEqual(decode_params(s.encode('base64')), s.encode('base64'))
+        self.assertEqual(decode_params(encode_params(s)), s)
 
-        self.assertEqual(decode_params('9343'), '9343')
-        self.assertEqual(decode_params('9343'.encode('base64')), '9343')
+        self.assertEqual(decode_params('b:' + s.encode('base64')), s)
+        self.assertEqual(encode_params(s), 'b:' + s.encode('base64').strip())
+
+    def test_decode_params_email(self):
+        email = 'smith@gmail.com'
+        self.assertEqual(decode_params(email.encode('base64')), email)
+
+    def test_decode_params_numbers(self):
+        n = '9343'
+        self.assertEqual(decode_params(n), n)
+        self.assertEqual(decode_params(n.encode('base64')), n.encode('base64'))
+        self.assertEqual(decode_params(encode_params(n)), n)
 
         self.assertEqual(decode_params('4624'), '4624')
+        self.assertEqual(decode_params('#4624'), '#4624')
 
-        self.assertEqual(decode_params('John Smith'), 'John Smith')
-        self.assertEqual(decode_params('John Smith'.encode('base64')), 'John Smith')
+    def test_decode_params_names(self):
+        s = 'John Smith'
+        self.assertEqual(decode_params(s), s)
+        self.assertEqual(decode_params(s.encode('base64')), s.encode('base64'))
+        self.assertEqual(decode_params(encode_params(s)), s)
 
+    def test_decode_params_random(self):
         h = random_hash()
         self.assertEqual(decode_params(h), h)
 
         h = random_hash()
-        self.assertEqual(decode_params(h.encode('base64')), h)
+        self.assertEqual(decode_params(h.encode('base64')), h.encode('base64'))
+
+        h = random_hash()
+        self.assertEqual(decode_params(encode_params(h)), h)
 
 
 class ShippingHelperFunctionsTestCase(TestCase):
