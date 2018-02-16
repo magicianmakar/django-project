@@ -12,7 +12,7 @@ from django.core.cache import cache, caches
 from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard
+from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
 from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params
 from shopified_core.shipping_helper import (
@@ -567,6 +567,10 @@ class CommerceHQOrdersPaginator(Paginator):
         if '@' in self.query:
             self.query_field = 'email'
         else:
+            track = CommerceHQOrderTrack.objects.filter(source_id=self.query).first()
+            if track:
+                self.query = str(track.order_id)
+
             self.query_field = 'id'
             self.query = re.sub(r'[^0-9]', '', self.query)
 
