@@ -3346,6 +3346,7 @@ def orders_view(request):
                             'quantity': b['quantity'] * el['quantity'],
                             'product_id': b_product.id,
                             'source_id': b_supplier.get_source_id(),
+                            'order_url': app_link('orders/place', product=b_supplier.get_source_id(), SABundle=True),
                             'variants': b_variants,
                             'shipping_method': b_shipping_method,
                             'country_code': country_code,
@@ -3627,7 +3628,6 @@ def orders_track(request):
 def orders_place(request):
     try:
         assert request.GET['product']
-        assert request.GET['SAPlaceOrder']
 
         product = request.GET['product']
 
@@ -3685,14 +3685,16 @@ def orders_place(request):
 
     # Save Auto fulfill event
     event_data = {}
-    order_key = request.GET['SAPlaceOrder']
-    event_key = 'keen_event_{}'.format(request.GET['SAPlaceOrder'])
+    order_data = None
+    order_key = request.GET.get('SAPlaceOrder')
+    if order_key:
+        event_key = 'keen_event_{}'.format(request.GET['SAPlaceOrder'])
 
-    if not order_key.startswith('order_'):
-        order_key = 'order_{}'.format(order_key)
+        if not order_key.startswith('order_'):
+            order_key = 'order_{}'.format(order_key)
 
-    order_data = order_data_cache(order_key)
-    prefix, store, order, line = order_key.split('_')
+        order_data = order_data_cache(order_key)
+        prefix, store, order, line = order_key.split('_')
 
     if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):
         try:
