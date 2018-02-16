@@ -106,7 +106,7 @@ class GetProductTestCase(TestCase):
         )
         request = Mock()
         request.user = self.user
-        request.GET = {'title': 'test'.encode('base64')}
+        request.GET = {'title': 'b:' + 'test'.encode('base64')}
 
         items = get_product(request, filter_products=True)[0]
         products = [item['qelem'] for item in items]
