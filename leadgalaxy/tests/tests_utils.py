@@ -997,3 +997,14 @@ class ShippingHelperTestCase(TestCase):
         self.assertEqual(customer_address['province'], 'Texas')
         self.assertEqual(customer_address['city'], 'Other')
         self.assertEqual(customer_address['address2'], '2nd Apt. N 555, Yants,')
+
+    def test_shopify_customer_il_zip_padding(self):
+        order = self.get_order(country_code='IL', country='Israel', zip="55966")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['zip'], '0055966')
+
+        order = self.get_order(country_code='IL', country='Israel', zip="11-55-967")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['zip'], '1155967')
