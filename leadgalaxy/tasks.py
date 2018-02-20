@@ -1054,7 +1054,7 @@ def keen_add_event(self, event_name, event_data):
                 if product_price:
                     event_data['product_price'] = product_price
         except:
-            raven_client.captureException()
+            pass
 
         keen.add_event(event_name, event_data)
     except:
