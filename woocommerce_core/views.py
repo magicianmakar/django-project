@@ -730,9 +730,11 @@ class OrderPlaceRedirectView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         try:
             assert self.request.GET['product']
-            assert self.request.GET['SAPlaceOrder']
 
             product = self.request.GET['product']
+            if safeInt(product):
+                product = 'https://www.aliexpress.com/item//{}.html'.format(product)
+
         except:
             raven_client.captureException()
             raise Http404("Product or Order not set")
