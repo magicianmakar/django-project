@@ -3708,9 +3708,12 @@ def orders_place(request):
                 pass
 
             elif k == 'product':
-                event_data['product'] = re.findall('[/_]([0-9]+).html', request.GET[k])
-                if event_data['product']:
-                    event_data['product'] = event_data['product'][0]
+                event_data['product'] = request.GET[k]
+
+                if not utils.safeInt(event_data['product']):  # Check if we are using product link or just the ID
+                    event_data['product'] = re.findall('[/_]([0-9]+).html', event_data['product'])
+                    if event_data['product']:
+                        event_data['product'] = event_data['product'][0]
 
             elif k.startswith('SA'):
                 event_data[k[2:].lower()] = request.GET[k]
