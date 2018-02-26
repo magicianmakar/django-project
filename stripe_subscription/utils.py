@@ -504,6 +504,9 @@ def process_webhook_event(request, event_id, raven_client):
     elif event.type == 'charge.succeeded':
         charge = event.data.object
 
+        if not charge.customer:
+            return HttpResponse('Customer Is Not Set')
+
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
         except User.DoesNotExist:
