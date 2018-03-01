@@ -4,6 +4,34 @@
 var taskIntervals = {};
 var taskCallsCount = {};
 
+function renderSupplierInfo(product_url, parent) {
+    if ((/aliexpress.com/i).test(product_url)) {
+        var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
+        if(!product_id || product_id.length != 2) {
+            return;
+        } else {
+            product_id = product_id[1];
+        }
+
+        $('.product-original-link-loading', parent).show();
+
+        window.extensionSendMessage({
+            subject: 'ProductStoreInfo',
+            product: product_id,
+        }, function(rep) {
+            $('.product-original-link-loading', parent).hide();
+
+            if (rep && rep.name) {
+                $('.product-supplier-name', parent).val(rep.name);
+                $('.product-supplier-link', parent).val(rep.url);
+            }
+        });
+    } else if ((/app.dropified.com\/marketplace\/product\/[0-9]+/i).test(product_url)) {
+        $('.product-supplier-name', parent).val('Dropwow');
+        $('.product-supplier-link', parent).val('https://app.dropified.com/marketplace');
+    }
+}
+
 function api_url(endpoint, store_type) {
     store_type = typeof(store_type) === 'undefined' ? null : store_type;
 
