@@ -362,8 +362,18 @@ def process_webhook_event(request, event_id, raven_client):
                     if sub.plan.metadata.get('lifetime'):
                         user.set_config('_stripe_lifetime', sub.plan.id)
                 else:
-                    raven_client.captureException()
-                    return HttpResponse('Cloud Not Register User')
+                    if user.have_stripe_billing():
+                        customer = user.stripe_customer
+
+                        customer.customer_id = sub.customer
+                        customer.save()
+                        customer.refresh()
+
+                        StripeSubscription.objects.filter(user=user).delete()
+
+                    else:
+                        raven_client.captureException()
+                        return HttpResponse('Cloud Not Register User')
             else:
                 raven_client.captureException(level='warning')
                 return HttpResponse('Customer Not Found')
@@ -387,6 +397,8 @@ def process_webhook_event(request, event_id, raven_client):
 
         if created:
             return HttpResponse('New User Registered')
+        else:
+            return HttpResponse('Subscription Updated')
 
     elif event.type == 'customer.subscription.updated':
         sub = event.data.object
@@ -491,6 +503,9 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type == 'charge.succeeded':
         charge = event.data.object
+
+        if not charge.customer:
+            return HttpResponse('Customer Is Not Set')
 
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)

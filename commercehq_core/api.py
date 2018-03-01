@@ -692,7 +692,7 @@ class CHQStoreApi(ApiResponseMixin, View):
                     }
                 )
 
-                if user.profile.plan.is_free or user.can_trial():
+                if user.profile.plan.is_free and not user_count:
                     return self.api_error('Please Activate your account first by visiting:\n{}'.format(
                         request.build_absolute_uri('/user/profile#plan'), status=401))
                 else:
