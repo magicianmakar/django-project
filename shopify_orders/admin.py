@@ -5,17 +5,22 @@ from django.contrib import admin
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderRisk
 
 
+USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
+
+
 @admin.register(ShopifySyncStatus)
 class ShopifySyncStatusAdmin(admin.ModelAdmin):
-    list_display = ('store', 'sync_type', 'sync_status', 'orders_count', 'created_at', 'updated_at')
-    list_filter = ('sync_type', 'sync_status')
+    list_display = ('store', 'sync_type', 'sync_status', 'elastic', 'orders_count', 'created_at', 'updated_at')
+    list_filter = ('sync_type', 'sync_status', 'elastic')
     raw_id_fields = ('store',)
+    search_fields = ('store__id', 'store__shop') + USER_SEARCH_FIELDS
 
 
 @admin.register(ShopifyOrder)
 class ShopifyOrderApiAdmin(admin.ModelAdmin):
     list_display = ('order_id', 'financial_status', 'fulfillment_status', 'created_at', 'updated_at', 'closed_at')
     raw_id_fields = ('user', 'store')
+    search_fields = ('store__id', 'store__shop') + USER_SEARCH_FIELDS
 
 
 @admin.register(ShopifyOrderLine)
@@ -28,3 +33,4 @@ class ShopifyOrderLineAdmin(admin.ModelAdmin):
 class ShopifyOrderRiskeAdmin(admin.ModelAdmin):
     list_display = ('store', 'order_id', 'created_at')
     raw_id_fields = ('store',)
+    search_fields = ('store__id', 'store__shop')

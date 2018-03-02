@@ -30,7 +30,6 @@ class StripePlanAdmin(admin.ModelAdmin):
 @admin.register(StripeCustomer)
 class StripeCustomerAdmin(admin.ModelAdmin):
     list_display = ('user', 'customer_id', 'created_at', 'updated_at')
-    readonly_fields = ('customer_id',)
     search_fields = ('customer_id',) + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
 
