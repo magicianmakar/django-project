@@ -38,6 +38,7 @@ from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import (
     safeStr,
+    list_chunks,
     app_link,
     save_user_ip,
     unique_username,
@@ -958,9 +959,19 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
 
         if order_ids:
             if type(order_ids) is list:
-                params['ids'] = ','.join(order_ids)
+                params['ids'] = ','.join([str(n) for n in order_ids])
             else:
                 params['ids'] = order_ids
+
+            ids_count = len(params['ids'].split(','))
+            if ids_count > 250:
+                for chunk_ids in list_chunks(params['ids'].split(','), 250):
+                    for order in get_shopify_orders(store=store, order_ids=chunk_ids, fields=fields):
+                        yield order
+
+                return
+
+            params['limit'] = ids_count
 
         if fields:
             if type(fields) is list:

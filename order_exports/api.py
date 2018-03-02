@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment, clean_query_id
+from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment, clean_query_id, get_shopify_orders
 from shopified_core.utils import app_link, send_email_from_template
 
 from leadgalaxy.models import ShopifyOrderTrack, User, ShopifyStore
@@ -473,7 +473,7 @@ class ShopifyTrackOrderExport():
     def create_track_orders_csv(self, orders):
         orders_count = orders.count()
         start = 0
-        steps = 5000
+        steps = 1000
 
         with open(self.file_path, 'wr') as csv_file:
             fieldnames = ['Shopify Order', 'Shopify Item', 'Aliexpress Order ID', 'Tracking Number']
@@ -481,14 +481,22 @@ class ShopifyTrackOrderExport():
             writer.writeheader()
 
             while start <= orders_count:
-                for order in orders[start:start + steps]:
-                    line = {}
-                    line['Shopify Order'] = order.order_id
-                    line['Shopify Item'] = order.line_id
-                    line['Aliexpress Order ID'] = order.source_id
-                    line['Tracking Number'] = order.source_tracking
+                orders_chunk = orders[start:start + steps]
+                orders_ids = list(set([o.order_id for o in orders_chunk]))
 
-                    writer.writerow(line)
+                shopify_orders = {}
+                for o in get_shopify_orders(store=self.store, order_ids=orders_ids, fields='id,name'):
+                    shopify_orders[o['id']] = o
+
+                for order in orders_chunk:
+                    shopify_order = shopify_orders.get(order.order_id)
+
+                    writer.writerow({
+                        'Shopify Order': shopify_order['name'] if shopify_order else order.order_id,
+                        'Shopify Item': order.line_id,
+                        'Aliexpress Order ID': order.source_id,
+                        'Tracking Number': order.source_tracking,
+                    })
 
                 start += steps
 
