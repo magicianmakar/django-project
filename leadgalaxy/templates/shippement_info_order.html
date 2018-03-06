@@ -9,6 +9,7 @@
                 <th>Shipping Company</th>
                 <th>Estimated Delivery Time</th>
                 <th>Shipping Cost</th>
+                <th>Has Tracking</th>
             </tr>
         </thead>
         <tbody>
@@ -36,13 +37,21 @@
                 <td>{{item.time}} days</td>
 
                 <td>
-                <div class="shipping-cost">
-                {% if item.price == '0' %}
-                    <strong>Free Shipping</strong>
-                {% else %}
-                    <span class="ui-cost notranslate" style="color: #F60;"><b>US ${{item.price}}</b></span>
-                {% endif %}
-                </div>
+                    <div class="shipping-cost">
+                    {% if item.price == '0' %}
+                        <strong>Free Shipping</strong>
+                    {% else %}
+                        <span class="ui-cost notranslate" style="color: #F60;"><b>US ${{item.price}}</b></span>
+                    {% endif %}
+                    </div>
+                </td>
+
+                <td>
+                    {% if item.isTracked %}
+                    Yes
+                    {% else %}
+                    No
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
