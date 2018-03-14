@@ -3951,6 +3951,9 @@ def register(request, registration=None, subscribe_plan=None):
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
 
+    if not request.GET:
+        return HttpResponseRedirect('https://go.dropified.com/choose-your-planxhh5m5e6')
+
     email = request.GET.get('email', '')
     if email:
         if '@' not in email:
