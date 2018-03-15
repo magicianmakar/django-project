@@ -3951,8 +3951,9 @@ def register(request, registration=None, subscribe_plan=None):
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
 
+    funnel_url = 'https://go.dropified.com/choose-your-planxhh5m5e6'
     if not request.GET and request.path == '/accounts/register':
-        return HttpResponseRedirect('https://go.dropified.com/choose-your-planxhh5m5e6')
+        return HttpResponseRedirect(funnel_url)
 
     email = request.GET.get('email', '')
     if email:
@@ -3971,6 +3972,12 @@ def register(request, registration=None, subscribe_plan=None):
         subscribe_plan = get_object_or_404(GroupPlan, slug=slug, payment_gateway='stripe')
         if not subscribe_plan.is_stripe():
             raise Http404('Not a Stripe Plan')
+        elif subscribe_plan.locked:
+            try:
+                assert request.GET.get('l') and request.GET.get('l') in subscribe_plan.register_hash
+            except:
+                raven_client.captureException(level='warning')
+                return HttpResponseRedirect(funnel_url)
 
         registration = None
 

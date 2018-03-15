@@ -1780,6 +1780,7 @@ class GroupPlan(models.Model):
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
+    locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
