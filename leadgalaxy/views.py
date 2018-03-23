@@ -819,6 +819,48 @@ def webhook(request, provider, option):
         except:
             raven_client.captureException()
 
+    elif provider == 'clickfunnels' and option == 'register':
+        try:
+            data = json.loads(request.body)
+
+            email = data['email']
+            fullname = data['name']
+            funnel_id = str(data['funnel_id'])
+            funnel_step_id = str(data['funnel_step_id'])
+
+            if funnel_id != request.GET['funnel_id'] or funnel_step_id != request.GET['funnel_step_id']:
+                return HttpResponse('Ignore Webhook')
+
+            intercom_attrs = {
+                "register_source": request.GET.get('register_source', 'clickfunnels'),
+                "register_medium": request.GET.get('register_medium', 'webhook'),
+            }
+
+            user, created = utils.register_new_user(email, fullname, intercom_attributes=intercom_attrs)
+
+            if created:
+                raven_client.captureMessage(
+                    'Clickfunnels Registration',
+                    level='warning',
+                    extra={
+                        'name': fullname,
+                        'email': email,
+                        'exists': User.objects.filter(email__iexact=email).exists()
+                    })
+
+                return HttpResponse('ok')
+            else:
+                raven_client.captureMessage('Clickfunnels registration email exists', extra={
+                    'name': fullname,
+                    'email': email,
+                    'exists': User.objects.filter(email__iexact=email).exists()
+                })
+
+                return HttpResponse('Email is already registed to an other user')
+
+        except:
+            raven_client.captureException()
+
     elif provider == 'price-monitor' and request.method == 'POST':
         product_id = request.GET['product']
         dropified_type = request.GET['dropified_type']  # shopify or chq
