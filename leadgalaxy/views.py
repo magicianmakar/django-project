@@ -828,7 +828,7 @@ def webhook(request, provider, option):
             funnel_id = str(data['funnel_id'])
             funnel_step_id = str(data['funnel_step_id'])
 
-            if funnel_id != request.GET['funnel_id'] or funnel_step_id != request.GET['funnel_step_id']:
+            if funnel_id != request.GET.get('funnel_id', '4600766') or funnel_step_id != request.GET.get('funnel_step_id', '25561209'):
                 return HttpResponse('Ignore Webhook')
 
             intercom_attrs = {
