@@ -1836,7 +1836,7 @@ class GroupPlan(models.Model):
 
     @property
     def is_startup(self):
-        return self.slug in ['startup', 'startup-shopify', 'starter']
+        return self.slug in ['startup', 'startup-shopify', 'starter', 'starter-shopify']
 
     @property
     def large_badge_image(self):

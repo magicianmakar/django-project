@@ -267,7 +267,7 @@ def callback(request):
 
         user.profile.change_plan(get_plan(
             payment_gateway='shopify',
-            plan_slug='startup-shopify'))
+            plan_slug='starter-shopify'))
 
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
         user_login(request, user)
