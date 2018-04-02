@@ -1708,6 +1708,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 order['order']['phone'] = phone_number
                 order['order']['phoneCountry'] = phone_country
 
+            if user.get_config('_aliexpress_telephone_workarround'):
+                order['order']['telephone_workarround'] = True
+
             try:
                 track = ShopifyOrderTrack.objects.get(
                     store=store,
