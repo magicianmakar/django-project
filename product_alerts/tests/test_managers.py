@@ -162,6 +162,9 @@ class ProductChangeManagerTestCase(TestCase):
         variant = chq_product['variants'][0]
         price = round(float(variant['price']), 2)
 
+        # Reset price to a reasonable amount
+        price = 100.0 if price < 0.02 else price
+
         # update price
         old_price = round(price - (price / 2.0), 2)
         chq_product['variants'][0]['price'] = old_price
