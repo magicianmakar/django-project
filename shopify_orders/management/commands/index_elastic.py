@@ -5,6 +5,7 @@ from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
 from shopify_orders.utils import is_store_synced, get_elastic
 from leadgalaxy.models import ShopifyStore
+from shopify_orders.utils import delete_store_orders
 
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import streaming_bulk
@@ -16,6 +17,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--store', dest='store', action='append', type=int, help='Store Orders to index')
         parser.add_argument('--user', dest='user', action='append', type=int, help='User Stores to index')
         parser.add_argument('--days', dest='days', action='store', type=int, help='Index order in the least number of days')
+        parser.add_argument('--reset', dest='reset', action='store_true', help='Delete Store indexed orders before indexing')
 
     def start_command(self, *args, **options):
         stores = ShopifyStore.objects.filter(is_active=True, shopifysyncstatus__sync_status__in=[2, 5])
@@ -36,6 +38,9 @@ class Command(DropifiedBaseCommand):
             stores_bar.update(1)
             if not is_store_synced(store):
                 continue
+
+            if options.get('reset'):
+                delete_store_orders(store, db=False, es=True)
 
             orders = ShopifyOrder.objects.prefetch_related('shopifyorderline_set').filter(store_id=store.id)
 
