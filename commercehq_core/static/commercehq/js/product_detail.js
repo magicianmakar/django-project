@@ -638,30 +638,7 @@ function bindExportEvents(target) {
         var parent = input.parents('.export');
         var product_url = input.val().trim();
 
-        if(!product_url.length || !(/aliexpress.com/i).test(product_url)) {
-            return;
-        }
-
-        var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
-        if(product_id.length != 2) {
-            return;
-        } else {
-            product_id = product_id[1];
-        }
-
-        $('.product-original-link-loading', parent).show();
-
-        window.extensionSendMessage({
-            subject: 'ProductStoreInfo',
-            product: product_id,
-        }, function(rep) {
-            $('.product-original-link-loading', parent).hide();
-
-            if (rep && rep.name) {
-                $('.product-supplier-name', parent).val(rep.name);
-                $('.product-supplier-link', parent).val(rep.url);
-            }
-        });
+        renderSupplierInfo(product_url, parent);
     }, 200);
 }
 

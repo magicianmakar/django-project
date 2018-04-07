@@ -52,6 +52,12 @@ def safeStr(v, default=''):
         return default
 
 
+def list_chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in xrange(0, len(l), n):
+        yield l[i:i + n]
+
+
 def app_link(*args, **kwargs):
     """
     Get full link to a web app page
