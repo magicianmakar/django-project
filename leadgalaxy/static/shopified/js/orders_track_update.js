@@ -239,7 +239,7 @@
             disable_config_sync = true;
 
             if(data._track_advanced_options == 'true') {
-                $('#advanced-options-check').prop('checked', true).trigger('change');
+                $('#advanced-options-check').iCheck('check');
             }
 
             if(data._track_update_delay) {
@@ -433,13 +433,9 @@
     $('#created_at_daterange').trigger('apply.daterangepicker', $('#created_at_daterange').data('daterangepicker'));
 
     $('input[name="created_at_daterange"]').on('change', syncTrackedOrders);
+    $('#advanced-options-check').iCheck('uncheck');
 
     $(function () {
         setTimeout(loadConfig, 500);
-    });
-
-    $('#modal-tracking-update').on('shown.bs.modal', function() {
-        // Force checkbox to start unchecked
-        $('#advanced-options-check').iCheck('uncheck');
     });
 })();
