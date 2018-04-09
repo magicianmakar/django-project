@@ -335,7 +335,8 @@
 {% endblock %}
 
 {% block extracss %}
-<link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+
+{% compress css %}
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
     .icheckbox_square-blue {
@@ -391,6 +392,8 @@
         margin-top: 18px;
     }
 </style>
+{% endcompress %}
+
 {% endblock %}
 
 {% block extrajs %}
