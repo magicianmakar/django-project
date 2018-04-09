@@ -537,7 +537,7 @@ $('#description-template-table .delete-template').click(function(e) {
 
 $('.edit-markup-rules-btn').click(function (e) {
     e.preventDefault();
-    
+
     $('#markup-rules-list-modal').modal({
         backdrop: 'static',
         keyboard: false
@@ -661,7 +661,7 @@ $('#add-rule-form').on('submit', function(e) {
                 tr.find('.rule-markup_value').text(parseFloat(rule.markup_value).toFixed(2));
                 tr.find('.rule-markup_compare_value').text(parseFloat(rule.markup_compare_value).toFixed(2));
                 tr.find('.rule-markup_type').text(rule.markup_type_display);
-                
+
                 tr.find('.edit-rule').attr('data-id', rule.id);
                 tr.find('.delete-rule').attr('data-id', rule.id);
                 tr.find('.delete-rule').attr('href', rule.delete_url);

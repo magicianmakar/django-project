@@ -28,6 +28,23 @@ def extra_bundles(request):
     }
 
 
+def store_limits_check(request):
+    stores_limit_reached = False
+
+    if request.user.is_authenticated() and \
+            not request.user.profile.is_subuser and \
+            not request.path.startswith('/user/profile'):
+
+        plan = request.user.profile.get_plan()
+        stores_count = request.user.profile.get_stores_count()
+        if 0 <= plan.stores < stores_count:
+            stores_limit_reached = True
+
+    return {
+        'stores_limit_reached': stores_limit_reached
+    }
+
+
 def extension_release(request):
     return {
         'DEBUG': settings.DEBUG,

@@ -115,6 +115,7 @@ TEMPLATES = [
                 'leadgalaxy.context_processors.extension_release',
                 'leadgalaxy.context_processors.intercom',
                 'leadgalaxy.context_processors.facebook_pixel',
+                'leadgalaxy.context_processors.store_limits_check',
                 'subusers.context_processors.template_config',
                 'analytic_events.context_processors.analytic_events',
             ],

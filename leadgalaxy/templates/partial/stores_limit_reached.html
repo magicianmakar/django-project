@@ -1,0 +1,258 @@
+{% load static %}
+
+<div id="check-plan-limits-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <h4 class="modal-title">Stores Limit Exceeded</h4>
+            </div>
+            <div id="check-plan-limits-modal-body" class="modal-body sk-loading">
+                <div class="sk-spinner-wrapper">
+                    <div class="sk-spinner sk-spinner-double-bounce">
+                        <div class="sk-double-bounce1"></div>
+                        <div class="sk-double-bounce2"></div>
+                    </div>
+                    <label>Loading stores...</label>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 b-r">
+                        <h3 class="m-t-none m-b">You've exceeded the number of stores for your plan. Only one can be active, please select which stores to deactivate.</h3>
+
+                        <form id="check-plan-limits-form" method="post" action="">
+                            <table id="check-plan-limits-stores" class="table table-ligthborder">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th class="hidden-xs" style=""></th>
+                                        <th class="hidden-xs" style="width: 13%;">Deactivate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-primary pull-left" id="check-plan-limits-update">Deactivate Selected Stores</button>
+                <a class="btn btn-primary" href="/user/profile#plan">Upgrade Account Plan</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    .modal-body.sk-loading {
+        position: relative;
+        min-height: 100px;
+    }
+    .modal-body > .sk-spinner-wrapper {
+        display: none;
+    }
+    .modal-body.sk-loading > .sk-spinner-wrapper {
+        display: block;
+        position: absolute;
+        top: calc(50% - 20px);
+        left: 0;
+        right: 0;
+        z-index: 2000;
+        text-align: center;
+    }
+    .modal-body.sk-loading:after {
+        content: '';
+        background-color: rgba(255, 255, 255, 0.7);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        box-sizing: border-box;
+    }
+    .modal-body.sk-loading > .sk-spinner-wrapper > .sk-spinner-double-bounce.sk-spinner {
+        display: inline-block;
+        margin: 0;
+    }
+    .modal-body.sk-loading > .sk-spinner-wrapper > label {
+        display: inline-block;
+        margin: 0 0 0 10px;
+        line-height: 40px;
+        overflow: hidden;
+    }
+    #check-plan-limits-modal .icheckbox_square-blue {
+        position: relative;
+    }
+    #check-plan-limits-stores thead tr th:first-child {
+        text-align: left;
+    }
+    #check-plan-limits-stores > tbody > tr > td:last-child {
+        text-align: center;
+    }
+</style>
+
+<script type="text/javascript">
+    $(function () {
+        function syncConfig() {
+            window.extensionSendMessage({
+                subject: 'SyncUserConfig',
+                from: 'website',
+                stores: true,
+            }, function() {});
+        }
+
+        var LimitReached = {
+            countStores: 0,  // Count how many ajax calls were started
+            countCompleteStores: 0,  // Count how many ajax calls were finished
+            ajaxCallbacks: {
+                beforeSend: function() {
+                    LimitReached.countStores += 1;
+                },
+                success: function(data) {
+                    $('tr[data-store-id="'+this.storeId+'"][data-store-type="'+this.type+'"]').remove();
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Store', data);
+                },
+                complete: function() {
+                    LimitReached.countCompleteStores += 1;
+                    LimitReached.checkComplete();
+                }
+            },
+            loading: {
+                add: function() {
+                    $('#check-plan-limits-modal-body').addClass('sk-loading');
+                },
+                remove: function() {
+                    $('#check-plan-limits-modal-body').removeClass('sk-loading');
+                }
+            },
+            call: {
+                shopify: function(storeId) {
+                    $.ajax({
+                        url: api_url('delete-store'),
+                        type: 'POST',
+                        data: {'store': storeId},
+                        context: {storeId: storeId, type: 'shopify'},
+                        beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                        success: LimitReached.ajaxCallbacks.success,
+                        error: LimitReached.ajaxCallbacks.error,
+                        complete: LimitReached.ajaxCallbacks.complete
+                    });
+                },
+                chq: function(storeId) {
+                    $.ajax({
+                        url: api_url('store', 'chq') +'?' + $.param({store_id: storeId}),
+                        method: 'DELETE',
+                        context: {storeId: storeId, type: 'chq'},
+                        beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                        success: LimitReached.ajaxCallbacks.success,
+                        error: LimitReached.ajaxCallbacks.error,
+                        complete: LimitReached.ajaxCallbacks.complete
+                    });
+                },
+                woo: function(storeId) {
+                    $.ajax({
+                        url: api_url('store', 'woo') +'?' + $.param({id: storeId}),
+                        method: 'DELETE',
+                        context: {storeId: storeId, type: 'woo'},
+                        beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                        success: LimitReached.ajaxCallbacks.success,
+                        error: LimitReached.ajaxCallbacks.error,
+                        complete: LimitReached.ajaxCallbacks.complete
+                    });
+                },
+            },
+            start: function() {
+                LimitReached.loading.add();
+            },
+            removeStore: function(storeId, storeType) {
+                if (storeType == 'shopify') {
+                    LimitReached.call.shopify(storeId);
+                }
+                if (storeType == 'chq') {
+                    LimitReached.call.chq(storeId);
+                }
+                if (storeType == 'woo') {
+                    LimitReached.call.woo(storeId);
+                }
+            },
+            checkComplete: function() {
+                if (LimitReached.countStores == LimitReached.countCompleteStores) {
+                    LimitReached.loading.remove();
+                    syncConfig();
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                }
+            }
+        };
+
+        function store_type(type) {
+            if (type === 'shopify') {
+                return 'Shopify';
+            } else if (type === 'chq') {
+                return 'CommerceHQ';
+            } else if (type === 'woo') {
+                return 'WooCommerce';
+            } else {
+                return type;
+            }
+        }
+
+        $.ajax({
+            url: '/api/stores',
+            type: 'GET',
+            data: {all: true},
+            beforeSend: function() {
+                $('#check-plan-limits-modal-body').addClass('sk-loading');
+            },
+            success: function (data) {
+                $('#check-plan-limits-stores tbody tr').remove();
+                for (var key in data) {
+                    var activeStore = data[key];
+                    $('#check-plan-limits-stores tbody').append(
+                        $('<tr class="store-limit-reached-row" data-store-id="' + activeStore.id + '" data-store-type="' + activeStore.type + '">').append(
+                            $('<td>').append($('<a>', {text: activeStore.name, href: activeStore.url, target: '_blank'})),
+                            $('<td>').append($('<span>', {'text': store_type(activeStore.type), 'class': 'badge'}) ),
+                            $('<td>').append(
+                                $('<input type="checkbox" class="check-plan-limits-checkbox" value="'+activeStore.id+'">')
+                            )
+                        )
+                    );
+                }
+
+                $('.check-plan-limits-checkbox').iCheck({
+                    checkboxClass: 'icheckbox_square-blue',
+                    radioClass: 'iradio_square-blue',
+                });
+            },
+            error: function (data) {
+                displayAjaxError('Stores List', data);
+            },
+            complete: function () {
+                $('#check-plan-limits-modal-body').removeClass('sk-loading');
+            }
+        });
+
+        $('#check-plan-limits-update').on('click', function(e) {
+            e.preventDefault();
+
+            var selected = $('#check-plan-limits-form input[type="checkbox"]:checked');
+            if (!selected.length) {
+                swal('Deactivate Stores', 'Select one or more stores first', 'warning');
+                return;
+            }
+
+            LimitReached.start();
+            selected.each(function() {
+                var storeRow = $(this).parents('.store-limit-reached-row'),
+                    storeId = storeRow.attr('data-store-id'),
+                    storeType = storeRow.attr('data-store-type');
+
+                LimitReached.removeStore(storeId, storeType);
+            });
+        });
+
+        $('#check-plan-limits-modal').modal({backdrop: 'static', keyboard: false});
+    });
+</script>
