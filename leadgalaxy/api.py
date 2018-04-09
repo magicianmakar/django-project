@@ -1934,7 +1934,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
             created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
 
-            if created_at_start <= created_at_max:
+            if created_at_start >= created_at_max:
                 created_at_max = created_at_start
 
             if created_at_end:

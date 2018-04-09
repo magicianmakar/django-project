@@ -120,7 +120,7 @@ class SyncAliexpressTestCase(TestCase):
             'store': self.store.pk,
             'all': 'true',
             'unfulfilled_only': 'true',
-            'createdAt': '',
+            'created_at': '',
             'count_only': 'true'
         }
 
@@ -135,7 +135,7 @@ class SyncAliexpressTestCase(TestCase):
             'store': self.store.pk,
             'all': 'true',
             'unfulfilled_only': 'false',
-            'createdAt': '',
+            'created_at': '',
             'count_only': 'true'
         }
 
@@ -150,6 +150,7 @@ class SyncAliexpressTestCase(TestCase):
             (timezone.now() - timedelta(days=7)).strftime('%m/%d/%Y'),
             timezone.now().strftime('%m/%d/%Y')
         )
+
         data = {
             'store': self.store.pk,
             'all': 'false',
