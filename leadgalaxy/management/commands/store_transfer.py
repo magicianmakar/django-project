@@ -44,8 +44,16 @@ class Command(DropifiedBaseCommand):
 
         if not ShopifyStore.objects.filter(shop=shop, user=to_user).count():
             if options['permissions_check']:
-                self.write('Store {} is not install on {} account'.format(shop, to_user.email))
-                return
+                try:
+                    store_info = store.get_info
+                except:
+                    store_info = {'email': ''}
+
+                if store_info['email'].lower() == to_user.email.lower():
+                    self.write('Warning: Store is not install on {} account but user email does match with Shopify Store email'.format(to_user.email))
+                else:
+                    self.write('Store {} is not install on {} account'.format(shop, to_user.email))
+                    return
             else:
                 self.write('Warning: Store is not install on {} account'.format(to_user.email))
         else:
