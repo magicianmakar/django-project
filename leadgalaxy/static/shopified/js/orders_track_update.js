@@ -364,6 +364,7 @@
 
     $('#created_at_daterange').daterangepicker({
         format: 'MM/DD/YYYY',
+        minDate: moment().subtract(30, 'days'),
         showDropdowns: true,
         showWeekNumbers: true,
         timePicker: false,
@@ -372,10 +373,8 @@
             'Today': [moment(), moment()],
             'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
             'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(30, 'days'), moment()],
             'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-            'All Time': 'all-time',
         },
         opens: 'right',
         drops: 'down',
@@ -414,8 +413,8 @@
                  end.format(end.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
             $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
         } else {
-            $('#created_at_daterange span').html('All Time');
-            $('input[name="created_at_daterange"]').val('all-time');
+            $('#created_at_daterange span').html('');
+            $('input[name="created_at_daterange"]').val('');
         }
 
         $('input[name="created_at_daterange"]').trigger('change');
@@ -428,7 +427,7 @@
     });
 
     var trackingSyncEndDate = moment(),
-        trackingSyncStartDate = moment().subtract(29, 'days');
+        trackingSyncStartDate = moment().subtract(30, 'days');
     $('#created_at_daterange').data('daterangepicker').setStartDate(trackingSyncStartDate.format('MM/DD/YYYY'));
     $('#created_at_daterange').data('daterangepicker').setEndDate(trackingSyncEndDate.format('MM/DD/YYYY'));
     $('#created_at_daterange').trigger('apply.daterangepicker', $('#created_at_daterange').data('daterangepicker'));
