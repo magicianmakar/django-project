@@ -221,6 +221,7 @@ def callback(request):
         code=request.GET['code'])
 
     user = request.user
+    store = None
 
     if request.session.get('shopify_reinstall'):
         store = ShopifyStore.objects.get(id=request.session['shopify_reinstall'])
