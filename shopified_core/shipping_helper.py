@@ -312,7 +312,7 @@ def country_from_code(country_code, default=None):
     if default is not None:
         return countries.get(country_code, default)
     else:
-        return countries[country_code]
+        return countries.get(country_code, country_code)
 
 
 def province_from_code(country_code, province_code):
