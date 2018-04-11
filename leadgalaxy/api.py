@@ -1790,7 +1790,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ShopifyOrderVariant.objects.filter(store=store, order_id=data.get('order'), line_id=data.get('line')) \
                                        .delete()
 
-            order_updater.add_note('Variant reset to customer selection for line #{} by {}'.format(
+            order_updater.add_note(u'Variant reset to customer selection for line #{} by {}'.format(
                 data.get('line'), user.first_name or user.username))
         else:
             ShopifyOrderVariant.objects.update_or_create(
