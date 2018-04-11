@@ -33,11 +33,12 @@ def store_limits_check(request):
 
     if request.user.is_authenticated() and \
             not request.user.profile.is_subuser and \
-            not request.path.startswith('/user/profile'):
+            not request.path.startswith('/user/profile') and \
+            not settings.DEBUG:
 
         plan = request.user.profile.get_plan()
         stores_count = request.user.profile.get_stores_count()
-        if 0 <= plan.stores < stores_count:
+        if plan and 0 <= plan.stores < stores_count:
             stores_limit_reached = True
 
     return {
