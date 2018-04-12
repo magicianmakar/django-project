@@ -729,11 +729,40 @@ class CHQStoreApi(ApiResponseMixin, View):
         try:
             pk = safeInt(data.get('store_id'))
             store = CommerceHQStore.objects.get(user=user, pk=pk)
+            permissions.user_can_delete(user, store)
+
             store.is_active = False
             store.save()
             return self.api_success()
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Store not found.', status=404)
+
+    def get_store_verify(self, request, user, data):
+        try:
+            store = CommerceHQStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        rep = None
+        try:
+            rep = store.request.get(
+                store.get_api_url('products'),
+                params={'fields': 'id', 'size': 1}
+            )
+
+            rep.raise_for_status()
+
+            return self.api_success({'store': store.get_store_url()})
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
+            return self.api_error('Connection to your store is not successful at:\n{}'.format(store.get_store_url()))
+
+        except IndexError:
+            return self.api_error('Your Store link is not correct:\n{}'.format(store.api_url))
+        except:
+            return self.api_error('API credetnails is not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
 
     def delete_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):

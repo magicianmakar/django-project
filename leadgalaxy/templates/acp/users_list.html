@@ -98,7 +98,11 @@
                                             {% if user.is_superuser %}
                                             <li><a href="/admin/leadgalaxy/planregistration/?q={{item.email|urlencode}}" target="_blank">Registration Links</a></li>
                                             <li><a href="/admin/leadgalaxy/planpayment/?q={{item.email|urlencode}}" target="_blank">Payments</a></li>
-                                            <li><a href="/admin/leadgalaxy/shopifystore/?q={{item.email|urlencode}}" target="_blank">Stores</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href="/admin/leadgalaxy/shopifystore/?q={{item.email|urlencode}}" target="_blank">Shopify Stores</a></li>
+                                            <li><a href="/admin/commercehq_core/commercehqstore/?q={{item.email|urlencode}}" target="_blank">CommerceHQ Stores</a></li>
+                                            <li><a href="/admin/woocommerce_core/woostore/?q={{item.email|urlencode}}" target="_blank">WooCommerce Stores</a></li>
+                                            <li class="divider"></li>
                                             <li><a href="/admin/stripe_subscription/extrastore/?q={{item.email|urlencode}}" target="_blank">Extra Stores</a></li>
                                             <li><a href="/admin/stripe_subscription/extrachqstore/?q={{item.email|urlencode}}" target="_blank">Extra CommerceHQ Stores</a></li>
                                             <li class="divider"></li>

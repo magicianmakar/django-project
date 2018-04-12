@@ -97,6 +97,30 @@ $(document).ready(function() {
         });
     });
 
+    $('.verify-api-url').click(function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('store-verify', 'chq'),
+            type: 'GET',
+            data: {
+                store: $(this).data('store-id')
+            },
+            context: {
+                btn: $(this)
+            },
+            success: function (data) {
+                swal('API URL', 'The API URL is working properly for CommerceHQ Store:\n' + data.store, 'success');
+            },
+            error: function (data) {
+                displayAjaxError('API URL', data);
+            },
+            complete: function () {
+            }
+        });
+    });
+
+
     $('#store-create-form').ajaxForm({
         target: '#store-create-form',
         clearForm: true,
