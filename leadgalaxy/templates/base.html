@@ -275,6 +275,10 @@
         {% include 'partial/accept_tos.html' %}
     {% endif %}
 
+    {% if stores_limit_reached %}
+        {% include 'partial/stores_limit_reached.html' %}
+    {% endif %}
+
     <script type="text/javascript" src="https://static.leaddyno.com/js"></script>
     <script>
         if (typeof (LeadDyno) !== 'undefined') {
