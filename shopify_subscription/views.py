@@ -89,11 +89,13 @@ def subscription_activated(request):
                 id=request.session.get('active_plan')))
 
             del request.session['active_plan']
+
+        messages.warning(request, 'Your plan was not changed because the charge was declined')
     else:
         request.user.profile.change_plan(get_plan(
             payment_gateway='shopify',
             plan_slug='starter-shopify'))
 
-    messages.success(request, 'Your plan has been successfully changed!')
+        messages.success(request, 'Your plan has been successfully changed!')
 
     return HttpResponseRedirect('/')
