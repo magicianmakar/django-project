@@ -9,6 +9,7 @@ import urlparse
 import ctypes
 import simplejson as json
 from urllib import urlencode
+from functools import wraps
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -85,7 +86,7 @@ def hash_text(text):
 
 
 def hash_list(data, sep=''):
-    return hash_text(sep.join(data))
+    return hash_text(sep.join([str(i) for i in data]))
 
 
 def random_hash():
@@ -480,3 +481,36 @@ def update_product_data_images(product, old_url, new_url):
     product.save()
 
     return product
+
+
+def execute_once_in(unique_ids, seconds):
+    """
+    This decorator wraps a normal function
+    so that it can be executed only once in the next few seconds.
+
+    Usage:
+
+    @execute_once_in([user.id, store.id], 3600)
+    def myfunction():
+        pass
+
+    If called multiple times, the above method will be executed only one
+    time during the next hour following its first execution.
+    """
+
+    def decorator(func):
+        def inner_decorator(*args, **kwargs):
+            key = "%s.%s.%s" % (func.__module__, func.__name__, hash_list(unique_ids))
+            key = key.replace(' ', '_')  # memcache doesn't like spaces
+
+            # NB: there's no way to tell if
+            # func() didn't execute or returned nothing
+            if cache.get(key):
+                return
+
+            cache.set(key, True, seconds)
+            return func(*args, **kwargs)
+
+        return wraps(func)(inner_decorator)
+
+    return decorator

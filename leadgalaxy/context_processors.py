@@ -6,6 +6,9 @@ from django.conf import settings
 
 import arrow
 
+from shopified_core.permissions import can_add_store
+from shopified_core.utils import execute_once_in
+
 
 def extra_bundles(request):
     """ Extra bundles link """
@@ -36,10 +39,30 @@ def store_limits_check(request):
             not request.path.startswith('/user/profile') and \
             not settings.DEBUG:
 
-        plan = request.user.profile.get_plan()
-        stores_count = request.user.profile.get_stores_count()
-        if plan and 0 <= plan.stores < stores_count:
-            stores_limit_reached = True
+        cache_key = 'stores_limit_reached_{}'.format(request.user.id)
+        cached_value = cache.get(cache_key)
+
+        if cached_value is not None:
+            stores_limit_reached = cached_value
+        else:
+            can_add, total_allowed, user_count = can_add_store(request.user)
+            if not can_add and total_allowed < user_count:  # if the user `can_add` a store he definetly didn't reach the limit
+                stores_limit_reached = True
+
+                @execute_once_in([request.user.id], 120)
+                def record_limit_event(can_add, total_allowed, user_count):
+                    from raven.contrib.django.raven_compat.models import client
+                    client.captureMessage('Store Limit Reached', extra={
+                        'can_add': can_add,
+                        'total_allowed': total_allowed,
+                        'user_count': user_count
+                    })
+
+                record_limit_event(can_add, total_allowed, user_count)
+
+            else:
+                # Only cache value if the store limit is not reached
+                cache.set(cache_key, False, timeout=900)
 
     return {
         'stores_limit_reached': stores_limit_reached
