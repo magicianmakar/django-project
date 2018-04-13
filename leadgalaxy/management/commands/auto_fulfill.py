@@ -155,7 +155,8 @@ class Command(DropifiedBaseCommand):
 
         if fulfilled:
             if user.get_config('aliexpress_as_notes', True):
-                note = "Auto Fulfilled by Dropified (Line Item #{})".format(order.line_id)
+                note = "Auto Fulfilled by Dropified (Item #{} - Confirmation Email: {})".format(
+                    order.line_id, 'Yes' if api_data['fulfillment'].get('notify_customer') else 'No')
 
                 countdown = self.store_countdown.get(store.id, 30)
                 tasks.add_ordered_note.apply_async(args=[store.id, order.order_id, note], countdown=countdown)
