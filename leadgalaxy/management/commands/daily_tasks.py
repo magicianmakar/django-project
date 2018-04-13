@@ -3,18 +3,19 @@ from django.utils import timezone
 import arrow
 
 from leadgalaxy.models import *
+from product_alerts.models import ProductChange
 from shopified_core.management import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         # Archive alerts after 7 days
-        archive_date = arrow.utcnow().replace(days=-7).datetime
-        AliexpressProductChange.objects.filter(hidden=False, created_at__lt=archive_date).update(hidden=True)
+        # archive_date = arrow.utcnow().replace(days=-7).datetime
+        # ProductChange.objects.filter(hidden=False, created_at__lt=archive_date).update(hidden=True)
 
         # Remove alerts after 30 days
         delete_date = arrow.utcnow().replace(days=-30).datetime
-        AliexpressProductChange.objects.filter(created_at__lt=delete_date).delete()
+        ProductChange.objects.filter(created_at__lt=delete_date).delete()
 
         # Expired plans
         self.stdout.write('Change plan of expired profiles', self.style.HTTP_INFO)
