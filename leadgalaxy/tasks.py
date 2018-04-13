@@ -1113,7 +1113,6 @@ def product_price_trends(self, store_id, product_variants):
     store = ShopifyStore.objects.get(id=store_id)
     trends = []
 
-    print product_variants
     for item in product_variants:
         history = ProductVariantPriceHistory.objects.filter(
             user=store.user,
