@@ -1,6 +1,7 @@
 from mock import Mock
 
 from django.test import TestCase
+from django import db
 
 from factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
@@ -97,7 +98,8 @@ class UserProfileTestCase(TestCase):
         user = UserFactory()
         user.profile.apply_registration(registration)
         permissions_count = user.profile.subuser_permissions.count()
-        self.assertEqual(permissions_count, len(SUBUSER_PERMISSIONS))
+        if SubuserPermission.objects.count():
+            self.assertEqual(permissions_count, len(SUBUSER_PERMISSIONS))
 
 
 class ShopifyProductTestCase(TestCase):

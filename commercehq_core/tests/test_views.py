@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, AppPermissionFactory
+from leadgalaxy.models import SubuserPermission
 
 from .factories import (
     CommerceHQStoreFactory,
@@ -272,7 +273,11 @@ class BoardsListTestCase(TestCase):
         self.subuser.profile.have_global_permissions()
         self.subuser_login()
         r = self.client.get(self.path)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
 
 class BoardCreateTestCase(TestCase):
@@ -475,7 +480,11 @@ class BoardDetailTestCase(TestCase):
         self.subuser.profile.have_global_permissions()
         self.subuser_login()
         r = self.client.get(self.path)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
 
 class SubuserpermissionsApiTestCase(TestCase):
@@ -498,7 +507,11 @@ class SubuserpermissionsApiTestCase(TestCase):
         board = CommerceHQBoardFactory(user=self.user)
         data = {'board_id': board.pk}
         r = self.client.get('/api/chq/board-config', data, **self.headers)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
     def test_subuser_cannot_view_board_without_permission(self):
@@ -513,7 +526,11 @@ class SubuserpermissionsApiTestCase(TestCase):
         self.user.profile.have_global_permissions()
         data = {'title': 'test'}
         r = self.client.post('/api/chq/boards-add', data, **self.headers)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
     @patch('commercehq_core.api.permissions.user_can_add', Mock(return_value=True))
@@ -529,7 +546,11 @@ class SubuserpermissionsApiTestCase(TestCase):
         product = CommerceHQProductFactory(store=self.store, user=self.parent_user)
         data = {'product': product.id, 'board': board.id}
         r = self.client.post('/api/chq/product-board', data, **self.headers)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
     def test_subuser_cannot_add_product_to_board_without_permission(self):
@@ -547,7 +568,11 @@ class SubuserpermissionsApiTestCase(TestCase):
         board.products.add(product)
         params = '?products={}&board_id={}'.format(product.id, board.id)
         r = self.client.delete('/api/chq/board-products' + params, **self.headers)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
     def test_subuser_cannot_remove_product_from_board_without_permission(self):
@@ -564,8 +589,12 @@ class SubuserpermissionsApiTestCase(TestCase):
         board = CommerceHQBoardFactory(user=self.user)
         params = '?board_id={}'.format(board.id)
         r = self.client.delete('/api/chq/board' + params, **self.headers)
-        self.assertFalse(CommerceHQBoard.objects.filter(pk=board.id).exists())
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertFalse(CommerceHQBoard.objects.filter(pk=board.id).exists())
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
     def test_subuser_cannot_delete_board_without_permission(self):
@@ -580,7 +609,11 @@ class SubuserpermissionsApiTestCase(TestCase):
         board = CommerceHQBoardFactory(user=self.user)
         data = {'board_id': board.id}
         r = self.client.post('/api/chq/board-empty', data, **self.headers)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
     def test_subuser_cannot_empty_board_without_permission(self):
@@ -596,7 +629,11 @@ class SubuserpermissionsApiTestCase(TestCase):
         board = CommerceHQBoardFactory(user=self.user)
         data = {'board_id': board.id, 'title': 'test'}
         r = self.client.post('/api/chq/board-config', data, **self.headers)
-        self.assertEqual(r.status_code, 200)
+
+        if SubuserPermission.objects.count():
+            self.assertEqual(r.status_code, 200)
+        else:
+            self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
     @patch('commercehq_core.utils.smart_board_by_board', Mock(return_value=True))

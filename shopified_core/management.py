@@ -16,7 +16,8 @@ class DropifiedBaseCommand(BaseCommand):
             }).raise_for_status()
 
         except requests.exceptions.HTTPError:
-            if not settings.DEBUG:
+            management_command = sys.argv[1] if len(sys.argv) > 1 else ''
+            if not settings.DEBUG and management_command != 'test':
                 self.stderr.write('Web app is not available %s' % sys.argv[-1])
                 raven_client.captureException(level='warning')
 
