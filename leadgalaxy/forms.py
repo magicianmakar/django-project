@@ -143,6 +143,7 @@ class UserProfileForm(forms.Form):
 
     vat = forms.CharField(max_length=100, required=False)
     invoice_to_company = forms.BooleanField(required=False)
+    use_relative_dates = forms.BooleanField(required=False)
 
 
 class UserProfileEmailForm(forms.Form):

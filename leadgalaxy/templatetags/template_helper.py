@@ -35,11 +35,16 @@ def date_humanize(context, date, html=True):
     except:
         pass
 
+    date_str = date.humanize()
+    user = context['request'].user
+    if user.is_authenticated() and not bool(user.get_config('use_relative_dates', True)):
+        date_str = date.format('DD/MM/YYYY')
+
     if html:
         return mark_safe('<span class="date itooltip" title="%s">%s</span>' % (
-            date.format('YYYY/MM/DD HH:mm:ss'), date.humanize()))
+            date.format('YYYY/MM/DD HH:mm:ss'), date_str))
     else:
-        return date.humanize()
+        return date_str
 
 
 @register.filter(name='get_datetime')

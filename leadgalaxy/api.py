@@ -2571,6 +2571,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if invoice_to_company is not None:
                 profile.set_config_value('invoice_to_company', bool(invoice_to_company))
 
+            use_relative_dates = form.cleaned_data.get('use_relative_dates')
+            if use_relative_dates is not None:
+                profile.set_config_value('use_relative_dates', bool(use_relative_dates))
+
             request.session['django_timezone'] = form.cleaned_data['timezone']
 
             return self.api_success({'reload': True})

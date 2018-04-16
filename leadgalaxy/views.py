@@ -2529,6 +2529,7 @@ def user_profile(request):
         'captchacredit_plans': captchacredit_plans,
         'captchacredit': captchacredit,
         'affiliate': affiliate,
+        'example_dates': [arrow.utcnow().replace(days=-2).format('DD/MM/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })
@@ -2702,6 +2703,7 @@ def orders_view(request):
     epacket_shipping = bool(models_user.get_config('epacket_shipping'))
     auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
     order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
+    use_relative_dates = bool(models_user.get_config('use_relative_dates', True))
     fix_order_variants = models_user.get_config('fix_order_variants')
     fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', False)
     fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', False)
@@ -3519,6 +3521,7 @@ def orders_view(request):
         'admitad_site_id': admitad_site_id,
         'user_admitad_credentials': user_admitad_credentials,
         'show_actual_supplier': show_actual_supplier,
+        'use_relative_dates': use_relative_dates,
         'order_risk_all_getaways': order_risk_all_getaways,
         'order_debug': order_debug,
         'page': 'orders',
