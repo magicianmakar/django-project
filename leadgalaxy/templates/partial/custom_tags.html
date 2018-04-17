@@ -3,6 +3,7 @@
 
 <script src="//fast.appcues.com/20262.js"></script>
 <script src="//fast.appcues.com/widget-bundle.js"></script>
+<script src="//app.getbeamer.com/js/beamer-embed.js"></script>
 
 <script>
     {% if user.is_authenticated and not DEBUG %}
@@ -105,6 +106,22 @@
         }
     }
     {% endif %}
+
+        var beamer_config = {
+            product_id : "zaFRJEVf1753",
+            selector: "#product-update-fx",
+            {% if user.is_authenticated %}
+            user_firstname : "{{user.first_name}}",
+            user_lastname : "{{user.first_name}}",
+            user_email : "{{user.email}}",
+            {% with plan=user.profile.plan %}
+            filter: "{{user.profile.plan.title}}",
+            {% endwith %}
+            right: 15,
+            top: 15,
+            {% endif %}
+        };
+
 
     {% if FACEBOOK_PIXEL_ID %}
         // Facebook Pixel
