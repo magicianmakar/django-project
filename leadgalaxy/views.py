@@ -2529,7 +2529,7 @@ def user_profile(request):
         'captchacredit_plans': captchacredit_plans,
         'captchacredit': captchacredit,
         'affiliate': affiliate,
-        'example_dates': [arrow.utcnow().replace(days=-2).format('DD/MM/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
+        'example_dates': [arrow.utcnow().replace(days=-2).format('MM/DD/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })

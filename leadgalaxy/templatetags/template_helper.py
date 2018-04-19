@@ -38,7 +38,7 @@ def date_humanize(context, date, html=True):
     date_str = date.humanize()
     user = context['request'].user
     if user.is_authenticated() and not bool(user.get_config('use_relative_dates', True)):
-        date_str = date.format('DD/MM/YYYY')
+        date_str = date.format('MM/DD/YYYY')
 
     if html:
         return mark_safe('<span class="date itooltip" title="%s">%s</span>' % (
