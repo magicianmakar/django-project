@@ -147,6 +147,10 @@
                                 <div class="row">
                                     <div class="col-xs-2">
                                         <b>Order <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a></b>
+
+                                        {% if order_debug %}
+                                            <a class="badge badge-info" target="_blank" href="{{order.order_api_url}}">order</a>
+                                        {% endif %}
                                     </div>
                                     <div class="col-xs-2">
                                         <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">

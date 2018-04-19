@@ -3,6 +3,7 @@ import simplejson as json
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import caches
@@ -520,6 +521,10 @@ class OrdersList(ListView):
         context['user_filter'] = self.filter_data
         context.update(self.filter_data)
 
+        context['order_debug'] = self.request.session.get('is_hijacked_user') or \
+            (self.request.user.is_superuser and self.request.GET.get('debug')) or \
+            self.request.user.get_config('_orders_debug') or settings.DEBUG
+
         return context
 
     def get_store(self):
@@ -565,6 +570,9 @@ class OrdersList(ListView):
             order['date_str'] = created_at.format('MM/DD/YYYY')
             order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
             order['order_url'] = self.store.get_admin_url('admin', 'orders', order['id'])
+            order['order_api_url'] = self.store.get_api_url('orders', order['id'])
+            order['order_api_url'] = order['order_api_url'].replace('https://', 'https://{}:{}@'.format(self.store.api_key, self.store.api_password))
+
             order['store'] = self.store
             order['placed_orders'] = 0
             order['connected_lines'] = 0
