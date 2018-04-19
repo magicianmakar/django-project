@@ -674,7 +674,10 @@ class OrdersList(ListView):
                     if bundles:
                         product_bundles = []
                         for idx, b in enumerate(bundles):
-                            b_product = CommerceHQProduct.objects.get(id=b['id'])
+                            b_product = CommerceHQProduct.objects.first(id=b['id']).first()
+                            if not b_product:
+                                continue
+
                             b_variant_id = b_product.get_real_variant_id(b['variant_id'])
                             b_supplier = b_product.get_suppier_for_variant(b_variant_id)
                             if b_supplier:
