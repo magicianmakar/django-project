@@ -674,7 +674,7 @@ class OrdersList(ListView):
                     if bundles:
                         product_bundles = []
                         for idx, b in enumerate(bundles):
-                            b_product = CommerceHQProduct.objects.first(id=b['id']).first()
+                            b_product = CommerceHQProduct.objects.filter(id=b['id']).first()
                             if not b_product:
                                 continue
 
