@@ -619,6 +619,17 @@ class OrdersList(ListView):
                 line.update(line.get('status'))
 
                 variant_id = line.get('variant', {}).get('id')
+                if line['product_id'] is None and '-' in line['title']:
+                    match_titles = '-'.join(line['title'].split('-')[0:-1]).strip()
+                    if match_titles in products_cache:
+                        if products_cache[match_titles]:
+                            line['product_id'] = products_cache[match_titles].source_id
+                    else:
+                        match_product = CommerceHQProduct.objects.filter(store=self.store, title=match_titles, source_id__gt=0).first()
+                        products_cache[match_titles] = match_product
+
+                        if match_product:
+                            line['product_id'] = match_product.source_id
 
                 line['variant_link'] = self.store.get_admin_url('admin/products/view?id={}'.format(line['product_id']))
 
