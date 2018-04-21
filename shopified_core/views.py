@@ -184,6 +184,7 @@ class ShopifiedApi(ApiResponseMixin, View):
     def post_quick_save(self, request, **kwargs):
         user = self.get_user(request, assert_login=True)
 
+        woo_count = user.profile.get_woo_stores().count()
         chq_count = user.profile.get_chq_stores().count()
         shopify_count = user.profile.get_shopify_stores().count()
 
@@ -195,10 +196,13 @@ class ShopifiedApi(ApiResponseMixin, View):
             else:
                 cache.set('quick_save_limit_{}'.format(user.id), True, timeout=user.get_config('_quick_save_limit', 5))
 
-        if not chq_count or (chq_count and shopify_count):
+        other_stores_empty = woo_count == 0 and chq_count == 0
+        if shopify_count > 0 or other_stores_empty:
             return ShopifyStoreApi.as_view()(request, **kwargs)
-        else:
+        elif chq_count > 0:
             return CHQStoreApi.as_view()(request, **kwargs)
+        else:
+            return WooStoreApi.as_view()(request, **kwargs)
 
     def get_all_orders_sync(self, request, **kwargs):
         user = self.get_user(request, assert_login=True)
