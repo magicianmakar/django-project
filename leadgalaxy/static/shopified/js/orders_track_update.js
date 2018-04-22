@@ -196,11 +196,7 @@
     });
 
     $('#advanced-options-check').on('ifChanged', function (e) {
-        if (e.target.checked) {
-            $('.advanced-options').addClass('show').removeClass('hide');
-        } else {
-            $('.advanced-options').addClass('hide').removeClass('show');
-        }
+        $('.advanced-options').toggle(e.target.checked);
 
         saveConfig('_track_advanced_options', e.target.checked);
     });
@@ -241,6 +237,8 @@
             if(data._track_advanced_options == 'true') {
                 $('#advanced-options-check').iCheck('check');
             }
+
+            $('.advanced-options').toggle($('#advanced-options-check')[0].checked);
 
             if(data._track_update_delay) {
                 $('#update-delay').val(data._track_update_delay).prop('synced', true);
