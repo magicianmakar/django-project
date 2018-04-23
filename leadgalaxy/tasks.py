@@ -1082,7 +1082,10 @@ def shopify_orders_risk(self, store, order_ids):
                 ShopifyOrderRisk.objects.create(
                     store=store,
                     order_id=order_id,
-                    data=json.dumps([{'score': i['score']} for i in risks])
+                    data=json.dumps([{
+                        'score': i['score'],
+                        'message': i['message']
+                    } for i in risks if i.get('display', True)])
                 )
 
                 if int(rep.headers['X-Shopify-Shop-Api-Call-Limit'].split('/')[0]) > 20:
@@ -1098,6 +1101,10 @@ def shopify_orders_risk(self, store, order_ids):
         for s in risks:
             if score < float(s['score']):
                 score = float(s['score'])
+
+            if 'shopify recommendation' in s.get('message', '').lower():
+                score = float(s['score'])
+                break
 
         orders[str(order_id)] = score
 
