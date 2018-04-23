@@ -130,6 +130,15 @@
         var btn = $(this);
         var modal = $('#modal-tracking-update');
 
+        // If orders object isn't filled inside count
+        if (!orders.pending) {
+            orders = {
+                pending: window.syncOrderIds.split(',').length,
+                success: 0,
+                error: 0
+            };
+        }
+
         $('.pending-msg', modal).hide();
         $('.update-progress, .update-progress p', modal).show();
         $('.progress-bar-success', modal).css('width', '0');

@@ -1940,7 +1940,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if created_at_end:
                 order_tracks = order_tracks.filter(created_at__lte=created_at_end)
 
-        order_tracks = order_tracks.filter(created_at__gte=created_at_max)
+        if not order_ids:
+            order_tracks = order_tracks.filter(created_at__gte=created_at_max)
 
         order_tracks = order_tracks.filter(hidden=False) \
                                    .defer('data') \
