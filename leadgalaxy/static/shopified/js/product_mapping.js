@@ -1,8 +1,9 @@
-(function(product_id, variants_mapping) {
+(function(product_id, variants_mapping, shopify_options, shopify_variants) {
     'use strict';
     var product_options = {};
-    
+
     var mapping_changed = false;
+    var current_mappings;
 
     function select_variant(variants, variant_title, variant_sku) {
         // variants: Shopify variants to select
@@ -79,6 +80,44 @@
         }
     }
 
+    function getSupplierUrl() {
+        var supplier = parseInt($('.supplier-select').val(), 10);
+        return product_suppliers[supplier].url;
+    }
+
+    function fetchSupplierOptions(callback) {
+        var supplier_url = getSupplierUrl();
+        if (/marketplace\/product\/[0-9]+/.test(supplier_url)) {
+            if (product_options[supplier_url]) {
+                callback(product_options[supplier_url]);
+            } else {
+                var supplier = parseInt($('.supplier-select').val(), 10);
+                $.ajax({
+                    url: '/api/marketplace-product-options',
+                    type: 'POST',
+                    data: {
+                        product: product_id,
+                        supplier: supplier
+                    },
+                    success: function(data) {
+                        product_options[supplier_url] = data;
+                        callback(data);
+                    },
+                    error: function(data) {
+                        displayAjaxError('Variants Mapping', data);
+                    }
+                });
+            }
+        } else {
+            window.extensionSendMessage({
+                subject: 'getVariants',
+                from: 'webapp',
+                url: supplier_url,
+                cache: true,
+            }, callback);
+        }
+    }
+
     $('#save-mapping').click(function(e) {
         $(this).bootstrapBtn('loading');
 
@@ -87,7 +126,7 @@
             supplier: $('.supplier-select').val(),
         };
 
-        $.map(variants_mapping, function (val, key) {
+        $.map(variants_mapping, function(val, key) {
             mapping[key] = JSON.stringify(val);
             return key;
         });
@@ -120,7 +159,7 @@
     });
 
     function selectColor() {
-        $('.variants-container').find('input').each(function() {
+        $('.variants-container, .options-container').find('input').each(function() {
 
             $(this).parents('.option-item-select').css('background-color', this.checked ? 'rgb(248, 216, 169)' : '#fff');
         });
@@ -148,11 +187,6 @@
                 $(display).append(optionEl);
             });
         });
-    }
-
-    function getSupplierUrl() {
-        var supplier = parseInt($('.supplier-select').val(), 10);
-        return product_suppliers[supplier].url;
     }
 
     $('.select-var-mapping').click(function(e) {
@@ -233,33 +267,7 @@
             selectColor();
         };
 
-        var supplier_url = getSupplierUrl();
-        if (/marketplace\/product\/[0-9]+/.test(supplier_url)) {
-            if (product_options[supplier_url]) {
-                render_options(product_options[supplier_url]);
-            } else {
-                var supplier = parseInt($('.supplier-select').val(), 10);
-                $.ajax({
-                    url: '/api/marketplace-product-options',
-                    type: 'POST',
-                    data: {product: product_id, supplier: supplier},
-                    success: function(data) {
-                        product_options[supplier_url] = data;
-                        render_options(data);
-                    },
-                    error: function(data) {
-                        displayAjaxError('Variants Mapping', data);
-                    }
-                });
-            }
-        } else {
-            window.extensionSendMessage({
-                subject: 'getVariants',
-                from: 'webapp',
-                url: supplier_url,
-                cache: true,
-            }, render_options);
-        }
+        fetchSupplierOptions(render_options);
     });
 
     $('#save-var-mapping').click(function(e) {
@@ -315,5 +323,179 @@
         }
     });
 
+    $('.select-options-mapping').click(function(e) {
+        e.preventDefault();
+
+        $(this).bootstrapBtn('loading');
+
+        var render_options = function(response) {
+            var bulk_option_tpl = Handlebars.compile($("#bulk-option-template").html());
+            var option_mapping_tpl = Handlebars.compile($("#option-mapping-template").html());
+            var supplier_option_tpl = Handlebars.compile($("#supplier-option-template").html());
+            var supplier_options = [];
+            for (var i = 0; i < response.length; i++) {
+                var supplier_option = {};
+                supplier_option['index'] = i;
+                supplier_option['title'] = response[i]['title'];
+                supplier_option['values'] = [];
+                for (var j = 0; j < response[i]['values'].length; j++) {
+                    var option = response[i]['values'][j];
+                    option['var_json'] = JSON.stringify(option);
+                    supplier_option['values'].push(option);
+                }
+                supplier_option['shopify_options'] = shopify_options;
+                supplier_options.push(supplier_option);
+            }
+            $('.options-container').empty();
+            $.each(supplier_options, function(index, supplier_option) {
+                var optionEl = $(bulk_option_tpl(supplier_option));
+                optionEl.find('.shopify-option-select').change(function() {
+                    var mapped = $(this).val();
+                    if (mapped) {
+                        mapped = parseInt(mapped);
+                    } else {
+                        mapped = -1;
+                    }
+                    var current_mapping;
+                    if (current_mappings) {
+                        if (current_mappings[index]['mapped'] == mapped) {
+                            current_mapping = current_mappings[index];
+                        }
+                    }
+                    if (mapped >= 0) { // The supplier option was mapped to one shopify option
+                        var shopify_values = shopify_options[mapped]['values'];
+                        var option_map = {
+                            index: mapped,
+                            supplier_values: supplier_option['values'],
+                            shopify_values: shopify_values,
+                        };
+                        var optionMappingEl = $(option_mapping_tpl(option_map));
+                        if (current_mapping) {
+                            for (var i = 0; i < shopify_values.length; i++) {
+                                var supplier_value = current_mapping['values'][shopify_values[i]]['title'];
+                                var name = 'mapped_value_' + mapped + i;
+                                optionMappingEl.find('select[name=' + name + ']').val(supplier_value);
+                            }
+                        }
+                        optionEl.find('.options-mapping').empty().append(optionMappingEl);
+                    } else { // The supplier option was mapped to "None", should select default value
+                        var supplierOptionEl = $(supplier_option_tpl(supplier_option));
+                        supplierOptionEl.find('.option-item, .option-item-select, .option-item-select img, .option-item-select .variant-title').click(function(e) {
+                            $(this).parents('.option-item').find('input').prop('checked', true);
+                            selectColor();
+                        });
+                        supplierOptionEl.find('input').on('change', function(e) {
+                            selectColor();
+                        });
+                        if (current_mapping) {
+                            supplierOptionEl.find('input[value="' + current_mapping['value']['title'] + '"]').prop('checked', true);
+                        }
+                        optionEl.find('.options-mapping').empty().append(supplierOptionEl);
+                    }
+
+                    // Disable mapped shopify options in other dropdowns
+                    var values = [];
+                    $('.options-container .shopify-option-select').each(function() {
+                        if ($(this).val()) {
+                            values.push($(this).val());
+                        }
+                        $(this).find('option').attr('disabled', null);
+                    });
+                    for (var i = 0; i < values.length; i++) {
+                        $('.options-container .shopify-option-select').each(function() {
+                            if (values[i] != $(this).val()) {
+                                $(this).find("option[value=" + values[i] + "]").attr('disabled', 'disabled');
+                            }
+                        });
+                    }
+                });
+                if (current_mappings) {
+                    if (current_mappings[index] && current_mappings[index]['mapped'] >= 0) {
+                        optionEl.find('.shopify-option-select').val(current_mappings[index]['mapped']);
+                    }
+                }
+                $('.options-container').append(optionEl);
+            });
+            $('#mapping-error').hide();
+            $('#modal-options-select').modal('show');
+            $('#modal-options-select .shopify-option-select').change();
+            $('.select-options-mapping').bootstrapBtn('reset');
+        };
+
+        fetchSupplierOptions(render_options);
+    });
+
+    $('#save-options-mapping').click(function(e) {
+        e.preventDefault();
+
+        var validateMapping = function(response) {
+            var mappings = [];
+            for (var i = 0; i < response.length; i++) {
+                var mapped = $('.options-container #mapped_for_' + i).val();
+                if (mapped) { // all shopify option values should be mapped to one supplier option value
+                    mapped = parseInt(mapped);
+                    var shopify_values = shopify_options[mapped]['values'];
+                    var mapping = {
+                        mapped: mapped,
+                        values: {},
+                    };
+                    for (var j = 0; j < shopify_values.length; j++) {
+                        var mapped_value = $("[name=mapped_value_" + mapped + j + "]");
+                        if (mapped_value.val()) {
+                            mapping['values'][shopify_values[j]] = JSON.parse(mapped_value.find('option:selected').attr('var-data'));
+                        } else {
+                            return false;
+                        }
+                    }
+                    mappings.push(mapping);
+                } else { // should have default value
+                    var default_option = $('input[name=value_for_supplier_option_' + i + ']:checked');
+                    if (default_option.length == 1) {
+                        mappings.push({
+                            mapped: -1,
+                            value: JSON.parse(default_option.attr('var-data')),
+                        });
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            return mappings;
+        };
+
+        var saveMapping = function(response) {
+            var result = validateMapping(response);
+            if (result) {
+                $('#mapping-error').hide();
+
+                current_mappings = result;
+
+                for (var variant_id in variants_mapping) {
+                    if (variants_mapping.hasOwnProperty(variant_id)) {
+                        variants_mapping[variant_id] = [];
+                        for (var i = 0; i < current_mappings.length; i++) {
+                            var mapping = current_mappings[i];
+                            if (mapping['mapped'] == -1) {
+                                variants_mapping[variant_id].push(mapping['value']);
+                            } else {
+                                var shopify_variant = shopify_variants[variant_id];
+                                var shopify_value = shopify_variant['option' + (mapping['mapped'] + 1)];
+                                variants_mapping[variant_id].push(mapping['values'][shopify_value]);
+                            }
+                        }
+                    }
+                }
+
+                $('#modal-options-select').modal('hide');
+                mapping_changed = true;
+                display_variant();
+            } else {
+                $('#mapping-error').show();
+            }
+        };
+
+        fetchSupplierOptions(saveMapping);
+    });
+
     display_variant();
-})(product_id, variants_mapping);
+})(product_id, variants_mapping, shopify_options, shopify_variants);

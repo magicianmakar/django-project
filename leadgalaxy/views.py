@@ -1352,6 +1352,7 @@ def product_mapping(request, product_id):
 
     images = {}
     variants_map = product.get_variant_mapping(supplier=current_supplier)
+    shopify_variants = {}
 
     for i in shopify_product['images']:
         for var in i['variant_ids']:
@@ -1385,6 +1386,7 @@ def product_mapping(request, product_id):
             pass
 
         variants_map[str(v['id'])] = options
+        shopify_variants[str(v['id'])] = v
         shopify_product['variants'][i]['default'] = options
         seen_variants.append(str(v['id']))
 
@@ -1405,6 +1407,7 @@ def product_mapping(request, product_id):
         'product_id': product_id,
         'product': product,
         'shopify_product': shopify_product,
+        'shopify_variants': shopify_variants,
         'variants_map': variants_map,
         'product_suppliers': product_suppliers,
         'current_supplier': current_supplier,
