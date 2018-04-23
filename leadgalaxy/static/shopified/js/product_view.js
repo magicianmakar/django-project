@@ -1587,5 +1587,29 @@ var PusherSubscription = {
         $('select#boards').trigger('change.select2');
     };
 
+    $('#var-images').on('click', '.download-image', function(e) {
+        // The download attribute only works for files with same origin
+        // Alternative way is to fetch and send as blob
+        if ($(this).get(0).hostname !== window.document.location.hostname) {
+            e.preventDefault();
+
+            var href = $(this).attr('href'),
+                fileName = $(this).attr('download'),
+                imgElement = document.createElement('a');
+
+            imgElement.href = href;
+            imgElement.download = fileName;
+
+            fetch(href).then(function(response) {
+                return response.blob();
+            }).then(function(blob) {
+                imgElement.href = window.URL.createObjectURL(blob);
+                imgElement.click();
+            }).catch(function(err) {
+                imgElement.target = '_blank';
+                imgElement.click();
+            });
+        }
+    });
 })();
 })(config, product);
