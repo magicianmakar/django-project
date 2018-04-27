@@ -29,11 +29,11 @@
                 </li>
                 {% endif %}
 
-                <li class="billing-tab">
+                <li class="billing-tab" {% if shopify_apps_customer %}style="display:none"{% endif %}>
                     <a data-toggle="tab" href="#tab-4" data-auto-hash="billing" data-auto-click="true" aria-expanded="false">Billing</a>
                 </li>
 
-                <li class="invoices-tab">
+                <li class="invoices-tab" {% if shopify_apps_customer %}style="display:none"{% endif %}>
                     <a data-toggle="tab" href="#tab-5" data-auto-hash="invoices" data-auto-click="true" aria-expanded="false">Invoices</a>
                 </li>
 
@@ -292,7 +292,7 @@
                 </div>
                 {% endif %}
 
-                <div id="tab-4" class="tab-pane">
+                <div id="tab-4" class="tab-pane" {% if shopify_apps_customer %}style="display:none"{% endif %}>
                     <div class="panel-body">
                         {% with source=user.stripe_customer.source %}
                             {% if source %}
@@ -344,7 +344,7 @@
                     </div>
                 </div>
 
-                <div id="tab-5" class="tab-pane">
+                <div id="tab-5" class="tab-pane" {% if shopify_apps_customer %}style="display:none"{% endif %}>
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-12">
@@ -367,7 +367,9 @@
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Email</label>
                                         <div class="col-sm-4">
-                                            <input type="email" name="dropwow_account_email" value="{{ user.dropwow_account.email }}" class="form-control">
+                                            <input type="email" name="dropwow_account_email" value="{{ user.dropwow_account.email }}" class="form-control"
+                                                {% if shopify_apps_customer %}readonly{% endif %}
+                                            >
                                         </div>
                                     </div>
                                     <div class="form-group">

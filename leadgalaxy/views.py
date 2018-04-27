@@ -2485,7 +2485,7 @@ def user_profile(request):
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
 
-    shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify') \
+    shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
                                      .annotate(num_permissions=Count('permissions')) \
                                      .order_by('num_permissions')
 
@@ -2508,7 +2508,7 @@ def user_profile(request):
             captchacredit = CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
 
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
-    shopify_apps_customer = request.user.get_config('shopify_app_store')
+    shopify_apps_customer = request.user.get_config('shopify_app_store') or request.user.profile.plan in shopify_plans
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)

@@ -14,7 +14,7 @@
                             <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
                                 data-plan-title="{{item.title}}" data-plan="{{item.id}}"
                                 data-trial-days="{{item.stripe_plan.trial_period_days}}"
-                                style="width: {% widthratio 100 stripe_plans|length 1 %}%"
+                                style="width: {% widthratio 100 shopify_plans|length 1 %}%"
                                 >
 
                                 <h3>{{item.title}}</h3>
@@ -78,9 +78,9 @@
                                     ></i>
                                 </p>
                                 <div class="plan-more-features" style="">
-                                    <button class="btn btn-default btn-outline more-feature-list-btn">
+                                    <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
                                         <i class="fa fa-plus"></i> More Features
-                                    </button>
+                                    </a>
                                 </div>
                                 <div class="plan-feature-list" style="display:none">
                                 </div>
