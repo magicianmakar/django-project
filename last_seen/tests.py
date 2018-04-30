@@ -147,13 +147,13 @@ class TestUserSeen(TestCase):
         user = User(username='testuser', pk=999)
 
         user_seen(user)
-        seen.assert_called_with(user, module=settings.LAST_SEEN_DEFAULT_MODULE)
+        seen.assert_called_with(user, module=settings.LAST_SEEN_DEFAULT_MODULE, interval=settings.LAST_SEEN_INTERVAL)
 
     @mock.patch('last_seen.models.LastSeen.objects.seen')
     def test_user_seen_no_default(self, seen):
         user = User(username='testuser', pk=1)
         user_seen(user, module="test")
-        seen.assert_called_with(user, module="test")
+        seen.assert_called_with(user, module="test", interval=settings.LAST_SEEN_INTERVAL)
 
     @mock.patch('last_seen.models.LastSeen.objects.seen')
     def test_user_seen_cached(self, seen):
@@ -170,7 +170,7 @@ class TestUserSeen(TestCase):
         cache.set("last_seen:%s:%s" % (module, user.pk),
                   time.time() - (2 * settings.LAST_SEEN_INTERVAL))
         user_seen(user, module=module)
-        seen.assert_called_with(user, module=module)
+        seen.assert_called_with(user, module=module, interval=settings.LAST_SEEN_INTERVAL)
 
 
 class TestClearInterval(TestCase):
@@ -231,5 +231,6 @@ class TestMiddleware(TestCase):
         request.path = ''
         request.session = {}
         request.user.is_authenticated.return_value = True
+        request.user.is_subuser = False
         self.middleware.process_request(request)
-        user_seen.assert_called_with(request.user.models_user, None)
+        user_seen.assert_called_with(request.user.models_user, module=None)

@@ -16,13 +16,13 @@ class LastSeenManager(models.Manager):
         Provides 2 utility methods
     """
 
-    def seen(self, user, module=settings.LAST_SEEN_DEFAULT_MODULE, force=False):
+    def seen(self, user, module=settings.LAST_SEEN_DEFAULT_MODULE, force=False, interval=settings.LAST_SEEN_INTERVAL):
         """
             Mask an user last on database seen with optional module
 
             If module not provided uses LAST_SEEN_DEFAULT_MODULE from settings
 
-            The last seen object is only updates is LAST_SEEN_INTERVAL seconds
+            The last seen object is only updates is interval seconds
             passed from last update or force=True
         """
         args = {
@@ -42,7 +42,7 @@ class LastSeenManager(models.Manager):
             return seen
 
         # if we get the object, see if we need to update
-        limit = timezone.now() - datetime.timedelta(seconds=settings.LAST_SEEN_INTERVAL)
+        limit = timezone.now() - datetime.timedelta(seconds=interval)
         if seen.last_seen < limit or force:
             seen.last_seen = timezone.now()
             seen.save()
@@ -79,9 +79,9 @@ def get_cache_key(module, user):
     return "last_seen:%s:%s" % (module, user.pk)
 
 
-def user_seen(user, module=None):
+def user_seen(user, module=None, interval=None):
     """
-        Mask an user last seen on database if LAST_SEEN_INTERVAL seconds
+        Mask an user last seen on database if `interval` seconds
         have passed from last database write.
 
         Uses optional module
@@ -94,18 +94,21 @@ def user_seen(user, module=None):
 
     cache_key = get_cache_key(module, user)
 
+    if interval is None:
+        interval = settings.LAST_SEEN_INTERVAL
+
     # compute limit to update db
-    limit = time.time() - settings.LAST_SEEN_INTERVAL
+    limit = time.time() - interval
     seen = cache.get(cache_key)
     if not seen or seen < limit:
-        cache.set(cache_key, time.time(), settings.LAST_SEEN_INTERVAL)
+        cache.set(cache_key, time.time(), interval)
 
         # mark the database and the cache, if interval is cleared force
         # database write
         if seen == -1:
-            LastSeen.objects.seen(user, module=module, force=True)
+            LastSeen.objects.seen(user, module=module, interval=interval, force=True)
         else:
-            LastSeen.objects.seen(user, module=module)
+            LastSeen.objects.seen(user, module=module, interval=interval)
 
 
 def clear_interval(user):

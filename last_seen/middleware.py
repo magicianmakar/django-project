@@ -23,7 +23,11 @@ class LastSeenMiddleware(object):
                 user = request.user
 
             try:
-                user_seen(user, module)
+                user_seen(user, module=module)
+                if request.user.is_subuser and user != request.user:
+                    interval = 600 if module is None else None
+
+                    user_seen(request.user, module=module, interval=interval)
             except:
                 from raven.contrib.django.raven_compat.models import client as raven_client
                 raven_client.captureException(level='warning')
