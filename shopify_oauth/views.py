@@ -202,7 +202,6 @@ def callback(request):
     verify_hmac_signature(request)
 
     if request.session.get('shopify_state', True) != request.GET.get('state', False):
-        print 'State does not match'
         raven_client.captureMessage(
             'State does not match',
             level='warning', request=request,

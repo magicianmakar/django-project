@@ -63,7 +63,6 @@ class LeadDynoAffiliations():
 
         result = self._get_response_from_url(url)
         json_response = result.json()
-        print 'COUNT:', result.text
         return json_response['count']
 
     def get_affiliates(self, page=1):
@@ -115,7 +114,6 @@ class LeadDynoAffiliations():
     def get_visitors_count(self):
         url = '/visitors/count'
         result = self._get_response_from_url(url)
-        print result.text
         return result.json()['count']
 
     def get_visitors(self, page=1):
