@@ -230,7 +230,16 @@
                         </thead>
                         <tbody>
                             {% for i in last_charges %}
-                            <tr>
+                            <tr
+                                {% if i.status == 'succeeded' %}
+                                    {% if i.amount_refunded %}
+                                        style="color: #172386"
+                                    {% else %}
+                                        style="color: #28901d"
+                                    {% endif %}
+                                {% endif %}
+                                {% if i.status == 'failed' %}style="color: #af3a3a"{% endif %}
+                            >
                                 <td><span class="itooltip" title="{{i.date}}">{{ i.date_str }}</span></td>
                                 <td>{{ i.amount }}</td>
                                 <td>{{ i.amount_refunded|default:'' }}</td>
@@ -242,7 +251,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="text-danger" class="btn btn-xs btn-warning refund-charge-btn" user-id="{{users.0.id}}" charge-id="{{i.id}}">Refund</a>
+                                    <a href="#" class="btn btn-xs btn-warning refund-charge-btn" {% if i.amount == i.amount_refunded %}disabled{% endif %} user-id="{{users.0.id}}"
+                                       charge-id="{{i.id}}" refund-amount="{{i.amount}}" refunded-amount="{{i.amount_refunded}}">
+                                        Refund
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -682,13 +694,20 @@
                 });
             });
 
+            function clean_money(s) {
+                return parseFloat(s.replace(/[^0-9,\.]/, '')) || 0.0;
+            }
+
             $('.refund-charge-btn').click(function (e) {
                 e.preventDefault();
+
+                var refund = clean_money($(e.target).attr('refund-amount')) - clean_money($(e.target).attr('refunded-amount'));
 
                 swal({
                     title: "Refund Charge",
                     text: "Amount to Refund:",
                     type: "input",
+                    inputValue: refund.toFixed(2),
                     showCancelButton: true,
                     closeOnConfirm: false,
                     animation: "slide-from-top",
