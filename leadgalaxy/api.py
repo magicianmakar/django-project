@@ -951,6 +951,20 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_change_customer_id(self, request, user, data):
+        if not user.is_superuser:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        if not target_user.is_stripe_customer():
+            return self.api_error('User is not a Stripe Customer')
+
+        target_user.stripe_customer.customer_id = data.get('customer-id')
+        target_user.stripe_customer.save()
+        target_user.stripe_customer.refresh()
+
+        return self.api_success()
+
     def post_product_notes(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)

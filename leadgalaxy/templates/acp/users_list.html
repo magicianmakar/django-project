@@ -122,6 +122,7 @@
                                             <li><a href="/admin/stripe_subscription/extrachqstore/?q={{item.email|urlencode}}" target="_blank">Extra CommerceHQ Stores</a></li>
                                             <li class="divider"></li>
                                             <li><a href="https://dashboard.stripe.com/search?query={{item.email|urlencode}}" target="_blank">Stripe</a></li>
+                                            <li><a href="/admin/stripe_subscription/stripecustomer/?q={{item.email|urlencode}}" target="_blank">Stripe Customer</a></li>
                                             {% endif %}
                                             <li><a href="#" class="intercom-btn" data-email="{{item.email}}" target="_blank">Intercom</a></li>
                                             <li class="divider"></li>
@@ -218,13 +219,21 @@
                         <div class="col-md-3">
                             <select class="form-control" name="customer_id" id="customer_id">
                                 {% for i in customer_ids %}
-                                <option value="{{i.id}}" {% if customer_id == i.id %}selected{% endif %}>{{i.email}} -- {{i.id}}</option>
+                                <option value="{{i.id}}" {% if customer_id == i.id %}selected{% endif %}>
+                                    {{i.email}} -- {{i.id}} {% if users.0.is_stripe_customer and i.id == users.0.stripe_customer.customer_id %}(current){% endif %}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="col-md-4">
                             <button type="submit" class="btn btn-success btn-sm" style="margin-top:2px">View</button>
+                            {% if users.0.is_stripe_customer %}
+                                <a href="#" class="btn btn-warning btn-sm m-l change-customer-id-btn" style="margin-top:2px"
+                                   customer-id="{{customer_id}}" user-id="{{users.0.id}}">Change Customer ID</a>
+                            {% else %}
+                            <i class="text-danger m-l">This user is not linked to any Stripe Customer</i>
+                            {% endif %}
                         </div>
                     </form>
                 </div>
@@ -760,6 +769,36 @@
                         }, 1000);
                     }).fail(function(data) {
                         displayAjaxError('Charge Refund', data);
+                    });
+                });
+            });
+
+            $('.change-customer-id-btn').click(function (e) {
+                e.preventDefault();
+
+                swal({
+                    title: "Change Customer ID",
+                    text: "Are you sure you want to change this Customer ID?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false || !inputValue) return false;
+
+                    $.ajax({
+                        url: '/api/change-customer-id',
+                        type: 'POST',
+                        data: {
+                            'customer-id': $(e.target).attr('customer-id'),
+                            'user': $(e.target).attr('user-id'),
+                        },
+                    }).done(function (data) {
+                        toastr.success('Changed!', 'Customer ID');
+                        swal.close();
+                    }).fail(function(data) {
+                        displayAjaxError('Customer ID Change', data);
                     });
                 });
             });
