@@ -13,7 +13,7 @@ class ShopifySyncStatusAdmin(admin.ModelAdmin):
     list_display = ('store', 'sync_type', 'sync_status', 'elastic', 'orders_count', 'created_at', 'updated_at')
     list_filter = ('sync_type', 'sync_status', 'elastic')
     raw_id_fields = ('store',)
-    search_fields = ('store__id', 'store__shop') + USER_SEARCH_FIELDS
+    search_fields = ['store__id', 'store__shop'] + map(lambda i: 'store__' + i, USER_SEARCH_FIELDS)
 
 
 @admin.register(ShopifyOrder)
