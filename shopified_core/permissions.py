@@ -219,7 +219,9 @@ def can_add_product(user, ignore_daily_limit=False):
         if day_count + 1 > profile.get_config_value('_daily_products_limit', 2000):
             from raven.contrib.django.raven_compat.models import client as raven_client
 
-            raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
+            if day_count % 10 == 0 and day_count <= 3000:
+                raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
+
             can_add = False
 
         cache.set(limit_key, day_count + 1, timeout=86400)
