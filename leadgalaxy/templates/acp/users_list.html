@@ -29,9 +29,9 @@
                             <th>Email</th>
                             <th>Plan</th>
                             {% if users_count == 1 %}
-                            <th>Shopify Stores</th>
-                            <th>CHQ Stores</th>
-                            <th>Products</th>
+                            <th>Shopify</th>
+                            <th>CommerceHQ</th>
+                            <th>WooCommerce</th>
                             <th>Bundles</th>
                             {% endif %}
                             <th style="width:13%">Join Date</th>
@@ -54,7 +54,7 @@
                                 {% endif %}
                             <td>{{item.email}}</td>
                             {% if users_count == 1 %}
-                            <td>
+                            <td style=" white-space:nowrap">
                                 <span class="plan-title" data-plan="{{item.profile.plan_id|default:''}}"></span>
 
                                 {% if item.is_subuser %}
@@ -64,10 +64,25 @@
                                         {{item.profile.subuser_parent.username}}</a>
                                 {% endif %}
                             </td>
-                            <td>{{item.profile.get_shopify_stores.count}}</td>
-                            <td>{{item.profile.get_chq_stores.count}}</td>
-                            <td>{{item.shopifyproduct_set.count}}</td>
                             <td style=" white-space:nowrap">
+                                <ul style="padding:0;margin:0">
+                                    <li style="list-style:none">{{item.profile.get_shopify_stores.count}} Stores</li>
+                                    <li style="list-style:none">{{item.shopifyproduct_set.count}} Products</li>
+                                </ul>
+                            </td>
+                            <td style=" white-space:nowrap">
+                                <ul style="padding:0;margin:0">
+                                    <li style="list-style:none">{{item.profile.get_chq_stores.count}} Stores</li>
+                                    <li style="list-style:none">{{item.commercehqproduct_set.count}} Products</li>
+                                </ul>
+                            </td>
+                            <td style=" white-space:nowrap">
+                                <ul style="padding:0;margin:0">
+                                    <li style="list-style:none">{{item.profile.get_woo_stores.count}} Stores</li>
+                                    <li style="list-style:none">{{item.wooproduct_set.count}} Products</li>
+                                </ul>
+                            </td>
+                            <td>
                                 <ul style="padding:0;margin:0">
                                     {% for bundle in item.profile.bundles.all %}
                                     <li>{{bundle.title}}</li>
