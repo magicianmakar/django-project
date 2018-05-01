@@ -849,3 +849,65 @@ class WooListPaginator(Paginator):
         items = self.object_list.update_params(params).items()
 
         return self._get_page(items, number, self)
+
+
+class WooOrderUpdater:
+
+    def __init__(self, store=None, order_id=None):
+        self.store = store
+        self.order_id = order_id
+
+        self.notes = []
+
+    def add_note(self, n):
+        self.notes.append(n)
+
+    def mark_as_ordered_note(self, line_id, source_id):
+        note = 'Aliexpress Order ID: {0}\n' \
+               'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+
+        if line_id:
+            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+
+        self.add_note(note)
+
+    def save_changes(self, add=True):
+        with cache.lock('updater_lock_{}_{}'.format(self.store.id, self.order_id), timeout=15):
+            self._do_save_changes(add=add)
+
+    def _do_save_changes(self, add=True):
+        if self.notes:
+            new_note = '\n'.join(self.notes)
+            current_note = ''
+            if add:
+                current_note = get_latest_order_note(self.store, self.order_id)
+            if current_note:
+                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
+            else:
+                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:500]
+
+            add_woo_order_note(self.store, self.order_id, new_note)
+
+    def delay_save(self, countdown=None):
+        from woocommerce_core.tasks import order_save_changes
+
+        order_save_changes.apply_async(
+            args=[self.toJSON()],
+            countdown=countdown
+        )
+
+    def toJSON(self):
+        return json.dumps({
+            "notes": self.notes,
+            "order": self.order_id,
+            "store": self.store.id,
+        }, sort_keys=True, indent=4)
+
+    def fromJSON(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        self.store = WooStore.objects.get(id=data.get("store"))
+        self.order_id = data.get("order")
+
+        self.notes = data.get("notes")

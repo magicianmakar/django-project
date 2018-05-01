@@ -802,6 +802,8 @@ class WooStoreApi(ApiResponseMixin, View):
         except UnicodeEncodeError as e:
             return self.api_error('Order ID is not a valid', status=501)
 
+        order_updater = utils.WooOrderUpdater(store, order_id)
+
         tracks = WooOrderTrack.objects.filter(store=store,
                                               order_id=order_id,
                                               line_id=line_id,
@@ -854,6 +856,9 @@ class WooStoreApi(ApiResponseMixin, View):
                 'updated_at': timezone.now(),
                 'status_updated_at': timezone.now()})
 
+        if user.profile.get_config_value('aliexpress_as_notes', True):
+            order_updater.mark_as_ordered_note(line_id, source_id)
+
         store.pusher_trigger('order-source-id-add', {
             'track': track.id,
             'order_id': order_id,
@@ -862,6 +867,9 @@ class WooStoreApi(ApiResponseMixin, View):
             'source_id': source_id})
 
         utils.update_order_status(store, order_id, 'processing')
+
+        if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
+            order_updater.delay_save()
 
         return self.api_success()
 

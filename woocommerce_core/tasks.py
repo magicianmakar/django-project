@@ -7,12 +7,13 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.utils.text import slugify
 from django.conf import settings
+from django.template.defaultfilters import truncatewords
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from unidecode import unidecode
 
-from app.celery import celery_app, CaptureFailure
+from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import utils
 from shopified_core import permissions
 
@@ -27,7 +28,8 @@ from .utils import (
     update_variants_api_data,
     update_product_images_api_data,
     create_variants_api_data,
-    get_latest_order_note
+    get_latest_order_note,
+    WooOrderUpdater
 )
 
 
@@ -315,3 +317,35 @@ def get_latest_order_note_task(store_id, order_id):
         data['success'] = False
 
     store.pusher_trigger('get-order-note', data)
+
+
+@celery_app.task(base=CaptureFailure, bind=True)
+def order_save_changes(self, data):
+    order_id = None
+    try:
+        updater = WooOrderUpdater()
+        updater.fromJSON(data)
+
+        order_id = updater.order_id
+
+        updater.save_changes()
+
+        order_note = '\n'.join(updater.notes)
+        updater.store.pusher_trigger('order-note-update', {
+            'order_id': order_id,
+            'note': order_note,
+            'note_snippet': truncatewords(order_note, 10),
+        })
+
+    except Exception as e:
+        response = ''
+        if hasattr(e, 'response') and hasattr(e.response, 'text'):
+            response = e.response.text
+
+        raven_client.captureException(
+            extra={'response': response}
+        )
+
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
