@@ -68,9 +68,7 @@
                 user_firstname : "{{user.first_name}}",
                 user_lastname : "{{user.first_name}}",
                 user_email : "{{user.email}}",
-                {% with plan=user.profile.plan %}
                 filter: "{{user.profile.plan.title}}",
-                {% endwith %}
                 right: 15,
                 top: 15,
                 {% endif %}
