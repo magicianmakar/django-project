@@ -61,8 +61,7 @@
                 }
             };
 
-        if (document.querySelector('#product-update-fx')) {
-            var beamer_config = {
+            window.beamer_config = {
                 product_id : "zaFRJEVf1753",
                 selector: "#product-update-fx",
                 {% if user.is_authenticated %}
@@ -76,7 +75,6 @@
                 top: 15,
                 {% endif %}
             };
-        }
 
         {% endif %}
     {% endif %}
