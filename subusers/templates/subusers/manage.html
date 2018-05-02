@@ -22,6 +22,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Join Date</th>
+                            <th>Last Activity</th>
                             <th style="width:100px">Actions</th>
                         </tr>
                     </thead>
@@ -38,7 +39,8 @@
                                 </a>
                             </td>
                             <td>{{item.email}}</td>
-                            <td>{{item.date_joined|date}}</td>
+                            <td>{% date_humanize item.date_joined %}</td>
+                            <td>{% date_humanize item.last_seen %}</td>
                             <td>
                                 <button class="btn btn-danger btn-xs delete-sub-user" user-id="{{item.id}}" user-name="{{item.username}}">
                                     <i class="fa fa-user-times"></i> Remove

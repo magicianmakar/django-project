@@ -9,6 +9,7 @@ from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 
 from leadgalaxy.models import ShopifyStore, PlanRegistration
+from last_seen.models import LastSeen, clear_interval
 from .utils import get_namespace
 from .forms import SubUserStoresForm, SubuserPermissionsForm, SubuserCHQPermissionsForm, SubuserWooPermissionsForm
 
@@ -21,8 +22,15 @@ def subusers(request):
     if request.user.is_subuser:
         raise PermissionDenied()
 
-    sub_users = User.objects.filter(profile__subuser_parent=request.user)
+    sub_users = []
     invitation = []
+
+    for sub in User.objects.filter(profile__subuser_parent=request.user):
+        sub.last_seen = LastSeen.objects.when(sub, 'website')
+        sub_users.append(sub)
+
+        clear_interval(sub)
+
     for i in PlanRegistration.objects.filter(sender=request.user).filter(Q(user__isnull=True) | Q(user__profile__subuser_parent=request.user)):
         i.have_access = (i.expired and (i.user.profile.subuser_stores.count() or i.user.profile.subuser_chq_stores.count()))
 
