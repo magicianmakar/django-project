@@ -589,6 +589,7 @@ class ShopifyStore(models.Model):
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
     version = models.IntegerField(default=1, choices=((1, 'Private App'), (2, 'Shopify App')), verbose_name='Store Version')
 
+    info = models.TextField(null=True, blank=True)
     list_index = models.IntegerField(default=0)
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True, db_index=True)
 
@@ -704,6 +705,18 @@ class ShopifyStore(models.Model):
             return rep['shop']
         else:
             raise Exception(rep['errors'])
+
+    def refresh_info(self, info=None, commit=True):
+        if info is None:
+            info = self.get_info
+
+        if type(info) is dict:
+            info = json.dumps(info)
+
+        self.info = info
+
+        if commit:
+            self.save()
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''

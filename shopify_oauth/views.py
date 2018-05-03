@@ -277,7 +277,7 @@ def callback(request):
 
         store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
         store.access_token = token['access_token']
-        store.scope = token['access_token'][0]
+        store.scope = settings.SHOPIFY_API_SCOPE
 
         store.save()
 
@@ -328,6 +328,7 @@ def callback(request):
             shop_info = shopify.Shop.current()
             store.title = shop_info.name
             store.currency_format = shop_info.money_in_emails_format
+            store.refresh_info(info=shop_info.to_dict(), commit=False)
 
             if shop_info.shop_owner and not user.first_name and not user.last_name:
                 fullname = shop_info.shop_owner.split(' ')

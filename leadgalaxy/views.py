@@ -711,6 +711,7 @@ def webhook(request, provider, option):
                 if shop_data.get('name'):
                     store.title = shop_data.get('name')
                     store.currency_format = shop_data.get('money_in_emails_format')
+                    store.store.refresh_info(info=shop_info.to_dict(), commit=False)
                     store.save()
 
                     return JsonResponse({'status': 'ok'})
