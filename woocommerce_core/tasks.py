@@ -215,7 +215,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
     except Exception as e:
         raven_client.captureException(extra={
-            'response': e.response.text if hasattr(e, 'response') else ''
+            'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
         })
 
         store.pusher_trigger('product-export', {
@@ -258,7 +258,7 @@ def product_update(product_id, data):
 
     except Exception as e:
         raven_client.captureException(extra={
-            'response': e.response.text if hasattr(e, 'response') else ''
+            'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
         })
 
         store.pusher_trigger('product-update', {
