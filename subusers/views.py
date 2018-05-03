@@ -26,7 +26,11 @@ def subusers(request):
     invitation = []
 
     for sub in User.objects.filter(profile__subuser_parent=request.user):
-        sub.last_seen = LastSeen.objects.when(sub, 'website')
+        try:
+            sub.last_seen = LastSeen.objects.when(sub, 'website')
+        except:
+            sub.last_seen = None
+
         sub_users.append(sub)
 
         clear_interval(sub)
