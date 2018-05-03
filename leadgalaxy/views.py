@@ -3567,9 +3567,11 @@ def orders_track(request):
     completed = request.GET.get('completed')
     source_reason = request.GET.get('reason')
     days_passed = request.GET.get('days_passed', '')
-    if days_passed.lower() == 'expired':
+    if days_passed == 'expired':
         days_passed = request.user.get_config('sync_delay_notify_days')
-    days_passed = utils.safeInt(days_passed, 0)
+        fulfillment_filter = '0'
+        tracking_filter = '0'
+        hidden_filter = '0'
 
     store = utils.get_store_from_request(request)
     if not store:

@@ -257,3 +257,20 @@ def user_orders_count(user):
 @register.assignment_tag
 def items_per_page_list():
     return ['10', '50', '100']
+
+
+@register.simple_tag(takes_context=True)
+def order_track_status(context, track, html=True):
+    if track.source_status_details:
+        if ',' in track.source_status_details:
+            return mark_safe('<span class="itooltip" title="{}">{}</span>'.format(track.get_source_status_details(), track.get_source_status()))
+        else:
+            return mark_safe('<b class="itooltip text-danger" title="{}">{}</b>'.format(track.get_source_status(), track.get_source_status_details()))
+    elif track.source_status:
+        color = ''
+        if track.source_status in ['PLACE_ORDER_SUCCESS', 'WAIT_SELLER_SEND_GOODS', 'SELLER_PART_SEND_GOODS', 'WAIT_BUYER_ACCEPT_GOODS', 'FINISH']:
+            color = 'text-navy'
+
+        return mark_safe('<b class="{}">{}</b>'.format(color, track.get_source_status()))
+    else:
+        return mark_safe('<i>Awaiting Sync with Aliexpress</i>')
