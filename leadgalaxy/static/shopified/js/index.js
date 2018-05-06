@@ -678,10 +678,21 @@ $('#add-rule-form').on('submit', function(e) {
 });
 
 function updateUserStatistics(statistics_data) {
-    $.each(statistics_data, function (i, store_info) {
-        $('#orders_pending_' + store_info.id).html('').parents('.statistics-link').toggle(true);
-        $('#products_saved_' + store_info.id).html(store_info.products_saved).parents('.statistics-link').toggle(store_info.products_saved);
-        $('#products_connected_' + store_info.id).html(store_info.products_connected).parents('.statistics-link').toggle(store_info.products_connected);
+    $.each(statistics_data, function(i, store_info) {
+        $('#orders_pending_' + store_info.id).html('').parents('.statistics-link').show(0);
+        var saved = $('#products_saved_' + store_info.id).html(store_info.products_saved).parents('.statistics-link');
+        if (store_info.products_saved) {
+            saved.show(0);
+        } else {
+            saved.hide(0);
+        }
+
+        var connected = $('#products_connected_' + store_info.id).html(store_info.products_connected).parents('.statistics-link');
+        if (store_info.products_connected) {
+            connected.show(0);
+        } else {
+            connected.hide(0);
+        }
     });
 }
 
