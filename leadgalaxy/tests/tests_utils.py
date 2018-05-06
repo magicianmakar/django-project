@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+import random
 import simplejson as json
 from mock import patch, Mock
 
@@ -27,7 +29,7 @@ import shopify_orders.tests.factories as order_factories
 from leadgalaxy.tests.factories import UserFactory
 
 import factory
-
+import requests
 
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -492,6 +494,28 @@ class OrdersTestCase(TestCase):
         updater.save_changes()
 
         self.assertEqual(note, utils.get_shopify_order_note(store, order_id))
+
+    def test_order_updater_note_unicode(self):
+        store = ShopifyStoreFactory()
+        order_id = 4905209738
+
+        feed = requests.get('http://feeds.bbci.co.uk/japanese/rss.xml').text
+        unicode_text = random.choice([i[1] for i in re.findall(r'title>(<!\[CDATA\[)([^>]+)(]]>)</title', feed)])
+
+        utils.set_shopify_order_note(store, order_id, unicode_text)
+
+        note = 'Test Note #%s' % utils.random_hash()
+
+        updater = utils.ShopifyOrderUpdater(store, order_id)
+        updater.add_note(note)
+        updater.save_changes()
+
+        current_note = utils.get_shopify_order_note(store, order_id)
+
+        self.assertIn(unicode_text, current_note)
+        self.assertIn(note, current_note)
+
+        updater.reset('notes')
 
     def test_order_updater_tags(self):
         store = ShopifyStoreFactory()
