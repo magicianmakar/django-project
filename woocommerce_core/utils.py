@@ -877,15 +877,7 @@ class WooOrderUpdater:
 
     def _do_save_changes(self, add=True):
         if self.notes:
-            new_note = '\n'.join(self.notes)
-            current_note = ''
-            if add:
-                current_note = get_latest_order_note(self.store, self.order_id)
-            if current_note:
-                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
-            else:
-                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:500]
-
+            new_note = u'\n'.join(self.notes)
             add_woo_order_note(self.store, self.order_id, new_note)
 
     def delay_save(self, countdown=None):

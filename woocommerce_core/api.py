@@ -1200,7 +1200,7 @@ class WooStoreApi(ApiResponseMixin, View):
         order_ids = data.getlist('order_ids[]')
 
         for order_id in order_ids:
-            tasks.get_latest_order_note_task.delay(store.id, order_id)
+            tasks.get_latest_order_note_task.apply_async(args=[store.id, order_id], expires=120)
 
         return self.api_success({})
 
