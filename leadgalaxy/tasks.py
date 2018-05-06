@@ -31,7 +31,6 @@ from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
 
 from shopify_orders import utils as order_utils
-from product_alerts.events import ProductChangeEvent
 
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
@@ -661,17 +660,6 @@ def generate_woo_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
-
-
-@celery_app.task(base=CaptureFailure, ignore_result=True)
-def product_change_alert(change_id):
-    try:
-        product_change = AliexpressProductChange.objects.get(pk=change_id)
-        product_change_event = ProductChangeEvent(product_change)
-        product_change_event.take_action()
-
-    except:
         raven_client.captureException()
 
 

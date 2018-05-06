@@ -55,7 +55,7 @@ class ShopifyProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
     raw_id_fields = ('parent_product', 'shopify_export', 'store', 'user', 'default_supplier')
     ordering = ('-updated_at',)
-    search_fields = ('data', 'notes', 'price_notification_id', 'shopify_id')
+    search_fields = ('data', 'notes', 'monitor_id', 'shopify_id')
 
     def store_(self, obj):
         return obj.store.title
@@ -195,13 +195,6 @@ class ShopifyProductImageAdmin(admin.ModelAdmin):
     list_display = ('product', 'variant', 'store')
     search_fields = ('image',)
     raw_id_fields = ('store',)
-
-
-@admin.register(AliexpressProductChange)
-class AliexpressProductChangeAdmin(admin.ModelAdmin):
-    list_display = ('product', 'user', 'seen', 'hidden', 'created_at', 'updated_at')
-    raw_id_fields = ('product', 'user')
-    search_fields = ('data',) + USER_SEARCH_FIELDS
 
 
 @admin.register(PlanPayment)

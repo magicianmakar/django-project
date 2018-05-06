@@ -2,34 +2,26 @@
 
 import re
 import random
-import simplejson as json
-from mock import patch, Mock
-
-from django.core.cache import cache
-from django.test import TestCase, TransactionTestCase
-from django.contrib.auth.models import User
+from django.test import TestCase
 from django.conf import settings
 
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy import utils
 from leadgalaxy.models import (
-    AliexpressProductChange,
     ShopifyOrderTrack
 )
 
-from product_alerts.events import ProductChangeEvent
-
 from shopified_core.shipping_helper import (
-     get_uk_province,
-     valide_aliexpress_province,
-     support_other_in_province,
+    get_uk_province,
+    valide_aliexpress_province,
+    support_other_in_province,
 )
 
-import shopify_orders.tests.factories as order_factories
 from leadgalaxy.tests.factories import UserFactory
 
 import factory
 import requests
+
 
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -684,154 +676,6 @@ class UtilsTestCase(TestCase):
 
     def test_ensure_title_unicode(self):
         self.assertEqual(utils.ensure_title(u'vari\xe9t\xe9'), u'vari\xe9t\xe9')
-
-
-class ProductChangeAlertTestCase(TransactionTestCase):
-    fixtures = ['product_changes.json']
-
-    def setUp(self):
-        self.user = User.objects.get(pk=1)
-
-        product_change = AliexpressProductChange.objects.get(pk=1)
-        event = ProductChangeEvent(product_change)
-        self.data = event.get_shopify_product()
-        self.data = event.prepare_data_before(self.data)
-
-    @patch.object(ProductChangeEvent, 'send_shopify', None)
-    @patch.object(ProductChangeEvent, 'send_email')
-    def test_notification_fired(self, send_email):
-        self.user.profile.config = json.dumps({
-            'alert_product_disappears': 'notify',
-            'alert_variant_disappears': 'notify',
-            'alert_price_change': 'notify',
-            'alert_quantity_change': 'notify'
-        })
-
-        self.user.profile.save()
-
-        cache.delete('product_change_%d' % self.user.id)
-
-        product_change = AliexpressProductChange.objects.get(pk=1)
-        event = ProductChangeEvent(product_change)
-        event.take_action()
-
-        self.assertFalse(send_email.called)
-
-        # Assert notification is sent only in a time span
-        event = ProductChangeEvent(product_change)
-        event.take_action()
-
-        send_email.assert_not_called() # email will be sent by cron with changes as batch on certain time basis.
-
-    def test_get_found_variant(self):
-        product_change = AliexpressProductChange.objects.get(pk=2)
-        change_events = json.loads(product_change.data)
-        event = ProductChangeEvent(product_change)
-        found = event.get_found_variant(change_events['changes']['variants'][0], self.data)
-
-        self.assertIsNotNone(found)
-
-    def test_get_previous_product_revision(self):
-        product_change = AliexpressProductChange.objects.get(pk=1)
-        event = ProductChangeEvent(product_change)
-        event.revision.data = self.data
-        event.revision.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=5)
-        event = ProductChangeEvent(product_change)
-        previous_revision = event.get_previous_product_revision('Vendor', True)
-
-        self.assertIsNotNone(previous_revision)
-
-    def test_product_disappears(self):
-        # Variant's quantity changed to zero
-        self.user.profile.config = json.dumps({"alert_product_disappears": "zero_quantity"})
-        self.user.profile.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=1)
-        event = ProductChangeEvent(product_change)
-        new_data = event.product_actions(self.data)
-
-        for variant in new_data['product']['variants']:
-            self.assertEqual(variant['inventory_quantity'], 0)
-
-        # Product unpublished
-        self.user.profile.config = json.dumps({"alert_product_disappears": "unpublish"})
-        self.user.profile.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=1)
-        event = ProductChangeEvent(product_change)
-        new_data = event.product_actions(self.data)
-
-        self.assertFalse(new_data['product']['published'])
-
-    def test_variant_disappears_remove(self):
-        # Remove variant
-        self.user.profile.config = json.dumps({"alert_variant_disappears": "remove"})
-        self.user.profile.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=4)
-        event = ProductChangeEvent(product_change)
-
-        # get variant_id for both checks
-        change_events = json.loads(product_change.data)
-
-        found = event.get_found_variant(change_events['changes']['variants'][0], self.data)[0]
-        variant_id = self.data['product']['variants'][found]['id']
-        new_data = event.variants_actions(self.data)
-
-        self.assertNotIn(variant_id, [i['id'] for i in new_data['product']['variants']])
-
-    def test_variant_disappears_zero_quantity(self):
-        # Set variant's quantity to zero
-        self.user.profile.config = json.dumps({"alert_variant_disappears": "zero_quantity"})
-        self.user.profile.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=4)
-        event = ProductChangeEvent(product_change)
-
-        change_events = json.loads(product_change.data)
-        found = event.get_found_variant(change_events['changes']['variants'][0], self.data)[0]
-
-        new_data = event.variants_actions(self.data)
-
-        self.assertEqual(new_data['product']['variants'][found]['inventory_quantity'], 0)
-
-    def test_price_change(self):
-        # Set variant's quantity to zero
-        self.user.profile.config = json.dumps({"alert_price_change": "update"})
-        self.user.profile.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=2)
-        event = ProductChangeEvent(product_change)
-
-        change_events = json.loads(product_change.data)
-        variant_event = change_events['changes']['variants'][0]
-        variant_change = variant_event['changes'][0]
-        found = event.get_found_variant(variant_event, self.data)[0]
-
-        selling_price = float(self.data['product']['variants'][found]['price'])
-        new_price = variant_change['new_value'] + (selling_price - variant_change['old_value'])
-
-        new_data = event.variants_actions(self.data)
-        self.assertEqual(new_data['product']['variants'][found]['price'], new_price)
-
-    def test_quantity_change(self):
-        # Set variant's quantity to zero
-        self.user.profile.config = json.dumps({"alert_quantity_change": "update"})
-        self.user.profile.save()
-
-        product_change = AliexpressProductChange.objects.get(pk=3)
-        event = ProductChangeEvent(product_change)
-
-        change_events = json.loads(product_change.data)
-        variant_event = change_events['changes']['variants'][0]
-        variant_change = variant_event['changes'][0]
-        found = event.get_found_variant(variant_event, self.data)[0]
-
-        new_data = event.variants_actions(self.data)
-
-        self.assertEqual(new_data['product']['variants'][found]['inventory_quantity'], variant_change['new_value'])
 
 
 class CustomerAddressTestCase(TestCase):

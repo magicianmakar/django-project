@@ -35,7 +35,7 @@ class ShopifyProductFactory(factory.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     data = '{}'
     price = factory.fuzzy.FuzzyFloat(100.0)
-    price_notification_id = factory.fuzzy.FuzzyInteger(999)
+    monitor_id = factory.fuzzy.FuzzyInteger(999)
     created_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
     updated_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
 

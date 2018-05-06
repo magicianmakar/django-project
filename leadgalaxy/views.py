@@ -657,7 +657,7 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
-                product.price_notification_id = 0
+                product.monitor_id = 0  # TODO: Remove from Price Monitor Service
                 product.shopify_id = 0
 
                 try:
@@ -669,7 +669,7 @@ def webhook(request, provider, option):
 
                 product.save()
 
-                AliexpressProductChange.objects.filter(product=product).delete()
+                ProductChange.objects.filter(shopify_product=product).delete()
 
                 ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
@@ -730,46 +730,6 @@ def webhook(request, provider, option):
             raven_client.captureException()
 
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
-
-    elif provider == 'price-notification' and request.method == 'POST':
-        product_id = request.GET['product']
-        try:
-            product = ShopifyProduct.objects.get(id=product_id)
-            shopify_product = utils.get_shopify_product(
-                product.store,
-                product.get_shopify_id(),
-                raise_for_status=True
-            )
-
-            cache.set('alert_product_{}'.format(product.id), shopify_product)
-
-        except ShopifyProduct.DoesNotExist:
-            return JsonResponse({'error': 'Product Not Found'}, status=404)
-
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code in [401, 402, 403, 404]:
-                product.price_notification_id = -4
-                product.save()
-
-                return JsonResponse({'error': 'Product Not Found'}, status=404)
-            else:
-                raven_client.captureException(leve='warning')
-
-        if product.user.can('price_changes.use') and product.is_connected:
-            product_change = AliexpressProductChange.objects.create(
-                product=product,
-                user=product.user,
-                data=request.body
-            )
-
-            tasks.product_change_alert.delay(product_change.pk)
-        else:
-            product.price_notification_id = 0
-            product.save()
-
-            return JsonResponse({'error': 'User do not have Alerts permission'}, status=404)
-
-        return JsonResponse({'status': 'ok'})
 
     elif provider == 'stripe' and request.method == 'POST':
         assert option == 'subs'
