@@ -670,6 +670,8 @@ def manage_product_change(change_id):
         manager = ProductChangeManager.initialize(product_change)
         manager.apply_changes()
 
+    except ProductChange.DoesNotExist:
+        pass
     except:
         raven_client.captureException()
 

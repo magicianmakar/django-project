@@ -84,7 +84,6 @@ def product_save(req_data, user_id):
             permissions.user_can_edit(user, product)
 
         except CommerceHQProduct.DoesNotExist:
-            raven_client.captureException()
             return {
                 'error': "Product {} does not exist".format(req_data['product'])
             }
@@ -355,6 +354,12 @@ def product_export(store_id, product_id, user_id, publish=None):
             'product': product.id,
             'product_url': reverse('chq:product_detail', kwargs={'pk': product.id}),
             'commercehq_url': product.commercehq_url
+        })
+
+    except CommerceHQProduct.DoesNotExist:
+        store.pusher_trigger('product-export', {
+            'success': False,
+            'error': 'Product Not Found',
         })
 
     except Exception as e:
