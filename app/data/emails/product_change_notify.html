@@ -215,7 +215,11 @@
         </div>
       {% endif %}
 
-
+    {% if have_more_changes %}
+    <p class="info-title" style="margin-bottom: 10px; line-height: 36px; font-weight: bold">
+      +{{have_more_changes}} More Product Alerts
+    </p>
+    {% endif %}
 
     <p style="margin-bottom: 10px; line-height: 36px;">
         You can find more details by visiting:&nbsp;  <a class="link-btn warning block" href="https://app.dropified.com/products/update" target="_blank" title="ALERTS PAGE">ALERTS PAGE</a>
