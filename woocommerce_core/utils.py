@@ -337,7 +337,7 @@ def split_product(product, split_factor, store=None):
     for option in options:
         new_product = duplicate_product(product, product.store)
         new_data = {}
-        new_data['title'] = '{} ({})'.format(title, option)
+        new_data['title'] = u'{} ({})'.format(title, option)
 
         variants = new_product.parsed.get('variants', [])
         new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
