@@ -6,7 +6,7 @@
             </div>
             <div class="panel-body">
                 <p style="margin:0">You are Subscribed to:</p>
-                <ul class="list-group">
+                <ul class="list-unstyled">
                     {% for item in user.stripesubscription_set.all %}
                         {% with status=item.get_status %}
 
