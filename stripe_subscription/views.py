@@ -380,7 +380,7 @@ def subscription_cancel(request):
 
     elif when == 'immediately':
         if sub.status == 'active':
-            invoice = get_recent_invoice(sub.customer)
+            invoice = get_recent_invoice(sub.customer, plan_invoices_only=True)
 
             if len(invoice.lines.data) == 1:
                 period = invoice.lines.data[0].period
