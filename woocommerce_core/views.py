@@ -531,7 +531,7 @@ class OrdersList(ListView):
                 product = product_by_source_id.get(product_id)
                 data = product_data.get(product_id)
                 item['product'] = product
-                item['image'] = next(iter(data['images']), {}).get('src')
+                item['image'] = next(iter(data['images']), {}).get('src') if data else None
                 variant_id = item.get('variation_id')
 
                 if product and product.has_supplier():
