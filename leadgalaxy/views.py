@@ -838,7 +838,7 @@ def webhook(request, provider, option):
         else:
             return JsonResponse({'error': 'Unknown Product Type'}, status=500)
 
-        if product.user.can('price_changes.use') and product.is_connected:
+        if product.user.can('price_changes.use') and product.is_connected and product.store.is_active:
             product_change = ProductChange.objects.create(
                 store_type=dropified_type,
                 shopify_product=product if dropified_type == 'shopify' else None,
