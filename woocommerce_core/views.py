@@ -443,6 +443,9 @@ class OrdersList(ListView):
             return mapped
 
         data = self.product_data.get(product.source_id)
+        if not data:
+            return []
+
         options = []
         for attribute in data['attributes']:
             options += attribute['options']
