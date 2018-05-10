@@ -681,7 +681,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             res = requests.post(
                 api_url,
                 files={
-                    'image': urllib2.urlopen(data.get('image_url'))
+                    'image': urllib2.urlopen(utils.add_http_schema(data.get('image_url')))
                 },
                 auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()

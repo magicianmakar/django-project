@@ -153,7 +153,7 @@ def get_domain(url, full=False):
 
 def add_http_schema(url):
     if not url.startswith('http'):
-        return 'http://{}'.format(url.lstrip(':/'))
+        return u'http://{}'.format(url.lstrip(':/'))
     else:
         return url
 
