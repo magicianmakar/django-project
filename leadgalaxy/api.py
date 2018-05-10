@@ -34,6 +34,7 @@ from shopified_core.utils import (
     order_data_cache,
     orders_update_limit,
     hash_url_filename,
+    add_http_schema,
     order_phone_number
 )
 
@@ -681,7 +682,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             res = requests.post(
                 api_url,
                 files={
-                    'image': urllib2.urlopen(utils.add_http_schema(data.get('image_url')))
+                    'image': urllib2.urlopen(add_http_schema(data.get('image_url')))
                 },
                 auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()
