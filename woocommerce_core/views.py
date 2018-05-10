@@ -337,12 +337,16 @@ class OrdersList(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        if not self.get_store():
+            messages.warning(request, 'Please add at least one store before using the Orders page.')
+            return redirect('/woo')
+
         if not request.user.can('place_orders.sub', self.get_store()):
             messages.warning(request, "You don't have access to this store orders")
             return redirect('/woo')
-
-        if not request.user.can('woocommerce.use'):
-            raise permissions.PermissionDenied()
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
@@ -566,6 +570,10 @@ class OrdersTrackList(ListView):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('woocommerce.use'):
             raise permissions.PermissionDenied()
+
+        if not self.get_store():
+            messages.warning(request, 'Please add at least one store before using the Tracking page.')
+            return redirect('/woo')
 
         return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 
