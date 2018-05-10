@@ -92,7 +92,6 @@ class StoresList(ListView):
 
     def get_queryset(self):
         stores = self.request.user.profile.get_woo_stores()
-        stores = stores.filter(~Q(api_url='') and ~Q(api_password=''))
 
         return stores
 
