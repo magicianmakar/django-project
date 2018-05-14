@@ -250,6 +250,9 @@ class WooProduct(models.Model):
             attributes = variant.get('attributes', [])
             variant['variant'] = [option['option'] for option in attributes]
 
+        if not variants:
+            variants = [{'variant': ['Default Title'], 'id': -1}]
+
         return variants
 
     def sync(self):
@@ -352,6 +355,7 @@ class WooProduct(models.Model):
             return self.default_supplier
 
     def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
+        name = -1 if name == 0 else name
         mapping = {}
 
         if supplier is None:
@@ -467,6 +471,7 @@ class WooProduct(models.Model):
 
     def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
         """ Return Shipping Method for the given variant_id and country_code """
+        variant_id = -1 if variant_id == 0 else variant_id
         mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
 
         if variant_id and country_code and mapping and type(mapping) is list:

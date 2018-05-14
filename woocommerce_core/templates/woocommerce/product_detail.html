@@ -361,16 +361,14 @@
                             Add Supplier
                         </a>
                     </div>
-                    {% comment %}
                     {% if product.is_connected %}
                         <div class="col-xs-5 text-right" style="padding: 0">
-                        <a class="btn btn-success btn-outline" href="{% url 'chq:product_mapping' product.id %}" target="_blank">
+                        <a class="btn btn-success btn-outline" href="{% url 'woo:product_mapping' product.id %}" target="_blank">
                             Variants Mapping
                             <i class="fa fa-external-link"></i>
                         </a>
                         </div>
                     {% endif %}
-                    {% endcomment %}
                 </div>
             </div>
         </div>
