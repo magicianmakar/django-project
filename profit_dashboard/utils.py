@@ -6,14 +6,14 @@ from datetime import date
 from collections import OrderedDict
 
 from django.conf import settings
-from django.db.models import Sum
+from django.db.models import Sum, Count
 
 from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
 from shopify_orders.models import ShopifyOrder
-from leadgalaxy.utils import safeFloat
+from leadgalaxy.utils import safeInt, safeFloat
 
 from .models import (
     FacebookAccess,
@@ -111,10 +111,11 @@ def get_profits(user_id, store_id, start, end):
             'css_empty': 'empty',
             'revenue': 0.0,
             'fulfillment_cost': 0.0,
+            'fulfillments_count': 0,
             'ad_spend': 0.0,
             'other_costs': 0.0,
             'outcome': 0.0,
-            'profit': 0.0
+            'profit': 0.0,
         }
 
     orders = ShopifyOrder.objects.filter(store_id=store_id,
@@ -137,12 +138,17 @@ def get_profits(user_id, store_id, start, end):
                                                  .values('date_key') \
                                                  .annotate(Sum('shipping_cost'),
                                                            Sum('products_cost'),
-                                                           Sum('total_cost')) \
+                                                           Sum('total_cost'),
+                                                           Count('id')) \
                                                  .order_by('date_key')
 
+    total_fulfillments_count = 0
     for shipping in shippings:
         date_key = arrow.get(shipping['date_key']).format('YYYY-MM-DD')
         profits_data[date_key]['fulfillment_cost'] = safeFloat(shipping['total_cost__sum'])
+        fulfillments_count = safeInt(shipping['id__count'])
+        profits_data[date_key]['fulfillments_count'] = fulfillments_count
+        total_fulfillments_count += fulfillments_count
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
@@ -169,8 +175,13 @@ def get_profits(user_id, store_id, start, end):
 
     for other_cost in other_costs:
         date_key = arrow.get(other_cost['date_key']).format('YYYY-MM-DD')
-        profits_data[date_key]['other_costs'] = safeFloat(other_cost['amount__sum'])
-        profits_data[date_key]['empty'] = False
+
+        other_cost_value = safeFloat(other_cost['amount__sum'])
+        is_empty = profits_data[date_key]['empty']
+
+        profits_data[date_key]['other_costs'] = other_cost_value
+        # Other costs might be saved as 0
+        profits_data[date_key]['empty'] = is_empty and other_cost_value == 0
         profits_data[date_key]['css_empty'] = ''
 
     totals = {
@@ -182,6 +193,7 @@ def get_profits(user_id, store_id, start, end):
     totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ad_spend']) + safeFloat(totals['other_costs'])
     totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome'])
     totals['orders_count'] = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start, end)).count()
+    totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
 
     return profits_data.values(), totals

@@ -119,7 +119,7 @@ class FacebookAdCostsTestCase(TestCase):
 
         self.assertItemsEqual(
             profits[0].keys(),
-            ['other_costs', 'revenue', 'week_day', 'date_as_slug', 'ad_spend', 'profit', 'fulfillment_cost', 'date_as_string', 'css_empty', 'outcome', 'empty']
+            ['other_costs', 'revenue', 'week_day', 'date_as_slug', 'ad_spend', 'profit', 'fulfillment_cost', 'date_as_string', 'css_empty', 'outcome', 'empty', 'fulfillments_count']
         )
 
 

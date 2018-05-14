@@ -155,8 +155,7 @@
                       <tr>
                         <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_count }}</button>Orders</td>
                         <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_per_day }}</button>Orders Per Day</td>
-                        <td>
-                        </td>
+                        <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
                       </tr>
                     </tbody>
                   </table>
@@ -230,7 +229,14 @@
                   <div class="chart">
                     <ul class="toggle-menu">
                       <li>
-                        <a href="#" class="toggle-data btn btn-white" data-label="Fulfillment Cost" data-key="fulfillment_cost">
+                        <a href="#" class="toggle-data btn btn-white" data-label="Fulfillments Count" data-key="fulfillments_count" data-y-axes="number">
+                          <i class="fa fa-check-square-o"></i>
+                          <i class="fa fa-square-o"></i>
+                          Fulfillment Count
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" class="toggle-data btn btn-white" data-label="Fulfillment Cost" data-key="fulfillment_cost" data-y-axes="aaa">
                           <i class="fa fa-check-square-o"></i>
                           <i class="fa fa-square-o"></i>
                           Fulfillment Costs
@@ -339,8 +345,7 @@
       <tr>
         <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_count}}</button>Orders</td>
         <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_per_day}}</button>Orders Per Day</td>
-        <td>
-        </td>
+        <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
       </tr>
     </tr>
   </tbody>
@@ -446,7 +451,7 @@
 
 {% compress js %}
   <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
-  <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.min.js' %}"></script>
+  <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.js' %}"></script>
   <script src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
   <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
   <script src="{% static 'profit/index.js' %}"></script>

@@ -131,28 +131,38 @@ Currency.init();
             });
         },
         initExpandable: function() {
-            $('#profits tbody tr').each(function() {
-                if ($(this).hasClass('empty')) {
-                    if (ProfitDashboard.start == null) {
-                        ProfitDashboard.start = $(this);
-                    } else {
-                        $(this).css('display', 'none');
-                        ProfitDashboard.count += 1;
+            var previousIndex = null,
+                previousRow = null,
+                startingRow = null;
+
+            $('#profits tbody .tooltip').remove();
+            $('#profits tbody tr.empty').each(function() {
+                var currentIndex = $(this).index();
+                if (previousIndex == currentIndex - 1) {
+                    // Empty rows in sequence
+                    $(this).css('display', 'none');
+                } else {
+                    if (startingRow != null) {
+                        ProfitDashboard.fillDateRange(startingRow, previousRow);
                     }
+
+                    startingRow = $(this);
+                    $(this).find('.actions').append($('<a href="#" class="open-dates"><i class="glyphicon glyphicon-chevron-down">'));
+                    $(this).tooltip('destroy');
                 }
 
-                if (!$(this).next().hasClass('empty')) {
-                    if (ProfitDashboard.count > 0) {
-                        var startDate = ProfitDashboard.start.find('td:first');
-                        ProfitDashboard.start.attr('data-initial-text', startDate.text()).addClass('closed');
-                        startDate.text(startDate.text() + ' - ' + $(this).find('td:first').text());
-                        ProfitDashboard.start.find('.actions').append($('<a href="#" class="open-dates"><i class="glyphicon glyphicon-chevron-down">'));
-                        ProfitDashboard.start.tooltip('destroy');
-                    }
-                    ProfitDashboard.start = null;
-                    ProfitDashboard.count = 0;
-                }
+                previousIndex = currentIndex;
+                previousRow = $(this);
             });
+
+            if (startingRow != null && previousRow != null) {
+                ProfitDashboard.fillDateRange(startingRow, previousRow);
+            }
+        },
+        fillDateRange: function(startingRow, previousRow) {
+            var startDate = startingRow.find('td:first');
+            startingRow.attr('data-initial-text', startDate.text()).addClass('closed');
+            startDate.text(startDate.text() + ' - ' + previousRow.find('td:first').text());
         },
         reloadExpandable: function() {
             $('.open-dates, .close-dates', '#profits tbody tr').remove();
@@ -181,18 +191,18 @@ Currency.init();
 
                 var selectedRow = $(this).parents('.profit');
 
+                // Replace date for first row and start tooltip again
                 selectedRow.find('td:first').text(selectedRow.attr('data-initial-text'));
                 selectedRow.tooltip();
 
-                var nextRows = selectedRow.nextAll(),
-                    index = nextRows.index(nextRows.nextAll(':not(.empty):first'));
-                nextRows.filter(':first').css('display', '');
-                nextRows.nextAll(':lt(' + index + ')').css('display', '');
+                // Show next rows
+                selectedRow.nextUntil('.closed, .opened', '.empty').css('display', '');
 
+                // Change row actions to a opened kind
                 $(this).find('.glyphicon').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
                 $(this).removeClass('open-dates').addClass('close-dates');
-
                 selectedRow.addClass('opened').removeClass('closed');
+
                 ProfitDashboard.fixStripes();
             });
         },
@@ -200,21 +210,18 @@ Currency.init();
             $('#profits').on('click', 'tr .actions a.close-dates', function(e) {
                 e.preventDefault();
 
-                var selectedRow = $(this).parents('.profit'),
-                    nextRows = selectedRow.nextAll(),
-                    index = nextRows.index(nextRows.filter(':not(.empty):first'));
+                var selectedRow = $(this).parents('.profit');
 
+                // Remove weekday tooltip
                 selectedRow.tooltip('destroy');
-                selectedRow.addClass('closed').removeClass('opened');
 
-                if (nextRows.filter(':not(.empty):first').length == 0) {
-                    var index = nextRows.index(nextRows.filter(':last')) + 1;
-                }
-
-                selectedRow = nextRows.filter(':lt(' + index + ')').css('display', 'none').filter(':last');
+                // Replace date for first row and hide next rows
+                var lastRow = selectedRow.nextUntil('.closed, .opened', '.empty').css('display', 'none').filter(':last');
                 var dateColumn = $(this).parents('.profit').find('td:first');
-                dateColumn.text(dateColumn.text() + ' - ' + selectedRow.find('td:first').text());
+                dateColumn.text(dateColumn.text() + ' - ' + lastRow.find('td:first').text());
 
+                // Change row actions to a closed kind
+                selectedRow.addClass('closed').removeClass('opened');
                 $(this).find('.glyphicon').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
                 $(this).removeClass('close-dates').addClass('open-dates');
 
@@ -239,9 +246,9 @@ Currency.init();
                     originalValue = parseFloat(otherCosts.attr('data-original-amount')),
                     inputValue = parseFloat($(this).val()),
                     totalCosts = otherCosts.parent().find('.total-costs span'),
-                    profitAmont = otherCosts.parent().find('.profit-amount span'),
+                    profitAmount = otherCosts.parent().find('.profit-amount span'),
                     totalCostsValue = parseFloat(totalCosts.attr('data-original-amount')),
-                    profitAmontValue = parseFloat(profitAmont.attr('data-original-amount')),
+                    profitAmountValue = parseFloat(profitAmount.attr('data-original-amount')),
                     revenue = parseFloat(otherCosts.parent().find('.revenue').attr('data-original-amount')),
                     percentage = otherCosts.parent().find('.percentage');
 
@@ -251,16 +258,19 @@ Currency.init();
 
                 value = inputValue - originalValue;
                 totalCosts.text((totalCostsValue + value).toFixed(2));
-                profitAmont.text((profitAmontValue - value).toFixed(2));
-                var percentageAmount = parseInt((profitAmontValue - inputValue) / revenue * 100);
+                profitAmount.text((profitAmountValue - value).toFixed(2));
+                var percentageAmount = parseInt((profitAmountValue - inputValue) / revenue * 100);
                 if (isNaN(percentageAmount)) {
                     percentageAmount = 0;
                 }
                 percentage.text(percentageAmount + '%');
 
+                var updatedTotalCosts = totalCostsValue + value,
+                    updatedProfitValue = profitAmountValue - value;
+
                 otherCosts.attr('data-original-amount', inputValue.toFixed(2));
-                totalCosts.attr('data-original-amount', (totalCostsValue + value).toFixed(2));
-                profitAmont.attr('data-original-amount', (profitAmontValue - value).toFixed(2));
+                totalCosts.attr('data-original-amount', updatedTotalCosts.toFixed(2));
+                profitAmount.attr('data-original-amount', updatedProfitValue.toFixed(2));
 
                 ProfitDashboard.totalsProfitAmount -= value;
                 ProfitDashboard.totalsOtherCostsAmount += value;
@@ -269,22 +279,28 @@ Currency.init();
                 $('#totals-other-costs').text(Currency.format(ProfitDashboard.totalsOtherCostsAmount, true));
                 $('#totals-total-costs').text(Currency.format(ProfitDashboard.totalsTotalCostsAmount, true));
 
-                if (($(this).parents('tr').hasClass('empty') && inputValue != 0)) {
-                    $(this).parents('tr').removeClass('empty');
-                    ProfitDashboard.reloadExpandable();
-                    ProfitDashboard.fixStripes();
+                $(this).off('blur');
+
+                var profitWasEmpty = $(this).parents('.profit').hasClass('empty'),
+                    profitIsEmpty = updatedTotalCosts == 0 && updatedProfitValue == 0;
+
+                if (profitIsEmpty) {
+                    $(this).parents('.profit').addClass('empty');
+                } else {
+                    $(this).parents('.profit').removeClass('empty');
                 }
 
-                $(this).off('blur');
-                if (!$(this).parents('tr').hasClass('empty') && inputValue == 0) {
-                    $(this).one('blur', function() {
-                        $(this).parents('tr').addClass('empty');
-                        ProfitDashboard.reloadExpandable();
-                        ProfitDashboard.fixStripes();
-                    });
+                if (profitIsEmpty != profitWasEmpty) {
+                    ProfitDashboard.attachReloadExpandanble($(this));
                 }
 
                 ProfitDashboard.saveOtherCost($(this), inputValue, value);
+            });
+        },
+        attachReloadExpandanble: function(totalCostsInput) {
+            totalCostsInput.one('blur', function() {
+                ProfitDashboard.reloadExpandable();
+                ProfitDashboard.fixStripes();
             });
         },
         saveOtherCost: function(otherCostsInput, amount) {
@@ -309,7 +325,7 @@ Currency.init();
                         form.find('.loading').removeClass('hidden');
                     },
                     success: function (data) {
-                        if (!data.status == 'ok') {
+                        if (data.status != 'ok') {
                             displayAjaxError('Other Costs save', data);
                         }
                     },
@@ -323,7 +339,7 @@ Currency.init();
             }, 2000);
         },
         loadChartsData: function() {
-            var results = {revenue: [], fulfillment_cost: [], ads_spend: [], other_costs: [], total_costs: []},
+            var results = {revenue: [], fulfillment_cost: [], ads_spend: [], other_costs: [], total_costs: [], fulfillments_count: []},
                 activeGraphViewCssClass = '.' + this.chartTime;
 
             if (this.chartTime == 'daily') {
@@ -337,6 +353,7 @@ Currency.init();
                     results.fulfillment_cost.push(+profit.fulfillment_cost.toFixed(2));
                     results.ads_spend.push(+profit.ad_spend.toFixed(2));
                     results.other_costs.push(+profit.other_costs.toFixed(2));
+                    results.fulfillments_count.push(+profit.fulfillments_count);
                     var total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
                     results.total_costs.push(+total_costs.toFixed(2));
                 }
@@ -348,6 +365,7 @@ Currency.init();
                 results.fulfillment_cost[position] = 0.0;
                 results.ads_spend[position] = 0.0;
                 results.other_costs[position] = 0.0;
+                results.fulfillments_count[position] = 0;
                 results.total_costs[position] = 0.0;
                 for (var iLength = this.profitsData.length, i = 0; i <= iLength; i++) {
                     var profit = this.profitsData[i];
@@ -364,6 +382,7 @@ Currency.init();
                         results.fulfillment_cost[position] = 0.0;
                         results.ads_spend[position] = 0.0;
                         results.other_costs[position] = 0.0;
+                        results.fulfillments_count[position] = 0;
                         results.total_costs[position] = 0.0;
                     }
 
@@ -372,10 +391,11 @@ Currency.init();
                     results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.fulfillment_cost).toFixed(2);
                     results.ads_spend[position] = +(results.ads_spend[position] + profit.ad_spend).toFixed(2);
                     results.other_costs[position] = +(results.other_costs[position] + profit.other_costs).toFixed(2);
+                    results.fulfillments_count[position] = +(results.fulfillments_count[position] + profit.fulfillments_count).toFixed(2);
                     results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                 }
             } else if (this.chartTime == 'monthly') {
-                var lastDate = ''
+                var lastDate = '',
                     position = -1;
 
                 for (var iLength = this.profitsData.length, i = 0; i <= iLength; i++) {
@@ -393,12 +413,15 @@ Currency.init();
                         results.fulfillment_cost[position] = +profit.fulfillment_cost.toFixed(2);
                         results.ads_spend[position] = +profit.ad_spend.toFixed(2);
                         results.other_costs[position] = +profit.other_costs.toFixed(2);
+                        results.fulfillments_count[position] = +profit.fulfillments_count;
                         results.total_costs[position] = +total_costs.toFixed(2);
+
                     } else {
                         results.revenue[position] = +(results.revenue[position] + profit.revenue).toFixed(2);
                         results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.fulfillment_cost).toFixed(2);
                         results.ads_spend[position] = +(results.ads_spend[position] + profit.ad_spend).toFixed(2);
                         results.other_costs[position] = +(results.other_costs[position] + profit.other_costs).toFixed(2);
+                        results.fulfillments_count[position] = +(results.fulfillments_count[position] + profit.fulfillments_count);
                         results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                     }
                 }
@@ -495,11 +518,24 @@ Currency.init();
                     hover: {mode: 'nearest', intersect: true},
                     scales: {
                         yAxes: [{
+                            id: 'currency',
                             ticks: {
                                 beginAtZero: true,
                                 callback: function(value, index, values) {
                                     return Currency.format(value);
                                 }
+                            }
+                        }, {
+                            id: 'number',
+                            position: 'right',
+                            display: false,
+                            gridLines: {
+                                display: false
+                            },
+                            ticks: {
+                                min: 0,
+                                fontColor: "rgba(147, 198, 126, 0.5)",
+                                backgroundColor: "rgba(147, 198, 126, 0.7)"
                             }
                         }]
                     }
@@ -547,23 +583,36 @@ Currency.init();
 
                 var label = $(this).attr('data-label'),
                     dataKey = $(this).attr('data-key'),
+                    dataYAxes = $(this).attr('data-y-axes'),
                     addDataset = !$(this).hasClass('active');
 
                 if (addDataset) {
                     $(this).addClass('active');
 
-                    ProfitDashboard.profitChartData.datasets.push(
-                        {
-                            label: label,
-                            fill: false,
-                            backgroundColor: 'rgba(248, 172, 89, 0.5)',
-                            borderColor: "rgba(248, 172, 89, 0.7)",
-                            dataKey: dataKey,
-                            data: ProfitDashboard.chartsData[dataKey]
-                        }
-                    );
+                    var dataset = {
+                        label: label,
+                        fill: false,
+                        backgroundColor: 'rgba(248, 172, 89, 0.5)',
+                        borderColor: "rgba(248, 172, 89, 0.7)",
+                        dataKey: dataKey,
+                        data: ProfitDashboard.chartsData[dataKey]
+                    };
+
+                    if (dataYAxes == 'number') {
+                        dataset['yAxisID'] = 'number';
+                        ProfitDashboard.profitChart.options.scales.yAxes[1].display = true;
+                        ProfitDashboard.profitChart.options.scales.yAxes[1].ticks.suggestedMax = Math.max.apply(null, dataset.data) + 1;
+                        dataset.borderColor = ProfitDashboard.profitChart.options.scales.yAxes[1].ticks.fontColor;
+                        dataset.backgroundColor = ProfitDashboard.profitChart.options.scales.yAxes[1].ticks.backgroundColor;
+                    }
+
+                    ProfitDashboard.profitChartData.datasets.push(dataset);
                 } else {
                     $(this).removeClass('active');
+
+                    if (dataYAxes == 'number' && $('#tab-charts .toggle-data.active[data-y-axes="number"]').length == 0) {
+                        ProfitDashboard.profitChart.options.scales.yAxes[1].display = false;
+                    }
 
                     ProfitDashboard.profitChartData.datasets = $.map(ProfitDashboard.profitChartData.datasets, function(dataset) {
                         if (dataset.dataKey != dataKey) {
