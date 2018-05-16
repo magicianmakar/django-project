@@ -578,6 +578,34 @@ $('#duplicate-btn').click(function (e) {
     });
 });
 
+$('#randomize-images-btn').click(function (e) {
+    e.preventDefault();
+
+    var product_id = $(this).attr('product-id');
+
+    $(this).bootstrapBtn('loading');
+
+    PusherSubscription.productRandomizeImageNames();
+
+    $.ajax({
+        url: '/api/product-randomize-image-names',
+        type: 'POST',
+        data: {
+            product: product_id
+        },
+        context: {btn: $(this)},
+        success: function (data) {
+            $('#modal-shopify-image-randomize .progress-bar-success').css('width', '0%');
+            $('#modal-shopify-image-randomize .progress-bar-danger').css('width', '0%');
+            $('#modal-shopify-image-randomize').modal({ backdrop: 'static', keyboard: false });
+        },
+        error: function (data) {
+            this.btn.bootstrapBtn('reset');
+            displayAjaxError('Randomizing Images URLs', data);
+        }
+    });
+});
+
 function matchImagesWithExtra(parent) {
     if (typeof parent === "undefined") {
         parent = "modal-add-image";
@@ -1487,7 +1515,46 @@ var PusherSubscription = {
                 }
             }
         });
-    }
+    },
+    productRandomizeImageNames: function() {
+        this.init();
+
+        window.channel.bind('product-randomize-image-names', function(data) {
+            if (data.product == config.product_id) {
+                if (data.success + data.fail >= data.total) {
+                    // Completed
+                    $('#randomize-images-btn').bootstrapBtn('reset');
+                    $('#modal-shopify-image-randomize').modal('hide');
+                    toastr.success('Done','Randomizing Images URLs');
+                }
+                if (data.total > 0) {
+                    $('#modal-shopify-image-randomize .progress-bar-success').css('width', ((data.success * 100.0) / data.total) + '%');
+                    $('#modal-shopify-image-randomize .progress-bar-danger').css('width', ((data.fail * 100.0) / data.total) + '%');
+                }
+                if (data.error) {
+                    $('#modal-shopify-image-randomize .error').html(data.error);
+                }
+                if (data.image) {
+                    // Update image variables with new image url
+                    var old_src;
+                    $.each(config.shopify_images, function (i, img) {
+                        if (img.id == data.image.old_id) {
+                            old_src = img.src;
+                            config.shopify_images[i] = data.image.image;
+                        }
+                    });
+                    $.each(product.images, function (i, src) {
+                        if (src == old_src) {
+                            product.images[i] = data.image.image.src;
+                        }
+                    });
+                    if (data.variants_images) {
+                        product.variants_images = data.variants_images;
+                    }
+                }
+            }
+        });
+    },
 };
 
 (function() {

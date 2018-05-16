@@ -356,6 +356,12 @@
 
                         <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
 
+                        {% if shopify_product %}
+                        <li><a id="randomize-images-btn" href="#" product-id="{{product.id}}" target="_blank">
+                            <i class="fa fa-random"></i> Randomize Images URLs</a>
+                        </li>
+                        {% endif %}
+
                         <li><a id="btn-split-variants" product-id="{{product.id}}" shopify-id="{{product.qelem.get_shopify_id}}"
                                type="button" target="_blank" class="itooltip" title="Split Variants into Separate Products"
                                data-placement="right">
@@ -892,6 +898,8 @@
         </div>
     </div>
 </div>
+
+{% include 'partial/shopify_image_randomize_modal.html' %}
 
 {% endblock %}
 

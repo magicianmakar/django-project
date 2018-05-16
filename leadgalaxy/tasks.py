@@ -30,6 +30,8 @@ from leadgalaxy.models import *
 from leadgalaxy import utils
 from leadgalaxy.statuspage import record_import_metric
 
+from shopified_core.utils import update_product_data_images
+
 from shopify_orders import utils as order_utils
 
 from product_alerts.models import ProductChange
@@ -160,6 +162,12 @@ def export_product(req_data, target, user_id):
                                     api_data['product']['variants'][idx]['inventory_quantity'] = variant_quantity['availabe_qty']
                 except:
                     raven_client.captureException(level='warning')
+
+                if user.get_config('randomize_image_names') and api_data['product'].get('images'):
+                    for i, image in enumerate(api_data['product']['images']):
+                        if image.get('src') and not image.get('filename'):
+                            path, ext = os.path.splitext(image.get('src'))
+                            api_data['product']['images'][i]['filename'] = '{}{}'.format(utils.random_hash(), ext)
 
                 r = requests.post(endpoint, json=api_data)
 
@@ -1132,3 +1140,69 @@ def product_price_trends(self, store_id, product_variants):
             'task': self.request.id,
             'trends': trends,
         })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def product_randomize_image_names(self, product_id):
+    data = {
+        'task': self.request.id,
+        'product': product_id,
+        'total': 0,
+        'success': 0,
+        'fail': 0,
+        'error': '',
+    }
+
+    product = ShopifyProduct.objects.get(id=product_id)
+    store = product.store
+    shopify_id = product.shopify_id
+
+    images = []
+    try:
+        # Get shopify product images
+        rep = requests.get(
+            url=store.get_link('/admin/products/{}/images.json'.format(shopify_id), api=True)
+        )
+        rep.raise_for_status()
+        images = rep.json()['images']
+        data['total'] = len(images)
+    except:
+        data['error'] = 'Shopify API Error'
+
+    if data['total'] == 0:
+        store.pusher_trigger('product-randomize-image-names', data)
+        return
+
+    for image in images:
+        try:
+            data['image'] = None
+            data['variants_images'] = None
+            image_id = image.pop('id')
+
+            # Post a shopify product image with new filename
+            path, ext = os.path.splitext(image['src'])
+            image['filename'] = '{}{}'.format(utils.random_hash(), ext)
+            rep = requests.post(
+                store.get_link('/admin/products/{}/images.json'.format(shopify_id), api=True),
+                json={'image': image}
+            )
+            rep.raise_for_status()
+
+            # Push image data with old image id
+            new_image = rep.json()
+            data['image'] = new_image
+            data['image']['old_id'] = image_id
+            update_product_data_images(product, image['src'], new_image['image']['src'])
+            data['variants_images'] = product.parsed.get('variants_images') or {}
+
+            # Delete a original shopify product image
+            rep = requests.delete(
+                store.get_link('/admin/products/{}/images/{}.json'.format(shopify_id, image_id), api=True),
+            )
+            rep.raise_for_status()
+            data['success'] += 1
+        except:
+            data['fail'] += 1
+            data['error'] = 'Shopify API Error'
+
+        store.pusher_trigger('product-randomize-image-names', data)

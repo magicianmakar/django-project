@@ -316,6 +316,20 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
+                                    <label for="randomize_image_names" class="col-sm-4 col-xs-8 control-label">
+                                        Randomize Images file names when importing products
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="randomize_image_names"
+                                               name="randomize_image_names"{% if config.randomize_image_names %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
                                     <label class="col-sm-4 col-xs-8 control-label">
                                         <a class="edit-custom-templates-btn" href="#">Custom Product Descriptions...</a>
                                     </label>

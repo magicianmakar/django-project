@@ -892,6 +892,13 @@ class ShopifyProduct(models.Model):
             return {}
 
     @property
+    def parsed(self):
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
+
+    @property
     def is_connected(self):
         return bool(self.get_shopify_id())
 

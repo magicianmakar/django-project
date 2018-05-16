@@ -1246,6 +1246,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             }
         })
 
+    def post_product_randomize_image_names(self, request, user, data):
+        product = ShopifyProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+        task = tasks.product_randomize_image_names.apply_async(args=[product.id], expires=120)
+        return self.api_success({'id': str(task.id)})
+
     def post_product_split_variants(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         split_factor = data.get('split_factor')
@@ -1490,6 +1496,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'sync_delay_notify_email',
                 'sync_delay_notify_push',
                 'sync_delay_notify_highlight',
+                'randomize_image_names'
             ]
 
         for key in data:

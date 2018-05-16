@@ -8,6 +8,7 @@ exclude =
     app/data,
     app/static,
     app/templates,
+    node_modules,
     migrations,
     tests,
     tests.py,
