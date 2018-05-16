@@ -29,6 +29,7 @@ from shopified_core.utils import (
     orders_update_limit,
     order_phone_number
 )
+from product_alerts.utils import unmonitor_store
 
 import tasks
 import utils
@@ -733,6 +734,9 @@ class CHQStoreApi(ApiResponseMixin, View):
 
             store.is_active = False
             store.save()
+
+            unmonitor_store(store)
+
             return self.api_success()
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Store not found.', status=404)

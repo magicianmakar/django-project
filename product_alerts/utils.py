@@ -18,6 +18,30 @@ def aliexpress_variants(product_id):
     return rep.json()
 
 
+def reset_product_monitor(store):
+    if store.__class__.__name__ == 'ShopifyStore' and store.shopifyproduct_set.count() < 2000:
+        store.shopifyproduct_set.filter(monitor_id__gt=0).update(monitor_id=0)
+    elif store.__class__.__name__ == 'CommerceHQStore' and store.products.count() < 2000:
+        store.products.filter(monitor_id__gt=0).update(monitor_id=0)
+
+
+def unmonitor_store(store):
+    if store.__class__.__name__ == 'ShopifyStore':
+        dropified_type = 'shopify'
+    elif store.__class__.__name__ == 'CommerceHQStore':
+        dropified_type = 'chq'
+
+    rep = requests.delete(
+        url='{}/products'.format(PRICE_MONITOR_BASE),
+        params={'dropified_type': dropified_type, 'store': store.id},
+        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+    )
+
+    rep.raise_for_status()
+
+    reset_product_monitor(store)
+
+
 def monitor_product(product, stdout=None):
     """
     product_id: Source Product ID (ex. Aliexpress ID)

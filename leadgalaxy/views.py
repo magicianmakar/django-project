@@ -717,11 +717,15 @@ def webhook(request, provider, option):
                     return JsonResponse({'status': 'ok'})
 
             elif topic == 'app/uninstalled':
+                from product_alerts.utils import unmonitor_store
+
                 store.is_active = False
                 store.uninstalled_at = timezone.now()
                 store.save()
 
                 utils.detach_webhooks(store, delete_too=True)
+
+                unmonitor_store(store)
 
                 return JsonResponse({'status': 'ok'})
             else:

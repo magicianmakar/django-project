@@ -48,7 +48,7 @@ from shopify_orders.models import (
 from dropwow_core.models import DropwowAccount
 from dropwow_core.utils import get_dropwow_product_options
 from product_alerts.models import ProductChange
-from product_alerts.utils import monitor_product
+from product_alerts.utils import monitor_product, unmonitor_store
 
 import tasks
 import utils
@@ -162,6 +162,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     raise
         else:
             utils.detach_webhooks(store, delete_too=True)
+
+        unmonitor_store(store)
 
         stores = []
         for i in user.profile.get_shopify_stores():
