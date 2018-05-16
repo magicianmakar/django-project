@@ -211,7 +211,7 @@ def get_mimetype(url, default=None):
     return content_type if content_type else default
 
 
-def send_email_from_template(tpl, subject, recipient, data, nl2br=True, from_email=None):
+def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_email=None):
     template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
     template = Template(open(template_file).read())
 
@@ -219,7 +219,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=True, from_ema
 
     email_html = template.render(ctx)
 
-    if nl2br:
+    if nl2br and '<head' not in email_html and '<body' not in email_html:
         email_plain = email_html
         email_html = email_html.replace('\n', '<br />')
     else:
@@ -290,8 +290,7 @@ def unlock_account_email(username):
         data={
             'username': user.get_first_name(),
             'unlock_link': app_link(reverse('user_unlock', kwargs={'token': unlock_token}))
-        },
-        nl2br=False
+        }
     )
 
     cache.set('unlock_email_{}'.format(hash_text(username.lower())), True, timeout=660)

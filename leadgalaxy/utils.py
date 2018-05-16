@@ -277,7 +277,6 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             tpl='register_credentials.html',
             subject='Your Dropified Account',
             recipient=email,
-            nl2br=False,
             data={
                 'user': user,
                 'password': password

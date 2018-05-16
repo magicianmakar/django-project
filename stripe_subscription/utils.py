@@ -292,8 +292,7 @@ def process_webhook_event(request, event_id, raven_client):
                     'amount': '${:0.2f}'.format(invoice.total / 100.),
                     'event_id': event.id.split('_').pop(),
                     'invoice_id': invoice.id.split('_').pop(),
-                },
-                nl2br=False
+                }
             )
 
             return HttpResponse('Email Notification Sent')

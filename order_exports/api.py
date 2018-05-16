@@ -378,8 +378,7 @@ class ShopifyOrderExportAPI():
             tpl='order_export.html',
             subject='[Dropified] Order Export',
             recipient=self.order_export.emails,
-            data=data,
-            nl2br=False
+            data=data
         )
 
     def save_generated_export_order_ids(self):
@@ -518,6 +517,5 @@ class ShopifyTrackOrderExport():
             tpl='tracked_order_export.html',
             subject='[Dropified] Aliexpress IDs & Tracking Numbers Export',
             recipient=self.user.email,
-            data=data,
-            nl2br=False
+            data=data
         )

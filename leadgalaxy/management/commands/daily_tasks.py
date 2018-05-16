@@ -46,5 +46,4 @@ class Command(DropifiedBaseCommand):
             tpl='expire_plan_change.html',
             subject='[Dropified] Plan Expire',
             recipient=['ma7dev@gmail.com', 'chase@dropified.com'],
-            data=data,
-            nl2br=False)
+            data=data)

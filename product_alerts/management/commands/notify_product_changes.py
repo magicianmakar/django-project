@@ -107,7 +107,6 @@ class Command(DropifiedBaseCommand):
                 '[Dropified] AliExpress Product Alert',
                 recipient_list,
                 data,
-                nl2br=False,
                 from_email='"Dropified" <no-reply@dropified.com>'
             )
 

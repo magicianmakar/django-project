@@ -1,4 +1,20 @@
-Hello {{firstname|title}}, Welcome to Dropified!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hello {{firstname|title}}, Welcome to Dropified!</p>
 
-Please follow this link to create your profile on Dropified:
-<a href="https://app.dropified.com/accounts/register/{{reg_hash}}">Click Here</a>
+    <p>Please follow this link to create your profile on Dropified:<br>
+        <a href="{{ url }}">Click Here To Download</a></p>
+
+    <p>
+        The Dropified Team
+        <br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a>
+    </p>
+</body>
+</html>

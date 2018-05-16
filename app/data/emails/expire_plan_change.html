@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
+    {% include "partial/email/css.html" %}
 </head>
 <body>
     <p>
@@ -13,6 +14,12 @@
         <b>{{ expired_plan.title }}</b>
         to
         <b>{{ new_plan.title }}</b>
+    </p>
+
+    <p>
+        The Dropified Team
+        <br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a>
     </p>
 </body>
 </html>

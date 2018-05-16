@@ -1,12 +1,23 @@
-Hi {{firstname|title}},
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hello {{firstname|title}},</p>
 
-Thanks for purchasing the <b>{{bundle_title}}</b>!
+    <p>Thanks for purchasing the <b>{{bundle_title}}</b>!</p>
 
-Your new features are waiting for you inside of Dropified.
+    <p>Your new features are waiting for you inside of Dropified.<br>
+        <a href="https://app.dropified.com">Go To Dropified</a>
+    </p>
 
-<a href="https://app.dropified.com">Go To Dropified</a>
-
-Enjoy
-
-The Dropified Team
-<a href="mailto:support@dropified.com">support@dropified.com</a>
+    <p>
+        The Dropified Team
+        <br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a>
+    </p>
+</body>
+</html>

@@ -57,8 +57,7 @@ class Command(DropifiedBaseCommand):
                         data={
                             'url': tracking_page_url,
                             'count': delayed_orders_count,
-                        },
-                        nl2br=False
+                        }
                     )
 
                     self.write_success(u'Notified {} orders to {}'.format(delayed_orders_count, user.email))

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
+    {% include "partial/email/css.html" %}
 </head>
 <body>
     <p>Hi,</p>
@@ -10,5 +11,11 @@
     <p>Your AliExpress Order IDs and Tracking Numbers have finished exporting and are ready to download.</p>
 
     <p><a href="{{ url }}">Click Here To Download</a></p>
+
+    <p>
+        The Dropified Team
+        <br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a>
+    </p>
 </body>
 </html>

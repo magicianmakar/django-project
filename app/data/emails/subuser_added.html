@@ -1,5 +1,22 @@
-Hello,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hello,</p>
 
-You are now a Dropified sub user of {{sender.email|urlize}}.
-Please follow this link to login to your account:
-<a href="https://app.dropified.com/">Click Here</a>
+    <p>You are now a Dropified Sub User of {{sender.email|urlize}}<br>
+        Please follow this link to login to your account:<br>
+        <a href="https://app.dropified.com/">Click Here</a>
+    </p>
+
+    <p>
+        The Dropified Team
+        <br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a>
+    </p>
+</body>
+</html>
