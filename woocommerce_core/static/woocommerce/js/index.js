@@ -101,4 +101,27 @@ $(document).ready(function() {
             });
         });
     });
+
+    $('.verify-api-url').click(function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('store-verify', 'woo'),
+            type: 'GET',
+            data: {
+                store: $(this).data('store-id')
+            },
+            context: {
+                btn: $(this)
+            },
+            success: function (data) {
+                swal('API URL', 'The API URL is working properly for WooCommerce Store:\n' + data.store, 'success');
+            },
+            error: function (data) {
+                displayAjaxError('API URL', data);
+            },
+            complete: function () {
+            }
+        });
+    });
 });

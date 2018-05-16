@@ -254,6 +254,29 @@ class WooStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def get_store_verify(self, request, user, data):
+        try:
+            store = WooStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except WooStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        rep = None
+        try:
+            rep = store.wcapi.get('products?page=1&per_page=1')
+            rep.raise_for_status()
+
+            return self.api_success({'store': store.get_store_url()})
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
+            return self.api_error('Connection to your store is not successful at:\n{}'.format(store.get_store_url()))
+
+        except IndexError:
+            return self.api_error('Your Store link is not correct:\n{}'.format(store.api_url))
+        except:
+            return self.api_error('API credetnails is not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
+
     def post_product_save(self, request, user, data):
         store_id = safeInt(data.get('store'))
         if store_id:
