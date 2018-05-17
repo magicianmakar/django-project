@@ -363,9 +363,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         })
 
     except Exception as e:
-        raven_client.captureException(extra={
-            'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
-        })
+        raven_client.captureException(extra=utils.http_exception_response(e))
 
         store.pusher_trigger('product-export', {
             'success': False,
@@ -479,9 +477,7 @@ def product_update(product_id, data):
         })
 
     except Exception as e:
-        raven_client.captureException(extra={
-            'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
-        })
+        raven_client.captureException(extra=utils.http_exception_response(e))
 
         store.pusher_trigger('product-update', {
             'success': False,
@@ -546,13 +542,7 @@ def order_save_changes(self, data):
         })
 
     except Exception as e:
-        response = ''
-        if hasattr(e, 'response') and hasattr(e.response, 'text'):
-            response = e.response.text
-
-        raven_client.captureException(
-            extra={'response': response}
-        )
+        raven_client.captureException(extra=utils.http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

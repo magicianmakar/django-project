@@ -18,7 +18,7 @@ from django.core.cache import cache, caches
 from django.utils import timezone
 
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params
+from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params, http_exception_response
 from shopified_core.shipping_helper import (
     load_uk_provincess,
     country_from_code,
@@ -101,10 +101,7 @@ def woocommerce_products(request, post_per_page=25, sort=None, board=None, store
 
 
 def format_woo_errors(e):
-    if not hasattr(e, 'response'):
-        return 'Server Error'
-
-    return e.response.json().get('message', '')
+    return http_exception_response(e, json=True).get('message', '')
 
 
 def update_product_api_data(api_data, data, store):

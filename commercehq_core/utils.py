@@ -14,7 +14,14 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
-from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params
+from shopified_core.utils import (
+    safeInt,
+    safeFloat,
+    hash_url_filename,
+    decode_params,
+    http_exception_response,
+    http_excption_status_code
+)
 from shopified_core.shipping_helper import (
     get_uk_province,
     valide_aliexpress_province,
@@ -462,16 +469,17 @@ def order_id_from_name(store, order_name, default=None):
 
 
 def format_chq_errors(e):
-    if not hasattr(e, 'response') or not hasattr(e.response, 'status_code') or e.response.status_code != 422:
+    response = http_exception_response(e, json=True)
+    if not response or http_excption_status_code(e) != 422:
         return 'Server Error'
 
     msg = []
-    errors_list = e.response.json()
+    errors_list = response
     if type(errors_list) is not list:
         errors_list = [errors_list]
 
     for errors in errors_list:
-        errors = errors.get('errors') or e.response.json().get('message')
+        errors = errors.get('errors') or response.get('message')
 
         if not errors:
             msg.append('Server Error')
@@ -930,9 +938,7 @@ def order_track_fulfillment(order_track, user_config=None):
             if not rep.ok and 'Warehouse ID' in rep.text:
                 raise
 
-            raven_client.captureException(level='warning', extra={
-                'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
-            })
+            raven_client.captureException(level='warning', extra=http_exception_response(e))
 
     try:
         last_shipment = (total_quantity - total_shipped - quantity) == 0

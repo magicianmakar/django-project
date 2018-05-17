@@ -21,7 +21,7 @@ from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, http_exception_response, http_excption_status_code
 from shopified_core.paginators import SimplePaginator
 
 from unidecode import unidecode
@@ -545,9 +545,8 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
         raven_client.captureException()
 
     except Exception as e:
-        if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
-            if e.response.status_code in [401, 402, 403, 404]:
-                return
+        if http_excption_status_code(e) in [401, 402, 403, 404]:
+            return
 
         raven_client.captureException(level='warning', extra={
             'Store': store_id,
@@ -825,13 +824,7 @@ def order_save_changes(self, data):
         updater.save_changes()
 
     except Exception as e:
-        response = ''
-        if hasattr(e, 'response') and hasattr(e.response, 'text'):
-            response = e.response.text
-
-        raven_client.captureException(
-            extra={'response': response}
-        )
+        raven_client.captureException(extra=http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

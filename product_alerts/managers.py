@@ -3,7 +3,7 @@ import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import app_link, safeFloat
+from shopified_core.utils import app_link, safeFloat, http_exception_response, http_excption_status_code
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index
 from product_alerts.models import ProductVariantPriceHistory
@@ -340,7 +340,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
             r.raise_for_status()
 
         except Exception as e:
-            if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code not in [401, 402, 403, 404]:
+            if http_excption_status_code(e) not in [401, 402, 403, 404]:
                 raven_client.captureException(extra={
                     'rep': r.text,
                     'data': product_data,
@@ -349,9 +349,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     'store': self.product.store,
                 })
             else:
-                raven_client.captureException(extra={
-                    'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
-                })
+                raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
         history, created = ProductVariantPriceHistory.objects.get_or_create(
@@ -442,7 +440,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             self.product.update_data(product_data)
 
         except Exception as e:
-            if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code not in [401, 402, 403, 404]:
+            if http_excption_status_code(e) not in [401, 402, 403, 404]:
                 raven_client.captureMessage(extra={
                     'rep': r.text,
                     'data': product_data,
@@ -451,9 +449,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                     'store': self.product.store,
                 })
             else:
-                raven_client.captureException(extra={
-                    'response': e.response.text if hasattr(e, 'response') and hasattr(e.response, 'text') else ''
-                })
+                raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
         history, created = ProductVariantPriceHistory.objects.get_or_create(

@@ -45,6 +45,7 @@ from shopified_core.utils import (
     send_email_from_template,
     hash_url_filename,
     encode_params,
+    http_exception_response,
     extension_hash_text
 )
 
@@ -546,13 +547,9 @@ def wicked_report_add_user(request, user):
             user.profile.save()
 
     except Exception as e:
-        response = ''
-        if hasattr(e, 'response') and hasattr(e.response, 'text'):
-            response = e.response.text
-
         raven_client.captureException(
             level='warning',
-            extra={'response': response}
+            extra=http_exception_response(e)
         )
 
 

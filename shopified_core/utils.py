@@ -513,3 +513,27 @@ def execute_once_in(unique_ids, seconds):
         return wraps(func)(inner_decorator)
 
     return decorator
+
+
+def http_exception_response(e, json=False, extra=True):
+    try:
+        if json:
+            return e.response.json()
+        elif extra:
+            return {'response': e.response.text}
+        else:
+            return e.response.text
+    except:
+        if json:
+            return {}
+        elif extra:
+            return {'response': ''}
+        else:
+            return ''
+
+
+def http_excption_status_code(e):
+    try:
+        return e.response.status_code
+    except:
+        return -1
