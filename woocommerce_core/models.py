@@ -65,7 +65,7 @@ class WooStore(models.Model):
             version='wc/v2',
             verify_ssl=False,
             query_string_auth=True,
-            timeout=15)
+            timeout=30)
 
     def save(self, *args, **kwargs):
         if not self.store_hash:

@@ -3,6 +3,7 @@ import json
 import itertools
 import urllib
 import arrow
+import requests
 
 from math import ceil
 from measurement.measures import Weight
@@ -101,7 +102,12 @@ def woocommerce_products(request, post_per_page=25, sort=None, board=None, store
 
 
 def format_woo_errors(e):
-    return http_exception_response(e, json=True).get('message', '')
+    if isinstance(e, requests.exceptions.ConnectionError) or \
+            isinstance(e, requests.exceptions.ConnectTimeout) or \
+            isinstance(e, requests.exceptions.ReadTimeout):
+        return 'Error when connecting to your WooCommerce Store'
+    else:
+        return http_exception_response(e, json=True).get('message', 'Server Error')
 
 
 def update_product_api_data(api_data, data, store):

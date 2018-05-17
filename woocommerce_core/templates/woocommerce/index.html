@@ -28,17 +28,17 @@
                             <tr id="store-row-{{store.id}}" class="store-store" >
                                 <td class="drag-show">
                                     <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
-                                    <a href="">{{store.title|default:store.api_url}}</a>
+                                    <a href="{% url 'woo:products_list' %}?store={{store.id}}">{{store.title|default:store.api_url}}</a>
                                 </td>
                                 <td class="hidden-xs" style="white-space:nowrap">
                                     {% with connected=store.connected_count saved=store.saved_count %}
                                     {% if connected or saved %}
                                         {% if saved %}
-                                            <a href="" class="label "><span class="num">{{saved}}</span> Saved</a>
+                                            <a href="{% url 'woo:products_list' %}?store=n&in={{store.id}}" class="label "><span class="num">{{saved}}</span> Saved</a>
                                         {% endif %}
 
                                         {% if connected %}
-                                            <a href="" class="label "><span class="num">{{connected}}</span> Connected</a>
+                                            <a href="{% url 'woo:products_list' %}?store={{store.id}}" class="label "><span class="num">{{connected}}</span> Connected</a>
                                         {% endif %}
                                     {% endif %}
                                     {% endwith %}
