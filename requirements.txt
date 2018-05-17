@@ -55,7 +55,7 @@ mock==2.0.0
 munch==2.0.4
 MySQL-python==1.2.5
 ndg-httpsclient==0.4.1
-newrelic==3.2.0.91
+newrelic==3.2.1.93
 oauth2client==4.1.2
 oauthlib==1.1.2
 ordereddict==1.1
@@ -75,7 +75,7 @@ python-dateutil==2.5.3
 pytz==2016.7
 PyYAML==3.12
 queuelib==1.4.2
-raven==6.7.0
+raven==6.8.0
 redis==2.10.6
 reportlab==3.3.0
 requests==2.18.4
@@ -84,12 +84,12 @@ requests-oauthlib==0.6.2
 rsa==3.4.2
 service-identity==14.0.0
 ShopifyAPI==2.5.0
-simplejson==3.14.0
+simplejson==3.15.0
 six==1.10.0
 slimit==0.8.1
 SQLAlchemy==1.0.12
 sqlparse==0.2.1
-stripe==1.80.0
+stripe==1.82.1
 sympy==0.7.6.1
 tld==0.7.6
 tqdm==4.8.4
