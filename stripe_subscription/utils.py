@@ -354,6 +354,9 @@ def process_webhook_event(request, event_id, raven_client):
                     fullname = stripe_customer.sources.data[0].name
 
                 user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
+                if not created and not user:
+                    raven_client.captureMessage('Could Not Register or find the user', extra={'email': email})
+                    return HttpResponse('Could Not Register or find the user')
 
                 if created:
                     customer = update_customer(user, stripe_customer)[0]
@@ -361,7 +364,7 @@ def process_webhook_event(request, event_id, raven_client):
                     if sub.plan.metadata.get('lifetime'):
                         user.set_config('_stripe_lifetime', sub.plan.id)
                 else:
-                    if user.have_stripe_billing():
+                    if user and user.have_stripe_billing():
                         customer = user.stripe_customer
 
                         customer.customer_id = sub.customer
@@ -529,6 +532,9 @@ def process_webhook_event(request, event_id, raven_client):
                     fullname = stripe_customer.sources.data[0].name
 
                 user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
+                if not created and not user:
+                    raven_client.captureMessage('Could Not Register or find the user', extra={'email': email})
+                    return HttpResponse('Could Not Register or find the user')
 
                 if not created:
                     StripeCustomer.objects.filter(user=user).delete()

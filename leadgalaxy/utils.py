@@ -252,6 +252,10 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             first_name = fullname[0]
             last_name = u' '.join(fullname[1:])
 
+    if len(email) > 30:
+        # Email should be less than 30 chars
+        return None, False
+
     username = unique_username(email, fullname=fullname)
     password = get_random_string(12)
 
