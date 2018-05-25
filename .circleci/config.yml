@@ -57,8 +57,8 @@ jobs:
       - run: 
           name: Intall NodeJS
           command: |
-              sudo apt install npm
-              sudo ln -s /usr/bin/nodejs /usr/bin/node
+              curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+              sudo apt-get install -y nodejs
 
       - run: 
           name: Static Code Checks
