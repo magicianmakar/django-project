@@ -887,12 +887,12 @@ def webhook(request, provider, option):
             try:
                 from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
             except:
-                return HttpResponse(":x: 'From' user not found")
+                return HttpResponse(":x: {} user not found".format(options['from']))
 
             try:
                 to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
             except:
-                return HttpResponse(":x: 'To' user not found")
+                return HttpResponse(":x: {} user not found".format(options['to']))
 
             shop = re.findall('[^/@\.]+\.myshopify\.com', options['store'])
             if not shop:

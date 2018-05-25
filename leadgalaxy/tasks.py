@@ -1210,7 +1210,7 @@ def store_transfer(self, options):
         store = ShopifyStore.objects.get(id=options['store'], user=from_user, is_active=True)
 
         for old_store in ShopifyStore.objects.filter(shop=store.shop, user=to_user, is_active=True):
-            detach_webhooks(old_store, delete_too=True)
+            utils.detach_webhooks(old_store, delete_too=True)
 
             old_store.is_active = False
             old_store.save()
