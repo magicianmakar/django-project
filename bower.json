@@ -19,7 +19,7 @@
     "uuid-js": "^0.7.5",
     "dropzone": "^4.3.0",
     "jquery-form": "^3.46.0",
-    "select2": "^4.0.3",
+    "select2": "4.0.3",
     "bootstrap-datepicker": "^1.6.4",
     "animatedmodal": "*",
     "animate.css": "^3.5.2",
