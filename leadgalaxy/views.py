@@ -860,6 +860,74 @@ def webhook(request, provider, option):
 
         return JsonResponse({'status': 'ok'})
 
+    elif provider == 'slack' and option == 'command':
+        request_from = None
+        for user in User.objects.filter(is_staff=True):
+            if request.POST['user_id'] in user.get_config('_slack_id', ''):
+                request_from = user
+
+        if request.POST['command'] == '/store-transfer':
+            if not request_from:
+                return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
+
+            try:
+                text = re.split(' +', request.POST['text'])
+                options = {
+                    'store': text[0],
+                    'from': text[1],
+                    'to': text[2],
+                    'response_url': request.POST['response_url'],
+                }
+
+                print options
+
+            except:
+                return HttpResponse(":x: Invalid Command Format")
+
+            try:
+                from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
+            except:
+                return HttpResponse(":x: 'From' user not found")
+
+            try:
+                to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
+            except:
+                return HttpResponse(":x: 'To' user not found")
+
+            shop = re.findall('[^/@\.]+\.myshopify\.com', options['store'])
+            if not shop:
+                return HttpResponse(':x: Store link is invalid')
+            else:
+                shop = shop.pop()
+
+            try:
+                store = ShopifyStore.objects.get(shop=shop, user=from_user, is_active=True)
+                if store.shopifyproduct_set.count() > 10000 or \
+                        store.shopifyorder_set.count() > 10000 or \
+                        store.shopifyordertrack_set.count() > 10000:
+                    return HttpResponse(':x: Store {} have to many Products/Orders, store must be manually transfered'.format(shop))
+
+            except ShopifyStore.DoesNotExist:
+                return HttpResponse(':x: Store {} is not found on {} account'.format(shop, from_user.email))
+
+            if not ShopifyStore.objects.filter(shop=shop, user=to_user).count():
+                HttpResponse(':x: Store {} is not install on {} account'.format(shop, to_user.email))
+
+            AdminEvent.objects.create(
+                user=request_from,
+                target_user=from_user,
+                event_type='store_transfer',
+                data=json.dumps({'to': to_user.email, 'store': shop}))
+
+            options['store'] = store.id
+            options['shop'] = store.shop
+
+            tasks.store_transfer.delay(options)
+            return HttpResponse(':hourglass_flowing_sand: Transferring {shop} from {from} to {to} is in progress...'.format(**options))
+
+        else:
+            return HttpResponse(':x: Unknown Command')
+
     else:
         raven_client.captureMessage('Unknown Webhook Provider')
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status=500)

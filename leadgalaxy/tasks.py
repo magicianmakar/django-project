@@ -1199,3 +1199,37 @@ def product_randomize_image_names(self, product_id):
             data['error'] = 'Shopify API Error'
 
         store.pusher_trigger('product-randomize-image-names', data)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def store_transfer(self, options):
+    try:
+        from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
+        to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
+
+        store = ShopifyStore.objects.get(id=options['store'], user=from_user, is_active=True)
+
+        for old_store in ShopifyStore.objects.filter(shop=store.shop, user=to_user, is_active=True):
+            detach_webhooks(old_store, delete_too=True)
+
+            old_store.is_active = False
+            old_store.save()
+
+        store.user = to_user
+        store.save()
+
+        ShopifyProduct.objects.filter(store=store, user=from_user).update(user=to_user)
+        ShopifyOrderTrack.objects.filter(store=store, user=from_user).update(user=to_user)
+        ShopifyOrder.objects.filter(store=store, user=from_user).update(user=to_user)  # TODO: Elastic update
+        ShopifyBoard.objects.filter(user=from_user).update(user=to_user)
+
+        requests.post(
+            url=options['response_url'],
+            json={'text': ':heavy_check_mark: Store {} has been transferred to {} account'.format(store.shop, to_user.email)}
+        )
+    except:
+        raven_client.captureException()
+        requests.post(
+            url=options['response_url'],
+            json={'text': ':x: Server Error when transferring {} to {} account'.format(options['shop'], options['to'])}
+        )
