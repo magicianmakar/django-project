@@ -226,7 +226,7 @@ SHOPIFY_API_SECRET = os.environ['SHOPIFY_API_SECRET']
 SHOPIFY_API_SCOPE = u','.join([
     'write_apps', 'write_content', 'write_products', 'write_customers',
     'write_orders', 'write_fulfillments', 'write_shipping', 'read_analytics',
-    'write_inventory'
+    'write_inventory', 'read_locations'
 ])
 
 # Slack API
