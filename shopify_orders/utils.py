@@ -69,17 +69,26 @@ def sort_orders(orders, page):
     return resorted
 
 
-def sort_es_orders(orders, hits):
-    orders_map = {}
+def sort_es_orders(orders, hits, db_orders):
+    shopify_orders_map = {}
+    db_orders_map = {}
     resorted = []
 
     for i in orders:
-        orders_map[i['id']] = i
+        shopify_orders_map[i['id']] = i
+
+    for order in db_orders:
+        db_orders_map[order.order_id] = order
 
     for i in hits:
-        order = orders_map.get(i['_source']['order_id'])
+        # import pdb; pdb.set_trace()
+        order = shopify_orders_map.get(i['_source']['order_id'])
+        db_order = db_orders_map.get(i['_source']['order_id'])
+
         if order:
-            order['db_updated_at'] = arrow.get(i['_source']['updated_at']).timestamp
+            order['es_updated_at'] = arrow.get(i['_source']['updated_at']).timestamp
+            order['db_updated_at'] = arrow.get(db_order.updated_at).timestamp
+
             resorted.append(order)
 
     return resorted

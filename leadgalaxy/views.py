@@ -3058,17 +3058,21 @@ def orders_view(request):
 
             rep.raise_for_status()
             shopify_orders = rep.json()['orders']
+            db_orders = ShopifyOrder.objects.filter(id__in=[i['_id'] for i in hits]) \
+                                            .only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 
-            page = shopify_orders_utils.sort_es_orders(shopify_orders, hits)
-            _update_page = shopify_orders_utils.sort_es_orders(shopify_orders, hits)
+            page = shopify_orders_utils.sort_es_orders(shopify_orders, hits, db_orders)
 
             countdown = 1
-            for order in _update_page:
-                if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
+            for order in page:
+                shopify_update_at = arrow.get(order['updated_at']).timestamp
+                if shopify_update_at > order['db_updated_at'] or shopify_update_at > order['es_updated_at']:
+
                     tasks.update_shopify_order.apply_async(
                         args=[store.id, order['id']],
                         kwarg={'shopify_order': order, 'from_webhook': False},
-                        countdown=countdown)
+                        countdown=countdown,
+                        expires=1800)
 
                     countdown = countdown + 1
 
@@ -3233,11 +3237,12 @@ def orders_view(request):
             # Update outdated order data by comparing last update timestamp
             countdown = 1
             for order in page:
-                if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
+                if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
                     tasks.update_shopify_order.apply_async(
                         args=[store.id, order['id']],
                         kwarg={'shopify_order': order, 'from_webhook': False},
-                        countdown=countdown)
+                        countdown=countdown,
+                        expires=1800)
 
                     countdown = countdown + 1
         else:
