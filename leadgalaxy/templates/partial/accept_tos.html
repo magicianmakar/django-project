@@ -12,17 +12,61 @@
     <div class="modal-content text-center col-sm-12 col-md-8 col-md-offset-2">
         <img src="https://d2kadg5e284yn4.cloudfront.net/static/dropified-logo.png" style="margin-top:50px;width:300px">
 
-        <h1 style="margin-top:50px">Welcome to Dropified!</h1>
-        <h1 style="margin-top:20px">Before you continue, please read and agree to the
-            <a href="https://app.dropified.com/terms-of-service" style="font-weight:initial;" target="_blank">Terms &amp; Conditions</a>
-        </h1>
+        <div class="text-left">
+            <h1 class="col-md-offset-1" style="margin-top:50px">Welcome to Dropified!</h1>
 
-        <div class="row">
-            <div class="col-md-12">
-                <label forHtml="accept-tos">
-                    <input name="accept-tos" type="checkbox" class="icheck">
-                    I agree to the Terms & Conditions
-                </label>
+            <h1 class="col-md-offset-1" style="margin-top:20px">
+                Before you continue, please read and agree to the
+                <a href="https://app.dropified.com/terms-of-service" style="font-weight:initial;" target="_blank">Terms &amp; Conditions</a>
+            </h1>
+
+            <h2 class="col-md-offset-1" style="margin-top:20px">
+                Your personal information is used in accordance with the GDPR. For more information,
+                <a href="https://www.dropified.com/gdpr-compliance/" style="font-weight:initial;" target="_blank">click here.</a>
+            </h2>
+
+            <div id="must-accept" class="row">
+                <div class="col-md-offset-1 col-md-11">
+                    <label forHtml="accept-tos">
+                        <input name="accept-tos" type="checkbox" class="icheck">
+                        I have read these Terms & Conditions and I understand where I can find these Terms & Conditions to read them again.
+                    </label>
+                </div>
+
+                <div class="col-md-offset-1 col-md-11">
+                    <label forHtml="over-16">
+                        <input name="over-16" type="checkbox" class="icheck">
+                        I confirm that I am 16 years of age.
+                    </label>
+                </div>
+
+                <div class="col-md-offset-1 col-md-11">
+                    <label forHtml="knows-personal-info-mean">
+                        <input name="knows-personal-info-mean" type="checkbox" class="icheck">
+                        I understand what "Personal Info" means.
+                    </label>
+                </div>
+
+                <div class="col-md-offset-1 col-md-11">
+                    <label forHtml="permits-personal-data">
+                        <input name="permits-personal-data" type="checkbox" class="icheck">
+                        I understand that Dropified requires my name, email address, mailing address, billing information and other personal information in order to bill me.
+                    </label>
+                </div>
+
+                <div class="col-md-offset-1 col-md-11">
+                    <label forHtml="understand-rights">
+                        <input name="understand-rights" type="checkbox" class="icheck">
+                        I understand how I can:
+                        <ul style="list-style-type: lower-alpha;">
+                            <li>Make changes in specified personal data</li>
+                            <li>Complete request to view my personal data</li>
+                            <li>Request to restrict processing of my personal data</li>
+                            <li>Request to delete my personal data</li>
+                            <li>Report a violation of GDPR principles</li>
+                        </ul>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -55,22 +99,30 @@
                     $('#animatedModal .close-animatedModal').button('loading');
                 }
 
-                $('#animatedModal').css('background-color', '#93c47d');
-                $('#animatedModal').css('opacity', '0.9');
+                $('#animatedModal').css('background-color', 'rgba(147, 196, 125, 0.9)');
             },
             afterOpen: function () {
-                $('#animatedModal').css('background-color', '#93c47d');
-                $('#animatedModal').css('opacity', '0.9');
+                $('#animatedModal').css('background-color', 'rgba(147, 196, 125, 0.9)');
             }
         });
 
         $("#acceptTOSBtn").trigger('click');
 
-        $('input[name="accept-tos"]').on('ifToggled', function(e){
+        function canContinue() {
+            var acceptTos = $('[name="accept-tos"]').is(':checked'),
+                overAge = $('[name="over-16"]').is(':checked'),
+                knowsPersonalInfoMean = $('[name="knows-personal-info-mean"]').is(':checked'),
+                permitsPersonalData = $('[name="permits-personal-data"]').is(':checked'),
+                understandRights = $('[name="understand-rights"]').is(':checked');
+
+            return acceptTos && overAge && knowsPersonalInfoMean && permitsPersonalData && understandRights;
+        }
+
+        $('#must-accept input[type="checkbox"]').on('ifToggled', function(e){
             if($.fn.hasOwnProperty('bootstrapBtn')) {
-                $('#animatedModal .close-animatedModal').bootstrapBtn(e.target.checked ? 'reset' : 'loading');
+                $('#animatedModal .close-animatedModal').bootstrapBtn(canContinue() ? 'reset' : 'loading');
             } else {
-                $('#animatedModal .close-animatedModal').button(e.target.checked ? 'reset' : 'loading');
+                $('#animatedModal .close-animatedModal').button(canContinue() ? 'reset' : 'loading');
             }
         });
 

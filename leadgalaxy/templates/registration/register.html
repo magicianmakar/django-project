@@ -27,6 +27,15 @@
 
     {% include "partial/custom_tags.html" %}
 
+    <style type="text/css">
+        .middle-box.loginscreen {
+            margin-top: 10px;
+            margin-bottom: 110px;
+        }
+        #checklist .form-group.col-md-12 {
+            margin-bottom: 2px;
+        }
+    </style>
 </head>
 
 <body class="login-body gray-bg">
@@ -99,17 +108,63 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <div id="checklist" class="row text-left">
+                    <div class="col-md-12">
+                        <label>
+                            Your personal information is used in accordance with the GDPR. For more information,
+                            <a href="https://www.dropified.com/gdpr-compliance/" target="_blank">click here.</a>
+                        </label>
+                    </div>
                     <div class="form-group col-md-12">
-                        <label for="accept_terms">
+                        <label htmlFor="accept_terms">
                             {% render_field form.accept_terms required="" %}
                             I agree to the
                             <a href="{% app_link 'pages/terms-of-service' %}" target="_blank">
                                 Terms &amp; Conditions
                             </a>
+                            and I understand where I can find these Terms & Conditions to read them again.
                             {{ form.accept_terms.errors | safe }}
                             <label class="control-label text-left terms-error" style="color:#ed5565;display:none">
                                 You need to accept Terms &amp; Conditions
+                            </label>
+                        </label>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label htmlFor="over-16">
+                            <input name="over-16" type="checkbox" required>
+                            I confirm that I am 16 years of age.
+                        </label>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label htmlFor="knows-personal-info-mean">
+                            <input name="knows-personal-info-mean" type="checkbox" required>
+                            I understand what "Personal Info" means.
+                        </label>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label htmlFor="permits-personal-data">
+                            <input name="permits-personal-data" type="checkbox" required>
+                            I understand that Dropified requires my name, email address, mailing address, billing information and other personal information in order to bill me.
+                        </label>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label htmlFor="understand-rights">
+                            <input name="understand-rights" type="checkbox" required>
+                            I understand how I can:
+                            <ul style="list-style-type: lower-alpha;">
+                                <li>Make changes in specified personal data</li>
+                                <li>Complete request to view my personal data</li>
+                                <li>Request to restrict processing of my personal data</li>
+                                <li>Request to delete my personal data</li>
+                                <li>Report a violation of GDPR principles</li>
+                            </ul>
+
+                            <label class="control-label text-left checklist-error" style="color:#ed5565;display:none">
+                                You need to confirm all checklist items
                             </label>
                         </label>
                     </div>
@@ -152,14 +207,32 @@
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
 
     <script type="text/javascript">
+        function acceptedChecklist() {
+            var overAge = $('[name="over-16"]').prop('checked'),
+                knowsPersonalInfoMean = $('[name="knows-personal-info-mean"]').prop('checked'),
+                permitsPersonalData = $('[name="permits-personal-data"]').prop('checked'),
+                understandRights = $('[name="understand-rights"]').prop('checked');
+
+            return overAge && knowsPersonalInfoMean && permitsPersonalData && understandRights;
+        }
         $('form').on('submit', function(e) {
+            var acceptSubmission = true;
+
+            if (acceptedChecklist()) {
+                $('.checklist-error').hide();
+            } else {
+                $('.checklist-error').show();
+                acceptSubmission = false;
+            }
+
             if ($('#id_accept_terms').prop('checked')) {
                 $('.terms-error').hide();
-                return true;
             } else {
                 $('.terms-error').show();
-                return false;
+                acceptSubmission = false;
             }
+
+            return acceptSubmission;
         });
     </script>
 
