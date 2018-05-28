@@ -373,7 +373,7 @@ Currency.init();
                         continue;
                     }
 
-                    var profitDate = moment(profit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'))
+                    var profitDate = moment(profit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
                     if (profitDate.isAfter(nextMonday)) {
                         position += 1;
                         nextMonday = nextMonday.add(1, 'weeks');
@@ -636,6 +636,47 @@ var FacebookProfitDashboard = {
     init: function() {
         this.onFacebookSyncFormSubmit();
         this.facebookStatus.connect();
+        this.onClickRemoveAccount();
+    },
+    onClickRemoveAccount: function() {
+        $('#fb-ad-remove').on('click', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+
+            swal({
+                    title: "Delete Synced Account Data",
+                    text: "This will remove the data for this account. Are you sure you want to remove it?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    showLoaderOnConfirm: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Remove",
+                    cancelButtonText: "Cancel"
+                },
+                function(isConfirmed) {
+                    if (isConfirmed) {
+                        $.ajax({
+                            type: 'POST',
+                            url: '/profit-dashboard/facebook/accounts/remove',
+                            data: {id: btn.attr('data-id')},
+                            success: function(data) {
+                                btn.parents('.facebook-account').remove();
+
+                                swal.close();
+                                toastr.success("The account data has been deleted.", "Deleted!");
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 2000);
+                            },
+                            error: function(data) {
+                                displayAjaxError('Delete Facebook Account Data', data);
+                            }
+                        });
+                    }
+                }
+            );
+        });
     },
     facebookStatus: {
         connect: function() {
@@ -813,7 +854,7 @@ $(function () {
                 'fb_access_token': $('input[name="fb_access_token"]').val(),
                 'accounts': $('#fb-account-select-modal [name="account"]').val(),
                 'campaigns': campaigns.join(','),
-                'config': $('#fb-account-select-modal [name="config"]').val()
+                'config': $('#fb-campaign-select-modal [name="config"]').val()
             },
             dataType: 'json',
             success: function(result) {

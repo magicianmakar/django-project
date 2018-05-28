@@ -36,8 +36,9 @@
           <input type="hidden" name="fb_access_token" value="">
           {% if not need_setup %}
           <button type="submit" class="btn btn-primary btn-xs">Sync Again</button>
+          <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Another Ad Account</a>
           {% else %}
-          <button id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Ad Account</button>
+          <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Ad Account</a>
           {% endif %}
         </form>
       </div>
@@ -45,7 +46,12 @@
       <div class="col-md-12" id="facebook-logged-in">
         <h4>Accounts Synced</h4>
         {% for account in accounts %}
-        <p><i>Account:</i> {{ account.account_name }} <i> - last time synced at:</i> {{ account.last_sync|date:"m/d/Y" }}</p>
+        <p class="facebook-account">
+          {{ account.account_name }}
+          <i> - last time synced at:</i>
+          {{ account.last_sync|date:"m/d/Y" }}
+          <a href="#" id="fb-ad-remove" class="btn btn-danger btn-xs m-l" data-id="{{ account.pk }}">× Remove</a>
+        </p>
         {% endfor %}
       </div>
     </div>
@@ -362,18 +368,22 @@
 
 <script id="fb-campaign-list" type="text/x-handlebars-template">
   <p>Please Select Facebook Campaigns: <a href="#" class="select-all-btn pull-right">Select All</a></p>
-  <select name="config">
-    {{#each config_choices}}
+  <select name="config" class="form-control">
+    {{#each config_options}}
     <option class="form-control" value="{{this.key}}" {{this.selected}}>{{this.value}}</option>
     {{/each}}
   </select>
+  <br>
   <ul class="list-group" style="overflow:auto;max-height:400px;">
     {{#each campaigns}}
     <li class="list-group-item">
-      <input type="checkbox" name="campaign" value="{{this.id}}" {{ this.checked }}>
-      {{this.name}}
-      <span class="badge badge-white">{{this.created_time}}</span>
-      <span class="badge badge-white">{{this.status}}</span></li>
+      <label>
+        <input type="checkbox" name="campaign" value="{{this.id}}" {{ this.checked }}>
+        <span class="facebook-campaign-title">{{this.name}}</span>
+        <span class="badge badge-white">{{this.created_time}}</span>
+        <span class="badge badge-white">{{this.status}}</span>
+      </label>
+    </li>
     {{/each}}
   </ul>
 </script>

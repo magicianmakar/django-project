@@ -1,15 +1,13 @@
 import arrow
 import simplejson as json
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 
-from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
@@ -19,6 +17,7 @@ from shopify_orders.utils import is_store_synced
 from .utils import (
     get_profits,
     calculate_profits,
+    get_facebook_api,
 )
 from .models import (
     CONFIG_CHOICES,
@@ -109,12 +108,7 @@ def facebook_insights(request):
 def facebook_accounts(request):
     access_token = request.GET.get('fb_access_token')
 
-    api = FacebookAdsApi.init(
-        settings.FACEBOOK_APP_ID,
-        settings.FACEBOOK_APP_SECRET,
-        access_token,
-        api_version='v2.10'
-    )
+    api = get_facebook_api(access_token)
 
     user = FBUser(fbid='me', api=api)
     accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
@@ -129,27 +123,38 @@ def facebook_campaign(request):
     access_token = request.GET.get('fb_access_token')
     account_id = request.GET.get('account_id')
 
-    api = FacebookAdsApi.init(
-        settings.FACEBOOK_APP_ID,
-        settings.FACEBOOK_APP_SECRET,
-        access_token,
-        api_version='v2.10'
-    )
+    api = get_facebook_api(access_token)
 
     store = utils.get_store_from_request(request)
-    access = FacebookAccess.objects.filter(user=request.user, store=store)
+    access, created = FacebookAccess.objects.update_or_create(
+        user=request.user,
+        store=store,
+        defaults={'access_token': access_token}
+    )
     saved_campaigns = access.campaigns.split(',')
 
-    account = FacebookAccount.objects.filter(
+    facebook_account = FacebookAccount.objects.filter(
         account_id=account_id,
         access=access,
         store=store,
     )
     updated = None
-    if account.exists():
-        account = account.first()
-        if account.config == 'include_and_new':
-            updated = arrow.get(account.last_sync)
+    if facebook_account.exists():
+        facebook_account = facebook_account.first()
+        if facebook_account.config == 'include_and_new':
+            updated = arrow.get(facebook_account.last_sync)
+
+    config_options = []
+    for option in CONFIG_CHOICES:
+        selected = ''
+        if facebook_account and facebook_account.config == option[0]:
+            selected = 'selected'
+
+        config_options.append({
+            'key': option[0],
+            'value': option[1],
+            'selected': selected
+        })
 
     user = FBUser(fbid='me', api=api)
     for account in user.get_ad_accounts(fields=[AdAccount.Field.name]):
@@ -160,15 +165,11 @@ def facebook_campaign(request):
                     'name': i['name'],
                     'status': i['status'].title(),
                     'created_time': arrow.get(i['created_time']).humanize(),
-                    'checked': 'checked="checked"' if i['id'] in saved_campaigns or
+                    'checked': 'checked' if i['id'] in saved_campaigns or
                     (updated is not None and arrow.get(i['created_time']) > updated)
                     else ''
                 } for i in account.get_campaigns(fields=['name', 'status', 'created_time'])],
-                'config_options': [{
-                    'key': option[0],
-                    'value': option[1],
-                    'selected': 'selected' if account.config == option[0] else ''
-                } for option in CONFIG_CHOICES]
+                'config_options': config_options
             })
 
     return JsonResponse({'error': 'Ad Account Not found'})
@@ -188,3 +189,17 @@ def save_other_costs(request):
     OtherCost.objects.update_or_create(store=store, date=date, defaults={'amount': amount})
 
     return JsonResponse({'status': 'ok'})
+
+
+@login_required
+def facebook_remove_account(request):
+    if request.method == 'POST':
+        store = utils.get_store_from_request(request)
+        access = get_object_or_404(FacebookAccess, user=request.user, store=store)
+
+        account = access.accounts.filter(pk=request.POST.get('id'))
+        account.delete()
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'error': 'Non-handled endpoint'}, status=405)
