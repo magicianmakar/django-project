@@ -24,7 +24,7 @@ from shopify_orders.models import ShopifyOrder
 from shopify_orders.tests.factories import ShopifyOrderFactory
 
 from .models import FacebookAdCost, AliexpressFulfillmentCost
-from .utils import get_facebook_ads, get_profits
+from .utils import get_facebook_api, get_facebook_ads, get_profits
 
 
 NOW = timezone.now()
@@ -73,12 +73,7 @@ class FacebookAdCostsTestCase(TestCase):
             "eYZA7JLHODWNEj6JDqhJfZB8y12ARYp7k6vOeB27h0ZD"
 
         try:
-            self.api = FacebookAdsApi.init(
-                settings.FACEBOOK_APP_ID,
-                settings.FACEBOOK_APP_SECRET,
-                self.access_token,
-                api_version='v2.10'
-            )
+            self.api = get_facebook_api(self.access_token)
 
             user = FBUser(fbid='me', api=self.api)
             account = list(user.get_ad_accounts())[0]

@@ -24,6 +24,15 @@ from .models import (
 )
 
 
+def get_facebook_api(access_token):
+    return FacebookAdsApi.init(
+        settings.FACEBOOK_APP_ID,
+        settings.FACEBOOK_APP_SECRET,
+        access_token,
+        api_version='v2.11'
+    )
+
+
 def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None, config='include'):
     access, created = FacebookAccess.objects.update_or_create(user=user, store=store, defaults={
         'access_token': access_token,
@@ -41,12 +50,7 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
     if not campaigns:
         campaigns = access.campaigns.split(',') if access.campaigns else []
 
-    api = FacebookAdsApi.init(
-        settings.FACEBOOK_APP_ID,
-        settings.FACEBOOK_APP_SECRET,
-        access_token,
-        api_version='v2.10'
-    )
+    api = get_facebook_api(access_token)
 
     user = FBUser(fbid='me', api=api)
     accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])

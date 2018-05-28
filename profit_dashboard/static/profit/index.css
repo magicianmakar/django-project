@@ -124,3 +124,33 @@
 .chart ul.toggle-menu li .toggle-data.active i.fa-check-square-o {
   display: inline-block;
 }
+
+#fb-campaign-select-modal .list-group .list-group-item {
+  padding: 0;
+}
+#fb-campaign-select-modal .list-group .list-group-item label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 10px 15px;
+  margin-bottom: 0;
+}
+#fb-campaign-select-modal .list-group .list-group-item input[type=checkbox] {
+  margin: 0;
+}
+#fb-campaign-select-modal .list-group .list-group-item .facebook-campaign-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 3px;
+  margin-right: auto;
+}
+#fb-campaign-select-modal .list-group .list-group-item .badge {
+  min-width: auto;
+}
+
+#facebook-sync {
+  margin-top: 6px;
+}
