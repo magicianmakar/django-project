@@ -4147,7 +4147,7 @@ def register(request, registration=None, subscribe_plan=None):
             reg_coupon = Signer().unsign(base64.decodestring(reg_coupon))
             reg_coupon = stripe.Coupon.retrieve(reg_coupon)
             if reg_coupon.redeem_by <= arrow.utcnow().timestamp:
-                return Http404
+                raise Http404
 
             reg_coupon = reg_coupon.metadata.msg
         except:
