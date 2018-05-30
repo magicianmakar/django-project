@@ -4146,6 +4146,9 @@ def register(request, registration=None, subscribe_plan=None):
         try:
             reg_coupon = Signer().unsign(base64.decodestring(reg_coupon))
             reg_coupon = stripe.Coupon.retrieve(reg_coupon)
+            if reg_coupon.redeem_by <= arrow.utcnow().timestamp:
+                return Http404
+
             reg_coupon = reg_coupon.metadata.msg
         except:
             reg_coupon = '<b style=color:red>Coupon Not Found!</b>'
