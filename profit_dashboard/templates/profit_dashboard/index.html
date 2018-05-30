@@ -8,7 +8,7 @@
 
 {% block main-container %}
 
-{% if user|can:'profit_dashboard_facebook.user' %}
+{% if user|can:'profit_dashboard_facebook.use' %}
 <div class="ibox float-e-margins" id="facebook-insights" style="display: none;">
   <div class="ibox-title">
       <h5>Facebook Ad Costs</h5>
@@ -438,7 +438,7 @@
   <script type="text/javascript">
     var config = {
       facebook: {
-        {% if user|can:'profit_dashboard_facebook.user' %}
+        {% if user|can:'profit_dashboard_facebook.use' %}
         appId: "{% app_setting 'FACEBOOK_APP_ID' %}"
         {% else %}
         appId: null
