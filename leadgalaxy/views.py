@@ -4147,11 +4147,15 @@ def register(request, registration=None, subscribe_plan=None):
             reg_coupon = Signer().unsign(base64.decodestring(reg_coupon))
             reg_coupon = stripe.Coupon.retrieve(reg_coupon)
             if reg_coupon.redeem_by <= arrow.utcnow().timestamp:
-                raise Http404
-
-            reg_coupon = reg_coupon.metadata.msg
+                reg_coupon = None
+            else:
+                reg_coupon = reg_coupon.metadata.msg
         except:
-            reg_coupon = '<b style=color:red>Coupon Not Found!</b>'
+            reg_coupon = None
+            raven_client.captureException()
+
+        if not reg_coupon:
+            raise Http404('Coupon Not Found')
 
     return render(request, "registration/register.html", {
         'form': form,
