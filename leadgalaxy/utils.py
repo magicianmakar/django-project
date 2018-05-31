@@ -722,13 +722,15 @@ def duplicate_product(product, store=None):
 
 def split_product(product, split_factor, store=None):
     data = json.loads(product.data)
-    new_products = []
+    new_products = {}
 
     if data['variants'] and len(data['variants']):
         active_variant = None
-        filtered = [v for v in data['variants'] if v['title'] == split_factor]
-        if len(filtered) > 0:
-            active_variant = filtered[0]
+        active_variant_idx = None
+        for idx, v in enumerate(data['variants']):
+            if v['title'] == split_factor:
+                active_variant = v
+                active_variant_idx = idx + 1
 
         if active_variant:
             for idx, v in enumerate(active_variant['values']):
@@ -770,9 +772,9 @@ def split_product(product, split_factor, store=None):
                 if not clone.have_supplier() and len(suppliers):
                     clone.set_default_supplier(suppliers[0], commit=True)
 
-                new_products.append(clone)
+                new_products[v] = clone
 
-    return new_products
+    return new_products, active_variant_idx
 
 
 def get_shopify_products_count(store):

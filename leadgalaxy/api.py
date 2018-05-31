@@ -1259,27 +1259,29 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         split_factor = data.get('split_factor')
         permissions.user_can_view(user, product)
 
-        splitted_products = utils.split_product(product, split_factor)
+        splitted_products, active_variant_idx = utils.split_product(product, split_factor)
 
         # if current product is connected, automatically connect splitted products.
         if product.shopify_id:
-            for splitted_product in splitted_products:
+            shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
+            shopify_variants = shopify_product['variants']
+            for option_value, splitted_product in splitted_products.iteritems():
                 data = json.loads(splitted_product.data)
 
                 variants = []
-                for v in data['variants']:
-                    variant = {
-                        'title': v['title'],
-                        'price': data['price'],
-                        'compare_at_price': data['compare_at_price'],
-                        'weight': data['weight'],
-                        'weight_unit': data['weight_unit']
-                    }
+                for v in shopify_variants:
+                    if v.get('option{}'.format(active_variant_idx), None) == option_value:
+                        v.pop('id', None)
+                        v.pop('image_id', None)
 
-                    for i, option in enumerate(v['values']):
-                        variant['option{}'.format(i)] = option
+                        # shift options
+                        option_idx = active_variant_idx
+                        while v.get('option{}'.format(option_idx + 1), None):
+                            v['option{}'.format(option_idx)] = v['option{}'.format(option_idx + 1)]
+                            option_idx += 1
+                        v.pop('option{}'.format(option_idx), None)
 
-                    variants.append(variant)
+                        variants.append(v)
 
                 images = []
                 for i in data['images']:
@@ -1311,7 +1313,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
 
         return self.api_success({
-            'products_ids': [p.id for p in splitted_products]
+            'products_ids': [p.id for v, p in splitted_products.iteritems()]
         })
 
     def post_product_exclude(self, request, user, data):
