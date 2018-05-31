@@ -1185,7 +1185,24 @@ $('#download-images').on('click', function(e) {
 $('.add-images-btn').click(function (e) {
     e.preventDefault();
 
-    $('#modal-add-image').modal('show');
+    if ($('#modal-add-image img').length) {
+        $('#modal-add-image').modal('show');
+    } else {
+        window.extensionSendMessage({
+            subject: 'getImages',
+            from: 'webapp',
+            url: $(e.target).attr('original-product'),
+            cache: true,
+        }, function (images) {
+            if (images && images.length) {
+                $.each(images, function (i, el) {
+                    $('#modal-add-image #images-row').append($('<img>', {'src': el}));
+                });
+
+                $('#modal-add-image').modal('show');
+            }
+        });
+    }
 });
 
 $('#modal-add-image').on('shown.bs.modal', function() {
