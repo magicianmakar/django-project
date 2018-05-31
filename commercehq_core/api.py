@@ -353,9 +353,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             product.store = store
             product.source_id = source_id
 
-            product.save()
-
-            # tasks.update_shopify_product(product.store.id, source_id, product_id=product.id)
+            product.sync()
 
         return self.api_success()
 

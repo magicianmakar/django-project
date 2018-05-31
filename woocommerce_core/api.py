@@ -1240,3 +1240,35 @@ class WooStoreApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             return self.api_error('WooCommerce API Error', status=500)
+
+    def post_product_connect(self, request, user, data):
+        product = WooProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        store = WooStore.objects.get(id=data.get('store'))
+        permissions.user_can_view(user, store)
+
+        source_id = safeInt(data.get('woocommerce'))
+
+        if source_id != product.source_id or product.store != store:
+            connected_to = WooProduct.objects.filter(
+                store=store,
+                source_id=source_id
+            )
+
+            if connected_to.exists():
+                return self.api_error(
+                    '\n'.join(
+                        ['The selected Product is already connected to:\n'] +
+                        [request.build_absolute_uri('/chq/product/{}'.format(i))
+                            for i in connected_to.values_list('id', flat=True)]),
+                    status=500)
+
+            product.store = store
+            product.source_id = source_id
+
+            product.save()
+
+            product.sync()
+
+        return self.api_success()
