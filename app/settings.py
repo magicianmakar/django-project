@@ -59,6 +59,7 @@ INSTALLED_APPS = (
 
     'article',
     'leadgalaxy',
+    'shopified_core',
     'shopify_oauth',
     'shopify_orders',
     'shopify_revision',

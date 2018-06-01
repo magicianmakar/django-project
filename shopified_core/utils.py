@@ -211,7 +211,7 @@ def get_mimetype(url, default=None):
     return content_type if content_type else default
 
 
-def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_email=None):
+def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_email=None, async=False):
     template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
     template = Template(open(template_file).read())
 
@@ -233,11 +233,17 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
     if from_email is None:
         from_email = '"Dropified" <support@dropified.com>'
 
-    send_mail(subject=subject,
-              recipient_list=recipient,
-              from_email=from_email,
-              message=email_plain,
-              html_message=email_html)
+    kwargs = dict(subject=subject,
+                  recipient_list=recipient,
+                  from_email=from_email,
+                  message=email_plain,
+                  html_message=email_html)
+
+    if async:
+        from shopified_core.tasks import send_email_async
+        send_email_async.apply_async(kwarg=kwargs, queue='priority_high')
+    else:
+        send_mail(**kwargs)
 
     return email_html
 
