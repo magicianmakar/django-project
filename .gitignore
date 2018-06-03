@@ -1,5 +1,6 @@
 .env.dev
 *.pyc
+*.pyo
 *.sqlite3
 *.sublime-*
 .sass-cache
