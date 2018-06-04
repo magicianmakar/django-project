@@ -2242,7 +2242,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater.add_tag(aliexpress_order_tags)
 
         if not settings.DEBUG and not from_oberlo:
-            if order_updater.have_changes()
+            if order_updater.have_changes():
                 order_updater.delay_save(countdown=note_delay)
             else:
                 # Update the order if the user doesn't enable any note, attribues or tag change when an order if linked to Aliexpress
