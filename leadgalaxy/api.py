@@ -2242,7 +2242,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater.add_tag(aliexpress_order_tags)
 
         if not settings.DEBUG and not from_oberlo:
-            order_updater.delay_save(countdown=note_delay)
+            if order_updater.have_changes()
+                order_updater.delay_save(countdown=note_delay)
+            else:
+                # Update the order if the user doesn't enable any note, attribues or tag change when an order if linked to Aliexpress
+                # Otherwise we won't update the order in Shopify and no Webhook call will trigger Order Update for this order
+                # TODO: Faster order fulfillement status update?
+                tasks.update_shopify_order.apply_async(args=[store.id, order_id], kwarg={'from_webhook': False})
 
         if track.data and not from_oberlo:
             shopify_orders_tasks.check_track_errors.delay(track.id)

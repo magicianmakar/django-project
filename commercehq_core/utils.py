@@ -1073,6 +1073,7 @@ class CHQOrderUpdater:
         order_data = {}
 
         if 'notes' in what:
+            self.notes = []
             order_data['notes'] = ''
 
         if len(order_data.keys()) > 1:
