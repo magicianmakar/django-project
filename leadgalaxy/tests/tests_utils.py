@@ -539,35 +539,35 @@ class OrdersTestCase(TestCase):
 
         self.assertEqual([attrib], utils.get_shopify_order(store, order_id)['note_attributes'])
 
-    def test_order_updater_have_changes(self):
-        store = ShopifyStoreFactory()
-        order_id = 4905209738
-
-        attrib = {'name': utils.random_hash(), 'value': utils.random_hash()}
-
-        updater = utils.ShopifyOrderUpdater(store, order_id)
+    def test_order_updater_have_changes_attributes(self):
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
         self.assertFalse(updater.have_changes())
 
-        updater.add_attribute(attrib)
+        updater.add_attribute({'name': utils.random_hash(), 'value': utils.random_hash()})
         self.assertTrue(updater.have_changes())
 
-        updater.reset('attributes')
-        self.assertFalse(updater.have_changes())
-
-        updater.reset('notes,tags,attribues')
+    def test_order_updater_have_changes_tags(self):
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
         self.assertFalse(updater.have_changes())
 
         updater.add_tag('tag')
         self.assertTrue(updater.have_changes())
 
-        updater.reset('notes,tags,attribues')
+    def test_order_updater_have_changes_tags(self):
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
         self.assertFalse(updater.have_changes())
 
         updater.add_note('note')
         self.assertTrue(updater.have_changes())
 
+
+    def test_order_updater_have_changes_tags(self):
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
+        self.assertFalse(updater.have_changes())
+
         updater.add_tag('tag')
-        updater.add_attribute(attrib)
+        updater.add_note('note')
+        updater.add_attribute({'name': utils.random_hash(), 'value': utils.random_hash()})
 
         self.assertTrue(updater.have_changes())
 

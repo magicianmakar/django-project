@@ -2582,15 +2582,12 @@ class ShopifyOrderUpdater:
         }
 
         if 'notes' in what:
-            self.notes = []
             order_data['note'] = ''
 
         if 'tags' in what:
-            self.tags = []
             order_data['tags'] = ''
 
         if 'attributes' in what:
-            self.attributes = []
             order_data['note_attributes'] = []
 
         if len(order_data.keys()) > 1:
