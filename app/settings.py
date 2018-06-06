@@ -225,9 +225,9 @@ DEFAULT_FROM_EMAIL = "support@dropified.com"
 SHOPIFY_API_KEY = os.environ['SHOPIFY_API_KEY']
 SHOPIFY_API_SECRET = os.environ['SHOPIFY_API_SECRET']
 SHOPIFY_API_SCOPE = u','.join([
-    'write_apps', 'write_content', 'write_products', 'write_customers',
+    'write_content', 'write_products', 'write_customers',
     'write_orders', 'write_fulfillments', 'write_shipping', 'read_analytics',
-    'write_inventory', 'read_locations'
+    'write_inventory', 'read_locations', 'read_all_orders'
 ])
 
 # Slack API
