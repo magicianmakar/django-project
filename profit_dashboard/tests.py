@@ -90,7 +90,8 @@ class FacebookAdCostsTestCase(TestCase):
                     create = False
 
             if create:
-                campaign = Campaign(parent_id=account.get_id_assured())
+                self.api.set_default_account_id(account.get_id_assured())
+                campaign = Campaign()
                 campaign[Campaign.Field.name] = "Companies looking for profit can come here"
                 campaign[Campaign.Field.objective] = "REACH"
                 campaign[Campaign.Field.configured_status] = Campaign.Status.paused
@@ -104,7 +105,6 @@ class FacebookAdCostsTestCase(TestCase):
                 access = FacebookAccessFactory(store=self.store, user=self.user)
                 account = FacebookAccountFactory(access=access, store=self.store)
                 FacebookAdCostFactory(account=account)
-
 
     # def test_more_than_one_ad_cost_exists_for_user(self):
     #     self.assertGreater(FacebookAdCost.objects.count(), 0)
