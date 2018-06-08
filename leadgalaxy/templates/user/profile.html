@@ -14,7 +14,8 @@
                     <a data-toggle="tab" href="#tab-1" data-auto-hash="" aria-expanded="true">Profile</a>
                 </li>
                 <li class="email-tab">
-                    <a data-toggle="tab" href="#tab-2" data-auto-hash="email" data-auto-click="true" aria-expanded="false">Email &amp; Password</a>
+                    <a data-toggle="tab" href="#tab-2" data-auto-hash="email" data-auto-click="true" aria-expanded="false">
+                        Email {% if not shopify_apps_customer %}&amp; Password{% endif %}</a>
                 </li>
                 {% if not user.is_subuser %}
                 <li class="plan-tab">
@@ -180,6 +181,7 @@
                         <div class="row">
                             <div class=" col-md-12 col-md-offset-0 ">
                                 <form id="user-email" method="get" class="form-horizontal">
+                                    {% if not shopify_apps_customer %}
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Current Password</label>
                                         <div class="col-sm-4">
@@ -188,6 +190,9 @@
                                     </div>
 
                                     <div class="hr-line-dashed"></div>
+                                    {% else %}
+                                        <input type="hidden" class="form-control" name="password" value="password">
+                                    {% endif %}
 
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Email</label>
@@ -195,6 +200,8 @@
                                             <input type="email" name="email" value="{{ user.email }}" class="form-control">
                                         </div>
                                     </div>
+
+                                    {% if not shopify_apps_customer %}
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">New Password</label>
 
@@ -209,6 +216,7 @@
                                             <input type="password" class="form-control" name="password2">
                                         </div>
                                     </div>
+                                    {% endif %}
 
                                     <div class="hr-line-dashed"></div>
                                 </form>
@@ -367,9 +375,7 @@
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Email</label>
                                         <div class="col-sm-4">
-                                            <input type="email" name="dropwow_account_email" value="{{ user.dropwow_account.email }}" class="form-control"
-                                                {% if shopify_apps_customer %}readonly{% endif %}
-                                            >
+                                            <input type="email" name="dropwow_account_email" value="{{ user.dropwow_account.email }}" class="form-control">
                                         </div>
                                     </div>
                                     <div class="form-group">

@@ -109,6 +109,7 @@ class UserProfile(models.Model):
 
     config = models.TextField(default='', blank=True)
     sync_delay_notify = models.IntegerField(default=0, null=True, db_index=True, verbose_name='Notify if no tracking number is found (days)')
+    shopify_app_store = models.BooleanField(default=False, verbose_name='User Register from Shopify App Store')
 
     plan_expire_at = models.DateTimeField(blank=True, null=True, verbose_name="Plan Expire Date")
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",

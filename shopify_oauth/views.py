@@ -1,5 +1,5 @@
 import hmac
-from hashlib import sha256
+import hashlib
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 from django.contrib import messages
 from django.contrib.auth import login as user_login
+from django.contrib.auth import logout as user_logout
 
 import shopify
 from requests_oauthlib import OAuth2Session
@@ -16,8 +17,6 @@ from requests_oauthlib import OAuth2Session
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
-from shopified_core.utils import unique_username
-
 from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan
 
@@ -54,11 +53,15 @@ def encoded_params_for_signature(params):
 def verify_hmac_signature(request):
     # message = "code={r[code]}&shop={r[shop]}&state={r[state]}&timestamp={r[timestamp]}".format(r=request.GET)
     message = encoded_params_for_signature(request.GET)
-    message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), sha256).hexdigest()
+    message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
     if message_hash != request.GET.get('hmac'):
         raven_client.captureMessage('HMAC Verification failed', level='warning', request=request)
         raise PermissionDenied('HMAC Verification failed')
+
+
+def shop_username(shop):
+    return shop.lower().strip().encode()
 
 
 def have_subusers(user):
@@ -200,7 +203,6 @@ def install(request, store):
 
 def callback(request):
     verify_hmac_signature(request)
-
     if request.session.get('shopify_state', True) != request.GET.get('state', False):
         raven_client.captureMessage(
             'State does not match',
@@ -210,7 +212,7 @@ def callback(request):
 
         # raise PermissionDenied('State not matching')
 
-    shop = request.GET['shop']
+    shop = request.GET['shop'].strip()
 
     oauth_session = shopify_session(request)
 
@@ -250,24 +252,39 @@ def callback(request):
 
         return HttpResponseRedirect('/')
 
+    if user.is_authenticated():
+        if user.get_config('shopify_app_store') \
+                or user.profile.shopify_app_store \
+                or user.profile.plan.payment_gateway == 'shopify':
+            user_logout(request)
+
     if not user.is_authenticated():
         # New User coming from Shopify Apps Store
-        shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
 
-        shop_info = shopify.Shop.current()
-        username = shop.split('.')[0]
-        username = unique_username(username, fullname=shop_info.shop_owner)
+        # check if we have a user with this shop as the username
+        if User.objects.filter(username__iexact=shop_username(shop), profile__shopify_app_store=True).exists():
+            user = User.objects.get(username__iexact=shop_username(shop), profile__shopify_app_store=True)
+        else:
+            # TODO: Check if email already exists and ask the user what to do
+            shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
 
-        user = User.objects.create(
-            username=username,
-            email=shop_info.email)
+            shop_info = shopify.Shop.current()
+            username = shop_username(shop)
 
-        user.set_password(get_random_string(20))
-        user.set_config('shopify_app_store', True)
+            user = User.objects.create(
+                username=username,
+                email=shop_info.email,
+            )
 
-        user.profile.change_plan(get_plan(
-            payment_gateway='shopify',
-            plan_slug='starter-shopify'))
+            user.set_password(get_random_string(20))
+            user.set_config('shopify_app_store', True)
+
+            user.profile.shopify_app_store = True
+            user.profile.change_plan(get_plan(
+                payment_gateway='shopify',
+                plan_slug='starter-shopify'))
+
+            user.profile.save()
 
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
         user_login(request, user)
@@ -337,7 +354,7 @@ def callback(request):
 
         except:
             raven_client.captureException()
-            return JsonResponse({'error': 'Shopify Store link is not correct.'}, status=500)
+            return JsonResponse({'error': 'An error occurred when installing Dropified on your store.'}, status=500)
 
         store.save()
 

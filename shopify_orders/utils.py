@@ -81,7 +81,6 @@ def sort_es_orders(orders, hits, db_orders):
         db_orders_map[order.order_id] = order
 
     for i in hits:
-        # import pdb; pdb.set_trace()
         order = shopify_orders_map.get(i['_source']['order_id'])
         db_order = db_orders_map.get(i['_source']['order_id'])
 
