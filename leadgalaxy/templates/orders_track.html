@@ -131,35 +131,10 @@
                                 </optgroup>
 
                                 <optgroup label="Order Cancellation Reason">
-                                    <option {% if reason == 'buyer_pay_timeout' %}selected="selected"{% endif %}
-                                            value="buyer_pay_timeout">Order Pay Timeout</option>
-
-                                    <option {% if reason == 'risk_reject_closed' %}selected="selected"{% endif %}
-                                            value="risk_reject_closed">Rejected By Risk Control</option>
-
-                                    <option {% if reason == 'buyer_accept_goods_timeout' %}selected="selected"{% endif %}
-                                            value="buyer_accept_goods_timeout">Buyer Accept Goods Timeout</option>
-
-                                    <option {% if reason == 'buyer_cancel_notpay_order' %}selected="selected"{% endif %}
-                                            value="buyer_cancel_notpay_order">Buyer Cancel or Doesn't Pay Order</option>
-
-                                    <option {% if reason == 'cancel_order_close_trade' %}selected="selected"{% endif %}
-                                            value="cancel_order_close_trade">Cancel Order Close Trade</option>
-
-                                    <option {% if reason == 'seller_send_goods_timeout' %}selected="selected"{% endif %}
-                                            value="seller_send_goods_timeout">Seller Send Goods Timeout</option>
-
-                                    <option {% if reason == 'buyer_cancel_order_in_risk' %}selected="selected"{% endif %}
-                                            value="buyer_cancel_order_in_risk">Buyer Cancel Order In Risk</option>
-
-                                    <option {% if reason == 'buyer_accept_goods' %}selected="selected"{% endif %}
-                                            value="buyer_accept_goods">Buyer Accept Goods</option>
-
-                                    <option {% if reason == 'seller_accept_issue_no_goods_return' %}selected="selected"{% endif %}
-                                            value="seller_accept_issue_no_goods_return">Seller Accept Issue No Goods Return</option>
-
-                                    <option {% if reason == 'seller_response_issue_timeout' %}selected="selected"{% endif %}
-                                            value="seller_response_issue_timeout">Seller Response Issue Timeout</option>
+                                    {% for key, value in rejected_status.items %}
+                                    <option {% if reason == key %}selected="selected"{% endif %}
+                                            value="{{ key }}">{{ value }}</option>
+                                    {% endfor %}
                                 </optgroup>
                             </select>
                         </div>

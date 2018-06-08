@@ -12,6 +12,7 @@ from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
+from shopified_core.utils import ALIEXPRESS_REJECTED_STATUS
 from shopify_orders.models import ShopifyOrder
 from leadgalaxy.utils import safeInt, safeFloat
 
@@ -228,11 +229,6 @@ def get_costs_from_track(track, commit=False):
         (dict/None): Return None in case of error or track doesn't have costs
     """
 
-    rejected_status = [
-        'buyer_pay_timeout', 'risk_reject_closed', 'buyer_cancel_notpay_order', 'cancel_order_close_trade', 'seller_send_goods_timeout',
-        'buyer_cancel_order_in_risk', 'buyer_accept_goods', 'seller_accept_issue_no_goods_return', 'seller_response_issue_timeout'
-    ]
-
     costs = {
         'total_cost': 0.0,
         'shipping_cost': 0.0,
@@ -250,7 +246,7 @@ def get_costs_from_track(track, commit=False):
         costs['shipping_cost'] = data['aliexpress']['order_details']['cost'].get('shipping').replace(',', '.')
         costs['products_cost'] = data['aliexpress']['order_details']['cost'].get('products').replace(',', '.')
 
-        if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in rejected_status:
+        if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in ALIEXPRESS_REJECTED_STATUS:
             return
 
         try:

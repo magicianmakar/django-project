@@ -24,6 +24,7 @@ from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
+    ALIEXPRESS_REJECTED_STATUS,
     safeInt,
     safeFloat,
     aws_s3_context,
@@ -1057,6 +1058,8 @@ class OrdersTrackList(ListView):
             'title': context['store'].title,
             'url': '{}?store={}'.format(reverse('chq:orders_list'), context['store'].id)
         }]
+
+        context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
 
         return context
 

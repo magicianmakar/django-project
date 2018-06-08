@@ -45,6 +45,7 @@ from dropwow_core.models import DropwowOrderStatus
 from product_alerts.models import ProductChange
 
 from shopified_core.utils import (
+    ALIEXPRESS_REJECTED_STATUS,
     app_link,
     send_email_from_template,
     version_compare,
@@ -3710,6 +3711,7 @@ def orders_track(request):
         'current_page': page,
         'errors': errors_list,
         'reason': source_reason,
+        'rejected_status': ALIEXPRESS_REJECTED_STATUS,
         'page': 'orders_track',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking']
     })

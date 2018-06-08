@@ -685,7 +685,19 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-sm-offset-1 col-sm-11">
+                            <div class="col-sm-offset-1 col-sm-5">
+                                <div class="form-group">
+                                    <label for="alert_order_cancelled" class="col-sm-6 control-label">When an order is cancelled</label>
+                                    <div class="col-sm-4">
+                                        <select id="alert_order_cancelled" name="alert_order_cancelled" class="form-control">
+                                            <option value="none" {% if config.alert_order_cancelled == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                            <option value="notify"{% if config.alert_order_cancelled == 'notify' %} selected="selected"{% endif %}>Notify me with e-mail</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-5">
                                 <div class="form-group">
                                     <label for="send_alerts_to_subusers" class="col-sm-4 col-xs-8 control-label">
                                         Send Alert to Sub Users too

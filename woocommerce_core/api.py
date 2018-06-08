@@ -31,6 +31,7 @@ from shopified_core.utils import (
     orders_update_limit,
     version_compare,
     order_phone_number,
+    CancelledOrderAlert
 )
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
@@ -917,6 +918,12 @@ class WooStoreApi(ApiResponseMixin, View):
         except WooOrderTrack.DoesNotExist:
             return self.api_error('Order Not Found', status=404)
 
+        cancelled_order_alert = CancelledOrderAlert(user.models_user,
+                                                    data.get('source_id'),
+                                                    data.get('end_reason'),
+                                                    order.source_status_details,
+                                                    order)
+
         order.source_status = data.get('status')
         order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
         order.status_updated_at = timezone.now()
@@ -938,6 +945,9 @@ class WooStoreApi(ApiResponseMixin, View):
         order.data = json.dumps(order_data)
 
         order.save()
+
+        # Send e-mail notifications for cancelled orders
+        cancelled_order_alert.send_email()
 
         return self.api_success()
 

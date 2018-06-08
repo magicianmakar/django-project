@@ -27,7 +27,8 @@ from shopified_core.utils import (
     version_compare,
     order_data_cache,
     orders_update_limit,
-    order_phone_number
+    order_phone_number,
+    CancelledOrderAlert
 )
 from product_alerts.utils import unmonitor_store
 
@@ -1075,6 +1076,12 @@ class CHQStoreApi(ApiResponseMixin, View):
         except CommerceHQOrderTrack.DoesNotExist:
             return self.api_error('Order Not Found', status=404)
 
+        cancelled_order_alert = CancelledOrderAlert(user.models_user,
+                                                    data.get('source_id'),
+                                                    data.get('end_reason'),
+                                                    order.source_status_details,
+                                                    order)
+
         order.source_status = data.get('status')
         order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
         order.status_updated_at = timezone.now()
@@ -1110,6 +1117,9 @@ class CHQStoreApi(ApiResponseMixin, View):
         order.data = json.dumps(order_data)
 
         order.save()
+
+        # Send e-mail notifications for cancelled orders
+        cancelled_order_alert.send_email()
 
         return self.api_success()
 

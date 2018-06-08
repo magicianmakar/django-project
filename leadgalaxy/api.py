@@ -35,7 +35,8 @@ from shopified_core.utils import (
     orders_update_limit,
     hash_url_filename,
     add_http_schema,
-    order_phone_number
+    order_phone_number,
+    CancelledOrderAlert
 )
 
 from shopify_orders import utils as shopify_orders_utils
@@ -2306,6 +2307,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         new_tracking_number = (tracking_number and tracking_number not in order.source_tracking)
 
+        models_user = user.models_user
+        cancelled_order_alert = CancelledOrderAlert(models_user,
+                                                    data.get('source_id'),
+                                                    data.get('end_reason'),
+                                                    order.source_status_details,
+                                                    order)
+
         order.source_status = data.get('status')
         order.source_tracking = tracking_number
         order.status_updated_at = timezone.now()
@@ -2344,7 +2352,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         order.save()
 
-        tracking_number_tags = user.models_user.get_config('tracking_number_tags')
+        tracking_number_tags = models_user.get_config('tracking_number_tags')
         if new_tracking_number and tracking_number_tags:
             order_updater = utils.ShopifyOrderUpdater(order.store, order.order_id)
             order_updater.add_tag(tracking_number_tags)
@@ -2352,6 +2360,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         if order.data and order.errors != -1:
             shopify_orders_tasks.check_track_errors.delay(order.id)
+
+        # Send e-mail notifications for cancelled orders
+        cancelled_order_alert.send_email()
 
         return self.api_success()
 

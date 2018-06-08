@@ -23,6 +23,19 @@ import bleach
 import phonenumbers
 from tld import get_tld
 
+ALIEXPRESS_REJECTED_STATUS = {
+    "buyer_pay_timeout": "Order Payment Timeout",
+    "risk_reject_closed": "Rejected By Risk Control",
+    "buyer_accept_goods_timeout": "Buyer Accept Goods Timeout",
+    "buyer_cancel_notpay_order": "Buyer Cancel or Doesn't Pay Order",
+    "cancel_order_close_trade": "Cancel Order Close Trade",
+    "seller_send_goods_timeout": "Seller Send Goods Timeout",
+    "buyer_cancel_order_in_risk": "Buyer Cancel Order In Risk",
+    "buyer_accept_goods": "Buyer Accept Goods",
+    "seller_accept_issue_no_goods_return": "Seller Accept Issue No Goods Return",
+    "seller_response_issue_timeout": "Seller Response Issue Timeout",
+}
+
 
 class OrderErrors:
     NAME = 1
@@ -543,3 +556,77 @@ def http_excption_status_code(e):
         return e.response.status_code
     except:
         return -1
+
+
+class CancelledOrderAlert():
+
+    def __init__(self, user, source_id, new_status, current_status, order_track, store_type=''):
+        self.user = user
+        self.source_id = source_id
+        self.new_source_status_details = new_status
+        self.current_source_status_details = current_status
+        self.order_track = order_track
+        self.store_type = store_type
+
+    def _can_email_cancelled_order(self):
+        """
+        This function checks if a cancellation e-mail can be send to the user
+        after an order is cancelled at Aliexpress
+        """
+        if self.user.get_config('alert_order_cancelled') != 'notify':
+            return False
+
+        if self.new_source_status_details not in ALIEXPRESS_REJECTED_STATUS:
+            return False
+
+        if self.current_source_status_details in ALIEXPRESS_REJECTED_STATUS:
+            return False
+
+        return True
+
+    def _send_cancelled_order_email(self):
+        """
+        Check for number of cancellation e-mails sent in the past 24 hours and
+          - Send if there are less than 10 or
+          - Send only one for higher
+        """
+        store_type = '{}_'.format(self.store_type) if self.store_type else ''
+
+        cancelled_orders_key = '{}cancelled_orders_{}'.format(store_type, self.order_track.store_id)
+        cancelled_orders_count = cache.get(cancelled_orders_key, 0)
+
+        if cancelled_orders_count < 10:
+            # Increase number of e-mails sent for cancelled orders
+            cache.set(cancelled_orders_key, cancelled_orders_count + 1, timeout=86400)
+
+            params = {'query': self.source_id, 'reason': self.new_source_status_details}
+            send_email_from_template(
+                tpl='aliexpress_order_cancellation.html',
+                subject='[Dropified] Aliexpress Order has been Cancelled',
+                recipient=self.user.email,
+                data={
+                    'username': self.user.username,
+                    'track': self.order_track,
+                    'track_url': app_link('{}/order/track'.format(self.store_type), **params),
+                },
+            )
+        elif cancelled_orders_count == 10:
+            # Ensure no new e-mails are sent for 24 hours
+            cache.set(cancelled_orders_key, cancelled_orders_count + 1, timeout=86400)
+
+            params = {'reason': self.new_source_status_details}
+            send_email_from_template(
+                tpl='aliexpress_order_cancellation.html',
+                subject='[Dropified] Many Aliexpress Orders has been Cancelled',
+                recipient=self.user.email,
+                data={
+                    'username': self.user.username,
+                    'track': self.order_track,
+                    'track_url': app_link('{}/order/track'.format(self.store_type), **params),
+                    'bulk': True
+                },
+            )
+
+    def send_email(self):
+        if self._can_email_cancelled_order():
+            self._send_cancelled_order_email()

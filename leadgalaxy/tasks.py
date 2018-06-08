@@ -21,7 +21,12 @@ from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
-from shopified_core.utils import app_link, http_exception_response, http_excption_status_code
+from shopified_core.utils import (
+    app_link,
+    http_exception_response,
+    http_excption_status_code,
+    ALIEXPRESS_REJECTED_STATUS
+)
 from shopified_core.paginators import SimplePaginator
 
 from unidecode import unidecode
@@ -901,11 +906,7 @@ def sync_product_exclude(self, store_id, product_id):
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def calculate_sales(self, user_id, period):
     try:
-        rejected_status = [
-            'buyer_pay_timeout', 'risk_reject_closed',
-            'buyer_cancel_notpay_order', 'cancel_order_close_trade', 'seller_send_goods_timeout',
-            'buyer_cancel_order_in_risk', 'buyer_accept_goods', 'seller_accept_issue_no_goods_return',
-            'seller_response_issue_timeout']
+        rejected_status = ALIEXPRESS_REJECTED_STATUS
 
         users_affiliate = {}
         sales_dropified = 0
