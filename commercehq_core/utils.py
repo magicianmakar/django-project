@@ -1024,6 +1024,13 @@ def get_chq_order_note(store, order_id):
     return order.get('notes')
 
 
+def update_chq_product(store, product_chq_id, api_product):
+    return store.request.patch(
+        url='{}/{}'.format(store.get_api_url('products'), product_chq_id),
+        json=api_product
+    )
+
+
 class CHQOrderUpdater:
 
     def __init__(self, store=None, order_id=None):

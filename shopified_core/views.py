@@ -131,8 +131,10 @@ class ShopifiedApi(ApiResponseMixin, View):
                 else:
                     user_login(request, user)
 
+                token = user.get_access_token()
+
                 return JsonResponse({
-                    'token': '',
+                    'token': token,
                     'user': {
                         'id': user.id,
                         'username': user.username,

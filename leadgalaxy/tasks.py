@@ -1136,6 +1136,30 @@ def product_price_trends(self, store_id, product_variants):
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def update_product_visibility(self, user_id, product_id, visibility):
+    try:
+        user = User.objects.get(id=user_id)
+        product = ShopifyProduct.objects.get(id=product_id)
+        permissions.user_can_edit(user, product)
+
+        product.update_data({'published': visibility})
+        product.save()
+
+        store = product.store
+        api_data = {
+            'product': {
+                'id': product.get_shopify_id(),
+                'published': visibility,
+            }
+        }
+        url = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
+        rep = requests.put(url, json=api_data)
+        rep.raise_for_status()
+    except Exception as e:
+        raven_client.captureException(extra=http_exception_response(e))
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def product_randomize_image_names(self, product_id):
     data = {
         'task': self.request.id,

@@ -58,6 +58,7 @@ class ProductChangeManager():
 
     def apply_changes(self):
         try:
+            self.product_change.send_hook_event()
             if not self.need_update():
                 # No need to check for updates, the user doesn't have any setting that will require a product update
                 self.product_change.status = 1  # Applied

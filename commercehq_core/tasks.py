@@ -547,3 +547,25 @@ def order_save_changes(self, data):
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def update_product_visibility(self, user_id, product_id, visibility):
+    try:
+        user = User.objects.get(id=user_id)
+        product = CommerceHQProduct.objects.get(id=product_id)
+        permissions.user_can_edit(user, product)
+
+        product.update_data({'published': visibility})
+        product.save()
+
+        store = product.store
+        rep = store.request.patch(
+            url='{}/{}'.format(store.get_api_url('products'), product.source_id),
+            json={
+                'is_draft': not visibility,
+            },
+        )
+        rep.raise_for_status()
+    except Exception as e:
+        raven_client.captureException(extra=utils.http_exception_response(e))

@@ -509,6 +509,20 @@ def user_first_name(self):
     return self.first_name.title() if self.first_name else self.username
 
 
+@add_to_class(User, 'get_access_token')
+def user_get_access_token(self):
+    try:
+        access_token = AccessToken.objects.filter(user=self).latest('created_at')
+    except:
+        token = get_random_string(32)
+        token = hashlib.md5(token).hexdigest()
+
+        access_token = AccessToken(user=self, token=token)
+        access_token.save()
+
+    return access_token.token
+
+
 @add_to_class(User, 'can')
 def user_can(self, perms, store_id=None):
     return self.profile.can(perms, store_id)

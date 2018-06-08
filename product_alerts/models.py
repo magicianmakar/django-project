@@ -2,7 +2,9 @@ import simplejson as json
 import arrow
 
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
+from rest_hooks.signals import raw_hook_event
 
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
@@ -54,22 +56,30 @@ class ProductChange(models.Model):
             return self.chq_product
         return None
 
-    def get_data(self):
+    def get_data(self, category=None):
+        # returns a list of product changes filtered by category:
+        # 'product:offline', 'variant:quantity', 'variant:price', 'variant:var_added', 'variant:var_removed'
         try:
             changes_data = json.loads(self.data)
+            changes = []
+            for change in changes_data:
+                if not category or (change['level'] in category and change['name'] in category):
+                    changes.append(change)
         except:
-            changes_data = []
-        for idx, change in enumerate(changes_data):
+            changes = []
+        for idx, change in enumerate(changes):
             sku = change.get('sku')
             if sku:
                 options = parse_sku(sku)
                 sku = ' / '.join(option.get('option_title', '') for option in options)
-                changes_data[idx]['sku_readable'] = sku
+                changes[idx]['sku_readable'] = sku
 
-        return changes_data
+        return changes
 
-    def get_changes_map(self, category):
-        changes = self.get_data()
+    def get_changes_map(self, category=None):
+        # returns a map of product changes filtered by category:
+        # 'product:offline', 'variant:quantity', 'variant:price', 'variant:var_added', 'variant:var_removed'
+        changes = self.get_data(category)
 
         changes_map = {
             'product': {
@@ -85,15 +95,15 @@ class ProductChange(models.Model):
 
         if changes and len(changes):
             for change in changes:
-                if not category or (change['level'] in category and change['name'] in category):
-                    if change.get('level') == 'product':
-                        changes_map['product'][change['name']].append(change)
-                    if change.get('level') == 'variant':
-                        changes_map['variants'][change['name']].append(change)
+                if change.get('level') == 'product':
+                    changes_map['product'][change['name']].append(change)
+                if change.get('level') == 'variant':
+                    changes_map['variants'][change['name']].append(change)
 
         return changes_map
 
     def get_categories(self):
+        # returns a list of change category names included in data
         changes = self.get_data()
         categories = []
         if changes and len(changes):
@@ -103,10 +113,59 @@ class ProductChange(models.Model):
                     categories.append(category)
         return ','.join(categories)
 
+    @classmethod
+    def get_category_from_event(cls, event):
+        # returns change category name from hook event name
+        # event names are listed in app.settings.PRICE_MONITOR_EVENTS
+        if event == 'product_disappeared':
+            return 'product:offline'
+        if event == 'variant_quantity_changed':
+            return 'variant:quantity'
+        if event == 'variant_price_changed':
+            return 'variant:price'
+        if event == 'variant_added':
+            return 'variant:var_added'
+        if event == 'variant_removed':
+            return 'variant:var_removed'
+
     def save(self, *args, **kwargs):
         if self.categories != self.get_categories():
             self.categories = self.get_categories()
         super(ProductChange, self).save(*args, **kwargs)
+
+    # send product change data to subscription hooks
+    # sent data should have same structure as response data from fallback api endpoints
+    # zapier_core.views.ZapierSampleList uses this method
+    def to_dict(self, category, change_index):
+        ret = {
+            'product_id': self.product.id,
+            'store_type': self.store_type,
+            'store_id': self.product.store_id,
+            'product_title': self.product.title,
+            'store_title': self.product.store.title,
+        }
+        changes = self.get_data(category)
+        if changes and len(changes):
+            ret.update(changes[change_index])
+        return ret
+
+    def send_hook_event(self):
+        # Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
+        # Query params of hook's target url are used to filter events to be triggered.
+        # Following url is hook's target url to get specific event for one shopify product
+        # https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
+        user = self.user
+        for event in settings.PRICE_MONITOR_EVENTS.keys():
+            category = ProductChange.get_category_from_event(event)
+            changes = self.get_data(category)
+            for i, change in enumerate(changes):
+                payload = self.to_dict(category, i)
+                raw_hook_event.send(
+                    sender=None,
+                    event_name=event,
+                    payload=payload,
+                    user=user
+                )
 
 
 class ProductVariantPriceHistory(models.Model):

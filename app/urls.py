@@ -24,6 +24,7 @@ urlpatterns = patterns(
     url(r'^marketplace/', include('dropwow_core.urls', namespace='marketplace')),
     url(r'^profit-dashboard/', include('profit_dashboard.urls')),
     url(r'^subusers/', include('subusers.urls')),
+    url(r'^zapier/', include('zapier_core.urls')),
 )
 
 

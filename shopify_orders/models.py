@@ -101,6 +101,20 @@ class ShopifyOrder(models.Model):
     def __unicode__(self):
         return u'#{} | {}'.format(self.order_number + 1000, self.store.title)
 
+    def to_dict(self):
+        return {
+            'store_id': self.store.id,
+            'store_title': self.store.title,
+            'order_id': self.order_id,
+            'order_number': self.order_number,
+            'total_price': self.total_price,
+            'customer_id': self.customer_id,
+            'customer_name': self.customer_name,
+            'customer_email': self.customer_email,
+            'financial_status': self.financial_status,
+            'fulfillment_status': self.fulfillment_status,
+        }
+
 
 class ShopifyOrderLine(models.Model):
     class Meta:

@@ -2202,6 +2202,13 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
+def update_shopify_product_data(store, product_shopify_id, api_product):
+    return requests.put(
+        url=store.get_link('/admin/products/{}.json'.format(product_shopify_id), api=True),
+        json={'product': api_product}
+    )
+
+
 # Helper Classes
 class TimezoneMiddleware(object):
 

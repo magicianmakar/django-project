@@ -9,6 +9,7 @@ from unidecode import unidecode
 import simplejson as json
 
 from elasticsearch import Elasticsearch
+from rest_hooks.signals import raw_hook_event
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopified_core.utils import OrderErrors
@@ -182,6 +183,13 @@ def update_shopify_order(store, data, sync_check=True):
             'cancelled_at': get_datetime(data['cancelled_at']),
         }
     )
+    if created:
+        raw_hook_event.send(
+            sender=None,
+            event_name='shopify_order_created',
+            payload=order.to_dict(),
+            user=store.user
+        )
 
     connected_items = 0
     need_fulfillment = len(data.get('line_items', []))

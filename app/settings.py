@@ -46,6 +46,9 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+    'rest_hooks',
+
     'raven.contrib.django.raven_compat',
     'widget_tweaks',    # For forms
     'hijack',
@@ -79,6 +82,7 @@ INSTALLED_APPS = (
     'commercehq_core',
     'dropwow_core',
     'woocommerce_core',
+    'zapier_core',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -325,6 +329,33 @@ CELERY_ROUTES = {
     "commercehq_core.tasks.product_update": {"queue": "priority_high"},
     "dropwow_core.tasks.fulfill_dropwow_items": {"queue": "priority_high"},
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'shopified_core.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'PAGINATE_BY': 10,
+    'PAGINATE_BY_PARAM': 'page_size',
+    'MAX_PAGINATE_BY': 100,
+}
+
+PRICE_MONITOR_EVENTS = {
+    'product_disappeared': None,
+    'variant_quantity_changed': None,
+    'variant_price_changed': None,
+    'variant_added': None,
+    'variant_removed': None,
+}
+
+HOOK_EVENTS = PRICE_MONITOR_EVENTS.copy()
+HOOK_EVENTS.update({
+    'shopify_order_created': None,
+})
+
+HOOK_DELIVERER = 'zapier_core.tasks.deliver_hook_wrapper'
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 if not DEBUG and SENTRY_DSN:
