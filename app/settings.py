@@ -78,6 +78,7 @@ INSTALLED_APPS = (
     'profit_dashboard',
     'affiliations',
     'subusers',
+    'tapfiliate',
 
     'commercehq_core',
     'dropwow_core',
@@ -414,3 +415,5 @@ ELASTICSEARCH_API = os.environ.get('FOUNDELASTICSEARCH_URL', '').split(',')
 ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get('FOUNDELASTICSEARCH_PASSWORD'))
 
 LEAD_DYNO_API_KEY = os.environ.get('LEAD_DYNO_API_KEY')
+
+TAPFILIATE_API_KEY = os.environ.get('TAPFILIATE_API_KEY')

@@ -200,3 +200,18 @@
 </script>
 
 <script src="//app.getbeamer.com/js/beamer-embed.js"></script>
+
+<script src="https://script.tapfiliate.com/tapfiliate.js" type="text/javascript" async></script>
+<script type="text/javascript">
+  (function(t,a,p){t.TapfiliateObject=a;t[a]=t[a]||function(){
+  (t[a].q=t[a].q||[]).push(arguments)}})(window,'tap');
+
+  tap('create', '6857-ecfa17');
+
+  {% if user.is_authenticated and user.is_stripe_customer %}
+    tap('conversion', '{{ user.stripe_customer.customer_id }}', 47);
+  {% else %}
+    tap('detect');
+  {% endif %}
+</script>
+

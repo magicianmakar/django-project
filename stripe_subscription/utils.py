@@ -20,6 +20,7 @@ from shopified_core.utils import safeStr
 from leadgalaxy.models import GroupPlan, UserProfile
 from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
+from tapfiliate.tasks import commission_from_stripe
 
 
 class SubscriptionException(Exception):
@@ -558,6 +559,10 @@ def process_webhook_event(request, event_id, raven_client):
                 return HttpResponse('New Registration to {}'.format(plan.title))
 
             return HttpResponse('User Not Found')
+
+        commission_from_stripe.apply_async(
+            kwarg={'charge_id': charge.id},
+            countdown=600)  # Give time for the user to register/login to Dropified before handling this event (wait for conversion)
 
         SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
             'charge': charge.to_dict(),
