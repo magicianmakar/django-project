@@ -342,6 +342,11 @@ REST_FRAMEWORK = {
     'MAX_PAGINATE_BY': 100,
 }
 
+if not DEBUG:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
+        'rest_framework.renderers.JSONRenderer',
+    )
+
 PRICE_MONITOR_EVENTS = {
     'product_disappeared': None,
     'variant_quantity_changed': None,
