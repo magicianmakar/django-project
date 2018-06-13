@@ -561,7 +561,7 @@ def process_webhook_event(request, event_id, raven_client):
             return HttpResponse('User Not Found')
 
         commission_from_stripe.apply_async(
-            kwarg={'charge_id': charge.id},
+            args=[charge.id],
             countdown=600)  # Give time for the user to register/login to Dropified before handling this event (wait for conversion)
 
         SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
