@@ -103,7 +103,7 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
         account_model.save()
 
 
-def get_profits(user_id, store_id, start, end):
+def get_profits(user_id, store_id, start, end, store_timezone=''):
     days = arrow.Arrow.range('day', start, end) + [arrow.get(end)]
     profits_data = OrderedDict()
     for day in reversed(days):
@@ -125,15 +125,12 @@ def get_profits(user_id, store_id, start, end):
 
     orders = ShopifyOrder.objects.filter(store_id=store_id,
                                          created_at__range=(start, end)) \
-                                 .extra({'date_key': 'date(created_at)'}) \
-                                 .values('date_key') \
-                                 .annotate(Sum('total_price')) \
-                                 .order_by('date_key')
+                                 .values('created_at', 'total_price')
 
     for order in orders:
         # Date: YYYY-MM-DD
-        date_key = arrow.get(order['date_key']).format('YYYY-MM-DD')
-        profits_data[date_key]['revenue'] = order['total_price__sum']
+        date_key = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
+        profits_data[date_key]['revenue'] += order['total_price']
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
@@ -190,7 +187,7 @@ def get_profits(user_id, store_id, start, end):
         profits_data[date_key]['css_empty'] = ''
 
     totals = {
-        'revenue': orders.aggregate(total=Sum('total_price__sum'))['total'] or 0.0,
+        'revenue': orders.aggregate(total=Sum('total_price'))['total'] or 0.0,
         'fulfillment_cost': shippings.aggregate(total=Sum('total_cost__sum'))['total'] or 0.0,
         'ad_spend': ad_costs.aggregate(total=Sum('spend__sum'))['total'] or 0.0,
         'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
