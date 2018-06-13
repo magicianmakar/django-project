@@ -49,16 +49,19 @@ def index(request):
 
     tz = timezone.localtime(timezone.now()).strftime(' %z')
     if end is None:
-        end = arrow.now().datetime
+        end = arrow.now()
     else:
-        end = arrow.get(end + tz, r'MM/DD/YYYY Z').datetime
+        end = arrow.get(end + tz, r'MM/DD/YYYY Z')
 
     if start is None:
-        start = arrow.now().replace(days=-30).datetime
+        start = arrow.now().replace(days=-30)
     else:
-        start = arrow.get(start + tz, r'MM/DD/YYYY Z').datetime
+        start = arrow.get(start + tz, r'MM/DD/YYYY Z')
 
-    profits, totals = get_profits(request.user.pk, store.id, start, end)
+    end = end.to(request.session['django_timezone']).datetime
+    start = start.to(request.session['django_timezone']).datetime
+
+    profits, totals = get_profits(request.user.pk, store.id, start, end, request.session['django_timezone'])
 
     profits_json = json.dumps(profits[::-1])
     profits_per_page = len(profits) + 1 if limit == 0 else limit
