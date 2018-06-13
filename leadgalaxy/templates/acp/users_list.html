@@ -144,7 +144,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="5" class="text-center" style="border-top:none">
-                            <i>No User Found</i>
+                            <i>No user match for: <b>{{q}}</b></i>
                         </td>
                    </tr>
                     {% endfor %}
@@ -170,8 +170,14 @@
                                 <td><span class="itooltip" title="{{i.date}}">{{ i.date_str }}</span></td>
                                 <td>{{ i.expired|yesno:'Yes,No' }}</td>
                                 <td>
-                                    <a href="text-danger" class="btn btn-xs btn-info registration-apply-btn"
+                                    {% if users %}
+                                    <a href="#" class="btn btn-xs btn-info registration-apply-btn"
                                         user-id="{{users.0.id}}" register-id="{{i.id}}">Apply</a>
+                                    {% else %}
+                                        <a href="/accounts/register/{{i.register_hash}}" class="btn btn-xs btn-success" target="_blank">
+                                            Registration Link
+                                        </a>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}

@@ -1807,6 +1807,8 @@ def acp_users_list(request):
     if request.GET.get('plan', None):
         users = users.filter(profile__plan_id=request.GET.get('plan'))
 
+    registrations_email = None
+
     if q:
         if request.GET.get('store'):
             users = users.filter(
@@ -1845,6 +1847,9 @@ def acp_users_list(request):
                 users = limited_users
 
         profiles = UserProfile.objects.filter(user__in=users)
+
+        if '@' in q:
+            registrations_email = q
 
         AdminEvent.objects.create(
             user=request.user,
@@ -1915,7 +1920,16 @@ def acp_users_list(request):
             for i in stripe.Subscription.list(customer=customer_id).data:
                 subscribtions.append(i)
 
-        for i in PlanRegistration.objects.filter(email__iexact=users[0].email):
+        registrations_email = users[0].email
+
+        try:
+            from last_seen.models import LastSeen
+            user_last_seen = arrow.get(LastSeen.objects.when(users[0], 'website')).humanize()
+        except:
+            user_last_seen = ''
+
+    if registrations_email:
+        for i in PlanRegistration.objects.filter(email__iexact=registrations_email):
             i.date = arrow.get(i.created_at).format('MM/DD/YYYY HH:mm')
             i.date_str = arrow.get(i.created_at).humanize()
 
@@ -1924,16 +1938,11 @@ def acp_users_list(request):
         if subscribtions and registrations:
             messages.warning(request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
 
-        try:
-            from last_seen.models import LastSeen
-            user_last_seen = arrow.get(LastSeen.objects.when(users[0], 'website')).humanize()
-        except:
-            user_last_seen = ''
-
     plans = GroupPlan.objects.all()
     bundles = FeatureBundle.objects.all()
 
     return render(request, 'acp/users_list.html', {
+        'q': q,
         'users': users,
         'plans': plans,
         'bundles': bundles,
