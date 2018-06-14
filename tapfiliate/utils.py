@@ -25,16 +25,23 @@ def find_conversation_from_stripe(customer_id):
     )
 
     rep.raise_for_status()
-    assert len(rep.json()) == 1
+
+    if not len(rep.json()):
+        return None
+
+    elif len(rep.json()) > 1:
+        raise Exception('More Than One Conversion')
 
     return rep.json()[0]
 
 
 def add_commission_from_stripe(charge_id):
-    charge = stripe.Invoice.retrieve(charge_id)
+    charge = stripe.Charge.retrieve(charge_id)
 
     customer_id = charge.customer
     conversion = find_conversation_from_stripe(customer_id)
+    if not conversion:
+        return
 
     customer = stripe.Customer.retrieve(customer_id)
     if arrow.get(customer.created).replace(years=1) < arrow.utcnow():
