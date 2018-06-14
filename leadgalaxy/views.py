@@ -3616,6 +3616,27 @@ def orders_track(request):
     completed = request.GET.get('completed')
     source_reason = request.GET.get('reason')
     days_passed = request.GET.get('days_passed', '')
+    date = request.GET.get('date', '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY')))
+
+    if query:
+        date = None
+
+    created_at_start, created_at_end = None, None
+    if date:
+        try:
+            daterange_list = date.split('-')
+
+            tz = timezone.localtime(timezone.now()).strftime(' %z')
+
+            created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+
+            if len(daterange_list) > 1 and daterange_list[1]:
+                created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                created_at_end = created_at_end.span('day')[1].datetime
+
+        except:
+            pass
+
     if days_passed == 'expired':
         days_passed = request.user.get_config('sync_delay_notify_days')
         fulfillment_filter = '0'
@@ -3693,6 +3714,12 @@ def orders_track(request):
         time_threshold = timezone.now() - timezone.timedelta(days=days_passed)
         orders = orders.filter(created_at__lt=time_threshold)
 
+    if created_at_start:
+        orders = orders.filter(created_at__gte=created_at_start)
+
+    if created_at_end:
+        orders = orders.filter(created_at__lte=created_at_end)
+
     sync_delay_notify_days = utils.safeInt(request.user.get_config('sync_delay_notify_days'))
     sync_delay_notify_highlight = request.user.get_config('sync_delay_notify_highlight')
     order_threshold = None
@@ -3715,6 +3742,7 @@ def orders_track(request):
     return render(request, 'orders_track.html', {
         'store': store,
         'orders': orders,
+        'date': date,
         'order_threshold': order_threshold,
         'paginator': paginator,
         'current_page': page,

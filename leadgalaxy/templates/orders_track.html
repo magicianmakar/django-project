@@ -75,6 +75,22 @@
                     >
 
                     <div class="row">
+                       <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
+                           <label>Date Range:</label>
+                       </div>
+                       <div class="col-md-4">
+                           <div id="date" class="form-control">
+                               <i class="fa fa-calendar m-r-xs"></i>
+                               <span>All Time</span>
+                               <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                           </div>
+                           <input type="hidden" type="text" name="date" value="{{ date|default:'' }}" />
+                       </div>
+                       <div class="col-md-6" style="">
+                           <span class="help-block "></span>
+                       </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
                             <label>Query:</label>
                         </div>

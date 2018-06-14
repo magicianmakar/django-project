@@ -273,6 +273,7 @@
         $(this).find(":input").filter(function() {
             return ((this.name == 'tracking' && this.value === '') ||
                 (this.name == 'reason' && this.value === '') ||
+                (this.name == 'days_passed' && this.value === '') ||
                 (this.name == 'hidden' && this.value == '0') ||
                 (this.name == 'fulfillment' && this.value == '2') ||
                 (this.name == 'query' && this.value.trim().length === 0));
