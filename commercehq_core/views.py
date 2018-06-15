@@ -91,6 +91,11 @@ class StoresList(ListView):
         can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
         is_stripe = self.request.user.profile.plan.is_stripe()
         stores_count = self.request.user.profile.get_stores_count()
+
+        context['add_store_btn'] = not self.request.user.is_subuser \
+            and (can_add or self.request.user.profile.plan.extra_stores) \
+            and not self.request.user.profile.from_shopify_app_store()
+
         context['extra_stores'] = can_add and is_stripe and stores_count >= 1 and total_allowed != -1
         context['breadcrumbs'] = ['Stores']
 

@@ -450,6 +450,9 @@ class UserProfile(models.Model):
             self.ips = json.dumps(user_ips[-9:])  # Save last 9 Ips
             self.save()
 
+    def from_shopify_app_store(self):
+        return bool(self.shopify_app_store or self.get_config_value('shopify_app_store'))
+
 
 class UserCompany(models.Model):
     name = models.CharField(max_length=100, blank=True, default='')
@@ -1824,6 +1827,7 @@ class GroupPlan(models.Model):
     stores = models.IntegerField(default=0, verbose_name="Stores Limit")
     products = models.IntegerField(default=0, verbose_name="Products Limit")
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
+    extra_stores = models.BooleanField(default=True, verbose_name='Support adding extra stores')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     badge_image = models.CharField(max_length=512, blank=True, default='')

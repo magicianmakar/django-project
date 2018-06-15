@@ -1,5 +1,6 @@
 {% load perms_helper %}
 
+{% if not user.profile.from_shopify_app_store %}
 <div class="dropdown">
     <button class="btn btn-default btn-outline dropdown-toggle"
             type="button" id="dropdownMenu1" data-toggle="dropdown"
@@ -50,3 +51,4 @@
         {% endif %}
     </ul>
 </div>
+{% endif %}

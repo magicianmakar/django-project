@@ -92,7 +92,7 @@
                             {% endfor %}
                       </tbody>
                     </table>
-                    {% if not user.is_subuser %}
+                    {% if add_store_btn %}
                         <a class="add-store-btn btn btn-primary btn-sm" href="#" data-extra="{{extra_stores|lower}}">
                             Add Store
                         </a>

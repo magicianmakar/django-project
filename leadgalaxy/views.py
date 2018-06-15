@@ -78,43 +78,50 @@ from .templatetags.template_helper import money_format
 
 @login_required
 def index_view(request):
-    stores = request.user.profile.get_shopify_stores()
-    config = request.user.models_user.profile.get_config()
+    user = request.user
+
+    stores = user.profile.get_shopify_stores()
+    config = user.models_user.profile.get_config()
 
     first_visit = config.get('_first_visit', True)
 
     if first_visit:
-        request.user.set_config('_first_visit', False)
+        user.set_config('_first_visit', False)
 
-    if request.user.profile.plan.slug == 'jvzoo-free-gift':
+    if user.profile.plan.slug == 'jvzoo-free-gift':
         first_visit = False
 
-    can_add, total_allowed, user_count = permissions.can_add_store(request.user)
+    can_add, total_allowed, user_count = permissions.can_add_store(user)
 
-    extra_stores = can_add and request.user.profile.plan.is_stripe() and \
-        request.user.profile.get_stores_count() >= 1 and \
+    extra_stores = can_add and user.profile.plan.is_stripe() and \
+        user.profile.get_stores_count() >= 1 and \
         total_allowed != -1
 
-    pending_sub = request.user.shopifysubscription_set.filter(status='pending')
+    add_store_btn = not user.is_subuser \
+        and (can_add or user.profile.plan.extra_stores) \
+        and not user.profile.from_shopify_app_store()
+
+    pending_sub = user.shopifysubscription_set.filter(status='pending')
     if len(pending_sub):
         charge = pending_sub[0].refresh()
         if charge.status == 'pending':
             request.session['active_subscription'] = charge.id
             return HttpResponseRedirect(charge.confirmation_url)
 
-    templates = DescriptionTemplate.objects.filter(user=request.user.models_user).defer('description')
-    markup_rules = PriceMarkupRule.objects.filter(user=request.user.models_user)
+    templates = DescriptionTemplate.objects.filter(user=user.models_user).defer('description')
+    markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
         'first_visit': first_visit or request.GET.get('new'),
         'extra_stores': extra_stores,
+        'add_store_btn': add_store_btn,
         'templates': templates,
         'markup_rules': markup_rules,
         'lead_dyno_record': request.session.pop('lead_dyno_record', False),
         'page': 'index',
-        'user_statistics': cache.get('user_statistics_{}'.format(request.user.id)),
+        'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
         'breadcrumbs': ['Stores']
     })
 

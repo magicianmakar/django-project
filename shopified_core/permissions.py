@@ -161,10 +161,10 @@ def can_add_store(user):
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
-        if not profile.can('unlimited_stores.use') or profile.get_config_value('_limit_stores'):
+        if not profile.can('unlimited_stores.use'):
             can_add = False
 
-    if not can_add and profile.plan.is_stripe():
+    if not can_add and profile.plan.is_stripe() and profile.plan.extra_stores:
         can_add = not profile.plan.is_free
 
     return can_add, total_allowed, user_count
