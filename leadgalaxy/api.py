@@ -1402,7 +1402,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         can_add, total_allowed, user_count = permissions.can_add_store(user)
 
         extra_stores = can_add and user.profile.plan.is_stripe() and \
-            user.profile.get_shopify_stores().count() >= 1
+            user.profile.get_shopify_stores().count() >= total_allowed
 
         config['extra_stores'] = extra_stores
 

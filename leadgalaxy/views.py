@@ -94,7 +94,7 @@ def index_view(request):
     can_add, total_allowed, user_count = permissions.can_add_store(user)
 
     extra_stores = can_add and user.profile.plan.is_stripe() and \
-        user.profile.get_stores_count() >= 1 and \
+        user.profile.get_stores_count() >= total_allowed and \
         total_allowed != -1
 
     add_store_btn = not user.is_subuser \

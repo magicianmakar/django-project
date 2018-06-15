@@ -106,7 +106,7 @@ class StoresList(ListView):
             and (can_add or self.request.user.profile.plan.extra_stores) \
             and not self.request.user.profile.from_shopify_app_store()
 
-        context['extra_stores'] = can_add and is_stripe and stores_count >= 1 and total_allowed != -1
+        context['extra_stores'] = can_add and is_stripe and stores_count >= total_allowed and total_allowed != -1
         context['breadcrumbs'] = ['Stores']
 
         return context
