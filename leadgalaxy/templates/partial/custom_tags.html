@@ -209,7 +209,7 @@
   tap('create', '6857-ecfa17');
 
   {% if user.is_authenticated and user.is_stripe_customer %}
-    tap('conversion', '{{ user.stripe_customer.customer_id }}');
+    tap('conversion', '{{ user.stripe_customer.customer_id }}', 0);
   {% else %}
     tap('detect');
   {% endif %}
