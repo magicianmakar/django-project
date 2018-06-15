@@ -149,7 +149,7 @@
         btn.hide();
         $('.stop-update-btn').show();
 
-        var createdAt = $(input_id).val();
+        var createdAt = $('input[name="created_at_daterange"]').val();
         if (createdAt.indexOf('all-time') > -1) {
             createdAt = '';
         }
