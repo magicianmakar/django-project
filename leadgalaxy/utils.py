@@ -2745,16 +2745,16 @@ def format_queueable_orders(request, orders, current_page):
             queue_order['order_name'] = line_item['order_name']
             queue_order['order_id'] = line_item['order_id']
 
-            queue_order['line_title'] = '<ul style="padding:0px;overflow-x:hidden;">'
+            queue_order['line_title'] = u'<ul style="padding:0px;overflow-x:hidden;">'
 
             for line_item in queue_order['items'][:3]:
-                queue_order['line_title'] += '<li>&bull; {}</li>'.format(line_item['line_title'])
+                queue_order['line_title'] += u'<li>&bull; {}</li>'.format(line_item['line_title'])
 
             count = len(queue_order['items']) - 3
             if count > 0:
-                queue_order['line_title'] += '<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
+                queue_order['line_title'] += u'<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
 
-            queue_order['line_title'] += '</ul>'
+            queue_order['line_title'] += u'</ul>'
 
             orders_result.append(queue_order)
 
