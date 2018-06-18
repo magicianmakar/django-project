@@ -341,7 +341,7 @@ def process_webhook_event(request, event_id, raven_client):
                 raven_client.captureException(level='warning')
 
         except StripeCustomer.DoesNotExist:
-            if sub.plan.metadata.get('click_funnels') or sub.plan.metadata.get('lifetime'):
+            if sub.plan.metadata.get('click_funnels') or sub.plan.metadata.get('lifetime') or request.GET.get('cf'):
                 stripe_customer = stripe.Customer.retrieve(sub.customer)
 
                 fullname = ''
