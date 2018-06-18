@@ -322,13 +322,25 @@
                     </div>
                     </form>
 
+                    {% if store_order_synced and open_orders and user|can:'bulk_order.use' %}
+                    <div class="row m-t">
+                        <div class="col-md-2 col-md-offset-10 text-right">
+                            <a class="btn  btn-success btn-rounded btn-sm itooltip bulk-order-btn"
+                                title="Place orders in bulk" href="#"
+                                pages-count="{{paginator.num_pages}}" orders-count="{{open_orders}}"
+                                {% if not open_orders %}disabled{% endif %}
+                                >Bulk Order Processing</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="orders">
                         {% for order in orders %}
                         <div class="order" order-id="{{order.id}}" connected="{{order.connected_lines}}">
                             <div class="header">
                                 <div class="row">
                                     <div class="col-xs-2">
-                                        <b>Order <a href="{{order.order_url}}" target="_blank">{{order.name}}</a></b>
+                                        <b>Order <a href="{{order.order_url}}" target="_blank" id="order_{{order.name}}">{{order.name}}</a></b>
 
                                         {% if order_debug %}
                                             <a class="badge badge-info" target="_blank" href="{{order.order_api_url}}">order</a>
@@ -373,7 +385,7 @@
                                             <div class="btn-group pull-right" style="display:flex">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc">
-                                                    Order All
+                                                    Order Items
                                                 </button>
 
                                                 <button type="button" class="btn btn-success btn-xs dropdown-toggle"
@@ -382,7 +394,7 @@
                                                 </button>
 
                                                 <ul class="dropdown-menu pull-right">
-                                                    <li><a class="order-seleted-lines" href="#">Order Selected</a></li>
+                                                    <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
                                                 </ul>
                                             </div>
                                         {% endif %}
@@ -792,6 +804,32 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
                 <button id="save-variant-change" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="bulk-order-modal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Bulk Order Processing Search</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="update-progress">
+                            <div class="progress progress-striped active">
+                                <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger btn-outline pull-left stop-bulk-btn" style=""
+                    data-store="{{store.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Stopping...">
+                    <i class="fa fa-stop-circle"></i> Stop</button>
             </div>
         </div>
     </div>

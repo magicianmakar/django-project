@@ -1,4 +1,4 @@
-/* global $, toastr, swal, displayAjaxError */
+/* global $, toastr, swal, displayAjaxError, cleanUrlPatch */
 
 (function(user_filter, sub_conf, product_variants) {
 'use strict';
@@ -641,41 +641,25 @@ $('.hide-non-connected-btn').click(function () {
     }
 });
 
-function addOrderToQueue(order) {
-    window.extensionSendMessage({
-        subject: 'getVersion',
-        from: 'website',
-    }, function(rep) {
-        if (rep && rep.version) {
-            if (versionCompare('1.71.0', rep.version) <= 0) {
-                // New Version that support Ordes Queue
-                window.extensionSendMessage({
-                    subject: 'AddOrderToQueue',
-                    from: 'website',
-                    order: order
-                }, function(rep) {
-                    if (rep && rep.error == 'alread_in_queue') {
-                        toastr.error('Product is already in Orders Queue');
-                    }
-                });
-            } else {
-                window.extensionSendMessage({
-                    subject: 'InitOrderAll',
-                    url: order.url
-                }, function(rep) {});
+function addOrderToQueue(order, warn) {
+    warn = typeof(warn) !== 'undefined' ? warn : true;
 
-                setTimeout(function () {
-                    window.extensionSendMessage({
-                        subject: 'OpenWindowUrl',
-                        url: order.url
-                    }, function(rep) {});
-                }, 100);
-            }
-        } else {
-            swal('Please Reload the page and make sure you are using the latest version of the extension');
+    if (!window.extensionSendMessage) {
+        swal('Please Reload the page and make sure you are using the latest version of the extension');
+        return;
+    }
+
+    window.extensionSendMessage({
+        subject: 'AddOrderToQueue',
+        from: 'website',
+        order: order
+    }, function(rep) {
+        if (rep && rep.error == 'alread_in_queue' && warn) {
+            toastr.error('Product is already in Orders Queue');
         }
     });
 }
+
 $('.queue-order-btn').click(function(e) {
     e.preventDefault();
     var btn = $(e.target);
@@ -861,6 +845,113 @@ $('.help-select').each(function (i, el) {
     });
 
     $(el).trigger('change');
+});
+
+function fetchOrdersToQueue(data) {
+    var bulkOrdersFound = 0;
+    var api_url = /^http/.test(data) ? data : cleanUrlPatch(window.location.href);
+    var api_data = /^http/.test(data) ? null : data;
+    $.ajax({
+        url: api_url,
+        type: 'GET',
+        data: api_data,
+        success: function(data) {
+            var pbar = $('#bulk-order-modal .progress .progress-bar');
+            var page = parseInt(pbar.attr('current')) + 1;
+            var pmax = parseInt(pbar.attr('max'));
+            pbar.css('width', ((page * 100.0) / pmax) + '%')
+                .text(page + ' Page' + (page > 1 ? 's' : ''))
+                .attr('current', page);
+
+            $.each(data.orders, function (i, order) {
+                window.ordersQueueData.push(order);
+            });
+
+            if (data.next && !window.bulkOrderStop) {
+                fetchOrdersToQueue(data.next);
+            } else {
+                window.bulkOrderStop = false;
+
+                $('.stop-bulk-btn').button('reset');
+                $('#bulk-order-modal').modal('hide');
+
+                if (window.ordersQueueData.length) {
+                    swal({
+                        title: 'Bulk Orders Processing',
+                        text: 'You have ' + window.ordersQueueData.length + ' Order' +
+                              (window.ordersQueueData.length ? 's' : '') + ' that need to be fulfilled',
+                        type: "success",
+                        showCancelButton: true,
+                        animation: false,
+                        cancelButtonText: "Cancel",
+                        confirmButtonText: 'Continue',
+                        closeOnCancel: true,
+                        closeOnConfirm: false,
+                        showLoaderOnConfirm: true,
+                    },
+                    function(isConfirm) {
+                        if (isConfirm) {
+                            $.each(window.ordersQueueData, function (i, order) {
+                                addOrderToQueue(order, false);
+                            });
+
+                            swal.close();
+                        }
+                    });
+                } else {
+                    swal({
+                        title: 'Bulk Orders Processing',
+                        text: 'No order has been found!',
+                        type: "warning"
+                    });
+                }
+            }
+        },
+        error: function(data) {
+            displayAjaxError('Bulk Order Processing Search', data);
+        }
+    });
+}
+
+$('.bulk-order-btn').click(function (e) {
+    e.preventDefault();
+
+    var orders_count = parseInt($(e.target).attr('orders-count'));
+    if (!orders_count) {
+        swal({
+            title: 'No orders found',
+            text: 'Try adjusting your current Filters',
+            type: "warning",
+        });
+
+        return;
+    }
+
+    window.ordersQueueData = [];
+
+    $('#bulk-order-modal .progress .progress-bar').css('width', '0px');
+    $('#bulk-order-modal .progress .progress-bar').attr('max', $(e.target).attr('pages-count'));
+    $('#bulk-order-modal .progress .progress-bar').attr('current', '0');
+
+    $('#bulk-order-modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    var formData = $('form.filter-form').serializeArray();
+    formData.push({
+        name: 'bulk_queue',
+        value: '1',
+    });
+
+    fetchOrdersToQueue(formData);
+});
+
+$('.stop-bulk-btn').click(function (e) {
+    e.preventDefault();
+
+    window.bulkOrderStop = true;
+    $(e.target).button('loading');
 });
 
 $('#country-filter').chosen({
