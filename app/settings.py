@@ -153,6 +153,8 @@ DATABASES = {
     }
 }
 
+DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
+
 # Cache
 CACHES = {
     "default": {
