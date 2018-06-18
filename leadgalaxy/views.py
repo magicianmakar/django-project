@@ -3531,12 +3531,14 @@ def orders_view(request):
 
         all_orders.append(order)
 
+    bulk_queue = bool(request.GET.get('bulk_queue'))
+
     active_orders = {}
     for i in orders_ids:
         active_orders['active_order_{}'.format(i)] = True
 
-    caches['orders'].set_many(orders_cache, timeout=21600)
-    caches['orders'].set_many(active_orders, timeout=3600)
+    caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
+    caches['orders'].set_many(active_orders, timeout=86400 if bulk_queue else 3600)
 
     if store_order_synced:
         countries = get_counrties_list()
@@ -3550,6 +3552,9 @@ def orders_view(request):
         (request.user.is_superuser and request.GET.get('debug')) or \
         request.user.get_config('_orders_debug') or \
         settings.DEBUG
+
+    if bulk_queue:
+        return utils.format_queueable_orders(request, all_orders, current_page)
 
     return render(request, 'orders_new.html', {
         'orders': all_orders,
