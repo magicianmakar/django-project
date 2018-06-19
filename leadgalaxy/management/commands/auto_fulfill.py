@@ -45,9 +45,7 @@ class Command(DropifiedBaseCommand):
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
 
-        fulfill_max = min(fulfill_max, len(orders)) if fulfill_max else len(orders)
-
-        self.write('Auto Fulfill {}/{} Orders'.format(fulfill_max, len(orders)), self.style.HTTP_INFO)
+        self.write('Auto Fulfill {} Orders'.format(fulfill_max), self.style.HTTP_INFO)
 
         counter = {
             'fulfilled': 0,
@@ -57,7 +55,7 @@ class Command(DropifiedBaseCommand):
         self.store_countdown = {}
         self.start_at = timezone.now()
 
-        for order in orders[:fulfill_max]:
+        for order in orders[:fulfill_max].iterator():
             try:
                 counter['need_fulfill'] += 1
 
