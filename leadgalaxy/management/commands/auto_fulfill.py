@@ -3,6 +3,7 @@ from django.utils import timezone
 import requests
 import time
 from simplejson import JSONDecodeError
+from tqdm import tqdm
 
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import *
@@ -28,6 +29,8 @@ class Command(DropifiedBaseCommand):
             '--uptime', dest='uptime', action='store', type=float, default=8,
             help='Maximuim task uptime (minutes)')
 
+        parser.add_argument('--progress', dest='progress', action='store_true', help='Shopw Reset Progress')
+
     def start_command(self, *args, **options):
         fulfill_store = options.get('store')
         fulfill_max = options.get('max')
@@ -45,7 +48,10 @@ class Command(DropifiedBaseCommand):
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
 
-        self.write('Auto Fulfill {} Orders'.format(fulfill_max), self.style.HTTP_INFO)
+        self.write('Start Auto Fulfill')
+
+        if options['progress']:
+            pbar = tqdm(total=orders.count())
 
         counter = {
             'fulfilled': 0,
@@ -55,7 +61,10 @@ class Command(DropifiedBaseCommand):
         self.store_countdown = {}
         self.start_at = timezone.now()
 
-        for order in orders[:fulfill_max].iterator():
+        for order in orders[:fulfill_max]:
+            if options['progress']:
+                pbar.update(1)
+
             try:
                 counter['need_fulfill'] += 1
 
@@ -65,7 +74,7 @@ class Command(DropifiedBaseCommand):
                     order.save()
 
                     counter['fulfilled'] += 1
-                    if counter['fulfilled'] % 50 == 0:
+                    if not options['progress'] and counter['fulfilled'] % 50 == 0:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
