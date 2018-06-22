@@ -8,7 +8,7 @@ from rest_hooks.signals import raw_hook_event
 
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
-from .utils import parse_sku
+from .utils import parse_sku, variant_index
 
 PRODUCT_CHANGE_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -136,7 +136,7 @@ class ProductChange(models.Model):
     # send product change data to subscription hooks
     # sent data should have same structure as response data from fallback api endpoints
     # zapier_core.views.ZapierSampleList uses this method
-    def to_dict(self, category, change_index):
+    def to_dict(self, product_data, category, change_index):
         ret = {
             'product_id': self.product.id,
             'store_type': self.store_type,
@@ -146,10 +146,23 @@ class ProductChange(models.Model):
         }
         changes = self.get_data(category)
         if changes and len(changes):
-            ret.update(changes[change_index])
-        return ret
+            change = changes[change_index]
+            if product_data and change.get('sku'):
+                idx = variant_index(self.product, change.get('sku'), product_data.get('variants', []))
+                if idx is not None:
+                    change['variant_id'] = product_data['variants'][idx]['id']
+                    title = product_data['variants'][idx].get('title')
+                    if title is None:
+                        title = ' / '.join(product_data['variants'][idx].get('variant', []))
+                    change['variant_title'] = title
+                    ret.update(change)
+                    return ret
+            else:
+                ret.update(change)
+                return ret
+        return None
 
-    def send_hook_event(self):
+    def send_hook_event(self, product_data):
         # Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
         # Query params of hook's target url are used to filter events to be triggered.
         # Following url is hook's target url to get specific event for one shopify product
@@ -159,13 +172,14 @@ class ProductChange(models.Model):
             category = ProductChange.get_category_from_event(event)
             changes = self.get_data(category)
             for i, change in enumerate(changes):
-                payload = self.to_dict(category, i)
-                raw_hook_event.send(
-                    sender=None,
-                    event_name=event,
-                    payload=payload,
-                    user=user
-                )
+                payload = self.to_dict(product_data, category, i)
+                if payload is not None:
+                    raw_hook_event.send(
+                        sender=None,
+                        event_name=event,
+                        payload=payload,
+                        user=user
+                    )
 
 
 class ProductVariantPriceHistory(models.Model):
