@@ -58,14 +58,13 @@ class ProductChangeManager():
 
     def apply_changes(self):
         try:
-            self.product_change.send_hook_event()
+            product_data = self.get_product_data()
+            self.product_change.send_hook_event(product_data)
             if not self.need_update():
                 # No need to check for updates, the user doesn't have any setting that will require a product update
                 self.product_change.status = 1  # Applied
                 self.product_change.save()
                 return
-
-            product_data = self.get_product_data()
 
             if product_data:
                 product_change_data = self.apply_product_changes(product_data)
@@ -126,7 +125,7 @@ class ProductChangeManager():
     def get_variant(self, product_data, variant_change):
         # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
         sku = variant_change.get('sku')
-        return variant_index(self.product, sku, product_data['variants'])
+        return variant_index(self.product, sku, product_data.get('variants', []))
 
     def handle_variant_price_change(self, product_data, variant_change):
         idx = self.get_variant(product_data, variant_change)
@@ -270,7 +269,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
         elif self.config['product_disappears'] == 'unpublish':
             product_data['published'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
-            for idx, variant in enumerate(product_data['variants']):
+            for idx, variant in enumerate(product_data.get('variants', [])):
                 product_data['variants'][idx]['inventory_quantity'] = 0
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
@@ -310,6 +309,8 @@ class ShopifyProductChangeManager(ProductChangeManager):
             variant['inventory_quantity'] = variant_change.get('quantity')
             variant['inventory_management'] = 'shopify'
             variant['inventory_policy'] = 'deny'
+            if product_data.get('variants') is None:
+                product_data['variants'] = []
             product_data['variants'].append(variant)
 
         return product_data
@@ -406,6 +407,8 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             variant['sku'] = variant_change.get('sku')
             variant['price'] = variant_change.get('price')
             # TODO: set quantity
+            if product_data.get('variants') is None:
+                product_data['variants'] = []
             product_data['variants'].append(variant)
 
         return product_data

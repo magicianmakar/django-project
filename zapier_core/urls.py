@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_visibility$', views.ProductVisibilityUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_notes$', views.ProductNotesUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_variant$', views.ProductVariantUpdate.as_view()),
+    url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/variants$', views.ProductVariantList.as_view()),
     url(r'^orders/shopify/(?P<pk>[0-9]+)$', views.ShopifyOrderDetail.as_view()),
     url(r'^orders/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/add_note$', views.OrderNotesUpdate.as_view()),
     url(r'^sub_user_emails$', views.SubUserEmails.as_view()),

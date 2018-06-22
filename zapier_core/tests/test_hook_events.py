@@ -40,7 +40,8 @@ class HookEventsTestCase(TestCase):
             target='TARGETURL',
         )
         product_change = ProductChange.objects.get(pk=4)
-        product_change.send_hook_event()
+        product_data = product_change.product.retrieve()
+        product_change.send_hook_event(product_data)
         requests_post.assert_called_once_with(
             url=hook.target,
             data=ANY,

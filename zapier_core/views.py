@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_hooks.models import Hook
 
 from shopified_core import permissions
-from shopified_core.utils import safeFloat
+from shopified_core.utils import safeFloat, safeInt
 
 from leadgalaxy.models import ShopifyProduct, ShopifyStore
 import leadgalaxy.tasks
@@ -21,7 +21,6 @@ import commercehq_core.tasks
 import commercehq_core.utils
 
 from product_alerts.models import ProductChange
-from product_alerts.utils import variant_index
 
 from .serializers import *
 
@@ -122,10 +121,39 @@ class ProductNotesUpdate(APIView):
         return Response({'id': pk})
 
 
+class ProductVariantList(APIView):
+    def get(self, request, pk, store_type):
+        user = request.user
+        if store_type == 'shopify':
+            product = ShopifyProduct.objects.get(id=pk)
+        elif store_type == 'chq':
+            product = CommerceHQProduct.objects.get(id=pk)
+
+        permissions.user_can_view(user, product)
+        variants = []
+        if store_type == 'shopify':
+            # Get product info from shopify store
+            product_data = leadgalaxy.utils.get_shopify_product(product.store, product.shopify_id)
+            for variant in product_data.get('variants', []):
+                variants.append({
+                    'id': variant['id'],
+                    'title': variant['title'],
+                })
+        elif store_type == 'chq':
+            # Get product info from chq store
+            product_data = product.retrieve()
+            for variant in product_data.get('variants', []):
+                variants.append({
+                    'id': variant['id'],
+                    'title': ' / '.join(variant['variant']),
+                })
+        return Response(variants)
+
+
 class ProductVariantUpdate(APIView):
     def post(self, request, pk, store_type):
         user = request.user
-        sku = request.DATA.get('sku')
+        variant_id = safeInt(request.DATA.get('variant_id'))
         price = safeFloat(request.DATA.get('price'))
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
@@ -136,23 +164,22 @@ class ProductVariantUpdate(APIView):
         if store_type == 'shopify':
             # Get product info from shopify store
             product_data = leadgalaxy.utils.get_shopify_product(product.store, product.shopify_id)
-            # parse sku and get variant index from product info
-            idx = variant_index(product, sku, product_data['variants'])
-            if idx is not None:  # Found a variant
-                product_data['variants'][idx]['price'] = round(price, 2)
-                res = leadgalaxy.utils.update_shopify_product_data(product.store, product.shopify_id, product_data)
-                res.raise_for_status()
+            for idx, variant in enumerate(product_data.get('variants', [])):
+                if variant['id'] == variant_id:
+                    product_data['variants'][idx]['price'] = round(price, 2)
+                    res = leadgalaxy.utils.update_shopify_product_data(product.store, product.shopify_id, product_data)
+                    res.raise_for_status()
+                    return Response({'id': pk, 'variant_id': variant_id})
         elif store_type == 'chq':
             # Get product info from chq store
             product_data = product.retrieve()
-            # parse sku and get variant index from product info
-            idx = variant_index(product, sku, product_data['variants'])
-            if idx is not None:  # Found a variant
-                product_data['variants'][idx]['price'] = round(price, 2)
-                res = commercehq_core.utils.update_chq_product(product.store, product.source_id, {'variants': product_data['variants']})
-                res.raise_for_status()
-
-        return Response({'id': pk, 'sku': sku, 'variant_index': idx})
+            for idx, variant in enumerate(product_data.get('variants', [])):
+                if variant['id'] == variant_id:
+                    product_data['variants'][idx]['price'] = round(price, 2)
+                    res = commercehq_core.utils.update_chq_product(product.store, product.source_id, {'variants': product_data['variants']})
+                    res.raise_for_status()
+                    return Response({'id': pk, 'variant_id': variant_id})
+        raise Http404
 
 
 class ShopifyOrderDetail(APIView):
@@ -259,18 +286,24 @@ class ZapierSampleList(APIView):
                     'old_value': 119.72,
                     'new_value': 129.72,
                     'level': 'variant',
+                    'variant_id': 1,
+                    'variant_title': 'Sample Variant',
                 }, {
                     'name': 'quantity',
                     'sku': '14:193#Black;5:202697812#13.3-inch',
                     'old_value': 5,
                     'new_value': 4,
                     'level': 'variant',
+                    'variant_id': 1,
+                    'variant_title': 'Sample Variant',
                 }, {
                     'name': 'var_added',
                     'sku': '14:193#Black;5:202697812#13.3-inch',
                     'price': 22.1,
                     'availabe_qty': 95,
                     'level': 'variant',
+                    'variant_id': 1,
+                    'variant_title': 'Sample Variant',
                 }, {
                     'name': 'var_added',
                     'sku': '14:193#Black;5:202697812#13.3-inch',
@@ -288,7 +321,7 @@ class ZapierSampleList(APIView):
                     'old_value': False,
                 }]),
             )
-            sample = product_change.to_dict(ProductChange.get_category_from_event(event), 0)
+            sample = product_change.to_dict({}, ProductChange.get_category_from_event(event), 0)
         else:
             raise Http404
         return Response([sample])
