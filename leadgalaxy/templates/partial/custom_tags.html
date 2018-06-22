@@ -208,8 +208,11 @@
 
   tap('create', '6857-ecfa17');
 
-  {% if user.is_authenticated and user.is_stripe_customer %}
-    tap('conversion', '{{ user.stripe_customer.customer_id }}', 0);
+  {% if tapafilate_conversaion %}
+    tap('conversion', '{{ tapafilate_conversaion }}', 0, {meta_data: {
+        email: "{{ user.email }}",
+        name: "{{ user.get_full_name | default:'' | escapejs }}",
+      });
   {% else %}
     tap('detect');
   {% endif %}

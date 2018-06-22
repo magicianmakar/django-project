@@ -124,6 +124,7 @@ TEMPLATES = [
                 'leadgalaxy.context_processors.store_limits_check',
                 'subusers.context_processors.template_config',
                 'analytic_events.context_processors.analytic_events',
+                'leadgalaxy.context_processors.tapafilate_conversaion',
             ],
         },
     },

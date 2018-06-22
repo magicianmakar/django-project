@@ -479,6 +479,8 @@ def process_webhook_event(request, event_id, raven_client):
             'lastname': '',
         })
 
+        cache.set('affilaite_{}'.format(cus.id), True, timeout=604800)
+
         return HttpResponse('Invited To Slack')
 
     elif event.type == 'customer.deleted':
