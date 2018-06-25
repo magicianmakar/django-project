@@ -212,7 +212,7 @@
     tap('conversion', '{{ tapafilate_conversaion }}', 0, {meta_data: {
         email: "{{ user.email }}",
         name: "{{ user.get_full_name | default:'' | escapejs }}",
-      });
+      }});
   {% else %}
     tap('detect');
   {% endif %}
