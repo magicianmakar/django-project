@@ -61,7 +61,7 @@ def index(request):
     end = end.to(request.session['django_timezone']).datetime
     start = start.to(request.session['django_timezone']).datetime
 
-    profits, totals = get_profits(request.user.pk, store.id, start, end, request.session['django_timezone'])
+    profits, totals = get_profits(request.user.pk, store, start, end, request.session['django_timezone'])
 
     profits_json = json.dumps(profits[::-1])
     profits_per_page = len(profits) + 1 if limit == 0 else limit
