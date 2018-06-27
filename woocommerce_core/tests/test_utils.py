@@ -60,7 +60,18 @@ class WooCommerceAddressTest(TestCase):
                 'last_name': '',
                 'postcode': '',
                 'state': ''
-            }
+            },
+            'billing': {
+                'address_1': '',
+                'address_2': '',
+                'city': '',
+                'company': '',
+                'country': '',
+                'first_name': '',
+                'last_name': '',
+                'postcode': '',
+                'state': ''
+            },
         }
 
     def test_must_return_address_even_if_all_values_are_empty_strings(self):

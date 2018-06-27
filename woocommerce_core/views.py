@@ -421,6 +421,7 @@ class OrdersList(ListView):
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()
         models_user = self.request.user.models_user
+        country = order['shipping']['country'] or order['billing']['country']
 
         return {
             'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
@@ -436,7 +437,7 @@ class OrdersList(ListView):
             'order': {
                 'phone': {
                     'number': order['billing'].get('phone'),
-                    'country': order['shipping'].get('country'),
+                    'country': country,
                 },
                 'note': models_user.get_config('order_custom_note'),
                 'epacket': bool(models_user.get_config('epacket_shipping')),
@@ -524,7 +525,7 @@ class OrdersList(ListView):
         order_track_by_item = self.get_order_track_by_item(order_ids)
 
         for order in orders:
-            country_code = order['shipping'].get('country')
+            country_code = order['shipping']['country'] or order['billing']['country']
             date_created = self.get_order_date_created(order)
             order['date_paid'] = self.get_order_date_paid(order)
             order['date'] = date_created.datetime
@@ -536,6 +537,7 @@ class OrdersList(ListView):
             order['connected_lines'] = 0
             order['items'] = order.pop('line_items')
             order['lines_count'] = len(order['items'])
+            order['has_shipping_address'] = any(order['shipping'].values())
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)

@@ -441,7 +441,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
                 orders = r.json()
 
                 for order in orders:
-                    country = order['shipping']['country']
+                    country = order['shipping']['country'] or order['billing']['country']
                     cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
 
                     for item in order.get('line_items', []):
@@ -658,7 +658,7 @@ def get_woo_products(store, page=1, limit=50, all_products=False):
 
 def woo_customer_address(order):
     customer_address = {}
-    shipping_address = order['shipping']
+    shipping_address = order['shipping'] if any(order['shipping'].values()) else order['billing']
 
     for k in shipping_address.keys():
         if shipping_address[k] and type(shipping_address[k]) is unicode:

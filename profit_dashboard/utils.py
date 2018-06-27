@@ -1,6 +1,7 @@
 import arrow
 import re
 import simplejson as json
+import requests
 
 from datetime import date
 from collections import OrderedDict
@@ -103,7 +104,8 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
         account_model.save()
 
 
-def get_profits(user_id, store_id, start, end, store_timezone=''):
+def get_profits(user_id, store, start, end, store_timezone=''):
+    store_id = store.id
     days = arrow.Arrow.range('day', start, end) + [arrow.get(end)]
     profits_data = OrderedDict()
     for day in reversed(days):
@@ -130,9 +132,21 @@ def get_profits(user_id, store_id, start, end, store_timezone=''):
     for order in orders:
         # Date: YYYY-MM-DD
         date_key = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
+        if date_key not in profits_data:
+            continue
+
         profits_data[date_key]['revenue'] += order['total_price']
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
+
+    # Account for refunds processed within date range
+    for refund in order_refunds(store, start, end, store_timezone):
+        date_key = arrow.get(refund['processed_at']).format('YYYY-MM-DD')
+        if date_key not in profits_data:
+            continue
+
+        for adjustment in refund.get('order_adjustments'):
+            profits_data[date_key]['revenue'] += float(adjustment.get('amount'))
 
     shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id,
                                                          created_at__range=(start, end)) \
@@ -147,6 +161,9 @@ def get_profits(user_id, store_id, start, end, store_timezone=''):
     total_fulfillments_count = 0
     for shipping in shippings:
         date_key = arrow.get(shipping['date_key']).format('YYYY-MM-DD')
+        if date_key not in profits_data:
+            continue
+
         profits_data[date_key]['fulfillment_cost'] = safeFloat(shipping['total_cost__sum'])
         fulfillments_count = safeInt(shipping['id__count'])
         profits_data[date_key]['fulfillments_count'] = fulfillments_count
@@ -164,6 +181,9 @@ def get_profits(user_id, store_id, start, end, store_timezone=''):
 
     for ad_cost in ad_costs:
         date_key = arrow.get(ad_cost['date_key']).format('YYYY-MM-DD')
+        if date_key not in profits_data:
+            continue
+
         profits_data[date_key]['ad_spend'] = safeFloat(ad_cost['spend__sum'])
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
@@ -177,6 +197,8 @@ def get_profits(user_id, store_id, start, end, store_timezone=''):
 
     for other_cost in other_costs:
         date_key = arrow.get(other_cost['date_key']).format('YYYY-MM-DD')
+        if date_key not in profits_data:
+            continue
 
         other_cost_value = safeFloat(other_cost['amount__sum'])
         is_empty = profits_data[date_key]['empty']
@@ -286,3 +308,41 @@ def get_costs_from_track(track, commit=False):
                 break
 
         return costs
+
+
+def order_refunds(store, start, end, store_timezone=''):
+    params = {
+        'updated_at_min': arrow.get(start).to(store_timezone).isoformat(),
+        'updated_at_max': arrow.get(end).to(store_timezone).isoformat(),
+        'fields': 'refunds',
+        'limit': 250
+    }
+    url = store.get_link('/admin/orders.json', api=True)
+
+    def retrieve_refunds(url, params):
+        orders_count = 250
+        while orders_count == 250:
+            r = requests.get(url=url, params=params)
+            orders = r.json().get('orders')
+            for order in orders:
+                for refund in order.get('refunds'):
+                    # Only yield refunds processed within date range
+                    processed_at = arrow.get(refund.get('processed_at'))
+                    if start < processed_at < end:
+                        yield refund
+
+            # There is still another page while orders count is at its max limit
+            params['page'] += 1
+            orders_count = len(orders)
+
+    # Partially refunded
+    params['financial_status'] = 'partially_refunded'
+    params['page'] = 1
+    for refund in retrieve_refunds(url, params):
+        yield refund
+
+    # Refunded and partially refunded can only be retrieved separately
+    params['financial_status'] = 'refunded'
+    params['page'] = 1  # New financial_status starting at 1st page
+    for refund in retrieve_refunds(url, params):
+        yield refund

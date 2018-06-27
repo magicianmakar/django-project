@@ -294,26 +294,50 @@
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
                                     <div class="col-md-3 col-xs-6" style="padding-left:5px">
-                                        {{order.shipping.first_name|default:''}} {{order.shipping.last_name|default:''}}
-                                        <br>
-                                        {{order.shipping.address_1}}<br>
-                                        {{order.shipping.address_2}}
+                                        {% if order.has_shipping_address %}
+                                            {{order.shipping.first_name|default:''}} {{order.shipping.last_name|default:''}}
+                                            <br>
+                                            {{order.shipping.address_1}}<br>
+                                            {{order.shipping.address_2}}
 
-                                        {% if order.shipping.address_2 %}<br>{% endif %}
+                                            {% if order.shipping.address_2 %}<br>{% endif %}
 
-                                        {{order.shipping.city}}
-                                        {% if order.shipping.postcode %}
-                                        , {{order.shipping.postcode}}
+                                            {{order.shipping.city}}
+                                            {% if order.shipping.postcode %}
+                                            , {{order.shipping.postcode}}
+                                            {% endif %}
+                                        {% else %}
+                                            {{order.billing.first_name|default:''}} {{order.billing.last_name|default:''}}
+                                            <br>
+                                            {{order.billing.address_1}}<br>
+                                            {{order.billing.address_2}}
+
+                                            {% if order.billing.address_2 %}<br>{% endif %}
+
+                                            {{order.billing.city}}
+                                            {% if order.billing.postcode %}
+                                            , {{order.billing.postcode}}
+                                            {% endif %}
                                         {% endif %}
                                         <br> {{order.billing.phone}}
-                                        <br> <b>{{order.shipping.country}}</b>
+                                        {% if order.has_shipping_address %}
+                                            <br> <b>{{order.shipping.country}}</b>
+                                        {% else %}
+                                            <br> <b>{{order.billing.country}}</b>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-1 col-xs-1">
-                                        <img class="itooltip" style="width: 16px"
-                                             title="{{order.shipping.country}}"
-                                             src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping.country|lower}}.svg">
-                                        <br />
-
+                                        {% if order.has_shipping_address %}
+                                            <img class="itooltip" style="width: 16px"
+                                                 title="{{order.shipping.country}}"
+                                                 src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping.country|lower}}.svg">
+                                            <br />
+                                        {% else %}
+                                            <img class="itooltip" style="width: 16px"
+                                                 title="{{order.billing.country}}"
+                                                 src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.billing.country|lower}}.svg">
+                                            <br />
+                                        {% endif %}
                                         {% if order.billing.email %}
                                             <a href="mailto:{{order.billing.email}}" class="itooltip" title="Send Email To The Customer">
                                                 <i class="fa fa-envelope-o fa-lg"></i>

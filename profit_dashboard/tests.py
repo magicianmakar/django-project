@@ -64,7 +64,10 @@ class FacebookAdCostsTestCase(TestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.user.save()
-        self.store = f.ShopifyStoreFactory(user=self.user)
+        self.store = f.ShopifyStoreFactory(
+            user=self.user,
+            api_url='https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
+        )
         self.store.save()
 
         self.access_token = "EAASor7q5H9wBABZBD1kZBZBnCStlWnU2RAbxGZCu5swK1v7F5W6o" + \
@@ -110,7 +113,7 @@ class FacebookAdCostsTestCase(TestCase):
     #     self.assertGreater(FacebookAdCost.objects.count(), 0)
 
     def test_ad_costs_dict_has_right_keys(self):
-        profits, totals = get_profits(self.user.id, self.store.id, timezone.now() - timedelta(days=30), timezone.now())
+        profits, totals = get_profits(self.user.id, self.store, timezone.now() - timedelta(days=30), timezone.now())
 
         self.assertItemsEqual(
             profits[0].keys(),
@@ -121,13 +124,16 @@ class FacebookAdCostsTestCase(TestCase):
 class RevenueTestCase(TestCase):
     def setUp(self):
         self.user = f.UserFactory()
-        self.store = f.ShopifyStoreFactory(user=self.user)
+        self.store = f.ShopifyStoreFactory(
+            user=self.user,
+            api_url='https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
+        )
         self.time = timezone.now()
         for i in range(10):
             ShopifyOrderFactory(store=self.store, created_at=self.time + timedelta(days=i))
 
         end = self.time + timedelta(9)
-        self.profits, self.totals = get_profits(self.user.id, self.store.id, self.time, end)
+        self.profits, self.totals = get_profits(self.user.id, self.store, self.time, end)
 
     def test_revenue_by_day_is_correct(self):
         i = 0
@@ -143,7 +149,10 @@ class RevenueTestCase(TestCase):
 class FulfillmentCostTestCase(TestCase):
     def setUp(self):
         self.user = f.UserFactory()
-        self.store = f.ShopifyStoreFactory(user=self.user)
+        self.store = f.ShopifyStoreFactory(
+            user=self.user,
+            api_url='https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
+        )
         time = timezone.now()
         self.now = timezone.now()
         self.total = 0.0
@@ -160,7 +169,7 @@ class FulfillmentCostTestCase(TestCase):
                 )
 
         end = self.now + timedelta(9)
-        self.profits, self.totals = get_profits(self.user.id, self.store.id, self.now, end)
+        self.profits, self.totals = get_profits(self.user.id, self.store, self.now, end)
 
     def test_fulfillment_cost_by_day_is_correct(self):
         i = 0
