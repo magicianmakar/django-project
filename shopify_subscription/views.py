@@ -7,8 +7,6 @@ from django.views.decorators.csrf import csrf_protect
 from shopified_core import permissions
 from shopified_core.utils import app_link
 from leadgalaxy.models import GroupPlan
-# from leadgalaxy.models import ClippingMagic, ClippingMagicPlan, CaptchaCredit, CaptchaCreditPlan
-from leadgalaxy.utils import get_plan
 
 from analytic_events.models import PlanSelectionEvent
 
@@ -40,6 +38,8 @@ def subscription_plan(request):
         user.shopifysubscription_set.all().update(status='cancelled')
         user.profile.change_plan(plan)
     else:
+        request.session['current_plan'] = user.profile.plan.id
+
         charge = store.shopify.RecurringApplicationCharge.create({
             "name": 'Dropified {}'.format(plan.title),
             "price": plan.monthly_price,
@@ -59,8 +59,6 @@ def subscription_plan(request):
         )
 
         sub.refresh(sub=charge)
-
-        user.shopifysubscription_set.exclude(id=sub.id).update(status='cancelled')
 
         request.session['active_subscription'] = sub.id
         request.session['active_plan'] = plan.id
@@ -91,8 +89,12 @@ def subscription_activated(request):
             del request.session['active_plan']
 
         messages.success(request, 'Your plan has been successfully changed!')
+
+        request.user.shopifysubscription_set.exclude(id=charge_id).update(status='cancelled')
+
     else:
-        request.user.profile.change_plan(get_plan(
+        request.user.profile.change_plan(GroupPlan.objects.get(
+            id=request.session['current_plan'],
             payment_gateway='shopify',
             plan_slug='starter-shopify'))
 
