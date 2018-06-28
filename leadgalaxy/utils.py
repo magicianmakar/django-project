@@ -2739,7 +2739,19 @@ def format_queueable_orders(request, orders, current_page):
             queue_order['items'].append(line_data)
             queue_order['line_id'].append(line_data['line_id'])
 
-        if len(queue_order['items']):
+        if len(queue_order['items']) == 1:
+            item = queue_order['items'][0]
+
+            del queue_order['cart']
+            del queue_order['items']
+
+            queue_order.update(item)
+
+            queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
+
+            orders_result.append(queue_order)
+
+        elif len(queue_order['items']) > 1:
             line_item = queue_order['items'][0]
             queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data'])
             queue_order['order_name'] = line_item['order_name']

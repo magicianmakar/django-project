@@ -908,7 +908,7 @@ function fetchOrdersToQueue(data) {
             }
         },
         error: function(data) {
-            displayAjaxError('Bulk Order Processing Search', data);
+            displayAjaxError('Bulk Order Processing', data);
         }
     });
 }
