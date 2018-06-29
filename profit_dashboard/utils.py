@@ -1,7 +1,6 @@
 import arrow
 import re
 import simplejson as json
-import requests
 
 from datetime import date
 from collections import OrderedDict
@@ -15,7 +14,7 @@ from facebookads.adobjects.adaccount import AdAccount
 
 from shopified_core.utils import ALIEXPRESS_REJECTED_STATUS
 from shopify_orders.models import ShopifyOrder
-from leadgalaxy.utils import safeInt, safeFloat
+from leadgalaxy.utils import safeInt, safeFloat, get_shopify_orders
 
 from .models import (
     FacebookAccess,
@@ -145,8 +144,13 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        for adjustment in refund.get('order_adjustments'):
-            profits_data[date_key]['revenue'] += float(adjustment.get('amount'))
+        for transaction in refund.get('transactions'):
+            kind = transaction.get('kind', 'refund')
+            test_transaction = transaction.get('test', False)
+            if not test_transaction and kind == 'refund':
+                profits_data[date_key]['revenue'] -= float(transaction.get('amount'))
+                profits_data[date_key]['empty'] = False
+                profits_data[date_key]['css_empty'] = ''
 
     shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id,
                                                          created_at__range=(start, end)) \
@@ -314,17 +318,21 @@ def order_refunds(store, start, end, store_timezone=''):
     params = {
         'updated_at_min': arrow.get(start).to(store_timezone).isoformat(),
         'updated_at_max': arrow.get(end).to(store_timezone).isoformat(),
-        'fields': 'refunds',
-        'limit': 250
     }
-    url = store.get_link('/admin/orders.json', api=True)
 
-    def retrieve_refunds(url, params):
+    def retrieve_refunds(params):
         orders_count = 250
-        while orders_count == 250:
-            r = requests.get(url=url, params=params)
-            orders = r.json().get('orders')
-            for order in orders:
+        limit = 250
+        page = 1
+        while orders_count >= limit:
+            shopify_orders = get_shopify_orders(store,
+                                                page=page,
+                                                limit=limit,
+                                                fields='refunds',
+                                                extra_params=params)
+            orders_count = 0
+            for order in shopify_orders:
+                orders_count += 1
                 for refund in order.get('refunds'):
                     # Only yield refunds processed within date range
                     processed_at = arrow.get(refund.get('processed_at'))
@@ -332,17 +340,14 @@ def order_refunds(store, start, end, store_timezone=''):
                         yield refund
 
             # There is still another page while orders count is at its max limit
-            params['page'] += 1
-            orders_count = len(orders)
+            page += 1
 
     # Partially refunded
     params['financial_status'] = 'partially_refunded'
-    params['page'] = 1
-    for refund in retrieve_refunds(url, params):
+    for refund in retrieve_refunds(params):
         yield refund
 
     # Refunded and partially refunded can only be retrieved separately
     params['financial_status'] = 'refunded'
-    params['page'] = 1  # New financial_status starting at 1st page
-    for refund in retrieve_refunds(url, params):
+    for refund in retrieve_refunds(params):
         yield refund

@@ -946,7 +946,7 @@ def get_shopify_order(store, order_id):
 
 
 def get_shopify_orders(store, page=1, limit=50, all_orders=False,
-                       order_ids=None, fields=None, session=requests):
+                       order_ids=None, fields=None, extra_params={}, session=requests):
 
     if not all_orders:
         params = {
@@ -955,6 +955,8 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
             'status': 'any',
             'order': 'created_at desc'
         }
+
+        params.update(extra_params)
 
         if order_ids:
             if type(order_ids) is list:
@@ -997,7 +999,8 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
         pages = int(ceil(count / float(limit)))
         for page in xrange(1, pages + 1):
             rep = get_shopify_orders(store=store, page=page, limit=limit,
-                                     fields=fields, all_orders=False, session=requests.session())
+                                     fields=fields, all_orders=False,
+                                     extra_params=extra_params, session=requests.session())
             for p in rep:
                 yield p
 
