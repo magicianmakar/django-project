@@ -74,6 +74,7 @@ class FacebookAdCostsTestCase(TestCase):
             "5UcAmKMR4z0T2lFNmhwSS6tWkXkifsMZA1aX2sYkBZBDZCqnbqIw8oCJgKn5ZBVC2jOHt" + \
             "zeTuuiBtBWNcc40zZCkn589nxHptuO54I3DoRLk8fqh5skJZA76mboZAAlYYUQDTAhIpc" + \
             "eYZA7JLHODWNEj6JDqhJfZB8y12ARYp7k6vOeB27h0ZD"
+        access = FacebookAccessFactory(store=self.store, user=self.user, access_token=self.access_token, expires_in=timezone.now() + timedelta(days=59))
 
         try:
             self.api = get_facebook_api(self.access_token)
@@ -105,7 +106,6 @@ class FacebookAdCostsTestCase(TestCase):
             get_facebook_ads(self.user, self.store, self.access_token, [account['id']], selected_campaigns)
         except FacebookRequestError, e:
             if e.api_error_code() == 17:  # (#17) User request limit reached
-                access = FacebookAccessFactory(store=self.store, user=self.user)
                 account = FacebookAccountFactory(access=access, store=self.store)
                 FacebookAdCostFactory(account=account)
 

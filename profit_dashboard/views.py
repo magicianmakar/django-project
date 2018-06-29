@@ -70,7 +70,7 @@ def index(request):
     page = paginator.page(page)
     profits = calculate_profits(page.object_list)
 
-    accounts = FacebookAccount.objects.filter(access__user=request.user)
+    accounts = FacebookAccount.objects.filter(access__store=store, access__user=request.user)
     need_setup = not FacebookAccess.objects.filter(user=request.user, store=store).exists()
 
     return render(request, 'profit_dashboard/index.html', {
@@ -129,7 +129,7 @@ def facebook_campaign(request):
     api = get_facebook_api(access_token)
 
     store = utils.get_store_from_request(request)
-    access, created = FacebookAccess.objects.update_or_create(
+    access, created = FacebookAccess.objects.get_or_create(
         user=request.user,
         store=store,
         defaults={'access_token': access_token}

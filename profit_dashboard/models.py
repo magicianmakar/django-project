@@ -1,4 +1,9 @@
+import arrow
+import json
+import requests
+
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
 
 from leadgalaxy.models import ShopifyStore
@@ -15,8 +20,44 @@ class FacebookAccess(models.Model):
     store = models.ForeignKey(ShopifyStore, null=True)
 
     access_token = models.CharField(max_length=255)
+    expires_in = models.DateTimeField(default=None, null=True, blank=True)
     account_ids = models.CharField(max_length=255, default='', blank=True)
     campaigns = models.TextField(default='', blank=True)
+
+    def exchange_long_lived_token(self, new_access_token=None):
+        """
+        Exchange current access token for long lived one with +59 days expiration
+        """
+        # Renew only if token expires in less than 2 weeks
+        delta_expires_in = self.expires_in - arrow.now().datetime
+        if self.expires_in is not None and delta_expires_in.days > 14:
+            return self.access_token
+
+        if new_access_token is not None:
+            self.access_token = new_access_token
+
+        # Token exchange must be done manually for now
+        url = 'https://graph.facebook.com/oauth/access_token'
+        session = requests.Session()
+        response = session.get(url, params={
+            'client_id': settings.FACEBOOK_APP_ID,
+            'client_secret': settings.FACEBOOK_APP_SECRET,
+            'fb_exchange_token': self.access_token,
+            'grant_type': 'fb_exchange_token'
+        })
+        token = json.loads(response.content)
+
+        # Default expire should be within the next hour
+        expires_in = arrow.now().replace(hours=1, minute=0)
+        if 'expires_in' in token:
+            expires_in_days = token['expires_in'] / 60 / 60 / 24  # Value is in seconds
+            expires_in = arrow.now().replace(days=expires_in_days, hour=0).datetime
+
+        self.access_token = token.get('access_token')
+        self.expires_in = expires_in
+        self.save()
+
+        return self.access_token
 
 
 class FacebookAccount(models.Model):

@@ -8,7 +8,8 @@
 
 {% block main-container %}
 
-{% if user|can:'profit_dashboard_facebook.use' %}
+{% with user|can:'profit_dashboard_facebook.use' as user_facebook_permission %}
+{% if user_facebook_permission %}
 <div class="ibox float-e-margins" id="facebook-insights" style="display: none;">
   <div class="ibox-title">
       <h5>Facebook Ad Costs</h5>
@@ -50,7 +51,7 @@
           {{ account.account_name }}
           <i> - last time synced at:</i>
           {{ account.last_sync|date:"m/d/Y" }}
-          <a href="#" id="fb-ad-remove" class="btn btn-danger btn-xs m-l" data-id="{{ account.pk }}">× Remove</a>
+          <a href="#" class="btn btn-danger btn-xs m-l fb-ad-remove" data-id="{{ account.pk }}">× Remove</a>
         </p>
         {% endfor %}
       </div>
@@ -126,7 +127,11 @@
                     <tbody>
                       <tr>
                         <td><button type="button" class="btn btn-info m-r-sm" id="total-revenue">{% money_format totals.revenue store True %}</button>Revenue</td>
+                        {% if user_facebook_permission %}
                         <td><button type="button" class="btn btn-warning m-r-sm" id="total-ad-spend">{% money_format totals.ad_spend store True %}</button>Ads Spend</td>
+                        {% else %}
+                        <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+                        {% endif %}
                         <td>
                           <button type="button" class="btn btn-primary m-r-sm">
                             {% money_format None store %}
@@ -161,7 +166,9 @@
                       <tr>
                         <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_count }}</button>Orders</td>
                         <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_per_day }}</button>Orders Per Day</td>
+                        {% if user_facebook_permission %}
                         <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+                        {% endif %}
                       </tr>
                     </tbody>
                   </table>
@@ -175,7 +182,9 @@
                         <th>Date</th>
                         <th>Revenue</th>
                         <th>Fulfillment Cost</th>
+                        {% if user_facebook_permission %}
                         <th>Ads Spend</th>
+                        {% endif %}
                         <th>Other Costs</th>
                         <th>Total Costs</th>
                         <th>Profit</th>
@@ -192,7 +201,9 @@
                           {% money_format profit.revenue store True %}
                         </td>
                         <td>{% money_format profit.fulfillment_cost store True %}</td>
+                        {% if user_facebook_permission %}
                         <td>{% money_format profit.ad_spend store True %}</td>
+                        {% endif %}
                         <td class="other-costs" data-original-amount="{{ profit.other_costs|default:'0'|floatformat:2 }}">
                           <form class="form-inline other-costs-form" action="{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}">
                             <div class="form-group">
@@ -248,6 +259,7 @@
                           Fulfillment Costs
                         </a>
                       </li>
+                      {% if user_facebook_permission %}
                       <li>
                         <a href="#" class="toggle-data btn btn-white" data-label="Ads Spend" data-key="ads_spend">
                           <i class="fa fa-check-square-o"></i>
@@ -255,6 +267,7 @@
                           Ads Spend
                         </a>
                       </li>
+                      {% endif %}
                       <li>
                         <a href="#" class="toggle-data btn btn-white" data-label="Other Costs" data-key="other_costs">
                           <i class="fa fa-check-square-o"></i>
@@ -317,7 +330,11 @@
   <tbody>
     <tr>
       <td><button type="button" class="btn btn-info m-r-sm">{{totals.currency_revenue}}</button>Revenue</td>
+      {% if user_facebook_permission %}
       <td><button type="button" class="btn btn-warning m-r-sm">{{totals.currency_ad_spend}}</button>Ads Spend</td>
+      {% else %}
+      <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+      {% endif %}
       <td>
         <button type="button" class="btn btn-primary m-r-sm">
           {{totals.currency_sign}}
@@ -351,7 +368,9 @@
       <tr>
         <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_count}}</button>Orders</td>
         <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_per_day}}</button>Orders Per Day</td>
+        {% if user_facebook_permission %}
         <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+        {% endif %}
       </tr>
     </tr>
   </tbody>
@@ -424,6 +443,7 @@
     </div>
   </div>
 </div>
+{% endwith %}
 
 {% endblock %}
 

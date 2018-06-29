@@ -639,7 +639,7 @@ var FacebookProfitDashboard = {
         this.onClickRemoveAccount();
     },
     onClickRemoveAccount: function() {
-        $('#fb-ad-remove').on('click', function(e) {
+        $('.fb-ad-remove').on('click', function(e) {
             e.preventDefault();
             var btn = $(this);
 

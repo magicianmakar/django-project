@@ -36,14 +36,9 @@ def get_facebook_api(access_token):
 
 def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None, config='include'):
     access, created = FacebookAccess.objects.update_or_create(user=user, store=store, defaults={
-        'access_token': access_token,
         'account_ids': ','.join(account_ids) if account_ids else '',
         'campaigns': ','.join(campaigns) if campaigns else ''
     })
-
-    if access_token and access_token != access.access_token:
-        access.access_token = access_token
-        access.save()
 
     if not account_ids:
         account_ids = access.account_ids.split(',') if access.account_ids else []
@@ -51,6 +46,7 @@ def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns
     if not campaigns:
         campaigns = access.campaigns.split(',') if access.campaigns else []
 
+    access_token = access.exchange_long_lived_token(access_token)
     api = get_facebook_api(access_token)
 
     user = FBUser(fbid='me', api=api)
