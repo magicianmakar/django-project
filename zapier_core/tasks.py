@@ -25,7 +25,7 @@ def deliver_hook(self, target, payload, instance_id=None, hook_id=None, **kwargs
             data=json.dumps(payload),
             headers={'Content-Type': 'application/json'}
         )
-        response.raise_for_response()
+        response.raise_for_status()
     except Exception as e:
         raven_client.captureException(extra=http_exception_response(e))
         if not self.request.called_directly:
