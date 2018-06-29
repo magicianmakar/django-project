@@ -272,13 +272,18 @@ def login_attempts_exceeded(username):
     cache.set(tries_key, tries, timeout=600)
 
     if tries['count'] != 1:
-        if tries['count'] < 5:
+        if tries['count'] < 10:
             time.sleep(1)
             return False
         else:
             return True
     else:
         return False
+
+
+def login_attempts_reset(username):
+    tries_key = 'login_attempts_{}'.format(hash_text(username.lower()))
+    cache.delete(tries_key)
 
 
 def unlock_account_email(username):

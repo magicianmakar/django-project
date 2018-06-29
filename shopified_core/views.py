@@ -133,6 +133,8 @@ class ShopifiedApi(ApiResponseMixin, View):
 
                 token = user.get_access_token()
 
+                core_utils.login_attempts_reset(email)
+
                 return JsonResponse({
                     'token': token,
                     'user': {
