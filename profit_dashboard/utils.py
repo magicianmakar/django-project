@@ -6,7 +6,7 @@ from datetime import date
 from collections import OrderedDict
 
 from django.conf import settings
-from django.db.models import Sum, Count
+from django.db.models import Sum
 
 from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
@@ -14,7 +14,7 @@ from facebookads.adobjects.adaccount import AdAccount
 
 from shopified_core.utils import ALIEXPRESS_REJECTED_STATUS
 from shopify_orders.models import ShopifyOrder
-from leadgalaxy.utils import safeInt, safeFloat, get_shopify_orders
+from leadgalaxy.utils import safeFloat, get_shopify_orders
 
 from .models import (
     FacebookAccess,
@@ -121,11 +121,12 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         }
 
     orders = ShopifyOrder.objects.filter(store_id=store_id,
-                                         created_at__range=(start, end)) \
-                                 .values('created_at', 'total_price')
+                                         created_at__range=(start, end))
 
-    for order in orders:
+    orders_map = {}
+    for order in orders.values('created_at', 'total_price', 'order_id'):
         # Date: YYYY-MM-DD
+        orders_map[order['order_id']] = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
         date_key = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue
@@ -149,25 +150,17 @@ def get_profits(user_id, store, start, end, store_timezone=''):
                 profits_data[date_key]['css_empty'] = ''
 
     shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id,
-                                                         created_at__range=(start, end)) \
-                                                 .extra({'date_key': 'date(created_at)'}) \
-                                                 .values('date_key') \
-                                                 .annotate(Sum('shipping_cost'),
-                                                           Sum('products_cost'),
-                                                           Sum('total_cost'),
-                                                           Count('id')) \
-                                                 .order_by('date_key')
+                                                         order_id__in=orders_map.keys())
 
     total_fulfillments_count = 0
     for shipping in shippings:
-        date_key = arrow.get(shipping['date_key']).format('YYYY-MM-DD')
+        date_key = orders_map[shipping.order_id]
         if date_key not in profits_data:
             continue
 
-        profits_data[date_key]['fulfillment_cost'] = safeFloat(shipping['total_cost__sum'])
-        fulfillments_count = safeInt(shipping['id__count'])
-        profits_data[date_key]['fulfillments_count'] = fulfillments_count
-        total_fulfillments_count += fulfillments_count
+        profits_data[date_key]['fulfillment_cost'] += safeFloat(shipping.total_cost)
+        profits_data[date_key]['fulfillments_count'] += 1
+        total_fulfillments_count += 1
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
@@ -210,7 +203,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
 
     totals = {
         'revenue': orders.aggregate(total=Sum('total_price'))['total'] or 0.0,
-        'fulfillment_cost': shippings.aggregate(total=Sum('total_cost__sum'))['total'] or 0.0,
+        'fulfillment_cost': shippings.aggregate(total=Sum('total_cost'))['total'] or 0.0,
         'ad_spend': ad_costs.aggregate(total=Sum('spend__sum'))['total'] or 0.0,
         'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
     }

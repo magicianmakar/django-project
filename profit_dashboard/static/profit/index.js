@@ -133,7 +133,8 @@ Currency.init();
         initExpandable: function() {
             var previousIndex = null,
                 previousRow = null,
-                startingRow = null;
+                startingRow = null,
+                countEmptySequence = 0;
 
             $('#profits tbody .tooltip').remove();
             $('#profits tbody tr.empty').each(function() {
@@ -141,22 +142,26 @@ Currency.init();
                 if (previousIndex == currentIndex - 1) {
                     // Empty rows in sequence
                     $(this).css('display', 'none');
+                    countEmptySequence += 1;
                 } else {
-                    if (startingRow != null) {
+                    if (startingRow != null && countEmptySequence > 0) {
                         ProfitDashboard.fillDateRange(startingRow, previousRow);
+                        startingRow.find('.actions').append($('<a href="#" class="open-dates"><i class="glyphicon glyphicon-chevron-down">'));
+                        startingRow.tooltip('destroy');
                     }
 
+                    countEmptySequence = 0;
                     startingRow = $(this);
-                    $(this).find('.actions').append($('<a href="#" class="open-dates"><i class="glyphicon glyphicon-chevron-down">'));
-                    $(this).tooltip('destroy');
                 }
 
                 previousIndex = currentIndex;
                 previousRow = $(this);
             });
 
-            if (startingRow != null && previousRow != null) {
+            if (startingRow != null && previousRow != null && countEmptySequence > 0) {
                 ProfitDashboard.fillDateRange(startingRow, previousRow);
+                startingRow.find('.actions').append($('<a href="#" class="open-dates"><i class="glyphicon glyphicon-chevron-down">'));
+                startingRow.tooltip('destroy');
             }
         },
         fillDateRange: function(startingRow, previousRow) {
