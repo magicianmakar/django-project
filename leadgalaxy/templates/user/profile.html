@@ -366,7 +366,7 @@
                 {% if request.user|can:'dropwow.use' or request.user|can:'youzign.use' %}
                 <div id="tab-6" class="tab-pane">
                     <div class="panel-body">
-                        {% if user|can:'fulfillbox.user' %}
+                        {% if user|can:'fulfillbox.use' %}
                         <div class="row">
                             <div class=" col-md-12 col-md-offset-0 ">
                                 <form id="aliexpress-integration" class="form-horizontal" role="form">
