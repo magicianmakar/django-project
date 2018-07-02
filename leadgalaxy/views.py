@@ -2730,11 +2730,10 @@ def orders_view(request):
                 user.backend = settings.AUTHENTICATION_BACKENDS[0]
                 login(request, user)
                 request.user = user
-                print 'Token Login'
             else:
                 raise Http404('Login is required')
     except:
-        traceback.print_exc()
+        raven_client.captureException()
 
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
@@ -3790,14 +3789,11 @@ def orders_place(request):
                 user.backend = settings.AUTHENTICATION_BACKENDS[0]
                 login(request, user)
                 request.user = user
-
-                print 'Token Login'
             else:
                 raise Http404('Login is required')
 
     except:
-        traceback.print_exc()
-        raise Http404('Login Error')
+        raven_client.captureException()
 
     try:
         assert request.GET['product']
