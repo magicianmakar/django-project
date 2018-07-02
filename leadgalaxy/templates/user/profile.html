@@ -38,7 +38,7 @@
                     <a data-toggle="tab" href="#tab-5" data-auto-hash="invoices" data-auto-click="true" aria-expanded="false">Invoices</a>
                 </li>
 
-                {% if request.user|can:'dropwow.use' %}
+                {% if request.user|can:'dropwow.use' or request.user|can:'youzign.use' or user|can:'fulfillbox.use' %}
                 <li class="integration-tab">
                     <a data-toggle="tab" href="#tab-6" data-auto-hash="integration" data-auto-click="true" aria-expanded="false">Integrations</a>
                 </li>
