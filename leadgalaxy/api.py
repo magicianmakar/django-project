@@ -2053,8 +2053,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         _order, customer_address = utils.shopify_customer_address(shopify_order)
 
         result = shopify_orders_tasks.fulfill_shopify_order_line(store.id, shopify_order, customer_address, line_id=line_id)
-        if not result:
-            return self.api_error('Auto fulfill error')
+
+        if type(result) is str:
+            return self.api_error(result)
+
+        elif not result:
+            return self.api_error('No connected items that need placing in this order')
 
         return self.api_success()
 
@@ -2683,6 +2687,18 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_aliexpress_integration(self, request, user, data):
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        if data.get('ali_pass') == 'password is set':
+            return self.api_error('Please Enter your Aliexpress account password')
+
+        user.models_user.set_config('ali_email', data.get('ali_email') or '')
+        user.models_user.set_config('ali_pw', data.get('ali_pass') or '')
+
+        return self.api_success()
+
     def post_marketplace_product_options(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -3190,3 +3206,16 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success({
             'email': user.email
         })
+
+    def post_auto_order_status(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        store.pusher_trigger('order-status-update', {
+            'orders': data['orders']
+        })
+
+        return self.api_success()

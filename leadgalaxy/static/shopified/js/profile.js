@@ -241,7 +241,6 @@ $('#save-dropwow-integration').click(function() {
         },
         success: function(data) {
             toastr.success('Dropwow Account Saved', 'Dropwow Account');
-            window.location.reload();
         },
         error: function(data) {
             displayAjaxError('Dropwow Account', data);
@@ -275,7 +274,31 @@ $('#save-youzign-integration').click(function () {
         }
     });
 
-    return false
+    return false;
+});
+
+
+$('#save-aliexpress-integration').click(function() {
+    var btn = $(this);
+    btn.button('loading');
+
+    $.ajax({
+        url: '/api/aliexpress-integration',
+        type: 'POST',
+        data: $('form#aliexpress-integration').serialize(),
+        context: {
+            btn: btn
+        },
+        success: function(data) {
+            toastr.success('Aliexpress Account Saved', 'Aliepxress Account');
+        },
+        error: function(data) {
+            displayAjaxError('Aliepxress Account', data);
+        },
+        complete: function() {
+            this.btn.button('reset');
+        }
+    });
 });
 
 $('#renew_clippingmagic, #renew_captchacredit').click(function() {

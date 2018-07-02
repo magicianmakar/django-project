@@ -281,7 +281,7 @@ function placeOrder(e) {
         }).done(function(data) {
             swal.close();
             toastr.success('Item was ordered.', 'Order Placed');
-            btn.hide();
+            // btn.hide();
 
         }).fail(function(data) {
             displayAjaxError('Place Order', data);
@@ -1098,6 +1098,23 @@ function pusherSub() {
                 $(target).show();
             }
         }
+    });
+
+    channel.bind('order-status-update', function(data) {
+        $.each(data.orders, function (i, order) {
+            var orderEl = $('.order[order-id="' + order.order_id + '"]');
+            if (!orderEl.length) {
+                return;
+            }
+
+            if (!orderEl.hasClass('disabled')) {
+                orderEl.find('.place-order').button('loading');
+            }
+
+            setTimeout(function () {
+                orderEl.find('.place-order').text(order.status);
+            }, 100);
+        });
     });
 
     channel.bind('pusher:subscription_succeeded', function() {

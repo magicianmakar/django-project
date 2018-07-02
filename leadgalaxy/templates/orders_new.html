@@ -380,7 +380,7 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-2">
+                                    <div class="col-xs-2" {% if use_fulfillbox %}style="padding:0"{% endif %}>
                                         {% if order.lines_count and not order.have_bundle %}
                                             <div class="btn-group pull-right" style="display:flex">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
@@ -397,6 +397,12 @@
                                                     <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
                                                 </ul>
                                             </div>
+
+                                            {% if use_fulfillbox %}
+                                            <a class="place-order btn btn-info btn-xs pull-right m-r-xs" href="#"
+                                               store="{{store.id}}" order-id="{{order.id}}">Auto Order</a>
+                                            {% endif %}
+
                                         {% endif %}
                                     </div>
                                 </div>

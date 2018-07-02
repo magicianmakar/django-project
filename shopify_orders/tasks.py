@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 
 import json
+import requests
+
+from django.conf import settings
 
 from app.celery import celery_app, CaptureFailure
 
@@ -33,6 +36,8 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
     for i in ShopifyOrderTrack.objects.filter(store=store, order_id=order['id']).defer('data'):
         order_tracks['{}-{}'.format(i.order_id, i.line_id)] = i
 
+    have_aliexpress = False
+
     for el in order['line_items']:
         if line_id and int(line_id) != el['id']:
             continue
@@ -53,20 +58,63 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
 
         variant_id = product.get_real_variant_id(variant_id)
         supplier = product.get_suppier_for_variant(variant_id)
-        if not product.have_supplier() or not supplier or not supplier.is_dropwow:
+        if not product.have_supplier() or not supplier:
             continue
 
-        order_status, created = DropwowOrderStatus.objects.update_or_create(
-            store=store,
-            shopify_order_id=order['id'],
-            shopify_line_id=el['id'],
-            defaults={
-                'product': product,
-                'customer_address': json.dumps(customer_address)
-            }
-        )
+        if supplier.is_dropwow:
+            order_status, created = DropwowOrderStatus.objects.update_or_create(
+                store=store,
+                shopify_order_id=order['id'],
+                shopify_line_id=el['id'],
+                defaults={
+                    'product': product,
+                    'customer_address': json.dumps(customer_address)
+                }
+            )
 
-        fulfill_dropwow_order(order_status)
+            return fulfill_dropwow_order(order_status)
+        elif supplier.is_aliexpress:
+            have_aliexpress = True
+
+    if have_aliexpress:
+        return fulfill_aliexpress_order(store, order)
+    else:
+        return False
+
+
+def fulfill_aliexpress_order(store, order):
+    if not settings.FULFILLBOX_API_URL:
+        return 'Service API is not set'
+
+    aliexpress_email, aliexpress_pass = store.user.get_config(['ali_email', 'ali_pw'])
+    if not aliexpress_email or not aliexpress_pass:
+        return 'Aliexpress Account is not set'
+
+    url = settings.FULFILLBOX_API_URL + '/api/aliexpress/order'
+    rep = requests.put(
+        url=url,
+        json={
+            'shop': str(store.shop),
+            'order': str(order['id']),
+            'user': str(store.user.id),
+            'store': {
+                'id': str(store.id),
+                'type': 'shopify',
+                'title': store.title,
+            },
+            'token': store.user.get_access_token(),
+            'aliexpress': {
+                'email': aliexpress_email,
+                'pass': aliexpress_pass,
+            }
+        })
+
+    try:
+        rep.raise_for_status()
+    except:
+        raven_client.captureException()
+
+    return rep.ok
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

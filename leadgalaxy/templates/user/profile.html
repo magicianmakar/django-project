@@ -366,10 +366,42 @@
                 {% if request.user|can:'dropwow.use' or request.user|can:'youzign.use' %}
                 <div id="tab-6" class="tab-pane">
                     <div class="panel-body">
+                        {% if user|can:'fulfillbox.user' %}
+                        <div class="row">
+                            <div class=" col-md-12 col-md-offset-0 ">
+                                <form id="aliexpress-integration" class="form-horizontal" role="form">
+                                    <h4>Aliexpress Account</h4>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Email</label>
+                                        <div class="col-sm-4">
+                                            <input id="ali_email" name="ali_email"
+                                                               value="{{ user.get_config.ali_email|default:'' }}" type="text" class="form-control" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Password</label>
+
+                                        <div class="col-sm-4">
+                                            <input id="ali_pass" name="ali_pass" type="password" class="form-control"
+                                                               value="{% if user.get_config.ali_pw %}password is set{% else %}{% endif %}" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 col-md-offset-1 text-right">
+                                        <button id="save-aliexpress-integration" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {% if request.user|can:'dropwow.use' %}
                         <div class="row">
                             <div class=" col-md-12 col-md-offset-0 ">
                                 <form id="dropwow-integration" method="get" class="form-horizontal">
+                                    <div class="hr-line-dashed"></div>
+
                                     <h4>Dropwow Account</h4>
 
                                     <div class="form-group">
@@ -418,7 +450,7 @@
                                     </div>
 
                                     <div class="col-md-6 col-md-offset-1 text-right">
-                                        <button id="save-youzign-integration" data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                                        <button id="save-youzign-integration" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                                     </div>
                                 </form>
                             </div>

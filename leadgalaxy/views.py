@@ -3589,6 +3589,7 @@ def orders_view(request):
         'use_relative_dates': use_relative_dates,
         'order_risk_all_getaways': order_risk_all_getaways,
         'order_debug': order_debug,
+        'use_fulfillbox': bool(settings.FULFILLBOX_API_URL and models_user.can('fulfillbox.user')),
         'page': 'orders',
         'breadcrumbs': breadcrumbs
     })

@@ -372,6 +372,11 @@ if not DEBUG and SENTRY_DSN:
         'dsn': SENTRY_DSN
     }
 
+# Auto Aliexpress fulfillment server API
+FULFILLBOX_API_URL = os.environ.get('FULFILLBOX_API_URL')
+if FULFILLBOX_API_URL:
+    FULFILLBOX_API_URL = FULFILLBOX_API_URL.rstrip('/')
+
 # Stripe
 STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
 STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
