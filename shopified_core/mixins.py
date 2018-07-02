@@ -54,7 +54,7 @@ class ApiResponseMixin():
         if data is None:
             data = self.request_data(request) or {}
 
-        authorization = request.META.get('HTTP_AUTHORIZATION')
+        authorization = request.META.get('HTTP_AUTHORIZATION') or request.GET.get('_t')
         if authorization:
             if 'undefined' in authorization:
                 authorization = None
@@ -63,7 +63,7 @@ class ApiResponseMixin():
                 if len(authorization) == 2:
                     authorization = authorization[1]
                 else:
-                    authorization = None
+                    authorization = authorization[0]
 
         if authorization or data.get('access_token'):
             token = authorization if authorization else data.get('access_token')

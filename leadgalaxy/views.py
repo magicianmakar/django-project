@@ -38,6 +38,7 @@ from affiliations.tasks import create_lead_dyno_affiliation
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
+from shopified_core.mixins import ApiResponseMixin
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.tasks import fulfill_shopify_order_line
 from commercehq_core.models import CommerceHQProduct
@@ -2720,8 +2721,21 @@ def save_image_s3(request):
     })
 
 
-@login_required
 def orders_view(request):
+    try:
+        if not request.user.is_authenticated():
+            mixing = ApiResponseMixin()
+            user = mixing.get_user(request)
+            if user:
+                user.backend = settings.AUTHENTICATION_BACKENDS[0]
+                login(request, user)
+                request.user = user
+                print 'Token Login'
+            else:
+                raise Http404('Login is required')
+    except:
+        traceback.print_exc()
+
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
 
@@ -3767,8 +3781,24 @@ def orders_track(request):
     })
 
 
-@login_required
 def orders_place(request):
+    try:
+        if not request.user.is_authenticated():
+            mixing = ApiResponseMixin()
+            user = mixing.get_user(request)
+            if user:
+                user.backend = settings.AUTHENTICATION_BACKENDS[0]
+                login(request, user)
+                request.user = user
+
+                print 'Token Login'
+            else:
+                raise Http404('Login is required')
+
+    except:
+        traceback.print_exc()
+        raise Http404('Login Error')
+
     try:
         assert request.GET['product']
 
