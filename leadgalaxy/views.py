@@ -39,6 +39,7 @@ from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.exceptions import ApiLoginException
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.tasks import fulfill_shopify_order_line
 from commercehq_core.models import CommerceHQProduct
@@ -2730,8 +2731,10 @@ def orders_view(request):
                 user.backend = settings.AUTHENTICATION_BACKENDS[0]
                 login(request, user)
                 request.user = user
-            else:
-                raise Http404('Login is required')
+
+    except ApiLoginException:
+        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, urllib.quote_plus(request.GET.urlencode())))
+
     except:
         raven_client.captureException()
 
@@ -3784,13 +3787,14 @@ def orders_place(request):
     try:
         if not request.user.is_authenticated():
             mixing = ApiResponseMixin()
-            user = mixing.get_user(request)
+            user = mixing.get_user(request, assert_login=False)
             if user:
                 user.backend = settings.AUTHENTICATION_BACKENDS[0]
                 login(request, user)
                 request.user = user
-            else:
-                raise Http404('Login is required')
+
+    except ApiLoginException:
+        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, urllib.quote_plus(request.GET.urlencode())))
 
     except:
         raven_client.captureException()
