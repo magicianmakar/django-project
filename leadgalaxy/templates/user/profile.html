@@ -363,7 +363,7 @@
                 </div>
 
 
-                {% if request.user|can:'dropwow.use' or request.user|can:'youzign.use' %}
+                {% if request.user|can:'dropwow.use' or request.user|can:'youzign.use' or user|can:'fulfillbox.use' %}
                 <div id="tab-6" class="tab-pane">
                     <div class="panel-body">
                         {% if user|can:'fulfillbox.use' %}
