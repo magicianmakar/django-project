@@ -36,17 +36,6 @@
         </style>
         {% endcompress %}
 
-        <script type="text/javascript" src="https://static.leaddyno.com/js"></script>
-        <script>
-            LeadDyno.key = "be5d77f4d08a0aa53f3696f40f056889461cf5be";
-            LeadDyno.recordVisit();
-            LeadDyno.autoWatch();
-
-            {% if lead_dyno_record %}
-                LeadDyno.recordPurchase();
-            {% endif %}
-        </script>
-
         {% include "partial/custom_tags.html" with disable_appcuse=True %}
 
     </head>
