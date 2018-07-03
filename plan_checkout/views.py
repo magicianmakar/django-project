@@ -87,8 +87,6 @@ class PlanCheckoutView(TemplateView):
 
         user_login(request, user)
 
-        request.session['lead_dyno_record'] = True
-
         return HttpResponseRedirect('/lifetime/ty')
 
 
@@ -97,7 +95,6 @@ class PurchaseThankYouView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(PurchaseThankYouView, self).get_context_data(**kwargs)
-        context['lead_dyno_record'] = self.request.session.pop('lead_dyno_record', False)
         context['plan_price'] = kwargs.get('plan_price')
         context['ecom_jam'] = kwargs['ecom_jam']
 
@@ -210,7 +207,5 @@ class MonthlyCheckoutView(TemplateView):
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
 
         user_login(request, user)
-
-        request.session['lead_dyno_record'] = True
 
         return HttpResponseRedirect('%s/ty' % request.path)

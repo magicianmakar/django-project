@@ -121,7 +121,6 @@ def index_view(request):
         'add_store_btn': add_store_btn,
         'templates': templates,
         'markup_rules': markup_rules,
-        'lead_dyno_record': request.session.pop('lead_dyno_record', False),
         'page': 'index',
         'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
         'breadcrumbs': ['Stores']
