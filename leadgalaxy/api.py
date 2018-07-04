@@ -2504,6 +2504,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             permissions.user_can_view(user, product)
 
+            assert product.store.is_active
+
             return self.api_success({
                 'url': app_link(reverse('product_view', args=[product.id]))
             })
