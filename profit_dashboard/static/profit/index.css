@@ -19,16 +19,26 @@
   padding: 11px;
 }
 
+.table > tbody > tr .other-costs-value {
+  display: none;
+}
+
 .table > tbody > tr.closed .other-costs-form {
-  visibility: hidden;
+  display: none;
+}
+
+.table > tbody > tr.closed .other-costs-value {
+  display: inline;
 }
 
 #graph-view,
+#table-view,
 #pagination-limit {
   list-style-type: none;
 }
 
 #graph-view li,
+#table-view li,
 #pagination-limit li {
   float: left;
   display: inline-block;
@@ -36,6 +46,7 @@
 }
 
 #graph-view li label,
+#table-view li label,
 #pagination-limit li label {
   display: inline-block;
   padding: 7px 7px 3px;

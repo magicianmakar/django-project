@@ -8,7 +8,6 @@
 
 {% block main-container %}
 
-{% with user|can:'profit_dashboard_facebook.use' as user_facebook_permission %}
 {% if user_facebook_permission %}
 <div class="ibox float-e-margins" id="facebook-insights" style="display: none;">
   <div class="ibox-title">
@@ -16,6 +15,7 @@
   </div>
   <div class="ibox-content">
     <div class="row">
+      <div class="alert alert-warning" style="padding: 10px 15px; margin-bottom: 10px;">For synchronizing with facebook, we need the permission to <b>read insights from your ads.</b></div>
       <div class="col-md-12" id="connect-facebook">
         <p class="pull-left" style="line-height: 28px;">For loading Ad Costs data please</p>
         <fb:login-button class="fb-login-button" scope="ads_read" onlogin="FacebookProfitDashboard.checkLoginState();" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false">
@@ -76,7 +76,9 @@
       <div class="panel-body">
         <form class="form-inline" method="get">
           <input type="hidden" name="store" value="{{ store.id }}">
-          <div class="form-group" id="profit-range">
+          <input type="hidden" class="form-control" name="start" value="{{ start }}"/>
+          <input type="hidden" class="form-control" name="end" value="{{ end }}" />
+          <!-- <div class="form-group" id="profit-range">
             <label>Range date</label>
             <div class="input-daterange input-group" id="datepicker" style="width: auto;">
               <input type="text" class="form-control" name="start" value="{{ start }}"/>
@@ -84,9 +86,9 @@
               <input type="text" class="form-control" name="end" value="{{ end }}" />
             </div>
           </div>
-          <button type="submit" class="btn btn-success">Filter</button>
+          <button type="submit" class="btn btn-success">Filter</button> -->
 
-          <ul id="pagination-limit" class="top-controls pull-right">
+          <!-- <ul id="pagination-limit" class="top-controls pull-right">
             <li>
               <label>Items per page:</label>
             </li>
@@ -105,19 +107,25 @@
             <li>
               <input type="text" name="limit" placeholder="Type here" value="{{ limit|default:"" }}" />
             </li>
+          </ul> -->
+
+          <ul id="table-view" class="top-controls pull-right">
+            <li><label>View:</label></li>
+            <li><a href="#" class="btn active btn-success daily" data-time="daily">Daily</a></li>
+            <li><a href="#" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
           </ul>
 
           <ul id="graph-view" class="top-controls pull-right hidden">
             <li><label>View:</label></li>
             <li><a href="#" class="btn btn-default daily" data-time="daily">Daily</a></li>
             <li><a href="#" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
-            <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li>
+            <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
           </ul>
         </form>
 
         <div id="top-controls-menu" class="clients-list">
           <ul class="nav nav-tabs">
-              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#pagination-limit"><i class="fa fa-table"></i> Table</a></li>
+              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#pagination-limit, #table-view"><i class="fa fa-table"></i> Table</a></li>
               <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#graph-view"><i class="fa fa-line-chart"></i> Charts</a></li>
           </ul>
           <div class="tab-content">
@@ -205,6 +213,7 @@
                         <td>{% money_format profit.ad_spend store True %}</td>
                         {% endif %}
                         <td class="other-costs" data-original-amount="{{ profit.other_costs|default:'0'|floatformat:2 }}">
+                          <span class="other-costs-value"></span>
                           <form class="form-inline other-costs-form" action="{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}">
                             <div class="form-group">
                               <label class="sr-only" for="other_costs">Amount</label>
@@ -295,6 +304,7 @@
     <td>{{this.currency_fulfillment_cost}}</td>
     <td>{{this.currency_ad_spend}}</td>
     <td class="other-costs" data-original-amount="{{this.other_costs}}">
+      <span class="other-costs-value"></span>
       <form class="form-inline other-costs-form" action="{{this.other_costs_url}}">
         <div class="form-group">
           <label class="sr-only" for="other_costs">Amount</label>
@@ -443,8 +453,6 @@
     </div>
   </div>
 </div>
-{% endwith %}
-
 {% endblock %}
 
 {% block extracss %}

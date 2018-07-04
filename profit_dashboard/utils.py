@@ -126,8 +126,8 @@ def get_profits(user_id, store, start, end, store_timezone=''):
     orders_map = {}
     for order in orders.values('created_at', 'total_price', 'order_id'):
         # Date: YYYY-MM-DD
-        orders_map[order['order_id']] = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
         date_key = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
+        orders_map[order['order_id']] = date_key
         if date_key not in profits_data:
             continue
 

@@ -44,7 +44,7 @@ def index(request):
 
     start = request.GET.get('start')
     end = request.GET.get('end')
-    limit = utils.safeInt(request.GET.get('limit'), 10)
+    limit = utils.safeInt(request.GET.get('limit'), 0)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
     tz = timezone.localtime(timezone.now()).strftime(' %z')
@@ -87,6 +87,7 @@ def index(request):
         'accounts': accounts,
         'need_setup': need_setup,
         'profits_json': profits_json,
+        'user_facebook_permission': request.user.can('profit_dashboard_facebook.use')
     })
 
 
