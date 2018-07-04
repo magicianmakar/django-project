@@ -4,9 +4,12 @@ from time import sleep
 from tqdm import tqdm
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from facebookads.adobjects.user import User as FBUser
+from facebookads.adobjects.adaccount import AdAccount
+
 from shopified_core.management import DropifiedBaseCommand
 from profit_dashboard.models import FacebookAccess
-from profit_dashboard.utils import get_facebook_ads
+from profit_dashboard.utils import get_facebook_api, get_facebook_ads
 
 
 class Command(DropifiedBaseCommand):
@@ -33,13 +36,22 @@ class Command(DropifiedBaseCommand):
         try:
             while count_times < times:
                 for access in facebook_access_list:
+                    api = get_facebook_api(access.access_token)
+
+                    user = FBUser(fbid='me', api=api)
+                    accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
+                    sleep(30)
+                    for account in accounts:
+                        account.get_campaigns(fields=['name', 'status', 'created_time'])
+
+                    sleep(30)
                     get_facebook_ads(access.user,
                                      access.store,
                                      access.access_token,
                                      access.account_ids.split(','),
                                      access.campaigns.split(','))
 
-                    sleep(randint(30, 60))  # Avoid hiting user calls limit
+                    sleep(randint(10, 30))  # Avoid hiting user calls limit
                     start += 1
                     if progress:
                         obar.update(1)

@@ -81,7 +81,6 @@ var Currency = {
 
 Currency.init();
 
-
 // Profit JS
 (function() {
     var ProfitDashboard = {
@@ -112,6 +111,7 @@ Currency.init();
             this.onClickCloseDates();
             this.onOtherCostsChange();
             this.onGraphViewClick();
+            this.onTableViewClick();
             this.onTabsChange();
             this.onChartToggleDataClick();
 
@@ -264,7 +264,7 @@ Currency.init();
                 value = inputValue - originalValue;
                 totalCosts.text((totalCostsValue + value).toFixed(2));
                 profitAmount.text((profitAmountValue - value).toFixed(2));
-                var percentageAmount = parseInt((profitAmountValue - inputValue) / revenue * 100);
+                var percentageAmount = parseInt((profitAmountValue - value) / revenue * 100);
                 if (isNaN(percentageAmount)) {
                     percentageAmount = 0;
                 }
@@ -574,6 +574,23 @@ Currency.init();
                 ProfitDashboard.reloadCharts();
             });
         },
+        activateTableView: function(btn) {
+            $('#table-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');
+            btn.removeClass('btn-default').addClass('active btn-success');
+        },
+        onTableViewClick: function() {
+            $('#table-view .btn').on('click', function(e) {
+                e.preventDefault();
+
+                ProfitDashboard.activateTableView($(this));
+                if ($(this).attr('data-time') == 'weekly') {
+                    ProfitDashboard.profitsWeekly();
+                }
+                if ($(this).attr('data-time') == 'daily') {
+                    ProfitDashboard.profitsDaily();
+                }
+            });
+        },
         onTabsChange: function() {
             $('#top-controls-menu .nav-tabs li a').on('click', function() {
                 var showControls = $(this).attr('data-top-controls');
@@ -628,6 +645,99 @@ Currency.init();
 
                 ProfitDashboard.profitChart.update();
             });
+        },
+        outputToRow: function(profitRow, profitAmounts) {
+            profitRow.find('td:nth-child(1)').text(profitAmounts.date_as_string);
+            profitRow.find('td:nth-child(2)').text(Currency.format(profitAmounts.revenue));
+            profitRow.find('td:nth-child(3)').text(Currency.format(profitAmounts.fulfillment_cost));
+            profitRow.find('td:nth-child(4)').text(Currency.format(profitAmounts.ad_spend));
+            profitRow.find('td:nth-child(5) .other-costs-value').text(Currency.format(profitAmounts.other_costs));
+
+            var outcome = profitAmounts.fulfillment_cost + profitAmounts.ad_spend + profitAmounts.other_costs,
+                profit = profitAmounts.revenue - outcome,
+                percentage = profit / profitAmounts.revenue * 100;
+
+            if (percentage < 0) {
+                percentage = 0;
+            }
+            if (percentage > 100 || isNaN(percentage)) {
+                percentage = 100;
+            }
+
+            profitRow.find('td:nth-child(6) span').text(Currency.format(outcome, true));
+            profitRow.find('td:nth-child(7) span').text(Currency.format(profit, true));
+            profitRow.find('td:nth-child(8)').text(parseInt(percentage) + '%');
+        },
+        refreshWeeklyData: function(profitData) {
+            return {
+                revenue: profitData.revenue,
+                other_costs: profitData.other_costs,
+                date_as_string: profitData.date_as_string,
+                ad_spend: profitData.ad_spend,
+                fulfillment_cost: profitData.fulfillment_cost
+            };
+        },
+        sumWeeklyData: function(weeklyData, profitData) {
+            return {
+                revenue: weeklyData.revenue + profitData.revenue,
+                other_costs: weeklyData.other_costs + profitData.other_costs,
+                date_as_string: weeklyData.date_as_string,
+                ad_spend: weeklyData.ad_spend + profitData.ad_spend,
+                fulfillment_cost: weeklyData.fulfillment_cost + profitData.fulfillment_cost
+            };
+        },
+        profitsWeekly: function() {
+            var countDays = -1,
+                lastProfit = null,
+                firstWeekDayRow = null,
+                weeklyAmounts = ProfitDashboard.refreshWeeklyData(profitsData[0]);
+            for (var i = 0, iLength = profitsData.length; i < iLength; i++) {
+                var profitData = profitsData[i],
+                    profitRow = $('#date-' + profitData.date_as_string.replace(/\//g, '')),
+                    isFirstDay = countDays % 7 == 0;
+
+                profitData.other_costs = parseFloat(profitRow.find('.other-costs').attr('data-original-amount'));
+
+                if (isFirstDay || i == 0) {
+                    if (firstWeekDayRow != null) {
+                        if (lastProfit != null) {
+                            weeklyAmounts.date_as_string += ' - ' + lastProfit.date_as_string;
+                        }
+                        ProfitDashboard.outputToRow(firstWeekDayRow, weeklyAmounts);
+                        firstWeekDayRow.tooltip('destroy');
+                    }
+                    weeklyAmounts = ProfitDashboard.refreshWeeklyData(profitData);
+                    firstWeekDayRow = profitRow;
+                    firstWeekDayRow.addClass('closed');
+                } else {
+                    weeklyAmounts = ProfitDashboard.sumWeeklyData(weeklyAmounts, profitData);
+                    profitRow.css('display', 'none');
+                    lastProfit = $.extend({}, profitData);
+                }
+
+                countDays += 1;
+            }
+
+            var nextWeekDay = moment(lastProfit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')).add(1, 'weeks');
+            weeklyAmounts.date_as_string += ' - ' + nextWeekDay.format('MM/DD/YYYY');
+            ProfitDashboard.outputToRow(firstWeekDayRow, weeklyAmounts);
+            firstWeekDayRow.tooltip('destroy');
+
+            ProfitDashboard.fixStripes();
+        },
+        profitsDaily: function() {
+            for (var i = 0, iLength = profitsData.length; i < iLength; i++) {
+                var profitData = profitsData[i],
+                    profitRow = $('#date-' + profitData.date_as_string.replace(/\//g, ''));
+
+                if (!profitRow.is(':visible')) {
+                    profitRow.css('display', '');
+                } else {
+                    profitRow.tooltip();
+                    profitRow.removeClass('closed');
+                    ProfitDashboard.outputToRow(profitRow, profitData);
+                }
+            }
         }
     };
 
