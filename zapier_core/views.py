@@ -96,12 +96,23 @@ class CommerceHQStoreViewSet(mixins.RetrieveModelMixin,
 
 class ProductVisibilityUpdate(APIView):
     def post(self, request, pk, store_type):
-        if request.DATA.get('visibility') is not None:
-            if store_type == 'shopify':
-                leadgalaxy.tasks.update_product_visibility.delay(request.user.id, pk, request.DATA.get('visibility'))
-            elif store_type == 'chq':
-                commercehq_core.tasks.update_product_visibility.delay(request.user.id, pk, request.DATA.get('visibility'))
-        return Response({'id': pk})
+        user = request.user
+        visibility = True if request.DATA.get('visibility', False) else False
+        if store_type == 'shopify':
+            product = ShopifyProduct.objects.get(id=pk)
+            permissions.user_can_edit(user, product)
+            leadgalaxy.tasks.update_product_visibility.delay(request.user.id, pk, visibility)
+            data = ShopifyProductSerializer(product).data
+            data['visibility'] = visibility
+            return Response(data)
+        elif store_type == 'chq':
+            product = CommerceHQProduct.objects.get(id=pk)
+            permissions.user_can_edit(user, product)
+            commercehq_core.tasks.update_product_visibility.delay(request.user.id, pk, visibility)
+            data = CommerceHQProductSerializer(product).data
+            data['visibility'] = visibility
+            return Response(data)
+        raise Http404
 
 
 class ProductNotesUpdate(APIView):
@@ -110,15 +121,18 @@ class ProductNotesUpdate(APIView):
         notes = request.DATA.get('notes')
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
+            permissions.user_can_edit(user, product)
+            data = ShopifyProductSerializer(product).data
         elif store_type == 'chq':
             product = CommerceHQProduct.objects.get(id=pk)
-        if product is not None and notes is not None:
             permissions.user_can_edit(user, product)
-
+            data = CommerceHQProductSerializer(product).data
+        if product is not None and notes is not None:
             product.notes = notes
             product.save()
-
-        return Response({'id': pk})
+            data['notes'] = notes
+            return Response(data)
+        raise Http404
 
 
 class ProductVariantList(APIView):
@@ -157,10 +171,13 @@ class ProductVariantUpdate(APIView):
         price = safeFloat(request.DATA.get('price'))
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
+            permissions.user_can_edit(user, product)
+            data = ShopifyProductSerializer(product).data
         elif store_type == 'chq':
             product = CommerceHQProduct.objects.get(id=pk)
+            permissions.user_can_edit(user, product)
+            data = CommerceHQProductSerializer(product).data
 
-        permissions.user_can_edit(user, product)
         if store_type == 'shopify':
             # Get product info from shopify store
             product_data = leadgalaxy.utils.get_shopify_product(product.store, product.shopify_id)
@@ -169,7 +186,8 @@ class ProductVariantUpdate(APIView):
                     product_data['variants'][idx]['price'] = round(price, 2)
                     res = leadgalaxy.utils.update_shopify_product_data(product.store, product.shopify_id, product_data)
                     res.raise_for_status()
-                    return Response({'id': pk, 'variant_id': variant_id})
+                    data['variant_id'] = variant_id
+                    return Response(data)
         elif store_type == 'chq':
             # Get product info from chq store
             product_data = product.retrieve()
@@ -178,7 +196,8 @@ class ProductVariantUpdate(APIView):
                     product_data['variants'][idx]['price'] = round(price, 2)
                     res = commercehq_core.utils.update_chq_product(product.store, product.source_id, {'variants': product_data['variants']})
                     res.raise_for_status()
-                    return Response({'id': pk, 'variant_id': variant_id})
+                    data['variant_id'] = variant_id
+                    return Response(data)
         raise Http404
 
 
@@ -223,7 +242,7 @@ class OrderNotesUpdate(APIView):
                 updater.add_note(notes)
                 updater.save_changes()
 
-        return Response({'id': pk})
+        return Response({'store_id': store_id, 'store_type': store_type, 'order_no': pk})
 
 
 class SubUserEmails(APIView):
