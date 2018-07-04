@@ -104,7 +104,11 @@ def export_product(req_data, target, user_id):
     if not original_url:  # Could be sent from the web app
         try:
             product = ShopifyProduct.objects.get(id=req_data.get('product'))
-            permissions.user_can_edit(user, product)
+            try:
+                permissions.user_can_edit(user, product)
+            except PermissionDenied:
+                if not (product.store and user.is_subuser and product.store.user == user.models_user):
+                    raise
 
             original_url = product.get_original_info().get('url', '')
 
@@ -323,7 +327,12 @@ def export_product(req_data, target, user_id):
             # Saved product update
             try:
                 product = ShopifyProduct.objects.get(id=req_data['product'])
-                permissions.user_can_edit(user, product)
+
+                try:
+                    permissions.user_can_edit(user, product)
+                except PermissionDenied:
+                    if not (product.store and user.is_subuser and product.store.user == user.models_user):
+                        raise
 
             except ShopifyProduct.DoesNotExist:
                 raven_client.captureException()
