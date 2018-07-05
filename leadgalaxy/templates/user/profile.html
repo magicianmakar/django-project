@@ -289,11 +289,11 @@
                             {% include "partial/plans/stripe_subscription.html" with current_plan=user.profile.plan %}
                         {% endif %}
 
-                        {% if user|can:'clippingmagic.use' %}
+                        {% if not shopify_apps_customer and user|can:'clippingmagic.use' %}
                             {% include "payments/clippingmagic_plans.html" %}
                         {% endif %}
 
-                        {% if user|can:'aliexpress_captcha.use' %}
+                        {% if not shopify_apps_customer and user|can:'aliexpress_captcha.use' %}
                             {% include "payments/captchacredit_plans.html" %}
                         {% endif %}
                     </div>
