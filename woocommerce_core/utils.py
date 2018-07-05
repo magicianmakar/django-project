@@ -13,12 +13,12 @@ from unidecode import unidecode
 from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.core.paginator import Paginator
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache, caches
 from django.utils import timezone
 
 from shopified_core import permissions
+from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safeInt, safeFloat, hash_url_filename, decode_params, http_exception_response
 from shopified_core.shipping_helper import (
     load_uk_provincess,
@@ -846,9 +846,10 @@ class WooListQuery(object):
         return self
 
 
-class WooListPaginator(Paginator):
+class WooListPaginator(SimplePaginator):
     def page(self, number):
         number = self.validate_number(number)
+        self.current_page = number
         params = {'page': number, 'per_page': self.per_page}
         # `self.object_list` is a `WooListQuery` instance
         items = self.object_list.update_params(params).items()
