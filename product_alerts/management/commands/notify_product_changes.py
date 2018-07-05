@@ -18,11 +18,12 @@ class Command(DropifiedBaseCommand):
     users_more_changes = {}
 
     def start_command(self, *args, **options):
-        prodduct_changes = ProductChange.objects.filter(notified_at=None, created_at__gte=arrow.now().replace(days=-1).datetime).order_by('user_id')
+        prodduct_changes = ProductChange.objects.filter(notified_at=None, created_at__range=[i.datetime for i in arrow.utcnow().span('day')]) \
+                                                .order_by('user_id')
 
         changes_user_map = {}
-
-        for change in prodduct_changes:
+        changes_count = 0
+        for change in prodduct_changes[:10000]:
             if change.user_id not in changes_user_map:
                 changes_user_map[change.user_id] = []
 
@@ -31,7 +32,9 @@ class Command(DropifiedBaseCommand):
             else:
                 self.users_more_changes[change.user_id] = self.users_more_changes.get(change.user_id, 0) + 1
 
-        self.stdout.write('Notfiy {} changes for {} users'.format(len(prodduct_changes), len(changes_user_map)))
+            changes_count += 1
+
+        self.stdout.write('Notfiy {} changes for {} users'.format(changes_count, len(changes_user_map)))
         self.stdout.write('Notfiy {}/{} extra changes'.format(len(self.users_more_changes), sum(self.users_more_changes.values())))
 
         ignored_users = set()
