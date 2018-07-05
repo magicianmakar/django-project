@@ -93,10 +93,7 @@ def subscription_activated(request):
         request.user.shopifysubscription_set.exclude(id=charge_id).update(status='cancelled')
 
     else:
-        request.user.profile.change_plan(GroupPlan.objects.get(
-            id=request.session['current_plan'],
-            payment_gateway='shopify',
-            plan_slug='starter-shopify'))
+        request.user.profile.change_plan(GroupPlan.objects.get(id=request.session['current_plan']))
 
         messages.warning(request, 'Your plan was not changed because the charge was declined')
 
