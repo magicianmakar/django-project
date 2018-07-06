@@ -254,9 +254,16 @@ def get_costs_from_track(track, commit=False):
 
     if data.get('aliexpress') and data.get('aliexpress').get('order_details') and \
             data.get('aliexpress').get('order_details').get('cost'):
-        costs['total_cost'] = data['aliexpress']['order_details']['cost'].get('total').replace(',', '.')
-        costs['shipping_cost'] = data['aliexpress']['order_details']['cost'].get('shipping').replace(',', '.')
-        costs['products_cost'] = data['aliexpress']['order_details']['cost'].get('products').replace(',', '.')
+
+        cost = data['aliexpress']['order_details']['cost']
+        if type(cost.get('total')) is float:
+            costs['total_cost'] = cost.get('total')
+            costs['shipping_cost'] = cost.get('shipping')
+            costs['products_cost'] = cost.get('products')
+        else:
+            costs['total_cost'] = cost.get('total').replace(',', '.')
+            costs['shipping_cost'] = cost.get('shipping').replace(',', '.')
+            costs['products_cost'] = cost.get('products').replace(',', '.')
 
         if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in ALIEXPRESS_REJECTED_STATUS:
             return
