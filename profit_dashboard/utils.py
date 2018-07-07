@@ -256,7 +256,7 @@ def get_costs_from_track(track, commit=False):
             data.get('aliexpress').get('order_details').get('cost'):
 
         cost = data['aliexpress']['order_details']['cost']
-        if type(cost.get('total')) is float:
+        if type(cost.get('total')) in [float, int, long]:
             costs['total_cost'] = cost.get('total')
             costs['shipping_cost'] = cost.get('shipping')
             costs['products_cost'] = cost.get('products')
