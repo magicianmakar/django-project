@@ -23,8 +23,6 @@ from django.views.generic import View
 from raven.contrib.django.raven_compat.models import client as raven_client
 from last_seen.models import LastSeen
 
-from affiliations.utils import LeadDynoAffiliation
-
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.shipping_helper import get_counrties_list, fix_fr_address
@@ -2078,6 +2076,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
         from_oberlo = 'oberlo.com' in request.META.get('HTTP_REFERER', '')
+        item_fulfillment_status = None
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
@@ -2105,6 +2104,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             try:
                 shopify_data = json.loads(data.get('shopify_data')) if data.get('shopify_data') else None
                 line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku, shopify_data=shopify_data)
+
+                if line and from_oberlo:
+                    item_fulfillment_status = line.get('fulfillment_status')
 
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code in [401, 402, 403, 404, 429]:
@@ -2186,17 +2188,21 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             while True:
                 try:
+                    track_defaults = {
+                        'user': user.models_user,
+                        'source_id': source_id,
+                        'created_at': timezone.now(),
+                        'updated_at': timezone.now(),
+                        'status_updated_at': timezone.now()
+                    }
+                    if item_fulfillment_status is not None:
+                        track_defaults['shopify_status'] = item_fulfillment_status
+
                     track, created = ShopifyOrderTrack.objects.update_or_create(
                         store=store,
                         order_id=order_id,
                         line_id=line_id,
-                        defaults={
-                            'user': user.models_user,
-                            'source_id': source_id,
-                            'created_at': timezone.now(),
-                            'updated_at': timezone.now(),
-                            'status_updated_at': timezone.now()
-                        }
+                        defaults=track_defaults
                     )
 
                     break
@@ -3137,24 +3143,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         task = tasks.product_price_trends.apply_async(args=[store.id, data.get('product_variants')], expires=120)
 
         return self.api_success({'task': task.id})
-
-    def post_affiliate_edit(self, request, user, data):
-        """
-        Edit affiliate e-mail, first name and last name
-        """
-
-        email = data.get('email', '') or None
-        first_name = data.get('first_name', '') or None
-        last_name = data.get('last_name', '') or None
-
-        affiliation = LeadDynoAffiliation(user)
-        try:
-            affiliate = affiliation.update(email=email, first_name=first_name, last_name=last_name)
-        except Exception:
-            raven_client.captureException()
-            return self.api_error('Server Error')
-
-        return self.api_success(affiliate)
 
     def get_search_shopify_products(self, request, user, data):
         try:

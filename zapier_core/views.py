@@ -211,8 +211,8 @@ class ShopifyOrderDetail(APIView):
             permissions.user_can_view(user, store)
             order_data = leadgalaxy.utils.get_shopify_order(store, pk)
             ret = {
-                'order_id': pk,
-                'order_number': order_data['order_number'],
+                'order_no': pk,
+                'order_label': order_data['order_number'],
                 'total_price': order_data['total_price'],
                 'financial_status': order_data['financial_status'],
                 'fulfillment_status': order_data['fulfillment_status'],

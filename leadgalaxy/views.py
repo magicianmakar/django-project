@@ -33,8 +33,6 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from analytic_events.models import RegistrationEvent
 
-from affiliations.tasks import create_lead_dyno_affiliation
-
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
@@ -4198,8 +4196,6 @@ def register(request, registration=None, subscribe_plan=None):
             RegistrationEvent.objects.create(user=request.user)
 
             utils.wicked_report_add_user(request, new_user)
-
-            create_lead_dyno_affiliation.delay(new_user.pk)
 
             if subscribe_plan:
                 if not try_plan and not subscribe_plan.is_free:
