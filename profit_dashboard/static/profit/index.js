@@ -691,6 +691,9 @@ Currency.init();
                 lastProfit = null,
                 firstWeekDayRow = null,
                 weeklyAmounts = ProfitDashboard.refreshWeeklyData(profitsData[0]);
+
+            $('#profits .profit.closed').removeClass('closed');
+            $('.open-dates, .close-dates', '#profits .profit .actions').remove();
             for (var i = 0, iLength = profitsData.length; i < iLength; i++) {
                 var profitData = profitsData[i],
                     profitRow = $('#date-' + profitData.date_as_string.replace(/\//g, '')),
@@ -723,6 +726,7 @@ Currency.init();
             ProfitDashboard.outputToRow(firstWeekDayRow, weeklyAmounts);
             firstWeekDayRow.tooltip('destroy');
 
+            $('#profits .profit.closed').css('display', '');
             ProfitDashboard.fixStripes();
         },
         profitsDaily: function() {
@@ -738,6 +742,7 @@ Currency.init();
                     ProfitDashboard.outputToRow(profitRow, profitData);
                 }
             }
+            ProfitDashboard.initExpandable();
         }
     };
 
