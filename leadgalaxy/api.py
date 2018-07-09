@@ -1724,7 +1724,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     order['shipping_address'] = fix_fr_address(order['shipping_address'])
 
             order['ordered'] = False
-            order['fast_checkout'] = user.get_config('_fast_checkout', True)
+            order['fast_checkout'] = user.get_config('_fast_checkout', False)
             order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
 
             phone = order['order']['phone']
