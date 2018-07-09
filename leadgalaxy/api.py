@@ -2076,6 +2076,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
         from_oberlo = 'oberlo.com' in request.META.get('HTTP_REFERER', '')
+        item_fulfillment_status = None
 
         try:
             assert len(source_id) > 0, 'Empty Order ID'
@@ -2103,6 +2104,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             try:
                 shopify_data = json.loads(data.get('shopify_data')) if data.get('shopify_data') else None
                 line = utils.get_shopify_order_line(store, order_id, None, line_sku=order_line_sku, shopify_data=shopify_data)
+
+                if line and from_oberlo:
+                    item_fulfillment_status = line.get('fulfillment_status')
 
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code in [401, 402, 403, 404, 429]:
@@ -2184,17 +2188,21 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             while True:
                 try:
+                    track_defaults = {
+                        'user': user.models_user,
+                        'source_id': source_id,
+                        'created_at': timezone.now(),
+                        'updated_at': timezone.now(),
+                        'status_updated_at': timezone.now()
+                    }
+                    if item_fulfillment_status is not None:
+                        track_defaults['shopify_status'] = item_fulfillment_status
+
                     track, created = ShopifyOrderTrack.objects.update_or_create(
                         store=store,
                         order_id=order_id,
                         line_id=line_id,
-                        defaults={
-                            'user': user.models_user,
-                            'source_id': source_id,
-                            'created_at': timezone.now(),
-                            'updated_at': timezone.now(),
-                            'status_updated_at': timezone.now()
-                        }
+                        defaults=track_defaults
                     )
 
                     break
