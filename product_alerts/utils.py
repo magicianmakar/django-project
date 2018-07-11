@@ -126,7 +126,7 @@ def parse_sku(sku):
     return options
 
 
-def variant_index(product, sku, variants):
+def variant_index(product, sku, variants=None):
     original_sku = sku
     found_variant_id = None
     variants_map = product.get_variant_mapping(for_extension=True)
@@ -153,6 +153,8 @@ def variant_index(product, sku, variants):
         if found:
             found_variant_id = variant_id
             break
+    if variants is None:
+        return found_variant_id
     if found_variant_id is not None:
         for idx, variant in enumerate(variants):
             if variant.get('id') == int(found_variant_id):

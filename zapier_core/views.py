@@ -4,7 +4,7 @@ from django.http import Http404
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from rest_framework import viewsets, mixins
+from rest_framework import generics, viewsets, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_hooks.models import Hook
@@ -34,6 +34,55 @@ class HookViewSet(viewsets.ModelViewSet):
 
     def pre_save(self, obj):
         obj.user = self.request.user
+
+
+class ProductChangesList(generics.ListAPIView):
+    serializer_class = ProductChangeSerializer
+    paginate_by = None
+
+    def get_category(self):
+        event = self.request.GET.get('event')
+        if event:
+            return ProductChange.get_category_from_event(event)
+        return None
+
+    def get_queryset(self):
+        queryset = ProductChange.objects.filter(user=self.request.user)
+        category = self.get_category()
+        if category:
+            queryset = queryset.filter(categories__icontains=category)
+        store_type = self.request.GET.get('store_type')
+        if store_type:
+            queryset = queryset.filter(store_type=store_type)
+            if store_type == 'shopify':
+                if self.request.GET.get('store_id'):
+                    queryset = queryset.filter(shopify_product__store_id=self.request.GET.get('store_id'))
+                if self.request.GET.get('product_id'):
+                    queryset = queryset.filter(shopify_product_id=self.request.GET.get('product_id'))
+            if store_type == 'chq' and self.request.GET.get('store_id'):
+                if self.request.GET.get('store_id'):
+                    queryset = queryset.filter(chq_product__store_id=self.request.GET.get('store_id'))
+                if self.request.GET.get('product_id'):
+                    queryset = queryset.filter(chq_product_id=self.request.GET.get('product_id'))
+
+        return queryset
+
+    def get_serializer_context(self):
+        return {
+            'category': self.get_category(),
+            'change_index': 0,
+        }
+
+    def list(self, request, *args, **kwargs):
+        self.object_list = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(self.object_list)
+        if page is not None:
+            serializer = self.get_pagination_serializer(page)
+        else:
+            serializer = self.get_serializer(self.object_list, many=True)
+
+        return Response(serializer.data)
 
 
 class ShopifyProductViewSet(mixins.RetrieveModelMixin,

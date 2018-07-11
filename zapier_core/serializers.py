@@ -2,6 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from rest_hooks.models import Hook
+from product_alerts.models import ProductChange
 from leadgalaxy.models import ShopifyProduct, ShopifyStore
 from shopify_orders.models import ShopifyOrder
 from commercehq_core.models import CommerceHQProduct, CommerceHQStore
@@ -30,6 +31,23 @@ class HookSerializer(serializers.ModelSerializer):
             return attrs
         else:
             raise serializers.ValidationError("target {} exists for event {}".format(target, event))
+
+
+# This serializer is used to send product changes on fallback api endpoint
+# Returned data should have same structure as the data sent to hooks
+# product_alerts.models.ProductChange.send_hook_event
+class ProductChangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductChange
+        fields = ('store_type',)
+
+    def to_native(self, obj):
+        ret = super(ProductChangeSerializer, self).to_native(obj)
+
+        category = self.context.get('category')
+        change_index = self.context.get('change_index')
+        ret.update(obj.to_dict({}, category, change_index))
+        return ret
 
 
 class ShopifyProductSerializer(serializers.ModelSerializer):

@@ -135,6 +135,7 @@ class ProductChange(models.Model):
 
     # send product change data to subscription hooks
     # sent data should have same structure as response data from fallback api endpoints
+    # zapier_core.serializers.ProductChangeSerializer uses this method
     # zapier_core.views.ZapierSampleList uses this method
     def to_dict(self, product_data, category, change_index):
         ret = {
@@ -147,19 +148,24 @@ class ProductChange(models.Model):
         changes = self.get_data(category)
         if changes and len(changes):
             change = changes[change_index]
-            if product_data and change.get('sku'):
-                idx = variant_index(self.product, change.get('sku'), product_data.get('variants', []))
-                if idx is not None:
+            if product_data is not None and change.get('sku'):
+                variants = product_data.get('variants', None)
+                idx = variant_index(self.product, change.get('sku'), variants)
+                if variants is not None and idx is not None:
                     change['variant_id'] = product_data['variants'][idx]['id']
                     title = product_data['variants'][idx].get('title')
                     if title is None:
                         title = ' / '.join(product_data['variants'][idx].get('variant', []))
                     change['variant_title'] = title
-                    ret.update(change)
-                    return ret
-            else:
-                ret.update(change)
-                return ret
+                if variants is None and idx is not None:
+                    change['variant_id'] = idx
+                    variants_map = self.product.get_variant_mapping(for_extension=True)
+                    title = ' / '.join(option['title'] for option in variants_map[idx])
+                    change['variant_title'] = title
+
+            ret.update(change)
+            return ret
+
         return None
 
     def send_hook_event(self, product_data):

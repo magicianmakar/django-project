@@ -15,6 +15,7 @@ router.register(r'products/chq', views.CommerceHQProductViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^samples/(?P<event>[a-z_]+)$', views.ZapierSampleList.as_view()),
+    url(r'^product-changes/$', views.ProductChangesList.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_visibility$', views.ProductVisibilityUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_notes$', views.ProductNotesUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_variant$', views.ProductVariantUpdate.as_view()),
