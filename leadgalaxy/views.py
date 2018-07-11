@@ -989,6 +989,13 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
             res = res.order_by(*sort_columns)
 
+    if request.GET.get('product_board') in ['added', 'not_added']:
+        board_list = request.user.models_user.shopifyboard_set.all()
+        if request.GET.get('product_board') == "added":
+            res = res.filter(shopifyboard=board_list)
+        elif request.GET.get('product_board') == "not_added":
+            res = res.exclude(shopifyboard=board_list)
+
     paginator = SimplePaginator(res, post_per_page)
 
     page = min(max(1, utils.safeInt(page)), paginator.num_pages)

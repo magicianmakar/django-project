@@ -63,6 +63,18 @@
                             </div>
                         </div>
 
+                        <div class="col-md-12 m-t-xs">
+                            <div class="form-group" style="width: 100%">
+                                <label class="m-r-sm" style="width: 95px">Products on Board</label>
+                                <select name="product_board" class="form-control">
+                                    <option selected disabled value="">Select an option</option>
+                                    <option {% if request.GET.product_board == "all" %} selected {% endif %} value="all">All Products</option>
+                                    <option {% if request.GET.product_board == "added" %} selected {% endif %} value="added">Added on Board</option>
+                                    <option {% if request.GET.product_board == "not_added" %} selected {% endif %} value="not_added">Not Added on Board</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="col-md-5 col-md-offset-8 m-t-md">
                             <button id="product-filter-form-btn" class="btn btn-primary">Apply</button>
                         </div>
