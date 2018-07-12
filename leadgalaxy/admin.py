@@ -113,8 +113,8 @@ class AccessTokenAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'plan', 'country', 'timezone', 'status')
-    list_filter = ('plan', 'status', 'bundles', 'shopify_app_store', 'sync_delay_notify')
+    list_display = ('user', 'email', 'plan', 'tz', 'date')
+    list_filter = ('plan', 'plan__payment_gateway', 'status', 'bundles', 'shopify_app_store', 'sync_delay_notify', 'shopify_app_store')
     search_fields = ('emails', 'country', 'timezone', 'ips') + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'subuser_parent')
 
@@ -142,6 +142,15 @@ class UserProfileAdmin(admin.ModelAdmin):
             'fields': ('plan_after_expire', 'plan_expire_at')
         }),
     )
+
+    def email(self, instance):
+        return instance.user.email
+
+    def date(self, instance):
+        return instance.user.date_joined
+
+    def tz(self, instance):
+        return u'{} | {}'.format(instance.country, instance.timezone).strip(' |')
 
     def get_form(self, request, obj=None, **kwargs):
         self.instance = obj  # Capture instance before the form gets generated
