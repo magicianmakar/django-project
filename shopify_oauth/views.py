@@ -18,7 +18,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
 from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
-from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan
+from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan, create_user_without_signals
 
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
@@ -275,20 +275,19 @@ def callback(request):
             shop_info = shopify.Shop.current()
             username = shop_username(shop)
 
-            user = User.objects.create(
+            user, profile = create_user_without_signals(
                 username=username,
                 email=shop_info.email,
-            )
+                password=get_random_string(20))
 
-            user.set_password(get_random_string(20))
             user.set_config('shopify_app_store', True)
 
-            user.profile.shopify_app_store = True
-            user.profile.change_plan(get_plan(
+            profile.shopify_app_store = True
+            profile.change_plan(get_plan(
                 payment_gateway='shopify',
                 plan_slug='shopify-free-plan'))
 
-            user.profile.save()
+            profile.save()
 
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
         user_login(request, user)
