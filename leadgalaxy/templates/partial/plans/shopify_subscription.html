@@ -17,7 +17,7 @@
                                 style="width: {% widthratio 100 shopify_plans|length 1 %}%"
                                 >
 
-                                <h3>{{item.title}}</h3>
+                                <h3>{{item.description}}</h3>
                                 {% if item.monthly_price and not item.is_free %}
                                     <p class="price">${{item.monthly_price}}<span>/mo</span></p>
                                 {% else %}

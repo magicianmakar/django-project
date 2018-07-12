@@ -17,7 +17,7 @@
                                 style="width: {% widthratio 100 stripe_plans|length 1 %}%"
                                 >
 
-                                <h3>{{item.title}}</h3>
+                                <h3>{{item.description}}</h3>
                                 <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
                                 {% if item.stripe_plan.retail_amount %}
                                     <p class="retail-price" title="Retail Price">
