@@ -252,10 +252,9 @@ def callback(request):
 
         return HttpResponseRedirect('/')
 
-    if user.is_authenticated():
-        if user.get_config('shopify_app_store') \
-                or user.profile.shopify_app_store \
-                or user.profile.plan.payment_gateway == 'shopify':
+    from_shopify_store = user.get_config('shopify_app_store') or user.profile.shopify_app_store or user.profile.plan.payment_gateway == 'shopify'
+
+    if user.is_authenticated() and from_shopify_store:
             user_logout(request)
 
     if not user.is_authenticated():
@@ -301,7 +300,7 @@ def callback(request):
     except ShopifyStore.DoesNotExist:
         can_add, total_allowed, user_count = permissions.can_add_store(user)
 
-        if not can_add:
+        if not from_shopify_store and not can_add:
             plans_url = request.build_absolute_uri('/user/profile#plan')
 
             if user.profile.plan.is_free:
@@ -323,6 +322,9 @@ def callback(request):
                     'contact support</a> to learn how to connect more stores'.format(plans_url))
 
             return HttpResponseRedirect('/')
+
+        elif from_shopify_store:
+            user.profile.change_plan(GroupPlan.objects.get(slug='shopify-free-plan'))
 
         store = ShopifyStore.objects.filter(user=user, shop=shop, version=2, is_active=False) \
                                     .order_by('uninstalled_at', '-id').first()
@@ -360,6 +362,10 @@ def callback(request):
 
         attach_webhooks(store)
 
-        messages.success(request, u'Your store <b>{}</b> has been added!'.format(store.title))
+        if from_shopify_store:
+            messages.success(request, u'Please select a plan to start your free trial!'.format(store.title))
+            return HttpResponseRedirect('/user/profile#plan')
+        else:
+            messages.success(request, u'Your store <b>{}</b> has been added!'.format(store.title))
 
     return HttpResponseRedirect('/')

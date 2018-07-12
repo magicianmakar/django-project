@@ -587,7 +587,7 @@ def user_can_trial(self):
         return self.stripe_customer.can_trial
     except User.stripe_customer.RelatedObjectDoesNotExist:
         # If the customer object is not created yet, that mean the user didn't chose a Stripe plan yet
-        return True
+        return self.profile.get_config_value('_can_trial', True)
 
 
 class ShopifyStore(models.Model):
@@ -1835,6 +1835,7 @@ class GroupPlan(models.Model):
     notes = models.TextField(null=True, blank=True, verbose_name='Admin Notes')
     features = models.TextField(null=True, blank=True, verbose_name='Features List')
     monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
+    trial_days = models.IntegerField(default=0)
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 

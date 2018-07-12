@@ -35,6 +35,9 @@
                                 <p class="cta">
                                     {% if current_plan == item %}
                                         <button class="btn btn-primary btn-outline">Current Plan</button>
+                                    {% elif user.can_trial and item.trial_days %}
+                                        <button class="btn btn-primary start-plan-trial" >
+                                            Try for {{item.trial_days}} days</button>
                                     {% else %}
                                         <button class="btn btn-success choose-shopify-plan">Choose Plan</button>
                                     {% endif %}

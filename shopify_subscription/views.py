@@ -21,7 +21,8 @@ def subscription_plan(request):
         return JsonResponse({'error': 'Please make sure you\'ve added your store'}, status=403)
 
     try:
-        plan = GroupPlan.objects.get(id=request.POST.get('plan'))
+        plan_id = request.POST.get('plan', request.GET.get('plan'))
+        plan = GroupPlan.objects.get(id=plan_id)
     except GroupPlan.DoesNotExist:
         return JsonResponse({'error': 'Selected plan not found'}, status=404)
 
@@ -43,6 +44,7 @@ def subscription_plan(request):
         charge = store.shopify.RecurringApplicationCharge.create({
             "name": 'Dropified {}'.format(plan.title),
             "price": plan.monthly_price,
+            "trial_days": plan.trial_days,
             "capped_amount": 100,
             "terms": "Dropified Monthly Subscription",
             "return_url": app_link(reverse('shopify_subscription.views.subscription_activated'))
@@ -91,6 +93,8 @@ def subscription_activated(request):
         messages.success(request, 'Your plan has been successfully changed!')
 
         request.user.shopifysubscription_set.exclude(id=charge_id).update(status='cancelled')
+
+        request.user.set_config('_can_trial', False)
 
     else:
         request.user.profile.change_plan(GroupPlan.objects.get(id=request.session['current_plan']))
