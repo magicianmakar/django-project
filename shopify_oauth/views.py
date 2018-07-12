@@ -252,13 +252,17 @@ def callback(request):
 
         return HttpResponseRedirect('/')
 
-    from_shopify_store = user.is_authenticated() and \
-        user.get_config('shopify_app_store') or user.profile.shopify_app_store or user.profile.plan.payment_gateway == 'shopify'
+    if user.is_authenticated():
+        from_shopify_store = (user.get_config('shopify_app_store') or
+                              user.profile.shopify_app_store or
+                              user.profile.plan.payment_gateway == 'shopify')
+    else:
+        from_shopify_store = True
 
-    if from_shopify_store:
+    if from_shopify_store and user.is_authenticated():
         user_logout(request)
 
-    if not user.is_authenticated():
+    if from_shopify_store:
         # New User coming from Shopify Apps Store
 
         # check if we have a user with this shop as the username
