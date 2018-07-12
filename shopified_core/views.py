@@ -117,7 +117,7 @@ class ShopifiedApi(ApiResponseMixin, View):
             return self.api_error('You have reached the maximum login attempts.\nPlease try again later.', status=403)
 
         try:
-            username = User.objects.get(email__iexact=email).username
+            username = User.objects.get(email__iexact=email, profile__shopify_app_store=False).username
         except:
             return self.api_error('Invalid email or password')
 

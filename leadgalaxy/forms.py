@@ -85,6 +85,9 @@ class RegisterForm(forms.ModelForm):
             User._default_manager.get(email__iexact=email)
         except User.DoesNotExist:
             return email
+        except User.MultipleObjectsReturned:
+            pass
+
         raise forms.ValidationError(
             'A user with that email already exists',
             code='duplicate_email',
@@ -166,6 +169,9 @@ class UserProfileEmailForm(forms.Form):
         except User.DoesNotExist:
             return email
 
+        except User.MultipleObjectsReturned:
+            pass
+
         raise forms.ValidationError(
             'A user with that email already exists',
             code='duplicate_email',
@@ -224,7 +230,7 @@ class EmailAuthenticationForm(AuthenticationForm):
             )
 
         try:
-            return User.objects.get(email__iexact=username).username
+            return User.objects.get(email__iexact=username, profile__shopify_app_store=False).username
 
         except ObjectDoesNotExist:
             raise ValidationError(

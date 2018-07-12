@@ -289,7 +289,7 @@ def login_attempts_reset(username):
 def unlock_account_email(username):
     try:
         if '@' in username:
-            user = User.objects.get(email__iexact=username)
+            user = User.objects.get(email__iexact=username, profile__shopify_app_store=False)
         else:
             user = User.objects.get(username__iexact=username)
     except:
