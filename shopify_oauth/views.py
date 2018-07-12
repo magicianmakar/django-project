@@ -61,7 +61,7 @@ def verify_hmac_signature(request):
 
 
 def shop_username(shop):
-    return shop.lower().strip().encode()
+    return shop.lower().strip().encode()[:30]
 
 
 def have_subusers(user):
