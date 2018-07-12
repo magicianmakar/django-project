@@ -286,7 +286,7 @@ def callback(request):
             user.profile.shopify_app_store = True
             user.profile.change_plan(get_plan(
                 payment_gateway='shopify',
-                plan_slug='starter-shopify'))
+                plan_slug='shopify-free-plan'))
 
             user.profile.save()
 
@@ -327,9 +327,6 @@ def callback(request):
                     'contact support</a> to learn how to connect more stores'.format(plans_url))
 
             return HttpResponseRedirect('/')
-
-        elif from_shopify_store:
-            user.profile.change_plan(GroupPlan.objects.get(slug='shopify-free-plan'))
 
         store = ShopifyStore.objects.filter(user=user, shop=shop, version=2, is_active=False) \
                                     .order_by('uninstalled_at', '-id').first()

@@ -583,11 +583,14 @@ def user_have_billing_info(self):
 
 @add_to_class(User, 'can_trial')
 def user_can_trial(self):
+    if self.profile.from_shopify_app_store():
+        return self.profile.get_config_value('_can_trial', True)
+
     try:
         return self.stripe_customer.can_trial
     except User.stripe_customer.RelatedObjectDoesNotExist:
         # If the customer object is not created yet, that mean the user didn't chose a Stripe plan yet
-        return self.profile.get_config_value('_can_trial', True)
+        return True
 
 
 class ShopifyStore(models.Model):
