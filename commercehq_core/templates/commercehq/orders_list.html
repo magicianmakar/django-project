@@ -168,10 +168,10 @@
                                         </span>
                                     </div>
                                     <div class="col-xs-2 order-status">
-                                        {% if order.status == 0 %}
+                                        {% if not order.order_compplete and order.status == 0 %}
                                             <span class="badge badge-danger primary">&nbsp;</span>
                                             No Products Ordered
-                                        {% elif order.status < 3 %}
+                                        {% elif not order.order_compplete and order.status < 3 %}
                                             <span class="badge badge-warning primary">&nbsp;</span>
                                             Partially Ordered
                                         {% else %}

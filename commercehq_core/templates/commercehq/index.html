@@ -17,7 +17,7 @@
                         <tr>
                           <th style="">Name</th>
                           <th class="hidden-xs" style="width:13%">Products</th>
-                          <th class="hidden-xs" style="width:13%">Orders</th>
+                          <th class="hidden-xs" style="width:13%"></th>
                         {% if not user.is_subuser %}
                             <th class="hidden-sm hidden-xs"></th>
                         {% endif %}
@@ -43,7 +43,9 @@
                                     {% endif %}
                                     {% endwith %}
                                 </td>
-                                <td></td>
+                                <td class="hidden-xs" style="white-space:nowrap">
+                                    <a class="label statistics-link"href="{% url 'chq:orders_list' %}?store={{store.id}}">Orders</a>
+                                </td>
                                 {% if not user.is_subuser %}
                                 <td style="white-space:nowrap" class="hidden-sm hidden-xs">
                                     <div class="btn-group ">

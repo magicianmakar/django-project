@@ -794,6 +794,8 @@ class OrdersList(ListView):
 
                 order['items'][ldx] = line
 
+            order['order_compplete'] = order['placed_orders'] == len(order['items'])
+
             if tracked_unfulfilled:
                 try:
                     store = self.get_store()
