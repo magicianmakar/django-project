@@ -57,7 +57,7 @@ def add_commission_from_stripe(charge_id):
     if not amount:
         return
 
-    amount = charge.amount / 100.0
+    amount = amount / 100.0
     rep = requests_session().post(
         url='https://api.tapfiliate.com/1.6/conversions/{}/commissions/'.format(conversion['id']),
         json={
