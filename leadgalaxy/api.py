@@ -1407,10 +1407,13 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         # Auto Order Timeout
         config['ot'] = {
             #  Start Auto fulfill after `t` is elapsed
-            't': profile.get_config().get('_auto_order_timeout', -1),
+            't': config.get('_auto_order_timeout', -1),
 
             #  Debug Auto fulfill timeout
-            'd': 0
+            'd': cache.get('__ot__d') or config.get('__ot__d'),
+
+            # Log page load time
+            'pa': cache.get('__ot__pa') or config.get('__ot__pa'),
         }
 
         config['user'] = {
