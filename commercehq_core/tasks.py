@@ -120,7 +120,7 @@ def product_save(req_data, user_id):
             supplier = CommerceHQSupplier.objects.create(
                 store=store,
                 product=product,
-                product_url=original_url,
+                product_url=original_url[:512],
                 supplier_name=store_info.get('name'),
                 supplier_url=store_info.get('url'),
                 is_default=True

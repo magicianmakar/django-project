@@ -286,7 +286,7 @@ def export_product(req_data, target, user_id):
                         product.default_supplier = ProductSupplier.objects.create(
                             store=store,
                             product=product,
-                            product_url=original_url,
+                            product_url=original_url[:512],
                             supplier_name=supplier.get('name'),
                             supplier_url=supplier.get('url'),
                             variants_map=variants_mapping,
@@ -383,7 +383,7 @@ def export_product(req_data, target, user_id):
                 supplier = ProductSupplier.objects.create(
                     store=store,
                     product=product,
-                    product_url=original_url,
+                    product_url=original_url[:512],
                     supplier_name=supplier_info.get('name'),
                     supplier_url=supplier_info.get('url'),
                     is_default=True

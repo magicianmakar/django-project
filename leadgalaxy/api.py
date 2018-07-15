@@ -1809,6 +1809,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
+        if not data.get('variant'):
+            return self.api_error('Variant was not selected', status=422)
+
         order_updater = utils.ShopifyOrderUpdater(store, data.get('order'))
 
         if data.get('variant') == '-1':
@@ -2083,10 +2086,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             source_id.encode('ascii')
 
             assert utils.safeInt(order_id), 'Order ID is not a numbers'
-            # assert utils.safeInt(source_id), 'Aliexpress ID is not a numbers'
-            # assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
-
-            # source_id = int(source_id)
+            assert re.match('^https?://', source_id) is None, 'Aliexpress Order ID should not be a link'
 
         except AssertionError as e:
             if from_oberlo and (not source_id or not len(source_id)):
@@ -2940,7 +2940,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product=product,
             product_url=supplier_url,
             supplier_name=data.get('vendor_name', 'Supplier'),
-            supplier_url=data.get('vendor_url', 'http://www.aliexpress.com/'),
+            supplier_url=remove_link_query(data.get('vendor_url', 'http://www.aliexpress.com/')),
             is_default=True
         )
 
