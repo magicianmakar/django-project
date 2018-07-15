@@ -1828,9 +1828,10 @@ def acp_users_list(request):
                 Q(shopifystore__id=utils.safeInt(request.GET.get('store'))) |
                 Q(shopifystore__shop__iexact=q) |
                 Q(commercehqstore__api_url__icontains=q) |
+                Q(woostore__api_url__icontains=q) |
                 Q(shopifystore__title__icontains=q)
             )
-        elif request.GET.get('user'):
+        elif request.GET.get('user') and utils.safeInt(request.GET.get('user')):
             users = users.filter(
                 Q(id=request.GET.get('user'))
             )
@@ -1842,6 +1843,7 @@ def acp_users_list(request):
                 Q(profile__ips__icontains=q) |
                 Q(shopifystore__shop__iexact=q) |
                 Q(commercehqstore__api_url__icontains=q) |
+                Q(woostore__api_url__icontains=q) |
                 Q(shopifystore__title__icontains=q)
             )
 
