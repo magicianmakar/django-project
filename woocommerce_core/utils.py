@@ -542,8 +542,12 @@ def get_tracking_products(store, tracker_orders, per_page=50):
     for tracked in tracker_orders:
         tracked.product = product = products.get(tracked.product_id)
         if product:
-            image = next(iter(product['images']), {})
-            tracked.line['image'] = image.get('src')
+            try:
+                image = next(iter(product['images']), {})
+                tracked.line['image'] = image.get('src')
+            except TypeError:
+                pass
+
             variation_id = tracked.line.get('variation_id')
             if variation_id:
                 path = 'products/{}/variations/{}'.format(product['id'], variation_id)
