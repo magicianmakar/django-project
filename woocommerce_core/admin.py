@@ -34,6 +34,13 @@ class WooProductAdmin(admin.ModelAdmin):
         return reverse('product_view', kwargs={'pid': obj.id})
 
 
+@admin.register(WooOrderTrack)
+class WooOrderTrackAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
+    raw_id_fields = ('store', 'user')
+    ordering = ('-created_at',)
+    search_fields = ('data', 'source_id', 'store__id') + USER_SEARCH_FIELDS
+
+
 admin.site.register(WooSupplier)
-admin.site.register(WooOrderTrack)
 admin.site.register(WooBoard)
