@@ -3791,7 +3791,7 @@ def orders_place(request):
     try:
         if not request.user.is_authenticated():
             mixing = ApiResponseMixin()
-            user = mixing.get_user(request, assert_login=False)
+            user = mixing.get_user(request)
             if user:
                 user.backend = settings.AUTHENTICATION_BACKENDS[0]
                 login(request, user)
