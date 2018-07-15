@@ -542,11 +542,11 @@ def get_tracking_products(store, tracker_orders, per_page=50):
     for tracked in tracker_orders:
         tracked.product = product = products.get(tracked.product_id)
         if product:
-            try:
-                image = next(iter(product['images']), {})
-                tracked.line['image'] = image.get('src')
-            except TypeError:
-                pass
+            if not tracked.line:
+                continue
+
+            image = next(iter(product['images']), {})
+            tracked.line['image'] = image.get('src')
 
             variation_id = tracked.line.get('variation_id')
             if variation_id:
