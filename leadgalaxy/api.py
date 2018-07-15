@@ -2943,7 +2943,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             product=product,
             product_url=supplier_url,
             supplier_name=data.get('vendor_name', 'Supplier'),
-            supplier_url=remove_link_query(data.get('vendor_url', 'http://www.aliexpress.com/')),
+            supplier_url=utils.remove_link_query(data.get('vendor_url', 'http://www.aliexpress.com/')),
             is_default=True
         )
 
