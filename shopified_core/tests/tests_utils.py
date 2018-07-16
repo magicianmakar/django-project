@@ -273,6 +273,25 @@ class UtilsTestCase(TestCase):
         username = unique_username('', fullname=[])
         self.assertEqual(username, 'user')
 
+    def test_unique_username_long_name(self):
+        username = unique_username('', fullname='Thiago Reges Rodrigues De Souza')
+        self.assertTrue(len(username) <= 30)
+        User.objects.create(username=username)
+
+        username = unique_username('', fullname='Thiago Reges Rodrigues De Souza')
+        self.assertTrue(len(username) <= 30)
+
+        username = unique_username('', fullname='Thiago Reges Rodrigues De Souza De Rodrigues De Reges')
+        self.assertTrue(len(username) <= 30)
+        User.objects.create(username=username)
+
+        username = unique_username('', fullname='Thiago Reges Rodrigues De Souza De Rodrigues De Reges')
+        self.assertTrue(len(username) <= 30)
+        User.objects.create(username=username)
+
+        username = unique_username('', fullname='Thiago Reges Rodrigues De Souza De Rodrigues De Reges')
+        self.assertTrue(len(username) <= 30)
+
     def test_decode_params_str(self):
         s = 'test'
         self.assertEqual(decode_params(s), s)

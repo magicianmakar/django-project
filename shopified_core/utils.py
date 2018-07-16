@@ -481,11 +481,16 @@ def unique_username(username='user', fullname=None):
         username = 'user'
 
     username = username.lower().strip()
-    new_username = username
+    if len(username) > 30:
+        username = re.sub(r'[^a-zA-Z]', '', username).strip()
+
+    new_username = username[:30]
 
     while User.objects.filter(username__iexact=new_username).exists():
         n += 1
-        new_username = u'{}{}'.format(username.strip(), n)
+        new_username = u'{}{}'.format(username.strip()[:29], n)
+
+    print new_username, len(new_username)
 
     return new_username
 
