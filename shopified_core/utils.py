@@ -490,8 +490,6 @@ def unique_username(username='user', fullname=None):
         n += 1
         new_username = u'{}{}'.format(username.strip()[:29], n)
 
-    print new_username, len(new_username)
-
     return new_username
 
 

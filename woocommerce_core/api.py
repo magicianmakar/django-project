@@ -1282,3 +1282,14 @@ class WooStoreApi(ApiResponseMixin, View):
             product.sync()
 
         return self.api_success()
+
+    def delete_product_connect(self, request, user, data):
+        product = WooProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        source_id = product.source_id
+        if source_id:
+            product.source_id = 0
+            product.save()
+
+        return self.api_success()
