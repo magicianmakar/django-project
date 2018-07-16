@@ -114,6 +114,7 @@ def update_product_api_data(api_data, data, store):
     api_data['name'] = data['title']
     api_data['status'] = 'publish' if data['published'] else 'draft'
     api_data['price'] = str(data['price'])
+    api_data['sale_price'] = str(data['price'])
     api_data['regular_price'] = str(data['compare_at_price'])
     api_data['description'] = data.get('description')
 
