@@ -170,7 +170,7 @@ def create_variants_api_data(data, image_id_by_hash):
         api_data = {'attributes': []}
         descriptions = []
         for name, option in itertools.izip(titles, product):
-            descriptions.append('{}: {}'.format(name, option))
+            descriptions.append(u'{}: {}'.format(name, option))
             api_data['attributes'].append({'name': name, 'option': option})
             if 'image' not in api_data:
                 for image_hash, variant_option in variants_images:
