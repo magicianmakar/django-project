@@ -3,6 +3,12 @@
 (function(user_filter, sub_conf) {
 'use strict';
 
+if (typeof(Pusher) !== 'undefined') {
+    // Pusher.logToConsole = true;
+    window.pusher = new Pusher(sub_conf.key);
+    window.channel = window.pusher.subscribe(sub_conf.channel);
+}
+
 $(function () {
     if (Cookies.get('shopify_products_filter') == 'true') {
         $('.filter-form').show();
@@ -183,7 +189,7 @@ Vue.component('shopify-products-table', {
             return replaceQueryParam('page', value);
         },
         pusherSub: function() {
-            if (typeof(Pusher) === 'undefined') {
+            if (!window.pusher || !window.channel) {
                 toastr.error('This could be due to using Adblocker extensions<br>' +
                     'Please whitelist Shopified App website and reload the page<br>' +
                     'Contact us for further assistance',
@@ -192,9 +198,6 @@ Vue.component('shopify-products-table', {
                     });
                 return;
             }
-
-            var pusher = new Pusher(sub_conf.key);
-            var channel = pusher.subscribe(sub_conf.channel);
 
             var vm = this;
 
@@ -212,9 +215,8 @@ Vue.component('shopify-products-table', {
                 }
             });
 
-            channel.bind('shopify-products-found', function(data) {
+            window.channel.bind('shopify-products-found', function(data) {
                 if (vm.task_id && vm.task_id === data.task) {
-                    console.log(data);
                     vm.prev = data.prev;
                     vm.current = data.current;
                     vm.next = data.next;
