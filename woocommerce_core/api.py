@@ -31,6 +31,7 @@ from shopified_core.utils import (
     orders_update_limit,
     version_compare,
     order_phone_number,
+    encoded_dict,
     CancelledOrderAlert
 )
 
@@ -306,7 +307,7 @@ class WooStoreApi(ApiResponseMixin, View):
                 params['search'] = data['query']
 
             try:
-                r = store.wcapi.get(u'products?{}'.format(urllib.urlencode(params)).encode("utf-8"))
+                r = store.wcapi.get('products?{}'.format(urllib.urlencode(encoded_dict(params))))
                 r.raise_for_status()
             except HTTPError:
                 return self.api_error('WooCommerce API Error', status=500)
