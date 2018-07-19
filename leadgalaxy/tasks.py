@@ -218,7 +218,7 @@ def export_product(req_data, target, user_id):
                         variants_mapping = utils.get_mapping_from_product(product_to_map)
 
                         # Duplicated product variant mapping
-                        duplicate_product_mapping(product, product_to_map, variants_mapping)
+                        duplicate_product_mapping(req_data, product_to_map, variants_mapping)
 
                         variants_mapping = json.dumps(variants_mapping)
 
@@ -228,15 +228,6 @@ def export_product(req_data, target, user_id):
                             r = mapped
                     except Exception as e:
                         raven_client.captureException()
-
-                    try:
-                        product_images = api_data['product'].get('images', [])
-                        if len(product_images) == len(shopify_images):
-                            for i, image in enumerate(product_images):
-                                if image.get('src'):
-                                    update_product_data_images(product, image['src'], shopify_images[i]['src'])
-                    except:
-                        raven_client.captureException(level='warning')
 
                 del api_data
 
@@ -454,6 +445,12 @@ def export_product(req_data, target, user_id):
 
 def duplicate_product_mapping(product, product_to_map, variants_mapping):
     try:
+        if not req_data.get('product'):
+            return
+
+        product = ShopifyProduct.objects.get(id=req_data['product'])
+        permissions.user_can_edit(user, product)
+
         parent = product.parent_product
         if parent and parent.shopify_id and parent.store.is_active and product.default_supplier.variants_map:
             parent_shopify_product = utils.get_shopify_product(parent.store, parent.shopify_id)
