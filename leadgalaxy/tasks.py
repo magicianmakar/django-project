@@ -443,7 +443,7 @@ def export_product(req_data, target, user_id):
     }
 
 
-def duplicate_product_mapping(product, product_to_map, variants_mapping):
+def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
     try:
         if not req_data.get('product'):
             return
