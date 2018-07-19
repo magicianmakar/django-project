@@ -449,8 +449,6 @@ def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
             return
 
         product = ShopifyProduct.objects.get(id=req_data['product'])
-        permissions.user_can_edit(user, product)
-
         parent = product.parent_product
         if parent and parent.shopify_id and parent.store.is_active and product.default_supplier.variants_map:
             parent_shopify_product = utils.get_shopify_product(parent.store, parent.shopify_id)
@@ -467,6 +465,8 @@ def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
                             if match:
                                 variants_mapping[str(variant['id'])] = parent_variants_mapping.get(
                                     str(parent_variant['id']))
+    except ShopifyProduct.DoesNotExist:
+        return
     except:
         raven_client.captureException(level='warning')
 

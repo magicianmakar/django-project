@@ -750,17 +750,6 @@ $('.add-supplier-info-btn').click(function (e) {
 
 /* /Connect Product */
 
-$('.cached-img').error(function() {
-    $.ajax({
-        url: api_url('product-image', 'chq') + '?' + $.param({
-            'store': $(this).attr('store'),
-            'product': $(this).attr('product')
-        }),
-        type: 'DELETE',
-        success: function(data) {}
-    });
-});
-
 $('.product-preview img').click(function (e) {
     var checkbox = $(this).parent().find('.line-checkbox');
     checkbox.prop('checked', !checkbox.prop('checked'));
