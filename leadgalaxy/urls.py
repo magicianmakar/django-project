@@ -58,6 +58,13 @@ urlpatterns = patterns(
         {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
     url(r'^accounts/password_change/done/$', 'django.contrib.auth.views.password_change_done',
         {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
+    url(r'^accounts/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        'django.contrib.auth.views.password_reset_confirm',
+        {'template_name': 'registration/password_reset_confirm2.html', 'extra_context': {'site_header': 'Dropified'}},
+        name='password_reset_confirm'),
+    url(r'^accounts/reset/done/$', 'django.contrib.auth.views.password_reset_complete',
+        {'template_name': 'registration/password_reset_complete2.html', 'extra_context': {'site_header': 'Dropified'}},
+        name='password_reset_complete'),
 
     url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
     url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),
