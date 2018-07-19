@@ -120,10 +120,8 @@ def index(request):
     except ShopifyStore.DoesNotExist:
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
+        # TODO: Handle multi stores
         if request.user.is_authenticated():
-            if not request.user.profile.get_shopify_stores(flat=True).filter(shop=request.GET['shop']).exists():
-                messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
-
             return HttpResponseRedirect('/')
         else:
             return HttpResponseRedirect('/accounts/login/')
@@ -133,17 +131,21 @@ def index(request):
         return HttpResponseRedirect('/accounts/login/')
 
     if request.user.is_authenticated():
-        if store.id not in request.user.profile.get_shopify_stores(flat=True):
-            messages.error(request, 'You don\'t have access to the <b>{}</b> store'.format(request.GET['shop']))
+        if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
+            messages.success(request, u'Welcome Back, {}'.format(request.user.first_name))
+            return HttpResponseRedirect('/')
+        else:
+            user_logout(request)
 
-        return HttpResponseRedirect('/')
+    user = store.user
+    if not have_subusers(user):
+        user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        user_login(request, user)
     else:
-        user = store.user
-        if not have_subusers(user):
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-            user_login(request, user)
+        request.session['sudo_user'] = user.id
+        return HttpResponseRedirect(reverse('sudo_login'))
 
-        return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
 
 
 def install(request, store):
@@ -151,7 +153,7 @@ def install(request, store):
         store = '{}.myshopify.com'.format(store)
 
     reinstall_store = request.GET.get('reinstall') and \
-        permissions.user_can_view(request.user, ShopifyStore.objects.get(id=request.GET.get('reinstall')))
+        permissions.user_can_view(request.user, ShopifyStore.objects.get(id=request.GET.get('reinstall')), superuser_can=False)
 
     if request.user.is_authenticated():
         user = request.user
@@ -233,7 +235,7 @@ def callback(request):
 
         del request.session['shopify_reinstall']
 
-        if not permissions.user_can_view(request.user, store):
+        if not permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
             messages.success(request, u'You don\'t have access to this store')
             return HttpResponseRedirect('/')
 
@@ -242,10 +244,7 @@ def callback(request):
         except:
             raven_client.captureException(level='warning')
 
-        store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-        store.access_token = token['access_token']
-        store.version = 2
-        store.save()
+        store.update_token(token)
 
         try:
             attach_webhooks(store)
@@ -255,6 +254,27 @@ def callback(request):
         messages.success(request, u'Your store <b>{}</b> has been re-installed!'.format(store.title))
 
         return HttpResponseRedirect('/')
+    else:
+        try:
+            store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True)
+
+            # We have one store/user account, try to log him in if he doesn't have sub users
+            if user.is_authenticated():
+                if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
+                    store.update_token(token)
+                    messages.success(request, u'Welcome Back, {}'.format(user.first_name))
+                    return HttpResponseRedirect('/')
+            else:
+                # handle the Shopify redirect flow
+                return index(request)
+
+        except ShopifyStore.DoesNotExist:
+            pass
+        except ShopifyStore.MultipleObjectsReturned:
+            # TODO: Handle multi stores
+            raven_client.captureException()
+        except:
+            raven_client.captureException()
 
     if user.is_authenticated():
         from_shopify_store = (user.get_config('shopify_app_store') or
@@ -297,13 +317,8 @@ def callback(request):
         user_login(request, user)
 
     try:
-        store = ShopifyStore.objects.get(user=user, shop=shop, version=2, is_active=True)
-
-        store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-        store.access_token = token['access_token']
-        store.scope = settings.SHOPIFY_API_SCOPE
-
-        store.save()
+        store = ShopifyStore.objects.get(user=user, shop=shop, is_active=True)
+        store.update_token(token, shop=shop)
 
     except ShopifyStore.DoesNotExist:
         can_add, total_allowed, user_count = permissions.can_add_store(user)
@@ -337,16 +352,15 @@ def callback(request):
             store.is_active = True
             store.uninstalled_at = None
         else:
-            store = ShopifyStore(
-                user=user, shop=shop, version=2,
-                access_token=token['access_token'],
-                scope=token['access_token'][0])
+            store = ShopifyStore(user=user, shop=shop)
 
-        permissions.user_can_add(user, store)
+        store.update_token(token, shop=shop)
+
+        if not permissions.user_can_add(user, store, raise_on_error=False):
+            messages.success(request, u'You don\'t authorization to add this store')
+            return HttpResponseRedirect('/')
 
         try:
-            store.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-
             shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
 
             shop_info = shopify.Shop.current()

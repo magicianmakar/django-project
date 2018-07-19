@@ -41,9 +41,14 @@
                 </h1>
             </div>
 
+            {% if not target_user %}
             <h3 class="welcome-title">Welcome to Dropified!</h3>
             <p class="welcome-text">It’s time to start automating your drop shipping business and experience how great drop shipping can be.</p>
             <h5 class="welcome-subtitle font-alt color-green">Login to see it in action!</h5>
+            {% else %}
+            <h3 class="welcome-title">Welcome {{ user.first_name|default:'Back'}}!</h3>
+            <p class="welcome-text">Enter your password to login to your account</p>
+            {% endif %}
             <form method="POST" class="m-t" role="form" action="{% url 'django.contrib.auth.views.login' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{request.GET.next|default:'/'}}" />
@@ -63,7 +68,12 @@
                 {% endif %}
 
                 <div class="form-group">
+                    {% if not target_user %}
                     {% render_field form.username class+="form-control new input-lg" placeholder="Email" type="email" required="" %}
+                    {% else %}
+                    {% render_field form.username value=target_user.email class+="form-control new input-lg" type="email" readonly="" %}
+                    {% endif %}
+
                     {{ form.username.errors | safe }}
                 </div>
                 <div class="form-group">
@@ -71,20 +81,25 @@
                     {{ form.password.errors | safe }}
                 </div>
                 <div style="text-align:center;">
-                    <button type="submit" class="big-btn btn btn-primary m-b">Login Now</button>
+                    <button type="submit" class="big-btn btn btn-primary m-b">Login</button>
                 </div>
 
                 <a href="/accounts/password/reset/" class="forgot-password">Forgot password?</a>
+                {% if not target_user %}
                 <p class="text-muted text-center no-account">Don't have an account yet?</p>
                 <a class="big-btn btn btn-info" href="{% url 'leadgalaxy.views.register' %}">Create an account</a>
+                {% endif %}
             </form>
+            {% if not target_user %}
             <div class="m-t copyright"><img src="{% static 'dropified-logo.png' %}" style="width:110px"> &copy; {% now "Y" %}</div>
+            {% endif %}
         </div>
     </div>
 
     </div>
     </div>
 
+    {% if not target_user %}
     <div class="support-footer">
         <div class="constrain">
             <h3 class="support-title">
@@ -100,6 +115,7 @@
 
         </div>
     </div>
+    {% endif %}
 
     <!-- Mainly scripts -->
     <script src="{% static 'js/jquery.min.js' %}"></script>

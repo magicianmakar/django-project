@@ -16,7 +16,14 @@ def get_object_user(obj):
         return store.user
 
 
-def user_can_add(user, obj):
+def raise_or_return_result(msg, raise_on_error):
+    if raise_on_error:
+        raise PermissionDenied(msg)
+
+    return False
+
+
+def user_can_add(user, obj, raise_on_error=True):
     obj_user = get_object_user(obj)
 
     if not user.is_subuser:
@@ -25,7 +32,7 @@ def user_can_add(user, obj):
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
                 isinstance(obj, WooStore):
-            raise PermissionDenied('Sub-User can not add new stores')
+            return raise_or_return_result("Sub-User can not add new stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
 
@@ -43,19 +50,21 @@ def user_can_add(user, obj):
                 elif isinstance(store, WooStore):
                     stores = user.profile.get_woo_stores(flat=True)
                 else:
-                    raise PermissionDenied('Unknow Store Type')
+                    return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
-                    raise PermissionDenied("You don't have autorization to edit this store.")
+                    return raise_or_return_result("You don't have autorization to edit this store.", raise_on_error=raise_on_error)
 
     if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(abs(hash('add'))))
+        return raise_or_return_result("Unautorized Add Action", raise_on_error=raise_on_error)
+
+    return can
 
 
-def user_can_view(user, obj):
+def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
     obj_user = get_object_user(obj)
 
-    if user.is_superuser:
+    if superuser_can and user.is_superuser:
         return True
     elif not user.is_subuser:
         can = obj_user == user
@@ -79,16 +88,18 @@ def user_can_view(user, obj):
                 elif isinstance(store, WooStore):
                     stores = user.profile.get_woo_stores(flat=True)
                 else:
-                    raise PermissionDenied('Unknow Store Type')
+                    return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
-                    raise PermissionDenied("You don't have autorization to view this store.")
+                    return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
 
     if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('view')))
+        return raise_or_return_result("Unautorized View Action", raise_on_error=raise_on_error)
+
+    return can
 
 
-def user_can_edit(user, obj):
+def user_can_edit(user, obj, raise_on_error=True):
     obj_user = get_object_user(obj)
 
     if not user.is_subuser:
@@ -97,7 +108,7 @@ def user_can_edit(user, obj):
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
                 isinstance(obj, WooStore):
-            raise PermissionDenied('Sub-User can not edit stores')
+            return raise_or_return_result("Sub-User can not edit stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
         if can:
@@ -114,16 +125,18 @@ def user_can_edit(user, obj):
                 elif isinstance(store, WooStore):
                     stores = user.profile.get_woo_stores(flat=True)
                 else:
-                    raise PermissionDenied('Unknow Store Type')
+                    return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
                 if store.id not in stores:
-                    raise PermissionDenied("You don't have autorization to view this store.")
+                    return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
 
     if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('edit')))
+        return raise_or_return_result("Unautorized Edit Action", raise_on_error=raise_on_error)
+
+    return can
 
 
-def user_can_delete(user, obj):
+def user_can_delete(user, obj, raise_on_error=True):
     obj_user = get_object_user(obj)
 
     if not user.is_subuser:
@@ -132,12 +145,14 @@ def user_can_delete(user, obj):
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
                 isinstance(obj, WooStore):
-            raise PermissionDenied('Sub-User can not delete stores')
+            return raise_or_return_result("Sub-User can not delete stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
 
     if not can:
-        raise PermissionDenied('Unautorized Action (0x{})'.format(hash('delete')))
+        return raise_or_return_result("Unautorized Delete Action", raise_on_error=raise_on_error)
+
+    return can
 
 
 def can_add_store(user):

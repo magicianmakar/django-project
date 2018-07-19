@@ -4253,6 +4253,22 @@ def register(request, registration=None, subscribe_plan=None):
     })
 
 
+def sudo_login(request):
+    from django.contrib.auth.views import login as login_view
+
+    target_user = None
+    if request.session.get('sudo_user'):
+        target_user = User.objects.get(id=request.session['sudo_user'])
+
+    return login_view(
+        request,
+        authentication_form=EmailAuthenticationForm,
+        extra_context={
+            'target_user': target_user
+        }
+    )
+
+
 @require_http_methods(['GET'])
 @login_required
 def user_profile_invoices(request):

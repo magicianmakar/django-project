@@ -680,6 +680,18 @@ class ShopifyStore(models.Model):
 
         return shop if full_domain else shop.split('.')[0]
 
+    def update_token(self, token, shop=None, commit=True):
+        if shop is None:
+            shop = self.get_shop(full_domain=True)
+
+        self.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
+        self.access_token = token
+        self.scope = '|'.join(token['access_token'])
+        self.version = 2
+
+        if commit:
+            self.save()
+
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any',
                          query='', all_orders=False, created_range=None):
         if all_orders:
