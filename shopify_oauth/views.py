@@ -138,7 +138,9 @@ def index(request):
             user_logout(request)
 
     user = store.user
-    if not have_subusers(user):
+    from_shopify_store = (user.get_config('shopify_app_store') or user.profile.shopify_app_store or user.profile.plan.payment_gateway == 'shopify')
+
+    if not have_subusers(user) or from_shopify_store:
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
         user_login(request, user)
     else:
