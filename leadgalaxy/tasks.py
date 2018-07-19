@@ -149,6 +149,17 @@ def export_product(req_data, target, user_id):
                 update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
                 r = requests.put(update_endpoint, json=api_data)
 
+                if r.ok:
+                    try:
+                        shopify_images = r.json()['product'].get('images', [])
+                        product_images = api_data['product'].get('images', [])
+                        if len(product_images) == len(shopify_images):
+                            for i, image in enumerate(product_images):
+                                if image.get('src'):
+                                    update_product_data_images(product, image['src'], shopify_images[i]['src'])
+                    except:
+                        raven_client.captureException(level='warning')
+
                 del api_data
             else:
                 endpoint = store.get_link('/admin/products.json', api=True)
@@ -182,6 +193,7 @@ def export_product(req_data, target, user_id):
 
                 if 'product' in r.json():
                     product_to_map = r.json()['product']
+                    shopify_images = product_to_map.get('images', [])
 
                     try:
                         if not product_to_map.get('images') and api_data['product'].get('images'):
@@ -193,15 +205,21 @@ def export_product(req_data, target, user_id):
                             }
 
                             try:
-                                requests.put(
+                                rep = requests.put(
                                     url=store.get_link('/admin/products/{}.json'.format(product_to_map['id']), api=True),
                                     json=images_fix_data
-                                ).raise_for_status()
+                                )
+                                rep.raise_for_status()
+                                shopify_images = rep.json()['product'].get('images', [])
                             except:
                                 raven_client.captureException(level='warning')
 
                         # Variant mapping
                         variants_mapping = utils.get_mapping_from_product(product_to_map)
+
+                        # Duplicated product variant mapping
+                        duplicate_product_mapping(product, product_to_map, variants_mapping)
+
                         variants_mapping = json.dumps(variants_mapping)
 
                         # Link images with variants
@@ -210,6 +228,15 @@ def export_product(req_data, target, user_id):
                             r = mapped
                     except Exception as e:
                         raven_client.captureException()
+
+                    try:
+                        product_images = api_data['product'].get('images', [])
+                        if len(product_images) == len(shopify_images):
+                            for i, image in enumerate(product_images):
+                                if image.get('src'):
+                                    update_product_data_images(product, image['src'], shopify_images[i]['src'])
+                    except:
+                        raven_client.captureException(level='warning')
 
                 del api_data
 
@@ -423,6 +450,28 @@ def export_product(req_data, target, user_id):
         },
         'target': target
     }
+
+
+def duplicate_product_mapping(product, product_to_map, variants_mapping):
+    try:
+        parent = product.parent_product
+        if parent and parent.shopify_id and parent.store.is_active and product.default_supplier.variants_map:
+            parent_shopify_product = utils.get_shopify_product(parent.store, parent.shopify_id)
+            if parent_shopify_product:
+                parent_variants_mapping = json.loads(product.default_supplier.variants_map)
+                for variant in product_to_map['variants']:
+                    for parent_variant in parent_shopify_product['variants']:
+                        if parent_variants_mapping.get(str(parent_variant['id'])):
+                            match = True
+                            for option in ['option1', 'option2', 'option3']:
+                                if variant[option] != parent_variant[option]:
+                                    match = False
+                                    break
+                            if match:
+                                variants_mapping[str(variant['id'])] = parent_variants_mapping.get(
+                                    str(parent_variant['id']))
+    except:
+        raven_client.captureException(level='warning')
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

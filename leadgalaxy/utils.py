@@ -683,7 +683,6 @@ def duplicate_product(product, store=None):
                 })
 
             product_data['variants_sku'] = {}
-            product_data['variants_images'] = {}
             for variant in shopify_product['variants']:
                 if len(variant['sku']) > 0:
                     titles = variant['title'].split(' / ')
@@ -697,10 +696,6 @@ def duplicate_product(product, store=None):
                                     product_data['variants_sku'][titles[k]] = values[k]
                     else:
                         product_data['variants_sku'][variant['title']] = variant['sku']
-
-                for image in shopify_product['images']:
-                    if image['id'] == variant['image_id']:
-                        product_data['variants_images'][variant['title']] = image['src']
 
             product.data = json.dumps(product_data)
 
