@@ -666,7 +666,7 @@ class ShopifyStore(models.Model):
         return url
 
     def get_api_credintals(self):
-        api_key, api_secret = re.findall(r'(\w+):(\w+)', self.api_url).pop()
+        api_key, api_secret = re.findall(r'(\w+)?:(\w+)', self.api_url).pop()
 
         return {
             'api_key': api_key,
