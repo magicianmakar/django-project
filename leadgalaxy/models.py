@@ -685,8 +685,8 @@ class ShopifyStore(models.Model):
             shop = self.get_shop(full_domain=True)
 
         self.api_url = 'https://:{}@{}'.format(token['access_token'], shop)
-        self.access_token = token
-        self.scope = '|'.join(token['access_token'])
+        self.access_token = token['access_token']
+        self.scope = '|'.join(token['scope'])
         self.version = 2
 
         if commit:
@@ -724,7 +724,7 @@ class ShopifyStore(models.Model):
     @property
     def shopify(self):
         import shopify
-        session = shopify.Session(self.shop, self.access_token)
+        session = shopify.Session(self.shop, self.get_api_credintals()['api_secret'])
         shopify.ShopifyResource.activate_session(session)
 
         return shopify
