@@ -25,6 +25,7 @@ from shopified_core.utils import (
     app_link,
     http_exception_response,
     http_excption_status_code,
+    delete_model_from_db,
     ALIEXPRESS_REJECTED_STATUS
 )
 from shopified_core.paginators import SimplePaginator
@@ -49,8 +50,7 @@ from product_feed.models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus
 from order_exports.models import OrderExport
 from order_exports.api import ShopifyOrderExportAPI, ShopifyTrackOrderExport
 
-from shopify_orders.models import ShopifyOrder
-from shopify_orders.models import ShopifyOrderRisk
+from shopify_orders.models import ShopifyOrder, ShopifyOrderRisk
 
 from product_alerts.models import ProductVariantPriceHistory
 from .templatetags.template_helper import money_format
@@ -1313,3 +1313,48 @@ def store_transfer(self, options):
             url=options['response_url'],
             json={'text': ':x: Server Error when transferring {} to {} account'.format(options['shop'], options['to'])}
         )
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def delete_shopify_store(self, store_id):
+    try:
+        store = ShopifyStore.objects.get(id=store_id)
+
+        match = {
+            'store': store
+        }
+
+        orders = order_utils.delete_store_orders(store)
+        products = delete_model_from_db(ShopifyProduct, match)
+        tracks = delete_model_from_db(ShopifyOrderTrack, match)
+
+        raven_client.captureMessage('Delete Store', level='info', extra={
+            'store': store.shop,
+            'orders': orders,
+            'products': products,
+            'tracks': tracks,
+        })
+
+        requests.delete(store.get_link('/admin/api_permissions/current.json', api=True))
+
+        store.delete()
+    except:
+        raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def delete_user(self, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+
+        if not user.is_subuser:
+            for store in user.profile.get_shopify_stores():
+                delete_shopify_store(store.id)
+
+        products = delete_model_from_db(ShopifyProduct, {'user': user})
+
+        user.delete()
+
+        raven_client.captureMessage('Delete User', level='info', extra={'Saved Products': products})
+    except:
+        raven_client.captureException()

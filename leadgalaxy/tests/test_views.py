@@ -1,9 +1,16 @@
 import json
+import base64
+import hmac
+import urllib3
+import mock
+from time import sleep
+from hashlib import sha256
 
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from mock import patch, Mock
 
@@ -15,6 +22,11 @@ from stripe_subscription.models import StripeCustomer
 from analytic_events.models import RegistrationEvent
 
 from leadgalaxy.views import get_product
+from leadgalaxy.models import ShopifyStore
+from leadgalaxy.tasks import delete_shopify_store
+
+from shopify_orders.utils import get_elastic
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
 
 
 class ProfileViewTestCase(TestCase):
@@ -551,3 +563,167 @@ class RegisterTestCase(TestCase):
     def test_events_are_removed_after_fire(self):
         self.client.post('/accounts/register', self.credentials, follow=True)
         self.assertEquals(RegistrationEvent.objects.count(), 0)
+
+
+def delete_shopify_store_callback(*args, **kwargs):
+    delete_shopify_store(*args)
+
+
+class ShopifyMandatoryWebhooksTestCase(TestCase):
+    def setUp(self):
+        self.user = f.UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.store = f.ShopifyStoreFactory(id=-9999)
+        self.store.user = self.user
+        api_credentials = sha256().hexdigest()
+        api_key, api_secret = api_credentials[:32], api_credentials[32:]
+        self.store.api_url = 'https://{}:{}@{}'.format(api_key, api_secret, self.store.api_url.replace('https://', ''))
+        self.store.save()
+
+        self.store.shop = self.store.get_shop(full_domain=True)
+        self.store.save()
+
+        # Creating Orders
+        urllib3.disable_warnings()
+        self.es = get_elastic()
+        order = f.ShopifyOrderFactory(user=self.user, store=self.store)
+        order.save()
+        shopify_customer = {
+            'id': order.customer_id,
+            'email': order.customer_email,
+            'phone': '',
+        }
+        self.shopify_order_ids = [order.order_id]
+        for i in range(5):
+            # Create orders with same customer id and e-mail
+            order = f.ShopifyOrderFactory(
+                user=self.user,
+                store=self.store,
+                customer_id=order.customer_id,
+                customer_email=order.customer_email
+            )
+            order.save()
+
+            self.es.index(
+                index="shopify-order",
+                doc_type="order",
+                id=order.id,
+                refresh=True,
+                body=dict(
+                    store=order.store_id,
+                    user=order.user_id,
+                    order_id=order.order_id,
+                    order_number=order.order_number,
+                    customer_id=order.customer_id,
+                    customer_name=order.customer_name,
+                    customer_email=order.customer_email
+                )
+            )
+
+            self.shopify_order_ids.append(order.order_id)
+
+        ShopifySyncStatus.objects.create(
+            store=self.store,
+            sync_type='orders',
+            sync_status=2,
+            orders_count=len(self.shopify_order_ids),
+            elastic=True
+        )
+
+        # Params for customer redact webhook request
+        self.customer_payload = json.dumps({
+            "shop_id": "shopify_shop_id",
+            "shop_domain": self.store.get_shop(full_domain=True),
+            "customer": shopify_customer,
+            "orders_to_redact": self.shopify_order_ids
+        })
+        shopify_hash = hmac.new(api_secret.encode(), self.customer_payload, sha256).digest()
+        self.customer_headers = {
+            'X-Shopify-Hmac-Sha256': base64.encodestring(shopify_hash).strip()
+        }
+
+        # Params for store delete webhook request
+        self.store_payload = json.dumps({
+            "shop_id": "shopify_shop_id",
+            "shop_domain": self.store.get_shop(full_domain=True),
+        })
+        shopify_hash = hmac.new(api_secret.encode(), self.store_payload, sha256).digest()
+        self.store_headers = {
+            'X-Shopify-Hmac-Sha256': base64.encodestring(shopify_hash).strip()
+        }
+
+    def test_not_from_shopify(self):
+        response = self.client.post('/webhook/gdpr-shopify/delete-customer',
+                                    self.customer_payload,
+                                    content_type="application/json")
+
+        self.assertEquals(response.status_code, 200)
+        stores = ShopifyStore.objects.all()
+        orders = ShopifyOrder.objects.all()
+
+        self.assertNotEquals(stores.count(), 0)
+        self.assertNotEquals(orders.count(), 0)
+
+    def test_delete_customer(self):
+        response = self.client.post('/webhook/gdpr-shopify/delete-customer',
+                                    self.customer_payload,
+                                    content_type="application/json",
+                                    **self.customer_headers)
+        self.assertEquals(response.status_code, 200)
+
+        # Check if elasticsearch orders are deleted
+        orders = self.es.search(index='shopify-order', doc_type='order', body={
+            'query': {
+                'terms': {
+                    '_id': self.shopify_order_ids
+                }
+            }
+        })
+        self.assertEquals(orders['hits']['total'], 0)
+
+        # Check if database orders are deleted
+        orders = ShopifyOrder.objects.all()
+        self.assertEquals(orders.count(), 0)
+
+    @mock.patch.object(delete_shopify_store, 'delay', side_effect=delete_shopify_store_callback)
+    def test_delete_store(self, d):
+        response = self.client.post('/webhook/gdpr-shopify/delete-store',
+                                    self.store_payload,
+                                    content_type="application/json",
+                                    **self.store_headers)
+        self.assertEquals(response.status_code, 200)
+
+        stores = ShopifyStore.objects.all()
+        orders = ShopifyOrder.objects.all()
+
+        self.assertEquals(stores.count(), 0)
+        self.assertEquals(orders.count(), 0)
+
+        # Check elasticsearch orders
+        orders = self.es.search(index='shopify-order', doc_type='order', body={
+            'query': {
+                'bool': {
+                    'must': {
+                        'term': {'store': self.store.id}
+                    },
+                },
+            }
+        })
+        self.assertEquals(orders['hits']['total'], 0)
+
+    def tearDown(self):
+        orders = self.es.search(
+            index='shopify-order',
+            doc_type='order',
+            body={'query': {'bool': {'must': {'term': {'store': self.store.id}}}}}
+        )
+
+        for order in orders['hits']['hits']:
+            self.es.delete(
+                index="shopify-order",
+                doc_type="order",
+                id=order.get('_id')
+            )

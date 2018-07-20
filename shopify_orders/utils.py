@@ -12,7 +12,7 @@ from elasticsearch import Elasticsearch
 from rest_hooks.signals import raw_hook_event
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopified_core.utils import OrderErrors
+from shopified_core.utils import OrderErrors, delete_model_from_db
 from shopified_core.shipping_helper import country_from_code
 
 
@@ -490,20 +490,7 @@ def delete_store_orders(store, db=True, es=True):
     deleted = []
 
     if db:
-        orders = ShopifyOrder.objects.filter(store=store)
-        orders_count = orders.count()
-
-        steps = 2000
-        count = 0
-        while count <= orders_count:
-            order_ids = orders[:steps].values_list('id', flat=True)
-            ShopifyOrder.objects.filter(id__in=order_ids).delete()
-
-            count += len(order_ids)
-
-            if not len(order_ids):
-                break
-
+        count = delete_model_from_db(ShopifyOrder, match={'store': store}, steps=2000)
         deleted.append(count)
 
     if es:
@@ -521,6 +508,8 @@ def delete_store_orders(store, db=True, es=True):
 
             r = es.delete_by_query(index='shopify-order', doc_type='order', body=body)
             deleted.append(r['total'])
+
+            ShopifySyncStatus.objects.filter(store=store, elastic=True).update(elastic=False)
 
     return deleted
 

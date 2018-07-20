@@ -33,6 +33,7 @@ from django.core.validators import validate_email, ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import pluralize
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import *

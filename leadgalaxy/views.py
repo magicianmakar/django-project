@@ -742,6 +742,54 @@ def webhook(request, provider, option):
 
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
+    elif provider == 'gdpr-shopify' and request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            for store in ShopifyStore.objects.filter(shop=data.get('shop_domain')):
+                try:
+                    utils.verify_shopify_webhook(store, request)
+                except:
+                    raven_client.captureException(level='warning')
+                    continue
+
+                topic = option.replace('-', '/')
+
+                if topic == 'delete/customer':
+                    # Erase from elasticsearch
+                    es = shopify_orders_utils.get_elastic()
+                    es_search_enabled = es and shopify_orders_utils.is_store_indexed(store=store)
+
+                    if es_search_enabled:
+                        es.delete_by_query(
+                            index='shopify-order',
+                            doc_type='order',
+                            body={
+                                'query': {
+                                    'terms': {
+                                        '_id': data.get('orders_to_redact')
+                                    }
+                                }
+                            }
+                        )
+
+                    # Erase from database
+                    ShopifyOrder.objects.filter(
+                        store=store,
+                        order_id__in=data.get('orders_to_redact'),
+                    ).delete()
+
+                elif topic == 'delete/store':
+                    tasks.delete_shopify_store.delay(store.id)
+
+                else:
+                    raven_client.captureMessage('Shopify GDPR Topic', level='warning', extra={'topic': topic})
+
+            return HttpResponse('ok')
+        except:
+            raven_client.captureException()
+
+            return JsonResponse({'status': 'ok', 'warning': 'Processing exception'}, status=500)
+
     elif provider == 'stripe' and request.method == 'POST':
         assert option == 'subs'
 

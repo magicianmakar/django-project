@@ -101,6 +101,7 @@ class ShopifyOrderFactory(factory.DjangoModelFactory):
     order_number = factory.fuzzy.FuzzyInteger(999)
     total_price = factory.fuzzy.FuzzyFloat(1000.0)
     customer_id = factory.fuzzy.FuzzyInteger(999)
+    customer_email = factory.LazyAttribute(lambda o: '%s@example.org' % o.user.username)
     created_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
     updated_at = factory.fuzzy.FuzzyDateTime(NOW, TOMORROW)
 

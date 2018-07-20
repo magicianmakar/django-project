@@ -31,6 +31,8 @@ jobs:
           PUSHER_SOCKET_URL: ws://ws.pusherapp.com/app/446d8151fc6d4157e2cc
           PUSHER_URL: http://446d8151fc6d4157e2cc:4e7022fac49cdb27bcdb@api.pusherapp.com/apps/255355
 
+          FOUNDELASTICSEARCH_URL: https://search-dropified-ci-tests-thechx2xa2if5bonuiyobhyamq.us-east-1.es.amazonaws.com/
+
           SENDGRID_PASSWORD: ""
           SENDGRID_USERNAME: ""
 
@@ -54,17 +56,17 @@ jobs:
           command: |
               source ./scripts/prepare_build.sh
 
-      - run: 
+      - run:
           name: Intall NodeJS
           command: |
               curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
               sudo apt-get install -y nodejs
 
-      - run: 
+      - run:
           name: Static Code Checks
           command: |
               flake8 --show-source
-    
+
       # Restore the dependency cache
       - restore_cache:
           keys:
@@ -74,7 +76,7 @@ jobs:
           - v1-dep-master-
           # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
           - v1-dep-
-        
+
       - run:
           name: Install Python Dependencies
           command: |
@@ -82,7 +84,7 @@ jobs:
               pip install -r requirements.txt
               npm install
 
-      - run: 
+      - run:
           name: Set up test
           command: |
               sudo ln -s ~/ShopifiedApp/webapp/node_modules/.bin/yuglify /usr/bin/yuglify
@@ -94,7 +96,7 @@ jobs:
           - app/static/libs/bower_components
           - venv
 
-      - run: 
+      - run:
           name: Django Tests
           command: |
             source venv/bin/activate

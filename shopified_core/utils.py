@@ -509,6 +509,33 @@ def update_product_data_images(product, old_url, new_url):
     return product
 
 
+def delete_model_from_db(model, match, steps=5000):
+    """ Delete rows from a table using `match` filter
+
+    This method will delete rows without using a lot of memory, deleting many rows at once may take a lot of memory and could exceed the container
+    allowed memory if filter match many rows (ex: ShopifyOrder.objects.filter(user=n).delete() won't work if the user have 100K or more orders)
+
+    Args:
+        model: Model instance (ex: ShopifyOrder)
+        match(dict): Filter to match rows to delete
+    """
+
+    model_ids = list(model.objects.filter(**match).values_list('id', flat=True))
+    model_count = len(model_ids)
+
+    steps = 10000
+    start = 0
+    count = 0
+    while start < model_count:
+        order_ids = model_ids[start:start + steps]
+        model.objects.filter(id__in=order_ids).delete()
+
+        start += steps
+        count += len(order_ids)
+
+    return count
+
+
 def execute_once_in(unique_ids, seconds):
     """
     This decorator wraps a normal function
