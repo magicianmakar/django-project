@@ -3,14 +3,12 @@ import base64
 import hmac
 import urllib3
 import mock
-from time import sleep
 from hashlib import sha256
 
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
 from django.contrib.auth.models import User
-from django.conf import settings
 
 from mock import patch, Mock
 
@@ -25,7 +23,6 @@ from leadgalaxy.views import get_product
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.tasks import delete_shopify_store
 
-from shopify_orders.utils import get_elastic
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
 
 
@@ -541,6 +538,7 @@ class AutoFulfillLimitsTestCase(TestCase):
         except NotImplementedError:
             pass
 
+
 class RegisterTestCase(TestCase):
     def setUp(self):
         self.credentials = {'password1': 'test',
@@ -588,7 +586,6 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
 
         # Creating Orders
         urllib3.disable_warnings()
-        self.es = get_elastic()
         order = f.ShopifyOrderFactory(user=self.user, store=self.store)
         order.save()
         shopify_customer = {
@@ -606,22 +603,6 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
                 customer_email=order.customer_email
             )
             order.save()
-
-            self.es.index(
-                index="shopify-order",
-                doc_type="order",
-                id=order.id,
-                refresh=True,
-                body=dict(
-                    store=order.store_id,
-                    user=order.user_id,
-                    order_id=order.order_id,
-                    order_number=order.order_number,
-                    customer_id=order.customer_id,
-                    customer_name=order.customer_name,
-                    customer_email=order.customer_email
-                )
-            )
 
             self.shopify_order_ids.append(order.order_id)
 
@@ -674,16 +655,6 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
                                     **self.customer_headers)
         self.assertEquals(response.status_code, 200)
 
-        # Check if elasticsearch orders are deleted
-        orders = self.es.search(index='shopify-order', doc_type='order', body={
-            'query': {
-                'terms': {
-                    '_id': self.shopify_order_ids
-                }
-            }
-        })
-        self.assertEquals(orders['hits']['total'], 0)
-
         # Check if database orders are deleted
         orders = ShopifyOrder.objects.all()
         self.assertEquals(orders.count(), 0)
@@ -701,29 +672,3 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
 
         self.assertEquals(stores.count(), 0)
         self.assertEquals(orders.count(), 0)
-
-        # Check elasticsearch orders
-        orders = self.es.search(index='shopify-order', doc_type='order', body={
-            'query': {
-                'bool': {
-                    'must': {
-                        'term': {'store': self.store.id}
-                    },
-                },
-            }
-        })
-        self.assertEquals(orders['hits']['total'], 0)
-
-    def tearDown(self):
-        orders = self.es.search(
-            index='shopify-order',
-            doc_type='order',
-            body={'query': {'bool': {'must': {'term': {'store': self.store.id}}}}}
-        )
-
-        for order in orders['hits']['hits']:
-            self.es.delete(
-                index="shopify-order",
-                doc_type="order",
-                id=order.get('_id')
-            )
