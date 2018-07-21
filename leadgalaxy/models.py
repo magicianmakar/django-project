@@ -451,7 +451,7 @@ class UserProfile(models.Model):
             self.save()
 
     def from_shopify_app_store(self):
-        return bool(self.shopify_app_store or self.get_config_value('shopify_app_store'))
+        return bool(self.shopify_app_store or self.get_config_value('shopify_app_store') or self.plan.payment_gateway == 'shopify')
 
 
 class UserCompany(models.Model):

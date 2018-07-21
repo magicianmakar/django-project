@@ -1337,6 +1337,9 @@ def delete_shopify_store(self, store_id):
 
         requests.delete(store.get_link('/admin/api_permissions/current.json', api=True))
 
+        if store.user.profile.from_shopify_app_store():
+            delete_user.delay(store.user.id)
+
         store.delete()
     except:
         raven_client.captureException()
