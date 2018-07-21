@@ -463,9 +463,10 @@ def verify_shopify_permissions(store):
 
 def verify_shopify_webhook(store, request, throw_excption=True):
     api_secret = store.get_api_credintals().get('api_secret')
-    webhook_hash = hmac.new(api_secret.encode(), request.body.encode(), sha256).digest()
+    api_data = request.body.encode()
+    webhook_hash = hmac.new(api_secret.encode(), api_data, sha256).digest()
     webhook_hash = base64.encodestring(webhook_hash).strip()
-    request_hash = request.META.get('X_SHOPIFY_HMAC_SHA256') or request.META.get('X-Shopify-Hmac-Sha256')
+    request_hash = request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256') or request.META.get('X-Shopify-Hmac-Sha256')
 
     if throw_excption:
         assert webhook_hash == request_hash, 'Webhook Verification'

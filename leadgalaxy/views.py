@@ -745,7 +745,7 @@ def webhook(request, provider, option):
     elif provider == 'gdpr-shopify' and request.method == 'POST':
         try:
             data = json.loads(request.body)
-            for store in ShopifyStore.objects.filter(shop=data.get('shop_domain')):
+            for store in ShopifyStore.objects.filter(shop=data.get('shop_domain'), is_active=False):
                 try:
                     utils.verify_shopify_webhook(store, request)
                 except:
