@@ -81,8 +81,8 @@ def subscribe_user_to_default_plan(user):
         update_subscription,
     )
 
-    # Default plan is Elite Plan
-    plan = GroupPlan.objects.get(slug='elite')
+    # Default paid plan is Builder Plan
+    plan = GroupPlan.objects.get(slug='builder')
 
     user.profile.create_stripe_customer()
 
@@ -138,7 +138,7 @@ def index(request):
             user_logout(request)
 
     user = store.user
-    from_shopify_store = (user.get_config('shopify_app_store') or user.profile.shopify_app_store or user.profile.plan.payment_gateway == 'shopify')
+    from_shopify_store = user.profile.from_shopify_app_store()
 
     if not have_subusers(user) or from_shopify_store:
         user.backend = settings.AUTHENTICATION_BACKENDS[0]
@@ -167,7 +167,7 @@ def install(request, store):
         can_add, total_allowed, user_count = permissions.can_add_store(user)
 
         if not can_add and not reinstall_store:
-            if user.profile.plan.is_free and user.can_trial():
+            if user.profile.plan.is_free and user.can_trial() and not user.profile.from_shopify_app_store():
                 subscribe_user_to_default_plan(user)
 
             else:
@@ -279,9 +279,7 @@ def callback(request):
             raven_client.captureException()
 
     if user.is_authenticated():
-        from_shopify_store = (user.get_config('shopify_app_store') or
-                              user.profile.shopify_app_store or
-                              user.profile.plan.payment_gateway == 'shopify')
+        from_shopify_store = user.profile.from_shopify_app_store()
     else:
         from_shopify_store = True
 

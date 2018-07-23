@@ -677,7 +677,7 @@ class CHQStoreApi(ApiResponseMixin, View):
         can_add, total_allowed, user_count = permissions.can_add_store(user)
 
         if not can_add:
-            if user.profile.plan.is_free and user.can_trial():
+            if user.profile.plan.is_free and user.can_trial() and not user.profile.from_shopify_app_store():
                 from shopify_oauth.views import subscribe_user_to_default_plan
 
                 subscribe_user_to_default_plan(user)
