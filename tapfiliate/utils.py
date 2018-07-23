@@ -58,11 +58,17 @@ def add_commission_from_stripe(charge_id):
         return
 
     amount = amount / 100.0
+
+    data = {
+        'conversion_sub_amount': amount
+    }
+
+    if conversion['affiliate']['id'] in ['cedricdufay']:
+        data['commission_type'] = 'preferred'
+
     rep = requests_session().post(
         url='https://api.tapfiliate.com/1.6/conversions/{}/commissions/'.format(conversion['id']),
-        json={
-            'conversion_sub_amount': amount
-        }
+        json=data
     )
 
     rep.raise_for_status()
