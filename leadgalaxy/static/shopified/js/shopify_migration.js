@@ -3,12 +3,6 @@
 (function(user_filter, sub_conf) {
 'use strict';
 
-if (typeof(Pusher) !== 'undefined') {
-    // Pusher.logToConsole = true;
-    window.pusher = new Pusher(sub_conf.key);
-    window.channel = window.pusher.subscribe(sub_conf.channel);
-}
-
 $(function () {
     if (Cookies.get('shopify_products_filter') == 'true') {
         $('.filter-form').show();
@@ -181,24 +175,11 @@ Vue.component('shopify-products-table', {
             current: 1
         }
     },
-    created: function () {
-        this.pusherSub();
-    },
     methods: {
         replacePageParam: function(value) {
             return replaceQueryParam('page', value);
         },
         pusherSub: function() {
-            if (!window.pusher || !window.channel) {
-                toastr.error('This could be due to using Adblocker extensions<br>' +
-                    'Please whitelist Shopified App website and reload the page<br>' +
-                    'Contact us for further assistance',
-                    'Pusher service is not loaded', {
-                        timeOut: 0
-                    });
-                return;
-            }
-
             var vm = this;
 
             $.ajax({
@@ -262,9 +243,24 @@ Vue.component('product-row', {
 });
 
 // create the root instance
-new Vue({
+var vue = new Vue({
     el: '#products-wrapper'
 });
 
+if (typeof(Pusher) !== 'undefined') {
+    // Pusher.logToConsole = true;
+    window.pusher = new Pusher(sub_conf.key);
+    window.channel = window.pusher.subscribe(sub_conf.channel);
+    window.channel.bind('pusher:subscription_succeeded', function(data){
+        vue.$refs.shopifyProductsTable.pusherSub();
+    });
+} else {
+    toastr.error('This could be due to using Adblocker extensions<br>' +
+        'Please whitelist Shopified App website and reload the page<br>' +
+        'Contact us for further assistance',
+        'Pusher service is not loaded', {
+            timeOut: 0
+        });
+}
 
 })(user_filter, sub_conf);
