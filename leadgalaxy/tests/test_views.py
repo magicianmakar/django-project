@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from mock import patch, Mock
 
@@ -574,7 +575,7 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
         self.user.set_password(self.password)
         self.user.save()
 
-        self.store = f.ShopifyStoreFactory(id=-9999)
+        self.store = f.ShopifyStoreFactory()
         self.store.user = self.user
         api_credentials = sha256().hexdigest()
         api_key, api_secret = api_credentials[:32], api_credentials[32:]
@@ -582,6 +583,7 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
         self.store.save()
 
         self.store.shop = self.store.get_shop(full_domain=True)
+        self.store.is_active = False
         self.store.save()
 
         # Creating Orders
@@ -621,9 +623,9 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
             "customer": shopify_customer,
             "orders_to_redact": self.shopify_order_ids
         })
-        shopify_hash = hmac.new(api_secret.encode(), self.customer_payload, sha256).digest()
+        shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.customer_payload, sha256).digest()
         self.customer_headers = {
-            'X-Shopify-Hmac-Sha256': base64.encodestring(shopify_hash).strip()
+            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodestring(shopify_hash).strip()
         }
 
         # Params for store delete webhook request
@@ -631,9 +633,9 @@ class ShopifyMandatoryWebhooksTestCase(TestCase):
             "shop_id": "shopify_shop_id",
             "shop_domain": self.store.get_shop(full_domain=True),
         })
-        shopify_hash = hmac.new(api_secret.encode(), self.store_payload, sha256).digest()
+        shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.store_payload, sha256).digest()
         self.store_headers = {
-            'X-Shopify-Hmac-Sha256': base64.encodestring(shopify_hash).strip()
+            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodestring(shopify_hash).strip()
         }
 
     def test_not_from_shopify(self):
