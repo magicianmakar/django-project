@@ -734,6 +734,12 @@ def webhook(request, provider, option):
 
                 unmonitor_store(store)
 
+                if user.profile.from_shopify_app_store():
+                    # Switch to free plan and disable trial
+                    user.profile.change_plan(GroupPlan.objects.get(
+                        payment_gateway='shopify',
+                        slug='shopify-free-plan'))
+
                 return JsonResponse({'status': 'ok'})
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(topic))
