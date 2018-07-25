@@ -270,7 +270,9 @@ class ShopifyProductChangeManager(ProductChangeManager):
             product_data['published'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
             for idx, variant in enumerate(product_data.get('variants', [])):
-                product_data['variants'][idx]['inventory_quantity'] = 0
+                if variant.get('id'):
+                    self.product.set_variant_quantity(quantity=0, variant_id=variant['id'], variant=variant)
+
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
 
@@ -292,13 +294,19 @@ class ShopifyProductChangeManager(ProductChangeManager):
         elif self.config['quantity_change'] == 'update':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
-                product_data['variants'][idx]['inventory_quantity'] = variant_change.get('new_value')
+                self.product.set_variant_quantity(
+                    quantity=variant_change.get('new_value'),
+                    variant_id=product_data['variants'][idx]['id'],
+                    variant=product_data['variants'][idx],
+                )
+
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
 
         return product_data
 
     def handle_variant_added(self, product_data, variant_change):
+        # TODO: Handle this case (Add setting, update logic...)
         return None  # This case is not covered with a setting
 
         idx = self.get_variant(product_data, variant_change)
@@ -306,6 +314,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
             variant = {}
             variant['sku'] = variant_change.get('sku')
             variant['price'] = variant_change.get('price')
+            # TODO: shopify location support
             variant['inventory_quantity'] = variant_change.get('quantity')
             variant['inventory_management'] = 'shopify'
             variant['inventory_policy'] = 'deny'
@@ -325,7 +334,12 @@ class ShopifyProductChangeManager(ProductChangeManager):
         elif self.config['variant_disappears'] == 'zero_quantity':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
-                product_data['variants'][idx]['inventory_quantity'] = 0
+                self.product.set_variant_quantity(
+                    quantity=0,
+                    variant_id=product_data['variants'][idx]['id'],
+                    variant=product_data['variants'][idx]
+                )
+
                 product_data['variants'][idx]['inventory_management'] = 'shopify'
                 product_data['variants'][idx]['inventory_policy'] = 'deny'
 

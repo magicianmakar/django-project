@@ -74,7 +74,8 @@ class ShopifyOrderExportAPI():
             'order_id': order_id,
             'line_id': line_item_id,
             'source_tracking': tracking_number,
-            'user_config': self.store.user.get_config()
+            'user_config': self.store.user.get_config(),
+            'location_id': self.store.get_primary_location()
         })
 
         return data

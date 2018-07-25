@@ -26,6 +26,9 @@
               <thead>
                 <tr>
                   <th style="">Name</th>
+                  {% if not user.is_subuser %}
+                  <th></th>
+                  {% endif %}
                   <th class="hidden-xs" style="width:13%">Products</th>
                   <th class="hidden-xs" style="width:13%">Orders</th>
 
@@ -41,6 +44,16 @@
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
+
+                        {% if not user.is_subuser %}
+                        <td class="hidden-xs" style="white-space:nowrap">
+                            {% if not item.primary_location %}
+                            <a href="#" class="label statistics-link change-default-location label-danger" store-id="{{ item.id }}" style="display: inline-block;">
+                                Select Primary Location
+                            </a>
+                            {% endif %}
+                        </td>
+                        {% endif %}
 
                         <td class="hidden-xs" style="white-space:nowrap">
                             <a href="/product?store=n&in={{item.id}}" class="label statistics-link">
@@ -89,6 +102,12 @@
                         <li>
                             <a store-id="{{item.id}}" class="change-tracking-url btn-success btn-outline">
                                 <i class="fa fa-chain"></i> Custom Tracking URL
+                            </a>
+                        </li>
+
+                        <li>
+                            <a store-id="{{item.id}}" class="change-default-location btn-success btn-outline">
+                                <i class="fa fa-building-o"></i> Select Primary Location
                             </a>
                         </li>
 
@@ -1251,6 +1270,39 @@
         </div>
     </div>
 </div>
+
+<div id="modal-store-default-location" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Default Location</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>Define the location to be used when automatically updating product inventories</p>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form">
+                            <input type="hidden" name="default-location-store" id="default-location-store">
+                            <div class="form-group">
+                                <label for="default-location">Select your default location:</label>
+                                <select id="default-location" name="default-location" class="form-control">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+                <button id="save-default-location" class="btn btn-primary" type="button"><i class="fa fa-save"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extracss %}
@@ -1302,6 +1354,14 @@
     table .label .num {
         font-weight: 600 !important;
     }
+    table .label-danger {
+        background-color: #ed5565 !important;
+        color: #FFFFFF !important;
+    }
+    table .label-danger[href]:focus,
+    table .label-danger[href]:hover {
+        background-color: #c9302c !important;
+    }
     table td:first-child {
         width: 100%;
     }
@@ -1325,6 +1385,15 @@
         text-align: right !important;
     }.sync-delay-config .left {
         text-align: left !important;
+    }
+    .btn-group .dropdown-menu .btn-success:hover {
+        background-color: #1a7bb9;
+    }
+    .btn-group .dropdown-menu .btn-info:hover {
+        background-color: #21bdbb;
+    }
+    .btn-group .dropdown-menu .btn-danger:hover {
+        background-color: #ec4758;
     }
 </style>
 {% endblock %}

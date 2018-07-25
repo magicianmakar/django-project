@@ -231,12 +231,14 @@ class ShopifyOrderImportAPI():
             if key in tracking:
                 tracking[key]['fulfillment']['line_items'].append({'id': item['line_item_id']})
             else:
-                data = order_track_fulfillment(**{
-                    'order_id': item['order_id'],
-                    'line_id': item['line_item_id'],
-                    'source_tracking': item['tracking_number'],
-                    'user_config': self.store.user.get_config()
-                })
+                data = order_track_fulfillment(
+                    order_id=item['order_id'],
+                    line_id=item['line_item_id'],
+                    source_tracking=item['tracking_number'],
+                    user_config=self.store.user.get_config(),
+                    location_id=self.store.get_primary_location()
+                )
+
                 tracking[key] = data
 
         for key, data in tracking.iteritems():

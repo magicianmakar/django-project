@@ -122,12 +122,10 @@ class ProductChangeManagerTestCase(TestCase):
         product = ShopifyProduct.objects.get(pk=5)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
-        quantity = variant['inventory_quantity']
+        quantity = product.get_variant_quantity(variant=variant)
 
         # update quantity
-        update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
-        shopify_product['variants'][0]['inventory_quantity'] = quantity + 10
-        r = requests.put(update_endpoint, json={'product': shopify_product})
+        r = product.set_variant_quantity(quantity + 10, variant=shopify_product['variants'][0])
         self.assertTrue(r.ok)
 
         product_changes.append({
@@ -137,16 +135,17 @@ class ProductChangeManagerTestCase(TestCase):
             'new_value': quantity,
             'old_value': quantity + 10,
         })
+
         request = self.factory.post(
             '/webhook/price-monitor/product?product={}&dropified_type=shopify'.format(product.id),
             data=json.dumps(product_changes),
             content_type='application/json'
         )
+
         response = webhook(request, 'price-monitor', None)
         self.assertEqual(response.status_code, 200)
-        shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
-        updated_variant = shopify_product['variants'][0]
-        updated_quantity = updated_variant['inventory_quantity']
+
+        updated_quantity = product.get_variant_quantity(variant_id=shopify_product['variants'][0]['id'])
 
         # check if quantity was updated back
         self.assertEqual(updated_quantity, quantity)

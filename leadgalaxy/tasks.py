@@ -179,7 +179,10 @@ def export_product(req_data, target, user_id):
                         if sku:
                             for variant_quantity in variant_quantities:
                                 if variant_quantity['sku_short'] == sku:
-                                    api_data['product']['variants'][idx]['inventory_quantity'] = variant_quantity['availabe_qty']
+                                    product.set_quantity_to_variant(
+                                        variant_quantity['availabe_qty'],
+                                        variant_id=variant.get('id')
+                                    )
                 except:
                     raven_client.captureException(level='warning')
 
@@ -188,6 +191,10 @@ def export_product(req_data, target, user_id):
                         if image.get('src') and not image.get('filename'):
                             path, ext = os.path.splitext(image.get('src'))
                             api_data['product']['images'][i]['filename'] = '{}{}'.format(utils.random_hash(), ext)
+
+                if api_data['product'].get('variants'):
+                    for variant in api_data['product'].get('variants'):
+                        variant["inventory_management"] = "shopify"
 
                 r = requests.post(endpoint, json=api_data)
 

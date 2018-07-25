@@ -176,7 +176,7 @@ class SubuserpermissionsApiTestCase(TestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
-        self.store = f.ShopifyStoreFactory(user=self.parent_user)
+        self.store = f.ShopifyStoreFactory(user=self.parent_user, api_url='https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com')
         self.client.login(username=self.user.username, password=self.password)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
@@ -279,6 +279,7 @@ class SubuserpermissionsApiTestCase(TestCase):
 
     @patch('leadgalaxy.views.utils.order_track_fulfillment', Mock(return_value=None))
     @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=None))
+    @patch('leadgalaxy.models.ShopifyStore.get_primary_location', Mock(return_value=None))
     @patch('leadgalaxy.views.requests.post')
     def test_subuser_can_fulfill_order_without_permission(self, request_post):
         response = Mock()

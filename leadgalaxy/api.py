@@ -1657,6 +1657,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'order_id': data.get('fulfill-order-id'),
             'source_tracking': data.get('fulfill-traking-number'),
             'use_usps': data.get('fulfill-tarcking-link') == 'usps',
+            'location_id': store.get_primary_location(),
             'user_config': {
                 'send_shipping_confirmation': data.get('fulfill-notify-customer'),
                 'validate_tracking_number': False,
@@ -3210,5 +3211,32 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         store.pusher_trigger('order-status-update', {
             'orders': data['orders']
         })
+
+        return self.api_success()
+
+    def get_shopify_locations(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        locations_url = store.get_link('/admin/locations.json', api=True)
+        response = requests.get(locations_url)
+        locations = response.json()
+
+        return self.api_success(locations)
+
+    def post_shopify_location(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=request.POST.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        store.primary_location = utils.safeInt(request.POST.get('primary_location'), None)
+        store.save()
 
         return self.api_success()

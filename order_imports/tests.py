@@ -25,12 +25,12 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):
     access_token = None
-    api_url = 'https://test:test@test-store.myshopify.com'
+    api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
     is_active = True
     list_index = 0
     scope = None
     shop = None
-    title = fuzzy.FuzzyText()
+    title = 'uncommonnow'
     user = factory.SubFactory('order_exports.tests.UserFactory')
     version = 1
 
@@ -114,7 +114,7 @@ class OrderImportFetchOrdersTestCase(TestCase):
 
     def test_found_shopify_filled_for_items(self):
         with requests_mock.mock(real_http=True) as mock:
-            mock.register_uri('GET', 'https://test:test@test-store.myshopify.com/admin/orders.json?name=1089', json={
+            mock.register_uri('GET', 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com/admin/orders.json?name=1089', json={
                 "orders": [
                     {"id": 4154418757, "line_items": [
                         {"id": 7374191301, "sku": "1100195-bulbasaur"},
@@ -123,7 +123,7 @@ class OrderImportFetchOrdersTestCase(TestCase):
                 ]
             })
 
-            mock.register_uri('GET', 'https://test:test@test-store.myshopify.com/admin/orders.json?name=1039', json={
+            mock.register_uri('GET', 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com/admin/orders.json?name=1039', json={
                 "orders": [
                     {"id": 4154418758, "line_items": [
                         {"id": 4175570565, "sku": "1100195-bulbasaur"},
@@ -157,14 +157,14 @@ class OrderImportSyncShopifyTestCase(TestCase):
         ]
 
         with requests_mock.mock(real_http=True) as mock:
-            base = 'https://test:test@test-store.myshopify.com'
+            base = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
             mock.register_uri('POST', base + '/admin/orders/4154418757/fulfillments.json', json={})
             mock.register_uri('POST', base + '/admin/orders/4095014149/fulfillments.json', json={})
 
             self.tracking_response = self.api.send_tracking_number(tracking_items)
 
         with requests_mock.mock(real_http=True) as mock:
-            base = 'https://test:test@test-store.myshopify.com'
+            base = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
             mock.register_uri('POST', base + '/admin/orders/4154418757/fulfillments.json', json={})
 
             self.incomplete_tracking_response = self.api.send_tracking_number(tracking_items)

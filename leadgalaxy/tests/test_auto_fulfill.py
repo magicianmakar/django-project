@@ -145,8 +145,10 @@ class AutoFulfillCombinedTestCase(TestCase):
             'line_items': [],
             'tracking_number': u'MA7565915257226HK',
             'tracking_company': 'USPS',
-            'notify_customer': True
+            'notify_customer': True,
+            'location_id': self.store.get_primary_location()
         }}
+
         for track in range(2):
             track = ShopifyOrderTrackFactory(
                 order_id='5415135170',

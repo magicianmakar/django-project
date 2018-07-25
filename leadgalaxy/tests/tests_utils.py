@@ -23,6 +23,18 @@ import factory
 import requests
 
 
+class ShopifyStoreFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = utils.ShopifyStore
+        django_get_or_create = ['id', 'api_url']
+
+    id = 1
+    title = 'uncommonnow'
+    api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
+    user_id = 1
+    primary_location = 1234567899
+
+
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ShopifyOrderTrack
@@ -32,17 +44,7 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     order_id = '5415135175'
     source_tracking = 'MA7565915257226HK'
     user_id = 1
-    store_id = 1
-
-
-class ShopifyStoreFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = utils.ShopifyStore
-        django_get_or_create = ['api_url']
-
-    title = 'uncommonnow'
-    api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
-    user_id = 1
+    store = factory.SubFactory(ShopifyStoreFactory)
 
 
 class ShopifyOrderFactory(factory.django.DjangoModelFactory):
@@ -53,7 +55,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     order_id = '5415135175'
     country_code = 'US'
     user_id = 1
-    store_id = 1
+    store = factory.SubFactory(ShopifyStoreFactory)
     order_number = 31
     total_price = 100
     customer_id = 1
@@ -86,6 +88,7 @@ class FulfillmentTestCase(TestCase):
             'order_id': '456789123',
             'source_tracking': 'MA7565915257226HK',
             'use_usps': True,
+            'location_id': 9876543211,
             'user_config': {
                 'send_shipping_confirmation': 'yes',
                 'validate_tracking_number': False,
@@ -93,8 +96,11 @@ class FulfillmentTestCase(TestCase):
             }
         }
 
+        self.store = ShopifyStoreFactory(id=1)
+        self.store2 = ShopifyStoreFactory(id=2)
+
     def create_track(self, order_id, line_id, source_tracking, country_code):
-        track = ShopifyOrderTrackFactory(order_id=order_id, line_id=line_id, source_tracking=source_tracking)
+        track = ShopifyOrderTrackFactory(order_id=order_id, line_id=line_id, source_tracking=source_tracking, store=self.store)
         order = ShopifyOrderFactory(order_id=order_id, country_code=country_code)
         ShopifyOrderLineFactory(line_id=line_id, order=order)
 
@@ -113,7 +119,7 @@ class FulfillmentTestCase(TestCase):
         self.assertFalse(utils.is_valide_tracking_number('7565915257226'))
 
     def test_fulfill_without_saved_line(self):
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store=self.store2)
         data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
         self.assertEqual(data['fulfillment']['tracking_url'], "http://track.aftership.com/{}".format(track.source_tracking))
@@ -156,7 +162,7 @@ class FulfillmentTestCase(TestCase):
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
 
     def test_default_confirmation_email(self):
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store=self.store2)
         data = utils.order_track_fulfillment(order_track=track, user_config={})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
@@ -164,7 +170,7 @@ class FulfillmentTestCase(TestCase):
         self.assertTrue(data['fulfillment']['notify_customer'])
 
     def test_default_confirmation_email_order_with_multi_lines_unfulfilled(self):
-        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        order = ShopifyOrderFactory(order_id='5415135170', store=self.store2)
         lines = [
             ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status=''),
             ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
@@ -173,13 +179,13 @@ class FulfillmentTestCase(TestCase):
         order.items_count = order.shopifyorderline_set.count()
         order.save()
 
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store=self.store2)
 
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
         self.assertFalse(data['fulfillment']['notify_customer'])
 
     def test_default_confirmation_email_order_with_multi_lines_partialy_fulfilled(self):
-        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        order = ShopifyOrderFactory(order_id='5415135170', store=self.store2)
         lines = [
             ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status='fulfilled'),
             ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
@@ -188,13 +194,13 @@ class FulfillmentTestCase(TestCase):
         order.items_count = order.shopifyorderline_set.count()
         order.save()
 
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store=self.store2)
 
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
     def test_default_confirmation_email_order_with_multi_lines_already_fulfilled(self):
-        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        order = ShopifyOrderFactory(order_id='5415135170', store=self.store2)
         lines = [
             ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status='fulfilled'),
             ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status='fulfilled'),
@@ -203,13 +209,13 @@ class FulfillmentTestCase(TestCase):
         order.items_count = order.shopifyorderline_set.count()
         order.save()
 
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines.pop().line_id, source_tracking='MA7565915257226HK', store=self.store2)
 
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
     def test_default_confirmation_email_order_with_multi_lines_partialy_fulfilled_duplicated(self):
-        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        order = ShopifyOrderFactory(order_id='5415135170', store=self.store2)
         lines = [
             ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status='fulfilled'),
             ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
@@ -218,13 +224,13 @@ class FulfillmentTestCase(TestCase):
         order.items_count = order.shopifyorderline_set.count()
         order.save()
 
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines[0].line_id, source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=lines[0].line_id, source_tracking='MA7565915257226HK', store=self.store2)
 
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
         self.assertFalse(data['fulfillment']['notify_customer'])
 
     def test_default_confirmation_email_order_with_multi_lines_all(self):
-        order = ShopifyOrderFactory(order_id='5415135170', store_id=2)
+        order = ShopifyOrderFactory(order_id='5415135170', store=self.store2)
         lines = [
             ShopifyOrderLineFactory(order=order, line_id='1654810', fulfillment_status=''),
             ShopifyOrderLineFactory(order=order, line_id='1654811', fulfillment_status=''),
@@ -235,24 +241,24 @@ class FulfillmentTestCase(TestCase):
         order.save()
 
         for i, line in enumerate(lines):
-            track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=line.line_id, source_tracking='MA7565915257226HK', store_id=2)
+            track = ShopifyOrderTrackFactory(order_id='5415135170', line_id=line.line_id, source_tracking='MA7565915257226HK', store=self.store2)
             data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'default'})
 
             # notify_customer should be True for last line only
             self.assertEqual(data['fulfillment']['notify_customer'], len(lines) - 1 == i)
 
     def test_dont_send_confirmation_email(self):
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store=self.store2)
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'no'})
         self.assertFalse(data['fulfillment']['notify_customer'])
 
     def test_always_send_confirmation_email(self):
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store=self.store2)
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'yes'})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
     def test_always_send_confirmation_email_if_tracking_is_valid(self):
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store=self.store2)
         data = utils.order_track_fulfillment(order_track=track, user_config={'send_shipping_confirmation': 'yes', 'validate_tracking_number': True})
         self.assertTrue(data['fulfillment']['notify_customer'])
 
@@ -265,7 +271,7 @@ class FulfillmentTestCase(TestCase):
         self.assertTrue(data['fulfillment']['notify_customer'])
 
     def test_custom_aftership_domain(self):
-        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store_id=2)
+        track = ShopifyOrderTrackFactory(order_id='5415135170', line_id='1654810', source_tracking='MA7565915257226HK', store=self.store2)
         data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})
         self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(track.source_tracking))
 

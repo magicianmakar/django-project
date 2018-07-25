@@ -350,6 +350,33 @@ $('.change-tracking-url').click(function(e) {
     $("#modal-store-tracking-url").modal('show');
 });
 
+$('.change-default-location').click(function(e) {
+    e.preventDefault();
+
+    var storeId = $(this).attr('store-id');
+    $('#default-location-store').val(storeId);
+
+    $.ajax({
+        url: api_url('shopify-locations'),
+        type: 'GET',
+        data: {
+            store: storeId
+        },
+        success: function(data) {
+            $('#default-location option').remove();
+            for (var i = 0, iLength = data.locations.length; i < iLength; i++) {
+                var location = data.locations[i];
+                $('#default-location').append($('<option>').val(location.id).text(location.name));
+            }
+        },
+        error: function(data) {
+            displayAjaxError('Default Location', data);
+        }
+    });
+
+    $("#modal-store-default-location").modal('show');
+});
+
 $('#save-custom-tracking-btn').click(function (e) {
     e.preventDefault();
 
@@ -377,6 +404,36 @@ $('#save-custom-tracking-btn').click(function (e) {
         },
         error: function(data) {
             displayAjaxError('Custom Tracking URL', data);
+        },
+        complete: function () {
+            btn.bootstrapBtn('reset');
+        }
+    });
+});
+
+$('#save-default-location').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(this);
+    btn.bootstrapBtn('loading');
+
+    var store = $('#default-location-store').val(),
+        primaryLocation = $('#default-location').val();
+
+    $.ajax({
+        url: '/api/shopify-location',
+        type: 'POST',
+        data: {
+            store: store,
+            primary_location: primaryLocation
+        },
+        success: function(data) {
+            toastr.success('Location Saved!', 'Default Location');
+            $("#modal-store-default-location").modal('hide');
+            $('.change-default-location.label-danger[store-id="' + store + '"]').addClass('hidden');
+        },
+        error: function(data) {
+            displayAjaxError('Default Location', data);
         },
         complete: function () {
             btn.bootstrapBtn('reset');

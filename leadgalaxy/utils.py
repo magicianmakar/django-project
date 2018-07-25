@@ -1566,11 +1566,13 @@ def order_track_fulfillment(**kwargs):
     if kwargs.get('order_track'):
         order_id = kwargs.get('order_track').order_id
         line_id = kwargs.get('order_track').line_id
+        location_id = kwargs.get('order_track').store.get_primary_location()
         source_tracking = kwargs.get('order_track').source_tracking
         store_id = kwargs.get('order_track').store_id
     else:
         order_id = kwargs['order_id']
         line_id = kwargs['line_id']
+        location_id = kwargs['location_id']
         source_tracking = kwargs['source_tracking']
         store_id = safeInt(kwargs.get('store_id'))
 
@@ -1605,6 +1607,7 @@ def order_track_fulfillment(**kwargs):
 
     data = {
         "fulfillment": {
+            "location_id": location_id,
             "tracking_number": source_tracking,
             "line_items": [{
                 "id": line_id,

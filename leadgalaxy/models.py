@@ -605,6 +605,7 @@ class ShopifyStore(models.Model):
     shop = models.CharField(max_length=512, blank=True, null=True)
     access_token = models.CharField(max_length=512, blank=True, null=True)
     scope = models.CharField(max_length=512, blank=True, null=True)
+    primary_location = models.BigIntegerField(blank=True, null=True)
 
     is_active = models.BooleanField(default=True, db_index=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
@@ -804,6 +805,27 @@ class ShopifyStore(models.Model):
             secret=settings.PUSHER_SECRET)
 
         pusher.trigger(self.pusher_channel(), event, data)
+
+    def get_primary_location(self):
+        if self.primary_location:
+            return self.primary_location
+
+        try:
+            store_info = json.loads(self.info)
+        except:
+            store_info = None
+        info = store_info or self.get_info
+
+        if info.get('primary_location_id'):
+            self.primary_location = info.get('primary_location_id')
+            self.save()
+            return self.primary_location
+
+        response = requests.get(self.get_link('/admin/locations.json', api=True))
+        locations = response.json()['locations']
+        primary_location = locations[0].get('id')
+
+        return primary_location
 
 
 class AccessToken(models.Model):
@@ -1365,6 +1387,54 @@ class ShopifyProduct(models.Model):
         except:
             product_data = {}
         return product_data
+
+    def get_inventory_item_by_variant(self, variant_id, variant=None):
+        if variant is None:
+            url = self.store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)
+            response = requests.get(url)
+            variant = response.json()['variant']
+
+        return variant.get('inventory_item_id')
+
+    def set_variant_quantity(self, quantity, variant_id=None, inventory_item_id=None, variant=None):
+        if inventory_item_id is None:
+            if variant_id is None:
+                variant_id = variant['id']
+
+            inventory_item_id = self.get_inventory_item_by_variant(variant_id, variant=variant)
+
+        return requests.post(
+            url=self.store.get_link('/admin/inventory_levels/set.json', api=True),
+            json={
+                'location_id': self.store.get_primary_location(),
+                'inventory_item_id': inventory_item_id,
+                'available': quantity,
+            }
+        )
+
+    def get_variant_quantity(self, variant_id=None, inventory_item_id=None, variant=None):
+        if inventory_item_id is None:
+            if variant_id is None:
+                variant_id = variant['id']
+
+            inventory_item_id = self.get_inventory_item_by_variant(variant_id, variant=variant)
+
+        primary_location = self.store.get_primary_location()
+        response = requests.get(
+            url=self.store.get_link('/admin/inventory_levels.json', api=True),
+            params={
+                'inventory_item_ids': inventory_item_id,
+                'location_ids': primary_location
+            }
+        )
+
+        inventories = response.json()['inventory_levels']
+
+        inventory = {}
+        if len(inventories):
+            inventory = inventories[0]
+
+        return inventory.get('available', 0)
 
 
 class ProductSupplier(models.Model):
