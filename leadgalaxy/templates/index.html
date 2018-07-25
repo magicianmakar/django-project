@@ -26,9 +26,6 @@
               <thead>
                 <tr>
                   <th style="">Name</th>
-                  {% if not user.is_subuser %}
-                  <th></th>
-                  {% endif %}
                   <th class="hidden-xs" style="width:13%">Products</th>
                   <th class="hidden-xs" style="width:13%">Orders</th>
 
@@ -44,16 +41,6 @@
                             <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move;display:none"></i>
                             <a href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                         </td>
-
-                        {% if not user.is_subuser %}
-                        <td class="hidden-xs" style="white-space:nowrap">
-                            {% if not item.primary_location %}
-                            <a href="#" class="label statistics-link change-default-location label-danger" store-id="{{ item.id }}" style="display: inline-block;">
-                                Select Primary Location
-                            </a>
-                            {% endif %}
-                        </td>
-                        {% endif %}
 
                         <td class="hidden-xs" style="white-space:nowrap">
                             <a href="/product?store=n&in={{item.id}}" class="label statistics-link">
