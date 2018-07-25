@@ -179,9 +179,9 @@ def export_product(req_data, target, user_id):
                         if sku:
                             for variant_quantity in variant_quantities:
                                 if variant_quantity['sku_short'] == sku:
-                                    product.set_quantity_to_variant(
-                                        variant_quantity['availabe_qty'],
-                                        variant_id=variant.get('id')
+                                    product.set_variant_quantity(
+                                        quantity=variant_quantity['availabe_qty'],
+                                        variant=variant
                                     )
                 except:
                     raven_client.captureException(level='warning')
