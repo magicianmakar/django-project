@@ -579,14 +579,18 @@ Currency.init();
             btn.removeClass('btn-default').addClass('active btn-success');
         },
         onTableViewClick: function() {
-            $('#table-view .btn').on('click', function(e) {
+            $('#table-view').on('click', '.btn:not(.active)', function(e) {
                 e.preventDefault();
 
+                var timeType = $(this).attr('data-time');
                 ProfitDashboard.activateTableView($(this));
-                if ($(this).attr('data-time') == 'weekly') {
+
+                if (timeType == 'weekly') {
+                    $('#profits').addClass('weekly').removeClass('daily');
                     ProfitDashboard.profitsWeekly();
                 }
-                if ($(this).attr('data-time') == 'daily') {
+                if (timeType == 'daily') {
+                    $('#profits').addClass('daily').removeClass('weekly');
                     ProfitDashboard.profitsDaily();
                 }
             });
@@ -730,11 +734,13 @@ Currency.init();
             ProfitDashboard.fixStripes();
         },
         profitsDaily: function() {
+            $('#profits .closed').removeClass('closed');
             for (var i = 0, iLength = profitsData.length; i < iLength; i++) {
                 var profitData = profitsData[i],
                     profitRow = $('#date-' + profitData.date_as_string.replace(/\//g, ''));
 
                 if (!profitRow.is(':visible')) {
+                    profitRow.find('td:first').text(profitData.date_as_string);
                     profitRow.css('display', '');
                 } else {
                     profitRow.tooltip();
@@ -743,6 +749,7 @@ Currency.init();
                 }
             }
             ProfitDashboard.initExpandable();
+            ProfitDashboard.fixStripes();
         }
     };
 
