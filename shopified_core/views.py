@@ -131,6 +131,13 @@ class ShopifiedApi(ApiResponseMixin, View):
                 else:
                     user_login(request, user)
 
+                if request.GET.get('provider') == 'zapier':
+                    if not user.can('zapier.use'):
+                        url = 'https://app.dropified.com/user/profile#plan'
+                        return self.api_error('Zapier integration requires a Dropified Premier account, ' +
+                                              'please visit {} to upgrade your plan.'.format(url),
+                                              status=403)
+
                 token = user.get_access_token()
 
                 core_utils.login_attempts_reset(email)
