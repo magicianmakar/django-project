@@ -136,6 +136,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'url': i.get_admin_url()
                 })
 
+            for i in user.profile.get_gear_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'gear',
+                    'url': i.get_admin_url()
+                })
+
         return JsonResponse(stores, safe=False)
 
     def post_delete_store(self, request, user, data):
@@ -1445,6 +1453,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     'id': i.id,
                     'name': i.title,
                     'type': 'woo',
+                    'url': i.get_admin_url()
+                })
+
+            for i in user.profile.get_gear_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'gear',
                     'url': i.get_admin_url()
                 })
 
