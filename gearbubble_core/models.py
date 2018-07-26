@@ -51,7 +51,7 @@ class GearBubbleStore(models.Model):
 
     @staticmethod
     def get_api_url(path):
-        domain = settings.GEARBUBBLE_URL.rstrip('/')
+        domain = settings.GEARBUBBLE_URL
         path = path.rstrip('/')
 
         return '{}/api/v1/{}'.format(domain, path)
@@ -73,10 +73,10 @@ class GearBubbleStore(models.Model):
         return session
 
     def get_store_url(self):
-        return settings.GEARBUBBLE_URL.rstrip('/')
+        return settings.GEARBUBBLE_URL
 
     def get_admin_url(self):
-        return '{}/{}'.format(settings.GEARBUBBLE_URL.rstrip('/'), 'pro_dashboard')
+        return '{}/{}'.format(settings.GEARBUBBLE_URL, 'pro_dashboard')
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
@@ -199,7 +199,7 @@ class GearBubbleProduct(models.Model):
     def gearbubble_url(self):
         if self.is_connected:
             path = 'private_products/{}/edit'.format(self.source_id)
-            return '{}/{}'.format(settings.GEARBUBBLE_URL.rstrip('/'), path)
+            return '{}/{}'.format(settings.GEARBUBBLE_URL, path)
 
         return None
 

@@ -406,6 +406,10 @@ KEEN_PROJECT_ID = os.environ.get('KEEN_PROJECT_ID')
 
 WICKED_REPORTS_API = os.environ.get('WICKED_REPORTS_API')
 
+# GearBubble
+GEARBUBBLE_URL = os.environ.get('GEARBUBBLE_URL', 'http://staging-gearbubble.com').rstrip('/')
+GEARBUBBLE_DEFAULT_QTY = 100
+
 # Dropwow
 DROPWOW_API_HOSTNAME = os.environ.get('DROPWOW_API_HOSTNAME')
 DROPWOW_API_USERNAME = os.environ.get('DROPWOW_API_USERNAME')
@@ -424,8 +428,5 @@ ELASTICSEARCH_API = os.environ.get('FOUNDELASTICSEARCH_URL', '').split(',')
 ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get('FOUNDELASTICSEARCH_PASSWORD'))
 
 LEAD_DYNO_API_KEY = os.environ.get('LEAD_DYNO_API_KEY')
-
-GEARBUBBLE_URL = 'http://staging-gearbubble.com' if DEBUG else 'https://wwww.gearbubble.com'
-GEARBUBBLE_DEFAULT_QTY = 100
 
 TAPFILIATE_API_KEY = os.environ.get('TAPFILIATE_API_KEY')

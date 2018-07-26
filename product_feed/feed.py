@@ -470,7 +470,7 @@ class GearBubbleProductFeed(object):
     def _add_variant(self, product_data, variant):
         image = next(iter(product_data.get('images', [])), {}).get('src', '')
         variant_id = 0
-        permalink = '{}/private_products/{}'.format(settings.GEARBUBBLE_URL.rstrip('/'), product_data['slug'])
+        permalink = '{}/private_products/{}'.format(settings.GEARBUBBLE_URL, product_data['slug'])
         body_html = product_data.get('body_html') or ''
         description = strip_tags(body_html)
 
