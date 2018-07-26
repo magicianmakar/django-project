@@ -1,0 +1,197 @@
+{% extends "base_gearbubble_core.html" %}
+
+{% load static %}
+{% load template_helper %}
+{% load perms_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="tabs-container col-md-offset-1 col-md-10">
+       <ul class="nav nav-tabs">
+            <li class="active">
+                <a data-toggle="tab" href="#tab-1"><i class="fa fa-chain"></i> Variants Mapping</a>
+            </li>
+            {% if user|can:'suppliers_shipping_mapping.use' %}
+            <li>
+                <a href="{% url 'gear:mapping_supplier' product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
+            </li>
+            {% endif %}
+       </ul>
+       <div class="tab-content">
+           <div id="tab-1" class="tab-pane active">
+               <div class="panel-body">
+                <form id="mapping-form" class="form-horizontal">
+                    <p class="m-b">
+                        For each supplier, map the variants that are used when that supplier is selected.
+                    </p>
+
+                    <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="control-label ">Choose The Supplier To Map:</label>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="supplier-select form-control" data-variant="{{variant.id}}" style="width:auto">
+                                {% for item in product.get_suppliers %}
+                                <option value="{{item.id}}"
+                                        {% if current_supplier.id == item.id %}selected{% endif %}>
+                                        {{item.get_name}}
+                                        {% if product.default_supplier.id == item.id %}
+                                            (Default)
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <table class="table table-borderd table-compact">
+                        <thead>
+                            <tr>
+                                <th style="padding-left:60px">GearBubble</th>
+                                <th>{{product.get_original_info.source|default:'Supplier'|title}}</th>
+                                <th style="width:110px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for variant in gearbubble_product.variants %}
+                            <tr>
+                                <td style="vertical-align:middle">
+                                    {% if variant.image %}
+                                        <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb variant.image 'thumb' %}" style="width:50px;margin-right:10px" />
+                                    {% else %}
+                                        <img class="thumb" style="width: 50px" src="{% static 'img/blank.gif' %}" />
+                                    {% endif %}
+
+                                    {{variant.description}}
+                                </td>
+                                <td style="vertical-align:middle">
+                                    <div class="var-data-display" style="display: flex; align-items: center;"
+                                         id="var_{{variant.id}}" data-var-id="{{variant.id}}"></div>
+                                </td>
+                                <td style="vertical-align:middle;text-align:center">
+                                    <a href="#" class="btn btn-xs btn-success select-var-mapping"
+                                       product-url="{{product.default_supplier.product_url}}"
+                                       data-var="{{variant.id}}">Change</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    Product doesn't have any variant.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <input type="hidden" name="product" value="{{product.id}}">
+                </form>
+
+                {% if gearbubble_product.variants %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <button id="save-mapping" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-variant-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title">Product Variants</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12 variants-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button id="save-var-mapping" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+
+<script id="variant-template" type="text/x-handlebars-template">
+    <div class="row well variant" style="padding: 5px 10px">
+        <h3>{{title}}:</h3>
+        <div class="options col-xs-12"></div>
+    </div>
+</script>
+
+<script id="variant-option-template" type="text/x-handlebars-template">
+    <div class="option-item" style="display:inline-block;margin-top: 5px;">
+        <div class="option-item-select" style="padding: 2px 5px;border: 1px solid rgb(204, 204, 204);border-radius: 3px;margin-right: 10px;display: flex;align-items: center;min-height: 30px;cursor: pointer;background-color: #fff;min-width: 55px;">
+            <input class="variant-select" name="{{variant.title}}" type="radio"
+                   style="margin: 0 5px 0" var-data="{{var_json}}"
+                   {{#if selected }}
+                   checked
+                   {{/if}}
+                   >
+            {{#if option.image}}
+                <img src="{{option.image}}" style="max-width:35px;max-height:35px;display:inline-block;margin-right: 5px;">
+            {{/if}}
+
+            <span class="variant-title" style="font-weight:bold;">{{option.title}}</span>
+        </div>
+    </div>
+</script>
+
+<script id="extra-input-template" type="text/x-handlebars-template">
+    <div class="" style="padding: 5px 0">
+        <input class="extra-input form-control" type="text">
+    </div>
+</script>
+
+{% endverbatim %}
+
+{% endblock %}
+
+{% block extracss %}
+<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extrajs %}
+
+
+<script type="text/javascript">
+    var bootstrapButton = $.fn.button.noConflict();
+    $.fn.bootstrapBtn = bootstrapButton;
+
+    var product_id = {{product.id}};
+    var variants_mapping = {% json_dumps variants_map %};
+    var product_suppliers = {% json_dumps product_suppliers %};
+</script>
+
+<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'gearbubble/js/product_mapping.js' %}"></script>
+{% endcompress %}
+
+{% endblock %}
+

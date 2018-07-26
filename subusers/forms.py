@@ -1,12 +1,12 @@
 from django import forms
 
-from leadgalaxy.models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission
+from leadgalaxy.models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission, SubuserGearPermission
 
 
 class SubUserStoresForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ["subuser_stores", "subuser_chq_stores", "subuser_woo_stores"]
+        fields = ["subuser_stores", "subuser_chq_stores", "subuser_woo_stores", "subuser_gear_stores"]
 
     def __init__(self, *args, **kwargs):
         parent_user = kwargs.pop("parent_user")
@@ -18,6 +18,7 @@ class SubUserStoresForm(forms.ModelForm):
             initial['subuser_stores'] = [t.pk for t in kwargs['instance'].subuser_stores.all()]
             initial['subuser_chq_stores'] = [t.pk for t in kwargs['instance'].subuser_chq_stores.all()]
             initial['subuser_woo_stores'] = [t.pk for t in kwargs['instance'].subuser_woo_stores.all()]
+            initial['subuser_gear_stores'] = [t.pk for t in kwargs['instance'].subuser_gear_stores.all()]
 
         self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_stores"].help_text = ""
@@ -30,6 +31,10 @@ class SubUserStoresForm(forms.ModelForm):
         self.fields["subuser_woo_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_woo_stores"].help_text = ""
         self.fields["subuser_woo_stores"].queryset = parent_user.profile.get_woo_stores()
+
+        self.fields["subuser_gear_stores"].widget = forms.widgets.CheckboxSelectMultiple()
+        self.fields["subuser_gear_stores"].help_text = ""
+        self.fields["subuser_gear_stores"].queryset = parent_user.profile.get_gear_stores()
 
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)
@@ -49,6 +54,10 @@ class SubUserStoresForm(forms.ModelForm):
             instance.subuser_woo_stores.clear()
             for store in self.cleaned_data['subuser_woo_stores']:
                 instance.subuser_woo_stores.add(store)
+
+            instance.subuser_gear_stores.clear()
+            for store in self.cleaned_data['subuser_gear_stores']:
+                instance.subuser_gear_stores.add(store)
 
         self.save_m2m = save_m2m
 
@@ -103,6 +112,19 @@ class SubuserWooPermissionsForm(forms.Form):
         super(SubuserWooPermissionsForm, self).__init__(*args, **kwargs)
         permissions_initial = kwargs['initial']['permissions']
         permissions_queryset = SubuserWooPermission.objects.filter(store=kwargs['initial']['store'])
+        permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
+        permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
+                                                          queryset=permissions_queryset,
+                                                          widget=permissions_widget,
+                                                          required=False)
+        self.fields['permissions'] = permissions_field
+
+
+class SubuserGearPermissionsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SubuserGearPermissionsForm, self).__init__(*args, **kwargs)
+        permissions_initial = kwargs['initial']['permissions']
+        permissions_queryset = SubuserGearPermission.objects.filter(store=kwargs['initial']['store'])
         permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
         permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
                                                           queryset=permissions_queryset,

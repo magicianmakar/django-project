@@ -1765,6 +1765,8 @@ def get_shipping_info(request):
         from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
     if request.GET.get('woo'):
         from woocommerce_core.models import WooProduct, WooSupplier
+    if request.GET.get('gear'):
+        from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
 
     aliexpress_id = request.GET.get('id')
     product = request.GET.get('product')
@@ -1794,6 +1796,15 @@ def get_shipping_info(request):
                 supplier = product.default_supplier
             else:
                 supplier = WooSupplier.objects.get(id=supplier)
+
+        elif request.GET.get('gear'):
+
+            if int(supplier) == 0:
+                product = GearBubbleProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = GearBubbleSupplier.objects.get(id=supplier)
 
         else:
 
@@ -1827,6 +1838,8 @@ def get_shipping_info(request):
         product = get_object_or_404(CommerceHQProduct, id=request.GET.get('product'))
     elif request.GET.get('woo'):
         product = get_object_or_404(WooProduct, id=request.GET.get('product'))
+    elif request.GET.get('gear'):
+        product = get_object_or_404(GearBubbleProduct, id=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 
@@ -1842,7 +1855,6 @@ def get_shipping_info(request):
     tpl = 'shippement_info.html'
     if request.GET.get('for') == 'order':
         tpl = 'shippement_info_order.html'
-
     return render(request, tpl, {
         'country_code': country_code,
         'country_name': country_from_code(country),

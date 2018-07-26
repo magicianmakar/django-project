@@ -121,7 +121,7 @@
                         <div id="notification-bell"></div>
                     </li>
 
-                    {% if user|can:'commercehq.use' or user|can:'woocommerce.use' %}
+                    {% if user|can:'commercehq.use' or user|can:'woocommerce.use' or user|can:'gearbubble.use' %}
                     <li>
                         {% block store-switch %}
                             {% include 'store_switch.html' %}

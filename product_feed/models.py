@@ -83,3 +83,17 @@ class WooFeedStatus(FeedStatusAbstract):
 
         feed_hash = hashlib.md5('u{}/{}/{}'.format('woo', self.store.user.id, self.store.id)).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
+
+
+class GearBubbleFeedStatus(FeedStatusAbstract):
+    store = models.OneToOneField('gearbubble_core.GearBubbleStore', related_name='feedstatus')
+
+    class Meta:
+        verbose_name = 'GearBubble Feed Status'
+        verbose_name_plural = 'GearBubble Feed Statuses'
+
+    def get_filename(self):
+        import hashlib
+
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id)).hexdigest()
+        return 'feeds/{}.xml'.format(feed_hash)

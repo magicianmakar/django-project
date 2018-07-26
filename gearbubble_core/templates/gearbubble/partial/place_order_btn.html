@@ -1,0 +1,78 @@
+{% load template_helper %}
+
+{% if item.supplier %}
+    <div class="btn-group dropup order-line-group"
+        order-id="{{order.id}}"
+        line-id="{{item.id}}"
+        order-data-id="{{item.order_data_id}}"
+        order-number="{{order.number}}"
+        line-title="{{item.name}}"
+        {% if item.shipping_method %}
+            style="display:flex"
+        {% endif %}
+    >
+    {% comment %}
+    {% if item.shipping_method %}
+        <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
+            title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
+            data-href="{% app_link 'gear/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+            href="#" style="border-right:1px solid #66a8cc"
+            >
+            {{item.shipping_method.method_short}}
+        </a>
+        <button type="button" class="btn btn-success btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="caret"></span>
+        </button>
+
+    {% else %}
+    {% endcomment %}
+
+        <button data-toggle="dropdown" class="btn {% if item.refunded %}btn-danger{% else %}btn-success{% endif %} btn-xs dropdown-toggle" aria-expanded="false">
+            Place Order
+            {% if order.refunded %}
+                {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
+            {% endif %}
+            <span class="caret"></span></button>
+    {% comment %}
+    {% endif %}
+    {% endcomment %}
+
+        <ul class="dropdown-menu pull-right">
+            {% if item.order_track %}
+            <li><a class="placed-order-details" href="#" order-id="{{order.id}}" source-order-id="{{item.order_track.source_id}}" order-date="{{item.order_track.created_at|date:'N j, Y, P'}}" line-id="{{item.id}}">Order Details</a></li>
+            {% else %}
+            <li><a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product_id}}">Mark as Ordered</a></li>
+            {% endif %}
+
+            <li><a href="{{item.supplier.short_product_url}}" target="_blank">Manual Order</a></li>
+
+            {% if item.order_data_id and item.supplier.support_auto_fulfill %}
+            <li class="divider"></li>
+            <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                    data-href="{% app_link 'gear/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SAStep=true %}"
+                   >Step By Step Order</a></li>
+               <li><a class="place-order-btn queue-order-btn add-to-cart" href="#" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
+                    data-href="{% app_link 'gear/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SAStep=true SACart=true SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+                   >Add To Cart</a></li>
+            <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                    data-href="{% app_link 'gear/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id %}"
+                   >Auto Place Order</a></li>
+            <li><a class="place-order-btn auto-shipping-btn" href="#"
+                    order-id="{{order.id}}" line-id="{{item.id}}"
+                    product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.country}}"
+                    data-href="{% app_link 'gear/orders/place' product=item.supplier.get_source_id %}"
+                    data-order="{{ item.order_data_id|urlencode }}"
+                >Auto - Choose Shipping</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% elif item.product_id %}
+    <button class="btn btn-xs btn-info add-supplier-btn"
+            store-id="{{store.id}}"
+            gear-product="{{item.product_id}}"
+            data-gear-product-connections="{% url 'gear:product_detail' item.product_id %}#connections">
+        <i class="fa fa-plus"></i> Add Supplier
+    </button>
+{% else %}
+    <span class="label label-warning">Not Tracked</span>
+{% endif %}

@@ -73,6 +73,15 @@ SUBUSER_WOO_STORE_PERMISSIONS = (
     ('view_alerts', 'View alerts'),
 )
 
+SUBUSER_GEAR_STORE_PERMISSIONS = (
+    ('save_for_later', 'Save products for later'),
+    ('send_to_gear', 'Send products to GearBubble'),
+    ('delete_products', 'Delete products'),
+    ('place_orders', 'Place orders'),
+    ('view_alerts', 'View alerts'),
+)
+
+
 PRICE_MARKUP_TYPES = (
     ('margin_percent', 'Increase by percentage'),
     ('margin_amount', 'Increase by amount'),
@@ -95,6 +104,7 @@ class UserProfile(models.Model):
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
     subuser_chq_stores = models.ManyToManyField('commercehq_core.CommerceHQStore', blank=True, related_name='subuser_chq_stores')
     subuser_woo_stores = models.ManyToManyField('woocommerce_core.WooStore', blank=True, related_name='subuser_woo_stores')
+    subuser_gear_stores = models.ManyToManyField('gearbubble_core.GearBubbleStore', blank=True, related_name='subuser_gear_stores')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -119,6 +129,7 @@ class UserProfile(models.Model):
     subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
     subuser_woo_permissions = models.ManyToManyField('SubuserWooPermission', blank=True)
+    subuser_gear_permissions = models.ManyToManyField('SubuserGearPermission', blank=True)
 
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
@@ -289,11 +300,23 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_gear_stores(self, flat=False):
+        if self.is_subuser:
+            stores = self.subuser_gear_stores.filter(is_active=True)
+        else:
+            stores = self.user.gearbubblestore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_stores_count(self):
         return sum([
             self.get_shopify_stores().count(),
             self.get_chq_stores().count(),
-            self.get_woo_stores().count()
+            self.get_woo_stores().count(),
+            self.get_gear_stores().count(),
         ])
 
     def get_new_alerts(self):
@@ -411,6 +434,8 @@ class UserProfile(models.Model):
                 return self.has_subuser_chq_permission(codename, store)
             elif store_model_name == 'WooStore':
                 return self.has_subuser_woo_permission(codename, store)
+            elif store_model_name == 'GearBubbleStore':
+                return self.has_subuser_gear_permission(codename, store)
             else:
                 raise ValueError('Invalid store')
 
@@ -434,6 +459,12 @@ class UserProfile(models.Model):
             return False
 
         return self.subuser_woo_permissions.filter(codename=codename, store=store).exists()
+
+    def has_subuser_gear_permission(self, codename, store):
+        if not self.subuser_gear_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_gear_permissions.filter(codename=codename, store=store).exists()
 
     def add_ip(self, ip):
         if not ip:
@@ -498,6 +529,19 @@ class SubuserWooPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
     store = models.ForeignKey('woocommerce_core.WooStore', related_name='subuser_woo_permissions')
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __unicode__(self):
+        return '{} - {}'.format(self.store.title, self.codename)
+
+
+class SubuserGearPermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='subuser_gear_permissions')
 
     class Meta:
         ordering = 'pk',
@@ -2324,6 +2368,22 @@ def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwa
         for store in stores:
             permissions = store.subuser_woo_permissions.all()
             instance.subuser_woo_permissions.add(*permissions)
+
+
+@receiver(post_save, sender='gearbubble_core.GearBubbleStore')
+def add_gear_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        for codename, name in SUBUSER_GEAR_STORE_PERMISSIONS:
+            SubuserGearPermission.objects.create(store=instance, codename=codename, name=name)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_gear_stores.through)
+def add_gear_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.gearbubblestore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_gear_permissions.all()
+            instance.subuser_gear_permissions.add(*permissions)
 
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')

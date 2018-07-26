@@ -21,6 +21,14 @@ def template_config(request):
                 'prefix': '/woo'
             }
         }
+    elif namespace == 'gear':
+        template_config = {
+            'base': 'base_gearbubble_core.html',
+            'url': {
+                'namespace': 'gear:',
+                'prefix': '/gear'
+            }
+        }
     else:
         template_config = {
             'base': 'base.html',

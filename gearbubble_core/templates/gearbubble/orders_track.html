@@ -1,0 +1,296 @@
+{% extends "base_gearbubble_core.html" %}
+
+{% load static %}
+{% load template_helper %}
+{% load perms_helper %}
+{% load url_tools %}
+{% load compress %}
+{% load cache %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+            {% for item in user.profile.get_gear_stores %}
+                {% if store == item or item.id|stringformat:"i" == request.GET.store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                {% else %}
+                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <div class="row m-b">
+                        <div class="col-md-4">
+                            <button class="btn btn-success btn-rounded btn-sm filter-btn">Filter</button>
+                            <span class="btn btn-white btn-rounded btn-sm">Tracking count: {{paginator.count}} </span>
+                        </div>
+
+                        <div class="col-md-6 col-md-offset-2 text-right">
+                            <div class="btn-group ">
+                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle" aria-expanded="false">
+                                    <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
+                                            <i class="fa fa-times"></i> Delete Order IDs
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="archive-selected-orders-btn" store-id="{{store.id}}">
+                                            <i class="fa fa-archive"></i> Archive Orders
+                                        </a>
+                                    </li>
+                                    </ul>
+                            </div>
+                            {% comment %}
+                            {% if request.user|can:'order_imports.use' %}
+                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r"
+                                title="Import Tracking IDs"
+                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
+                            {% endif %}
+                            {% endcomment %}
+                            <button class="btn btn-success btn-rounded btn-outline btn-sm aliexpress-sync-btn" data-store="{{store.id}}">
+                                <i class="fa fa-refresh"></i> Sync with Aliexpress</button>
+                        </div>
+                    </div>
+                    <form method="get" class="filter-form m-t-sm" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Query:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="query" value="{{request.GET.query|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Order ID or Tracking number">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Tracking #:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="tracking" class="form-control" style="padding: 6px 0px">
+                                <option {% if request.GET.tracking != '0' and  request.GET.tracking != '1' %}selected="selected"{% endif %} value="">Any</option>
+                                <option {% if request.GET.tracking == '1' %}selected="selected"{% endif %} value="1">Has Tracking #</option>
+                                <option {% if request.GET.tracking == '0' %}selected="selected"{% endif %} value="0">No Tracking #</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>GearBubble Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="fulfillment" class="form-control" style="padding: 6px 0px">
+                                <option {% if not request.GET.fulfillment  or request.GET.fulfillment = '2' %}selected="selected"{% endif %} value="2">Any</option>
+                                <option {% if request.GET.fulfillment == '1' %}selected="selected"{% endif %} value="1">Fulfilled</option>
+                                <option {% if request.GET.fulfillment == '0' %}selected="selected"{% endif %} value="0">Not Fulfilled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Aliexpress Status:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="reason" class="form-control" style="padding: 6px 0px">
+                                <option {% if not request.GET.reason %}selected="selected"{% endif %} value="">Any</option>
+
+                                <option {% if request.GET.reason == 'buyer_pay_timeout' %}selected="selected"{% endif %}
+                                        value="buyer_pay_timeout">Order Pay Timeout</option>
+
+                                <option {% if request.GET.reason == 'risk_reject_closed' %}selected="selected"{% endif %}
+                                        value="risk_reject_closed">Rejected By Risk Control</option>
+
+                                <option {% if request.GET.reason == 'buyer_accept_goods_timeout' %}selected="selected"{% endif %}
+                                        value="buyer_accept_goods_timeout">Buyer Accept Goods Timeout</option>
+
+                                <option {% if request.GET.reason == 'buyer_cancel_notpay_order' %}selected="selected"{% endif %}
+                                        value="buyer_cancel_notpay_order">Buyer Cancel or Doesn't Pay Order</option>
+
+                                <option {% if request.GET.reason == 'cancel_order_close_trade' %}selected="selected"{% endif %}
+                                        value="cancel_order_close_trade">Cancel Order Close Trade</option>
+
+                                <option {% if request.GET.reason == 'seller_send_goods_timeout' %}selected="selected"{% endif %}
+                                        value="seller_send_goods_timeout">Seller Send Goods Timeout</option>
+
+                                <option {% if request.GET.reason == 'buyer_cancel_order_in_risk' %}selected="selected"{% endif %}
+                                        value="buyer_cancel_order_in_risk">Buyer Cancel Order In Risk</option>
+
+                                <option {% if request.GET.reason == 'buyer_accept_goods' %}selected="selected"{% endif %}
+                                        value="buyer_accept_goods">Buyer Accept Goods</option>
+
+                                <option {% if request.GET.reason == 'seller_accept_issue_no_goods_return' %}selected="selected"{% endif %}
+                                        value="seller_accept_issue_no_goods_return">Seller Accept Issue No Goods Return</option>
+
+                                <option {% if request.GET.reason == 'seller_response_issue_timeout' %}selected="selected"{% endif %}
+                                        value="seller_response_issue_timeout">Seller Response Issue Timeout</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            <label>Archived:</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="hidden" class="form-control" style="padding: 6px 0px">
+                                <option {% if request.GET.hidden = '2' %}selected="selected"{% endif %} value="2">Any</option>
+                                <option {% if not request.GET.hidden or request.GET.hidden == '0' %}selected="selected"{% endif %} value="0">Not Archived</option>
+                                <option {% if request.GET.hidden == '1' %}selected="selected"{% endif %} value="1">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2" style="width: 150px;margin-right: 0;padding-right: 0">
+                            {% if request.GET.store %}  <input type="hidden" name="store" value="{{ request.GET.store }}"> {% endif %}
+                            {% if request.GET.sort %}   <input type="hidden" name="sort" value="{{ request.GET.sort }}"> {% endif %}
+
+                            <button class="btn btn-primary">Apply</button>
+                        </div>
+                    </div>
+                    <hr >
+                    </form>
+
+                    <table class="table table-condensed xtable-hover">
+                      <thead>
+                        <tr>
+                          <th style="width:64px">
+                              <div class="row">
+                                  <div class="col-md-12">
+                                    <input type="checkbox" class="icheck check-all" name="check-all">
+                                  </div>
+                              </div>
+                          </th>
+                          <th  class="no-wrap" style="width:26%">
+                              <a href="{% url_toggle 'sort' '-order,order' %}">GearBubble Order {% sort_icon 'sort' 'order' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-source,source' %}">Aliexpress Order {% sort_icon 'sort' 'source' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-status,status' %}">Aliexpress Status {% sort_icon 'sort' 'status' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in orders %}
+                        <tr id="{{item.id}}">
+                            <td style="min-width:30px">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <img class="no-img no-img-sm unveil visible-md-inline visible-lg-inline"
+                                            src="{% static 'img/blank.gif' %}"
+                                            data-src="{{item.line.image.src}}"
+                                            style="width:64px" />
+                                            <input type="checkbox" class="icheck order-track" name="track"
+                                                   value="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}" />
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a class="itooltip" href="{{gearbubble_url}}/private_products/{{item.order.vendor_product_id}}/edit" target="_blank" title="{{item.line.name}}">
+                                    <span class="badge badge-primary">#{{item.order_id}}</span>
+                                    <span class="m-l-xs visible-lg-inline">
+                                        {{item.line.name|truncatewords:10}}
+                                    </span>
+                                </a>
+                            </td>
+                            <td><a href="{{item.get_source_url}}" target="_blank">#{{item.source_id}}</a></td>
+                            <td>{{item.get_source_status|default:''}}</td>
+                            <td>
+                                {% if item.source_tracking %}
+                                <a href="{{item.get_tracking_link}}" target="_blank">
+                                    {{item.source_tracking}}
+                                </a>
+                                {% endif %}
+                            </td>
+
+                            <td class="no-wrap">{% date_humanize item.created_at %}</td>
+                            <td class="no-wrap">{% date_humanize item.updated_at %}</td>
+                            <td class="no-wrap">
+                                {% if item.line.fulfillment_status != 'fulfilled' %}
+                                <button class="btn btn-success btn-xs fulfill-btn itooltip"
+                                        store="{{item.store_id}}"
+                                        order-id="{{item.order.id}}"
+                                        line-id="{{item.line.id}}"
+                                        product-id="{{item.line.product_id}}"
+                                        quantity="{{item.line.quantity}}"
+                                        tracking-number="{{item.source_tracking|default:''}}"
+                                        title="Fulfill this item in GearBubble"
+                                        >Fulfill</button>
+                                {% else %}
+                                    <span class="badge badge-primary">
+                                        Fulfilled
+                                    </span>
+                                {% endif %}
+
+                                {% if item.auto_fulfilled %}
+                                    <span class="badge badge-primary itooltip" title="Item was Automatically fulfilled by Dropified">Auto</span>
+                                {% endif %}
+
+                                {% if not item.hidden %}
+                                <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order itooltip"
+                                        title="Archive in Tracking page">Archive</button>
+                                {% else %}
+                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order">Un-Archive</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="7">
+                                {% if request.GET.query %}
+                                    No tracked orders found for: <b>{{request.GET.query}}</b>
+                                {% else %}
+                                    No tracked orders found.
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+
+                  {% include "partial/paginator.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% cache 600 gear_shipping_carriers2 store.id %}
+{% include 'gearbubble/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
+{% endcache %}
+
+{% include 'gearbubble/partial/tracking_update_modal.html' with store=store only %}
+
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+    .icheckbox_square-blue {
+        position: initial !important;
+        margin: 0 !important;
+    }
+
+    table tbody .icheckbox_square-blue {
+        position: absolute !important;
+        top: 0px;
+        left: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+
+{% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'gearbubble/js/orders_track.js' %}" type="text/javascript"></script>
+    <script src="{% static 'gearbubble/js/orders_track_update.js' %}" type="text/javascript"></script>
+{% endcompress %}
+
+{% endblock %}
+

@@ -426,6 +426,15 @@ function sendProductToWooCommerce(productId, storeId, publish) {
     return $.post(api_url('product-export', 'woo'), data);
 }
 
+function sendProductToGearBubble(productId, storeId) {
+    var data = {
+        product: productId,
+        store: storeId,
+    };
+
+    return $.post(api_url('product-export', 'gear'), data);
+}
+
 function productsEditModal(products) {
     if (!products || !products.length) {
         toastr.warning('No product is selected');

@@ -21,3 +21,10 @@ class WooFeedStatusFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'product_feed.WooFeedStatus'
+
+
+class GearBubbleFeedStatusFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
+
+    class Meta:
+        model = 'product_feed.GearBubbleFeedStatus'

@@ -20,6 +20,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.api import ShopifyStoreApi
 from commercehq_core.api import CHQStoreApi
 from woocommerce_core.api import WooStoreApi
+from gearbubble_core.api import GearBubbleApi
 
 from leadgalaxy.models import ShopifyOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
@@ -37,6 +38,7 @@ class ShopifiedApi(ApiResponseMixin, View):
         'shopify',  # Shopify Stores
         'chq',      # CommerceHQ Stores
         'woo',      # WooCommerce Stores
+        'gear',     # GearBubble Stores
     ]
 
     default = {
@@ -70,6 +72,8 @@ class ShopifiedApi(ApiResponseMixin, View):
                 return CHQStoreApi.as_view()(request, *args, **kwargs)
             elif kwargs['store_type'] == 'woo':
                 return WooStoreApi.as_view()(request, *args, **kwargs)
+            elif kwargs['store_type'] == 'gear':
+                return GearBubbleApi.as_view()(request, *args, **kwargs)
             else:
                 raise Exception("Unknown Store Type")
 

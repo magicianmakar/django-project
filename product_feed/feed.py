@@ -29,7 +29,9 @@ from woocommerce_core.utils import (
     get_woo_products
 )
 
-from .models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus
+from gearbubble_core.utils import get_api_url
+
+from .models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus, GearBubbleFeedStatus
 
 
 def safeInt(v, default=0):
@@ -408,6 +410,104 @@ class WooProductFeed():
         os.unlink(self.out.name)
 
 
+class GearBubbleProductFeed(object):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
+        domain = urlparse(get_api_url('')).netloc
+        self.info = {'currency': self._get_store_currency(), 'domain': domain, 'name': store.title}
+        self.store = store
+        self.currency = self.info['currency']
+        self.domain = self.info['domain']
+        self.revision = safeInt(revision, 1)
+        self.all_variants = all_variants
+        self.include_variants = include_variants
+        self.default_product_category = default_product_category
+
+    def _add_element(self, tag, text):
+        self.writer.startTag(tag)
+        self.writer.text(text)
+        self.writer.endTag()
+
+    def init(self):
+        self.out = NamedTemporaryFile(suffix='.xml', prefix='gear_feed_', delete=False)
+        self.writer = XmlWriter(self.out, pretty=True, indent='')
+        self.writer.addNamespace("g", "http://base.google.com/ns/1.0")
+        self.writer.startTag("rss", {"version": "2.0"})
+        self.writer.startTag("channel")
+        self._add_element('title', self.store.title)
+        self._add_element('link', self.store.get_store_url())
+        self._add_element('description', u'{} Products Feed'.format(self.store.title))
+
+    def save(self):
+        self.writer.endTag()
+        self.writer.endTag()
+        self.writer.close()
+        self.out.close()
+
+        return self.out
+
+    def generate_feed(self):
+        for p in self.store.get_gearbubble_products():
+            self.add_product(p)
+
+    def add_product(self, product):
+        has_variants = bool(product.get('variants'))
+
+        if self.include_variants and has_variants:
+            variants = product.get('variants')
+            variants = variants if self.all_variants else variants[:1]
+
+            for variant in variants:
+                self._add_variant(product, variant)
+        else:
+            self._add_variant(product, None)
+
+    def _get_store_currency(self):
+        """
+        Returns USD for now because there is no way to check for store currency
+        """
+        return 'USD'
+
+    def _add_variant(self, product_data, variant):
+        image = next(iter(product_data.get('images', [])), {}).get('src', '')
+        variant_id = 0
+        permalink = '{}/private_products/{}'.format(settings.GEARBUBBLE_URL.rstrip('/'), product_data['slug'])
+        body_html = product_data.get('body_html') or ''
+        description = strip_tags(body_html)
+
+        if variant:
+            images = product_data.get('images', [])
+            images_by_id = {image['id']: image for image in images}
+            image = images_by_id.get(variant['image_id'], {}).get('src', '')
+            variant_id = variant['id']
+
+        self.writer.startTag('item')
+
+        self._add_element('g:id', 'store_{}_{}'.format(product_data['id'], variant_id))
+        self._add_element('g:link', permalink)
+        self._add_element('g:title', product_data['title'])
+        self._add_element('g:description', description)
+        self._add_element('g:image_link', image)
+
+        if variant:
+            self._add_element('g:price', '{amount} {currency}'.format(amount=variant['price'], currency=self.currency))
+            self._add_element('g:shipping_weight', '{} {}'.format(variant['weight'], variant['weight_unit']))
+
+        self._add_element('g:google_product_category', self.default_product_category)
+        self._add_element('g:availability', 'in stock')
+        self._add_element('g:condition', 'new')
+
+        self.writer.endTag()
+
+    def out_file(self):
+        return self.out
+
+    def out_filename(self):
+        return self.out.name
+
+    def delete_out(self):
+        os.unlink(self.out.name)
+
+
 def get_store_feed(store):
     try:
         return FeedStatus.objects.get(store=store)
@@ -435,6 +535,13 @@ def get_woo_store_feed(store):
         return WooFeedStatus.objects.get(store=store)
     except WooFeedStatus.DoesNotExist:
         return WooFeedStatus.objects.create(store=store, updated_at=None)
+
+
+def get_gear_store_feed(store):
+    try:
+        return GearBubbleFeedStatus.objects.get(store=store)
+    except GearBubbleFeedStatus.DoesNotExist:
+        return GearBubbleFeedStatus.objects.create(store=store, updated_at=None)
 
 
 def generate_product_feed(feed_status, nocache=False):
@@ -543,6 +650,52 @@ def generate_woo_product_feed(feed_status, nocache=False):
                               feed_status.all_variants,
                               feed_status.include_variants_id,
                               feed_status.default_product_category)
+
+        feed.init()
+
+        feed_status.status = 2
+        feed_status.save()
+
+        feed.generate_feed()
+        feed.save()
+
+        feed_status.generation_time = time.time() - feed_start
+        feed_status.updated_at = timezone.now()
+
+        feed_s3_url, upload_time = aws_s3_upload(
+            filename=feed_status.get_filename(),
+            input_filename=feed.out_filename(),
+            mimetype='application/xml',
+            upload_time=True,
+            compress=True,
+            bucket_name=settings.S3_PRODUCT_FEED_BUCKET
+        )
+
+        feed.delete_out()
+
+    else:
+        feed_s3_url = feed_status.get_url()
+
+    feed_status.status = 1
+    feed_status.save()
+
+    return feed_s3_url
+
+
+def generate_gear_product_feed(feed_status, nocache=False):
+    store = feed_status.store
+
+    if not store.user.can('product_feeds.use'):
+        return False
+
+    feed_start = time.time()
+
+    if not feed_status.feed_exists() or nocache:
+        feed = GearBubbleProductFeed(store,
+                                     feed_status.revision,
+                                     feed_status.all_variants,
+                                     feed_status.include_variants_id,
+                                     feed_status.default_product_category)
 
         feed.init()
 

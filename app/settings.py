@@ -83,6 +83,7 @@ INSTALLED_APPS = (
     'commercehq_core',
     'dropwow_core',
     'woocommerce_core',
+    'gearbubble_core',
     'zapier_core',
 )
 
@@ -423,5 +424,8 @@ ELASTICSEARCH_API = os.environ.get('FOUNDELASTICSEARCH_URL', '').split(',')
 ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get('FOUNDELASTICSEARCH_PASSWORD'))
 
 LEAD_DYNO_API_KEY = os.environ.get('LEAD_DYNO_API_KEY')
+
+GEARBUBBLE_URL = 'http://staging-gearbubble.com' if DEBUG else 'https://wwww.gearbubble.com'
+GEARBUBBLE_DEFAULT_QTY = 100
 
 TAPFILIATE_API_KEY = os.environ.get('TAPFILIATE_API_KEY')

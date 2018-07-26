@@ -10,6 +10,8 @@
                 CommerceHQ
             {% elif request.resolver_match.kwargs.store_type == 'woo' %}
                 WooCommerce
+            {% elif request.resolver_match.kwargs.store_type == 'gear' %}
+                GearBubble
             {% else %}
                 Shopify
             {% endif %}
@@ -17,15 +19,17 @@
             CommerceHQ
         {% elif request.resolver_match.namespace == 'woo' %}
             WooCommerce
+        {% elif request.resolver_match.namespace == 'gear' %}
+            GearBubble
         {% else %}
         {% endif %}
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
         <li>
-            {% if shopify_view_name %}
+        {% if shopify_view_name %}
                 <a href="{% url shopify_view_name %}">
-            {% else %}
+        {% else %}
                 <a href="{% url 'index' %}">
             {% endif %}Shopify</a>
         </li>
@@ -47,6 +51,16 @@
             {% else %}
                 <a href="{% url 'woo:index' %}">
             {% endif %}WooCommerce</a>
+        </li>
+        {% endif %}
+
+        {% if user|can:'gearbubble.use' %}
+        <li>
+            {% if gear_view_name %}
+                <a href="{% url gear_view_name %}">
+            {% else %}
+                <a href="{% url 'gear:index' %}">
+            {% endif %}GearBubble</a>
         </li>
         {% endif %}
     </ul>

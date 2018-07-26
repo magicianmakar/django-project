@@ -13,4 +13,6 @@ urlpatterns = patterns(
         subusers.views.subuser_chq_store_permissions, name='subuser_chq_store_permissions'),
     url(r'^woo-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
+    url(r'^gear-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_gear_store_permissions, name='subuser_gear_store_permissions'),
 )

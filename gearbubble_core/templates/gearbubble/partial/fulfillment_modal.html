@@ -1,0 +1,91 @@
+<div id="modal-fulfillment" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    {% with pos_my='top center' pos_at='bottom center' %}
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Fulfill Order</h3>
+                        <span title="Testing QTip2" class="qtip"> <i class="fa fa-question-circle"></i> TEsting </span>
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="fulfill-provider">
+                                    Provider
+                                    {% include 'partial/help_tooltip.html' with help="The name of the shipping carrier." %}
+                                </label>
+                                <select class="form-control" name="fulfill-provider" id="fulfill-provider" style="width:120px">
+                                    {% if shipping_carriers %}
+                                        {% for carrier in shipping_carriers %}
+                                            <option value="{{carrier.id}}">{{carrier.title}}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                    <option value="aftership">AfterShip</option>
+                                    <option value="usps">USPS</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fulfill-provider-name">Tracking Company
+                                {% include 'partial/help_tooltip.html' with help="If you choose a custom provider, fill this in." %}
+                                </label>
+                                <input type="text" id="fulfill-provider-name" name="fulfill-provider-name" class="form-control" style="width:200px">
+                            </div>
+                            <div class="form-group">
+                                <label for="fulfill-tracking-number">Tracking Number
+                                {% include 'partial/help_tooltip.html' with help="If you don't have a tracking number, leave this field blank." %}
+                                </label>
+                                <input type="text" id="fulfill-tracking-number" name="fulfill-tracking-number" class="form-control" style="width:200px">
+                            </div>
+                            {% comment %}
+                            {% if notify %}
+                            <div class="form-group">
+                                <label for="fulfill-notify-customer">
+                                    Send shipping confirmation email to the customer
+                                </label>
+                                <select class="form-control" name="fulfill-notify-customer" id="fulfill-notify-customer" style="width:100px">
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                </select>
+                            </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="fulfill-tracking-link">
+                                    Tracking Link
+                                    {% include 'partial/help_tooltip.html' with help="The URL pointing to the shipment tracking page." %}
+                                </label>
+                                <input type="text" id="fulfill-tracking-link" name="fulfill-tracking-link" class="form-control" style="width:200px">
+                            </div>
+                            <div class="form-group">
+                                <label for="fulfill-date-shipped">
+                                    Date Shipped
+                                    {% include 'partial/help_tooltip.html' with help="The date the order was shipped." %}
+                                </label>
+                                <div class="input-group date" style="width:150px">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-calendar"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        name="fulfill-date-shipped"
+                                        value="{% now "m/d/Y" %}"
+                                        data-provide="datepicker" />
+                                </div>
+                            </div>
+                            {% endcomment %}
+                            <div>
+                                <input type="hidden" id="fulfill-order-id" name="fulfill-order-id" class="form-control">
+                                <input type="hidden" id="fulfill-line-id" name="fulfill-line-id" class="form-control">
+                                <input type="hidden" id="fulfill-store" name="fulfill-store" class="form-control">
+                                <input type="hidden" id="fulfill-product-id" name="fulfill-product-id" class="form-control">
+
+                                <button id="fullfill-order-btn" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Fulfill Order</strong></button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

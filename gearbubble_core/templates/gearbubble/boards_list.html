@@ -1,0 +1,145 @@
+{% extends "base_gearbubble_core.html" %}
+
+{% load static %}
+{% load compress %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Boards<small></small></h5>
+            </div>
+
+            <div class="ibox-content">
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th style="width:50%">Title</th>
+                            <th>Products</th>
+                            <th>Updated</th>
+                            <th>Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in boards %}
+                        <tr id="board-row-{{item.id}}" class="board-box">
+                            <td>
+                                <a
+                                    class="edit-user-premsc"
+                                    board-id="{{item.id}}"
+                                    href="{% url 'gear:board_detail' item.id %}">
+                                    {{item.title}}
+                                </a>
+                            </td>
+                            <td class="products-count">
+                                <a href="{% url 'gear:board_detail' item.id %}?store=n" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.saved_count|default:'0' }}</span> Saved</a>
+                                <a href="{% url 'gear:board_detail' item.id %}?store=c" class="btn btn-outline btn-xs btn-default"><span class="product-count">{{ item.connected_count|default:'0' }}</span> Connected</a>
+                            </td>
+                            <td>{{item.updated_at|date}}</td>
+                            <td>
+                                <button
+                                    data-board-id="{{item.id}}"
+                                    class="btn btn-xs btn-primary board-edit gear-edit-board-btn">
+                                    <i class="fa fa-edit"></i>Edit
+                                </button>
+                                <button
+                                    data-board-id="{{item.id}}"
+                                    class="btn btn-xs btn-warning board-empty gear-empty-board-btn">
+                                    <i class="fa fa-eraser"></i> Empty
+                                </button>
+                                <button
+                                    data-board-id="{{item.id}}"
+                                    class="btn btn-xs btn-danger board-delete gear-delete-board-btn">
+                                    <i class="fa fa-times"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <button class="btn btn-success gear-add-board-btn">
+                    <i class="fa fa-plus"></i> Add Board
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="smartboard-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Edit Board</h3>
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="">Board Title:</label>
+                                <input type="text" id="board-title" class="form-control">
+                            </div>
+
+                            <h3 class="m-t-none m-b">Smart Board</h3>
+                            <p class="m-t-none m-b" style="padding: 0; margin: 0">Add products to this board if (separate values with comma):</p>
+                            <input type="hidden" id="smartboard-board">
+
+                            <div class="form-group">
+                                <label for="">Product Title contains:</label>
+                                <input type="text" id="smartboard-product-title" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Tags contains:</label>
+                                <input type="text" id="smartboard-product-tags" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Product Type contains:</label>
+                                <input type="text" id="smartboard-product-type" class="form-control">
+                            </div>
+                            <div>
+                                <button id="smartboard-save-changes" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Save</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+
+    {% compress js %}
+        <script type="text/javascript" src="{% static 'gearbubble/js/boards.js' %}"></script>
+    {% endcompress %}
+
+{% endblock %}
+
+{% block modal-board-add %}
+    {% include 'gearbubble/modal_board_add.html' %}
+    {% include 'gearbubble/modal_board_update.html' %}
+{% endblock modal-board-add %}

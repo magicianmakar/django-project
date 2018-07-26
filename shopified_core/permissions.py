@@ -3,6 +3,7 @@ from django.core.exceptions import PermissionDenied
 from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
 from woocommerce_core.models import WooStore
+from gearbubble_core.models import GearBubbleStore
 
 
 def get_object_user(obj):
@@ -31,7 +32,8 @@ def user_can_add(user, obj, raise_on_error=True):
     else:
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
-                isinstance(obj, WooStore):
+                isinstance(obj, WooStore) or \
+                isinstance(obj, GearBubbleStore):
             return raise_or_return_result("Sub-User can not add new stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -49,6 +51,8 @@ def user_can_add(user, obj, raise_on_error=True):
                     stores = user.profile.get_chq_stores(flat=True)
                 elif isinstance(store, WooStore):
                     stores = user.profile.get_woo_stores(flat=True)
+                elif isinstance(store, GearBubbleStore):
+                    stores = user.profile.get_gear_stores(flat=True)
                 else:
                     return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
@@ -73,7 +77,8 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
         if can:
             if isinstance(obj, ShopifyStore) or \
                     isinstance(obj, CommerceHQStore) or \
-                    isinstance(obj, WooStore):
+                    isinstance(obj, WooStore) or \
+                    isinstance(obj, GearBubbleStore):
                 store = obj
             elif hasattr(obj, 'store'):
                 store = obj.store
@@ -87,6 +92,8 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
                     stores = user.profile.get_chq_stores(flat=True)
                 elif isinstance(store, WooStore):
                     stores = user.profile.get_woo_stores(flat=True)
+                elif isinstance(store, GearBubbleStore):
+                    stores = user.profile.get_gear_stores(flat=True)
                 else:
                     return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
@@ -107,7 +114,8 @@ def user_can_edit(user, obj, raise_on_error=True):
     else:
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
-                isinstance(obj, WooStore):
+                isinstance(obj, WooStore) or \
+                isinstance(obj, GearBubbleStore):
             return raise_or_return_result("Sub-User can not edit stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -124,6 +132,8 @@ def user_can_edit(user, obj, raise_on_error=True):
                     stores = user.profile.get_chq_stores(flat=True)
                 elif isinstance(store, WooStore):
                     stores = user.profile.get_woo_stores(flat=True)
+                elif isinstance(store, GearBubbleStore):
+                    stores = user.profile.get_gear_stores(flat=True)
                 else:
                     return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
@@ -144,7 +154,8 @@ def user_can_delete(user, obj, raise_on_error=True):
     else:
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
-                isinstance(obj, WooStore):
+                isinstance(obj, WooStore) or \
+                isinstance(obj, GearBubbleStore):
             return raise_or_return_result("Sub-User can not delete stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -172,6 +183,7 @@ def can_add_store(user):
     user_count = profile.user.shopifystore_set.filter(is_active=True).count()
     user_count += profile.user.commercehqstore_set.filter(is_active=True).count()
     user_count += profile.user.woostore_set.filter(is_active=True).count()
+    user_count += profile.user.gearbubblestore_set.filter(is_active=True).count()
 
     can_add = True
 
