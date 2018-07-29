@@ -10,3 +10,13 @@ class GearBubbleStoreFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'gearbubble_core.GearBubbleStore'
+
+
+class GearBubbleOrderTrackFactory(factory.DjangoModelFactory):
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
+    order_id = factory.fuzzy.FuzzyInteger(1000)
+    line_id = factory.fuzzy.FuzzyInteger(1000)
+
+    class Meta:
+        model = 'gearbubble_core.GearBubbleOrderTrack'
