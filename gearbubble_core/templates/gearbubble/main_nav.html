@@ -105,6 +105,13 @@
             </li>
             {% endif %}
 
+            <li>
+                <a id="product-update-fx" href="#">
+                    <i class="fa fa-lightbulb-o"></i>
+                    <span class="nav-label">What’s New?</span>
+                </a>
+            </li>
+
             {% cache 1800 sidebar_link user.id user.profile.plan_id %}
             {% include 'partial/sidebar_link.html' with links=sidebar_links plan=user.profile.plan.register_hash %}
             {% endcache %}
