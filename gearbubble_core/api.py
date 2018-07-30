@@ -205,6 +205,9 @@ class GearBubbleApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_save_for_later(self, request, user, data):
+        return self.post_product_save(request, user, data)
+
     def post_product_save(self, request, user, data):
         store_id = safeInt(data.get('store'))
 
