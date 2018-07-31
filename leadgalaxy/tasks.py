@@ -202,10 +202,6 @@ def export_product(req_data, target, user_id):
                             path, ext = os.path.splitext(image.get('src'))
                             api_data['product']['images'][i]['filename'] = '{}{}'.format(utils.random_hash(), ext)
 
-                if api_data['product'].get('variants'):
-                    for variant in api_data['product'].get('variants'):
-                        variant["inventory_management"] = "shopify"
-
                 r = requests.post(endpoint, json=api_data)
 
                 if 'product' in r.json():
