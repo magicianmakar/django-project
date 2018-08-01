@@ -998,12 +998,13 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     products = []
     paginator = None
     page = request.GET.get('page', 1)
+    models_user = request.user.models_user
     user = request.user
     user_stores = request.user.profile.get_shopify_stores(flat=True)
     res = ShopifyProduct.objects.select_related('store') \
                                 .defer('variants_map', 'shipping_map', 'notes') \
-                                .filter(store__in=user_stores)
-
+                                .filter(user=models_user) \
+                                .filter(Q(store__in=user_stores) | Q(store=None))
     if store:
         if store == 'c':  # connected
             res = res.exclude(shopify_id=0)
@@ -1013,7 +1014,10 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
             in_store = utils.safeInt(request.GET.get('in'))
             if in_store:
                 in_store = get_object_or_404(ShopifyStore, id=in_store)
-                res = res.filter(store=in_store)
+                if len(user_stores) == 1:
+                    res = res.filter(Q(store=in_store) | Q(store=None))
+                else:
+                    res = res.filter(store=in_store)
 
                 permissions.user_can_view(user, in_store)
         else:
