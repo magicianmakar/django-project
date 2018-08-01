@@ -178,24 +178,6 @@ def export_product(req_data, target, user_id):
                 if api_data['product'].get('variants') and len(api_data['product']['variants']) > 100:
                     api_data['product']['variants'] = api_data['product']['variants'][:100]
 
-                try:
-                    variant_quantities = []
-                    supplier = ProductSupplier(product_url=original_url)
-                    if supplier.is_aliexpress:
-                        variant_quantities = aliexpress_variants(supplier.get_source_id())
-
-                    for idx, variant in enumerate(api_data['product']['variants']):
-                        sku = variant.get('sku')
-                        if sku:
-                            for variant_quantity in variant_quantities:
-                                if variant_quantity['sku_short'] == sku:
-                                    product.set_variant_quantity(
-                                        quantity=variant_quantity['availabe_qty'],
-                                        variant=variant
-                                    )
-                except:
-                    raven_client.captureException(level='warning')
-
                 if user.get_config('randomize_image_names') and api_data['product'].get('images'):
                     for i, image in enumerate(api_data['product']['images']):
                         if image.get('src') and not image.get('filename'):
@@ -328,6 +310,8 @@ def export_product(req_data, target, user_id):
                         product.default_supplier.save()
 
                     product.save()
+
+                    sync_shopify_product_quantities.apply_async(args=[product.id])
 
                 except ShopifyProduct.DoesNotExist:
                     raven_client.captureException()
@@ -489,21 +473,24 @@ def sync_shopify_product_quantities(self, product_id):
     try:
         product = ShopifyProduct.objects.get(pk=product_id)
         product_data = utils.get_shopify_product(product.store, product.shopify_id)
+
+        if not product.default_supplier.is_aliexpress:
+            return
+
         variant_quantities = aliexpress_variants(product.default_supplier.get_source_id())
-        update = False
+
         for variant in variant_quantities:
             sku = variant.get('sku')
-            if sku:
-                idx = variant_index(product, sku, product_data['variants'])
-                if idx is not None:
-                    product_data['variants'][idx]['inventory_quantity'] = variant['availabe_qty']
-                    update = True
+            if not sku:
+                continue
 
-        if update:
-            update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
-            rep = requests.put(update_endpoint, json={'product': product_data})
+            idx = variant_index(product, sku, product_data['variants'])
+            if not idx:
+                continue
 
-            rep.raise_for_status()
+            product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
+            time.sleep(0.5)
+
     except Exception:
         raven_client.captureException()
 
