@@ -29,9 +29,10 @@ class FacebookAccess(models.Model):
         Exchange current access token for long lived one with +59 days expiration
         """
         # Renew only if token expires in less than 2 weeks
-        delta_expires_in = self.expires_in - arrow.now().datetime
-        if self.expires_in is not None and delta_expires_in.days > 14:
-            return self.access_token
+        if self.expires_in is not None:
+            delta_expires_in = self.expires_in - arrow.now().datetime
+            if delta_expires_in.days > 14:
+                return self.access_token
 
         if new_access_token is not None:
             self.access_token = new_access_token
