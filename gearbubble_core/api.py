@@ -18,6 +18,7 @@ from django.core import serializers
 from django.db.models import F
 from django.core.cache import cache
 from django.db import transaction
+from django.contrib import messages
 
 from shopified_core.exceptions import ProductExportException
 from shopified_core.mixins import ApiResponseMixin
@@ -249,6 +250,7 @@ class GearBubbleApi(ApiResponseMixin, View):
             return self.api_error(e.message)
         else:
             pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
+            messages.info(request, 'Processing image(s). Refresh the page later to see image(s) (if any).')
             return self.api_success({'pusher': pusher})
 
     def post_product_update(self, request, user, data):
@@ -256,9 +258,17 @@ class GearBubbleApi(ApiResponseMixin, View):
             pk = safeInt(data.get('product', 0))
             product = GearBubbleProduct.objects.get(pk=pk)
             permissions.user_can_edit(user, product)
+            product.sync()
             product_data = json.loads(data['data'])
             args = product.id, product_data
             tasks.product_update.apply_async(args=args, countdown=0, expires=60)
+            effect_on_current_images = utils.get_effect_on_current_images(product, product_data)
+
+            if effect_on_current_images == 'change':
+                messages.info(request, 'Updating image(s). Refresh the page later to see the changes.')
+
+            if effect_on_current_images == 'add':
+                messages.info(request, 'Adding image(s). Refresh the page later to see new image(s).')
 
             return self.api_success()
 

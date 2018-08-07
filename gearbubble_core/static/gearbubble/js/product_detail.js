@@ -172,7 +172,8 @@ $('#product-update-btn').click(function (e) {
         $('#gearbubble-variants tr.gearbubble-variant').each(function(j, tr) {
 
             var variant_data = {
-                id: parseInt($(tr).attr('variant-id'))
+                id: parseInt($(tr).attr('variant-id')),
+                image: $(tr).attr('variant-image'),
             };
 
             var attrs = [
@@ -1026,7 +1027,6 @@ var PusherSubscription = {
         var pusher = new Pusher(config.sub_conf.key);
         var channel = pusher.subscribe(config.sub_conf.channel);
         channel.bind('pixlr-editor', function(data) {
-            console.log(data.product, config.product_id);
             if (data.product == config.product_id) {
                 $('#download-images').bootstrapBtn('reset');
                 pusher.unsubscribe(config.sub_conf.channel);
@@ -1077,7 +1077,7 @@ $('#var-images').on('click', '.var-image-block .advanced-edit-photo', function(e
             imageId = image.attr('id');
 
         if (!imageUrl.match(/shopifiedapp\.s3\.amazonaws\.com/)) {
-            imageUrl = app_link(['api/ali/get-image'], {url: btoa(imageUrl)});;
+            imageUrl = app_link(['api/ali/get-image'], {url: btoa(imageUrl)});
         }
 
         PusherSubscription.pixlrEditor(imageId);

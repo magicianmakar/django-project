@@ -600,7 +600,7 @@ def get_product_export_data(product):
     return vendor_product
 
 
-def get_product_update_data(product, data, images=None):
+def get_product_update_data(product, data):
     api_data = {'id': product.source_id}
     api_data['title'] = data.get('title', '')
     api_data['cost'] = data.get('price', '')
@@ -610,8 +610,17 @@ def get_product_update_data(product, data, images=None):
     api_data['weight'] = data.get('weight', '')
     api_data['weight_unit'] = data.get('weight_unit', '')
 
-    if images:
-        api_data['images'] = images
+    effect_on_current_images = get_effect_on_current_images(product, data)
+
+    if not effect_on_current_images == 'same':
+        if effect_on_current_images == 'change':
+            # Should replace the images after the old ones are deleted
+            api_data['images'] = [{'src': src} for src in data.get('images', [])]
+        if effect_on_current_images == 'add':
+            update_images = set(data.get('images', []))
+            current_images = set(product.parsed.get('images', []))
+            # Adds new images to the current image set
+            api_data['images'] = [{'src': src} for src in (update_images - current_images)]
 
     if data.get('variants', []):
         api_data['variants'] = []
@@ -621,9 +630,33 @@ def get_product_update_data(product, data, images=None):
             variant['cost'] = variant_data['price']
             variant['compare_at_price'] = variant_data['compare_at_price']
             variant['sku'] = variant_data['sku']
+
+            if effect_on_current_images == 'change':
+                # Updating the product's images would require that all images,
+                # including the variant images, are cleared first before the
+                # new images are added. For this reason, the variant image
+                # must be assigned to the variant again or else it will
+                # disappear with the old images.
+                variant['image'] = variant_data['image']
+
             api_data['variants'].append(variant)
 
     return api_data
+
+
+def get_effect_on_current_images(product, product_data):
+    update_images = set(product_data.get('images', []))
+    current_images = set(product.parsed.get('images', []))
+
+    if not update_images.issuperset(current_images):
+        # The update will change the current set of images
+        return 'change'
+
+    if update_images.issuperset(current_images) and not (update_images == current_images):
+        # The update will keep the current set of images and add new ones
+        return 'add'
+
+    return 'same'
 
 
 class OrderListQuery(object):

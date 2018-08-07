@@ -2774,6 +2774,16 @@ def save_image_s3(request):
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
 
+    elif request.GET.get('gear') or request.POST.get('gear'):
+        from gearbubble_core.models import GearBubbleProduct, GearUserUpload
+
+        product = GearBubbleProduct.objects.get(id=product_id)
+        permissions.user_can_edit(request.user, product)
+        GearUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            update_product_data_images(product, old_url, upload_url)
+
     else:
         product = ShopifyProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)

@@ -113,7 +113,7 @@
                                     </thead>
                                     <tbody>
                                         {% for item in gearbubble_product.variants %}
-                                        <tr class="gearbubble-variant" variant-id="{{item.id}}">
+                                        <tr class="gearbubble-variant" variant-id="{{item.id}}" variant-image="{{item.image.src}}">
                                             <td>
                                                 {% if item.image.src %}
                                                 <img class="unveil" src="{% static 'img/blank.gif' %}" data-src="{% shopify_image_thumb item.image.src %}"

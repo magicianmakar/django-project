@@ -23,6 +23,7 @@ from .utils import (
     get_product_export_data,
     get_product_update_data,
     OrderListQuery,
+    get_effect_on_current_images
 )
 
 
@@ -175,26 +176,15 @@ def product_update(product_id, data):
     store = product.store
     product.update_data({'type': data.get('type', '')})
     product.save()
+    api_url = get_api_url('private_products/{}'.format(product.source_id))
     pusher_data = {'success': False, 'product': product.id, 'product_url': product_url}
 
     try:
-        current_images = set(product.parsed.get('images', []))
-        update_images = set(data.get('images', []))
-        images = None
+        gearbubble_product = get_product_update_data(product, data)
+        effect_on_current_images = get_effect_on_current_images(product, data)
 
-        if not update_images.issuperset(current_images):
-            # Replaces the old the image set
-            images = [{'src': src} for src in update_images]
-
-        if update_images.issuperset(current_images) and not (update_images == current_images):
-            # Adds the new images to the current image set
-            images = [{'src': src} for src in (update_images - current_images)]
-
-        gearbubble_product = get_product_update_data(product, data, images)
-        api_url = get_api_url('private_products/{}'.format(product.source_id))
-
-        if not update_images.issuperset(current_images):
-            # Clears all images to replace them with new ones
+        if effect_on_current_images == 'change':
+            # Deletes all current images so that they can be replaced
             r = store.request.put(api_url, json={'product': {'id': product.source_id, 'images': []}})
             r.raise_for_status()
 
