@@ -1208,6 +1208,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
     if customer_address['country_code'] == 'MK':
         customer_address['country'] = 'Macedonia'
 
+    if customer_address['country_code'] == 'PL':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
+
     customer_address['name'] = ensure_title(customer_address['name'])
 
     if customer_address['company']:
