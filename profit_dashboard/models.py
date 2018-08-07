@@ -22,9 +22,8 @@ class FacebookAccess(models.Model):
     access_token = models.CharField(max_length=255)
     expires_in = models.DateTimeField(default=None, null=True, blank=True)
     account_ids = models.CharField(max_length=255, default='', blank=True)
-    campaigns = models.TextField(default='', blank=True)
 
-    def exchange_long_lived_token(self, new_access_token=None):
+    def exchange_long_lived_token(self, new_access_token=None, new_expires_in=None):
         """
         Exchange current access token for long lived one with +59 days expiration
         """
@@ -33,6 +32,12 @@ class FacebookAccess(models.Model):
             delta_expires_in = self.expires_in - arrow.now().datetime
             if delta_expires_in.days > 14:
                 return self.access_token
+
+        # Check if new token is expired
+        new_expires_in = arrow.get().replace(seconds=new_expires_in).datetime
+        delta_expires_in = new_expires_in - arrow.now().datetime
+        if delta_expires_in.seconds < 60:
+            raise Exception('Facebook token has expired')
 
         if new_access_token is not None:
             self.access_token = new_access_token
@@ -68,13 +73,17 @@ class FacebookAccount(models.Model):
     last_sync = models.DateField(null=True)
     account_id = models.CharField(max_length=50)
     account_name = models.CharField(max_length=255)
+
     config = models.CharField(max_length=100, choices=CONFIG_CHOICES, default='selected')
+    campaigns = models.TextField(default='', blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class FacebookAdCost(models.Model):
     account = models.ForeignKey(FacebookAccount,
                                 related_name='costs',
                                 on_delete=models.CASCADE)
+    campaign_id = models.CharField(max_length=100, default='', null=True)
     created_at = models.DateField()
     impressions = models.IntegerField(default=0)
     spend = models.DecimalField(decimal_places=2, max_digits=9)

@@ -113,7 +113,7 @@ class FacebookAdCostsTestCase(TestCase):
     #     self.assertGreater(FacebookAdCost.objects.count(), 0)
 
     def test_ad_costs_dict_has_right_keys(self):
-        profits, totals = get_profits(self.user.id, self.store, timezone.now() - timedelta(days=30), timezone.now())
+        profits, totals, details = get_profits(self.user.id, self.store, timezone.now() - timedelta(days=30), timezone.now())
 
         self.assertItemsEqual(
             profits[0].keys(),
@@ -133,7 +133,7 @@ class RevenueTestCase(TestCase):
             ShopifyOrderFactory(store=self.store, created_at=self.time + timedelta(days=i))
 
         end = self.time + timedelta(9)
-        self.profits, self.totals = get_profits(self.user.id, self.store, self.time, end)
+        self.profits, self.totals, details = get_profits(self.user.id, self.store, self.time, end)
 
     def test_revenue_by_day_is_correct(self):
         i = 0
@@ -169,7 +169,7 @@ class FulfillmentCostTestCase(TestCase):
                 )
 
         end = self.now + timedelta(9)
-        self.profits, self.totals = get_profits(self.user.id, self.store, self.now, end)
+        self.profits, self.totals, details = get_profits(self.user.id, self.store, self.now, end)
 
     def test_fulfillment_cost_by_day_is_correct(self):
         i = 0

@@ -1,0 +1,105 @@
+{% load template_helper %}
+
+<div class="col-lg-12" style="padding-right: 0; padding-left: 0;">
+  <table class="table totals">
+    <tbody>
+      <tr>
+        <td><button type="button" class="btn btn-info m-r-sm" id="total-revenue">{% money_format totals.revenue store True %}</button>Revenue</td>
+        {% if user_facebook_permission %}
+        <td><button type="button" class="btn btn-warning m-r-sm" id="total-ad-spend">{% money_format totals.ad_spend store True %}</button>Ads Spend</td>
+        {% else %}
+        <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+        {% endif %}
+        <td>
+          <button type="button" class="btn btn-primary m-r-sm">
+            {% money_format None store %}
+            <span id="totals-profit" data-original-amount="{{ totals.profit|default:"0"|floatformat:2 }}">
+              {% money_format totals.profit store True True %}
+            </span>
+          </button>
+          Profit
+        </td>
+      </tr>
+      <tr>
+        <td><button type="button" class="btn btn-warning m-r-sm" id="totals-fulfillment-cost">{% money_format totals.fulfillment_cost store True %}</button>Fulfillment Cost</td>
+        <td>
+          <button type="button" class="btn btn-warning m-r-sm">
+            {% money_format None store %}
+            <span id="totals-other-costs" data-original-amount="{{ totals.other_costs|default:"0"|floatformat:2 }}">
+              {% money_format totals.other_costs store True True %}
+            </span>
+          </button>
+          Other Costs
+        </td>
+        <td>
+          <button type="button" class="btn btn-danger m-r-sm">
+            {% money_format None store %}
+            <span id="totals-total-costs" data-original-amount="{{ totals.outcome|default:"0"|floatformat:2 }}">
+              {% money_format totals.outcome store True True %}
+            </span>
+          </button>
+          Total Costs
+        </td>
+      </tr>
+      <tr>
+        <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_count }}</button>Orders</td>
+        <td><button type="button" class="btn btn-primary m-r-sm">{{ totals.orders_per_day }}</button>Orders Per Day</td>
+        {% if user_facebook_permission %}
+        <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+        {% endif %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+{% verbatim %}
+<script id="profit-totals" type="text/x-handlebars-template">
+  <tbody>
+    <tr>
+      <td><button type="button" class="btn btn-info m-r-sm">{{totals.currency_revenue}}</button>Revenue</td>
+      {% if user_facebook_permission %}
+      <td><button type="button" class="btn btn-warning m-r-sm">{{totals.currency_ad_spend}}</button>Ads Spend</td>
+      {% else %}
+      <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+      {% endif %}
+      <td>
+        <button type="button" class="btn btn-primary m-r-sm">
+          {{totals.currency_sign}}
+          <span id="totals-profit" data-original-amount="{{totals.profit}}">
+            {{totals.currency_profit}}
+          </span>
+        </button>
+        Profit
+      </td>
+    </tr>
+    <tr>
+      <td><button type="button" class="btn btn-warning m-r-sm">{{totals.currency_fulfillment_cost}}</button>Fulfillment Cost</td>
+      <td>
+        <button type="button" class="btn btn-warning m-r-sm">
+          {{totals.currency_sign}}
+          <span id="totals-other-costs" data-original-amount="{{totals.other_costs}}">
+            {{totals.currency_other_costs}}
+          </span>
+        </button>
+        Other Costs
+      </td>
+      <td>
+        <button type="button" class="btn btn-danger m-r-sm">
+          {{totals.currency_sign}}
+          <span id="totals-total-costs" data-original-amount="{{totals.outcome}}">
+            {{totals.currency_outcome}}
+          </span>
+        </button>
+        Total Costs
+      </td>
+      <tr>
+        <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_count}}</button>Orders</td>
+        <td><button type="button" class="btn btn-primary m-r-sm">{{totals.orders_per_day}}</button>Orders Per Day</td>
+        {% if user_facebook_permission %}
+        <td><button type="button" class="btn btn-warning m-r-sm">{{totals.fulfillments_count}}</button>Fulfillments</td>
+        {% endif %}
+      </tr>
+    </tr>
+  </tbody>
+</script>
+{% endverbatim %}

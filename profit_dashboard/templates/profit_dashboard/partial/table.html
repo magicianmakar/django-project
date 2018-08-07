@@ -1,0 +1,109 @@
+{% load template_helper %}
+
+<div id="profit-data">
+  <table id="profits" class="table daily">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Revenue</th>
+        <th>Fulfillment Cost</th>
+        {% if user_facebook_permission %}
+        <th>Ads Spend</th>
+        {% endif %}
+        <th>Other Costs</th>
+        <th>Total Costs</th>
+        <th>Profit</th>
+        <th>Profit Margin</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for profit in profits %}
+      <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}
+      {% ifchanged profit.empty %}{% else %}{% if profit.empty %} style="display: none;"{% endif %}{% endifchanged %}>
+        <td>{{ profit.date_as_string }}</td>
+        <td class="revenue" data-original-amount="{{ profit.revenue|default:"0"|floatformat:2 }}">
+          {% money_format profit.revenue store True %}
+        </td>
+        <td>{% money_format profit.fulfillment_cost store True %}</td>
+        {% if user_facebook_permission %}
+        <td>{% money_format profit.ad_spend store True %}</td>
+        {% endif %}
+        <td class="other-costs" data-original-amount="{{ profit.other_costs|default:'0'|floatformat:2 }}">
+          <span class="other-costs-value"></span>
+          <form class="form-inline other-costs-form" action="{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}">
+            <div class="form-group">
+              <label class="sr-only" for="other_costs">Amount</label>
+              <div class="input-group">
+                <div class="input-group-addon">{% money_format None store %}</div>
+                <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{ profit.other_costs|default:'0'|floatformat:2 }}" size="10" autocomplete="off">
+              </div>
+            </div>
+            <div class="form-group loading hidden">
+              <div class="sk-spinner sk-spinner-wave">
+                  <div class="sk-rect1"></div>
+                  <div class="sk-rect2"></div>
+                  <div class="sk-rect3"></div>
+                  <div class="sk-rect4"></div>
+                  <div class="sk-rect5"></div>
+              </div>
+            </div>
+          </form>
+        </td>
+        <td class="total-costs">
+          {% money_format None store %}<span data-original-amount="{{ profit.outcome|default:"0"|floatformat:2 }}">{{ profit.outcome|default:"0"|floatformat:2 }}</span>
+        </td>
+        <td class="profit-amount">
+          {% money_format None store %}<span data-original-amount="{{ profit.profit|default:"0"|floatformat:2 }}">{{ profit.profit|default:"0"|floatformat:2 }}</span>
+        </td>
+        <td class="percentage">{{ profit.return_over_investment }}</td>
+        <td class="actions"></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% include "partial/paginator.html" %}
+</div>
+
+{% verbatim %}
+<script id="profit" type="text/x-handlebars-template">
+  {{#each profits}}
+  <tr id="date-{{this.date_as_slug}}" class="profit {{this.css_empty}}" data-toggle="profit-tooltip" data-placement="right" title="{{this.week_day}}">
+    <td>{{this.date_as_string}}</td>
+    <td class="revenue" data-original-amount="{{this.revenue}}">{{this.currency_revenue}}</td>
+    <td>{{this.currency_fulfillment_cost}}</td>
+    <td>{{this.currency_ad_spend}}</td>
+    <td class="other-costs" data-original-amount="{{this.other_costs}}">
+      <span class="other-costs-value"></span>
+      <form class="form-inline other-costs-form" action="{{this.other_costs_url}}">
+        <div class="form-group">
+          <label class="sr-only" for="other_costs">Amount</label>
+          <div class="input-group">
+            <div class="input-group-addon">{{this.currency_sign}}</div>
+            <input type="text" class="form-control" name="other_costs" id="other_costs" placeholder="Amount" value="{{this.other_costs}}" size="10" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group loading hidden">
+          <div class="sk-spinner sk-spinner-wave">
+              <div class="sk-rect1"></div>
+              <div class="sk-rect2"></div>
+              <div class="sk-rect3"></div>
+              <div class="sk-rect4"></div>
+              <div class="sk-rect5"></div>
+          </div>
+        </div>
+      </form>
+    </td>
+    <td class="total-costs">
+      {{this.currency_sign}}<span data-original-amount="{{this.outcome}}">{{this.currency_outcome}}</span>
+    </td>
+    <td class="profit-amount">
+      {{this.currency_sign}}<span data-original-amount="{{this.profit}}">{{this.currency_profit}}</span>
+    </td>
+    <td class="percentage">{{this.return_over_investment}}</td>
+    <td class="actions"></td>
+  </tr>
+  {{/each}}
+</script>
+{% endverbatim %}

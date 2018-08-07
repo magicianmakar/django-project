@@ -80,6 +80,7 @@ class TagsTestCase(TestCase):
 
         self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
         self.assertEqual(template_helper.money_format(1000.10, store), '$1,000.10')
+        self.assertEqual(template_helper.money_format(-1000.10, store), '- $1,000.10')
 
         self.assertEqual(template_helper.money_format(0, store), '$0.00')
         self.assertEqual(template_helper.money_format(0.0, store), '$0.00')
@@ -102,6 +103,7 @@ class TagsTestCase(TestCase):
         self.assertEqual(template_helper.money_format(12.34, store), '$12')
         self.assertEqual(template_helper.money_format(12.64, store), '$13')
         self.assertEqual(template_helper.money_format(1200.00, store), '$1,200')
+        self.assertEqual(template_helper.money_format(-1200.00, store), '- $1,200')
 
     def test_money_format_amount_with_comma_separator(self):
         store = Mock()

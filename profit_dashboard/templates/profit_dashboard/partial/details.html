@@ -1,0 +1,95 @@
+{% load template_helper %}
+
+<table id="details" class="table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Product</th>
+      <th>Revenue/Refunds</th>
+      <th>Aliexpress Cost</th>
+      <th>Profit</th>
+      <th>Aliexpress Order ID</th>
+      <th>Shopify Order ID</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for detail in profit_details %}
+    <tr>
+      <td>{{ detail.date_as_string }}</td>
+      <td class="products">
+        {% for name in detail.products %}
+          <span>{{ name }}</span>
+        {% endfor %}
+        {% for name in detail.refunded_products %}
+          <span class="label label-danger">{{ name }}</span>
+        {% endfor %}
+      </td>
+      <td>
+        {% if detail.total_price %}
+        <span class="label label-success">{% money_format detail.total_price store True %}</span>
+        {% endif %}
+        {% if detail.total_refund %}
+        <span class="label label-danger">{% money_format detail.total_refund store True %}</span>
+        {% endif %}
+      </td>
+      <td>
+        <span class="label label-danger">{% money_format detail.fulfillment_cost store True %}</span>
+      </td>
+      <td>{% money_format detail.profit store True %}</td>
+      <td>
+        {% for track in detail.aliexpress_tracks %}
+          <a href="{{ track.source_url }}" target="_blank">{{ track.source_id }}</a>{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </td>
+      <td>
+        <a href="{{ detail.shopify_url }}" target="_blank">
+          {{ detail.order_name }}
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div id="details-pagination">
+  {% include "partial/paginator.html" with paginator=details_paginator current_page=profit_details %}
+</div>
+
+
+{% verbatim %}
+<script id="profit-details" type="text/x-handlebars-template">
+  {{#each details}}
+  <tr>
+    <td>{{this.date_as_string}}</td>
+    <td class="products">
+      {{#each this.products}}
+        <span>{{this}}</span>
+      {{/each}}
+      {{#each this.refunded_products}}
+        <span class="label label-danger">{{this}}</span>
+      {{/each}}
+    </td>
+    <td>
+      {{#if this.total_price }}
+      <span class="label label-success">{{currencyFormat this.total_price false}}</span>
+      {{/if}}
+      {{#if this.total_refund }}
+      <span class="label label-danger">{{currencyFormat this.total_refund false}}</span>
+      {{/if}}
+    </td>
+    <td>
+      <span class="label label-danger">{{currencyFormat this.fulfillment_cost false}}</span>
+    </td>
+    <td>{{currencyFormat this.profit false}}</td>
+    <td>
+      {{#each this.aliexpress_tracks}}{{#if @index}},{{/if}} <a href="{{ this.source_url }}" target="_blank">{{this.source_id}}</a>{{/each}}
+    </td>
+    <td>
+      <a href="{{this.shopify_url}}" target="_blank">
+        {{this.order_name}}
+      </a>
+    </td>
+  </tr>
+  {{/each}}
+</script>
+{% endverbatim %}

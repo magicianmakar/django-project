@@ -212,12 +212,17 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
     if just_value:
         currency_format = re.findall(r'(\{\{.+?\}\})', currency_format)[0]
 
+    negative = False
     if amount is not None and amount != '':
         if type(amount) is not float:
             try:
                 amount = float(amount)
             except:
                 amount = 0.0
+
+        if amount < 0:
+            amount = abs(amount)
+            negative = True
 
         amount_no_decimals = '{:,.0f}'.format(round(amount))
         amount = '{:,.2f}'.format(amount)
@@ -235,6 +240,9 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
         currency_format = currency_format.replace('{{amount_no_decimals}}', amount_no_decimals)
         currency_format = currency_format.replace('{{amount_with_comma_separator}}', amount)
         currency_format = currency_format.replace('{{amount_no_decimals_with_comma_separator}}', amount_no_decimals)
+
+    if negative and amount != '0.00':
+        currency_format = '- {}'.format(currency_format)
 
     return currency_format.strip()
 

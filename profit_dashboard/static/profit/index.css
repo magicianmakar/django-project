@@ -165,3 +165,13 @@
 #facebook-sync {
   margin-top: 6px;
 }
+
+#details .products span {
+  float: left;
+  clear: left;
+  max-width: 420px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin: 1px 0;
+}

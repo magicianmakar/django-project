@@ -1,0 +1,35 @@
+<div class="chart">
+  <ul class="toggle-menu">
+    <li>
+      <a href="#" class="toggle-data btn btn-white" data-label="Fulfillments Count" data-key="fulfillments_count" data-y-axes="number">
+        <i class="fa fa-check-square-o"></i>
+        <i class="fa fa-square-o"></i>
+        Fulfillment Count
+      </a>
+    </li>
+    <li>
+      <a href="#" class="toggle-data btn btn-white" data-label="Fulfillment Cost" data-key="fulfillment_cost" data-y-axes="aaa">
+        <i class="fa fa-check-square-o"></i>
+        <i class="fa fa-square-o"></i>
+        Fulfillment Costs
+      </a>
+    </li>
+    {% if user_facebook_permission %}
+    <li>
+      <a href="#" class="toggle-data btn btn-white" data-label="Ads Spend" data-key="ads_spend">
+        <i class="fa fa-check-square-o"></i>
+        <i class="fa fa-square-o"></i>
+        Ads Spend
+      </a>
+    </li>
+    {% endif %}
+    <li>
+      <a href="#" class="toggle-data btn btn-white" data-label="Other Costs" data-key="other_costs">
+        <i class="fa fa-check-square-o"></i>
+        <i class="fa fa-square-o"></i>
+        Other Costs
+      </a>
+    </li>
+  </ul>
+  <canvas id="profits-chart" height="100"></canvas>
+</div>

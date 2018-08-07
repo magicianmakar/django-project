@@ -10,4 +10,5 @@ urlpatterns = patterns(
     url(r'^facebook/accounts$', profit_dashboard.views.facebook_accounts),
     url(r'^facebook/campaign$', profit_dashboard.views.facebook_campaign),
     url(r'^other-costs/save$', profit_dashboard.views.save_other_costs),
+    url(r'^details$', profit_dashboard.views.profit_details),
 )

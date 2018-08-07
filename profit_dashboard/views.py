@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from facebookads.adobjects.user import User as FBUser
@@ -18,6 +19,7 @@ from .utils import (
     get_profits,
     calculate_profits,
     get_facebook_api,
+    get_profit_details,
 )
 from .models import (
     CONFIG_CHOICES,
@@ -61,7 +63,8 @@ def index(request):
     end = end.to(request.session['django_timezone']).datetime
     start = start.to(request.session['django_timezone']).datetime
 
-    profits, totals = get_profits(request.user.pk, store, start, end, request.session['django_timezone'])
+    profits, totals, details = get_profits(request.user.pk, store, start, end, request.session['django_timezone'])
+    profit_details, details_paginator = details
 
     profits_json = json.dumps(profits[::-1])
     profits_per_page = len(profits) + 1 if limit == 0 else limit
@@ -87,21 +90,32 @@ def index(request):
         'accounts': accounts,
         'need_setup': need_setup,
         'profits_json': profits_json,
+        'profit_details': profit_details,
+        'details_paginator': details_paginator,
         'user_facebook_permission': request.user.can('profit_dashboard_facebook.use')
     })
 
 
 @login_required
 def facebook_insights(request):
+    """ Save campaigns to account(if selected) and fetch insights
+    """
     if request.method == 'POST':
         access_token = request.POST.get('fb_access_token')
+        expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
         store = utils.get_store_from_request(request)
 
-        account_ids = request.POST.get('accounts').split(',') if request.POST.get('accounts') else []
-        campaigns = request.POST.get('campaigns').split(',') if request.POST.get('campaigns') else []
+        # Update facebook account sync meta data
+        account_id = request.POST.get('account_id')
+        campaigns = request.POST.get('campaigns')
         config = request.POST.get('config')
+        FacebookAccount.objects.filter(
+            access__user=request.user,
+            access__store=store,
+            account_id=account_id
+        ).update(campaigns=campaigns, config=config)
 
-        fetch_facebook_insights.delay(request.user.pk, store.id, access_token, account_ids, campaigns, config)
+        fetch_facebook_insights.delay(request.user.pk, store.id, access_token, expires_in)
 
         return JsonResponse({'success': True})
 
@@ -110,10 +124,17 @@ def facebook_insights(request):
 
 @login_required
 def facebook_accounts(request):
+    """ Save access token and return accounts
+    """
     access_token = request.GET.get('fb_access_token')
+    expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
+    store = utils.get_store_from_request(request)
+    FacebookAccess.objects.get_or_create(user=request.user, store=store, defaults={
+        'access_token': access_token,
+        'expires_in': arrow.get().replace(seconds=expires_in).datetime
+    })
 
     api = get_facebook_api(access_token)
-
     user = FBUser(fbid='me', api=api)
     accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
 
@@ -124,30 +145,34 @@ def facebook_accounts(request):
 
 @login_required
 def facebook_campaign(request):
-    access_token = request.GET.get('fb_access_token')
-    account_id = request.GET.get('account_id')
-
-    api = get_facebook_api(access_token)
-
+    """ Save account and return campaigns
+    """
     store = utils.get_store_from_request(request)
-    access, created = FacebookAccess.objects.get_or_create(
-        user=request.user,
-        store=store,
-        defaults={'access_token': access_token}
-    )
-    saved_campaigns = access.campaigns.split(',')
+    facebook_access = FacebookAccess.objects.get(user=request.user, store=store)
+    access_token = facebook_access.access_token
+    account_id = request.GET.get('account_id')
+    account_name = request.GET.get('account_name')
 
-    facebook_account = FacebookAccount.objects.filter(
+    # Save selected account_id
+    account_ids = facebook_access.account_ids and facebook_access.account_ids.split(',') or []
+    if account_id not in account_ids:
+        account_ids.append(account_id)
+        facebook_access.account_ids = ','.join(account_ids)
+        facebook_access.save()
+        facebook_access.refresh_from_db()
+
+    # Create with las_sync < 31 days so first sync starts at that date
+    facebook_account, created = FacebookAccount.objects.update_or_create(
+        store=store,
+        access=facebook_access,
         account_id=account_id,
-        access=access,
-        store=store,
+        defaults={
+            'account_name': account_name,
+            'last_sync': arrow.get().replace(days=-31).date()
+        }
     )
-    updated = None
-    if facebook_account.exists():
-        facebook_account = facebook_account.first()
-        if facebook_account.config == 'include_and_new':
-            updated = arrow.get(facebook_account.last_sync)
 
+    # Get config options minding previous synced accounts
     config_options = []
     for option in CONFIG_CHOICES:
         selected = ''
@@ -160,6 +185,9 @@ def facebook_campaign(request):
             'selected': selected
         })
 
+    # Returns campaigns minding previous synced accounts
+    saved_campaigns = facebook_account.campaigns.split(',')
+    api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
     for account in user.get_ad_accounts(fields=[AdAccount.Field.name]):
         if account['id'] == account_id:
@@ -169,9 +197,7 @@ def facebook_campaign(request):
                     'name': i['name'],
                     'status': i['status'].title(),
                     'created_time': arrow.get(i['created_time']).humanize(),
-                    'checked': 'checked' if i['id'] in saved_campaigns or
-                    (updated is not None and arrow.get(i['created_time']) > updated)
-                    else ''
+                    'checked': 'checked' if i['id'] in saved_campaigns else ''
                 } for i in account.get_campaigns(fields=['name', 'status', 'created_time'])],
                 'config_options': config_options
             })
@@ -207,3 +233,50 @@ def facebook_remove_account(request):
         return JsonResponse({'success': True})
 
     return JsonResponse({'error': 'Non-handled endpoint'}, status=405)
+
+
+@login_required
+def profit_details(request):
+    store = utils.get_store_from_request(request)
+    if not store:
+        return JsonResponse({
+            'error': 'Please add at least one store before using the Profits Dashboard.'
+        }, status=500)
+
+    start = request.POST.get('start')
+    end = request.POST.get('end')
+    limit = utils.safeInt(request.POST.get('limit'), 20)
+    current_page = utils.safeInt(request.POST.get('page'), 1)
+
+    tz = timezone.localtime(timezone.now()).strftime(' %z')
+    if end is None:
+        end = arrow.now()
+    else:
+        end = arrow.get(end + tz, r'MM/DD/YYYY Z')
+
+    if start is None:
+        start = arrow.now().replace(days=-30)
+    else:
+        start = arrow.get(start + tz, r'MM/DD/YYYY Z')
+
+    store_timezone = request.session['django_timezone']
+    end = end.to(store_timezone).datetime
+    start = start.to(store_timezone).datetime
+
+    details, paginator = get_profit_details(store,
+                                            (start, end),
+                                            limit=limit,
+                                            page=current_page,
+                                            store_timezone=store_timezone)
+
+    pagination = render_to_string('partial/paginator.html', {
+        'request': request,
+        'paginator': paginator,
+        'current_page': details
+    })
+
+    return JsonResponse({
+        'status': 'ok',
+        'details': details.object_list,
+        'pagination': pagination
+    })

@@ -13,8 +13,10 @@ from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
 from shopified_core.utils import ALIEXPRESS_REJECTED_STATUS
-from shopify_orders.models import ShopifyOrder
+from shopified_core.paginators import SimplePaginator
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy.utils import safeFloat, get_shopify_orders
+from leadgalaxy.models import ShopifyOrderTrack
 
 from .models import (
     FacebookAccess,
@@ -34,67 +36,70 @@ def get_facebook_api(access_token):
     )
 
 
-def get_facebook_ads(user, store, access_token=None, account_ids=None, campaigns=None, config='include'):
-    access, created = FacebookAccess.objects.update_or_create(user=user, store=store, defaults={
-        'account_ids': ','.join(account_ids) if account_ids else '',
-        'campaigns': ','.join(campaigns) if campaigns else ''
-    })
+def get_facebook_ads(user, store, access_token=None, expires_in=None):
+    access = FacebookAccess.objects.get(user=user, store=store)
+    access_token = access.exchange_long_lived_token(access_token, expires_in)
 
-    if not account_ids:
-        account_ids = access.account_ids.split(',') if access.account_ids else []
-
-    if not campaigns:
-        campaigns = access.campaigns.split(',') if access.campaigns else []
-
-    access_token = access.exchange_long_lived_token(access_token)
     api = get_facebook_api(access_token)
-
     user = FBUser(fbid='me', api=api)
-    accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
     params = {'time_increment': 1}
 
+    account_ids = access.account_ids.split(',')
+    accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
     for account in accounts:
         if account['id'] not in account_ids:
             continue
 
-        account_model, created = FacebookAccount.objects.update_or_create(
+        account_model = FacebookAccount.objects.get(
             account_id=account.get(account.Field.id),
             access=access,
-            store=store,
-            defaults={
-                'account_name': account.get(account.Field.name),
-                'last_sync': date.today(),
-                'config': config
-            }
+            store=store
         )
 
         if account_model.last_sync:
             params['time_range'] = {
-                'since': account_model.last_sync.strftime('%Y-%m-%d'),
+                'since': arrow.get(account_model.last_sync).replace(days=-1).format('YYYY-MM-DD'),
                 'until': date.today().strftime('%Y-%m-%d')
             }
 
+        campaigns = account_model.campaigns.split(',')
         campaign_insights = {}
         for campaign in account.get_campaigns(fields=['name', 'status', 'created_time']):
-            if 'include' in config and campaign['id'] not in campaigns:
-                continue
-            if 'exclude' in config and campaign['id'] in campaigns:
+            if 'include' in account_model.config and campaign['id'] not in campaigns:
+                campaign_date = arrow.get(campaign['created_time']).datetime
+                if 'new' in account_model.config and campaign_date > account_model.updated_at:
+                    campaigns.append(campaign['id'])
+                else:
+                    continue
+            if 'exclude' in account_model.config and campaign['id'] in campaigns:
                 continue
 
             for insight in campaign.get_insights(params=params):
-                insight_date = arrow.get(insight[insight.Field.date_start]).datetime
-                if insight_date not in campaign_insights:
-                    campaign_insights[insight_date] = {
+                insight_date = arrow.get(insight[insight.Field.date_start]).format('YYYY-MM-DD')
+                insight_key = '{}-{}'.format(insight_date, campaign['id'])
+                if insight_key not in campaign_insights:
+                    campaign_insights[insight_key] = {
                         'impressions': int(insight[insight.Field.impressions]),
                         'spend': float(insight[insight.Field.spend]),
+                        'created_at': arrow.get(insight[insight.Field.date_start]).date(),
+                        'campaign_id': campaign['id'],
                     }
                 else:
-                    campaign_insights[insight_date]['impressions'] += int(insight[insight.Field.impressions])
-                    campaign_insights[insight_date]['spend'] += float(insight[insight.Field.spend])
+                    campaign_insights[insight_key]['impressions'] += int(insight[insight.Field.impressions])
+                    campaign_insights[insight_key]['spend'] += float(insight[insight.Field.spend])
 
-        for key, val in campaign_insights.items():
-            FacebookAdCost.objects.update_or_create(account=account_model, created_at=key, defaults=val)
+        for key, value in campaign_insights.items():
+            FacebookAdCost.objects.update_or_create(
+                account=account_model,
+                created_at=value['created_at'],
+                campaign_id=value['campaign_id'],
+                defaults={
+                    'impressions': value['impressions'],
+                    'spend': value['spend'],
+                }
+            )
 
+        account_model.campaigns = ','.join(campaigns)
         account_model.last_sync = date.today()
         account_model.save()
 
@@ -120,14 +125,26 @@ def get_profits(user_id, store, start, end, store_timezone=''):
             'profit': 0.0,
         }
 
+    # Shopify Orders
     orders = ShopifyOrder.objects.filter(store_id=store_id,
                                          created_at__range=(start, end))
 
     orders_map = {}
     for order in orders.values('created_at', 'total_price', 'order_id'):
         # Date: YYYY-MM-DD
-        date_key = arrow.get(order['created_at']).to(store_timezone).format('YYYY-MM-DD')
-        orders_map[order['order_id']] = date_key
+        created_at = arrow.get(order['created_at']).to(store_timezone)
+        date_key = created_at.format('YYYY-MM-DD')
+        orders_map[order['order_id']] = {
+            'date': created_at.datetime,
+            'date_as_string': created_at.format('MM/DD/YYYY'),
+            'order_id': order['order_id'],
+            'total_price': order['total_price'],
+            'total_refund': 0.0,
+            'profit': order['total_price'],
+            'products': [],
+            'refunded_products': [],
+            'aliexpress_track': []
+        }
         if date_key not in profits_data:
             continue
 
@@ -136,25 +153,27 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         profits_data[date_key]['css_empty'] = ''
 
     # Account for refunds processed within date range
+    refunds = []
     for refund in order_refunds(store, start, end, store_timezone):
+        refunds.append(refund)
+
         date_key = arrow.get(refund['processed_at']).format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue
 
-        for transaction in refund.get('transactions'):
-            kind = transaction.get('kind', 'refund')
-            test_transaction = transaction.get('test', False)
-            if not test_transaction and kind == 'refund':
-                profits_data[date_key]['revenue'] -= float(transaction.get('amount'))
-                profits_data[date_key]['empty'] = False
-                profits_data[date_key]['css_empty'] = ''
+        refund_amount = get_refund_amount(refund.get('transactions'))
+        if refund_amount:
+            profits_data[date_key]['revenue'] -= refund_amount
+            profits_data[date_key]['empty'] = False
+            profits_data[date_key]['css_empty'] = ''
 
+    # Aliexpress costs
     shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id,
                                                          order_id__in=orders_map.keys())
 
     total_fulfillments_count = 0
     for shipping in shippings:
-        date_key = orders_map[shipping.order_id]
+        date_key = orders_map[shipping.order_id]['date']
         if date_key not in profits_data:
             continue
 
@@ -164,6 +183,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
+    # Facebook Insights
     ad_costs = FacebookAdCost.objects.filter(account__access__store_id=store_id,
                                              account__access__user_id=user_id,
                                              created_at__range=(start, end)) \
@@ -181,6 +201,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
+    # Other Costs
     other_costs = OtherCost.objects.filter(store_id=store_id,
                                            date__range=(start, end)) \
                                    .extra({'date_key': 'date(date)'}) \
@@ -201,6 +222,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         profits_data[date_key]['empty'] = is_empty and other_cost_value == 0
         profits_data[date_key]['css_empty'] = ''
 
+    # Totals
     totals = {
         'revenue': orders.aggregate(total=Sum('total_price'))['total'] or 0.0,
         'fulfillment_cost': shippings.aggregate(total=Sum('total_cost'))['total'] or 0.0,
@@ -213,7 +235,18 @@ def get_profits(user_id, store, start, end, store_timezone=''):
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
 
-    return profits_data.values(), totals
+    # Details
+    date_range = (arrow.get(start).to(store_timezone).datetime,
+                  arrow.get(end).to(store_timezone).datetime)
+    details = get_profit_details(store,
+                                 date_range,
+                                 limit=20,
+                                 page=1,
+                                 orders_map=orders_map,
+                                 refunds_list=refunds,
+                                 store_timezone=store_timezone)
+
+    return profits_data.values(), totals, details
 
 
 def calculate_profits(profits):
@@ -333,6 +366,7 @@ def order_refunds(store, start, end, store_timezone=''):
                     # Only yield refunds processed within date range
                     processed_at = arrow.get(refund.get('processed_at'))
                     if start < processed_at < end:
+                        refund['processed_at_datetime'] = processed_at
                         yield refund
 
             # There is still another page while orders count is at its max limit
@@ -347,3 +381,132 @@ def order_refunds(store, start, end, store_timezone=''):
     params['financial_status'] = 'refunded'
     for refund in retrieve_refunds(params):
         yield refund
+
+
+def get_refund_amount(transactions):
+    refund_amount = 0.0
+    for transaction in transactions:
+        kind = transaction.get('kind', 'refund')
+        test_transaction = transaction.get('test', False)
+        if not test_transaction and kind == 'refund':
+            refund_amount += float(transaction.get('amount'))
+
+    return refund_amount
+
+
+def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refunds_list=[], store_timezone=''):
+    """
+    Returns each refund, order and aliexpress fulfillment sorted by date
+    """
+    if not orders_map:
+        orders_map = {}
+        orders = ShopifyOrder.objects.filter(
+            store_id=store.id,
+            created_at__range=date_range
+        ).values('created_at', 'total_price', 'order_id')
+        for order in orders:
+            created_at = arrow.get(order['created_at']).to(store_timezone)
+            orders_map[order['order_id']] = {
+                'date': created_at.datetime,
+                'date_as_string': created_at.format('MM/DD/YYYY'),
+                'order_id': order['order_id'],
+                'total_price': order['total_price'],
+                'total_refund': 0.0,
+                'profit': order['total_price'],
+                'products': [],
+                'refunded_products': [],
+                'aliexpress_track': []
+            }
+
+    if not refunds_list:
+        refunds_list = order_refunds(store, date_range[0], date_range[1], store_timezone)
+
+    # Merge refunds with orders
+    new_refunds = {}  # For refunds done later than order.created_at
+    for refund in refunds_list:
+        order_id = refund.get('order_id')
+        processed_at = refund['processed_at_datetime']
+        order_created_at = orders_map.get(order_id, {}).get('date')
+
+        # Sum refund amount
+        refund_amount = get_refund_amount(refund.get('transactions'))
+
+        # Refunded products
+        refunded_products = [i.get('line_item').get('title') for i in refund.get('refund_line_items', [])]
+
+        # Same refund.processed_at as order.created_at shows at the same row
+        if order_created_at and order_created_at.date() == processed_at.date():
+            orders_map[order_id]['total_refund'] -= refund_amount
+            orders_map[order_id]['profit'] -= refund_amount
+            orders_map[order_id]['refunded_products'] += refunded_products
+        else:
+            refunds_key = '{}-{}'.format(processed_at.format('YYYY-MM-DD'), order_id)
+            if refunds_key not in new_refunds:
+                new_refunds[refunds_key] = {
+                    'date': processed_at.datetime,
+                    'date_as_string': processed_at.format('MM/DD/YYYY'),
+                    'order_id': refund.get('order_id'),
+                    'profit': 0.0,
+                    'total_refund': 0.0,
+                    'refunded_products': [],
+                }
+
+            new_refunds[refunds_key]['profit'] -= refund_amount
+            new_refunds[refunds_key]['total_refund'] -= refund_amount
+            new_refunds[refunds_key]['refunded_products'] += refunded_products
+
+    # Get line items for orders
+    for line in ShopifyOrderLine.objects.filter(order__order_id__in=orders_map.keys()).values('order__order_id', 'title', 'quantity'):
+        orders_map[line['order__order_id']]['products'].append('%d x %s' % (line['quantity'] or 1, line['title']))
+
+    # Paginate profit details
+    profit_details = orders_map.values() + new_refunds.values()
+    profit_details = sorted(profit_details, key=lambda k: k['date'], reverse=True)
+    paginator = SimplePaginator(profit_details, limit)
+    page = min(max(1, page), paginator.num_pages)
+    profit_details = paginator.page(page)
+
+    # Get track for orders being shown
+    order_ids = [i.get('order_id') for i in profit_details]
+    tracks_map = {}
+    existing_order_tracks = []
+    for track in ShopifyOrderTrack.objects.filter(store=store, order_id__in=order_ids):
+        # We only need distinct track's
+        key = '{}-{}'.format(track.order_id, track.source_id)
+        if key in existing_order_tracks:
+            continue
+
+        existing_order_tracks.append(key)
+
+        costs = get_costs_from_track(track)
+        if costs:
+            if track.order_id not in tracks_map:
+                tracks_map[track.order_id] = []
+
+            tracks_map[track.order_id].append({
+                'source_id': track.source_id,
+                'source_url': track.get_source_url(),
+                'costs': costs
+            })
+
+    def sum_costs(x, y):
+        return x + float(y['costs']['total_cost'])
+
+    shopify_orders = get_shopify_orders(store,
+                                        page=1,
+                                        limit=limit,
+                                        fields='name,id',
+                                        order_ids=order_ids)
+    shopify_orders = {i['id']: i['name'] for i in shopify_orders}
+
+    # Merge tracks with orders
+    for detail in profit_details:
+        detail['aliexpress_tracks'] = tracks_map.get(detail.get('order_id'))
+        detail['shopify_url'] = store.get_link('/admin/orders/{}'.format(detail.get('order_id')))
+        detail['order_name'] = shopify_orders.get(detail['order_id'])
+        if detail['aliexpress_tracks']:
+            fulfillment_cost = reduce(sum_costs, detail['aliexpress_tracks'], 0)
+            detail['profit'] -= fulfillment_cost
+            detail['fulfillment_cost'] = fulfillment_cost
+
+    return profit_details, paginator
