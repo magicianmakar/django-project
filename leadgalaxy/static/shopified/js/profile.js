@@ -235,13 +235,14 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
     var option = $('#' + type + '_plan option:selected');
     var plan = option.val();
     var have_billing_info = $(this).data('cc');
+    var shopify_billing = $(this).data('shopify');
 
     if (!plan) {
         swal(title, 'Please select a credit to purchase first.', 'warning');
         return;
     }
 
-    if(!have_billing_info) {
+    if(!shopify_billing && !have_billing_info) {
         swal({
             title: title,
             text: "Add your credit card to purchase credits.",
@@ -263,9 +264,10 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
         return;
     }
 
+    var payement_method = shopify_billing ? 'Shopify Account' : 'Credit Card';
     swal({
         title: "Purchase " + option.data('credits') + " Credits",
-        text: "Your Credit Card will be charged " + option.data('amount') + '\nContinue with the purchase?',
+        text: "Your " + payement_method + " will be charged " + option.data('amount') + '\nContinue with the purchase?',
         type: "info",
         showCancelButton: true,
         closeOnConfirm: false,
@@ -284,11 +286,18 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
                     'plan': plan
                 },
                 success: function(data) {
-                    toastr.success('Credit Purchase Complete!', title);
-                    swal.close();
+                    if (!data.location) {
+                        toastr.success('Credit Purchase Complete!', title);
+                        swal.close();
+                    }
 
                     setTimeout(function() {
-                        window.location.reload();
+                        if (data.location) {
+                            window.location.href = data.location;
+                        } else {
+                            window.location.reload();
+                        }
+
                     }, 1500);
                 },
                 error: function(data) {

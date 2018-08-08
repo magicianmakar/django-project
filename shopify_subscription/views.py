@@ -6,8 +6,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from shopified_core import permissions
 from shopified_core.utils import app_link
-from leadgalaxy.models import GroupPlan
-
+from leadgalaxy.models import GroupPlan, ShopifyStore, ClippingMagic, CaptchaCredit
 from analytic_events.models import PlanSelectionEvent
 
 from .models import ShopifySubscription
@@ -100,5 +99,60 @@ def subscription_activated(request):
         request.user.profile.change_plan(GroupPlan.objects.get(id=request.session['current_plan']))
 
         messages.warning(request, 'Your plan was not changed because the charge was declined')
+
+    return HttpResponseRedirect('/')
+
+
+@login_required
+def subscription_charged(request, store):
+    charge_id = request.GET['charge_id']
+
+    store = ShopifyStore.objects.get(id=store)
+    permissions.user_can_view(request.user, store)
+
+    charge = store.shopify.ApplicationCharge.find(charge_id)
+
+    if charge.status == 'accepted':
+        charge.activate()
+
+        charge = request.session['shopiyf_charge']
+        purchase_title = ''
+
+        if charge['type'] == 'captcha':
+            purchase_title = 'Captcha'
+
+            try:
+                captchacredit = CaptchaCredit.objects.get(user=request.user.models_user)
+                captchacredit.remaining_credits += charge['credits']
+                captchacredit.save()
+
+            except CaptchaCredit.DoesNotExist:
+                captchacredit.objects.create(
+                    user=request.user.models_user,
+                    remaining_credits=charge['credits']
+                )
+        elif charge['type'] == 'clippingmagic':
+            purchase_title = 'Clipping Magic'
+
+            try:
+                clippingmagic = ClippingMagic.objects.get(user=request.user.models_user)
+                clippingmagic.remaining_credits += charge['credits']
+                clippingmagic.save()
+
+            except ClippingMagic.DoesNotExist:
+                ClippingMagic.objects.create(
+                    user=request.user.models_user,
+                    remaining_credits=charge['credits']
+                )
+        else:
+            messages.warning(request, 'Unknown Charge Type')
+            return HttpResponseRedirect('/')
+
+        del request.session['shopiyf_charge']
+
+        messages.success(request, 'You\'ve successfully purchased {} of {} credits!'.format(charge['credits'], purchase_title))
+
+    else:
+        messages.warning(request, 'Your purchase was not completed because the charge was declined')
 
     return HttpResponseRedirect('/')

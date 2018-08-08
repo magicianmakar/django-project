@@ -4,11 +4,13 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from django.core.urlresolvers import reverse
 
 import arrow
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.utils import app_link
 from leadgalaxy.models import GroupPlan
 from leadgalaxy.models import ClippingMagic, ClippingMagicPlan, CaptchaCredit, CaptchaCreditPlan
 
@@ -225,8 +227,28 @@ def clippingmagic_subscription(request):
 
     invoice = None
 
+    clippingmagic_plan = ClippingMagicPlan.objects.get(id=request.POST.get('plan'))
+
+    if request.user.profile.from_shopify_app_store():
+        store = user.profile.get_shopify_stores().first()
+
+        request.session['shopiyf_charge'] = {
+            'type': 'clippingmagic',
+            'credits': clippingmagic_plan.allowed_credits
+        }
+
+        charge = store.shopify.ApplicationCharge.create({
+            "name": "Dropified Clipping Magic - {} Credits".format(clippingmagic_plan.allowed_credits),
+            "price": clippingmagic_plan.amount,
+            "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
+        })
+
+        return JsonResponse({
+            'status': 'ok',
+            'location': charge.confirmation_url
+        })
+
     try:
-        clippingmagic_plan = ClippingMagicPlan.objects.get(id=request.POST.get('plan'))
 
         stripe.InvoiceItem.create(
             customer=user.stripe_customer.customer_id,
@@ -298,9 +320,28 @@ def captchacredit_subscription(request):
     user = request.user
     paid = False
 
-    try:
-        captchacredit_plan = CaptchaCreditPlan.objects.get(id=request.POST.get('plan'))
+    captchacredit_plan = CaptchaCreditPlan.objects.get(id=request.POST.get('plan'))
 
+    if request.user.profile.from_shopify_app_store():
+        store = user.profile.get_shopify_stores().first()
+
+        request.session['shopiyf_charge'] = {
+            'type': 'captcha',
+            'credits': captchacredit_plan.allowed_credits
+        }
+
+        charge = store.shopify.ApplicationCharge.create({
+            "name": "Dropified Auto Captcha - {} Credits".format(captchacredit_plan.allowed_credits),
+            "price": captchacredit_plan.amount,
+            "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
+        })
+
+        return JsonResponse({
+            'status': 'ok',
+            'location': charge.confirmation_url
+        })
+
+    try:
         stripe.InvoiceItem.create(
             customer=user.stripe_customer.customer_id,
             amount=captchacredit_plan.amount * 100,

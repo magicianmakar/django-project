@@ -2632,9 +2632,7 @@ def user_profile(request):
             captchacredit = CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
 
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
-    shopify_apps_customer = request.user.get_config('shopify_app_store') \
-        or request.user.profile.plan in shopify_plans \
-        or request.user.profile.shopify_app_store
+    shopify_apps_customer = request.user.profile.from_shopify_app_store()
 
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)

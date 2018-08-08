@@ -39,7 +39,9 @@
             </div>
 
             <div class="col-md-2" >
-                <button class="btn btn-primary" id="renew_captchacredit" data-title="AutoCaptcha Credits" data-cc="{{user.have_billing_info|lower}}">Purchase</button>
+                <button class="btn btn-primary" id="renew_captchacredit"
+                        data-title="AutoCaptcha Credits" data-cc="{{user.have_billing_info|lower}}"
+                        data-shopify="{{shopify_apps_customer|lower}}">Purchase</button>
             </div>
 
             <div class="col-md-4">
