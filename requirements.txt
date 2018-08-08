@@ -91,7 +91,7 @@ six==1.10.0
 slimit==0.8.1
 SQLAlchemy==1.2.10
 sqlparse==0.2.1
-stripe==2.4.0
+stripe==1.84.2
 sympy==0.7.6.1
 tld==0.7.6
 tqdm==4.24.0
