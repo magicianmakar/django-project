@@ -14,7 +14,7 @@ from facebookads.adobjects.adaccount import AdAccount
 
 from shopified_core.utils import ALIEXPRESS_REJECTED_STATUS
 from shopified_core.paginators import SimplePaginator
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifyOrder
 from leadgalaxy.utils import safeFloat, get_shopify_orders
 from leadgalaxy.models import ShopifyOrderTrack
 
@@ -454,10 +454,6 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
             new_refunds[refunds_key]['profit'] -= refund_amount
             new_refunds[refunds_key]['total_refund'] -= refund_amount
             new_refunds[refunds_key]['refunded_products'] += refunded_products
-
-    # Get line items for orders
-    for line in ShopifyOrderLine.objects.filter(order__order_id__in=orders_map.keys()).values('order__order_id', 'title', 'quantity'):
-        orders_map[line['order__order_id']]['products'].append('%d x %s' % (line['quantity'] or 1, line['title']))
 
     # Paginate profit details
     profit_details = orders_map.values() + new_refunds.values()
