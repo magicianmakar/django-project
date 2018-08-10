@@ -10,6 +10,7 @@ from celery import Task
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
 from django.conf import settings
+from django.core.cache import cache
 from raven.contrib.django.raven_compat.models import client as raven_client
 from raven.contrib.celery import register_signal
 
@@ -34,8 +35,6 @@ class CaptureFailure(Task):
 
 
 def retry_countdown(key, retries):
-    from django.core.cache import cache
-
     retries = max(1, retries)
     countdown = cache.get(key, random.randint(10, 30)) + random.randint(retries, retries * 60) + (60 * retries)
     cache.set(key, countdown + random.randint(5, 30), timeout=countdown + 60)
