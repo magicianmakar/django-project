@@ -17,11 +17,11 @@
     <tr>
       <td>{{ detail.date_as_string }}</td>
       <td class="products">
-        {% for name in detail.products %}
-          <span>{{ name }}</span>
+        {% for product in detail.products %}
+          <span>{{ product.quantity }} x {{ product.title }}</span>
         {% endfor %}
-        {% for name in detail.refunded_products %}
-          <span class="label label-danger">{{ name }}</span>
+        {% for product in detail.refunded_products %}
+          <span class="label label-danger">{{ product.quantity }} x {{ product.title }}</span>
         {% endfor %}
       </td>
       <td>
@@ -63,10 +63,10 @@
     <td>{{this.date_as_string}}</td>
     <td class="products">
       {{#each this.products}}
-        <span>{{this}}</span>
+        <span>{{this.quantity}} x {{this.title}}</span>
       {{/each}}
       {{#each this.refunded_products}}
-        <span class="label label-danger">{{this}}</span>
+        <span class="label label-danger">{{this.quantity}} x {{this.title}}</span>
       {{/each}}
     </td>
     <td>

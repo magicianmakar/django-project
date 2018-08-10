@@ -173,7 +173,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
 
     total_fulfillments_count = 0
     for shipping in shippings:
-        date_key = orders_map[shipping.order_id]['date']
+        date_key = arrow.get(orders_map[shipping.order_id]['date']).format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue
 
@@ -432,7 +432,7 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
         refund_amount = get_refund_amount(refund.get('transactions'))
 
         # Refunded products
-        refunded_products = [i.get('line_item').get('title') for i in refund.get('refund_line_items', [])]
+        refunded_products = [i.get('line_item') for i in refund.get('refund_line_items', [])]
 
         # Same refund.processed_at as order.created_at shows at the same row
         if order_created_at and order_created_at.date() == processed_at.date():
@@ -488,18 +488,24 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
     def sum_costs(x, y):
         return x + float(y['costs']['total_cost'])
 
-    shopify_orders = get_shopify_orders(store,
-                                        page=1,
-                                        limit=limit,
-                                        fields='name,id',
-                                        order_ids=order_ids)
-    shopify_orders = {i['id']: i['name'] for i in shopify_orders}
+    shopify_orders = get_shopify_orders(store, page=1, limit=limit, fields='name,id,line_items', order_ids=order_ids)
+    shopify_orders = {
+        i['id']: {
+            'name': i['name'],
+            'line_items': i.get('line_items', [])
+        }
+        for i in shopify_orders
+    }
 
     # Merge tracks with orders
     for detail in profit_details:
         detail['aliexpress_tracks'] = tracks_map.get(detail.get('order_id'))
         detail['shopify_url'] = store.get_link('/admin/orders/{}'.format(detail.get('order_id')))
-        detail['order_name'] = shopify_orders.get(detail['order_id'])
+
+        shopify_order = shopify_orders.get(detail['order_id'], {})
+        detail['order_name'] = shopify_order.get('name')
+        detail['products'] = shopify_order.get('line_items', [])
+
         if detail['aliexpress_tracks']:
             fulfillment_cost = reduce(sum_costs, detail['aliexpress_tracks'], 0)
             detail['profit'] -= fulfillment_cost
