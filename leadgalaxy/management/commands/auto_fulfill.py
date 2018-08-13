@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import *
+from shopify_orders.models import ShopifyOrderLog
 from leadgalaxy import utils
 from leadgalaxy import tasks
 
@@ -173,5 +174,15 @@ class Command(DropifiedBaseCommand):
             if line:
                 line.fulfillment_status = 'fulfilled'
                 line.save()
+
+            ShopifyOrderLog.objects.update_order_log(
+                store=store,
+                user=None,
+                log='Marked as fulfilled By Dropified',
+                level='success',
+                icon='check',
+                order_id=order.order_id,
+                line_id=order.line_id
+            )
 
         return fulfilled

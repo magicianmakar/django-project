@@ -1,6 +1,8 @@
+import arrow
+import simplejson as json
+
 from django.db import models
 from django.contrib.auth.models import User
-import simplejson as json
 
 from leadgalaxy.models import (
     ShopifyStore,
@@ -192,3 +194,81 @@ class ShopifyOrderRisk(models.Model):
 
         self.data = data
         self.save()
+
+
+class ShopifyOrderLogManager(models.Manager):
+    def update_order_log(self, **kwargs):
+        order_log, created = self.update_or_create(
+            store=kwargs.pop('store'),
+            order_id=kwargs.pop('order_id'),
+        )
+
+        order_log.add_log(**kwargs)
+
+        return order_log
+
+
+class ShopifyOrderLog(models.Model):
+    store = models.ForeignKey(ShopifyStore)
+    order_id = models.BigIntegerField()
+    logs = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ShopifyOrderLogManager()
+
+    def __unicode__(self):
+        return u'Log: #{}'.format(self.order_id)
+
+    def add_log(self, log, user, line_id=None, level=None, icon=None, commit=True):
+        log_time = arrow.utcnow().timestamp
+
+        logs = self.get_logs(sort=False)
+        log = {
+            'time': log_time,
+            'log': log,
+            'user': user.id if user else 0
+        }
+
+        if line_id:
+            log['line'] = line_id
+
+        if level:
+            log['level'] = level
+
+        if icon:
+            log['icon'] = icon
+
+        logs.append(log)
+
+        self.logs = json.dumps(logs)
+
+        if commit:
+            self.save()
+
+    def get_logs(self, sort='desc', pretty=False, include_webhooks=False):
+        try:
+            logs = json.loads(self.logs)
+        except:
+            return []
+
+        if include_webhooks:
+            order = ShopifyOrder.objects.filter(store=self.store, order_id=self.order_id).first()
+            if order:
+                logs.append({
+                    'log': 'Order Created in Shopify',
+                    'time': arrow.get(order.created_at).timestamp,
+                    'icon': 'flag',
+                    'user': 0
+                })
+
+        if sort:
+            logs = sorted(logs, cmp=lambda a, b: cmp(a['time'], b['time']), reverse=bool(sort == 'desc'))
+
+        if pretty:
+            for idx, log in enumerate(logs):
+                if log['user']:
+                    logs[idx]['user'] = User.objects.get(id=log['user'])
+
+        return logs

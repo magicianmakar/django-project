@@ -286,7 +286,7 @@ class SubuserpermissionsApiTestCase(TestCase):
         response.json = Mock(return_value={'fulfillment': '1'})
         request_post.return_value = response
         self.user.profile.subuser_stores.add(self.store)
-        data = {'fulfill-store': self.store.id, 'fulfill-line-id': 1}
+        data = {'fulfill-store': self.store.id, 'fulfill-line-id': 1, 'fulfill-order-id': 2}
         r = self.client.post('/api/fulfill-order', data)
         self.assertEquals(r.status_code, 200)
 

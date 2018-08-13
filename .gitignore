@@ -5,6 +5,7 @@
 *.sublime-*
 .sass-cache
 .DS_Store
+.idea
 staticfiles
 venv
 docs

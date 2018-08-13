@@ -2,8 +2,13 @@ from django.contrib import admin
 
 # Register your models here.
 
-from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderRisk
-
+from shopify_orders.models import (
+    ShopifySyncStatus,
+    ShopifyOrder,
+    ShopifyOrderLine,
+    ShopifyOrderRisk,
+    ShopifyOrderLog
+)
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
@@ -34,3 +39,10 @@ class ShopifyOrderRiskeAdmin(admin.ModelAdmin):
     list_display = ('store', 'order_id', 'created_at')
     raw_id_fields = ('store',)
     search_fields = ('store__id', 'store__shop')
+
+
+@admin.register(ShopifyOrderLog)
+class ShopifyOrderLogAdmin(admin.ModelAdmin):
+    list_display = ('store', 'order_id', 'created_at', 'updated_at')
+    raw_id_fields = ('store',)
+    search_fields = ('store__id', 'store__shop', 'order_id')

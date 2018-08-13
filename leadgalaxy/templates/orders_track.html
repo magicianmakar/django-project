@@ -12,7 +12,7 @@
         <ul class="nav nav-tabs">
             {% for item in user.profile.get_shopify_stores %}
                 {% if store == item or item.id|stringformat:"i" == request.GET.store %}
-                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                    <li class="active" data-store="{{ item.id }}"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
                 {% else %}
                     <li class=""><a href="/orders/track?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
                 {% endif %}
@@ -292,12 +292,18 @@
                                     <span class="badge badge-primary itooltip" title="Item was Automatically fulfilled by Dropified">Auto</span>
                                 {% endif %}
 
-                                {% if not item.hidden %}
+                                {% if item.hidden %}
+                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order">Un-Archive</button>
+                                {% else %}
                                 <button order-id="{{item.id}}" class="btn btn-info btn-xs btn-outline hide-order itooltip"
                                         title="Archive in Tracking page">Archive</button>
-                                {% else %}
-                                <button order-id="{{item.id}}" class="btn btn-success btn-xs btn-outline show-order">Un-Archive</button>
                                 {% endif %}
+
+                                <button store="{{item.store_id}}" order-id="{{item.order.id}}" line-id="{{item.line.id}}"
+                                        class="btn btn-info btn-xs btn-outline track-details itooltip">
+                                    Details
+                                </button>
+
                             </td>
                         </tr>
                         {% empty %}
@@ -316,6 +322,13 @@
 
                   {% include "partial/paginator.html" %}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-tracking-details" class="modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
             </div>
         </div>
     </div>

@@ -301,4 +301,27 @@
         });
     });
 
+    $(".track-details").click(function(e) {
+        var btn = $(e.target);
+        var detailsUrl = api_url('track-log') + '?' + $.param({
+            'store': btn.attr('store'),
+            'order_id': btn.attr('order-id'),
+            'line_id': btn.attr('order-id'),
+        });
+
+        btn.button('loading');
+        $('#modal-tracking-details .modal-content').load(detailsUrl, function(response, status) {
+            btn.button('reset');
+            if (status != 'error') {
+                $('#modal-tracking-details').modal('show');
+            } else {
+                try {
+                    response = JSON.parse(response);
+                } catch (e) {}
+
+                toastr.error(getAjaxError(response));
+            }
+        });
+    });
+
 })();

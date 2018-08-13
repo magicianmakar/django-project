@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django.core.management import call_command
 
-from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine, ShopifyOrderLog
 from leadgalaxy import utils
 from leadgalaxy.models import (
     ShopifyOrderTrack,
@@ -33,6 +33,19 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     status_updated_at = timezone.now()
 
 
+class ShopifyOrderLogFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = ShopifyOrderLog
+        django_get_or_create = ['order_track_id', 'store_id', 'user_id']
+
+    order_track_id = '1654810'
+    user_id = 1
+    store_id = 1
+    data = ''
+    updated_at = timezone.now()
+
+
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 
     class Meta:
@@ -42,6 +55,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
     title = 'uncommonnow'
     api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
     user_id = 1
+    is_active = True
     auto_fulfill = 'enable'
 
 

@@ -7645,3 +7645,90 @@ body.skin-3 {
     display: none;
   }
 }
+
+
+/* Activity stream */
+.stream {
+  position: relative;
+  padding: 10px 0;
+}
+.stream:first-child .stream-badge:before {
+  top: 10px;
+}
+.stream:last-child .stream-badge:before {
+  height: 30px;
+}
+.stream .stream-badge {
+  width: 50px;
+}
+.stream .stream-badge i {
+  border: 1px solid #e7eaec;
+  border-radius: 50%;
+  padding: 6px;
+  color: #808486;
+  position: absolute;
+  background-color: #ffffff;
+  left: 8px;
+}
+.stream .stream-badge i.fa-circle {
+  color: #ced0d1;
+}
+.stream .stream-badge i.bg-success {
+  color: #ffffff;
+  background-color: #1c84c6;
+  border-color: #1c84c6;
+}
+.stream .stream-badge i.bg-primary {
+  color: #ffffff;
+  background-color: #1ab394;
+  border-color: #1ab394;
+}
+.stream .stream-badge i.bg-warning {
+  color: #ffffff;
+  background-color: #f8ac59;
+  border-color: #f8ac59;
+}
+.stream .stream-badge i.bg-info {
+  color: #ffffff;
+  background-color: #23c6c8;
+  border-color: #23c6c8;
+}
+.stream .stream-badge i.bg-danger {
+  color: #ffffff;
+  background-color: #ed5565;
+  border-color: #ed5565;
+}
+.stream .stream-badge:before {
+  content: '';
+  width: 1px;
+  background-color: #e7eaec;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+}
+.stream .stream-info {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.stream .stream-info img {
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  margin-right: 2px;
+  margin-top: -4px;
+}
+.stream .stream-info .date {
+  color: #9a9d9f;
+  font-size: 80%;
+}
+.stream .stream-panel {
+  margin-left: 55px;
+}
+.stream-small {
+  margin: 10px 0;
+}
+.stream-small .label {
+  padding: 2px 6px;
+  margin-right: 2px;
+}

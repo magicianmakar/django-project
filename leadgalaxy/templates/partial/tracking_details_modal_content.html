@@ -1,0 +1,39 @@
+{% load template_helper %}
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <h4 class="modal-title">Tracking Logs</h4>
+</div>
+
+<div class="modal-body">
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="activity-stream">
+                {% for log in logs %}
+                <div class="stream">
+                    <div class="stream-badge">
+                        <i class="fa fa-{{log.icon|default:'circle'}} bg-{{log.level}}"></i>
+                    </div>
+                    <div class="stream-panel">
+                        <div class="stream-info">
+                            <a href="#">
+                                <span>
+                                {% if not log.user %}
+                                    Dropified
+                                {% elif user == log.user %}
+                                    You
+                                {% else %}
+                                    {{log.user.get_full_name|default:log.user.email}}
+                                {% endif %}
+                                </span>
+                                <span class="date">{% date_humanize log.time %}</span>
+                            </a>
+                        </div>
+                        {{log.log}}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

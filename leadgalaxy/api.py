@@ -15,7 +15,7 @@ from django.db.models import F
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.views.generic import View
@@ -43,6 +43,7 @@ from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
     ShopifyOrderVariant,
+    ShopifyOrderLog,
 )
 from dropwow_core.models import DropwowAccount
 from dropwow_core.utils import get_dropwow_product_options
@@ -1691,6 +1692,14 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         try:
             rep.raise_for_status()
 
+            ShopifyOrderLog.objects.update_order_log(
+                store=store,
+                user=user,
+                log='Manually Fulfilled in Shopify',
+                order_id=fulfillment_data['order_id'],
+                line_id=fulfillment_data['line_id']
+            )
+
             return self.api_success()
 
         except:
@@ -2099,6 +2108,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
         from_oberlo = 'oberlo.com' in request.META.get('HTTP_REFERER', '')
+        using_dropified_extension = request.META.get('HTTP_X_EXTENSION_VERSION')
         item_fulfillment_status = None
 
         try:
@@ -2225,6 +2235,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         defaults=track_defaults
                     )
 
+                    if not from_oberlo:
+                        ShopifyOrderLog.objects.update_order_log(
+                            store=store,
+                            user=user,
+                            log='Order Placed In Aliexpress' if using_dropified_extension else 'Manually link to Aliexpress Order',
+                            level='info',
+                            icon='tag',
+                            order_id=order_id,
+                            line_id=line_id
+                        )
+
                     break
 
                 except ShopifyOrderTrack.MultipleObjectsReturned:
@@ -2310,6 +2331,16 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 deleted_ids.append(track.id)
                 track.delete()
 
+                ShopifyOrderLog.objects.update_order_log(
+                    store=track.store,
+                    user=user,
+                    log=u'Delete Aliexpress Order ID (#{})'.format(track.source_id),
+                    level='warning',
+                    icon='times',
+                    order_id=track.order_id,
+                    line_id=track.line_id
+                )
+
                 track.store.pusher_trigger('order-source-id-delete', {
                     'store_id': track.store.id,
                     'order_id': track.order_id,
@@ -2383,10 +2414,21 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order.save()
 
         tracking_number_tags = models_user.get_config('tracking_number_tags')
-        if new_tracking_number and tracking_number_tags:
-            order_updater = utils.ShopifyOrderUpdater(order.store, order.order_id)
-            order_updater.add_tag(tracking_number_tags)
-            order_updater.delay_save()
+        if new_tracking_number:
+            if tracking_number_tags:
+                order_updater = utils.ShopifyOrderUpdater(order.store, order.order_id)
+                order_updater.add_tag(tracking_number_tags)
+                order_updater.delay_save()
+
+            ShopifyOrderLog.objects.update_order_log(
+                store=order.store,
+                user=user,
+                log='Tracking Number Added',
+                level='info',
+                icon='truck',
+                order_id=order.order_id,
+                line_id=order.line_id
+            )
 
         if order.data and order.errors != -1:
             shopify_orders_tasks.check_track_errors.delay(order.id)
@@ -3256,3 +3298,49 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         store.save()
 
         return self.api_success()
+
+    def get_track_log(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+            track_log = ShopifyOrderLog.objects.get(store=store, order_id=data['order_id'])
+
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        except ShopifyOrderLog.DoesNotExist:
+            return self.api_error('No log found', status=404)
+
+        except ShopifyOrderTrack.DoesNotExist:
+            return self.api_error('Order not found', status=404)
+
+        logs = track_log.get_logs(pretty=True, include_webhooks=True)
+
+        return render(request, 'partial/tracking_details_modal_content.html', {
+            'store': store,
+            'logs': logs,
+            'request': request,
+        })
+
+    def post_track_log(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        log = ShopifyOrderLog.objects.update_order_log(
+            store=store,
+            user=user if 'user' not in data else int(data['user']),
+            log=data['log'],
+            order_id=data.get('order_id'),
+            level=data.get('level'),
+            icon=data.get('icon'),
+            line_id=data.get('line_id')
+        )
+
+        return self.api_success({
+            'log': log.get_logs()
+        })
