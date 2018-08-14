@@ -198,10 +198,14 @@ class ShopifyOrderRisk(models.Model):
 
 class ShopifyOrderLogManager(models.Manager):
     def update_order_log(self, **kwargs):
-        order_log, created = self.update_or_create(
-            store=kwargs.pop('store'),
-            order_id=kwargs.pop('order_id'),
-        )
+        store = kwargs.pop('store')
+        order_id = kwargs.pop('order_id')
+
+        try:
+            order_log, created = self.update_or_create(store=store, order_id=order_id)
+
+        except ShopifyOrderLog.MultipleObjectsReturned:
+            order_log = self.filter(store=store, order_id=order_id).first()
 
         order_log.add_log(**kwargs)
 
