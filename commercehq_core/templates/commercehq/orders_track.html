@@ -85,7 +85,7 @@
                         </div>
                         <div class="col-md-2">
                             <select name="fulfillment" class="form-control" style="padding: 6px 0px">
-                                <option {% if not request.GET.fulfillment  or request.GET.fulfillment = '2' %}selected="selected"{% endif %} value="2">Any</option>
+                                <option {% if not request.GET.fulfillment  or request.GET.fulfillment == '2' %}selected="selected"{% endif %} value="2">Any</option>
                                 <option {% if request.GET.fulfillment == '1' %}selected="selected"{% endif %} value="1">Fulfilled</option>
                                 <option {% if request.GET.fulfillment == '0' %}selected="selected"{% endif %} value="0">Not Fulfilled</option>
                             </select>
@@ -114,7 +114,7 @@
                         </div>
                         <div class="col-md-2">
                             <select name="hidden" class="form-control" style="padding: 6px 0px">
-                                <option {% if request.GET.hidden = '2' %}selected="selected"{% endif %} value="2">Any</option>
+                                <option {% if request.GET.hidden == '2' %}selected="selected"{% endif %} value="2">Any</option>
                                 <option {% if not request.GET.hidden or request.GET.hidden == '0' %}selected="selected"{% endif %} value="0">Not Archived</option>
                                 <option {% if request.GET.hidden == '1' %}selected="selected"{% endif %} value="1">Archived</option>
                             </select>
