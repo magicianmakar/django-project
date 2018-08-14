@@ -31,10 +31,6 @@ class Command(DropifiedBaseCommand):
             kwargs = {
                 'user': account.access.user,
                 'store': account.store,
-                'access_token': account.access.access_token,
-                'account_ids': account.access.account_ids.split(','),
-                'campaigns': account.access.campaigns.split(','),
-                'config': account.config,
             }
 
             try:

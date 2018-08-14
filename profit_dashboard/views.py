@@ -129,10 +129,13 @@ def facebook_accounts(request):
     access_token = request.GET.get('fb_access_token')
     expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
     store = utils.get_store_from_request(request)
-    FacebookAccess.objects.get_or_create(user=request.user, store=store, defaults={
+    facebook_access, created = FacebookAccess.objects.get_or_create(user=request.user, store=store, defaults={
         'access_token': access_token,
         'expires_in': arrow.get().replace(seconds=expires_in).datetime
     })
+
+    if not created:
+        facebook_access.update_token(access_token, expires_in)
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)

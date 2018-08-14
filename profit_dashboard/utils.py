@@ -32,7 +32,7 @@ def get_facebook_api(access_token):
         settings.FACEBOOK_APP_ID,
         settings.FACEBOOK_APP_SECRET,
         access_token,
-        api_version='v2.11'
+        api_version='v3.0'
     )
 
 
