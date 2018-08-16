@@ -497,11 +497,11 @@ class OrdersTestCase(TestCase):
         store = ShopifyStoreFactory()
         order_id = 4905209738
 
-        feed = requests.get('http://feeds.bbci.co.uk/japanese/rss.xml').text
+        feed = requests.get('http://feeds.bbci.co.uk/japanese/rss.xml')
         if not feed.ok:
             return
 
-        unicode_text = random.choice([i[1] for i in re.findall(r'title>(<!\[CDATA\[)([^>]+)(]]>)</title', feed)])
+        unicode_text = random.choice([i[1] for i in re.findall(r'title>(<!\[CDATA\[)([^>]+)(]]>)</title', feed.text)])
 
         utils.set_shopify_order_note(store, order_id, unicode_text)
 
