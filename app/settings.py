@@ -353,16 +353,21 @@ if not DEBUG:
     )
 
 PRICE_MONITOR_EVENTS = {
-    'product_disappeared': None,
-    'variant_quantity_changed': None,
-    'variant_price_changed': None,
-    'variant_added': None,
-    'variant_removed': None,
+    'product:offline': None,
+    'variant:quantity': None,
+    'variant:price': None,
+    'variant:var_added': None,
+    'variant:var_removed': None,
 }
 
 HOOK_EVENTS = PRICE_MONITOR_EVENTS.copy()
 HOOK_EVENTS.update({
     'shopify_order_created': None,
+    'shopify_order_cancelled': None,
+    'shopify_order_status_changed': None,
+    'alert_created': None,
+    'order_track_source_status_changed': None,
+    'order_track_source_tracking_changed': None,
 })
 
 HOOK_DELIVERER = 'zapier_core.tasks.deliver_hook_wrapper'

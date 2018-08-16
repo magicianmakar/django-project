@@ -1,8 +1,7 @@
-import simplejson as json
+import requests
 
 from django.http import Http404
 from django.contrib.auth.models import User
-from django.utils import timezone
 
 from rest_framework import generics, viewsets, mixins
 from rest_framework.views import APIView
@@ -12,16 +11,17 @@ from rest_hooks.models import Hook
 from shopified_core import permissions
 from shopified_core.utils import safeFloat, safeInt
 
-from leadgalaxy.models import ShopifyProduct, ShopifyStore
+from leadgalaxy.models import ShopifyProduct, ShopifyStore, ShopifyOrderTrack
 import leadgalaxy.tasks
 import leadgalaxy.utils
 
-from commercehq_core.models import CommerceHQProduct, CommerceHQStore
+from commercehq_core.models import CommerceHQProduct, CommerceHQStore, CommerceHQOrderTrack
 import commercehq_core.tasks
 import commercehq_core.utils
 
 from product_alerts.models import ProductChange
 
+from .payload import get_chq_order_data
 from .serializers import *
 
 
@@ -36,19 +36,72 @@ class HookViewSet(viewsets.ModelViewSet):
         obj.user = self.request.user
 
 
-class ProductChangesList(generics.ListAPIView):
-    serializer_class = ProductChangeSerializer
-    paginate_by = None
-
-    def get_category(self):
-        event = self.request.GET.get('event')
-        if event:
-            return ProductChange.get_category_from_event(event)
-        return None
+class ShopifyOrderList(generics.ListAPIView):
+    serializer_class = ShopifyOrderSerializer
 
     def get_queryset(self):
-        queryset = ProductChange.objects.filter(user=self.request.user)
-        category = self.get_category()
+        self.store = ShopifyStore.objects.get(id=self.request.GET.get('store_id'))
+        permissions.user_can_view(self.request.user, self.store)
+        queryset = ShopifyOrder.objects.filter(store=self.store).select_related('store').order_by('-created_at')
+        if self.request.GET.get('status') == 'cancelled':
+            queryset = queryset.filter(cancelled_at__isnull=False)
+        return queryset
+
+    def get_serializer_context(self):
+        rep = requests.get(
+            url=self.store.get_link('/admin/orders.json', api=True),
+            params={
+                'ids': ','.join([str(o.order_id) for o in self.object_list]),
+                'status': 'any',
+                'fulfillment_status': 'any',
+                'financial_status': 'any',
+            }
+        )
+        rep.raise_for_status()
+        shopify_orders = rep.json()['orders']
+        return {
+            'data': {str(o['id']): o for o in shopify_orders},
+        }
+
+    def list(self, request, *args, **kwargs):
+        self.object_list = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(self.object_list)
+        if page is not None:
+            self.object_list = page
+            serializer = self.get_pagination_serializer(page)
+        else:
+            serializer = self.get_serializer(self.object_list, many=True)
+
+        return Response(serializer.data)
+
+
+class ShopifyOrderTrackList(generics.ListAPIView):
+    serializer_class = ShopifyOrderTrackSerializer
+
+    def get_queryset(self):
+        store = ShopifyStore.objects.get(id=self.request.GET.get('store_id'))
+        permissions.user_can_view(self.request.user, store)
+        queryset = ShopifyOrderTrack.objects.filter(store=store).select_related('store').order_by('-created_at')
+        return queryset
+
+
+class CommerceHQOrderTrackList(generics.ListAPIView):
+    serializer_class = CommerceHQOrderTrackSerializer
+
+    def get_queryset(self):
+        store = CommerceHQStore.objects.get(id=self.request.GET.get('store_id'))
+        permissions.user_can_view(self.request.user, store)
+        queryset = CommerceHQOrderTrack.objects.filter(store=store).select_related('store').order_by('-created_at')
+        return queryset
+
+
+class ProductAlertList(generics.ListAPIView):
+    serializer_class = ProductAlertSerializer
+
+    def get_queryset(self):
+        queryset = ProductChange.objects.filter(user=self.request.user).order_by('-created_at')
+        category = self.request.GET.get('category')
         if category:
             queryset = queryset.filter(categories__icontains=category)
         store_type = self.request.GET.get('store_type')
@@ -59,17 +112,62 @@ class ProductChangesList(generics.ListAPIView):
                     queryset = queryset.filter(shopify_product__store_id=self.request.GET.get('store_id'))
                 if self.request.GET.get('product_id'):
                     queryset = queryset.filter(shopify_product_id=self.request.GET.get('product_id'))
+                queryset = queryset.select_related('shopify_product', 'shopify_product__store')
             if store_type == 'chq' and self.request.GET.get('store_id'):
                 if self.request.GET.get('store_id'):
                     queryset = queryset.filter(chq_product__store_id=self.request.GET.get('store_id'))
                 if self.request.GET.get('product_id'):
                     queryset = queryset.filter(chq_product_id=self.request.GET.get('product_id'))
+                queryset = queryset.select_related('chq_product', 'chq_product__store')
 
         return queryset
 
     def get_serializer_context(self):
         return {
-            'category': self.get_category(),
+            'category': self.request.GET.get('category'),
+        }
+
+    def list(self, request, *args, **kwargs):
+        self.object_list = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(self.object_list)
+        if page is not None:
+            serializer = self.get_pagination_serializer(page)
+        else:
+            serializer = self.get_serializer(self.object_list, many=True)
+
+        return Response(serializer.data)
+
+
+class ProductChangesList(generics.ListAPIView):
+    serializer_class = ProductChangeSerializer
+
+    def get_queryset(self):
+        queryset = ProductChange.objects.filter(user=self.request.user).order_by('-created_at')
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(categories__icontains=category)
+        store_type = self.request.GET.get('store_type')
+        if store_type:
+            queryset = queryset.filter(store_type=store_type)
+            if store_type == 'shopify':
+                if self.request.GET.get('store_id'):
+                    queryset = queryset.filter(shopify_product__store_id=self.request.GET.get('store_id'))
+                if self.request.GET.get('product_id'):
+                    queryset = queryset.filter(shopify_product_id=self.request.GET.get('product_id'))
+                queryset = queryset.select_related('shopify_product', 'shopify_product__store')
+            if store_type == 'chq' and self.request.GET.get('store_id'):
+                if self.request.GET.get('store_id'):
+                    queryset = queryset.filter(chq_product__store_id=self.request.GET.get('store_id'))
+                if self.request.GET.get('product_id'):
+                    queryset = queryset.filter(chq_product_id=self.request.GET.get('product_id'))
+                queryset = queryset.select_related('chq_product', 'chq_product__store')
+
+        return queryset
+
+    def get_serializer_context(self):
+        return {
+            'category': self.request.GET.get('category'),
             'change_index': 0,
         }
 
@@ -98,6 +196,7 @@ class ShopifyProductViewSet(mixins.RetrieveModelMixin,
             queryset = queryset.filter(store_id=self.request.GET.get('store_id'))
         if self.request.GET.get('title'):
             queryset = queryset.filter(title=self.request.GET.get('title'))
+        queryset = queryset.select_related('store')
         return queryset
 
 
@@ -114,6 +213,7 @@ class CommerceHQProductViewSet(mixins.RetrieveModelMixin,
             queryset = queryset.filter(store_id=self.request.GET.get('store_id'))
         if self.request.GET.get('title'):
             queryset = queryset.filter(title=self.request.GET.get('title'))
+        queryset = queryset.select_related('store')
         return queryset
 
 
@@ -250,23 +350,21 @@ class ProductVariantUpdate(APIView):
         raise Http404
 
 
-class ShopifyOrderDetail(APIView):
-    def get(self, request, pk):
+class OrderDetail(APIView):
+    def get(self, request, pk, store_type):
         user = request.user
         store_id = request.GET.get('store_id')
         ret = {}
-        if store_id:
+        if store_type == 'shopify':
             store = ShopifyStore.objects.get(id=store_id)
             permissions.user_can_view(user, store)
             order_data = leadgalaxy.utils.get_shopify_order(store, pk)
-            ret = {
-                'order_no': pk,
-                'order_label': order_data['order_number'],
-                'total_price': order_data['total_price'],
-                'financial_status': order_data['financial_status'],
-                'fulfillment_status': order_data['fulfillment_status'],
-                'currency': order_data['currency'],
-            }
+            ret = get_shopify_order_data(store, order_data)
+        elif store_type == 'chq':
+            store = CommerceHQStore.objects.get(id=store_id)
+            permissions.user_can_view(user, store)
+            order_data = commercehq_core.utils.get_chq_order(store, pk)
+            ret = get_chq_order_data(store, order_data)
 
         return Response(ret)
 
@@ -304,92 +402,3 @@ class SubUserEmails(APIView):
         for sub_user in User.objects.filter(profile__subuser_parent=user):
             emails.append(sub_user.email)
         return Response({'emails': ','.join(emails)})
-
-
-class ZapierSampleList(APIView):
-    def get(self, request, event):
-        """returns a sample for shopify_order, product_disappeared, variant_added, variant_price_changed, variant_quantity_changed, variant_removed"""
-        if event == 'shopify_order':
-            order = ShopifyOrder(
-                id=1,
-                store=ShopifyStore(
-                    id=1,
-                    title='Sample Shopify Store',
-                ),
-                order_id=386704408627,
-                user=request.user,
-                order_number=100,
-                customer_id=207119551,
-                customer_name='Paul Norman',
-                customer_email='paul.norman@example.com',
-                financial_status='paid',
-                fulfillment_status='fulfilled',
-                total_price=99.99,
-                tags='imported',
-                city='Ottawa',
-                zip_code='K2P0V6',
-                country_code='CA',
-                items_count='2',
-                created_at=timezone.now(),
-                updated_at=timezone.now(),
-                closed_at=timezone.now(),
-                cancelled_at=timezone.now(),
-            )
-            sample = order.to_dict()
-        elif event in settings.PRICE_MONITOR_EVENTS:
-            product_change = ProductChange(
-                user=request.user,
-                store_type='shopify',
-                shopify_product=ShopifyProduct(
-                    id=1,
-                    title='Sample Shopify Product',
-                    store=ShopifyStore(
-                        id=1,
-                        title='Sample Shopify Store',
-                    )
-                ),
-                data=json.dumps([{
-                    'name': 'price',
-                    'sku': '14:193#Black;5:202697812#13.3-inch',
-                    'old_value': 119.72,
-                    'new_value': 129.72,
-                    'level': 'variant',
-                    'variant_id': 1,
-                    'variant_title': 'Sample Variant',
-                }, {
-                    'name': 'quantity',
-                    'sku': '14:193#Black;5:202697812#13.3-inch',
-                    'old_value': 5,
-                    'new_value': 4,
-                    'level': 'variant',
-                    'variant_id': 1,
-                    'variant_title': 'Sample Variant',
-                }, {
-                    'name': 'var_added',
-                    'sku': '14:193#Black;5:202697812#13.3-inch',
-                    'price': 22.1,
-                    'availabe_qty': 95,
-                    'level': 'variant',
-                    'variant_id': 1,
-                    'variant_title': 'Sample Variant',
-                }, {
-                    'name': 'var_added',
-                    'sku': '14:193#Black;5:202697812#13.3-inch',
-                    'price': 22.1,
-                    'availabe_qty': 95,
-                    'level': 'variant',
-                }, {
-                    'name': 'var_removed',
-                    'sku': '14:193#Black;5:202697812#13.3-inch',
-                    'level': 'variant',
-                }, {
-                    'name': 'offline',
-                    'level': 'product',
-                    'new_value': True,
-                    'old_value': False,
-                }]),
-            )
-            sample = product_change.to_dict({}, ProductChange.get_category_from_event(event), 0)
-        else:
-            raise Http404
-        return Response([sample])

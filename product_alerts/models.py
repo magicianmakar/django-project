@@ -6,9 +6,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from rest_hooks.signals import raw_hook_event
 
+from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
 from .utils import parse_sku, variant_index
+from leadgalaxy.templatetags.template_helper import price_diff, money_format
 
 PRODUCT_CHANGE_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -54,6 +56,14 @@ class ProductChange(models.Model):
             return self.shopify_product
         if self.store_type == 'chq':
             return self.chq_product
+        return None
+
+    @property
+    def product_link(self):
+        if self.store_type == 'shopify':
+            return app_link('product', self.product.id)
+        if self.store_type == 'chq':
+            return app_link('chq/product', self.product.id)
         return None
 
     def get_data(self, category=None):
@@ -114,24 +124,138 @@ class ProductChange(models.Model):
         return ','.join(categories)
 
     @classmethod
-    def get_category_from_event(cls, event):
-        # returns change category name from hook event name
-        # event names are listed in app.settings.PRICE_MONITOR_EVENTS
-        if event == 'product_disappeared':
-            return 'product:offline'
-        if event == 'variant_quantity_changed':
-            return 'variant:quantity'
-        if event == 'variant_price_changed':
-            return 'variant:price'
-        if event == 'variant_added':
-            return 'variant:var_added'
-        if event == 'variant_removed':
-            return 'variant:var_removed'
+    def get_category_label(cls, category):
+        if category == 'product:offline':
+            return 'Availability'
+        if category == 'variant:quantity':
+            return 'Quantity'
+        if category == 'variant:price':
+            return 'Price'
+        if category == 'variant:var_added':
+            return 'New Variant'
+        if category == 'variant:var_removed':
+            return 'Removed Variant'
 
     def save(self, *args, **kwargs):
         if self.categories != self.get_categories():
             self.categories = self.get_categories()
         super(ProductChange, self).save(*args, **kwargs)
+
+    # send product alert data to subscription hooks
+    # sent data should have same structure as response data from fallback api endpoints
+    # zapier_core.serializers.ProductAlertSerializer uses this method
+    def to_alert(self, category):
+        changes = self.get_data(category)
+        if not changes:
+            return None
+        if not category:
+            change = changes[0]
+            category = '{}:{}'.format(change['level'], change['name'])
+
+        product_title = self.product.title
+        original_url = self.product.get_original_info().get('url')
+        store = self.product.store
+        ret = {
+            'category': category,
+            'category_label': ProductChange.get_category_label(category),
+            'store_type': self.store_type,
+            'store_id': store.id,
+            'store_title': store.title,
+            'product_id': self.product.id,
+            'product_title': product_title,
+            'product_url_source': original_url,
+            'product_url_dropified': self.product_link,
+            'description': '',
+            'body_text': '',
+            'body_html': '',
+        }
+
+        headers = []
+        data = []
+        if category == 'product:offline':
+            ret['description'] = 'The Availability of %s has changed.' % product_title
+            change = changes[0]
+            if not change['new_value']:
+                ret['body_text'] = '%s is now Online' % product_title
+                ret['body_html'] = '<a href="%s" target="_blank">%s</a> is now <b style="color:green">Online</b>' % (original_url, product_title)
+            else:
+                ret['body_text'] = '%s is now Offline' % product_title
+                ret['body_html'] = '<a href="%s" target="_blank">%s</a> is now <b style="color:red">Offline</b>' % (original_url, product_title)
+        if category == 'variant:quantity':
+            ret['description'] = 'The Quantity of one or more Variants of %s has changed.' % product_title
+            headers = ['Variant', 'Change', 'Old Quantity', 'New Quantity']
+            for i, change in enumerate(changes):
+                data.append([
+                    change['sku_readable'],
+                    price_diff(None, change['old_value'], change['new_value'], reverse_colors=False, html=False),
+                    change['old_value'],
+                    change['new_value']
+                ])
+        if category == 'variant:price':
+            ret['description'] = 'The Price of one or more Variants of %s has changed.' % product_title
+            headers = ['Variant', 'Change', 'Old Price', 'New Price']
+            for i, change in enumerate(changes):
+                data.append([
+                    change['sku_readable'],
+                    price_diff(None, change['old_value'], change['new_value'], reverse_colors=False, html=False),
+                    money_format(change['old_value'], store),
+                    money_format(change['new_value'], store)
+                ])
+        if category == 'variant:var_added':
+            ret['description'] = 'A new variant has been added to %s.' % product_title
+            headers = ['New Variant']
+            for i, change in enumerate(changes):
+                data.append([change['sku_readable']])
+        if category == 'variant:var_removed':
+            ret['description'] = 'A variant has been removed from %s.' % product_title
+            headers = ['Removed Variant']
+            for i, change in enumerate(changes):
+                data.append([change['sku_readable']])
+        if len(headers):
+            lengths = []
+            ret['body_html'] += '<table><thead><tr>'
+            for i, header in enumerate(headers):
+                lengths.append(len(header))
+                ret['body_html'] += '<th>%s</th>' % header
+            ret['body_html'] += '</tr></thead><tbody>'
+            for i, row in enumerate(data):
+                ret['body_html'] += '<tr>'
+                for j, value in enumerate(row):
+                    if value and len(str(value)) > lengths[j]:
+                        lengths[j] = len(str(value))
+                    ret['body_html'] += '<td>%s</td>' % value
+                ret['body_html'] += '</tr>'
+            ret['body_html'] += '</tbody></table>'
+
+            for i, header in enumerate(headers):
+                length = str(lengths[i])
+                ret['body_text'] += (' {:' + length + 's}  ').format(header)
+            ret['body_text'] += "\n"
+            for i, header in enumerate(headers):
+                length = str(lengths[i])
+                ret['body_text'] += ('_{:' + length + 's}_ ').format('_' * lengths[i])
+            for i, row in enumerate(data):
+                ret['body_text'] += "\n"
+                for j, value in enumerate(row):
+                    length = str(lengths[j])
+                    ret['body_text'] += (' {:' + length + 's}  ').format(str(value))
+        return ret
+
+    def send_hook_event_alert(self):
+        # Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
+        # Query params of hook's target url are used to filter events to be triggered.
+        # Following url is hook's target url to get specific event for one shopify product
+        # https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
+        user = self.user
+        for category in settings.PRICE_MONITOR_EVENTS.keys():
+            payload = self.to_alert(category)
+            if payload is not None:
+                raw_hook_event.send(
+                    sender=None,
+                    event_name='alert_created',
+                    payload=payload,
+                    user=user
+                )
 
     # send product change data to subscription hooks
     # sent data should have same structure as response data from fallback api endpoints
@@ -164,6 +288,7 @@ class ProductChange(models.Model):
                     change['variant_title'] = title
 
             ret.update(change)
+            ret.pop('level', None)
             return ret
 
         return None
@@ -174,15 +299,14 @@ class ProductChange(models.Model):
         # Following url is hook's target url to get specific event for one shopify product
         # https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
         user = self.user
-        for event in settings.PRICE_MONITOR_EVENTS.keys():
-            category = ProductChange.get_category_from_event(event)
+        for category in settings.PRICE_MONITOR_EVENTS.keys():
             changes = self.get_data(category)
             for i, change in enumerate(changes):
                 payload = self.to_dict(product_data, category, i)
                 if payload is not None:
                     raw_hook_event.send(
                         sender=None,
-                        event_name=event,
+                        event_name=category,
                         payload=payload,
                         user=user
                     )

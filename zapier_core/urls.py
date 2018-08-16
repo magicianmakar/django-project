@@ -14,13 +14,16 @@ router.register(r'products/chq', views.CommerceHQProductViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^samples/(?P<event>[a-z_]+)$', views.ZapierSampleList.as_view()),
+    url(r'^product-alerts/$', views.ProductAlertList.as_view()),
     url(r'^product-changes/$', views.ProductChangesList.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_visibility$', views.ProductVisibilityUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_notes$', views.ProductNotesUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/update_variant$', views.ProductVariantUpdate.as_view()),
     url(r'^products/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/variants$', views.ProductVariantList.as_view()),
-    url(r'^orders/shopify/(?P<pk>[0-9]+)$', views.ShopifyOrderDetail.as_view()),
+    url(r'^orders/shopify/$', views.ShopifyOrderList.as_view()),
+    url(r'^order-tracks/shopify/$', views.ShopifyOrderTrackList.as_view()),
+    url(r'^order-tracks/chq/$', views.CommerceHQOrderTrackList.as_view()),
+    url(r'^orders/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)$', views.OrderDetail.as_view()),
     url(r'^orders/(?P<store_type>[a-z_]+)/(?P<pk>[0-9]+)/add_note$', views.OrderNotesUpdate.as_view()),
     url(r'^sub_user_emails$', views.SubUserEmails.as_view()),
 ]

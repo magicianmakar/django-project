@@ -112,7 +112,7 @@ def shopify_image_thumb(link, size='small', crop=''):
 
 
 @register.simple_tag(takes_context=True)
-def price_diff(context, from_, to_, reverse_colors=False):
+def price_diff(context, from_, to_, reverse_colors=False, html=True):
     if from_ is not float:
         from_ = float(from_)
 
@@ -123,17 +123,29 @@ def price_diff(context, from_, to_, reverse_colors=False):
 
     if from_ > to_:
         if to_ > 0:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (
-                colors[0], (((to_ - from_) * 100.) / to_)))
+            if html:
+                return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i> %0.0f%%</span>' % (
+                    colors[0], (((to_ - from_) * 100.) / to_)))
+            else:
+                return '%0.0f%%' % (((to_ - from_) * 100.) / to_)
         else:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0]))
+            if html:
+                return mark_safe('<span style="color:%s"><i class="fa fa-sort-desc"></i></span>' % (colors[0]))
+            else:
+                return ''
 
     else:
         if from_ > 0:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (
-                colors[1], (((to_ - from_) * 100.) / from_)))
+            if html:
+                return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i> +%0.0f%%</span>' % (
+                    colors[1], (((to_ - from_) * 100.) / from_)))
+            else:
+                return '%0.0f%%' % (((to_ - from_) * 100.) / from_)
         else:
-            return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i></span>' % (colors[1]))
+            if html:
+                return mark_safe('<span style="color:%s"><i class="fa fa-sort-asc"></i></span>' % (colors[1]))
+            else:
+                return ''
 
 
 @register.simple_tag

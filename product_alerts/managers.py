@@ -60,6 +60,7 @@ class ProductChangeManager():
         try:
             product_data = self.get_product_data()
             self.product_change.send_hook_event(product_data)
+            self.product_change.send_hook_event_alert()
             if not self.need_update():
                 # No need to check for updates, the user doesn't have any setting that will require a product update
                 self.product_change.status = 1  # Applied

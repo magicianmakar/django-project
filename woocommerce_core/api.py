@@ -34,6 +34,7 @@ from shopified_core.utils import (
     encoded_dict,
     CancelledOrderAlert
 )
+from zapier_core.utils import send_order_track_change
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
 import tasks
@@ -916,6 +917,10 @@ class WooStoreApi(ApiResponseMixin, View):
         try:
             order = WooOrderTrack.objects.get(id=data.get('order'))
             permissions.user_can_edit(user, order)
+
+            source_status = order.source_status
+            source_tracking = order.source_tracking
+
         except WooOrderTrack.DoesNotExist:
             return self.api_error('Order Not Found', status=404)
 
@@ -946,6 +951,7 @@ class WooStoreApi(ApiResponseMixin, View):
         order.data = json.dumps(order_data)
 
         order.save()
+        send_order_track_change(order, source_status, source_tracking)
 
         # Send e-mail notifications for cancelled orders
         cancelled_order_alert.send_email()

@@ -32,6 +32,7 @@ from shopified_core.utils import (
     orders_update_limit,
     get_domain,
 )
+from zapier_core.utils import send_order_track_change
 
 from .models import (
     GearBubbleStore,
@@ -906,6 +907,10 @@ class GearBubbleApi(ApiResponseMixin, View):
 
         try:
             order = GearBubbleOrderTrack.objects.get(id=data.get('order'))
+
+            source_status = order.source_status
+            source_tracking = order.source_tracking
+
         except GearBubbleOrderTrack.DoesNotExist:
             return self.api_error('Order Not Found', status=404)
 
@@ -931,6 +936,7 @@ class GearBubbleApi(ApiResponseMixin, View):
         order.data = json.dumps(order_data)
 
         order.save()
+        send_order_track_change(order, source_status, source_tracking)
 
         return self.api_success()
 

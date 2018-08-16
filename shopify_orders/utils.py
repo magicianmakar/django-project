@@ -9,11 +9,12 @@ from unidecode import unidecode
 import simplejson as json
 
 from elasticsearch import Elasticsearch
-from rest_hooks.signals import raw_hook_event
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopified_core.utils import OrderErrors, delete_model_from_db
 from shopified_core.shipping_helper import country_from_code
+
+from zapier_core.utils import send_shopify_order_event
 
 
 def safeInt(v, default=0):
@@ -160,6 +161,12 @@ def update_shopify_order(store, data, sync_check=True):
     address = data.get('shipping_address', data.get('customer', {}).get('default_address', {}))
     customer = data.get('customer', address)
 
+    order = ShopifyOrder.objects.filter(order_id=data['id'], store=store).first()
+    if order is not None:
+        is_cancelled = order.is_cancelled
+        financial_status = order.financial_status
+        fulfillment_status = order.fulfillment_status
+
     order, created = ShopifyOrder.objects.update_or_create(
         order_id=data['id'],
         store=store,
@@ -184,12 +191,12 @@ def update_shopify_order(store, data, sync_check=True):
         }
     )
     if created:
-        raw_hook_event.send(
-            sender=None,
-            event_name='shopify_order_created',
-            payload=order.to_dict(),
-            user=store.user
-        )
+        send_shopify_order_event('shopify_order_created', store, data)
+    else:
+        if not is_cancelled and order.is_cancelled:
+            send_shopify_order_event('shopify_order_cancelled', store, data)
+        if financial_status != order.financial_status or fulfillment_status != order.fulfillment_status:
+            send_shopify_order_event('shopify_order_status_changed', store, data)
 
     connected_items = 0
     need_fulfillment = len(data.get('line_items', []))

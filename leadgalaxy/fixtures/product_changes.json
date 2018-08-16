@@ -329,6 +329,23 @@
 },
 {
   "fields": {
+    "is_default": true,
+    "product": 1,
+    "shipping_method": null,
+    "created_at": "2016-09-09T22:31:05.967Z",
+    "updated_at": "2016-09-09T22:44:07.920Z",
+    "supplier_url": "http://www.aliexpress.com/store/2339384",
+    "product_url": "https://www.aliexpress.com/item/SWORDFISH-designer-belts-men-high-quality-genuine-leather-belt-man-fashion-strap-male-cowhide-belts-for/32750070496.html",
+    "variants_map": null,
+    "supplier_name": "DINISITON Official Store",
+    "store": 1
+  },
+  "model": "commercehq_core.commercehqsupplier",
+  "pk": 1
+},
+{
+  "fields": {
+    "default_supplier": 1,
     "shipping_map": "",
     "product_type": "Belts & Cummerbunds",
     "title": "DINISITON designer belts men high quality genuine leather belt man fashion strap male cowhide belts for men jeans cow leather",

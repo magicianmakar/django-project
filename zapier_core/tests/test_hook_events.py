@@ -36,7 +36,7 @@ class HookEventsTestCase(TestCase):
     def test_deliver_hook(self, requests_post, deliver):
         hook = Hook.objects.create(
             user=self.user,
-            event='variant_quantity_changed',
+            event='variant:quantity',
             target='TARGETURL',
         )
         product_change = ProductChange.objects.get(pk=4)
@@ -49,12 +49,29 @@ class HookEventsTestCase(TestCase):
         )
 
 
+    @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
+    @patch('requests.post')
+    def test_deliver_hook_alert(self, requests_post, deliver):
+        hook = Hook.objects.create(
+            user=self.user,
+            event='alert_created',
+            target='TARGETURL',
+        )
+        product_change = ProductChange.objects.get(pk=2)
+        product_change.send_hook_event_alert()
+        requests_post.assert_called_once_with(
+            url=hook.target,
+            data=ANY,
+            headers=ANY,
+        )
+
+
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     @patch('zapier_core.tasks.deliver_hook.apply_async')
     def test_variant_price_changed(self, deliver_hook, manage):
         hook = Hook.objects.create(
             user=self.user,
-            event='variant_price_changed',
+            event='variant:price',
             target='TARGETURL',
         )
 
