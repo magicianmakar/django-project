@@ -174,7 +174,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         api_data = add_product_attributes_to_api_data(api_data, saved_data)
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
-        r = store.wcapi.post('products', api_data)
+        r = store.get_wcapi(timeout=60).post('products', api_data)
         if not r.ok:
             product_data = None
             if '/products/' in r.url:
@@ -195,7 +195,7 @@ def product_export(store_id, product_id, user_id, publish=None):
             image_id_by_hash = get_image_id_by_hash(product_data)
             variant_list = create_variants_api_data(saved_data, image_id_by_hash)
             path = 'products/{}/variations/batch'.format(product.source_id)
-            r = store.wcapi.post(path, {'create': variant_list})
+            r = store.get_wcapi(timeout=60).post(path, {'create': variant_list})
             r.raise_for_status()
 
         store.pusher_trigger('product-export', {
@@ -234,7 +234,7 @@ def product_update(product_id, data):
         api_data = add_store_tags_to_api_data(api_data, store, data.get('tags', []))
         api_data = update_product_images_api_data(api_data, data)
 
-        r = store.wcapi.put('products/{}'.format(product.source_id), api_data)
+        r = store.get_wcapi(timeout=60).put('products/{}'.format(product.source_id), api_data)
         r.raise_for_status()
 
         product.update_data({'type': data.get('type', '')})
@@ -245,7 +245,7 @@ def product_update(product_id, data):
         if variants_data:
             variants = update_variants_api_data(variants_data)
             path = 'products/%s/variations/batch' % product.source_id
-            r = store.wcapi.post(path, {'update': variants})
+            r = store.get_wcapi(timeout=60).post(path, {'update': variants})
             r.raise_for_status()
 
         store.pusher_trigger('product-update', {

@@ -55,8 +55,7 @@ class WooStore(models.Model):
     def __unicode__(self):
         return self.title
 
-    @property
-    def wcapi(self):
+    def get_wcapi(self, timeout=30):
         return API(
             url=self.api_url,
             consumer_key=self.api_key,
@@ -65,7 +64,9 @@ class WooStore(models.Model):
             version='wc/v2',
             verify_ssl=False,
             query_string_auth=True,
-            timeout=30)
+            timeout=timeout)
+
+    wcapi = property(get_wcapi)
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
