@@ -498,6 +498,9 @@ class OrdersTestCase(TestCase):
         order_id = 4905209738
 
         feed = requests.get('http://feeds.bbci.co.uk/japanese/rss.xml').text
+        if not feed.ok:
+            return
+
         unicode_text = random.choice([i[1] for i in re.findall(r'title>(<!\[CDATA\[)([^>]+)(]]>)</title', feed)])
 
         utils.set_shopify_order_note(store, order_id, unicode_text)
